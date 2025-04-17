@@ -1,21 +1,20 @@
-- [workflow\_templates](#workflow_templates)
-  - [Adding New Templates](#adding-new-templates)
-    - [1 — Find Templates Folder](#1--find-templates-folder)
-    - [2 — Obtain Workflow](#2--obtain-workflow)
-    - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
-    - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
-    - [5 — Compress Assets](#5--compress-assets)
-    - [6 — Rename and Move Files](#6--rename-and-move-files)
-    - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
-    - [8 — Embed Models](#8--embed-models)
-    - [8 — Embed Node Versions (optional)](#8--embed-node-versions-optional)
-    - [9 — Add Documentation Nodes (optional)](#9--add-documentation-nodes-optional)
-    - [9 — Bump Version and Create PR](#9--bump-version-and-create-pr)
-    - [10 — Add Translations](#10--add-translations)
-
 # workflow_templates
 
 ComfyUI workflow templates hosted under <https://github.com/Comfy-Org/ComfyUI_frontend/tree/main/public>.
+
+- [Adding New Templates](#adding-new-templates)
+  - [1 — Find Templates Folder](#1--find-templates-folder)
+  - [2 — Obtain Workflow](#2--obtain-workflow)
+  - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
+  - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
+  - [5 — Compress Assets](#5--compress-assets)
+  - [6 — Rename and Move Files](#6--rename-and-move-files)
+  - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
+  - [8 — Embed Models](#8--embed-models)
+  - [9 — Embed Node Versions (optional)](#9--embed-node-versions-optional)
+  - [10 — Add Documentation Nodes (optional)](#10--add-documentation-nodes-optional)
+  - [11 — Bump Version and Create PR](#11--bump-version-and-create-pr)
+  - [12 — Add Translations](#12--add-translations)
 
 ## Adding New Templates
 
@@ -307,7 +306,7 @@ You can find the `hash` and `hash_type` for a model on huggingface (see below)or
 >
 > Ensure that the filename being downloaded from the links matches the filenames in the `widgets_values` exactly.
 
-### 8 — Embed Node Versions (optional)
+### 9 — Embed Node Versions (optional)
 
 If your template requires a specific version of Comfy or a custom node, you can specify that using the same process as with models.
 
@@ -341,7 +340,7 @@ The Wan 2.1 workflow requires the SaveWEBM node which wasn't fully supported unt
 
 This can help diagnose issues when others run the workflow and ensure the workflow is more reproducible.
 
-### 9 — Add Documentation Nodes (optional)
+### 10 — Add Documentation Nodes (optional)
 
 If your template corresponds with a page on https://github.com/comfyanonymous/ComfyUI_examples, https://docs.comfy.org/custom-nodes/workflow_templates, etc., you can add a `MarkdownNote` node with links:
 
@@ -357,7 +356,7 @@ Raw markdown used:
 > [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/advanced/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
-### 9 — Bump Version and Create PR
+### 11 — Bump Version and Create PR
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process ahs no hiccups and you can generate the thumbnail image on the first execution (if applicable).
 2. Create a fork of https://github.com/Comfy-Org/workflow_templates
@@ -372,7 +371,7 @@ Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflo
 
 Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
 
-### 10 — Add Translations
+### 12 — Add Translations
 
 Make a PR in https://github.com/Comfy-Org/ComfyUI_frontend adding the mapping from your template filename (without extension) to the English display name title. The mapping goes in [`ComfyUI_frontend/src/locales/en/main.json`](https://github.com/Comfy-Org/ComfyUI_frontend/blob/9f0abac57ba0d5752c51198bf8a075b8336fdda1/src/locales/en/main.json#L480-L487).
 
