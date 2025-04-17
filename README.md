@@ -4,12 +4,13 @@
     - [2 — Obtain Workflow](#2--obtain-workflow)
     - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
     - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
-    - [5 — Rename and Move Files](#5--rename-and-move-files)
-    - [6 — Add Entry to `index.json`](#6--add-entry-to-indexjson)
-    - [7 — Embed Models](#7--embed-models)
+    - [5 — Compress Assets](#5--compress-assets)
+    - [6 — Rename and Move Files](#6--rename-and-move-files)
+    - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
+    - [8 — Embed Models](#8--embed-models)
     - [8 — Embed Node Versions (optional)](#8--embed-node-versions-optional)
     - [9 — Add Documentation Nodes (optional)](#9--add-documentation-nodes-optional)
-    - [9 — Create PR](#9--create-pr)
+    - [9 — Bump Version and Create PR](#9--bump-version-and-create-pr)
     - [10 — Add Translations](#10--add-translations)
 
 # workflow_templates
@@ -69,8 +70,8 @@ For my Wan 2.1 template, I'll just use [the webp video](https://comfyanonymous.g
 
 Choose the content type and hover effect (optional) for your thumbnail:
 
-| Content Types                                                                                                   | Hover Effects                                                                                                       |
-| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Content Types                                                                                                   | Hover Effects                                                                                                                |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
 | ![Image Element](docs/pictures/thumbnail-variants/default.gif)<br>**Image**: Default image with no extra effect | ![Compare Slider](docs/pictures/thumbnail-variants/compare-slider.gif)<br>**Compare Slider**: Before/after comparison tool   |
 | ![Video Player](docs/pictures/thumbnail-variants/video.gif)<br>**Video**: Webp animation                        | ![Hover Dissolve](docs/pictures/thumbnail-variants/hover-disolve.gif)<br>**Hover Dissolve**: Dissolves to 2nd image on hover |
 | ![Audio Controls](docs/pictures/thumbnail-variants/audio.gif)<br>**Audio**: Audio playback                      | ![Hover Zoom](docs/pictures/thumbnail-variants/hover-zoom.gif)<br>**Hover Zoom**: Same as default but zooms more             |
@@ -81,7 +82,13 @@ Choose the content type and hover effect (optional) for your thumbnail:
 
 Since my Wan 2.1 thumbnail is already an animated video, I'll use a video thumbnail but choose not to add an effect.
 
-### 5 — Rename and Move Files
+### 5 — Compress Assets
+
+Attempt to compress the assets. Since the thumbnails will never be taking up a large portion of the screen, it is acceptable to lower their size. It's also good to convert them to a space-efficient file format like webp or jpeg, applying a lossy compression algorithm (e.g., convert at 65% quality).
+
+[EzGif](https://ezgif.com/png-to-webp) has free tools for changing resolution, compressing, and converting file types. Use whatever tool you are comfortable with.
+
+### 6 — Rename and Move Files
 
 Give the workflow a filename that has no spaces, dots, or special characters. Then rename the thumbnail file(s) to match, but with a counter suffix.
 
@@ -100,7 +107,7 @@ text_to_video_wan-1.webp
 
 Then move the renamed files to your templates folder.
 
-### 6 — Add Entry to `index.json`
+### 7 — Add Entry to `index.json`
 
 There's an [`index.json`](templates/index.json) file in the templates folder which is where template configurations are set. You will need to add your template to this file, using the fields outlined below:
 
@@ -170,7 +177,7 @@ Now you can start ComfyUI (or refresh browser if already running) and test that 
 >
 > Make sure to use double-quotes `"` instead of single-quotes `'` when adding things to json files
 
-### 7 — Embed Models
+### 8 — Embed Models
 
 Now we need to embed metadata for any models the template workflow uses. This way, the user can download and run the workflow without ever leaving ComfyUI.
 
@@ -208,6 +215,8 @@ To add them to the workflow json, find each associated node and add the metadata
 +         {
 +           "name": "wan_2.1_vae.safetensors",
 +           "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors?download=true",
++           "hash": "2fc39d31359a4b0a64f55876d8ff7fa8d780956ae2cb13463b0223e15148976b"
++           "hash_type": "SHA256",
 +           "directory": "vae"
 +         }
 +       ]
@@ -240,6 +249,8 @@ To add them to the workflow json, find each associated node and add the metadata
 +         {
 +           "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
 +           "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true",
++           "hash": "c3355d30191f1f066b26d93fba017ae9809dce6c627dda5f6a66eaa651204f68",
++           "hash_type": "SHA256",
 +           "directory": "text_encoders"
 +         }
 +       ]
@@ -276,6 +287,8 @@ To add them to the workflow json, find each associated node and add the metadata
 +         {
 +           "name": "wan2.1_t2v_1.3B_bf16.safetensors",
 +           "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_1.3B_bf16.safetensors?download=true",
++           "hash": "6f999b0d6cb9a72b3d98ac386ed96f57f8cecae13994a69232514ea4974ad5fd",
++           "hash_type": "SHA256",
 +           "directory": "diffusion_models"
 +         }
 +       ]
@@ -284,19 +297,11 @@ To add them to the workflow json, find each associated node and add the metadata
     },
 ```
 
-You can also specify the model hash if appropriate:
+You can find the `hash` and `hash_type` for a model on huggingface (see below)or by calculating it yourself with a script or online tool.
 
-```json
-{
-  "name": "wan2.1_t2v_1.3B_bf16.safetensors",
-  "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_1.3B_bf16.safetensors?download=true",
-  "directory": "diffusion_models",
-  "hash": "8743b52063cd84097a65d1633f5c74f5",
-  "hash_type": "MD5"
-}
-```
+![finding hash on hugginface](docs/pictures/finding-hugginface-hash.png)
 
-[Workflow spec](https://docs.comfy.org/specs/workflow_json#workflow-json) for more details.
+[Workflow spec](https://docs.comfy.org/specs/workflow_json#workflow-json) and [ModelFile Zod schema](https://github.com/Comfy-Org/ComfyUI_frontend/blob/6bc03a624ecbc0439501d0c7c2b073ca90e9a742/src/schemas/comfyWorkflowSchema.ts#L34-L40) for more details.
 
 > [!CAUTION]
 >
@@ -352,17 +357,20 @@ Raw markdown used:
 > [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/advanced/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
-### 9 — Create PR
+### 9 — Bump Version and Create PR
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process ahs no hiccups and you can generate the thumbnail image on the first execution (if applicable).
 2. Create a fork of https://github.com/Comfy-Org/workflow_templates
 3. Clone the fork to your system
 4. Copy your new workflow and thumbnail(s) into the `templates` folder
 5. Add your changes to the `templates/index.json` file
-6. Commit and push changes
-7. Create a PR on https://github.com/Comfy-Org/workflow_templates
+6. Bump the version in `pyproject.toml` ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
+7. Commit and push changes
+8. Create a PR on https://github.com/Comfy-Org/workflow_templates
 
 Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflow_templates/pull/16
+
+Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
 
 ### 10 — Add Translations
 
