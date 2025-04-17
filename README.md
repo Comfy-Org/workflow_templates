@@ -87,6 +87,10 @@ Attempt to compress the assets. Since the thumbnails will never be taking up a l
 
 [EzGif](https://ezgif.com/png-to-webp) has free tools for changing resolution, compressing, and converting file types. Use whatever tool you are comfortable with.
 
+> [!TIP]
+>
+> Convert to webp first, then resize to a smaller resolution. You can maintain high quality and still get near 95% reduction if e.g., converting from png.
+
 ### 6 — Rename and Move Files
 
 Give the workflow a filename that has no spaces, dots, or special characters. Then rename the thumbnail file(s) to match, but with a counter suffix.
