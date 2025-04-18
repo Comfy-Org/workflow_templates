@@ -22,31 +22,9 @@ I will demonstrate how to add a new template by walking through the process of a
 
 ### 1 — Find Templates Folder
 
-**Option 1**: [Set up ComfyUI_frontend dev environment](https://github.com/Comfy-Org/ComfyUI_frontend?tab=readme-ov-file#development), start the dev server and use the `ComfyUI_frontend/public/templates` folder (create it if it doesn't exist)
+[Set up ComfyUI_frontend dev environment](https://github.com/Comfy-Org/ComfyUI_frontend?tab=readme-ov-file#development), start the dev server.
 
-**Option 2**: Start the virtual environment you use to run ComfyUI (if applicable), then run this command in the terminal to print the location of the templates folder:
-
-```bash
-python -c "import comfyui_frontend_package, os; print(os.path.join(comfyui_frontend_package.__path__[0], 'static', 'templates'))"
-```
-
-**Options 3**: Specify the frontend version with the `--front-end-version` argument. For example if using `1.13.5`, use the command:
-
-```bash
-python main.py --front-end-version Comfy-Org/ComfyUI_frontend@1.13.5
-```
-
-The templates folder will then be at the location:
-
-```
-ComfyUI/web_custom_versions/Comfy-Org_ComfyUI_frontend/1.13.5/templates
-```
-
-If using option 3, keep in mind local changes will be overwritten when restarting ComfyUI.
-
-> [!IMPORTANT]
->
-> Now that you know the location, you can test changes to the templates by modifying the contents of this folder
+Copy the `templates` folder from this repository to the `ComfyUI_frontend/public` folder.
 
 ### 2 — Obtain Workflow
 
@@ -144,6 +122,7 @@ If your template doesn't fit into an existing category, you can add a new one:
 +       "mediaSubtype": "webp",
 +       "description": "Your template"s description.",
 +       "tutorialUrl": "https://link-to-some-helpful-docs-if-they-exist.como"
++       "thumbnailVariant": "zoomHover",
 +     },
 +   ]
 + }
@@ -173,6 +152,8 @@ The Wan 2.1 template I'm adding already fits into the "Video" category, so I'll 
     ]
   },
 ```
+
+The `thumbnailVariant` field is where you add the choice of thumbnail variant.
 
 Now you can start ComfyUI (or refresh browser if already running) and test that your template works.
 
