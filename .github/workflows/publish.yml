@@ -2,11 +2,15 @@ name: Publish to PyPI
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "pyproject.toml"
   pull_request:
     types: [closed]
     branches: [main]
     paths:
-      - 'pyproject.toml'
+      - "pyproject.toml"
 
 jobs:
   publish:
@@ -21,7 +25,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install build dependencies
         run: python -m pip install build
@@ -37,4 +41,4 @@ jobs:
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.PYPI_TOKEN }} 
+          password: ${{ secrets.PYPI_TOKEN }}
