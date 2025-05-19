@@ -1,46 +1,66 @@
 {
   "id": "88ac5dad-efd7-40bb-84fe-fbaefdee1fa9",
   "revision": 0,
-  "last_node_id": 59,
-  "last_link_id": 123,
+  "last_node_id": 75,
+  "last_link_id": 138,
   "nodes": [
     {
-      "id": 48,
-      "type": "MarkdownNote",
+      "id": 49,
+      "type": "LatentApplyOperationCFG",
       "pos": [
-        -360.0564270019531,
-        45.08247375488281
+        940,
+        -160
       ],
       "size": [
-        499.296875,
-        571.3455200195312
+        290,
+        50
       ],
-      "flags": {},
-      "order": 0,
+      "flags": {
+        "collapsed": false
+      },
+      "order": 10,
       "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "About ACE Step",
-      "properties": {},
-      "widgets_values": [
-        "[Tutorial](http://docs.comfy.org/tutorials/audio/ace-step/ace-step-v1) | [教程](http://docs.comfy.org/zh-CN/tutorials/audio/ace-step/ace-step-v1)\n\n\n### Model Download\n\nDownload the following model and save it to the **ComfyUI/models/checkpoints** folder.\n[ace_step_v1_3.5b.safetensors](https://huggingface.co/Comfy-Org/ACE-Step_ComfyUI_repackaged/blob/main/all_in_one/ace_step_v1_3.5b.safetensors)\n\n\n### Multilingual Support\n\nCurrently, ACE-Step V1 supports multiple languages. When running, the ACE-Step model will obtain the English letters after the conversion of the corresponding different languages, and then generate music.\n\nHowever, currently in ComfyUI, we have not fully implemented the conversion from multiple languages to English letters (Japanese has been implemented at present). Therefore, if you need to use multiple languages for relevant music generation, you need to first convert the corresponding language into English letters, and then input the abbreviation of the corresponding language code at the beginning of the corresponding `lyrics`.\n\nFor example, Chinese `[zh]`, Japanese `[ja]`, Korean `[ko]`, etc.\nFor example:\n```\n[zh]ni hao\n[ja]kon ni chi wa\n[ko]an nyeong\n```\n\n---\n\n### 模型下载\n\n下载下面的模型并保存到 **ComfyUI/models/checkpoints** 文件夹下\n[ace_step_v1_3.5b.safetensors](https://huggingface.co/Comfy-Org/ACE-Step_ComfyUI_repackaged/blob/main/all_in_one/ace_step_v1_3.5b.safetensors)\n\n\n### 多语言支持\n\n目前 ACE-Step V1 是支持多语言的，运行是 ACE-Step 模型会获取到对应的不同语言转换后的英文字母，然后进行音乐生成。\n\n但目前在 ComfyUI 中我们并没有完全实现多语言到英文字母的转换（目前日文已经实现），所以如果你需要使用多语言来进行相关的音乐生成，你需要首先将对应的语言转换成英文字母，然后在对应 `lyrics` 开头输入对应语言代码的缩写。\n\n比如中文`[zh]` 日语 `[ja]` 韩语 `[ko]` 等\n比如：\n```\n[zh]ni hao\n[ja]kon ni chi wa\n[ko]an nyeong\n```"
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 113
+        },
+        {
+          "name": "operation",
+          "type": "LATENT_OPERATION",
+          "link": 114
+        }
       ],
-      "color": "#432",
-      "bgcolor": "#653"
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            121
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "LatentApplyOperationCFG"
+      },
+      "widgets_values": []
     },
     {
       "id": 40,
       "type": "CheckpointLoaderSimple",
       "pos": [
-        179.5068359375,
-        87.76739501953125
+        180,
+        -160
       ],
       "size": [
-        375,
+        370,
         98
       ],
       "flags": {},
-      "order": 1,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -48,7 +68,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            123
+            115
           ]
         },
         {
@@ -63,14 +83,14 @@
           "type": "VAE",
           "links": [
             83,
-            113
+            137
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "CheckpointLoaderSimple",
         "cnr_id": "comfy-core",
         "ver": "0.3.32",
+        "Node name for S&R": "CheckpointLoaderSimple",
         "models": [
           {
             "name": "ace_step_v1_3.5b.safetensors",
@@ -86,18 +106,153 @@
       "bgcolor": "#533"
     },
     {
+      "id": 48,
+      "type": "MarkdownNote",
+      "pos": [
+        -460,
+        -200
+      ],
+      "size": [
+        610,
+        820
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "About ACE Step and Multi-language Input",
+      "properties": {},
+      "widgets_values": [
+        "[Tutorial](http://docs.comfy.org/tutorials/audio/ace-step/ace-step-v1) | [教程](http://docs.comfy.org/zh-CN/tutorials/audio/ace-step/ace-step-v1)\n\n\n### Model Download\n\nDownload the following model and save it to the **ComfyUI/models/checkpoints** folder.\n[ace_step_v1_3.5b.safetensors](https://huggingface.co/Comfy-Org/ACE-Step_ComfyUI_repackaged/blob/main/all_in_one/ace_step_v1_3.5b.safetensors)\n\n\n### Multilingual Support\n\nCurrently, the implementation of multi-language support for ACE-Step V1 is achieved by uniformly converting different languages into English characters. At present, in ComfyUI, we haven't implemented the step of converting multi-languages into English. This is because if we need to implement the corresponding conversion, we have to add additional core dependencies of ComfyUI, which may lead to uncertain dependency conflicts.\n\nSo, currently, if you need to input multi-language text, you have to manually convert it into English characters to complete this process. Then, at the beginning of the corresponding `lyrics`, input the abbreviation of the corresponding language code.\n\nFor example, for Chinese, use `[zh]`, for Japanese use `[ja]`, for Korean use `[ko]`, and so on. For specific language input, please check the examples in the instructions. \n\nFor example, Chinese `[zh]`, Japanese `[ja]`, Korean `[ko]`, etc.\n\nExample:\n\n```\n[verse]\n\n[zh]wo3zou3guo4shen1ye4de5jie1dao4\n[zh]leng3feng1chui1luan4si1nian4de5piao4liang4wai4tao4\n[zh]ni3de5wei1xiao4xiang4xing1guang1hen3xuan4yao4\n[zh]zhao4liang4le5wo3gu1du2de5mei3fen1mei3miao3\n\n[chorus]\n\n[verse]​\n[ko]hamkke si-kkeuleo-un sesang-ui sodong-eul pihae​\n[ko]honja ogsang-eseo dalbich-ui eolyeompus-ileul balaboda​\n[ko]niga salang-eun lideum-i ganghan eum-ag gatdago malhaess-eo​\n[ko]han ta han tamada ma-eum-ui ondoga eolmana heojeonhanji ijge hae\n\n[bridge]\n[es]cantar mi anhelo por ti sin ocultar\n[es]como poesía y pintura, lleno de anhelo indescifrable\n[es]tu sombra es tan terca como el viento, inborrable\n[es]persiguiéndote en vuelo, brilla como cruzar una mar de nubes\n\n[chorus]\n[fr]que tu sois le vent qui souffle sur ma main\n[fr]un contact chaud comme la douce pluie printanière\n[fr]que tu sois le vent qui s'entoure de mon corps\n[fr]un amour profond qui ne s'éloignera jamais\n\n```\n\n---\n\n### 模型下载\n\n下载下面的模型并保存到 **ComfyUI/models/checkpoints** 文件夹下\n[ace_step_v1_3.5b.safetensors](https://huggingface.co/Comfy-Org/ACE-Step_ComfyUI_repackaged/blob/main/all_in_one/ace_step_v1_3.5b.safetensors)\n\n\n### 多语言支持\n\n目前 ACE-Step V1 多语言的实现是通过将不同语言统一转换为英文字符来实现的，目前在 ComfyUI 中我们并没有实现多语言转换为英文的这一步骤。因为如果需要实现对应转换，则需要增加额外的 ComfyUI 核心依赖，这将可能带来不确定的依赖冲突。\n\n所以目前如果你需要输入多语言，则需要手动转换为英文字符来实现这一过程，然后在对应 `lyrics` 开头输入对应语言代码的缩写。\n\n比如中文`[zh]` 日语 `[ja]` 韩语 `[ko]` 等，具体语言输入请查看说明中的示例\n\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 18,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        1080,
+        270
+      ],
+      "size": [
+        150.93612670898438,
+        46
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 122
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 83
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            126,
+            127,
+            128
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.32",
+        "Node name for S&R": "VAEDecodeAudio"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 60,
+      "type": "SaveAudio",
+      "pos": [
+        1260,
+        40
+      ],
+      "size": [
+        610,
+        112
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 127
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "SaveAudio"
+      },
+      "widgets_values": [
+        "audio/ComfyUI"
+      ]
+    },
+    {
+      "id": 61,
+      "type": "SaveAudioOpus",
+      "pos": [
+        1260,
+        220
+      ],
+      "size": [
+        610,
+        136
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 128
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "SaveAudioOpus"
+      },
+      "widgets_values": [
+        "audio/ComfyUI",
+        "128k"
+      ]
+    },
+    {
       "id": 44,
       "type": "ConditioningZeroOut",
       "pos": [
-        817.6288452148438,
-        573.2665405273438
+        600,
+        70
       ],
       "size": [
         197.712890625,
         26
       ],
-      "flags": {},
-      "order": 10,
+      "flags": {
+        "collapsed": true
+      },
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
@@ -111,41 +266,147 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            109
+            120
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "ConditioningZeroOut",
         "cnr_id": "comfy-core",
-        "ver": "0.3.32"
+        "ver": "0.3.32",
+        "Node name for S&R": "ConditioningZeroOut"
       },
       "widgets_values": []
     },
     {
-      "id": 50,
-      "type": "VAEEncodeAudio",
+      "id": 51,
+      "type": "ModelSamplingSD3",
       "pos": [
-        863.7657470703125,
-        657.9622802734375
+        590,
+        -40
       ],
       "size": [
-        150.16366577148438,
+        330,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 115
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            113
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "ModelSamplingSD3"
+      },
+      "widgets_values": [
+        5.000000000000001
+      ]
+    },
+    {
+      "id": 50,
+      "type": "LatentOperationTonemapReinhard",
+      "pos": [
+        590,
+        -160
+      ],
+      "size": [
+        330,
+        58
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT_OPERATION",
+          "type": "LATENT_OPERATION",
+          "links": [
+            114
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "LatentOperationTonemapReinhard"
+      },
+      "widgets_values": [
+        1.0000000000000002
+      ]
+    },
+    {
+      "id": 17,
+      "type": "EmptyAceStepLatentAudio",
+      "pos": [
+        180,
+        50
+      ],
+      "size": [
+        370,
+        82
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.32",
+        "Node name for S&R": "EmptyAceStepLatentAudio"
+      },
+      "widgets_values": [
+        120,
+        1
+      ]
+    },
+    {
+      "id": 68,
+      "type": "VAEEncodeAudio",
+      "pos": [
+        180,
+        180
+      ],
+      "size": [
+        370,
         46
       ],
       "flags": {},
-      "order": 8,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 114
+          "link": 136
         },
         {
           "name": "vae",
           "type": "VAE",
-          "link": 113
+          "link": 137
         }
       ],
       "outputs": [
@@ -153,71 +414,124 @@
           "name": "LATENT",
           "type": "LATENT",
           "links": [
-            115
+            138
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "VAEEncodeAudio",
         "cnr_id": "comfy-core",
-        "ver": "0.3.32"
+        "ver": "0.3.34",
+        "Node name for S&R": "VAEEncodeAudio"
       },
       "widgets_values": []
     },
     {
-      "id": 18,
-      "type": "VAEDecodeAudio",
+      "id": 64,
+      "type": "LoadAudio",
       "pos": [
-        1406.169921875,
-        52.43358612060547
+        180,
+        340
       ],
       "size": [
-        150.93612670898438,
-        46
+        370,
+        140
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            136
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "audio_ace_step_1_t2a_song-1.mp3",
+        null,
+        null
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 52,
+      "type": "KSampler",
+      "pos": [
+        940,
+        -40
+      ],
+      "size": [
+        290,
+        262
       ],
       "flags": {},
       "order": 12,
       "mode": 0,
       "inputs": [
         {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 101
+          "name": "model",
+          "type": "MODEL",
+          "link": 121
         },
         {
-          "name": "vae",
-          "type": "VAE",
-          "link": 83
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 117
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 120
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 138
         }
       ],
       "outputs": [
         {
-          "name": "AUDIO",
-          "type": "AUDIO",
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
           "links": [
-            116,
-            117,
-            118,
-            119
+            122
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "VAEDecodeAudio",
         "cnr_id": "comfy-core",
-        "ver": "0.3.32"
+        "ver": "0.3.34",
+        "Node name for S&R": "KSampler"
       },
-      "widgets_values": []
+      "widgets_values": [
+        938549746349002,
+        "randomize",
+        50,
+        5,
+        "euler",
+        "simple",
+        0.30000000000000004
+      ]
     },
     {
-      "id": 55,
+      "id": 59,
       "type": "SaveAudioMP3",
       "pos": [
-        1597.8463134765625,
-        54.53912353515625
+        1260,
+        -160
       ],
       "size": [
-        270,
+        610,
         136
       ],
       "flags": {},
@@ -227,14 +541,14 @@
         {
           "name": "audio",
           "type": "AUDIO",
-          "link": 119
+          "link": 126
         }
       ],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "SaveAudioMP3",
         "cnr_id": "comfy-core",
-        "ver": "0.3.34"
+        "ver": "0.3.34",
+        "Node name for S&R": "SaveAudioMP3"
       },
       "widgets_values": [
         "audio/ComfyUI",
@@ -242,146 +556,18 @@
       ]
     },
     {
-      "id": 51,
-      "type": "SaveAudio",
+      "id": 73,
+      "type": "Note",
       "pos": [
-        1599.808837890625,
-        246.18336486816406
+        1260,
+        410
       ],
       "size": [
-        270,
-        112
+        610,
+        90
       ],
       "flags": {},
-      "order": 13,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 116
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.34"
-      },
-      "widgets_values": [
-        "audio/ComfyUI"
-      ]
-    },
-    {
-      "id": 53,
-      "type": "PreviewAudio",
-      "pos": [
-        1600.5079345703125,
-        596.70458984375
-      ],
-      "size": [
-        270,
-        88
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 118
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "PreviewAudio",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.34"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 52,
-      "type": "SaveAudioOpus",
-      "pos": [
-        1594.4737548828125,
-        411.3661804199219
-      ],
-      "size": [
-        270,
-        136
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "audio",
-          "type": "AUDIO",
-          "link": 117
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "SaveAudioOpus",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.34"
-      },
-      "widgets_values": [
-        "audio/ComfyUI",
-        "128k"
-      ]
-    },
-    {
-      "id": 49,
-      "type": "LoadAudio",
-      "pos": [
-        179.58726501464844,
-        298.2223205566406
-      ],
-      "size": [
-        377.0028381347656,
-        136
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            114
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadAudio",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.32"
-      },
-      "widgets_values": [
-        "audio_ace_step_1_t2a_instrumentals-1.mp3",
-        null,
-        null
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
-      "id": 54,
-      "type": "MarkdownNote",
-      "pos": [
-        1923.333984375,
-        257.1035461425781
-      ],
-      "size": [
-        210,
-        160.2292938232422
-      ],
-      "flags": {},
-      "order": 3,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -396,15 +582,15 @@
       "id": 14,
       "type": "TextEncodeAceStepAudio",
       "pos": [
-        607.525390625,
-        41.35445785522461
+        590,
+        120
       ],
       "size": [
-        415.02911376953125,
-        475.584228515625
+        340,
+        500
       ],
       "flags": {},
-      "order": 7,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -419,213 +605,44 @@
           "type": "CONDITIONING",
           "links": [
             108,
-            110
+            117
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "TextEncodeAceStepAudio",
         "cnr_id": "comfy-core",
-        "ver": "0.3.32"
+        "ver": "0.3.32",
+        "Node name for S&R": "TextEncodeAceStepAudio"
       },
       "widgets_values": [
-        "anime, cute female vocals, kawaii pop, j-pop, childish, piano, guitar, synthesizer, fast, happy, cheerful, lighthearted,female voice",
-        "[verse]\nNeon lights they glow so bright\nCity whispers in the dead of night\nRhythms course through concrete veins\nCaught in echoes of old refrains\n\n[verse]\nBassline thumping in my chest\nHeartbeats mirror the city's zest\nZapping whispers fill the air\nSynthetic dreams floating everywhere\n\n[chorus]\nCrank it up and let it roll\nEmbrace the heat, let it unfold\nIn this rhythm, we find our home\nHear the night sing, our anthem's shown\n\n[verse]\nGuitar strings begin to moan\nRouse the soul from slumber's throne\nEach note, a tale untold\nIn this night, we're brave and bold\n\n[bridge]\nVoices merge in sweet harmony\nLost in a beautiful symphony\nEternal echoes, timeless sighs\nPassionate cries beneath the skies\n\n[verse]\nKeyboard keys come alive and play\nMelodies carried by the evening spray\nSeize the tune, don't let it go\nIn this instant, we start to soar",
-        1.0000000000000002
+        "anime, cute female vocals, kawaii pop, j-pop, childish, piano, guitar, synthesizer, fast, happy, cheerful, lighthearted",
+        "[verse]\nフワフワ　オミミガ\nユレルヨ　カゼノナカ\nキラキラ　アオイメ\nミツメル　セカイヲ\n\n[verse]\nフワフワ　シッポハ\nオオキク　ユレルヨ\nキンイロ　カミノケ\nナビクヨ　カゼノナカ\n\n[verse]\nコンフィーユーアイノ\nマモリビト\nピンクノ　セーターデ\nエガオヲ　クレルヨ\n\nアオイロ　スカートト\nクロイコート　キンノモヨウ\nヤサシイ　ヒカリガ\nツツムヨ　フェネックガール\n\n[verse]\nフワフワ　オミミデ\nキコエル　ココロノ　コエ\nダイスキ　フェネックガール\nイツデモ　ソバニイルヨ",
+        0.9900000000000002
       ]
     },
     {
-      "id": 56,
+      "id": 75,
       "type": "MarkdownNote",
       "pos": [
-        1064.5172119140625,
-        360.5704345703125
+        950,
+        410
       ],
       "size": [
-        312.7547912597656,
-        301.2734680175781
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "\nUpload an audio clip. Then, you can set the style you want to change in the tags of **TextEncodeAceStepAudio**, and change the gender of the voice, such as \"pop, female voice\" and so on.\n\nIn the **lyrics**, you can modify and edit the original lyrics, thus changing the lyrics in the original audio.\n\n[Important] The **denoise** of the Ksampler node needs to be adjusted. The higher the value, the greater the difference from the original audio. \n\n---\n\n上传一段音频，然后你可以在 **TextEncodeAceStepAudio** 的 tags 里设置想要改变的风格，更换人声的性别比如“pop,female voice” 等\n\n在 **lyrics** 里 你可以将原始的歌词进行修改编辑，从而改变原本音频中的歌词\n\n[重要] Ksampler node 的 **denoise** 需要进行调整，数值越高和原始的音频差异越大"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 3,
-      "type": "KSampler",
-      "pos": [
-        1063.522705078125,
-        43.54597854614258
-      ],
-      "size": [
-        315,
-        262
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 122
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 110
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 109
-        },
-        {
-          "name": "latent_image",
-          "type": "LATENT",
-          "link": 115
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "slot_index": 0,
-          "links": [
-            101
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "KSampler",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.32"
-      },
-      "widgets_values": [
-        854091846496054,
-        "randomize",
-        50,
-        5,
-        "res_multistep",
-        "simple",
-        0.6000000000000001
-      ]
-    },
-    {
-      "id": 57,
-      "type": "LatentApplyOperationCFG",
-      "pos": [
-        1060,
-        -70
-      ],
-      "size": [
-        204.87850952148438,
-        46
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 120
-        },
-        {
-          "name": "operation",
-          "type": "LATENT_OPERATION",
-          "link": 121
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            122
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LatentApplyOperationCFG"
-      }
-    },
-    {
-      "id": 58,
-      "type": "ModelSamplingSD3",
-      "pos": [
-        740,
-        -80
-      ],
-      "size": [
-        270,
-        58
+        280,
+        210
       ],
       "flags": {},
       "order": 6,
       "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 123
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            120
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ModelSamplingSD3",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.32"
-      },
-      "widgets_values": [
-        5.000000000000001
-      ]
-    },
-    {
-      "id": 59,
-      "type": "LatentOperationTonemapReinhard",
-      "pos": [
-        690,
-        -190
-      ],
-      "size": [
-        314.7124938964844,
-        58
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
       "inputs": [],
-      "outputs": [
-        {
-          "name": "LATENT_OPERATION",
-          "type": "LATENT_OPERATION",
-          "links": [
-            121
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LatentOperationTonemapReinhard"
-      },
+      "outputs": [],
+      "title": "About Repainting",
+      "properties": {},
       "widgets_values": [
-        1
-      ]
+        "Providing the lyrics of the original song or the modified lyrics is very important for the output of repainting or editing. \n\nAdjust the value of the **denoise** parameter in KSampler. The larger the value, the lower the similarity between the output audio and the original audio.\n\n提供原始歌曲的歌词或者修改后的歌词对于音频编辑的输出是非常重要的，调整 KSampler 中的  denoise 参数的数值，数值越大输出的音频与原始音频相似度越低"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -646,14 +663,6 @@
       "VAE"
     ],
     [
-      101,
-      3,
-      0,
-      18,
-      0,
-      "LATENT"
-    ],
-    [
       108,
       14,
       0,
@@ -662,108 +671,108 @@
       "CONDITIONING"
     ],
     [
-      109,
-      44,
-      0,
-      3,
-      2,
-      "CONDITIONING"
-    ],
-    [
-      110,
-      14,
-      0,
-      3,
-      1,
-      "CONDITIONING"
-    ],
-    [
       113,
-      40,
-      2,
-      50,
-      1,
-      "VAE"
-    ],
-    [
-      114,
-      49,
-      0,
-      50,
-      0,
-      "AUDIO"
-    ],
-    [
-      115,
-      50,
-      0,
-      3,
-      3,
-      "LATENT"
-    ],
-    [
-      116,
-      18,
-      0,
       51,
       0,
-      "AUDIO"
-    ],
-    [
-      117,
-      18,
-      0,
-      52,
-      0,
-      "AUDIO"
-    ],
-    [
-      118,
-      18,
-      0,
-      53,
-      0,
-      "AUDIO"
-    ],
-    [
-      119,
-      18,
-      0,
-      55,
-      0,
-      "AUDIO"
-    ],
-    [
-      120,
-      58,
-      0,
-      57,
+      49,
       0,
       "MODEL"
     ],
     [
-      121,
-      59,
+      114,
+      50,
       0,
-      57,
+      49,
       1,
       "LATENT_OPERATION"
     ],
     [
-      122,
-      57,
+      115,
+      40,
       0,
-      3,
+      51,
       0,
       "MODEL"
     ],
     [
-      123,
-      40,
+      117,
+      14,
       0,
-      58,
+      52,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      120,
+      44,
+      0,
+      52,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      121,
+      49,
+      0,
+      52,
       0,
       "MODEL"
+    ],
+    [
+      122,
+      52,
+      0,
+      18,
+      0,
+      "LATENT"
+    ],
+    [
+      126,
+      18,
+      0,
+      59,
+      0,
+      "AUDIO"
+    ],
+    [
+      127,
+      18,
+      0,
+      60,
+      0,
+      "AUDIO"
+    ],
+    [
+      128,
+      18,
+      0,
+      61,
+      0,
+      "AUDIO"
+    ],
+    [
+      136,
+      64,
+      0,
+      68,
+      0,
+      "AUDIO"
+    ],
+    [
+      137,
+      40,
+      2,
+      68,
+      1,
+      "VAE"
+    ],
+    [
+      138,
+      68,
+      0,
+      52,
+      3,
+      "LATENT"
     ]
   ],
   "groups": [
@@ -771,23 +780,62 @@
       "id": 1,
       "title": "Load model here",
       "bounding": [
-        169.5068359375,
-        14.167394638061523,
-        395,
-        181.60000610351562
+        170,
+        -230,
+        390,
+        180
       ],
       "color": "#3f789e",
       "font_size": 24,
       "flags": {}
     },
     {
-      "id": 2,
-      "title": "Audio to be edited",
+      "id": 4,
+      "title": "Latent",
       "bounding": [
-        169.58726501464844,
-        224.62237548828125,
-        400.3086242675781,
-        220.6884765625
+        170,
+        -30,
+        390,
+        280
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Adjust the vocal volume",
+      "bounding": [
+        580,
+        -230,
+        350,
+        140
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "For repainting",
+      "bounding": [
+        170,
+        270,
+        390,
+        223.60000610351562
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Output",
+      "bounding": [
+        1250,
+        -230,
+        630,
+        760
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -797,13 +845,21 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4736244074476696,
+      "scale": 0.6830134553650705,
       "offset": [
-        987.8388641158258,
-        641.6499388907655
+        785.724285521853,
+        434.02395631202546
       ]
     },
-    "frontendVersion": "1.19.4"
+    "frontendVersion": "1.19.9",
+    "node_versions": {
+      "comfy-core": "0.3.34",
+      "ace-step": "06f751d65491c9077fa2bc9b06d2c6f2a90e4c56"
+    },
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }
