@@ -1,0 +1,1277 @@
+{
+  "id": "5b04d04b-86a5-4576-875d-8685864a1f56",
+  "revision": 0,
+  "last_node_id": 85,
+  "last_link_id": 281,
+  "nodes": [
+    {
+      "id": 58,
+      "type": "Anything Everywhere",
+      "pos": [
+        -463,
+        153
+      ],
+      "size": [
+        191.08749389648438,
+        26
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "color_on": "#FF6E6E",
+          "label": "VAE",
+          "name": "anything",
+          "shape": 7,
+          "type": "*",
+          "link": 118
+        }
+      ],
+      "outputs": [],
+      "title": "vae",
+      "properties": {
+        "aux_id": "chrisgoringe/cg-use-everywhere",
+        "ver": "5e7a8cd9bb2860e8bfb2559088d43be52090e0e8",
+        "Node name for S&R": "Anything Everywhere",
+        "group_restricted": 0,
+        "color_restricted": 0,
+        "cnr_id": "cg-use-everywhere",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 19,
+      "type": "SDVN Load Checkpoint",
+      "pos": [
+        -652,
+        190
+      ],
+      "size": [
+        270,
+        190
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            78
+          ]
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [
+            79
+          ]
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "links": [
+            118
+          ]
+        },
+        {
+          "name": "ckpt_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Load Checkpoint",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        true,
+        "",
+        "model.safetensors",
+        "Flux_dev_v1_fill-fp8.safetensors"
+      ]
+    },
+    {
+      "id": 67,
+      "type": "SDVN Apply Style Model",
+      "pos": [
+        617,
+        185
+      ],
+      "size": [
+        310,
+        197
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 272
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 138
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            164
+          ]
+        },
+        {
+          "name": "parameter",
+          "type": "PARAMETER",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Apply Style Model",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "flux1-redux-dev.safetensors",
+        "sigclip_vision_patch14_384.safetensors",
+        "none",
+        1,
+        1
+      ]
+    },
+    {
+      "id": 41,
+      "type": "SDVN Load Lora",
+      "pos": [
+        -370,
+        188
+      ],
+      "size": [
+        270,
+        218
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 78
+        },
+        {
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 79
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            80
+          ]
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [
+            81
+          ]
+        },
+        {
+          "name": "lora_path",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Load Lora",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        true,
+        "",
+        "model.safetensors",
+        "Flux_Turbo_8steps.safetensors",
+        1,
+        1
+      ]
+    },
+    {
+      "id": 70,
+      "type": "SDVN Inpaint",
+      "pos": [
+        940.877197265625,
+        185.7136993408203
+      ],
+      "size": [
+        293.1787109375,
+        138
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "pixels",
+          "type": "IMAGE",
+          "link": 200
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": null
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 201
+        },
+        {
+          "name": "positive",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 164
+        },
+        {
+          "name": "negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 165
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            160
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            161
+          ]
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            176
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Inpaint",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        false
+      ]
+    },
+    {
+      "id": 72,
+      "type": "SDVN IC Lora Layout",
+      "pos": [
+        491,
+        507
+      ],
+      "size": [
+        270,
+        118
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 273
+        },
+        {
+          "name": "image2",
+          "type": "IMAGE",
+          "link": 212
+        },
+        {
+          "name": "mask1",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "mask2",
+          "shape": 7,
+          "type": "MASK",
+          "link": 199
+        }
+      ],
+      "outputs": [
+        {
+          "name": "ic_layout",
+          "type": "IMAGE",
+          "links": [
+            200
+          ]
+        },
+        {
+          "name": "mask_layout",
+          "type": "MASK",
+          "links": [
+            201
+          ]
+        },
+        {
+          "name": "crop_image1",
+          "type": "CROP",
+          "links": null
+        },
+        {
+          "name": "crop_image2",
+          "type": "CROP",
+          "links": [
+            215
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN IC Lora Layout",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        1024
+      ]
+    },
+    {
+      "id": 22,
+      "type": "SDVN KSampler",
+      "pos": [
+        1241.686279296875,
+        188.50967407226562
+      ],
+      "size": [
+        270,
+        638
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 40
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 160
+        },
+        {
+          "name": "negative",
+          "shape": 7,
+          "type": "CONDITIONING",
+          "link": 161
+        },
+        {
+          "name": "latent_image",
+          "shape": 7,
+          "type": "LATENT",
+          "link": 176
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": null
+        },
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            216
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN KSampler",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "Auto",
+        "None",
+        1,
+        8,
+        8,
+        "euler",
+        "normal",
+        445781276658562,
+        "randomize",
+        false,
+        1024,
+        1024,
+        50
+      ]
+    },
+    {
+      "id": 74,
+      "type": "SDVN IC Lora Layout Crop",
+      "pos": [
+        1540,
+        91
+      ],
+      "size": [
+        208.42343139648438,
+        46
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 216
+        },
+        {
+          "name": "crop",
+          "type": "CROP",
+          "link": 215
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            218
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN IC Lora Layout Crop",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 75,
+      "type": "SDVN Loop Inpaint Stitch",
+      "pos": [
+        1760,
+        92
+      ],
+      "size": [
+        196.88436889648438,
+        46
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "stitchers",
+          "type": "STITCHER",
+          "link": 217
+        },
+        {
+          "name": "inpainted_images",
+          "type": "IMAGE",
+          "link": 218
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            219
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Loop Inpaint Stitch",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 73,
+      "type": "SDVN Inpaint Crop",
+      "pos": [
+        213,
+        513
+      ],
+      "size": [
+        270,
+        334.0000305175781
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 197
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": 258
+        }
+      ],
+      "outputs": [
+        {
+          "name": "stitcher",
+          "type": "STITCHER",
+          "links": [
+            217
+          ]
+        },
+        {
+          "name": "cropped_image",
+          "type": "IMAGE",
+          "links": [
+            212
+          ]
+        },
+        {
+          "name": "cropped_mask",
+          "type": "MASK",
+          "links": [
+            199
+          ]
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Inpaint Crop",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        1024,
+        1.2
+      ]
+    },
+    {
+      "id": 24,
+      "type": "SDVN Load Lora",
+      "pos": [
+        -83,
+        189
+      ],
+      "size": [
+        270,
+        218
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "shape": 7,
+          "type": "MODEL",
+          "link": 80
+        },
+        {
+          "name": "clip",
+          "shape": 7,
+          "type": "CLIP",
+          "link": 81
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            40
+          ]
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [
+            41
+          ]
+        },
+        {
+          "name": "lora_path",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Load Lora",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        true,
+        "",
+        "model.safetensors",
+        "Lora/ACE+/comfyui_portrait_lora64.safetensors",
+        1,
+        1
+      ]
+    },
+    {
+      "id": 20,
+      "type": "SDVN CLIP Text Encode",
+      "pos": [
+        202,
+        188
+      ],
+      "size": [
+        400,
+        278
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            138
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            165
+          ]
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN CLIP Text Encode",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "chân dung cô gái, tóc ngắn",
+        "",
+        "None",
+        "english",
+        629723102596126,
+        "randomize"
+      ]
+    },
+    {
+      "id": 80,
+      "type": "SDVN Yolo8 Seg",
+      "pos": [
+        -375,
+        944
+      ],
+      "size": [
+        270,
+        378.00006103515625
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 255
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            257
+          ]
+        },
+        {
+          "name": "all_id",
+          "type": "STRING",
+          "links": [
+            256
+          ]
+        },
+        {
+          "name": "num_objects",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Yolo8 Seg",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "yolo-human-parse-v2.pt",
+        0.6,
+        "0,1"
+      ]
+    },
+    {
+      "id": 82,
+      "type": "GrowMask",
+      "pos": [
+        -88,
+        946
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 257
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            258
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.32",
+        "Node name for S&R": "GrowMask",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        10,
+        true
+      ]
+    },
+    {
+      "id": 81,
+      "type": "SDVN Any Show",
+      "pos": [
+        -87,
+        1068
+      ],
+      "size": [
+        251,
+        192
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "any",
+          "type": "*",
+          "link": 256
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Any Show",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "0 - hair\n1 - face\n2 - neck\n3 - arm\n4 - hand\n5 - back\n6 - leg\n7 - foot\n8 - outfit\n9 - phone\n10 - hat\n11 - shoe"
+      ]
+    },
+    {
+      "id": 60,
+      "type": "SaveImage",
+      "pos": [
+        1529.2098388671875,
+        184.87875366210938
+      ],
+      "size": [
+        524,
+        647
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 219
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.32",
+        "Node name for S&R": "SaveImage",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 69,
+      "type": "SDVN Load Image",
+      "pos": [
+        -659,
+        518
+      ],
+      "size": [
+        270,
+        382.00006103515625
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            272,
+            273
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "img_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Load Image",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        true,
+        "",
+        "Ảnh màn hình 2025-05-08 lúc 10.42.45.png",
+        "image"
+      ]
+    },
+    {
+      "id": 28,
+      "type": "SDVN Load Image",
+      "pos": [
+        -659,
+        944
+      ],
+      "size": [
+        270,
+        382.00006103515625
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": [
+            197,
+            255
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": []
+        },
+        {
+          "name": "img_path",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "aux_id": "StableDiffusionVN/SDVN_Comfy_node",
+        "ver": "5805722442996199ac20a14e024f5b1614cb246f",
+        "Node name for S&R": "SDVN Load Image",
+        "cnr_id": "sdvn_comfy_node",
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        true,
+        "https://www.pinterest.com/pin/42362052739238133/",
+        "None",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      40,
+      24,
+      0,
+      22,
+      0,
+      "MODEL"
+    ],
+    [
+      41,
+      24,
+      1,
+      20,
+      0,
+      "CLIP"
+    ],
+    [
+      78,
+      19,
+      0,
+      41,
+      0,
+      "MODEL"
+    ],
+    [
+      79,
+      19,
+      1,
+      41,
+      1,
+      "CLIP"
+    ],
+    [
+      80,
+      41,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      81,
+      41,
+      1,
+      24,
+      1,
+      "CLIP"
+    ],
+    [
+      118,
+      19,
+      2,
+      58,
+      0,
+      "VAE"
+    ],
+    [
+      138,
+      20,
+      0,
+      67,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      160,
+      70,
+      0,
+      22,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      161,
+      70,
+      1,
+      22,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      164,
+      67,
+      0,
+      70,
+      3,
+      "CONDITIONING"
+    ],
+    [
+      165,
+      20,
+      1,
+      70,
+      4,
+      "CONDITIONING"
+    ],
+    [
+      176,
+      70,
+      2,
+      22,
+      3,
+      "LATENT"
+    ],
+    [
+      197,
+      28,
+      0,
+      73,
+      0,
+      "IMAGE"
+    ],
+    [
+      199,
+      73,
+      2,
+      72,
+      3,
+      "MASK"
+    ],
+    [
+      200,
+      72,
+      0,
+      70,
+      0,
+      "IMAGE"
+    ],
+    [
+      201,
+      72,
+      1,
+      70,
+      2,
+      "MASK"
+    ],
+    [
+      212,
+      73,
+      1,
+      72,
+      1,
+      "IMAGE"
+    ],
+    [
+      215,
+      72,
+      3,
+      74,
+      1,
+      "CROP"
+    ],
+    [
+      216,
+      22,
+      1,
+      74,
+      0,
+      "IMAGE"
+    ],
+    [
+      217,
+      73,
+      0,
+      75,
+      0,
+      "STITCHER"
+    ],
+    [
+      218,
+      74,
+      0,
+      75,
+      1,
+      "IMAGE"
+    ],
+    [
+      219,
+      75,
+      0,
+      60,
+      0,
+      "IMAGE"
+    ],
+    [
+      255,
+      28,
+      0,
+      80,
+      0,
+      "IMAGE"
+    ],
+    [
+      256,
+      80,
+      2,
+      81,
+      0,
+      "*"
+    ],
+    [
+      257,
+      80,
+      1,
+      82,
+      0,
+      "MASK"
+    ],
+    [
+      258,
+      82,
+      0,
+      73,
+      1,
+      "MASK"
+    ],
+    [
+      272,
+      69,
+      0,
+      67,
+      0,
+      "IMAGE"
+    ],
+    [
+      273,
+      69,
+      0,
+      72,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7150325284786504,
+      "offset": [
+        754.447246702475,
+        -31.425711552467643
+      ]
+    },
+    "ue_links": [
+      {
+        "downstream": 70,
+        "downstream_slot": 1,
+        "upstream": "19",
+        "upstream_slot": 2,
+        "controller": 58,
+        "type": "VAE"
+      },
+      {
+        "downstream": 22,
+        "downstream_slot": 4,
+        "upstream": "19",
+        "upstream_slot": 2,
+        "controller": 58,
+        "type": "VAE"
+      }
+    ],
+    "node_versions": {
+      "comfy-core": "0.3.10",
+      "SDVN_Comfy_node": "d5ae4f45bb4c11f02eb407418e9b4e01fa3036de"
+    },
+    "links_added_by_ue": [
+      280,
+      281
+    ],
+    "frontendVersion": "1.19.9"
+  },
+  "version": 0.4
+}
