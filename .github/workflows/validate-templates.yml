@@ -1,0 +1,61 @@
+name: Validate Templates
+
+on:
+  push:
+    branches: [ main, spec ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'templates/**'
+      - 'scripts/validate_templates.py'
+      - '.github/workflows/validate-templates.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install jsonschema
+    
+    - name: Run validation script
+      run: python scripts/validate_templates.py
+    
+    - name: Check JSON syntax
+      run: |
+        echo "Checking JSON syntax..."
+        for file in templates/*.json; do
+          if ! python -m json.tool "$file" > /dev/null 2>&1; then
+            echo "❌ Invalid JSON syntax in $file"
+            exit 1
+          fi
+        done
+        echo "✅ All JSON files have valid syntax"
+    
+    - name: Check file sizes
+      run: |
+        echo "Checking file sizes..."
+        LARGE_FILES=0
+        for file in templates/*; do
+          if [ -f "$file" ]; then
+            SIZE=$(stat -c%s "$file" 2>/dev/null || stat -f%z "$file" 2>/dev/null)
+            SIZE_MB=$((SIZE / 1048576))
+            if [ "$SIZE_MB" -gt 5 ]; then
+              echo "⚠️  Warning: $file is larger than 5MB (${SIZE_MB}MB)"
+              LARGE_FILES=$((LARGE_FILES + 1))
+            fi
+          fi
+        done
+        if [ "$LARGE_FILES" -gt 0 ]; then
+          echo "Found $LARGE_FILES large files. Consider compressing thumbnails."
+        fi

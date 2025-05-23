@@ -1,0 +1,79 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ComfyUI Workflow Templates Index",
+  "description": "Schema for validating the index.json file containing workflow template metadata",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/templateCategory"
+  },
+  "definitions": {
+    "templateCategory": {
+      "type": "object",
+      "required": ["moduleName", "title", "templates"],
+      "properties": {
+        "moduleName": {
+          "type": "string",
+          "description": "Module identifier for the category",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display name for the category"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["image", "video", "audio", "3d"],
+          "description": "Optional type hint for the category"
+        },
+        "templates": {
+          "type": "array",
+          "description": "Array of workflow templates in this category",
+          "items": {
+            "$ref": "#/definitions/templateInfo"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "templateInfo": {
+      "type": "object",
+      "required": ["name", "mediaType", "mediaSubtype", "description"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Workflow filename without .json extension",
+          "pattern": "^[a-zA-Z0-9._-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Optional display title for the template"
+        },
+        "tutorialUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional URL to tutorial or documentation"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video", "audio", "3d"],
+          "description": "Type of output media this workflow produces"
+        },
+        "mediaSubtype": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "File extension/format of the thumbnail (e.g., webp, mp3, mp4)"
+        },
+        "thumbnailVariant": {
+          "type": "string",
+          "enum": ["compareSlider", "hoverDissolve", "hoverZoom", "zoomHover"],
+          "description": "Optional thumbnail hover effect"
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of what the workflow does"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}
