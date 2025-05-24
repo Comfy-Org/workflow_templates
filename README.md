@@ -343,7 +343,7 @@ Raw markdown used:
 
 ### 11 — Bump Version and Create PR
 
-1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process ahs no hiccups and you can generate the thumbnail image on the first execution (if applicable).
+1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process has no hiccups and you can generate the thumbnail image on the first execution (if applicable).
 2. Create a fork of https://github.com/Comfy-Org/workflow_templates
 3. Clone the fork to your system
 4. Copy your new workflow and thumbnail(s) into the `templates` folder
