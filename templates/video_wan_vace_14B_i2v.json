@@ -2,7 +2,7 @@
   "id": "96995b8f-85c5-47af-b3cf-7b6a24675694",
   "revision": 0,
   "last_node_id": 162,
-  "last_link_id": 294,
+  "last_link_id": 295,
   "nodes": [
     {
       "id": 111,
@@ -1424,41 +1424,6 @@
       "bgcolor": "#533"
     },
     {
-      "id": 139,
-      "type": "PrimitiveInt",
-      "pos": [
-        60,
-        710
-      ],
-      "size": [
-        340,
-        90
-      ],
-      "flags": {},
-      "order": 16,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "INT",
-          "type": "INT",
-          "links": [
-            294
-          ]
-        }
-      ],
-      "title": "Length",
-      "properties": {
-        "Node name for S&R": "PrimitiveInt"
-      },
-      "widgets_values": [
-        81,
-        "fixed"
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
       "id": 68,
       "type": "CreateVideo",
       "pos": [
@@ -1504,6 +1469,53 @@
       "widgets_values": [
         16
       ]
+    },
+    {
+      "id": 162,
+      "type": "MarkdownNote",
+      "pos": [
+        -320,
+        1080
+      ],
+      "size": [
+        340,
+        280
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note",
+      "properties": {},
+      "widgets_values": [
+        "VACE does not use data with style reference for training. Currently, it only has the functions of object or background reference. Therefore, at \"Load reference image\", you should upload a image with a solid-colored background or a background image. At present, the WanVaceToVideo node only supports the input of a single reference_image image.\n\n---\n\nVACE 并没有使用风格参考的数据去训练，目前只有物体或背景参考的功能，所以在 Load reference image 这里你应该上传背景为纯色的图片，或者背景图，目前 WanVaceToVideo 节点只支持输入单个 reference_image 图片"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 121,
+      "type": "MarkdownNote",
+      "pos": [
+        -1200,
+        10
+      ],
+      "size": [
+        470,
+        800
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/vace) | [教程](https://docs.comfy.org/zh-CN/tutorials/video/wan/vace)\n\n[Causvid Lora extracted  by Kijai](https://www.reddit.com/r/StableDiffusion/comments/1knuafk/causvid_lora_massive_speedup_for_wan21_made_by/) Thanks to CausVid MIT\n\n##  14B Support 480P 720P\n\n**Diffusion Model**\n- [wan2.1_vace_14B_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_vace_14B_fp16.safetensors)\n\n**LoRA**\n- [Wan21_CausVid_14B_T2V_lora_rank32.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/blob/main/Wan21_CausVid_14B_T2V_lora_rank32.safetensors)\n\nIt takes about 40 minutes to complete at 81 frames 720P resolution with the RTX 4090 .  \nAfter using Wan21_CausVid_14B_T2V_lora_rank32.safetensors, it only takes about 4 minutes.\n\n## 1.3B Support 480P only\n\n**Diffusion Model**\n- [wan2.1_vace_1.3B_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_vace_14B_fp16.safetensors)\n\n**LoRA**\n- [Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/blob/main/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors)\n \n\n## Other Models\n\n* You may already have these models if you use Wan workflow before.\n\n**VAE**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors?download=true)\n\n**Text encoders**   Chose one of following model\n- [umt5_xxl_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp16.safetensors?download=true)\n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true)\n\n> You can choose between fp16 of fp8; I used fp16 to match what kijai's wrapper is compatible with.\n\nFile save location\n\n```\nComfyUI/\n├── models/\n│   ├── diffusion_models/\n│   │   ├-── wan2.1_vace_14B_fp16.safetensors\n│   │   └─── wan2.1_vace_1.3B_fp16.safetensors \n│   ├── text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors # or fp16\n│   ├── loras/\n│   │   ├── Wan21_CausVid_14B_T2V_lora_rank32.safetensors\n│   │   └── Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors\n│   └── vae/\n│       └──  wan_2.1_vae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 109,
@@ -1575,7 +1587,7 @@
           "widget": {
             "name": "length"
           },
-          "link": 294
+          "link": 295
         }
       ],
       "outputs": [
@@ -1616,57 +1628,45 @@
       "widgets_values": [
         720,
         720,
-        9,
+        1,
         1,
         0.5000000000000001
       ]
     },
     {
-      "id": 162,
-      "type": "MarkdownNote",
+      "id": 139,
+      "type": "PrimitiveInt",
       "pos": [
-        -320,
-        1080
+        60,
+        710
       ],
       "size": [
         340,
-        280
-      ],
-      "flags": {},
-      "order": 17,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note",
-      "properties": {},
-      "widgets_values": [
-        "VACE does not use data with style reference for training. Currently, it only has the functions of object or background reference. Therefore, at \"Load reference image\", you should upload a image with a solid-colored background or a background image. At present, the WanVaceToVideo node only supports the input of a single reference_image image.\n\n---\n\nVACE 并没有使用风格参考的数据去训练，目前只有物体或背景参考的功能，所以在 Load reference image 这里你应该上传背景为纯色的图片，或者背景图，目前 WanVaceToVideo 节点只支持输入单个 reference_image 图片"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 121,
-      "type": "MarkdownNote",
-      "pos": [
-        -1200,
-        10
-      ],
-      "size": [
-        470,
-        800
+        90
       ],
       "flags": {},
       "order": 18,
       "mode": 0,
       "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/vace) | [教程](https://docs.comfy.org/zh-CN/tutorials/video/wan/vace)\n\n[Causvid Lora extracted  by Kijai](https://www.reddit.com/r/StableDiffusion/comments/1knuafk/causvid_lora_massive_speedup_for_wan21_made_by/) Thanks to CausVid MIT\n\n##  14B Support 480P 720P\n\n**Diffusion Model**\n- [wan2.1_vace_14B_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_vace_14B_fp16.safetensors)\n\n**LoRA**\n- [Wan21_CausVid_14B_T2V_lora_rank32.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/blob/main/Wan21_CausVid_14B_T2V_lora_rank32.safetensors)\n\nIt takes about 40 minutes to complete at 81 frames 720P resolution with the RTX 4090 .  \nAfter using Wan21_CausVid_14B_T2V_lora_rank32.safetensors, it only takes about 4 minutes.\n\n## 1.3B Support 480P only\n\n**Diffusion Model**\n- [wan2.1_vace_1.3B_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_vace_14B_fp16.safetensors)\n\n**LoRA**\n- [Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/blob/main/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors)\n \n\n## Other Models\n\n* You may already have these models if you use Wan workflow before.\n\n**VAE**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors?download=true)\n\n**Text encoders**   Chose one of following model\n- [umt5_xxl_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp16.safetensors?download=true)\n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true)\n\n> You can choose between fp16 of fp8; I used fp16 to match what kijai's wrapper is compatible with.\n\nFile save location\n\n```\nComfyUI/\n├── models/\n│   ├── diffusion_models/\n│   │   ├-── wan2.1_vace_14B_fp16.safetensors\n│   │   └─── wan2.1_vace_1.3B_fp16.safetensors \n│   ├── text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors # or fp16\n│   ├── loras/\n│   │   ├── Wan21_CausVid_14B_T2V_lora_rank32.safetensors\n│   │   └── Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors\n│   └── vae/\n│       └──  wan_2.1_vae.safetensors\n```\n"
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            295
+          ]
+        }
       ],
-      "color": "#432",
-      "bgcolor": "#653"
+      "title": "Length",
+      "properties": {
+        "Node name for S&R": "PrimitiveInt"
+      },
+      "widgets_values": [
+        81,
+        "fixed"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
     }
   ],
   "links": [
@@ -1999,7 +1999,7 @@
       "INT"
     ],
     [
-      294,
+      295,
       139,
       0,
       109,
@@ -2114,7 +2114,7 @@
     },
     {
       "id": 16,
-      "title": "Length",
+      "title": "Length - 1 should be divisible by 4",
       "bounding": [
         40,
         620,
@@ -2207,13 +2207,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.45949729863574545,
+      "scale": 0.6727499949325964,
       "offset": [
-        1597.6277747291851,
-        365.8152887282306
+        835.2834022171496,
+        -95.0718725490264
       ]
     },
-    "frontendVersion": "1.19.9",
+    "frontendVersion": "1.21.0",
     "node_versions": {
       "comfy-core": "0.3.34"
     },
