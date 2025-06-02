@@ -158,6 +158,107 @@ def check_required_thumbnails(index_data: List[Dict], templates_dir: Path) -> Tu
     return len(errors) == 0, errors
 
 
+def find_model_loader_nodes(template_data: Dict, models: List[Dict]) -> List[Tuple[str, str, str]]:
+    """Find nodes that use models from the models array in their widget values."""
+    model_nodes = []
+    model_names = {model.get('name', '') for model in models}
+    
+    # Look in the nodes array
+    nodes = template_data.get('nodes', [])
+    for node in nodes:
+        if isinstance(node, dict):
+            node_id = str(node.get('id', 'unknown'))
+            node_type = node.get('type', 'unknown')
+            widgets_values = node.get('widgets_values', [])
+            
+            # Check if any widget value matches a model name
+            for widget_value in widgets_values:
+                if isinstance(widget_value, str) and widget_value in model_names:
+                    model_nodes.append((node_id, node_type, widget_value))
+    
+    return model_nodes
+
+
+def check_model_metadata_format(index_data: List[Dict], templates_dir: Path) -> Tuple[bool, List[str]]:
+    """Check for top-level models arrays and validate node property models have corresponding widget values."""
+    errors = []
+    
+    # Get all template names from index
+    template_names = set()
+    for category in index_data:
+        for template in category.get('templates', []):
+            template_names.add(template.get('name', ''))
+    
+    # Check each template file
+    for template_name in template_names:
+        template_file = templates_dir / f"{template_name}.json"
+        if not template_file.exists():
+            continue
+            
+        try:
+            with open(template_file, 'r', encoding='utf-8') as f:
+                template_data = json.load(f)
+        except Exception as e:
+            errors.append(f"Error reading {template_name}.json: {e}")
+            continue
+        
+        # Check if template has top-level models array
+        if 'models' in template_data and isinstance(template_data['models'], list):
+            models = template_data['models']
+            if models:  # Only report if there are actually models
+                errors.append(f"FAIL: {template_name}.json has {len(models)} models in top-level 'models' array")
+                
+                # Try to suggest where models should be placed
+                model_nodes = find_model_loader_nodes(template_data, models)
+                
+                if model_nodes:
+                    errors.append(f"  → Suggestion: Move models to node properties for these model loader nodes:")
+                    for node_id, node_type, model_name in model_nodes:
+                        errors.append(f"    - Node {node_id} ({node_type}) uses model: {model_name}")
+                else:
+                    errors.append(f"  → No nodes found that use these models in their widget values")
+                
+                # List the models found
+                errors.append(f"  → Top-level models found:")
+                for model in models:
+                    name = model.get('name', 'unknown')
+                    directory = model.get('directory', 'unknown')
+                    errors.append(f"    - {name} (directory: {directory})")
+        
+        # NEW: Validate that models in node properties have corresponding widget values
+        nodes = template_data.get('nodes', [])
+        widget_values_by_node = {}
+        node_models = []
+        
+        # Collect widget values and models from each node
+        for node in nodes:
+            if isinstance(node, dict):
+                node_id = str(node.get('id', 'unknown'))
+                widgets_values = node.get('widgets_values', [])
+                widget_values_by_node[node_id] = [
+                    v for v in widgets_values if isinstance(v, str)
+                ]
+                
+                properties = node.get('properties', {})
+                if isinstance(properties, dict) and 'models' in properties:
+                    models_list = properties['models']
+                    if isinstance(models_list, list):
+                        for model in models_list:
+                            if isinstance(model, dict):
+                                model_name = model.get('name', '')
+                                if model_name:
+                                    node_models.append((node_id, node.get('type', 'unknown'), model_name))
+        
+        # Validate each model has corresponding widget value
+        for node_id, node_type, model_name in node_models:
+            node_widget_values = widget_values_by_node.get(node_id, [])
+            if model_name not in node_widget_values:
+                errors.append(f"ERROR: {template_name}.json - Model '{model_name}' in node {node_id} ({node_type}) properties but not in widget_values")
+                errors.append(f"  → Widget values: {node_widget_values}")
+    
+    return len(errors) == 0, errors
+
+
 def main():
     """Main validation function."""
     # Check for GitHub Actions environment
@@ -226,6 +327,14 @@ def main():
         print("   ✅ All templates have thumbnails")
     else:
         print("   ❌ Missing thumbnails")
+        all_errors.extend(errors)
+    
+    print("\n5️⃣  Checking model metadata format...")
+    valid, errors = check_model_metadata_format(index_data, templates_dir)
+    if valid:
+        print("   ✅ All templates use correct model metadata format")
+    else:
+        print("   ❌ Templates using deprecated top-level models format found")
         all_errors.extend(errors)
     
     # Print warnings
