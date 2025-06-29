@@ -34,22 +34,21 @@ jobs:
       - name: Build package
         run: python -m build
 
-      - name: Extract version
-        id: version
-        run: |
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Extracted version: $VERSION"
-
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
 
+      - name: Extract version from pyproject.toml
+        id: get_version
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v${{ steps.version.outputs.VERSION }}" \
-            --title "Release v${{ steps.version.outputs.VERSION }}" \
-            --generate-notes
+          gh release create "v${{ steps.get_version.outputs.VERSION }}" \
+          --title "v${{ steps.get_version.outputs.VERSION }}" \
+          --generate-notes
