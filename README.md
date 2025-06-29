@@ -1,6 +1,6 @@
 # workflow_templates
 
-ComfyUI workflow templates hosted under <https://github.com/Comfy-Org/ComfyUI_frontend/tree/main/public>.
+ComfyUI workflow templates available in the app by clicking the **Workflow** button then the **Browse Templates** button.
 
 - [Adding New Templates](#adding-new-templates)
   - [1 — Find Templates Folder](#1--find-templates-folder)
@@ -22,7 +22,7 @@ I will demonstrate how to add a new template by walking through the process of a
 
 ### 1 — Find Templates Folder
 
-[Set up ComfyUI_frontend dev environment](https://github.com/Comfy-Org/ComfyUI_frontend?tab=readme-ov-file#development), start the dev server.
+[Set up ComfyUI_frontend dev environment](https://github.com/Comfy-Org/ComfyUI_frontend?tab=readme-ov-file#development). In the `ComfyUI_frontend/.env` file, add the line `DISABLE_TEMPLATES_PROXY=true` then start the dev server with `npm run dev`.
 
 Copy the `templates` folder from this repository to the `ComfyUI_frontend/public` folder.
 
@@ -34,6 +34,10 @@ Either
 - Use an existing workflow. To extract the workflow json from an image, you can use this tool: <https://comfyui-embedded-workflow-editor.vercel.app/>
 
 I will get my workflow from the [ComfyUI_examples Wan 2.1 page](https://comfyanonymous.github.io/ComfyUI_examples/wan/). To get the workflow from the video on that page, I'll drag the video into [comfyui-embedded-workflow-editor](https://comfyui-embedded-workflow-editor.vercel.app/). Then I'll copy and paste it into a new json file on my computer.
+
+> [!IMPORTANT]
+>
+> Make sure you start ComfyUI with `--disable-all-custom-nodes` when creating the workflow file (to prevent custom extensions adding metadata into the saved workflow file)
 
 ### 3 — Obtain Thumbnails
 
@@ -344,8 +348,8 @@ Raw markdown used:
 ### 11 — Bump Version and Create PR
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process has no hiccups and you can generate the thumbnail image on the first execution (if applicable).
-2. Create a fork of https://github.com/Comfy-Org/workflow_templates
-3. Clone the fork to your system
+2. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
+3. Clone the fork to your system (if not a collaborator)
 4. Copy your new workflow and thumbnail(s) into the `templates` folder
 5. Add your changes to the `templates/index.json` file
 6. Bump the version in `pyproject.toml` ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
