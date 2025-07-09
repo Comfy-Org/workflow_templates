@@ -127,12 +127,16 @@ def analyze_markdown_links(result: Dict):
             })
 
 def analyze_matching(result: Dict):
-    """Check widgets_values and properties.models matching."""
+    """Check widgets_values and properties.models matching, skip MarkdownNote/Note nodes for properties.models check."""
     for safetensors_node in result['safetensors_widgets']:
         node_id = safetensors_node['id']
         node_type = safetensors_node['type']
         safetensors_files = safetensors_node['safetensors_files']
         properties = safetensors_node['properties']
+
+        # Skip properties.models check for MarkdownNote/Note nodes
+        if node_type.lower() in ['markdownnote', 'note']:
+            continue
 
         properties_models = properties.get('models', [])
 
