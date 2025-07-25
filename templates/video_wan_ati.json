@@ -1,0 +1,1070 @@
+{
+  "id": "96995b8f-85c5-47af-b3cf-7b6a24675694",
+  "revision": 0,
+  "last_node_id": 262,
+  "last_link_id": 405,
+  "nodes": [
+    {
+      "id": 140,
+      "type": "UNETLoader",
+      "pos": [
+        -525.3953247070312,
+        78.10833740234375
+      ],
+      "size": [
+        360,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            405
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors",
+            "directory": "diffusion_models"
+          }
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors",
+        "fp8_e4m3fn"
+      ]
+    },
+    {
+      "id": 38,
+      "type": "CLIPLoader",
+      "pos": [
+        -525.3953247070312,
+        208.10826110839844
+      ],
+      "size": [
+        360,
+        106
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            74,
+            75
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true",
+            "directory": "text_encoders"
+          }
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "wan",
+        "default"
+      ]
+    },
+    {
+      "id": 248,
+      "type": "WanTrackToVideo",
+      "pos": [
+        420,
+        180
+      ],
+      "size": [
+        265.6821594238281,
+        394.1162414550781
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 381
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 382
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 383
+        },
+        {
+          "name": "start_image",
+          "type": "IMAGE",
+          "link": 384
+        },
+        {
+          "name": "clip_vision_output",
+          "shape": 7,
+          "type": "CLIP_VISION_OUTPUT",
+          "link": 397
+        },
+        {
+          "name": "tracks",
+          "type": "STRING",
+          "widget": {
+            "name": "tracks"
+          },
+          "link": 380
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            385
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            386
+          ]
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            387
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "WanTrackToVideo"
+      },
+      "widgets_values": [
+        "[]",
+        720,
+        480,
+        81,
+        1,
+        220,
+        10
+      ]
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -90,
+        360
+      ],
+      "size": [
+        425.27801513671875,
+        180.6060791015625
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            382
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Negative Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "CLIPTextEncode",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走,过曝，"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 251,
+      "type": "CLIPVisionEncode",
+      "pos": [
+        -30,
+        640
+      ],
+      "size": [
+        290.390625,
+        78
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": 395
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 396
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CLIP_VISION_OUTPUT",
+          "type": "CLIP_VISION_OUTPUT",
+          "links": [
+            397
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "CLIPVisionEncode"
+      },
+      "widgets_values": [
+        "none"
+      ]
+    },
+    {
+      "id": 39,
+      "type": "VAELoader",
+      "pos": [
+        -530,
+        370
+      ],
+      "size": [
+        360,
+        60
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            76,
+            383
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "wan_2.1_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
+            "directory": "vae"
+          }
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "wan_2.1_vae.safetensors"
+      ]
+    },
+    {
+      "id": 244,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        -520,
+        480
+      ],
+      "size": [
+        344.7685546875,
+        60.39640808105469
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "links": [
+            395
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.41",
+        "Node name for S&R": "CLIPVisionLoader",
+        "models": [
+          {
+            "name": "clip_vision_h.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors",
+            "directory": "clip_vision"
+          }
+        ]
+      },
+      "widgets_values": [
+        "clip_vision_h.safetensors"
+      ]
+    },
+    {
+      "id": 258,
+      "type": "SaveVideo",
+      "pos": [
+        370,
+        650
+      ],
+      "size": [
+        720,
+        578
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 404
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 240,
+      "type": "LoadImage",
+      "pos": [
+        -530,
+        690
+      ],
+      "size": [
+        394.4261779785156,
+        454.2128601074219
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            384,
+            396
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.26",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "input-14.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 260,
+      "type": "MarkdownNote",
+      "pos": [
+        -850,
+        470
+      ],
+      "size": [
+        290,
+        120
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "VRAM Usage",
+      "properties": {},
+      "widgets_values": [
+        "\n4090D 24GB (VRAM usage 90%)\n- size: 720*480\n- 1st gen: 500s\n- 2nd gen: 463s"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 257,
+      "type": "CreateVideo",
+      "pos": [
+        790,
+        480
+      ],
+      "size": [
+        270,
+        78
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 403
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            404
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        16
+      ]
+    },
+    {
+      "id": 3,
+      "type": "KSampler",
+      "pos": [
+        810,
+        60
+      ],
+      "size": [
+        252.072021484375,
+        262
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 392
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 385
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 386
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 387
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            388
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "KSampler",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        48,
+        "fixed",
+        20,
+        3,
+        "uni_pc",
+        "simple",
+        1
+      ]
+    },
+    {
+      "id": 48,
+      "type": "ModelSamplingSD3",
+      "pos": [
+        420,
+        70
+      ],
+      "size": [
+        270,
+        60
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 405
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            392
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "ModelSamplingSD3",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        8.000000000000002
+      ]
+    },
+    {
+      "id": 262,
+      "type": "MarkdownNote",
+      "pos": [
+        -100,
+        1200
+      ],
+      "size": [
+        450,
+        100
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "How to create Trajectory JSON",
+      "properties": {},
+      "widgets_values": [
+        "Visit [Trajectory-Annotation-Tool](https://comfyui-wiki.github.io/Trajectory-Annotation-Tool/), upload an image and create trajectories."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        890,
+        370
+      ],
+      "size": [
+        170,
+        46
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 388
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            403
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "VAEDecode",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -90,
+        50
+      ],
+      "size": [
+        420,
+        260
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            381
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.34",
+        "Node name for S&R": "CLIPTextEncode",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "The white dragon warrior stands still, eyes full of determination and strength. The camera slowly moves closer or circles around the warrior, highlighting the powerful presence and heroic spirit of the character."
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 259,
+      "type": "MarkdownNote",
+      "pos": [
+        -1040,
+        10
+      ],
+      "size": [
+        480,
+        410
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model Links",
+      "properties": {},
+      "widgets_values": [
+        "[Tutorial](http://docs.comfy.org/tutorials/video/wan/wan-ati) | [教程](http://docs.comfy.org/zh-CN/tutorials/video/wan/wan-ati)\n\n**Diffusion Model**\n- [Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors)\n\n**VAE**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors?download=true)\n\n**Text encoders**   Chose one of following model\n- [umt5_xxl_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp16.safetensors?download=true)\n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true)\n\n\n**clip_vision**\n- [clip_vision_h.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors)\n\nFile save location\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   └───Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors # or other version\n│   ├───📂 clip_vision/\n│   │   └─── clip_vision_h.safetensors\n│   └───📂 vae/\n│       └──  wan_2.1_vae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 247,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -70,
+        820
+      ],
+      "size": [
+        400,
+        310
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            380
+          ]
+        }
+      ],
+      "title": "Trajectory JSON",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.45",
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "[\n  [\n    {\n      \"x\": 393,\n      \"y\": 126\n    },\n    {\n      \"x\": 393,\n      \"y\": 126\n    },\n    {\n      \"x\": 393,\n      \"y\": 126\n    },\n    {\n      \"x\": 393,\n      \"y\": 125\n    },\n    {\n      \"x\": 388,\n      \"y\": 123\n    },\n    {\n      \"x\": 380,\n      \"y\": 123\n    },\n    {\n      \"x\": 372,\n      \"y\": 122\n    },\n    {\n      \"x\": 338,\n      \"y\": 122\n    },\n    {\n      \"x\": 312,\n      \"y\": 121\n    },\n    {\n      \"x\": 294,\n      \"y\": 121\n    },\n    {\n      \"x\": 281,\n      \"y\": 122\n    },\n    {\n      \"x\": 263,\n      \"y\": 123\n    },\n    {\n      \"x\": 254,\n      \"y\": 125\n    },\n    {\n      \"x\": 245,\n      \"y\": 126\n    },\n    {\n      \"x\": 241,\n      \"y\": 127\n    },\n    {\n      \"x\": 240,\n      \"y\": 127\n    },\n    {\n      \"x\": 240,\n      \"y\": 128\n    },\n    {\n      \"x\": 239,\n      \"y\": 128\n    },\n    {\n      \"x\": 238,\n      \"y\": 130\n    },\n    {\n      \"x\": 236,\n      \"y\": 131\n    },\n    {\n      \"x\": 233,\n      \"y\": 133\n    },\n    {\n      \"x\": 230,\n      \"y\": 135\n    },\n    {\n      \"x\": 226,\n      \"y\": 137\n    },\n    {\n      \"x\": 226,\n      \"y\": 137\n    },\n    {\n      \"x\": 226,\n      \"y\": 137\n    },\n    {\n      \"x\": 226,\n      \"y\": 138\n    },\n    {\n      \"x\": 226,\n      \"y\": 138\n    },\n    {\n      \"x\": 226,\n      \"y\": 138\n    },\n    {\n      \"x\": 226,\n      \"y\": 139\n    },\n    {\n      \"x\": 226,\n      \"y\": 139\n    },\n    {\n      \"x\": 226,\n      \"y\": 141\n    },\n    {\n      \"x\": 226,\n      \"y\": 142\n    },\n    {\n      \"x\": 226,\n      \"y\": 142\n    },\n    {\n      \"x\": 228,\n      \"y\": 143\n    },\n    {\n      \"x\": 229,\n      \"y\": 143\n    },\n    {\n      \"x\": 230,\n      \"y\": 144\n    },\n    {\n      \"x\": 232,\n      \"y\": 145\n    },\n    {\n      \"x\": 237,\n      \"y\": 146\n    },\n    {\n      \"x\": 238,\n      \"y\": 146\n    },\n    {\n      \"x\": 246,\n      \"y\": 147\n    },\n    {\n      \"x\": 252,\n      \"y\": 149\n    },\n    {\n      \"x\": 260,\n      \"y\": 150\n    },\n    {\n      \"x\": 262,\n      \"y\": 150\n    },\n    {\n      \"x\": 265,\n      \"y\": 150\n    },\n    {\n      \"x\": 271,\n      \"y\": 151\n    },\n    {\n      \"x\": 276,\n      \"y\": 151\n    },\n    {\n      \"x\": 278,\n      \"y\": 151\n    },\n    {\n      \"x\": 281,\n      \"y\": 151\n    },\n    {\n      \"x\": 286,\n      \"y\": 152\n    },\n    {\n      \"x\": 289,\n      \"y\": 152\n    },\n    {\n      \"x\": 292,\n      \"y\": 152\n    },\n    {\n      \"x\": 296,\n      \"y\": 152\n    },\n    {\n      \"x\": 299,\n      \"y\": 152\n    },\n    {\n      \"x\": 307,\n      \"y\": 153\n    },\n    {\n      \"x\": 311,\n      \"y\": 153\n    },\n    {\n      \"x\": 315,\n      \"y\": 154\n    },\n    {\n      \"x\": 317,\n      \"y\": 154\n    },\n    {\n      \"x\": 320,\n      \"y\": 155\n    },\n    {\n      \"x\": 324,\n      \"y\": 155\n    },\n    {\n      \"x\": 326,\n      \"y\": 157\n    },\n    {\n      \"x\": 327,\n      \"y\": 157\n    },\n    {\n      \"x\": 328,\n      \"y\": 157\n    },\n    {\n      \"x\": 331,\n      \"y\": 158\n    },\n    {\n      \"x\": 332,\n      \"y\": 158\n    },\n    {\n      \"x\": 333,\n      \"y\": 158\n    },\n    {\n      \"x\": 335,\n      \"y\": 159\n    },\n    {\n      \"x\": 340,\n      \"y\": 159\n    },\n    {\n      \"x\": 345,\n      \"y\": 160\n    },\n    {\n      \"x\": 353,\n      \"y\": 161\n    },\n    {\n      \"x\": 357,\n      \"y\": 162\n    },\n    {\n      \"x\": 362,\n      \"y\": 163\n    },\n    {\n      \"x\": 367,\n      \"y\": 165\n    },\n    {\n      \"x\": 369,\n      \"y\": 165\n    },\n    {\n      \"x\": 372,\n      \"y\": 166\n    },\n    {\n      \"x\": 375,\n      \"y\": 166\n    },\n    {\n      \"x\": 378,\n      \"y\": 166\n    },\n    {\n      \"x\": 379,\n      \"y\": 167\n    },\n    {\n      \"x\": 381,\n      \"y\": 167\n    },\n    {\n      \"x\": 384,\n      \"y\": 167\n    },\n    {\n      \"x\": 387,\n      \"y\": 168\n    },\n    {\n      \"x\": 392,\n      \"y\": 169\n    },\n    {\n      \"x\": 400,\n      \"y\": 170\n    },\n    {\n      \"x\": 405,\n      \"y\": 170\n    },\n    {\n      \"x\": 410,\n      \"y\": 170\n    },\n    {\n      \"x\": 417,\n      \"y\": 171\n    },\n    {\n      \"x\": 425,\n      \"y\": 174\n    },\n    {\n      \"x\": 434,\n      \"y\": 174\n    },\n    {\n      \"x\": 441,\n      \"y\": 175\n    },\n    {\n      \"x\": 448,\n      \"y\": 175\n    },\n    {\n      \"x\": 456,\n      \"y\": 176\n    },\n    {\n      \"x\": 465,\n      \"y\": 177\n    },\n    {\n      \"x\": 472,\n      \"y\": 177\n    },\n    {\n      \"x\": 479,\n      \"y\": 177\n    },\n    {\n      \"x\": 484,\n      \"y\": 177\n    },\n    {\n      \"x\": 491,\n      \"y\": 178\n    },\n    {\n      \"x\": 498,\n      \"y\": 179\n    },\n    {\n      \"x\": 502,\n      \"y\": 179\n    },\n    {\n      \"x\": 505,\n      \"y\": 179\n    },\n    {\n      \"x\": 514,\n      \"y\": 179\n    },\n    {\n      \"x\": 520,\n      \"y\": 179\n    },\n    {\n      \"x\": 523,\n      \"y\": 181\n    },\n    {\n      \"x\": 530,\n      \"y\": 181\n    },\n    {\n      \"x\": 537,\n      \"y\": 182\n    },\n    {\n      \"x\": 544,\n      \"y\": 183\n    },\n    {\n      \"x\": 551,\n      \"y\": 183\n    },\n    {\n      \"x\": 554,\n      \"y\": 183\n    },\n    {\n      \"x\": 561,\n      \"y\": 184\n    },\n    {\n      \"x\": 569,\n      \"y\": 185\n    },\n    {\n      \"x\": 577,\n      \"y\": 186\n    },\n    {\n      \"x\": 581,\n      \"y\": 186\n    },\n    {\n      \"x\": 586,\n      \"y\": 186\n    },\n    {\n      \"x\": 590,\n      \"y\": 187\n    },\n    {\n      \"x\": 596,\n      \"y\": 187\n    },\n    {\n      \"x\": 600,\n      \"y\": 189\n    },\n    {\n      \"x\": 602,\n      \"y\": 189\n    },\n    {\n      \"x\": 607,\n      \"y\": 189\n    },\n    {\n      \"x\": 612,\n      \"y\": 190\n    },\n    {\n      \"x\": 614,\n      \"y\": 190\n    },\n    {\n      \"x\": 616,\n      \"y\": 190\n    },\n    {\n      \"x\": 617,\n      \"y\": 190\n    },\n    {\n      \"x\": 617,\n      \"y\": 190\n    },\n    {\n      \"x\": 619,\n      \"y\": 191\n    },\n    {\n      \"x\": 619,\n      \"y\": 191\n    },\n    {\n      \"x\": 620,\n      \"y\": 191\n    },\n    {\n      \"x\": 620,\n      \"y\": 191\n    },\n    {\n      \"x\": 621,\n      \"y\": 191\n    },\n    {\n      \"x\": 623,\n      \"y\": 191\n    },\n    {\n      \"x\": 624,\n      \"y\": 191\n    },\n    {\n      \"x\": 625,\n      \"y\": 191\n    },\n    {\n      \"x\": 625,\n      \"y\": 192\n    },\n    {\n      \"x\": 625,\n      \"y\": 192\n    },\n    {\n      \"x\": 625,\n      \"y\": 192\n    },\n    {\n      \"x\": 628,\n      \"y\": 197\n    },\n    {\n      \"x\": 628,\n      \"y\": 199\n    },\n    {\n      \"x\": 629,\n      \"y\": 200\n    },\n    {\n      \"x\": 629,\n      \"y\": 201\n    },\n    {\n      \"x\": 629,\n      \"y\": 202\n    },\n    {\n      \"x\": 629,\n      \"y\": 202\n    },\n    {\n      \"x\": 629,\n      \"y\": 203\n    },\n    {\n      \"x\": 629,\n      \"y\": 203\n    },\n    {\n      \"x\": 629,\n      \"y\": 203\n    },\n    {\n      \"x\": 629,\n      \"y\": 203\n    },\n    {\n      \"x\": 629,\n      \"y\": 203\n    },\n    {\n      \"x\": 630,\n      \"y\": 205\n    },\n    {\n      \"x\": 630,\n      \"y\": 205\n    },\n    {\n      \"x\": 630,\n      \"y\": 206\n    },\n    {\n      \"x\": 630,\n      \"y\": 207\n    },\n    {\n      \"x\": 630,\n      \"y\": 207\n    },\n    {\n      \"x\": 630,\n      \"y\": 208\n    },\n    {\n      \"x\": 630,\n      \"y\": 208\n    },\n    {\n      \"x\": 631,\n      \"y\": 211\n    },\n    {\n      \"x\": 631,\n      \"y\": 211\n    },\n    {\n      \"x\": 631,\n      \"y\": 213\n    },\n    {\n      \"x\": 631,\n      \"y\": 215\n    },\n    {\n      \"x\": 632,\n      \"y\": 215\n    },\n    {\n      \"x\": 632,\n      \"y\": 216\n    },\n    {\n      \"x\": 632,\n      \"y\": 216\n    },\n    {\n      \"x\": 632,\n      \"y\": 216\n    },\n    {\n      \"x\": 632,\n      \"y\": 217\n    },\n    {\n      \"x\": 632,\n      \"y\": 217\n    },\n    {\n      \"x\": 632,\n      \"y\": 218\n    },\n    {\n      \"x\": 632,\n      \"y\": 218\n    }\n  ]\n]"
+      ]
+    }
+  ],
+  "links": [
+    [
+      74,
+      38,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      75,
+      38,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      76,
+      39,
+      0,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      380,
+      247,
+      0,
+      248,
+      5,
+      "STRING"
+    ],
+    [
+      381,
+      6,
+      0,
+      248,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      382,
+      7,
+      0,
+      248,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      383,
+      39,
+      0,
+      248,
+      2,
+      "VAE"
+    ],
+    [
+      384,
+      240,
+      0,
+      248,
+      3,
+      "IMAGE"
+    ],
+    [
+      385,
+      248,
+      0,
+      3,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      386,
+      248,
+      1,
+      3,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      387,
+      248,
+      2,
+      3,
+      3,
+      "LATENT"
+    ],
+    [
+      388,
+      3,
+      0,
+      8,
+      0,
+      "LATENT"
+    ],
+    [
+      392,
+      48,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      395,
+      244,
+      0,
+      251,
+      0,
+      "CLIP_VISION"
+    ],
+    [
+      396,
+      240,
+      0,
+      251,
+      1,
+      "IMAGE"
+    ],
+    [
+      397,
+      251,
+      0,
+      248,
+      4,
+      "CLIP_VISION_OUTPUT"
+    ],
+    [
+      403,
+      8,
+      0,
+      257,
+      0,
+      "IMAGE"
+    ],
+    [
+      404,
+      257,
+      0,
+      258,
+      0,
+      "VIDEO"
+    ],
+    [
+      405,
+      140,
+      0,
+      48,
+      0,
+      "MODEL"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step1 - Load models here",
+      "bounding": [
+        -540,
+        -20,
+        420,
+        610
+      ],
+      "color": "#b58b2a",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step4 - Prompt",
+      "bounding": [
+        -100,
+        -20,
+        450,
+        610
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Sampling & Decoding",
+      "bounding": [
+        370,
+        -20,
+        720,
+        620
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 26,
+      "title": "Step2 - Upload image",
+      "bounding": [
+        -540,
+        610,
+        420,
+        540
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 27,
+      "title": "Step 3-Plaste Trajectory JSON",
+      "bounding": [
+        -100,
+        740,
+        450,
+        410
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9229599817707979,
+      "offset": [
+        1098.5764546277032,
+        -443.13709495742705
+      ]
+    },
+    "frontendVersion": "1.23.4",
+    "node_versions": {
+      "comfy-core": "0.3.34"
+    },
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true,
+    "ue_links": [],
+    "links_added_by_ue": []
+  },
+  "version": 0.4
+}
