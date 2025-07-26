@@ -2,19 +2,20 @@
 
 ComfyUI workflow templates available in the app by clicking the **Workflow** button then the **Browse Templates** button.
 
-- [Adding New Templates](#adding-new-templates)
-  - [1 — Find Templates Folder](#1--find-templates-folder)
-  - [2 — Obtain Workflow](#2--obtain-workflow)
-  - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
-  - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
-  - [5 — Compress Assets](#5--compress-assets)
-  - [6 — Rename and Move Files](#6--rename-and-move-files)
-  - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
-  - [8 — Embed Models](#8--embed-models)
-  - [9 — Embed Node Versions (optional)](#9--embed-node-versions-optional)
-  - [10 — Add Documentation Nodes (optional)](#10--add-documentation-nodes-optional)
-  - [11 — Bump Version and Create PR](#11--bump-version-and-create-pr)
-  - [12 — Add Translations](#12--add-translations)
+- [workflow\_templates](#workflow_templates)
+  - [Adding New Templates](#adding-new-templates)
+    - [1 — Find Templates Folder](#1--find-templates-folder)
+    - [2 — Obtain Workflow](#2--obtain-workflow)
+    - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
+    - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
+    - [5 — Compress Assets](#5--compress-assets)
+    - [6 — Rename and Move Files](#6--rename-and-move-files)
+    - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
+    - [8 — Embed Models](#8--embed-models)
+    - [9 — Embed Node Versions (optional)](#9--embed-node-versions-optional)
+    - [10 — Add Documentation Nodes (optional)](#10--add-documentation-nodes-optional)
+    - [11 — Bump Version and Create PR](#11--bump-version-and-create-pr)
+    - [12 — Add Translations](#12--add-translations)
 
 ## Adding New Templates
 
@@ -342,7 +343,7 @@ Raw markdown used:
 
 > [Wan - ComfyUI_examples](https://comfyanonymous.github.io/ComfyUI_examples/wan/#text-to-video) — Overview
 >
-> [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/advanced/wan-video) — Explanation of concepts and step-by-step tutorial
+> [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/tutorials/video/wan/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
 ### 11 — Bump Version and Create PR
