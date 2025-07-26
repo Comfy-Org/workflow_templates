@@ -290,7 +290,7 @@ You can find the `hash` and `hash_type` for a model on huggingface (see below)or
 
 ![finding hash on hugginface](docs/pictures/finding-hugginface-hash.png)
 
-[Workflow spec](https://docs.comfy.org/specs/workflow_json#workflow-json) and [ModelFile Zod schema](https://github.com/Comfy-Org/ComfyUI_frontend/blob/6bc03a624ecbc0439501d0c7c2b073ca90e9a742/src/schemas/comfyWorkflowSchema.ts#L34-L40) for more details.
+[Workflow spec](https://docs.comfy.org/specs/workflow_json) and [ModelFile Zod schema](https://github.com/Comfy-Org/ComfyUI_frontend/blob/6bc03a624ecbc0439501d0c7c2b073ca90e9a742/src/schemas/comfyWorkflowSchema.ts#L34-L40) for more details.
 
 > [!CAUTION]
 >
