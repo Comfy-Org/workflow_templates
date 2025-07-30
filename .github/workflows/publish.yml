@@ -8,12 +8,36 @@ on:
       - "pyproject.toml"
 
 jobs:
-  publish:
+  check-version-change:
     runs-on: ubuntu-latest
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main') ||
-      (github.event_name == 'push' && github.ref == 'refs/heads/main')
+    outputs:
+      version-changed: ${{ steps.check.outputs.changed }}
+      new-version: ${{ steps.check.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check if version actually changed
+        id: check
+        run: |
+          CURRENT_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          PREVIOUS_VERSION=$(git show HEAD~1:pyproject.toml | python -c "import tomllib, sys; print(tomllib.load(sys.stdin.buffer)['project']['version'])")
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged: $CURRENT_VERSION"
+          fi
+
+  publish:
+    needs: check-version-change
+    if: needs.check-version-change.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -40,16 +64,10 @@ jobs:
           password: ${{ secrets.PYPI_TOKEN }}
           attestations: false
 
-      - name: Extract version from pyproject.toml
-        id: get_version
-        run: |
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v${{ steps.get_version.outputs.VERSION }}" \
-          --title "v${{ steps.get_version.outputs.VERSION }}" \
+          gh release create "v${{ needs.check-version-change.outputs.new-version }}" \
+          --title "v${{ needs.check-version-change.outputs.new-version }}" \
           --generate-notes
