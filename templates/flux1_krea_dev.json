@@ -1,7 +1,7 @@
 {
   "id": "908d0bfb-e192-4627-9b57-147496e6e2dd",
   "revision": 0,
-  "last_node_id": 50,
+  "last_node_id": 51,
   "last_link_id": 70,
   "nodes": [
     {
@@ -16,7 +16,7 @@
         660
       ],
       "flags": {},
-      "order": 9,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
@@ -59,9 +59,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "DualCLIPLoader",
         "cnr_id": "comfy-core",
         "ver": "0.3.40",
-        "Node name for S&R": "DualCLIPLoader",
         "models": [
           {
             "name": "clip_l.safetensors",
@@ -107,9 +107,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAELoader",
         "cnr_id": "comfy-core",
         "ver": "0.3.40",
-        "Node name for S&R": "VAELoader",
         "models": [
           {
             "name": "ae.safetensors",
@@ -136,7 +136,7 @@
       "flags": {
         "collapsed": false
       },
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -155,9 +155,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "ConditioningZeroOut",
         "cnr_id": "comfy-core",
-        "ver": "0.3.40",
-        "Node name for S&R": "ConditioningZeroOut"
+        "ver": "0.3.40"
       },
       "widgets_values": []
     },
@@ -175,7 +175,7 @@
       "flags": {
         "collapsed": true
       },
-      "order": 8,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -200,17 +200,175 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "VAEDecode",
         "cnr_id": "comfy-core",
-        "ver": "0.3.40",
-        "Node name for S&R": "VAEDecode"
+        "ver": "0.3.40"
       },
       "widgets_values": []
+    },
+    {
+      "id": 27,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        -320,
+        630
+      ],
+      "size": [
+        270,
+        120
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            51
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.40"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ]
+    },
+    {
+      "id": 45,
+      "type": "CLIPTextEncode",
+      "pos": [
+        10,
+        170
+      ],
+      "size": [
+        330,
+        210
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 64
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            65,
+            66
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.47"
+      },
+      "widgets_values": [
+        "Highly realistic portrait of a Nordic woman with blonde hair and blue eyes, very few freckles on her face, gaze sharp and intellectual. The lighting should reflect the unique coolness of Northern Europe. Outfit is minimalist and modern, background is blurred in cool tones. Needs to perfectly capture the characteristics of a Scandinavian woman. solo, Centered composition\n"
+      ]
+    },
+    {
+      "id": 38,
+      "type": "UNETLoader",
+      "pos": [
+        -320,
+        150
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            61
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.40"
+      },
+      "widgets_values": [
+        "flux1-krea-dev.safetensors",
+        "fp8_e4m3fn_fast"
+      ]
+    },
+    {
+      "id": 43,
+      "type": "MarkdownNote",
+      "pos": [
+        -870,
+        340
+      ],
+      "size": [
+        520,
+        390
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model links",
+      "properties": {},
+      "widgets_values": [
+        "## Important\n\nGo to [black-forest-labs/FLUX.1-Krea-dev](https://huggingface.co/black-forest-labs/FLUX.1-Krea-dev/), accept the agreement in that repo, then click the link below to download the models.\n\n## Model links\n\n**Diffusion Model**\n\n- [flux1-krea-dev.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-Krea-dev/resolve/main/flux1-krea-dev.safetensors)\n\n**Text Encoder**\n\n- [clip_l.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/blob/main/clip_l.safetensors)\n\n- [t5xxl_fp16.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors) or [t5xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors)\n\n**VAE**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors)\n\n\n```\nComfyUI/\n├── models/\n│   ├── diffusion_models/\n│   │   └─── flux1-krea-dev.safetensors \n│   ├── text_encoders/\n│   │   ├── clip_l.safetensors\n│   │   └─── t5xxl_fp16.safetensors # or t5xxl_fp8_e4m3fn_scaled.safetensors\n│   └── vae/\n│       └── ae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 51,
+      "type": "MarkdownNote",
+      "pos": [
+        -870,
+        110
+      ],
+      "size": [
+        520,
+        190
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "VRAM Usage",
+      "properties": {},
+      "widgets_values": [
+        "The original version of the model will be around 47GB, so users with low VRAM will not be able to run it. You can wait for the community to make the fp8 or GGUF version.\n\nThe default **weight_dtype** is set to **fp8_e4m3fn_fast** to make the first use easier.\n\nIf you have enough VRAM, such as an **RTX 4090 with 24GB**, you can set **weight_dtype** to **default** for better quality.\n\nFor reference, data generated at 1024*1024 resolution on a 4090 24GB:\n- Weight_dtype: default\n- VRAM usage: 96%\n- 1st Gen: 90s\n- 2nd Gen: 40s"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 31,
       "type": "KSampler",
       "pos": [
-        20,
+        10,
         550
       ],
       "size": [
@@ -218,7 +376,7 @@
         262
       ],
       "flags": {},
-      "order": 7,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -253,9 +411,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "KSampler",
         "cnr_id": "comfy-core",
-        "ver": "0.3.40",
-        "Node name for S&R": "KSampler"
+        "ver": "0.3.40"
       },
       "widgets_values": [
         277251746703202,
@@ -265,139 +423,6 @@
         "euler",
         "simple",
         1
-      ]
-    },
-    {
-      "id": 27,
-      "type": "EmptySD3LatentImage",
-      "pos": [
-        -320,
-        630
-      ],
-      "size": [
-        270,
-        120
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "slot_index": 0,
-          "links": [
-            51
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.40",
-        "Node name for S&R": "EmptySD3LatentImage"
-      },
-      "widgets_values": [
-        1024,
-        1024,
-        1
-      ]
-    },
-    {
-      "id": 45,
-      "type": "CLIPTextEncode",
-      "pos": [
-        10,
-        170
-      ],
-      "size": [
-        330,
-        210
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 64
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            65,
-            66
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.47",
-        "Node name for S&R": "CLIPTextEncode"
-      },
-      "widgets_values": [
-        "Highly realistic portrait of a Nordic woman with blonde hair and blue eyes, very few freckles on her face, gaze sharp and intellectual. The lighting should reflect the unique coolness of Northern Europe. Outfit is minimalist and modern, background is blurred in cool tones. Needs to perfectly capture the characteristics of a Scandinavian woman. solo, Centered composition\n"
-      ]
-    },
-    {
-      "id": 43,
-      "type": "MarkdownNote",
-      "pos": [
-        -870,
-        110
-      ],
-      "size": [
-        520,
-        390
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "## Important\n\nGo to [black-forest-labs/FLUX.1-Krea-dev](https://huggingface.co/black-forest-labs/FLUX.1-Krea-dev/), accept the agreement in that repo, then click the link below to download the models.\n\n## Model links\n\n**Diffusion Model**\n\n- [flux1-krea-dev.safetensors](https://huggingface.co/black-forest-labs/FLUX.1-Krea-dev/resolve/main/flux1-krea-dev.safetensors)\n\n**Text Encoder**\n\n- [clip_l.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/blob/main/clip_l.safetensors)\n\n- [t5xxl_fp16.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors) or [t5xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors)\n\n**VAE**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors)\n\n\n```\nComfyUI/\n├── models/\n│   ├── diffusion_models/\n│   │   └─── flux1-krea-dev.safetensors \n│   ├── text_encoders/\n│   │   ├── clip_l.safetensors\n│   │   └─── t5xxl_fp16.safetensors # or t5xxl_fp8_e4m3fn_scaled.safetensors\n│   └── vae/\n│       └── ae.safetensors\n```\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 38,
-      "type": "UNETLoader",
-      "pos": [
-        -320,
-        150
-      ],
-      "size": [
-        270,
-        82
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            61
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.40",
-        "Node name for S&R": "UNETLoader"
-      },
-      "widgets_values": [
-        "flux1-krea-dev.safetensors",
-        "fp8_e4m3fn_fast"
       ]
     }
   ],
@@ -519,13 +544,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8800000000000238,
+      "scale": 1.2884080000000375,
       "offset": [
-        1205.726915176168,
-        229.4943809786823
+        982.9730735496678,
+        -140.5450006394394
       ]
     },
-    "frontendVersion": "1.23.4",
+    "frontendVersion": "1.25.2",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
