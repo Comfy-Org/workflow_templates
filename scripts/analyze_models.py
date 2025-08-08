@@ -178,7 +178,7 @@ def analyze_all_templates(templates_dir: str) -> Tuple[Dict, Dict]:
     }
 
     for filename in os.listdir(templates_dir):
-        if filename.endswith('.json') and filename not in ('index.json', 'index.schema.json'):
+        if filename.endswith('.json') and not filename.startswith('index.'):
             file_path = os.path.join(templates_dir, filename)
             statistics['total_files'] += 1
 
