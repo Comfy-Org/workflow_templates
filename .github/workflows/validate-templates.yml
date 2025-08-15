@@ -9,6 +9,7 @@ on:
       - 'templates/**'
       - 'scripts/validate_templates.py'
       - 'scripts/check_third_party_nodes.py'
+      - 'scripts/validate_thumbnails.py'
       - '.github/workflows/validate-templates.yml'
 
 jobs:
@@ -110,6 +111,64 @@ jobs:
           3. Remove or replace any nodes using other \`cnr_id\` values with equivalent official nodes
           
           **Note**: Only templates using official ComfyUI nodes (\`cnr_id: "comfy-core"\`) can be merged to ensure plug-and-play functionality.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    
+    - name: Validate thumbnails
+      id: thumbnail_check
+      run: |
+        echo "Validating template thumbnails..."
+        python3 scripts/validate_thumbnails.py > thumbnail_report.txt 2>&1 || echo "thumbnail_issues=true" >> $GITHUB_OUTPUT
+        cat thumbnail_report.txt
+        
+        # Check if thumbnail validation failed
+        if grep -q "Thumbnail validation failed" thumbnail_report.txt; then
+          echo "thumbnail_issues=true" >> $GITHUB_OUTPUT
+          echo "::error::Thumbnail validation failed. Please check thumbnail files and configurations."
+        else
+          echo "thumbnail_issues=false" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
+    
+    - name: Comment on PR about thumbnail issues
+      if: steps.thumbnail_check.outputs.thumbnail_issues == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          
+          // Read thumbnail validation report
+          let report = '';
+          try {
+            report = fs.readFileSync('thumbnail_report.txt', 'utf8');
+          } catch (error) {
+            report = 'Unable to read thumbnail validation report';
+          }
+          
+          const comment = `## ❌ Thumbnail Validation Issues Found
+          
+          Your template has thumbnail configuration issues that need to be resolved.
+          
+          **Why this matters:** Templates need proper thumbnails to provide users with visual previews. Templates with special thumbnail variants like "compareSlider" or "hoverDissolve" require specific thumbnail files to work correctly.
+          
+          ### Validation Report:
+          \`\`\`
+          ${report}
+          \`\`\`
+          
+          ### How to Fix:
+          1. **Missing thumbnails**: Ensure each template has at least one thumbnail file (e.g., \`template-1.webp\`)
+          2. **Incomplete dual thumbnails**: Templates with \`thumbnailVariant: "compareSlider"\` or \`"hoverDissolve"\` need both \`-1\` and \`-2\` thumbnail files
+          3. **Check file naming**: Thumbnail files should be named \`{template_name}-{number}.{extension}\`
+          4. **Verify file format**: Use the correct file extension (\`.webp\`, \`.mp3\`, etc.) as specified in the template's \`mediaSubtype\`
+          
+          **Note**: All templates must have proper thumbnails configured to ensure the best user experience when browsing templates.`;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
