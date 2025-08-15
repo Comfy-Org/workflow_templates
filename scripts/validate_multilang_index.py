@@ -142,29 +142,51 @@ def fix_missing_templates(reference_data: List[Dict], lang_data: List[Dict], mis
     
     # Create a mapping of template names to template data from reference
     ref_templates = {}
+    ref_template_order = {}  # Track the order of templates in reference
     for category in reference_data:
-        for template in category.get('templates', []):
+        for idx, template in enumerate(category.get('templates', [])):
             template_name = template.get('name', '')
             if template_name:
                 ref_templates[template_name] = (template, category)
+                ref_template_order[template_name] = idx
     
-    # Add missing templates to the appropriate categories
+    # Add missing templates to the appropriate categories in the correct order
     fixed_data = []
     for category in lang_data:
         fixed_category = category.copy()
-        fixed_templates = list(category.get('templates', []))
+        current_templates = list(category.get('templates', []))
         
-        # Check if any missing templates belong to this category
-        for template_name in missing_templates:
-            if template_name in ref_templates:
-                ref_template, ref_category = ref_templates[template_name]
-                # Match categories by structural properties (type, category) instead of title
-                if (ref_category.get('type', '') == category.get('type', '') and 
-                    ref_category.get('category', '') == category.get('category', '')):
-                    # Add the template with English content (to be translated later)
-                    fixed_templates.append(ref_template.copy())
+        # Find the matching reference category
+        ref_category = None
+        for ref_cat in reference_data:
+            if (ref_cat.get('type', '') == category.get('type', '') and 
+                ref_cat.get('category', '') == category.get('category', '')):
+                ref_category = ref_cat
+                break
         
-        fixed_category['templates'] = fixed_templates
+        if ref_category:
+            # Create a new template list in the same order as reference
+            ref_template_names = [t.get('name', '') for t in ref_category.get('templates', [])]
+            existing_template_names = {t.get('name', '') for t in current_templates}
+            
+            new_templates = []
+            for ref_name in ref_template_names:
+                if ref_name in existing_template_names:
+                    # Find existing template and add it
+                    for template in current_templates:
+                        if template.get('name', '') == ref_name:
+                            new_templates.append(template)
+                            break
+                elif ref_name in missing_templates:
+                    # Add missing template from reference
+                    ref_template, _ = ref_templates[ref_name]
+                    new_templates.append(ref_template.copy())
+            
+            fixed_category['templates'] = new_templates
+        else:
+            # Keep original templates if no matching category found
+            fixed_category['templates'] = current_templates
+        
         fixed_data.append(fixed_category)
     
     # If we still have missing templates, we need to add missing categories
