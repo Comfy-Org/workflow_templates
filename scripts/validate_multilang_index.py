@@ -158,7 +158,9 @@ def fix_missing_templates(reference_data: List[Dict], lang_data: List[Dict], mis
         for template_name in missing_templates:
             if template_name in ref_templates:
                 ref_template, ref_category = ref_templates[template_name]
-                if ref_category.get('title', '') == category.get('title', ''):
+                # Match categories by structural properties (type, category) instead of title
+                if (ref_category.get('type', '') == category.get('type', '') and 
+                    ref_category.get('category', '') == category.get('category', '')):
                     # Add the template with English content (to be translated later)
                     fixed_templates.append(ref_template.copy())
         
