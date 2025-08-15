@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
 Check if ComfyUI workflow templates use third-party nodes.
-Only nodes with "cnr_id": "comfy-core" are allowed.
+
+For official templates, we want users to be able to open and use them directly
+without needing to install any third-party custom nodes or extensions. 
+Only nodes with "cnr_id": "comfy-core" are allowed to ensure templates work
+out-of-the-box with a standard ComfyUI installation.
 """
 
 import json
