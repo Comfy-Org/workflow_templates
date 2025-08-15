@@ -8,6 +8,7 @@ on:
     paths:
       - 'templates/**'
       - 'scripts/validate_templates.py'
+      - 'scripts/check_third_party_nodes.py'
       - '.github/workflows/validate-templates.yml'
 
 jobs:
@@ -59,3 +60,58 @@ jobs:
         if [ "$LARGE_FILES" -gt 0 ]; then
           echo "Found $LARGE_FILES large files. Consider compressing thumbnails."
         fi
+    
+    - name: Check for third-party nodes
+      id: third_party_check
+      run: |
+        echo "Checking for third-party nodes..."
+        python3 scripts/check_third_party_nodes.py > third_party_report.txt 2>&1 || echo "third_party_found=true" >> $GITHUB_OUTPUT
+        cat third_party_report.txt
+        
+        # Check if third-party nodes are found
+        if grep -q "Third-party nodes found" third_party_report.txt; then
+          echo "third_party_found=true" >> $GITHUB_OUTPUT
+          echo "::error::Third-party nodes found. Please only use official nodes with cnr_id: 'comfy-core'"
+        else
+          echo "third_party_found=false" >> $GITHUB_OUTPUT
+        fi
+      continue-on-error: true
+    
+    - name: Comment on PR about third-party nodes
+      if: steps.third_party_check.outputs.third_party_found == 'true' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          
+          // Read report content
+          let report = '';
+          try {
+            report = fs.readFileSync('third_party_report.txt', 'utf8');
+          } catch (error) {
+            report = 'Unable to read third-party node check report';
+          }
+          
+          const comment = `## ❌ Third-Party Nodes Found
+          
+          Your template uses third-party nodes, which is not allowed. Please ensure all nodes use the official \`cnr_id: "comfy-core"\`.
+          
+          ### Check Report:
+          \`\`\`
+          ${report}
+          \`\`\`
+          
+          ### How to Fix:
+          1. Check the \`properties.cnr_id\` field in all nodes in your template files
+          2. Ensure all \`cnr_id\` values are \`"comfy-core"\`
+          3. Remove or replace any nodes using other \`cnr_id\` values
+          
+          **Note**: Only templates using official nodes (\`cnr_id: "comfy-core"\`) can be merged.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
