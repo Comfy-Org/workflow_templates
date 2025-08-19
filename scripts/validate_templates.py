@@ -85,8 +85,12 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
     # Find orphaned files (files that exist but aren't referenced)
     all_files = set(f.name for f in templates_dir.iterdir() if f.is_file())
     
-    # Exclude special files
-    special_files = {'index.json', 'index.schema.json', '.gitignore', 'README.md'}
+    # Exclude special files including multilingual index files
+    special_files = {
+        'index.json', 'index.schema.json', '.gitignore', 'README.md',
+        'index.es.json', 'index.fr.json', 'index.ja.json', 'index.ko.json',
+        'index.ru.json', 'index.zh.json', 'index.zh-TW.json'
+    }
     all_files -= special_files
     
     # Separate workflow and media files
