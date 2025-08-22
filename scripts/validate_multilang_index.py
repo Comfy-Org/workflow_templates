@@ -219,6 +219,25 @@ def auto_commit_changes(changed_files: List[str], fix_summary: Dict[str, List[st
         return True
     
     try:
+        # Check if we're in GitHub Actions and in a PR context
+        is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+        github_head_ref = os.environ.get('GITHUB_HEAD_REF')
+        
+        if is_github_actions and github_head_ref:
+            # In GitHub Actions PR context, ensure we're on the correct branch
+            print(f"🔍 GitHub Actions detected. Ensuring we're on branch: {github_head_ref}")
+            
+            # Check current branch
+            result = subprocess.run(['git', 'branch', '--show-current'], capture_output=True, text=True, check=False)
+            current_branch = result.stdout.strip() if result.returncode == 0 else "unknown"
+            print(f"📍 Current branch: {current_branch}")
+            
+            # If we're on the wrong branch or detached HEAD, switch to the correct branch
+            if current_branch != github_head_ref:
+                print(f"🔄 Switching to branch: {github_head_ref}")
+                # First, ensure we have the branch locally
+                subprocess.run(['git', 'checkout', '-B', github_head_ref, f'origin/{github_head_ref}'], check=True)
+        
         # Add files to git
         subprocess.run(['git', 'add'] + changed_files, check=True)
         
@@ -266,6 +285,13 @@ Co-Authored-By: Claude <noreply@anthropic.com>"""
         # Commit changes
         subprocess.run(['git', 'commit', '-m', commit_message], check=True)
         print(f"✅ Auto-committed fixes for {len(changed_files)} files")
+        
+        # If in GitHub Actions, push the changes
+        if is_github_actions and github_head_ref:
+            print(f"🚀 Pushing changes to {github_head_ref}")
+            subprocess.run(['git', 'push', 'origin', github_head_ref], check=True)
+            print("✅ Successfully pushed changes to remote branch")
+        
         return True
         
     except subprocess.CalledProcessError as e:
