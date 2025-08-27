@@ -1,7 +1,7 @@
 {
   "id": "ea7ba43e-ab56-40d4-a298-423f5bfe4462",
   "revision": 0,
-  "last_node_id": 62,
+  "last_node_id": 63,
   "last_link_id": 125,
   "nodes": [
     {
@@ -16,7 +16,7 @@
         180.6060791015625
       ],
       "flags": {},
-      "order": 8,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -118,58 +118,60 @@
       ]
     },
     {
-      "id": 6,
-      "type": "CLIPTextEncode",
+      "id": 59,
+      "type": "CreateVideo",
       "pos": [
-        70,
-        -40
+        535.0439453125,
+        666
       ],
       "size": [
-        422.84503173828125,
-        164.31304931640625
+        315,
+        78
       ],
       "flags": {},
-      "order": 7,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 74
+          "name": "images",
+          "type": "IMAGE",
+          "link": 122
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 123
         }
       ],
       "outputs": [
         {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "slot_index": 0,
+          "name": "VIDEO",
+          "type": "VIDEO",
           "links": [
-            112
+            124
           ]
         }
       ],
-      "title": "CLIP Text Encode (Positive Prompt)",
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.52",
-        "Node name for S&R": "CLIPTextEncode"
+        "Node name for S&R": "CreateVideo"
       },
       "widgets_values": [
-        "The robot girl is singing, very moving and focused, with rich expressions."
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
+        16
+      ]
     },
     {
-      "id": 52,
-      "type": "LoadImage",
+      "id": 37,
+      "type": "UNETLoader",
       "pos": [
-        -370,
-        780
+        -410,
+        -30
       ],
       "size": [
-        315,
-        314.00006103515625
+        413.0632019042969,
+        82
       ],
       "flags": {},
       "order": 2,
@@ -177,43 +179,112 @@
       "inputs": [],
       "outputs": [
         {
-          "name": "IMAGE",
-          "type": "IMAGE",
+          "name": "MODEL",
+          "type": "MODEL",
           "slot_index": 0,
           "links": [
-            118
+            110
           ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "slot_index": 1,
-          "links": null
         }
       ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.52",
-        "Node name for S&R": "LoadImage"
+        "Node name for S&R": "UNETLoader"
       },
       "widgets_values": [
-        "Zoomable image (4).jpg",
-        "image"
+        "wan2.2_s2v_14B_bf16.safetensors",
+        "fp8_e4m3fn"
+      ]
+    },
+    {
+      "id": 39,
+      "type": "VAELoader",
+      "pos": [
+        -410,
+        260
+      ],
+      "size": [
+        413.0632019042969,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            76,
+            114
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "wan_2.1_vae.safetensors"
+      ]
+    },
+    {
+      "id": 54,
+      "type": "ModelSamplingSD3",
+      "pos": [
+        535.0439453125,
+        -70
+      ],
+      "size": [
+        315,
+        60
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 110
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            111
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "ModelSamplingSD3"
+      },
+      "widgets_values": [
+        8
       ]
     },
     {
       "id": 3,
       "type": "KSampler",
       "pos": [
-        540,
-        220
+        535.0439453125,
+        42
       ],
       "size": [
         315,
         474
       ],
       "flags": {},
-      "order": 12,
+      "order": 13,
       "mode": 0,
       "inputs": [
         {
@@ -253,7 +324,7 @@
         "Node name for S&R": "KSampler"
       },
       "widgets_values": [
-        182643825203865,
+        904922679318159,
         "randomize",
         20,
         6,
@@ -263,309 +334,18 @@
       ]
     },
     {
-      "id": 59,
-      "type": "CreateVideo",
-      "pos": [
-        540,
-        850
-      ],
-      "size": [
-        315,
-        78
-      ],
-      "flags": {},
-      "order": 14,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 122
-        },
-        {
-          "name": "audio",
-          "shape": 7,
-          "type": "AUDIO",
-          "link": 123
-        }
-      ],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            124
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "CreateVideo"
-      },
-      "widgets_values": [
-        16
-      ]
-    },
-    {
-      "id": 8,
-      "type": "VAEDecode",
-      "pos": [
-        540,
-        750
-      ],
-      "size": [
-        315,
-        46
-      ],
-      "flags": {},
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 35
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 76
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            122
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "VAEDecode"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 58,
-      "type": "LoadAudio",
-      "pos": [
-        -370,
-        590
-      ],
-      "size": [
-        315,
-        136
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "AUDIO",
-          "type": "AUDIO",
-          "links": [
-            121,
-            123
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "LoadAudio"
-      },
-      "widgets_values": [
-        "Everybody Wants To Rule the World.mp3",
-        null,
-        null
-      ]
-    },
-    {
-      "id": 54,
-      "type": "ModelSamplingSD3",
-      "pos": [
-        140,
-        530
-      ],
-      "size": [
-        285.087890625,
-        60
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 110
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "slot_index": 0,
-          "links": [
-            111
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "ModelSamplingSD3"
-      },
-      "widgets_values": [
-        8
-      ]
-    },
-    {
-      "id": 60,
-      "type": "SaveVideo",
-      "pos": [
-        890,
-        -80
-      ],
-      "size": [
-        1090,
-        1000
-      ],
-      "flags": {},
-      "order": 15,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 124
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "SaveVideo"
-      },
-      "widgets_values": [
-        "video/ComfyUI",
-        "auto",
-        "auto"
-      ]
-    },
-    {
-      "id": 37,
-      "type": "UNETLoader",
-      "pos": [
-        -410,
-        -30
-      ],
-      "size": [
-        413.0632019042969,
-        82
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "slot_index": 0,
-          "links": [
-            110
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "UNETLoader"
-      },
-      "widgets_values": [
-        "wan2.2_s2v_14B_bf16.safetensors",
-        "fp8_e4m3fn"
-      ]
-    },
-    {
-      "id": 39,
-      "type": "VAELoader",
-      "pos": [
-        -410,
-        260
-      ],
-      "size": [
-        413.0632019042969,
-        58
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "slot_index": 0,
-          "links": [
-            76,
-            114
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "VAELoader"
-      },
-      "widgets_values": [
-        "wan_2.1_vae.safetensors"
-      ]
-    },
-    {
-      "id": 61,
-      "type": "MarkdownNote",
-      "pos": [
-        -950,
-        -80
-      ],
-      "size": [
-        480,
-        500
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Model Links",
-      "properties": {},
-      "widgets_values": [
-        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/wan2_2_s2v\n) | [教程](https://docs.comfy.org/zh-CN/tutorials/video/wan/wan2_2_s2v\n)\n\n**diffusion_models**       \n- [wan2.2_s2v_14B_bf16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_s2v_14B_bf16.safetensors)\n\n**audio_encoders**\n- [wav2vec2_large_english_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/audio_encoders/wav2vec2_large_english_fp16.safetensors)\n\n**vae**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors)\n\n**text_encoders**   \n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   └─── wan2.2_s2v_14B_bf16.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   ├───📂 audio_encoders/ # Create one if you can't find this folder\n│   │   └─── wav2vec2_large_english_fp16.safetensors \n│   └───📂 vae/\n│       └── wan_2.1_vae.safetensors\n```\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
       "id": 55,
       "type": "WanSoundImageToVideo",
       "pos": [
-        540,
-        -80
+        130,
+        620
       ],
       "size": [
         315,
         250
       ],
       "flags": {},
-      "order": 11,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
@@ -644,18 +424,61 @@
       ]
     },
     {
-      "id": 56,
-      "type": "AudioEncoderEncode",
+      "id": 8,
+      "type": "VAEDecode",
       "pos": [
-        140,
-        440
+        535.0439453125,
+        568
       ],
       "size": [
-        285.087890625,
+        315,
         46
       ],
       "flags": {},
-      "order": 9,
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 35
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            122
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 56,
+      "type": "AudioEncoderEncode",
+      "pos": [
+        -370,
+        770
+      ],
+      "size": [
+        320,
+        50
+      ],
+      "flags": {},
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
@@ -684,6 +507,206 @@
         "Node name for S&R": "AudioEncoderEncode"
       },
       "widgets_values": []
+    },
+    {
+      "id": 60,
+      "type": "SaveVideo",
+      "pos": [
+        890,
+        -70
+      ],
+      "size": [
+        1090,
+        1000
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 124
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 58,
+      "type": "LoadAudio",
+      "pos": [
+        -370,
+        590
+      ],
+      "size": [
+        315,
+        136
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            121,
+            123
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "ComfyUI_00036_.mp3",
+        null,
+        null
+      ]
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        70,
+        -40
+      ],
+      "size": [
+        422.84503173828125,
+        164.31304931640625
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            112
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "女孩在唱歌，表情丰富"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 52,
+      "type": "LoadImage",
+      "pos": [
+        -360,
+        870
+      ],
+      "size": [
+        315,
+        314.00006103515625
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            118
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "Zoomable image (4).jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 61,
+      "type": "MarkdownNote",
+      "pos": [
+        -950,
+        -80
+      ],
+      "size": [
+        480,
+        500
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model Links",
+      "properties": {},
+      "widgets_values": [
+        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/wan2_2_s2v\n) | [教程](https://docs.comfy.org/zh-CN/tutorials/video/wan/wan2_2_s2v\n)\n\n**diffusion_models**       \n- [wan2.2_s2v_14B_bf16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_s2v_14B_bf16.safetensors)\n\n**audio_encoders**\n- [wav2vec2_large_english_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/audio_encoders/wav2vec2_large_english_fp16.safetensors)\n\n**vae**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors)\n\n**text_encoders**   \n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   └─── wan2.2_s2v_14B_bf16.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   ├───📂 audio_encoders/ # Create one if you can't find this folder\n│   │   └─── wav2vec2_large_english_fp16.safetensors \n│   └───📂 vae/\n│       └── wan_2.1_vae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 63,
+      "type": "MarkdownNote",
+      "pos": [
+        -440,
+        1250
+      ],
+      "size": [
+        480,
+        88
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Reference image is optional. You can use Ctrl-B to bypass the load image node."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -847,7 +870,7 @@
       "bounding": [
         -440,
         -110,
-        470,
+        480,
         580
       ],
       "color": "#3f789e",
@@ -860,8 +883,8 @@
       "bounding": [
         -440,
         490,
-        470,
-        630
+        480,
+        710
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -873,8 +896,21 @@
       "bounding": [
         60,
         -110,
-        445.27801513671875,
-        484.2060852050781
+        450,
+        580
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Step 4 - Video size and length",
+      "bounding": [
+        60,
+        490,
+        450,
+        460
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -884,10 +920,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6508275910438771,
+      "scale": 0.9435785844636057,
       "offset": [
-        1838.7842011777082,
-        305.3863597628686
+        811.5509994148648,
+        -640.8107375829205
       ]
     },
     "frontendVersion": "1.25.11"
