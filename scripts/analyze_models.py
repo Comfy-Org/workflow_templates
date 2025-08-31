@@ -11,6 +11,13 @@ from typing import Dict, List, Set, Tuple
 from collections import defaultdict
 
 
+def is_subgraph_node(node_type: str) -> bool:
+    """Check if a node type indicates a subgraph node (UUID/GUID format)."""
+    # Subgraph nodes have type as UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+    return bool(re.match(uuid_pattern, node_type, re.IGNORECASE))
+
+
 def analyze_json_file(file_path: str) -> Dict:
     """Analyze a single JSON file, extract model-related information and markdown safetensors links."""
     try:
@@ -59,8 +66,8 @@ def analyze_json_file(file_path: str) -> Dict:
         widgets_values = node.get('widgets_values', [])
         properties = node.get('properties', {})
 
-        # Model loader node
-        if any(keyword in node_type.lower() for keyword in ['loader', 'checkpoint']):
+        # Model loader node (but not subgraph nodes)
+        if any(keyword in node_type.lower() for keyword in ['loader', 'checkpoint']) and not is_subgraph_node(node_type):
             result['model_loaders'].append({
                 'id': node_id,
                 'type': node_type,
@@ -127,7 +134,7 @@ def analyze_markdown_links(result: Dict):
             })
 
 def analyze_matching(result: Dict):
-    """Check widgets_values and properties.models matching, skip MarkdownNote/Note nodes for properties.models check."""
+    """Check widgets_values and properties.models matching, skip MarkdownNote/Note nodes and subgraph nodes for properties.models check."""
     for safetensors_node in result['safetensors_widgets']:
         node_id = safetensors_node['id']
         node_type = safetensors_node['type']
@@ -136,6 +143,10 @@ def analyze_matching(result: Dict):
 
         # Skip properties.models check for MarkdownNote/Note nodes
         if node_type.lower() in ['markdownnote', 'note']:
+            continue
+            
+        # Skip properties.models check for subgraph nodes (type is UUID/GUID format)
+        if is_subgraph_node(node_type):
             continue
 
         properties_models = properties.get('models', [])
@@ -171,6 +182,7 @@ def analyze_all_templates(templates_dir: str) -> Tuple[Dict, Dict]:
         'files_with_properties_models': 0,
         'node_types': defaultdict(int),
         'model_loader_types': defaultdict(int),
+        'subgraph_node_types': defaultdict(int),
         'total_safetensors_files': set(),
         'files_with_errors': [],
         'markdown_link_errors': 0,
@@ -196,7 +208,11 @@ def analyze_all_templates(templates_dir: str) -> Tuple[Dict, Dict]:
                 statistics['files_with_properties_models'] += 1
 
             for node in result['safetensors_widgets']:
-                statistics['node_types'][node['type']] += 1
+                node_type = node['type']
+                if is_subgraph_node(node_type):
+                    statistics['subgraph_node_types'][node_type] += 1
+                else:
+                    statistics['node_types'][node_type] += 1
                 for sf in node['safetensors_files']:
                     statistics['total_safetensors_files'].add(sf)
 
@@ -235,6 +251,11 @@ def generate_report(results: Dict, statistics: Dict) -> str:
     report.append("\n## Node Types with .safetensors")
     for node_type, count in sorted(statistics['node_types'].items(), key=lambda x: x[1], reverse=True):
         report.append(f"- {node_type}: {count}")
+    
+    if statistics['subgraph_node_types']:
+        report.append("\n## Subgraph Node Types with .safetensors (skipped from model validation)")
+        for node_type, count in sorted(statistics['subgraph_node_types'].items(), key=lambda x: x[1], reverse=True):
+            report.append(f"- {node_type}: {count}")
 
     report.append("\n## Details")
     for filename, result in results.items():
