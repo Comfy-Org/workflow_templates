@@ -259,9 +259,12 @@ class TemplateSyncManager:
             
             new_category = {
                 "moduleName": master_category["moduleName"],
-                "category": master_category["category"],
                 "type": master_category["type"]
             }
+            
+            # Copy isEssential if it exists
+            if "isEssential" in master_category:
+                new_category["isEssential"] = master_category["isEssential"]
             
             if matching_idx is not None and matching_idx not in used_target_indices:
                 # Use existing category data for language-specific fields
@@ -271,14 +274,14 @@ class TemplateSyncManager:
                 # Preserve existing title if available
                 if "title" in existing_category:
                     new_category["title"] = existing_category["title"]
-                    self.syncer.logger.info(f"  🔗 Matched category '{master_category['category']}' with existing category (preserved title: '{existing_category['title']}')")
+                    self.syncer.logger.info(f"  🔗 Matched category '{master_category['moduleName']}' with existing category (preserved title: '{existing_category['title']}')")
                 else:
                     new_category["title"] = master_category["title"]
             else:
                 # No matching category found, use master data
                 new_category["title"] = master_category["title"]
                 if matching_idx is None:
-                    self.syncer.logger.info(f"  ➕ Added new category: '{master_category['category']}'")
+                    self.syncer.logger.info(f"  ➕ Added new category: '{master_category['moduleName']}'")
                 
             new_category["templates"] = []
             
@@ -309,7 +312,7 @@ class TemplateSyncManager:
         removed_categories = []
         for idx, target_category in enumerate(target_data):
             if idx not in used_target_indices and target_category.get("templates"):
-                removed_categories.append(target_category.get("category", f"Category {idx}"))
+                removed_categories.append(target_category.get("moduleName", f"Category {idx}"))
                 
         if removed_categories:
             self.syncer.logger.info(f"  🗑️ Removed categories: {', '.join(removed_categories)}")
