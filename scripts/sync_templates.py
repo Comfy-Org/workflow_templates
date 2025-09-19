@@ -265,6 +265,14 @@ class TemplateSyncManager:
             # Copy isEssential if it exists
             if "isEssential" in master_category:
                 new_category["isEssential"] = master_category["isEssential"]
+                
+            # Copy category if it exists
+            if "category" in master_category:
+                new_category["category"] = master_category["category"]
+                
+            # Copy icon if it exists
+            if "icon" in master_category:
+                new_category["icon"] = master_category["icon"]
             
             if matching_idx is not None and matching_idx not in used_target_indices:
                 # Use existing category data for language-specific fields
