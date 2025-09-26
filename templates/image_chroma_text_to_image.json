@@ -2,102 +2,115 @@
   "id": "b2d37916-fab5-425f-850d-7a64886e4d54",
   "revision": 0,
   "last_node_id": 750,
-  "last_link_id": 1369,
+  "last_link_id": 1371,
   "nodes": [
     {
-      "id": 741,
-      "type": "T5TokenizerOptions",
+      "id": 298,
+      "type": "VAEDecode",
       "pos": [
-        -1800,
-        830
+        -1450,
+        1470
       ],
       "size": [
-        210,
-        82
+        140,
+        46
       ],
-      "flags": {},
-      "order": 11,
+      "flags": {
+        "collapsed": false
+      },
+      "order": 16,
       "mode": 0,
       "inputs": [
         {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 1342
+          "name": "samples",
+          "type": "LATENT",
+          "link": 1355
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 1252
         }
       ],
       "outputs": [
         {
-          "name": "CLIP",
-          "type": "CLIP",
+          "name": "IMAGE",
+          "type": "IMAGE",
           "links": [
-            1356,
-            1359
+            1341
           ]
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.59",
-        "Node name for S&R": "T5TokenizerOptions",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.27",
+        "Node name for S&R": "VAEDecode"
       },
-      "widgets_values": [
-        1,
-        0
-      ]
+      "widgets_values": []
     },
     {
-      "id": 734,
-      "type": "BasicScheduler",
+      "id": 694,
+      "type": "CFGGuider",
       "pos": [
         -1770,
-        1550
+        1300
       ],
       "size": [
         210,
-        106
+        98
       ],
-      "flags": {},
-      "order": 15,
+      "flags": {
+        "collapsed": false
+      },
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
           "name": "model",
           "type": "MODEL",
-          "link": 1369
+          "link": 1370
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 1358
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 1361
         }
       ],
       "outputs": [
         {
-          "name": "SIGMAS",
-          "type": "SIGMAS",
+          "name": "GUIDER",
+          "type": "GUIDER",
           "links": [
-            1353
+            1351
           ]
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.59",
-        "Node name for S&R": "BasicScheduler",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.27",
+        "Node name for S&R": "CFGGuider"
       },
       "widgets_values": [
-        "beta",
-        26,
-        1
+        3.5
       ]
     },
     {
@@ -127,186 +140,20 @@
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.49",
-        "Node name for S&R": "KSamplerSelect",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.49",
+        "Node name for S&R": "KSamplerSelect"
       },
       "widgets_values": [
         "euler"
       ]
-    },
-    {
-      "id": 718,
-      "type": "RandomNoise",
-      "pos": [
-        -1770,
-        1170
-      ],
-      "size": [
-        210,
-        82
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "NOISE",
-          "type": "NOISE",
-          "links": [
-            1350
-          ]
-        }
-      ],
-      "title": "SEED",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.57",
-        "Node name for S&R": "RandomNoise",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": [
-        798004928304404,
-        "randomize"
-      ]
-    },
-    {
-      "id": 748,
-      "type": "CLIPTextEncode",
-      "pos": [
-        -1520,
-        570
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 13,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 1356
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            1358
-          ]
-        }
-      ],
-      "title": "CLIP Text Encode (Positive Prompt)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.59",
-        "Node name for S&R": "CLIPTextEncode"
-      },
-      "widgets_values": [
-        "This is a nature documentary close-up photograph of the right side of the face of a tiger. The photograph is centered on it's highly detailed and speckled eye surrounded by intricately detailed fur. Overlaid at the center of the image is a title text that says \"CHROMA1-HD\" in a large white 3D letters. Amateur photography. Unfiltered. Real life. Natural light. Subtle shadows. "
-      ],
-      "color": "#232",
-      "bgcolor": "#353"
-    },
-    {
-      "id": 694,
-      "type": "CFGGuider",
-      "pos": [
-        -1770,
-        1300
-      ],
-      "size": [
-        210,
-        98
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 16,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 1368
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 1358
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 1361
-        }
-      ],
-      "outputs": [
-        {
-          "name": "GUIDER",
-          "type": "GUIDER",
-          "links": [
-            1351
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.27",
-        "Node name for S&R": "CFGGuider",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": [
-        3.5
-      ]
-    },
-    {
-      "id": 739,
-      "type": "Note",
-      "pos": [
-        -1820,
-        590
-      ],
-      "size": [
-        260,
-        90
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Optional Flow Shift",
-      "properties": {},
-      "widgets_values": [
-        "Flow Shift node set to 1.0 represents intended shift by the creator of the Chroma model and will produce greater detail. "
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
     },
     {
       "id": 701,
@@ -336,25 +183,415 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            1367
+            1370,
+            1371
           ]
         }
       ],
       "title": "Flow Shift",
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.52",
-        "Node name for S&R": "ModelSamplingAuraFlow",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.52",
+        "Node name for S&R": "ModelSamplingAuraFlow"
       },
       "widgets_values": [
         1
+      ]
+    },
+    {
+      "id": 710,
+      "type": "VAELoader",
+      "pos": [
+        -2260,
+        920
+      ],
+      "size": [
+        370,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            1252
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.27",
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "ae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 718,
+      "type": "RandomNoise",
+      "pos": [
+        -1770,
+        1170
+      ],
+      "size": [
+        210,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            1350
+          ]
+        }
+      ],
+      "title": "SEED",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.57",
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        798004928304404,
+        "randomize"
+      ]
+    },
+    {
+      "id": 731,
+      "type": "UNETLoader",
+      "pos": [
+        -2260,
+        650
+      ],
+      "size": [
+        370,
+        82
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            1366
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.57",
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "Chroma1-HD-fp8_scaled_rev2.safetensors",
+            "url": "https://huggingface.co/silveroxides/Chroma1-HD-fp8-scaled/resolve/main/Chroma1-HD-fp8_scaled_rev2.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Chroma1-HD-fp8_scaled_rev2.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 733,
+      "type": "CLIPLoader",
+      "pos": [
+        -2260,
+        770
+      ],
+      "size": [
+        370,
+        110
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            1342
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.57",
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "t5xxl_fp8_e4m3fn_scaled.safetensors",
+            "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "t5xxl_fp8_e4m3fn_scaled.safetensors",
+        "chroma",
+        "default"
+      ]
+    },
+    {
+      "id": 734,
+      "type": "BasicScheduler",
+      "pos": [
+        -1770,
+        1550
+      ],
+      "size": [
+        210,
+        106
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 1371
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            1353
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "beta",
+        26,
+        1
+      ]
+    },
+    {
+      "id": 737,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        -2260,
+        1170
+      ],
+      "size": [
+        370,
+        106
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            1354
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "EmptySD3LatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 739,
+      "type": "Note",
+      "pos": [
+        -1820,
+        590
+      ],
+      "size": [
+        260,
+        90
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Optional Flow Shift",
+      "properties": {},
+      "widgets_values": [
+        "Flow Shift node set to 1.0 represents intended shift by the creator of the Chroma model and will produce greater detail. "
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 740,
+      "type": "SaveImage",
+      "pos": [
+        -1080,
+        530
+      ],
+      "size": [
+        1020,
+        1140
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1341
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 741,
+      "type": "T5TokenizerOptions",
+      "pos": [
+        -1800,
+        830
+      ],
+      "size": [
+        210,
+        82
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 1342
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            1356,
+            1359
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "T5TokenizerOptions"
+      },
+      "widgets_values": [
+        0,
+        0
       ]
     },
     {
@@ -382,6 +619,29 @@
       "bgcolor": "#653"
     },
     {
+      "id": 743,
+      "type": "MarkdownNote",
+      "pos": [
+        -2970,
+        530
+      ],
+      "size": [
+        640,
+        580
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Chroma final model has been released and is hosted [here](https://huggingface.co/lodestones/Chroma1-HD). You can visit [here](https://huggingface.co/lodestones/Chroma) to get previous versions for download. For other models, if you have used models related to Flux, then you probably don't need to download them again.\n\n## diffusion_models\n\n[Chroma1-HD.safetensors](https://huggingface.co/lodestones/Chroma1-HD/resolve/main/Chroma1-HD.safetensors)\n\nor fp8_scaled version for lower VRAM GPU\n\n[Chroma1-HD-fp8_scaled_rev2.safetensors](https://huggingface.co/silveroxides/Chroma1-HD-fp8-scaled/resolve/main/Chroma1-HD-fp8_scaled_rev2.safetensors)\n\n\n## text_encoders\n\n[t5xxl_fp16](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors)\n\nor\n\n[t5xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors)\n\n## vae\n\n[ae.safetensors](https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors)\n\n## loras\nThis workflow didn't embedded any LoRA model\n\nYou can find some LoRA in [Chroma-LoRA-Experiments](https://huggingface.co/silveroxides/Chroma-LoRA-Experiments/tree/main)\n\n\n```\n📂 ComfyUI/\n├─ 📂 models/\n│   ├─ 📂 diffusion_models/\n│   │     ├── Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors\n│   │     └── Chroma1-HD.safetensors\n│   ├─ 📂 loras/\n│   │     └── Put the LoRA file you downloaded here.\n│   ├─ 📂 text_encoders/\n│   │     ├── t5xxl_fp8_e4m3fn_scaled.safetensors\n│   │     └── t5xxl_fp16.safetensors \n│   └─ 📂 vae/\n│            └──  ae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
       "id": 747,
       "type": "SamplerCustomAdvanced",
       "pos": [
@@ -393,7 +653,7 @@
         230
       ],
       "flags": {},
-      "order": 17,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
@@ -437,6 +697,13 @@
         }
       ],
       "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
         "cnr_id": "comfy-core",
         "ver": "0.3.59",
         "Node name for S&R": "SamplerCustomAdvanced"
@@ -444,99 +711,53 @@
       "widgets_values": []
     },
     {
-      "id": 298,
-      "type": "VAEDecode",
+      "id": 748,
+      "type": "CLIPTextEncode",
       "pos": [
-        -1450,
-        1470
+        -1520,
+        570
       ],
       "size": [
-        140,
-        46
+        400,
+        200
       ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 18,
+      "flags": {},
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 1355
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 1252
+          "name": "clip",
+          "type": "CLIP",
+          "link": 1356
         }
       ],
       "outputs": [
         {
-          "name": "IMAGE",
-          "type": "IMAGE",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
           "links": [
-            1341
+            1358
           ]
         }
       ],
+      "title": "CLIP Text Encode (Positive Prompt)",
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.27",
-        "Node name for S&R": "VAEDecode",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 737,
-      "type": "EmptySD3LatentImage",
-      "pos": [
-        -2260,
-        1170
-      ],
-      "size": [
-        370,
-        106
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "links": [
-            1354
-          ]
-        }
-      ],
-      "properties": {
+        "secondTabWidth": 65,
         "cnr_id": "comfy-core",
         "ver": "0.3.59",
-        "Node name for S&R": "EmptySD3LatentImage",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
+        "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        1024,
-        1024,
-        1
+        "This is a nature documentary close-up photograph of the right side of the face of a tiger. The photograph is centered on it's highly detailed and speckled eye surrounded by intricately detailed fur. Overlaid at the center of the image is a title text that says \"CHROMA1-HD\" in a large white 3D letters. Amateur photography. Unfiltered. Real life. Natural light. Subtle shadows. "
       ],
-      "color": "#323",
-      "bgcolor": "#535"
+      "color": "#232",
+      "bgcolor": "#353"
     },
     {
       "id": 749,
@@ -550,7 +771,7 @@
         200
       ],
       "flags": {},
-      "order": 14,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
@@ -570,6 +791,13 @@
       ],
       "title": "CLIP Text Encode (Negative Prompt)",
       "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
         "cnr_id": "comfy-core",
         "ver": "0.3.59",
         "Node name for S&R": "CLIPTextEncode"
@@ -579,274 +807,6 @@
       ],
       "color": "#322",
       "bgcolor": "#533"
-    },
-    {
-      "id": 740,
-      "type": "SaveImage",
-      "pos": [
-        -1080,
-        530
-      ],
-      "size": [
-        1020,
-        1140
-      ],
-      "flags": {},
-      "order": 19,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 1341
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.59",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65
-      },
-      "widgets_values": [
-        "ComfyUI"
-      ]
-    },
-    {
-      "id": 710,
-      "type": "VAELoader",
-      "pos": [
-        -2260,
-        920
-      ],
-      "size": [
-        370,
-        60
-      ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 5,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "links": [
-            1252
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.27",
-        "Node name for S&R": "VAELoader",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "models": [
-          {
-            "name": "ae.safetensors",
-            "url": "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors",
-            "directory": "vae"
-          }
-        ]
-      },
-      "widgets_values": [
-        "ae.safetensors"
-      ]
-    },
-    {
-      "id": 731,
-      "type": "UNETLoader",
-      "pos": [
-        -2260,
-        650
-      ],
-      "size": [
-        370,
-        82
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            1366
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.57",
-        "Node name for S&R": "UNETLoader",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "models": [
-          {
-            "name": "Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors",
-            "url": "https://huggingface.co/silveroxides/Chroma1-HD-fp8-scaled/resolve/main/Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors",
-            "directory": "diffusion_models"
-          }
-        ]
-      },
-      "widgets_values": [
-        "Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors",
-        "default"
-      ]
-    },
-    {
-      "id": 750,
-      "type": "Mahiro",
-      "pos": [
-        -2370,
-        1360
-      ],
-      "size": [
-        506.0494079589844,
-        26
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 1367
-        }
-      ],
-      "outputs": [
-        {
-          "name": "patched_model",
-          "type": "MODEL",
-          "links": [
-            1368,
-            1369
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.60",
-        "Node name for S&R": "Mahiro"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 746,
-      "type": "Note",
-      "pos": [
-        -2080,
-        1440
-      ],
-      "size": [
-        210,
-        100
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Optional Mahiro",
-      "properties": {},
-      "widgets_values": [
-        "Mahiro node makes it so positive prompt influence is increased. This is optional."
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 733,
-      "type": "CLIPLoader",
-      "pos": [
-        -2260,
-        770
-      ],
-      "size": [
-        370,
-        110
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            1342
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.57",
-        "Node name for S&R": "CLIPLoader",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "models": [
-          {
-            "name": "t5xxl_fp8_e4m3fn_scaled.safetensors",
-            "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors",
-            "directory": "text_encoders"
-          }
-        ]
-      },
-      "widgets_values": [
-        "t5xxl_fp8_e4m3fn_scaled.safetensors",
-        "chroma",
-        "default"
-      ]
-    },
-    {
-      "id": 743,
-      "type": "MarkdownNote",
-      "pos": [
-        -2970,
-        530
-      ],
-      "size": [
-        640,
-        580
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "Chroma final model has been released and is hosted [here](https://huggingface.co/lodestones/Chroma1-HD). You can visit [here](https://huggingface.co/lodestones/Chroma) to get previous versions for download. For other models, if you have used models related to Flux, then you probably don't need to download them again.\n\n## diffusion_models\n\n[Chroma1-HD.safetensors](https://huggingface.co/lodestones/Chroma1-HD/resolve/main/Chroma1-HD.safetensors)\n\nor\n\n[Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors](https://huggingface.co/silveroxides/Chroma1-HD-fp8-scaled/resolve/main/Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors)\n\n\n## text_encoders\n\n[t5xxl_fp16](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors)\n\nor\n\n[t5xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors)\n\n## vae\n\n[ae.safetensors](https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors)\n\n## loras\nThis workflow didn't embedded any LoRA model\n\nYou can find some LoRA in [Chroma-LoRA-Experiments](https://huggingface.co/silveroxides/Chroma-LoRA-Experiments/tree/main)\n\n\n```\n📂 ComfyUI/\n├─ 📂 models/\n│   ├─ 📂 diffusion_models/\n│   │     ├── Chroma1-HD-fp8_scaled_rev2_learned_topp0.25_k16-2688_svd.safetensors\n│   │     └── Chroma1-HD.safetensors\n│   ├─ 📂 loras/\n│   │     └── Put the LoRA file you downloaded here.\n│   ├─ 📂 text_encoders/\n│   │     ├── t5xxl_fp8_e4m3fn_scaled.safetensors\n│   │     └── t5xxl_fp16.safetensors \n│   └─ 📂 vae/\n│            └──  ae.safetensors\n```\n"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -963,24 +923,16 @@
       "MODEL"
     ],
     [
-      1367,
+      1370,
       701,
-      0,
-      750,
-      0,
-      "MODEL"
-    ],
-    [
-      1368,
-      750,
       0,
       694,
       0,
       "MODEL"
     ],
     [
-      1369,
-      750,
+      1371,
+      701,
       0,
       734,
       0,
@@ -992,8 +944,8 @@
       "id": 4,
       "title": "Sampler Settings",
       "bounding": [
-        -1840,
-        1080,
+        -1850,
+        1075,
         730,
         600
       ],
@@ -1018,7 +970,7 @@
       "id": 6,
       "title": "Optional",
       "bounding": [
-        -1840,
+        -1850,
         500,
         290,
         560
@@ -1032,7 +984,7 @@
       "title": "Step 2: Image Size",
       "bounding": [
         -2300,
-        1080,
+        1075,
         440,
         220
       ],
@@ -1044,7 +996,7 @@
       "id": 8,
       "title": "Step 3: Prompt",
       "bounding": [
-        -1530,
+        -1525,
         500,
         420,
         550
@@ -1057,10 +1009,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.36453680349820106,
+      "scale": 0.8773012826870386,
       "offset": [
-        4434.18612777406,
-        333.1993494718826
+        2744.775256153499,
+        -651.1505822062505
       ]
     },
     "frontendVersion": "1.26.13",
