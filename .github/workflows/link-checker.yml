@@ -1,0 +1,217 @@
+name: Link Checker
+
+on:
+  push:
+    paths:
+      - 'templates/**.json'
+      - 'scripts/check_links.py'
+      - '.github/workflows/link-checker.yml'
+  pull_request:
+    paths:
+      - 'templates/**.json'
+      - 'scripts/check_links.py'
+      - '.github/workflows/link-checker.yml'
+
+permissions:
+  contents: read
+  pull-requests: write  # Allow commenting on PRs
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install lychee
+        run: |
+          curl -sSL https://github.com/lycheeverse/lychee/releases/latest/download/lychee-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          sudo mv lychee /usr/local/bin/
+          lychee --version
+
+      - name: Extract links from JSON workflows
+        id: extract_links
+        run: |
+          echo "Extracting links from JSON workflow files..."
+          python3 scripts/check_links.py extract > extracted_links.txt 2>&1 || echo "extract_failed=true" >> $GITHUB_OUTPUT
+          cat extracted_links.txt
+
+          # Check if extraction succeeded
+          if [ -f "links_to_check.txt" ] && [ -s "links_to_check.txt" ]; then
+            echo "extract_failed=false" >> $GITHUB_OUTPUT
+            echo "Found $(wc -l < links_to_check.txt) links to check"
+          else
+            echo "extract_failed=true" >> $GITHUB_OUTPUT
+            echo "::warning::No links found to check"
+          fi
+
+      - name: Check links with lychee
+        id: lychee
+        if: steps.extract_links.outputs.extract_failed == 'false'
+        run: |
+          echo "Checking extracted links..."
+          lychee \
+            --verbose \
+            --no-progress \
+            --accept 100..=103,200..=299,429 \
+            --timeout 20 \
+            --max-retries 3 \
+            --exclude 'linkedin\.com' \
+            --exclude 'facebook\.com' \
+            --exclude 'twitter\.com' \
+            --exclude 'x\.com' \
+            --format markdown \
+            --output lychee-report.md \
+            links_to_check.txt \
+            || echo "link_errors=true" >> $GITHUB_OUTPUT
+
+          if [ -f lychee-report.md ]; then
+            cat lychee-report.md
+            if grep -q "🚫 Errors" lychee-report.md; then
+              echo "link_errors=true" >> $GITHUB_OUTPUT
+              echo "::error::Broken links found in workflow files"
+            else
+              echo "link_errors=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "link_errors=false" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Generate link report
+        id: generate_report
+        if: steps.extract_links.outputs.extract_failed == 'false'
+        run: |
+          echo "Generating detailed link report..."
+          python3 scripts/check_links.py report > link_report.txt 2>&1
+          cat link_report.txt
+
+      - name: Generate excluded links report
+        id: excluded_report
+        if: steps.extract_links.outputs.extract_failed == 'false'
+        run: |
+          echo "Generating excluded links report..."
+          python3 scripts/check_links.py report-excluded > excluded_links.txt 2>&1 || true
+          if [ -f "excluded_links.txt" ]; then
+            cat excluded_links.txt
+          fi
+
+      - name: Comment on PR about link errors
+        if: github.event_name == 'pull_request' && steps.lychee.outputs.link_errors == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            // Read link checker report
+            let lycheeReport = '';
+            try {
+              lycheeReport = fs.readFileSync('lychee-report.md', 'utf8');
+            } catch (error) {
+              lycheeReport = 'Unable to read lychee report';
+            }
+
+            // Read detailed report
+            let detailedReport = '';
+            try {
+              detailedReport = fs.readFileSync('link_report.txt', 'utf8');
+            } catch (error) {
+              detailedReport = '';
+            }
+
+            // Read excluded links report
+            let excludedReport = '';
+            try {
+              excludedReport = fs.readFileSync('excluded_links.txt', 'utf8');
+            } catch (error) {
+              excludedReport = '';
+            }
+
+            // Truncate if too long (GitHub comment limit)
+            const maxLength = 60000;
+            if (lycheeReport.length > maxLength) {
+              lycheeReport = lycheeReport.substring(0, maxLength) + '\n\n...(Report truncated due to length)';
+            }
+
+            const comment = `## 🔗 Broken Links Found in Workflow Files
+
+            The link checker found broken or unreachable links in your workflow JSON files.
+
+            **Why this matters:** Broken model download links will prevent users from using the workflows properly. All URLs in \`properties.models[].url\` fields and MarkdownNote/Note widgets must be valid and accessible.
+
+            ### Link Check Results:
+
+            ${lycheeReport}
+
+            ${detailedReport ? '### Detailed Report:\n\n```\n' + detailedReport + '\n```\n' : ''}
+
+            ${excludedReport ? excludedReport + '\n\n**Note:** These links are excluded because they require authentication or have known issues. If you need to modify the exclusion rules, edit \`.lycheeignore\`.\n\n---\n\n' : ''}
+
+            ### Common Issues:
+
+            1. **404 Not Found**: The file or page doesn't exist
+               - Verify the URL is correct
+               - Check if the file was moved or renamed
+               - Update to the correct URL
+
+            2. **Timeout**: Server didn't respond in time
+               - Verify the URL is correct
+               - Check if the server is temporarily down
+               - Try accessing the URL manually
+
+            3. **Connection Failed**: Unable to reach the server
+               - Verify the domain exists
+               - Check if the repository/file was deleted
+
+            ### How to Fix:
+
+            1. **For model URLs in \`properties.models[].url\`:**
+               - Update the URL to a valid download link
+               - Ensure the model file is still available
+               - Test the URL manually before committing
+
+            2. **For links in MarkdownNote/Note widgets:**
+               - Update or remove broken documentation links
+               - Ensure all referenced resources are accessible
+
+            ### Testing Links Locally:
+
+            \`\`\`bash
+            # Extract and check links
+            python3 scripts/check_links.py extract
+            lychee links_to_check.txt
+            \`\`\`
+
+            **Note**: All links in workflow files must be valid and accessible before merging to ensure users can download required models and access documentation.`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+      - name: Upload reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: link-check-reports
+          path: |
+            extracted_links.txt
+            links_to_check.txt
+            lychee-report.md
+            link_report.txt
+          retention-days: 7
+
+      - name: Fail if broken links found
+        if: steps.lychee.outputs.link_errors == 'true'
+        run: |
+          echo "❌ Broken links detected in workflow files!"
+          echo "Please fix the broken links listed in the report above."
+          exit 1
