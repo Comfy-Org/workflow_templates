@@ -8,6 +8,43 @@ import os
 import re
 import sys
 from typing import Dict, List, Set, Tuple
+ 
+def load_whitelist_config(whitelist_path: str = None) -> Dict:
+    """Load whitelist configuration for model link checks.
+
+    Structure example:
+    {
+      "whitelist": {
+        "model_check_ignore_node_types": ["MarkdownNote", "Note"]
+      }
+    }
+    """
+    if whitelist_path is None:
+        # Default to scripts/whitelist.json relative to this file
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        whitelist_path = os.path.join(script_dir, 'whitelist.json')
+
+    if not os.path.exists(whitelist_path):
+        # Fallback to empty whitelist if file missing
+        return {"whitelist": {"model_check_ignore_node_types": []}}
+
+    try:
+        with open(whitelist_path, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+            wl = cfg.get('whitelist', {})
+            if 'model_check_ignore_node_types' not in wl:
+                wl['model_check_ignore_node_types'] = []
+            cfg['whitelist'] = wl
+            return cfg
+    except (json.JSONDecodeError, FileNotFoundError, UnicodeDecodeError):
+        return {"whitelist": {"model_check_ignore_node_types": []}}
+
+def is_node_ignored_for_model_check(node_type: str, whitelist_config: Dict) -> bool:
+    """Return True if the node type should skip model link validation."""
+    wl = (whitelist_config or {}).get('whitelist', {})
+    ignore_types = set(wl.get('model_check_ignore_node_types', []))
+    # Case-insensitive match for convenience
+    return node_type in ignore_types or node_type.lower() in {t.lower() for t in ignore_types}
 from collections import defaultdict
 
 
@@ -18,7 +55,7 @@ def is_subgraph_node(node_type: str) -> bool:
     return bool(re.match(uuid_pattern, node_type, re.IGNORECASE))
 
 
-def analyze_json_file(file_path: str) -> Dict:
+def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
     """Analyze a single JSON file, extract model-related information and markdown safetensors links."""
     try:
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -105,7 +142,7 @@ def analyze_json_file(file_path: str) -> Dict:
         result['root_models'] = data['models']
 
     # Analyze matching
-    analyze_matching(result)
+    analyze_matching(result, whitelist_config)
     # Analyze markdown links
     analyze_markdown_links(result)
 
@@ -133,7 +170,7 @@ def analyze_markdown_links(result: Dict):
                 'url_name': None
             })
 
-def analyze_matching(result: Dict):
+def analyze_matching(result: Dict, whitelist_config: Dict = None):
     """Check widgets_values and properties.models matching, skip MarkdownNote/Note nodes and subgraph nodes for properties.models check."""
     for safetensors_node in result['safetensors_widgets']:
         node_id = safetensors_node['id']
@@ -143,6 +180,9 @@ def analyze_matching(result: Dict):
 
         # Skip properties.models check for MarkdownNote/Note nodes
         if node_type.lower() in ['markdownnote', 'note']:
+            continue
+        # Skip properties.models check based on whitelist of node types
+        if is_node_ignored_for_model_check(node_type, whitelist_config or {}):
             continue
             
         # Skip properties.models check for subgraph nodes (type is UUID/GUID format)
@@ -173,7 +213,7 @@ def analyze_matching(result: Dict):
                 'safetensors_files': safetensors_files
             })
 
-def analyze_all_templates(templates_dir: str) -> Tuple[Dict, Dict]:
+def analyze_all_templates(templates_dir: str, whitelist_config: Dict = None) -> Tuple[Dict, Dict]:
     """Analyze all template files in the given directory."""
     results = {}
     statistics = {
@@ -194,7 +234,7 @@ def analyze_all_templates(templates_dir: str) -> Tuple[Dict, Dict]:
             file_path = os.path.join(templates_dir, filename)
             statistics['total_files'] += 1
 
-            result = analyze_json_file(file_path)
+            result = analyze_json_file(file_path, whitelist_config)
             results[filename] = result
 
             if 'error' in result:
@@ -280,13 +320,20 @@ def generate_report(results: Dict, statistics: Dict) -> str:
     return '\n'.join(report)
 
 def main():
-    templates_dir = './templates'
-    report_path = './model_analysis_report.md'
+    import argparse
 
-    results, statistics = analyze_all_templates(templates_dir)
+    parser = argparse.ArgumentParser(description='Analyze model references in ComfyUI templates')
+    parser.add_argument('--templates-dir', default='./templates', help='Templates directory (default: ./templates)')
+    parser.add_argument('--whitelist', help='Path to whitelist configuration JSON (default: ./scripts/whitelist.json)')
+    parser.add_argument('--report', default='./model_analysis_report.md', help='Output report path')
+    args = parser.parse_args()
+
+    whitelist_config = load_whitelist_config(args.whitelist)
+
+    results, statistics = analyze_all_templates(args.templates_dir, whitelist_config)
     report = generate_report(results, statistics)
 
-    with open(report_path, 'w', encoding='utf-8') as f:
+    with open(args.report, 'w', encoding='utf-8') as f:
         f.write(report)
 
     print(report)
