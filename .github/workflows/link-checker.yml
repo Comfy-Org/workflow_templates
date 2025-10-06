@@ -83,14 +83,6 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Generate link report
-        id: generate_report
-        if: steps.extract_links.outputs.extract_failed == 'false'
-        run: |
-          echo "Generating detailed link report..."
-          python3 scripts/check_links.py report > link_report.txt 2>&1
-          cat link_report.txt
-
       - name: Generate excluded links report
         id: excluded_report
         if: steps.extract_links.outputs.extract_failed == 'false'
@@ -101,6 +93,12 @@ jobs:
             cat excluded_links.txt
           fi
 
+      - name: Generate detailed report for artifacts
+        if: steps.extract_links.outputs.extract_failed == 'false'
+        run: |
+          echo "Generating detailed link report for artifacts..."
+          python3 scripts/check_links.py report > link_report_detailed.txt 2>&1 || true
+
       - name: Comment on PR about link errors
         if: github.event_name == 'pull_request' && steps.lychee.outputs.link_errors == 'true'
         uses: actions/github-script@v7
@@ -109,20 +107,12 @@ jobs:
           script: |
             const fs = require('fs');
 
-            // Read link checker report
+            // Read link checker report (only errors)
             let lycheeReport = '';
             try {
               lycheeReport = fs.readFileSync('lychee-report.md', 'utf8');
             } catch (error) {
               lycheeReport = 'Unable to read lychee report';
-            }
-
-            // Read detailed report
-            let detailedReport = '';
-            try {
-              detailedReport = fs.readFileSync('link_report.txt', 'utf8');
-            } catch (error) {
-              detailedReport = '';
             }
 
             // Read excluded links report
@@ -145,13 +135,11 @@ jobs:
 
             **Why this matters:** Broken model download links will prevent users from using the workflows properly. All URLs in \`properties.models[].url\` fields and MarkdownNote/Note widgets must be valid and accessible.
 
-            ### Link Check Results:
+            ### ❌ Failed Links:
 
             ${lycheeReport}
 
-            ${detailedReport ? '### Detailed Report:\n\n```\n' + detailedReport + '\n```\n' : ''}
-
-            ${excludedReport ? excludedReport + '\n\n**Note:** These links are excluded because they require authentication or have known issues. If you need to modify the exclusion rules, edit \`.lycheeignore\`.\n\n---\n\n' : ''}
+            ${excludedReport ? '---\n\n' + excludedReport + '\n\n**Note:** These links are intentionally excluded from checking. If you need to modify the exclusion rules, edit \`.lycheeignore\`.\n\n' : ''}
 
             ### Common Issues:
 
@@ -186,7 +174,20 @@ jobs:
             # Extract and check links
             python3 scripts/check_links.py extract
             lychee links_to_check.txt
+
+            # View detailed report
+            python3 scripts/check_links.py report
+
+            # View excluded links
+            python3 scripts/check_links.py report-excluded
             \`\`\`
+
+            ### 📦 Detailed Reports
+
+            For a complete list of all links and their sources, download the artifacts from this workflow run:
+            - \`link_report_detailed.txt\` - Full detailed report showing all links and which files contain them
+            - \`excluded_links.txt\` - Complete list of excluded links
+            - \`lychee-report.md\` - Full lychee check report
 
             **Note**: All links in workflow files must be valid and accessible before merging to ensure users can download required models and access documentation.`;
 
@@ -206,7 +207,8 @@ jobs:
             extracted_links.txt
             links_to_check.txt
             lychee-report.md
-            link_report.txt
+            excluded_links.txt
+            link_report_detailed.txt
           retention-days: 7
 
       - name: Fail if broken links found
