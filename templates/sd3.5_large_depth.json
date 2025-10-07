@@ -1,39 +1,9 @@
 {
   "id": "2a6b0ab5-480c-4acc-a44f-8f9b5036a76b",
   "revision": 0,
-  "last_node_id": 65,
+  "last_node_id": 67,
   "last_link_id": 130,
   "nodes": [
-    {
-      "id": 9,
-      "type": "SaveImage",
-      "pos": [
-        560.6922607421875,
-        101.67475128173828
-      ],
-      "size": [
-        845.74560546875,
-        898.2359619140625
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 13
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.33"
-      },
-      "widgets_values": [
-        "ComfyUI"
-      ]
-    },
     {
       "id": 58,
       "type": "ConditioningZeroOut",
@@ -70,7 +40,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.33",
-        "Node name for S&R": "ConditioningZeroOut"
+        "Node name for S&R": "ConditioningZeroOut",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": []
     },
@@ -135,54 +110,18 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.33",
-        "Node name for S&R": "ControlNetApplyAdvanced"
+        "Node name for S&R": "ControlNetApplyAdvanced",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": [
         0.7000000000000002,
         0,
         1
       ]
-    },
-    {
-      "id": 45,
-      "type": "LoadImage",
-      "pos": [
-        -712.6139526367188,
-        420.5608825683594
-      ],
-      "size": [
-        373.2554016113281,
-        336.6703796386719
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            127
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.33",
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "vcmd_create_dragon_mascot_characters_that_best_suitable_for_Sin_5ba6beab-2ad7-4810-997e-387c27bea297.png",
-        "image"
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
     },
     {
       "id": 46,
@@ -196,7 +135,7 @@
         58
       ],
       "flags": {},
-      "order": 1,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -216,16 +155,19 @@
         "models": [
           {
             "name": "sd3.5_large_controlnet_depth.safetensors",
-            "url": "https://huggingface.co/stabilityai/stable-diffusion-3.5-controlnets/resolve/main/sd3.5_large_controlnet_depth.safetensors?download=true",
+            "url": "https://huggingface.co/Comfy-Org/stable-diffusion-3.5-controlnets_ComfyUI_repackaged/resolve/main/split_files/controlnet/sd3.5_large_controlnet_depth.safetensors",
             "directory": "controlnet"
           }
-        ]
+        ],
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": [
         "sd3.5_large_controlnet_depth.safetensors"
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
+      ]
     },
     {
       "id": 4,
@@ -239,7 +181,7 @@
         98
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -279,20 +221,69 @@
             "url": "https://huggingface.co/Comfy-Org/stable-diffusion-3.5-fp8/resolve/main/sd3.5_large_fp8_scaled.safetensors?download=true",
             "directory": "checkpoints"
           }
-        ]
+        ],
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": [
         "sd3.5_large_fp8_scaled.safetensors"
+      ]
+    },
+    {
+      "id": 57,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -256.62030029296875,
+        95.26077270507812
       ],
-      "color": "#322",
-      "bgcolor": "#533"
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 117
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            119,
+            123
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.33",
+        "Node name for S&R": "CLIPTextEncode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "hairy dragon stuffed toy with light green color in a fairy tale background, fluffy hair, standing with 2 legs"
+      ]
     },
     {
       "id": 56,
       "type": "KSampler",
       "pos": [
-        173.2810516357422,
-        384.3057556152344
+        170,
+        100
       ],
       "size": [
         306.7953186035156,
@@ -336,7 +327,12 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.33",
-        "Node name for S&R": "KSampler"
+        "Node name for S&R": "KSampler",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": [
         0,
@@ -349,94 +345,15 @@
       ]
     },
     {
-      "id": 33,
-      "type": "EmptySD3LatentImage",
-      "pos": [
-        -708.1129150390625,
-        827.324462890625
-      ],
-      "size": [
-        300.9447021484375,
-        106
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "slot_index": 0,
-          "links": [
-            115
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.33",
-        "Node name for S&R": "EmptySD3LatentImage"
-      },
-      "widgets_values": [
-        1024,
-        1024,
-        1
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
-      "id": 57,
-      "type": "CLIPTextEncode",
-      "pos": [
-        -256.62030029296875,
-        95.26077270507812
-      ],
-      "size": [
-        400,
-        200
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "clip",
-          "type": "CLIP",
-          "link": 117
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "slot_index": 0,
-          "links": [
-            119,
-            123
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.33",
-        "Node name for S&R": "CLIPTextEncode"
-      },
-      "widgets_values": [
-        "hairy dragon stuffed toy with light green color in a fairy tale background, fluffy hair, standing with 2 legs"
-      ]
-    },
-    {
       "id": 8,
       "type": "VAEDecode",
       "pos": [
-        178.41342163085938,
-        239.4571075439453
+        170,
+        420
       ],
       "size": [
-        278.8823547363281,
-        46.5799446105957
+        310,
+        46
       ],
       "flags": {},
       "order": 10,
@@ -466,43 +383,177 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.3.33",
-        "Node name for S&R": "VAEDecode"
+        "Node name for S&R": "VAEDecode",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": []
     },
     {
-      "id": 64,
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        520,
+        100
+      ],
+      "size": [
+        845.74560546875,
+        898.2359619140625
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.33",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 45,
+      "type": "LoadImage",
+      "pos": [
+        -720,
+        450
+      ],
+      "size": [
+        373.2554016113281,
+        336.6703796386719
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            127
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.33",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "example.png",
+        "image"
+      ]
+    },
+    {
+      "id": 33,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        -680,
+        910
+      ],
+      "size": [
+        300.9447021484375,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            115
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.33",
+        "Node name for S&R": "EmptySD3LatentImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ]
+    },
+    {
+      "id": 67,
       "type": "MarkdownNote",
       "pos": [
-        -1096.2403564453125,
-        393.0308532714844
+        -1090,
+        410
       ],
       "size": [
         338.3355407714844,
         162.93470764160156
       ],
-      "flags": {},
+      "flags": {
+        "collapsed": false
+      },
       "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "properties": {},
+      "title": "Note: About the input image",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
-        "Please use the preprocessed images, or install [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) to preprocess the images.\n\n---\n\n请使用经过预处理的图像，或者安装 [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) 来对图像进行预处理"
+        "Please use the preprocessed images, or install [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) to preprocess the images"
       ],
       "color": "#432",
       "bgcolor": "#653"
     },
     {
-      "id": 65,
+      "id": 66,
       "type": "MarkdownNote",
       "pos": [
-        -1094.0626220703125,
-        54.434391021728516
+        -1270,
+        50
       ],
       "size": [
-        339.5606689453125,
-        262.63995361328125
+        520,
+        300
       ],
       "flags": {},
       "order": 5,
@@ -510,9 +561,15 @@
       "inputs": [],
       "outputs": [],
       "title": "Model links",
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "version": "7.1",
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
-        "Please visit [stable-diffusion-3.5-controlnets](https://huggingface.co/stabilityai/stable-diffusion-3.5-controlnets) and log in to agree to the protocol to get permission to download.\n\n访问链接并同意对应的仓库协议才能具有下载权限\n\n---\n\n[sd3.5_large_controlnet_depth.safetensors](https://huggingface.co/stabilityai/stable-diffusion-3.5-controlnets/resolve/main/sd3.5_large_controlnet_depth.safetensors) \nSave in  **ComfyUI/models/controlnet** \n\n\n[sd3.5_large_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/stable-diffusion-3.5-fp8/resolve/main/sd3.5_large_fp8_scaled.safetensors?download=true)\nSave in **ComfyUI/models/checkpoints** \n"
+        "**checkpoints**\n - [sd3.5_large_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/stable-diffusion-3.5-fp8/resolve/main/sd3.5_large_fp8_scaled.safetensors)\n\n**ControlNet**\n\n- [sd3.5_large_controlnet_depth.safetensors](https://huggingface.co/Comfy-Org/stable-diffusion-3.5-controlnets_ComfyUI_repackaged/resolve/main/split_files/controlnet/sd3.5_large_controlnet_depth.safetensors)\n\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 checkpoints/\n│   │   └── sd3.5_large_fp8_scaled.safetensors\n│   ├── 📂 controlnet/ \n│   │   └── sd3.5_large_controlnet_depth.safetensors\n```\n"
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -637,10 +694,10 @@
       "id": 1,
       "title": "Load models here",
       "bounding": [
-        -726.0094604492188,
-        16.407316207885742,
-        407.85345458984375,
-        311.0736083984375
+        -730,
+        20,
+        410,
+        330
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -650,10 +707,23 @@
       "id": 2,
       "title": "Need preprocessed image",
       "bounding": [
-        -722.6139526367188,
-        346.96087646484375,
+        -730,
+        380,
         402.7755432128906,
         424.4949951171875
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Image size",
+      "bounding": [
+        -730,
+        830,
+        400,
+        200
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -663,13 +733,18 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.1,
+      "scale": 0.752720943413912,
       "offset": [
-        1580.579103493252,
-        75.42708476368196
+        1262.9459058403513,
+        312.706293890329
       ]
     },
-    "frontendVersion": "1.16.9"
+    "frontendVersion": "1.27.9",
+    "ue_links": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }
