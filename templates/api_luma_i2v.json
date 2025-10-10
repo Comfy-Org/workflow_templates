@@ -84,6 +84,116 @@
       ]
     },
     {
+      "id": 8,
+      "type": "SaveVideo",
+      "pos": [
+        625.2393188476562,
+        350.60430908203125
+      ],
+      "size": [
+        370.9286193847656,
+        592.5714721679688
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "ComfyUI_video_luma",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "LoadImage",
+      "pos": [
+        -179.82247924804688,
+        -3.519538640975952
+      ],
+      "size": [
+        270,
+        314
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "first_image",
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "input.png",
+        "image"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "LumaConceptsNode",
+      "pos": [
+        -182.28829956054688,
+        722.8502807617188
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "luma_concepts",
+          "shape": 7,
+          "type": "LUMA_CONCEPTS",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "luma_concepts",
+          "type": "LUMA_CONCEPTS",
+          "links": [
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LumaConceptsNode"
+      },
+      "widgets_values": [
+        "zoom_in",
+        "orbit_left",
+        "None",
+        "None"
+      ]
+    },
+    {
       "id": 5,
       "type": "LumaImageToVideoNode",
       "pos": [
@@ -95,7 +205,7 @@
         335.2434387207031
       ],
       "flags": {},
-      "order": 6,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -138,30 +248,6 @@
         63119199850581,
         "randomize"
       ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
-      "id": 26,
-      "type": "MarkdownNote",
-      "pos": [
-        211.505615234375,
-        -12.040167808532715
-      ],
-      "size": [
-        386.8224792480469,
-        292.3617248535156
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "About Luma Image to Video",
-      "properties": {},
-      "widgets_values": [
-        "[Tuotrial](https://docs.comfy.org/tutorials/api-nodes/luma/luma-image-to-video) | [教程](https://docs.comfy.org/zh-CN/tutorials/api-nodes/luma/luma-image-to-video) \n\n1 - At least one of \"first_image\" and \"last_image\" is required\n\n2 - “luma_concepts” is mainly used to control camera movement.\n\n3 - “seed” is only used to determine whether the node should be re - run, but the actual result has nothing to do with the seed.\n\n4 -  To enable the corresponding input, right - click on the node in the current purple \"Bypass\" mode, and set the corresponding \"mode\" to \"always\".\n\n---\n\n1- \"first_image\" 和 \"last_image\" 至少需要一个\n\n2 - “luma_concepts” 主要用于控制相机运动\n\n3 - “seed” 仅用于确定节点是否应重新运行，但实际结果与种子无关 \n\n4 - 要启用对应的输入请在目前紫色“绕过（Bypss）”模式的节点上右键，设置对应的“模式（mode）” 为 “总是（always）”"
-      ],
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -184,120 +270,10 @@
       "title": "About API Node",
       "properties": {},
       "widgets_values": [
-        "[About API Node](https://docs.comfy.org/tutorials/api-nodes/overview) | [关于 API 节点](https://docs.comfy.org/zh-CN/tutorials/api-nodes/overview)\n\nTo use the API, you must be in a secure network environment:\n\n- Allows access from `127.0.0.1` or `localhost`.\n\n- Use our API Node in website services starting with `https`\n\n- Make sure you can normally connect to our API services (some regions may need a proxy).\n\n- Make sure you are logged in in the settings and that your account still has enough credits to cover the consumption of API calls.\n\n- On non-whitelisted sites or local area networks (LANs), please try to [log in using an API Key](https://docs.comfy.org/interface/user#logging-in-with-an-api-key).\n\n---\n\n要使用API，你必须处于安全的网络环境中：\n\n- 允许从`127.0.0.1`或`localhost`访问。\n- 在带有 https 开头的服务中使用我们的 API Node\n- 确保你能够正常连接我们的API服务（某些地区可能需要代理）。\n- 确保你已在设置中登录，且你的账户仍有足够的积分来支付API调用的消耗。\n- 在非白名单站点或者局域网（LAN），请尝试[使用 API Key 来登录](https://docs.comfy.org/zh-CN/interface/user#%E4%BD%BF%E7%94%A8-api-key-%E8%BF%9B%E8%A1%8C%E7%99%BB%E5%BD%95)\n"
+        "[About API Node](https://docs.comfy.org/tutorials/api-nodes/overview) \n\nTo use the API, you must be in a secure network environment:\n\n- Allows access from `127.0.0.1` or `localhost`.\n\n- Use our API Node in website services starting with `https`\n\n- Make sure you can normally connect to our API services (some regions may need a proxy).\n\n- Make sure you are logged in in the settings and that your account still has enough credits to cover the consumption of API calls.\n\n- On non-whitelisted sites or local area networks (LANs), please try to [log in using an API Key](https://docs.comfy.org/interface/user#logging-in-with-an-api-key).\n"
       ],
       "color": "#432",
       "bgcolor": "#653"
-    },
-    {
-      "id": 8,
-      "type": "SaveVideo",
-      "pos": [
-        625.2393188476562,
-        350.60430908203125
-      ],
-      "size": [
-        370.9286193847656,
-        592.5714721679688
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 6
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "Node name for S&R": "SaveVideo"
-      },
-      "widgets_values": [
-        "ComfyUI_video_luma",
-        "auto",
-        "auto"
-      ]
-    },
-    {
-      "id": 9,
-      "type": "LoadImage",
-      "pos": [
-        -179.82247924804688,
-        -3.519538640975952
-      ],
-      "size": [
-        270,
-        314
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            8
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "title": "first_image",
-      "properties": {
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "input.png",
-        "image"
-      ]
-    },
-    {
-      "id": 24,
-      "type": "LumaConceptsNode",
-      "pos": [
-        -182.28829956054688,
-        722.8502807617188
-      ],
-      "size": [
-        270,
-        130
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "luma_concepts",
-          "shape": 7,
-          "type": "LUMA_CONCEPTS",
-          "link": 19
-        }
-      ],
-      "outputs": [
-        {
-          "name": "luma_concepts",
-          "type": "LUMA_CONCEPTS",
-          "links": [
-            18
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LumaConceptsNode"
-      },
-      "widgets_values": [
-        "zoom_in",
-        "orbit_left",
-        "None",
-        "None"
-      ]
     }
   ],
   "links": [
@@ -345,7 +321,14 @@
   "groups": [],
   "config": {},
   "extra": {
-    "frontendVersion": "1.19.0"
+    "frontendVersion": "1.28.6",
+    "ds": {
+      "scale": 0.9134035339737271,
+      "offset": [
+        -124.40497653133457,
+        342.5580407696466
+      ]
+    }
   },
   "version": 0.4
 }
