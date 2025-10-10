@@ -72,7 +72,9 @@ jobs:
 
           if [ -f lychee-report.md ]; then
             cat lychee-report.md
-            if grep -q "🚫 Errors" lychee-report.md; then
+            # Check if there are actual error links (not just the "Errors" section header)
+            # Look for lines starting with "| [" after "🚫 Errors" which indicate actual broken links
+            if grep -q "🚫 Errors" lychee-report.md && sed -n '/🚫 Errors/,/^$/p' lychee-report.md | grep -q "^| \["; then
               echo "link_errors=true" >> $GITHUB_OUTPUT
               echo "::error::Broken links found in workflow files"
             else
