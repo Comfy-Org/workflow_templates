@@ -124,19 +124,11 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
     if valid_assets:
         report.append("\n## Valid Assets\n")
         report.append(f"{len(valid_assets)} asset(s) successfully validated:\n\n")
+        report.append("| Workflow File | Node Type | Asset Filename |\n")
+        report.append("|---------------|-----------|----------------|\n")
         
-        # Group by workflow file
-        by_workflow = {}
-        for asset in valid_assets:
-            workflow = asset["workflow"]
-            if workflow not in by_workflow:
-                by_workflow[workflow] = []
-            by_workflow[workflow].append(asset)
-        
-        for workflow in sorted(by_workflow.keys()):
-            report.append(f"\n**{workflow}:**\n")
-            for asset in by_workflow[workflow]:
-                report.append(f"- ✓ `{asset['filename']}` ({asset['node_type']})\n")
+        for asset in sorted(valid_assets, key=lambda x: (x["workflow"], x["filename"])):
+            report.append(f"| `{asset['workflow']}` | `{asset['node_type']}` | `{asset['filename']}` |\n")
     
     return "".join(report)
 
