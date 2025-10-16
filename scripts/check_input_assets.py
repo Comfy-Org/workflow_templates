@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """
 Script to validate that input assets referenced in workflow JSON files exist in the inputs/ folder.
+Also generates a JSON file for uploading assets to public storage.
 """
 
 import json
 import os
 import sys
+import mimetypes
+import re
 from pathlib import Path
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 
 # Configure supported node types that require input assets
 # Add new node types to this list as they are discovered
@@ -133,8 +136,187 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
     return "".join(report)
 
 
+def parse_filename(filename: str) -> Dict[str, str]:
+    """
+    Parse input filename to extract workflow name and description.
+    Format: {workflow}_{description}.{ext}
+    
+    Returns:
+        Dict with 'workflow', 'description', and 'extension' keys
+    """
+    stem = Path(filename).stem
+    ext = Path(filename).suffix.lstrip('.')
+    
+    # Try to split on first underscore to get workflow name
+    parts = stem.split('_', 1)
+    if len(parts) == 2:
+        workflow = parts[0]
+        description = parts[1].replace('_', ' ')
+    else:
+        workflow = stem
+        description = stem
+    
+    return {
+        "workflow": workflow,
+        "description": description,
+        "extension": ext
+    }
+
+
+def get_mime_type(filename: str) -> str:
+    """
+    Get MIME type for a file based on its extension.
+    """
+    mime_type, _ = mimetypes.guess_type(filename)
+    if mime_type:
+        return mime_type
+    
+    # Fallback for common extensions
+    ext = Path(filename).suffix.lower()
+    mime_map = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp',
+        '.mp4': 'video/mp4',
+        '.mov': 'video/quicktime',
+        '.avi': 'video/x-msvideo',
+        '.mp3': 'audio/mpeg',
+        '.wav': 'audio/wav',
+        '.ogg': 'audio/ogg',
+        '.json': 'application/json'
+    }
+    return mime_map.get(ext, 'application/octet-stream')
+
+
+def get_media_type_tag(mime_type: str) -> str:
+    """
+    Get media type tag from MIME type.
+    """
+    if mime_type.startswith('image/'):
+        return 'image'
+    elif mime_type.startswith('video/'):
+        return 'video'
+    elif mime_type.startswith('audio/'):
+        return 'audio'
+    else:
+        return 'file'
+
+
+def load_index_json(index_path: Path) -> Dict[str, Dict]:
+    """
+    Load index.json and create a mapping of workflow names to their info.
+    
+    Returns:
+        Dict mapping workflow name to template info
+    """
+    try:
+        with open(index_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except (json.JSONDecodeError, IOError) as e:
+        print(f"⚠️ Warning: Could not read index.json: {e}")
+        return {}
+    
+    workflow_map = {}
+    for module in data:
+        if not isinstance(module, dict):
+            continue
+        templates = module.get('templates', [])
+        for template in templates:
+            if isinstance(template, dict):
+                name = template.get('name')
+                title = template.get('title', name)
+                if name:
+                    workflow_map[name] = {
+                        'title': title,
+                        'description': template.get('description', ''),
+                        'tags': template.get('tags', [])
+                    }
+    
+    return workflow_map
+
+
+def generate_upload_json(inputs_dir: Path, templates_dir: Path, 
+                         base_url: str = "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/") -> Dict:
+    """
+    Generate JSON file for uploading assets to public storage.
+    
+    Args:
+        inputs_dir: Path to input directory
+        templates_dir: Path to templates directory  
+        base_url: Base URL for GitHub raw content
+        
+    Returns:
+        Dict with assets list ready for JSON export
+    """
+    # Load workflow info from index.json
+    index_path = templates_dir / "index.json"
+    workflow_map = load_index_json(index_path)
+    
+    assets = []
+    
+    # Scan all files in input directory
+    for file_path in sorted(inputs_dir.iterdir()):
+        if file_path.is_file() and not file_path.name.startswith('.'):
+            filename = file_path.name
+            parsed = parse_filename(filename)
+            mime_type = get_mime_type(filename)
+            media_type = get_media_type_tag(mime_type)
+            
+            # Get workflow info if available
+            workflow_name = parsed['workflow']
+            workflow_info = workflow_map.get(workflow_name, {})
+            workflow_title = workflow_info.get('title', workflow_name)
+            
+            # Generate display name
+            description = parsed['description'].title()
+            if description:
+                display_name = f"Input {media_type} for {workflow_title} workflow - {description}"
+            else:
+                display_name = f"Input {media_type} for {workflow_title} workflow"
+            
+            # Generate tags
+            tags = ['input', media_type]
+            
+            # Add workflow-specific tags if available
+            workflow_tags = workflow_info.get('tags', [])
+            if workflow_tags:
+                # Add first tag from workflow as a contextual tag
+                if workflow_tags[0] not in tags:
+                    tags.append(workflow_tags[0].lower())
+            
+            asset = {
+                "url": f"{base_url}{filename}",
+                "display_name": display_name,
+                "tags": tags,
+                "mime_type": mime_type
+            }
+            
+            assets.append(asset)
+    
+    return {"assets": assets}
+
+
 def main():
     """Main execution function."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description='Validate input assets and optionally generate upload JSON'
+    )
+    parser.add_argument(
+        '--generate-upload-json',
+        action='store_true',
+        help='Generate workflow_template_input_files.json for asset upload'
+    )
+    parser.add_argument(
+        '--base-url',
+        default='https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/',
+        help='Base URL for GitHub raw content (default: %(default)s)'
+    )
+    args = parser.parse_args()
+    
     # Get repository root
     repo_root = Path(__file__).parent.parent
     templates_dir = repo_root / "templates"
@@ -182,6 +364,31 @@ def main():
     with open(report_file, 'w', encoding='utf-8') as f:
         f.write(report)
     print(f"\n📄 Report saved to: {report_file}")
+    
+    # Generate upload JSON if requested
+    if args.generate_upload_json:
+        print("\n" + "=" * 60)
+        print("Generating Upload JSON")
+        print("=" * 60)
+        
+        upload_data = generate_upload_json(inputs_dir, templates_dir, args.base_url)
+        upload_file = repo_root / "workflow_template_input_files.json"
+        
+        with open(upload_file, 'w', encoding='utf-8') as f:
+            json.dump(upload_data, f, indent=2, ensure_ascii=False)
+        
+        print(f"✅ Generated {len(upload_data['assets'])} asset entries")
+        print(f"📄 Upload JSON saved to: {upload_file}")
+        
+        # Show sample entries
+        if upload_data['assets']:
+            print("\n📋 Sample entries:")
+            for asset in upload_data['assets'][:3]:
+                print(f"  - {asset['display_name']}")
+                print(f"    URL: {asset['url']}")
+                print(f"    Tags: {', '.join(asset['tags'])}")
+                print(f"    MIME: {asset['mime_type']}")
+                print()
     
     # Set output for GitHub Actions
     if os.getenv('GITHUB_OUTPUT'):
