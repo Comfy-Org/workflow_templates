@@ -27,6 +27,7 @@ This will:
 - Check for `LoadImage`, `LoadAudio`, and `LoadVideo` nodes
 - Validate that referenced assets exist in `input/`
 - Generate a validation report at `asset_validation_report.md`
+- **Exit with error code 1 if any assets are missing** (fails CI/CD)
 
 #### Generate Upload JSON
 

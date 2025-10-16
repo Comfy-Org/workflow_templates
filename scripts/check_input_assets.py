@@ -398,12 +398,23 @@ def main():
             f.write(f"valid_count={len(valid_assets)}\n")
     
     # Exit with appropriate code
-    if missing_assets:
-        print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s)")
-        sys.exit(1)
-    else:
-        print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
+    # If generate-upload-json flag is used, don't fail on validation errors
+    # JSON generation is independent of validation results
+    if args.generate_upload_json:
+        if missing_assets:
+            print(f"\n⚠️ Validation warning: {len(missing_assets)} missing asset(s)")
+            print("ℹ️ JSON file was generated for existing assets")
+        else:
+            print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
         sys.exit(0)
+    else:
+        # When only running validation (no JSON generation), fail on missing assets
+        if missing_assets:
+            print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s)")
+            sys.exit(1)
+        else:
+            print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
+            sys.exit(0)
 
 
 if __name__ == "__main__":
