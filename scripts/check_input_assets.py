@@ -136,10 +136,14 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
     return "".join(report)
 
 
-def parse_filename(filename: str) -> Dict[str, str]:
+def parse_filename(filename: str, workflow_names: List[str] = None) -> Dict[str, str]:
     """
     Parse input filename to extract workflow name and description.
     Format: {workflow}_{description}.{ext}
+    
+    Args:
+        filename: The filename to parse
+        workflow_names: List of known workflow names from index.json
     
     Returns:
         Dict with 'workflow', 'description', and 'extension' keys
@@ -147,14 +151,37 @@ def parse_filename(filename: str) -> Dict[str, str]:
     stem = Path(filename).stem
     ext = Path(filename).suffix.lstrip('.')
     
-    # Try to split on first underscore to get workflow name
-    parts = stem.split('_', 1)
-    if len(parts) == 2:
-        workflow = parts[0]
-        description = parts[1].replace('_', ' ')
-    else:
-        workflow = stem
-        description = stem
+    workflow = None
+    description = stem
+    
+    # If we have workflow names, try to match the longest one
+    if workflow_names:
+        # Sort by length descending to match longest first
+        sorted_names = sorted(workflow_names, key=len, reverse=True)
+        for name in sorted_names:
+            if stem.startswith(name + '_'):
+                workflow = name
+                # Remove workflow name and the underscore
+                description = stem[len(name) + 1:]
+                break
+            elif stem == name:
+                # Exact match, no description
+                workflow = name
+                description = ''
+                break
+    
+    # Fallback: if no match found, use first underscore split
+    if workflow is None:
+        parts = stem.split('_', 1)
+        if len(parts) == 2:
+            workflow = parts[0]
+            description = parts[1]
+        else:
+            workflow = stem
+            description = ''
+    
+    # Convert underscores to spaces for display
+    description = description.replace('_', ' ')
     
     return {
         "workflow": workflow,
@@ -254,37 +281,39 @@ def generate_upload_json(inputs_dir: Path, templates_dir: Path,
     index_path = templates_dir / "index.json"
     workflow_map = load_index_json(index_path)
     
+    # Get list of all workflow names for better parsing
+    workflow_names = list(workflow_map.keys())
+    
     assets = []
     
     # Scan all files in input directory
     for file_path in sorted(inputs_dir.iterdir()):
         if file_path.is_file() and not file_path.name.startswith('.'):
             filename = file_path.name
-            parsed = parse_filename(filename)
+            parsed = parse_filename(filename, workflow_names)
             mime_type = get_mime_type(filename)
             media_type = get_media_type_tag(mime_type)
             
             # Get workflow info if available
             workflow_name = parsed['workflow']
             workflow_info = workflow_map.get(workflow_name, {})
-            workflow_title = workflow_info.get('title', workflow_name)
             
             # Generate display name
-            description = parsed['description'].title()
-            if description:
-                display_name = f"Input {media_type} for {workflow_title} workflow - {description}"
+            # If workflow not found in index.json, use original filename
+            if not workflow_info:
+                # No workflow match found, use original filename
+                display_name = filename
             else:
-                display_name = f"Input {media_type} for {workflow_title} workflow"
+                # Workflow matched, generate descriptive name
+                workflow_title = workflow_info.get('title', workflow_name)
+                description = parsed['description'].title()
+                if description:
+                    display_name = f"{description} for {workflow_title}"
+                else:
+                    display_name = f"{media_type.title()} for {workflow_title}"
             
-            # Generate tags
+            # Generate tags - only input and media type
             tags = ['input', media_type]
-            
-            # Add workflow-specific tags if available
-            workflow_tags = workflow_info.get('tags', [])
-            if workflow_tags:
-                # Add first tag from workflow as a contextual tag
-                if workflow_tags[0] not in tags:
-                    tags.append(workflow_tags[0].lower())
             
             asset = {
                 "file_path": f"input/{filename}",
