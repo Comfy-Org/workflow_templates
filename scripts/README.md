@@ -1,214 +1,179 @@
-# Template Synchronization Script
+# Workflow Template Scripts
 
-This script is used to automatically synchronize template information from the English master file (`index.json`) to other language versions, ensuring consistency across all language versions.
+This directory contains scripts for managing workflow templates and their input assets.
 
-## Features
+## check_input_assets.py
 
-- 🔄 **Automatic Synchronization**: Synchronizes additions, deletions, and updates of templates from the English version
-- 📊 **Order Maintenance**: Maintains the order of templates and categories consistent with the English version across all language versions
-- 🎯 **Intelligent Field Handling**: Automatically synchronizes technical fields while prompting for handling language-specific fields
-- 💬 **Interactive Processing**: Provides flexible handling options for fields like tags and descriptions
-- 📝 **Detailed Logging**: Provides complete operation logs and change records
-- 🔒 **Safe Backup**: Automatically creates backup files and supports dry-run mode
+A comprehensive script that validates input assets referenced in workflow JSON files and optionally generates an upload configuration file.
 
-## Supported Language Versions
+### Features
 
-- 🇨🇳 Simplified Chinese (`index.zh.json`)
-- 🇹🇼 Traditional Chinese (`index.zh-TW.json`)
-- 🇯🇵 Japanese (`index.ja.json`)
-- 🇰🇷 Korean (`index.ko.json`)
-- 🇪🇸 Spanish (`index.es.json`)
-- 🇫🇷 French (`index.fr.json`)
-- 🇷🇺 Russian (`index.ru.json`)
+1. **Asset Validation**: Validates that all input assets referenced in workflow templates exist in the `input/` directory
+2. **Upload JSON Generation**: Creates a `workflow_template_input_files.json` file for bulk asset upload to public storage
+3. **Detailed Reporting**: Generates comprehensive validation reports
 
-## Installation Requirements
+### Usage
 
-- Python 3.6+
-- No additional dependencies required
+#### Basic Validation
 
-## Usage
-
-### Basic Usage
+Run asset validation without generating upload JSON:
 
 ```bash
-# Run in the templates directory - preserves all translated content by default
-python3 scripts/sync_templates.py --templates-dir templates
-
-# Or run from the scripts directory
-cd scripts
-python3 sync_templates.py --templates-dir ../templates
+python scripts/check_input_assets.py
 ```
 
-### Parameter Options
+This will:
+- Scan all workflow JSON files in `templates/`
+- Check for `LoadImage`, `LoadAudio`, and `LoadVideo` nodes
+- Validate that referenced assets exist in `input/`
+- Generate a validation report at `asset_validation_report.md`
+- **Exit with error code 1 if any assets are missing** (fails CI/CD)
+
+#### Generate Upload JSON
+
+Generate the upload JSON file for asset deployment:
 
 ```bash
-# Dry run mode - see what operations would be performed without actually modifying files
-python3 sync_templates.py --templates-dir templates --dry-run
-
-# Force sync tags (overwrite translated tags)
-python3 sync_templates.py --templates-dir templates --force-sync-tags
-
-# Force sync language fields (overwrite translated titles and descriptions)
-python3 sync_templates.py --templates-dir templates --force-sync-language-fields
-
-# Combine multiple parameters
-python3 sync_templates.py --templates-dir templates --dry-run --force-sync-tags
+python scripts/check_input_assets.py --generate-upload-json
 ```
 
-### Parameter Descriptions
+This will:
+- Perform all validation steps
+- Scan all files in `input/` directory
+- Parse filenames to extract workflow and description info
+- Match with workflow metadata from `templates/index.json`
+- Generate `workflow_template_input_files.json` at repository root
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `--templates-dir` | Directory where template files are located | `.` |
-| `--dry-run` | Dry run mode, shows operations without modifying files | `False` |
-| `--force-sync-tags` | Force sync tags (overwrites translations) | `False` |
-| `--force-sync-language-fields` | Force sync language fields (overwrites translations) | `False` |
-| `--preserve-translations` | Preserve existing translations (default behavior) | `True` |
+#### Custom Base URL
 
-## Field Handling Strategy
+Use a custom base URL for the generated asset URLs:
 
-### 🔄 Automatically Synced Fields
-These fields are directly synchronized from the English version without confirmation:
-- `models` - Model list
-- `date` - Date
-- `size` - File size
-- `mediaType` - Media type
-- `mediaSubtype` - Media subtype
-- `tutorialUrl` - Tutorial URL
-- `thumbnailVariant` - Thumbnail variant
-
-### 🌐 Language-Specific Fields (Translation Preserved by Default)
-These fields preserve existing translations by default unless `--force-sync-language-fields` is used to force synchronization:
-- `title` - Title
-- `description` - Description
-
-### 🏷️ Tag Fields (Translation Preserved by Default)
-- `tags` - Tags: Preserves translated tags by default unless `--force-sync-tags` is used to force synchronization
-
-## Default Behavior Explanation
-
-**🎯 Intelligent Protection of Translations**:
-- ✅ **Automatic Synchronization of Technical Fields**: Automatically updates technical parameters such as models, date, size
-- 🛡️ **Protection of Translation Content**: Preserves all translated titles, descriptions, and tags
-- ➕ **Intelligent Addition**: Only adds new fields when missing
-- 📊 **Maintaining Consistency**: Maintains template order and structure
-
-**Example Log Output**:
-```
-✓ Auto-synced size: 1.99                    # Automatically sync technical field
-⏭ Preserved translated tags: ['文生图', '图像']  # Preserve translated tags
-➕ Added new template: new_template_name     # Add new template
-```
-
-## Operation Types
-
-### ➕ Adding New Templates
-When new templates exist in the English version, they are automatically added to all language versions:
-```
-➕ Added new template: new_template_name
-```
-
-### 🗑️ Removing Templates
-When templates are deleted from the English version, they are removed from all language versions:
-```
-🗑️ Removed template: old_template_name
-```
-
-### ✓ Updating Templates
-When template fields change:
-```
-✓ Auto-synced size: 1.99                    # Technical field auto-synced
-⏭ Preserved translated title: '图像生成'      # Preserve translated content
-➕ Added missing tutorialUrl: https://...    # Add missing field
-```
-
-## Log Output
-
-The script generates detailed log files (`sync.log`) recording all operations:
-
-```
-2025-09-01 23:51:52 - INFO - 🚀 Starting template synchronization...
-2025-09-01 23:51:52 - INFO - 🌐 Synchronizing zh (index.zh.json)...
-2025-09-01 23:51:52 - INFO - ✓ Auto-synced size: 1.99
-2025-09-01 23:51:52 - INFO - ➕ Added new template: new_template
-```
-
-## Synchronization Summary
-
-After completion, an operation summary is displayed:
-```
-📊 Synchronization Summary:
-   Files processed: 7
-   Templates added: 3
-   Templates removed: 1
-   Templates updated: 15
-   Fields updated: 42
-```
-
-## Security Features
-
-### 🔒 Automatic Backup
-Automatic backup files are created before each run:
-- Backup location: `templates/backups/`
-- Naming format: `index.zh_20250901_235152.json`
-
-### 🧪 Dry Run Mode
-Use the `--dry-run` parameter to safely see what operations would be performed:
 ```bash
-python3 sync_templates.py --templates-dir templates --dry-run
+python scripts/check_input_assets.py --generate-upload-json --base-url "https://example.com/assets/"
 ```
+
+### Input File Naming Convention
+
+Input files should follow this naming pattern:
+
+```
+{workflow_name}_{description}.{extension}
+```
+
+Examples:
+- `image_to_video_input_image.png`
+- `flux_dev_checkpoint_example_prompt.txt`
+- `audio_stable_audio_example_reference.mp3`
+
+The script will:
+1. Extract `workflow_name` from the filename
+2. Look up workflow title from `templates/index.json`
+3. Convert `description` to human-readable format
+4. Generate appropriate display name and tags
+
+### Output Format
+
+The generated `workflow_template_input_files.json` follows this structure:
+
+```json
+{
+  "assets": [
+    {
+      "url": "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/image_to_video_input_image.png",
+      "display_name": "Input image for Image to Video workflow - Input Image",
+      "tags": ["input", "image", "image to video"],
+      "mime_type": "image/png"
+    }
+  ]
+}
+```
+
+### Supported Asset Types
+
+The script automatically detects and categorizes assets:
+
+- **Images**: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`
+- **Videos**: `.mp4`, `.mov`, `.avi`
+- **Audio**: `.mp3`, `.wav`, `.ogg`
+- **Other**: Detected via Python's `mimetypes` module
+
+### Integration with GitHub Actions
+
+The workflow is automatically triggered on:
+- Push to `main` branch (changes to `input/`, `templates/index.json`, or the script itself)
+- Pull requests with relevant changes
+- Manual workflow dispatch
+
+#### Automatic Commits
+
+The workflow will automatically:
+- **On Pull Requests**: Commit the updated `workflow_template_input_files.json` directly to the PR branch
+- **On Main Branch**: Commit the updated JSON file with `[skip ci]` to prevent recursive triggers
+- **Validation Report**: The `asset_validation_report.md` is excluded from commits (added to `.gitignore`)
+
+This ensures that the upload JSON is always up-to-date with the latest input assets.
+
+See `.github/workflows/generate-upload-json.yml` for details.
+
+### Node Types Checked
+
+Currently supported node types:
+- `LoadImage`
+- `LoadAudio`
+- `LoadVideo`
+
+To add more node types, update the `ASSET_NODE_TYPES` list in the script.
+
+## Adding New Assets
+
+1. Add your asset file to the `input/` directory following the naming convention
+2. Reference the asset in your workflow JSON file
+3. The GitHub Action will automatically:
+   - Validate the asset exists
+   - Generate updated upload JSON
+   - Commit the changes (on main branch)
 
 ## Troubleshooting
 
-### Common Issues
+### Missing Assets Error
 
-1. **Permission Errors**
-   ```bash
-   chmod +x scripts/sync_templates.py
-   ```
+If you see validation errors:
+1. Check the `asset_validation_report.md` file
+2. Ensure all referenced files exist in `input/`
+3. Verify filenames match exactly (case-sensitive)
 
-2. **File Encoding Issues**
-   Ensure all JSON files use UTF-8 encoding
+### Workflow Not Found
 
-3. **JSON Format Errors**
-   Use JSON validation tools to check file format
+If workflow title shows as the filename:
+1. Check that the workflow name matches an entry in `templates/index.json`
+2. Verify the `name` field in index.json matches the prefix of your input filename
 
-### Log Viewing
-```bash
-# View latest logs
-tail -f templates/sync.log
+### MIME Type Issues
 
-# Search for error messages
-grep -i error templates/sync.log
-```
-
-## Development Information
-
-- **Script Location**: `scripts/sync_templates.py`
-- **Python Version**: 3.6+
-- **Encoding**: UTF-8
-- **Log Level**: INFO
-
-## Best Practices
-
-1. **Pre-Run Check**: Use `--dry-run` to see what operations would be performed first
-2. **Regular Backups**: The script automatically backs up files, but it's recommended to manually back up important files regularly
-3. **Batch Processing**: For large-scale changes, consider using `--auto-sync-tags` to reduce interaction
-4. **Test Validation**: After synchronization, verify that JSON files are correctly formatted
+The script uses Python's `mimetypes` module with fallbacks for common types. If you encounter issues:
+1. Check the extension is recognized
+2. Add custom MIME types to the `mime_map` dictionary in `get_mime_type()`
 
 ## Example Workflow
 
 ```bash
-# 1. First see what operations would be performed
-python3 scripts/sync_templates.py --templates-dir templates --dry-run
+# 1. Add new input asset
+cp my_image.png input/flux_dev_checkpoint_example_sample_input.png
 
-# 2. If everything looks good, execute the actual synchronization
-python3 scripts/sync_templates.py --templates-dir templates
+# 2. Update workflow to reference it
+# Edit templates/flux_dev_checkpoint_example.json
 
-# 3. Check logs to confirm operation results
-cat templates/sync.log
+# 3. Validate locally
+python scripts/check_input_assets.py --generate-upload-json
+
+# 4. Review generated JSON
+cat workflow_template_input_files.json
+
+# 5. Commit and push
+git add input/flux_dev_checkpoint_example_sample_input.png
+git add templates/flux_dev_checkpoint_example.json
+git commit -m "Add new input asset for flux workflow"
+git push
 ```
 
----
-
-For issues or suggestions, please contact the development team.
+The GitHub Action will automatically validate and regenerate the upload JSON.
