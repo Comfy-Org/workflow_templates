@@ -79,6 +79,7 @@ The generated `workflow_template_input_files.json` follows this structure:
 {
   "assets": [
     {
+      "file_path": "input/image_to_video_input_image.png",
       "url": "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/image_to_video_input_image.png",
       "display_name": "Input image for Image to Video workflow - Input Image",
       "tags": ["input", "image", "image to video"],

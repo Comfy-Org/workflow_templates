@@ -287,6 +287,7 @@ def generate_upload_json(inputs_dir: Path, templates_dir: Path,
                     tags.append(workflow_tags[0].lower())
             
             asset = {
+                "file_path": f"input/{filename}",
                 "url": f"{base_url}{filename}",
                 "display_name": display_name,
                 "tags": tags,
@@ -385,6 +386,7 @@ def main():
             print("\n📋 Sample entries:")
             for asset in upload_data['assets'][:3]:
                 print(f"  - {asset['display_name']}")
+                print(f"    File: {asset['file_path']}")
                 print(f"    URL: {asset['url']}")
                 print(f"    Tags: {', '.join(asset['tags'])}")
                 print(f"    MIME: {asset['mime_type']}")
