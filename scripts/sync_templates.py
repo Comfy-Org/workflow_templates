@@ -79,7 +79,7 @@ class TemplateSyncer:
         if self.dry_run:
             self.logger.info(f"[DRY RUN] Would save {file_path.name}")
             return
-            
+             s
         try:
             # First get the standard JSON with indentation
             json_str = json.dumps(data, ensure_ascii=False, indent=2)
