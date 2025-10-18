@@ -3,10 +3,30 @@
 Template Synchronization Script for ComfyUI Workflow Templates
 
 This script synchronizes template information from the English master file (index.json)
-to all other language versions, maintaining consistency while preserving language-specific content.
+to all other language versions, with automatic tag translation support.
+
+Key Features:
+- Auto-sync technical fields (models, date, size, vram, etc.)
+- Automatic tag translation using tag_mappings.json
+- Preserve language-specific translations (title, description)
+- Detect and track new tags for manual translation
+- Maintain consistent structure across all language files
+
+Tag Translation Workflow:
+1. Tags are automatically translated from English to target language using tag_mappings.json
+2. New tags not in mappings are temporarily kept in English
+3. New tags are added to tag_mappings.json for later translation
+4. Update tag_mappings.json with proper translations
+5. Re-run sync to apply translations to all language files
+
+Usage:
+    python sync_templates.py --templates-dir ./templates
+    python sync_templates.py --templates-dir ./templates --dry-run
+    python sync_templates.py --templates-dir ./templates --force-sync-language-fields
 
 Author: Claude Code
-Date: 2025-09-01
+Date: 2025-10-17
+Version: 2.0
 """
 
 import json
@@ -24,9 +44,12 @@ class TemplateSyncer:
     """Main class for template synchronization operations"""
     
     def __init__(self, templates_dir: str, dry_run: bool = False):
-        self.templates_dir = Path(templates_dir)
+        self.templates_dir = Path(templates_dir).resolve()
         self.dry_run = dry_run
         self.master_file = self.templates_dir / "index.json"
+        # Tag mappings file is in the scripts directory (sibling to templates)
+        scripts_dir = self.templates_dir.parent / "scripts"
+        self.tag_mappings_file = scripts_dir / "tag_mappings.json"
         
         # Configuration for field handling
         self.auto_sync_fields = {
@@ -47,8 +70,17 @@ class TemplateSyncer:
             "ru": "index.ru.json"
         }
         
-        # Setup logging
+        # Setup logging first
         self.setup_logging()
+        
+        # Load tag mappings (needs logger)
+        self.tag_mappings = self.load_tag_mappings()
+        self.category_mappings = {}
+        self.title_mappings = {}
+        self.new_tags = set()  # Track new tags discovered during sync
+        self.used_tags = set()  # Track tags that are actually used in templates
+        self.used_categories = set()  # Track categories that are actually used
+        self.used_titles = set()  # Track titles that are actually used
         
     def setup_logging(self):
         """Configure logging system"""
@@ -62,6 +94,165 @@ class TemplateSyncer:
             ]
         )
         self.logger = logging.getLogger(__name__)
+        
+    def load_tag_mappings(self) -> Dict[str, Dict[str, str]]:
+        """Load tag mappings from JSON file"""
+        if not self.tag_mappings_file.exists():
+            self.logger.warning(f"Tag mappings file not found: {self.tag_mappings_file}")
+            return {}
+            
+        try:
+            with open(self.tag_mappings_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            # Extract metadata if present
+            metadata = data.get('_metadata', {})
+            supported_langs = []
+            if metadata:
+                self.logger.info(f"Tag mappings metadata: {metadata.get('description', 'N/A')}")
+                # Get supported languages from metadata
+                supported_langs = metadata.get('languages', [])
+                if supported_langs:
+                    self.logger.info(f"Supported languages: {', '.join(supported_langs)}")
+                    # Update language files based on metadata
+                    self.language_files = {lang: f"index.{lang}.json" for lang in supported_langs}
+            
+            # Extract categories and titles mappings
+            self.category_mappings = data.get('_categories', {})
+            self.title_mappings = data.get('_titles', {})
+            
+            # Filter out metadata and special sections, return only tag mappings
+            mappings = {k: v for k, v in data.items() if not k.startswith('_')}
+            
+            # Ensure all tags, categories, and titles have entries for all supported languages
+            if supported_langs:
+                updated = False
+                
+                # Update tag mappings
+                for tag, translations in mappings.items():
+                    for lang in supported_langs:
+                        if lang not in translations:
+                            translations[lang] = tag
+                            updated = True
+                            self.logger.info(f"  ➕ Added missing language '{lang}' for tag '{tag}'")
+                
+                # Update category mappings
+                for category, translations in self.category_mappings.items():
+                    for lang in supported_langs:
+                        if lang not in translations:
+                            translations[lang] = category
+                            updated = True
+                            self.logger.info(f"  ➕ Added missing language '{lang}' for category '{category}'")
+                
+                # Update title mappings
+                for title, translations in self.title_mappings.items():
+                    for lang in supported_langs:
+                        if lang not in translations:
+                            translations[lang] = title
+                            updated = True
+                            self.logger.info(f"  ➕ Added missing language '{lang}' for title '{title}'")
+                
+                if updated:
+                    # Save updated mappings
+                    self.logger.info(f"Saving mappings with added language entries...")
+                    data['_categories'] = self.category_mappings
+                    data['_titles'] = self.title_mappings
+                    self._save_mappings_with_metadata(data, mappings)
+            
+            self.logger.info(f"Loaded mappings - Tags: {len(mappings)}, Categories: {len(self.category_mappings)}, Titles: {len(self.title_mappings)}")
+            return mappings
+        except Exception as e:
+            self.logger.error(f"Failed to load tag mappings: {e}")
+            return {}
+            
+    def _save_mappings_with_metadata(self, original_data: dict, mappings: dict):
+        """Helper method to save mappings with metadata preserved"""
+        if self.dry_run:
+            return
+            
+        try:
+            # Preserve metadata if it exists
+            output_data = {}
+            if '_metadata' in original_data:
+                output_data['_metadata'] = original_data['_metadata']
+            
+            # Add tag mappings (sorted for consistency)
+            for tag in sorted(mappings.keys()):
+                output_data[tag] = mappings[tag]
+            
+            # Save to file
+            with open(self.tag_mappings_file, 'w', encoding='utf-8') as f:
+                json.dump(output_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            self.logger.error(f"Failed to save tag mappings: {e}")
+    
+    def save_tag_mappings(self):
+        """Save tag mappings to JSON file, preserving metadata"""
+        if self.dry_run:
+            self.logger.info(f"[DRY RUN] Would save tag mappings")
+            return
+            
+        try:
+            # Load existing file to preserve metadata
+            existing_data = {}
+            if self.tag_mappings_file.exists():
+                with open(self.tag_mappings_file, 'r', encoding='utf-8') as f:
+                    existing_data = json.load(f)
+            
+            self._save_mappings_with_metadata(existing_data, self.tag_mappings)
+            self.logger.info(f"Saved tag mappings: {len(self.tag_mappings)} tags")
+        except Exception as e:
+            self.logger.error(f"Failed to save tag mappings: {e}")
+            
+    def translate_tag(self, tag: str, target_lang: str) -> str:
+        """Translate a tag to target language using mappings"""
+        if tag in self.tag_mappings:
+            lang_mappings = self.tag_mappings[tag]
+            if target_lang in lang_mappings:
+                return lang_mappings[target_lang]
+        
+        # Tag not found in mappings - track it as new
+        if tag not in self.tag_mappings:
+            self.new_tags.add(tag)
+            self.logger.warning(f"  ⚠️  New tag discovered: '{tag}' (using English temporarily)")
+            
+            # Add to mappings with English as default for all languages
+            self.tag_mappings[tag] = {
+                lang: tag for lang in self.language_files.keys()
+            }
+        
+        # Return English as fallback
+        return tag
+        
+    def translate_tags(self, tags: List[str], target_lang: str) -> List[str]:
+        """Translate a list of tags to target language"""
+        # Track which tags are being used
+        self.used_tags.update(tags)
+        return [self.translate_tag(tag, target_lang) for tag in tags]
+    
+    def translate_category(self, category: str, target_lang: str) -> str:
+        """Translate a category to target language using mappings"""
+        self.used_categories.add(category)
+        
+        if category in self.category_mappings:
+            lang_mappings = self.category_mappings[category]
+            if target_lang in lang_mappings:
+                return lang_mappings[target_lang]
+        
+        # Category not found in mappings - return English
+        return category
+    
+    def translate_title(self, title: str, target_lang: str) -> str:
+        """Translate a title to target language using mappings"""
+        self.used_titles.add(title)
+        
+        if title in self.title_mappings:
+            lang_mappings = self.title_mappings[title]
+            if target_lang in lang_mappings:
+                return lang_mappings[target_lang]
+        
+        # Title not found in mappings - return English
+        return title
         
     def load_json_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load and parse JSON file"""
@@ -79,7 +270,7 @@ class TemplateSyncer:
         if self.dry_run:
             self.logger.info(f"[DRY RUN] Would save {file_path.name}")
             return
-             s
+            
         try:
             # First get the standard JSON with indentation
             json_str = json.dumps(data, ensure_ascii=False, indent=2)
@@ -186,25 +377,19 @@ class TemplateSyncManager:
                     changes_made = True
                     self.syncer.logger.info(f"  ✓ Auto-synced {field}: {master_template[field]}")
                     
-        # Handle tags based on options - default is to preserve existing translations
+        # Handle tags - always translate using mappings
         if "tags" in master_template:
-            if self.sync_options.get("force_sync_tags", False):
-                # Only sync tags if explicitly forced
-                if "tags" not in target_template or set(target_template["tags"]) != set(master_template["tags"]):
-                    updated_template["tags"] = master_template["tags"]
-                    changes_made = True
-                    self.syncer.logger.info(f"  ✓ Force-synced tags: {master_template['tags']}")
-            else:
-                # Default: preserve existing translated tags
-                if "tags" not in target_template:
-                    # Only add tags if template doesn't have any
-                    updated_template["tags"] = master_template["tags"]
-                    changes_made = True
-                    self.syncer.logger.info(f"  ➕ Added missing tags: {master_template['tags']}")
+            # Translate tags from English to target language
+            translated_tags = self.syncer.translate_tags(master_template["tags"], lang)
+            
+            # Update if different or missing
+            if "tags" not in target_template or target_template["tags"] != translated_tags:
+                updated_template["tags"] = translated_tags
+                changes_made = True
+                if translated_tags != master_template["tags"]:
+                    self.syncer.logger.info(f"  🏷️  Translated tags: {master_template['tags']} → {translated_tags}")
                 else:
-                    # Keep existing translated tags
-                    if set(target_template["tags"]) != set(master_template["tags"]):
-                        self.syncer.logger.info(f"  ⏭ Preserved translated tags: {target_template['tags']} (English: {master_template['tags']})")
+                    self.syncer.logger.info(f"  ➕ Added tags: {translated_tags}")
                         
         # Handle language-specific fields - default is to preserve existing translations
         for field in self.syncer.language_specific_fields:
@@ -279,17 +464,18 @@ class TemplateSyncManager:
                 existing_category = target_data[matching_idx]
                 used_target_indices.add(matching_idx)
                 
-                # Preserve existing title if available
-                if "title" in existing_category:
-                    new_category["title"] = existing_category["title"]
-                    self.syncer.logger.info(f"  🔗 Matched category '{master_category['moduleName']}' with existing category (preserved title: '{existing_category['title']}')")
-                else:
-                    new_category["title"] = master_category["title"]
+                # Use translated title from mappings
+                master_title = master_category.get("title", "")
+                translated_title = self.syncer.translate_title(master_title, lang)
+                new_category["title"] = translated_title
+                self.syncer.logger.info(f"  🔗 Matched category '{master_category['moduleName']}' with existing category (translated title: '{translated_title}')")
             else:
-                # No matching category found, use master data
-                new_category["title"] = master_category["title"]
+                # No matching category found, use translated title from mappings
+                master_title = master_category.get("title", "")
+                translated_title = self.syncer.translate_title(master_title, lang)
+                new_category["title"] = translated_title
                 if matching_idx is None:
-                    self.syncer.logger.info(f"  ➕ Added new category: '{master_category['moduleName']}'")
+                    self.syncer.logger.info(f"  ➕ Added new category: '{master_category['moduleName']}' (translated title: '{translated_title}')")
                 
             new_category["templates"] = []
             
@@ -350,6 +536,24 @@ class TemplateSyncManager:
                 self.syncer.logger.error(f"Failed to sync {lang}: {e}")
                 success = False
                 
+        # Check for unused tags in mappings
+        unused_tags = set(self.syncer.tag_mappings.keys()) - self.syncer.used_tags
+        if unused_tags:
+            self.syncer.logger.info(f"\n🗑️  Unused tags in mappings: {len(unused_tags)}")
+            self.syncer.logger.info(f"   These tags exist in tag_mappings.json but are not used in any template:")
+            for tag in sorted(unused_tags):
+                self.syncer.logger.info(f"   - {tag}")
+            self.syncer.logger.info(f"   💡 You can manually remove these from {self.syncer.tag_mappings_file} if they are no longer needed")
+        
+        # Save tag mappings if new tags were discovered
+        if self.syncer.new_tags:
+            self.syncer.logger.info(f"\n🆕 New tags discovered: {len(self.syncer.new_tags)}")
+            for tag in sorted(self.syncer.new_tags):
+                self.syncer.logger.info(f"   - {tag}")
+            self.syncer.logger.info(f"\n💾 Saving updated tag mappings...")
+            self.syncer.save_tag_mappings()
+            self.syncer.logger.info(f"✅ Please review and update translations for new tags in: {self.syncer.tag_mappings_file}")
+        
         # Print summary
         self.syncer.logger.info(f"\n📊 Synchronization Summary:")
         self.syncer.logger.info(f"   Files processed: {self.stats['files_processed']}")
@@ -357,25 +561,42 @@ class TemplateSyncManager:
         self.syncer.logger.info(f"   Templates removed: {self.stats['templates_removed']}")
         self.syncer.logger.info(f"   Templates updated: {self.stats['templates_updated']}")
         self.syncer.logger.info(f"   Fields updated: {self.stats['fields_updated']}")
+        if self.syncer.new_tags:
+            self.syncer.logger.info(f"   New tags found: {len(self.syncer.new_tags)}")
         
         return success
 
 
 def main():
     """Main entry point"""
-    parser = argparse.ArgumentParser(description='Synchronize ComfyUI workflow template files')
+    parser = argparse.ArgumentParser(
+        description='Synchronize ComfyUI workflow template files with automatic tag translation',
+        epilog="""
+Examples:
+  # Normal sync with tag translation
+  python sync_templates.py --templates-dir ./templates
+  
+  # Dry run to see what would change
+  python sync_templates.py --templates-dir ./templates --dry-run
+  
+  # Force sync language fields (overwrite existing translations)
+  python sync_templates.py --templates-dir ./templates --force-sync-language-fields
+
+Tag Translation:
+  Tags are automatically translated using tag_mappings.json. New tags will be 
+  added to the mappings file using English as default. You can then manually 
+  update the translations for each language in tag_mappings.json.
+        """
+    )
     parser.add_argument('--templates-dir', default='.', help='Directory containing template files')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
-    parser.add_argument('--force-sync-tags', action='store_true', help='Force sync all tags (overwrite translations)')
-    parser.add_argument('--force-sync-language-fields', action='store_true', help='Force sync language-specific fields (overwrite translations)')
-    parser.add_argument('--preserve-translations', action='store_true', default=True, help='Preserve existing translations (default behavior)')
+    parser.add_argument('--force-sync-language-fields', action='store_true', 
+                       help='Force sync language-specific fields (title, description) - overwrite existing translations')
     
     args = parser.parse_args()
     
     sync_options = {
-        'force_sync_tags': args.force_sync_tags,
-        'force_sync_language_fields': args.force_sync_language_fields,
-        'preserve_translations': args.preserve_translations
+        'force_sync_language_fields': args.force_sync_language_fields
     }
     
     try:
