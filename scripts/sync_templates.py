@@ -73,14 +73,19 @@ class TemplateSyncer:
         # Setup logging first
         self.setup_logging()
         
-        # Load tag mappings (needs logger)
+        # Load tag mappings (needs logger) - this also loads untranslated_templates
         self.tag_mappings = self.load_tag_mappings()
-        self.category_mappings = {}
-        self.title_mappings = {}
+        # Note: category_mappings, title_mappings, and untranslated_templates are loaded in load_tag_mappings
         self.new_tags = set()  # Track new tags discovered during sync
         self.used_tags = set()  # Track tags that are actually used in templates
         self.used_categories = set()  # Track categories that are actually used
         self.used_titles = set()  # Track titles that are actually used
+        self.translation_stats = {
+            'templates_scanned': 0,
+            'untranslated_found': 0,
+            'translations_applied': 0,
+            'translations_synced': 0
+        }
         
     def setup_logging(self):
         """Configure logging system"""
@@ -121,6 +126,11 @@ class TemplateSyncer:
             self.category_mappings = data.get('_categories', {})
             self.title_mappings = data.get('_titles', {})
             
+            # Load untranslated templates FIRST - before any save operations
+            self.untranslated_templates = data.get('_untranslated_templates', {})
+            self.original_untranslated_templates = json.loads(json.dumps(self.untranslated_templates))  # Deep copy
+            self.logger.info(f"DEBUG: Loaded {len(self.untranslated_templates)} templates with translation tracking")
+            
             # Filter out metadata and special sections, return only tag mappings
             mappings = {k: v for k, v in data.items() if not k.startswith('_')}
             
@@ -160,6 +170,8 @@ class TemplateSyncer:
                     self._save_mappings_with_metadata(data, mappings)
             
             self.logger.info(f"Loaded mappings - Tags: {len(mappings)}, Categories: {len(self.category_mappings)}, Titles: {len(self.title_mappings)}")
+            self.logger.info(f"DEBUG: Final untranslated_templates count: {len(self.untranslated_templates)}")
+            
             return mappings
         except Exception as e:
             self.logger.error(f"Failed to load tag mappings: {e}")
@@ -176,6 +188,18 @@ class TemplateSyncer:
             if '_metadata' in original_data:
                 output_data['_metadata'] = original_data['_metadata']
             
+            # Add categories and titles
+            if self.category_mappings:
+                output_data['_categories'] = self.category_mappings
+            if self.title_mappings:
+                output_data['_titles'] = self.title_mappings
+            
+            # Add untranslated templates - prioritize memory version over file version
+            if self.untranslated_templates:
+                output_data['_untranslated_templates'] = self.untranslated_templates
+            elif '_untranslated_templates' in original_data:
+                output_data['_untranslated_templates'] = original_data['_untranslated_templates']
+            
             # Add tag mappings (sorted for consistency)
             for tag in sorted(mappings.keys()):
                 output_data[tag] = mappings[tag]
@@ -187,12 +211,18 @@ class TemplateSyncer:
             self.logger.error(f"Failed to save tag mappings: {e}")
     
     def save_tag_mappings(self):
-        """Save tag mappings to JSON file, preserving metadata"""
+        """Save tag mappings to JSON file, preserving metadata and creating backup"""
         if self.dry_run:
             self.logger.info(f"[DRY RUN] Would save tag mappings")
             return
             
         try:
+            # Create backup before saving
+            if self.tag_mappings_file.exists():
+                backup_file = self.tag_mappings_file.with_suffix('.json.backup')
+                shutil.copy2(self.tag_mappings_file, backup_file)
+                self.logger.info(f"Created backup: {backup_file.name}")
+            
             # Load existing file to preserve metadata
             existing_data = {}
             if self.tag_mappings_file.exists():
@@ -253,6 +283,188 @@ class TemplateSyncer:
         
         # Title not found in mappings - return English
         return title
+    
+    def detect_untranslated_field(self, template_name: str, field: str, 
+                                   en_value: str, lang: str, lang_value: str) -> bool:
+        """
+        Detect if a field is untranslated (same as English)
+        Returns True if untranslated and recorded
+        IMPORTANT: Never overwrites manually added translations
+        """
+        if en_value == lang_value and en_value:  # Same as English and not empty
+            # Initialize template entry if needed
+            if template_name not in self.untranslated_templates:
+                self.untranslated_templates[template_name] = {}
+            
+            # Initialize field entry if needed
+            if field not in self.untranslated_templates[template_name]:
+                self.untranslated_templates[template_name][field] = {
+                    '_sync_status': {
+                        'last_synced': datetime.now().isoformat(),
+                        'needs_translation': [],
+                        'translated': [],
+                        'manually_added': []
+                    },
+                    'en': en_value
+                }
+            
+            # Get the field data
+            field_data = self.untranslated_templates[template_name][field]
+            sync_status = field_data['_sync_status']
+            
+            # Check if we already have a manually added translation for this language
+            existing_value = field_data.get(lang, '')
+            if existing_value and existing_value != en_value:
+                # User has manually added a translation, don't overwrite or modify
+                # Just update the status lists if needed
+                if lang in sync_status['needs_translation']:
+                    sync_status['needs_translation'].remove(lang)
+                if lang not in sync_status['manually_added']:
+                    sync_status['manually_added'].append(lang)
+                return False  # Not untranslated, has manual translation
+            
+            # Only add to needs_translation if not already there
+            if lang not in sync_status['needs_translation'] and lang not in sync_status['translated']:
+                sync_status['needs_translation'].append(lang)
+            
+            # Only store English value if no translation exists
+            if lang not in field_data:
+                field_data[lang] = lang_value
+            
+            # Update sync time
+            sync_status['last_synced'] = datetime.now().isoformat()
+            
+            return True
+        return False
+    
+    def apply_translation_from_mapping(self, template_name: str, field: str, 
+                                       lang: str) -> Optional[str]:
+        """
+        Get translation from mapping for a specific template field
+        Returns translation if available and different from English, None otherwise
+        """
+        if template_name not in self.untranslated_templates:
+            return None
+        
+        template_data = self.untranslated_templates[template_name]
+        if field not in template_data:
+            return None
+        
+        field_data = template_data[field]
+        en_value = field_data.get('en', '')
+        
+        # Check if we have a translation for this language
+        if lang in field_data:
+            translation = field_data[lang]
+            # Only return if it's actually a translation (different from English)
+            if translation != en_value and translation:
+                return translation
+        
+        return None
+    
+    def update_translation_status(self, template_name: str, field: str, 
+                                   lang: str, current_value: str, en_value: str):
+        """
+        Update the translation status after syncing
+        Moves language from needs_translation to translated if translation is applied
+        """
+        if template_name not in self.untranslated_templates:
+            return
+        
+        template_data = self.untranslated_templates[template_name]
+        if field not in template_data:
+            return
+        
+        field_data = template_data[field]
+        sync_status = field_data['_sync_status']
+        
+        # Check if the value is now different from English (translated)
+        if current_value != en_value and current_value:
+            # Move from needs_translation to translated
+            if lang in sync_status['needs_translation']:
+                sync_status['needs_translation'].remove(lang)
+            if lang not in sync_status['translated']:
+                sync_status['translated'].append(lang)
+            
+            # Remove from manually_added if present
+            if lang in sync_status.get('manually_added', []):
+                sync_status['manually_added'].remove(lang)
+            
+            # Remove the untranslated value from field_data
+            if lang in field_data and field_data[lang] == en_value:
+                del field_data[lang]
+        
+        # Update sync time
+        sync_status['last_synced'] = datetime.now().isoformat()
+        
+        # Clean up if this field is fully translated
+        if not sync_status['needs_translation'] and not sync_status.get('manually_added', []):
+            # All languages translated, can optionally remove this field
+            # For now, keep it for tracking but mark it
+            sync_status['fully_translated'] = True
+    
+    def detect_manually_added_translations(self):
+        """
+        Detect translations that were manually added to the mapping
+        but not yet synced to language files
+        """
+        self.logger.info(f"\n🔍 Scanning for manually added translations...")
+        self.logger.info(f"   Checking {len(self.untranslated_templates)} templates")
+        
+        manually_added_count = 0
+        for template_name, template_data in self.untranslated_templates.items():
+            for field in ['title', 'description']:
+                if field not in template_data:
+                    continue
+                
+                field_data = template_data[field]
+                sync_status = field_data.get('_sync_status', {})
+                en_value = field_data.get('en', '')
+                
+                # Check each language in the field
+                for lang in self.language_files.keys():
+                    if lang not in field_data:
+                        continue
+                    
+                    value = field_data[lang]
+                    
+                    # If value is different from English, it's a translation
+                    if value != en_value and value:
+                        # Check if it's in needs_translation (meaning not yet synced)
+                        if lang in sync_status.get('needs_translation', []):
+                            if 'manually_added' not in sync_status:
+                                sync_status['manually_added'] = []
+                            if lang not in sync_status['manually_added']:
+                                sync_status['manually_added'].append(lang)
+                                manually_added_count += 1
+                                self.logger.info(f"  💾 Detected manually added translation: {template_name}.{field}[{lang}]")
+                        
+                        # Also check if this translation is already applied to language files
+                        # If so, move it from needs_translation to translated
+                        lang_file = self.language_files.get(lang)
+                        if lang_file:
+                            try:
+                                with open(self.templates_dir / lang_file, 'r', encoding='utf-8') as f:
+                                    lang_data = json.load(f)
+                                
+                                # Find the template in the language file
+                                lang_templates = [t for cat in lang_data for t in cat.get('templates', []) if t.get('name') == template_name]
+                                if lang_templates and field in lang_templates[0]:
+                                    current_lang_value = lang_templates[0][field]
+                                    if current_lang_value == value:
+                                        # Translation is already applied, update status
+                                        if lang in sync_status.get('needs_translation', []):
+                                            sync_status['needs_translation'].remove(lang)
+                                        if lang not in sync_status.get('translated', []):
+                                            sync_status['translated'].append(lang)
+                                        if lang in sync_status.get('manually_added', []):
+                                            sync_status['manually_added'].remove(lang)
+                                        self.logger.info(f"  ✅ Translation already applied: {template_name}.{field}[{lang}]")
+                            except Exception as e:
+                                self.logger.debug(f"Could not check language file {lang_file}: {e}")
+        
+        if manually_added_count > 0:
+            self.logger.info(f"\n✅ Found {manually_added_count} manually added translations ready to sync")
         
     def load_json_file(self, file_path: Path) -> List[Dict[str, Any]]:
         """Load and parse JSON file"""
@@ -391,24 +603,56 @@ class TemplateSyncManager:
                 else:
                     self.syncer.logger.info(f"  ➕ Added tags: {translated_tags}")
                         
-        # Handle language-specific fields - default is to preserve existing translations
+        # Handle language-specific fields with translation detection and application
         for field in self.syncer.language_specific_fields:
             if field in master_template:
-                if field not in target_template:
+                en_value = master_template[field]
+                current_value = target_template.get(field, en_value)
+                
+                # First, check if we have a translation in the mapping
+                translation = self.syncer.apply_translation_from_mapping(template_name, field, lang)
+                
+                if translation:
+                    # We have a translation in mapping, apply it
+                    if current_value != translation:
+                        updated_template[field] = translation
+                        changes_made = True
+                        self.syncer.translation_stats['translations_applied'] += 1
+                        self.syncer.logger.info(f"  🌐 Applied translation from mapping for {field}: '{translation}'")
+                        
+                        # Update translation status
+                        self.syncer.update_translation_status(template_name, field, lang, translation, en_value)
+                elif field not in target_template:
                     # Add missing language-specific field from English
-                    updated_template[field] = master_template[field]
+                    updated_template[field] = en_value
                     changes_made = True
-                    self.syncer.logger.info(f"  ➕ Added missing {field}: {master_template[field]}")
+                    self.syncer.logger.info(f"  ➕ Added missing {field}: {en_value}")
+                    
+                    # Detect as untranslated
+                    self.syncer.detect_untranslated_field(template_name, field, en_value, lang, en_value)
                 elif self.sync_options.get("force_sync_language_fields", False):
                     # Only update if explicitly forced
-                    if self.syncer.compare_field_values(field, target_template[field], master_template[field]):
-                        updated_template[field] = master_template[field]
+                    if self.syncer.compare_field_values(field, current_value, en_value):
+                        updated_template[field] = en_value
                         changes_made = True
-                        self.syncer.logger.info(f"  ✓ Force-synced {field}: {master_template[field]}")
+                        self.syncer.logger.info(f"  ✓ Force-synced {field}: {en_value}")
                 else:
-                    # Default: preserve existing translations
-                    if self.syncer.compare_field_values(field, target_template[field], master_template[field]):
-                        self.syncer.logger.info(f"  ⏭ Preserved translated {field}: '{target_template[field]}' (English: '{master_template[field]}')")
+                    # Check if current value is same as English (untranslated)
+                    is_untranslated = self.syncer.detect_untranslated_field(
+                        template_name, field, en_value, lang, current_value
+                    )
+                    
+                    if is_untranslated:
+                        self.syncer.logger.info(f"  ⚠️  Untranslated {field} detected in {lang}: '{current_value}'")
+                    elif self.syncer.compare_field_values(field, current_value, en_value):
+                        # Different from English, it's translated
+                        self.syncer.logger.info(f"  ⏭ Preserved translated {field}: '{current_value}' (English: '{en_value}')")
+                        
+                        # Update status to mark as translated
+                        self.syncer.update_translation_status(template_name, field, lang, current_value, en_value)
+        
+        # Track that we scanned this template
+        self.syncer.translation_stats['templates_scanned'] += 1
                             
         if changes_made:
             self.stats['templates_updated'] += 1
@@ -516,6 +760,85 @@ class TemplateSyncManager:
         self.stats['files_processed'] += 1
         
         return True
+    
+    def generate_translation_report(self):
+        """Generate detailed translation status report"""
+        self.syncer.logger.info("\n" + "="*80)
+        self.syncer.logger.info("📊 Translation Status Report")
+        self.syncer.logger.info("="*80)
+        
+        if not self.syncer.untranslated_templates:
+            self.syncer.logger.info("✅ All templates are fully translated!")
+            return
+        
+        # Count statistics
+        total_templates = len(self.syncer.untranslated_templates)
+        needs_translation_count = 0
+        ready_to_sync_count = 0
+        fully_translated_count = 0
+        
+        for template_name, template_data in sorted(self.syncer.untranslated_templates.items()):
+            has_needs_translation = False
+            has_manually_added = False
+            is_fully_translated = True
+            
+            self.syncer.logger.info(f"\nTemplate: {template_name}")
+            
+            for field in ['title', 'description']:
+                if field not in template_data:
+                    continue
+                
+                field_data = template_data[field]
+                sync_status = field_data.get('_sync_status', {})
+                
+                needs_trans = sync_status.get('needs_translation', [])
+                translated = sync_status.get('translated', [])
+                manually_added = sync_status.get('manually_added', [])
+                last_synced = sync_status.get('last_synced', 'N/A')
+                
+                if needs_trans or manually_added:
+                    is_fully_translated = False
+                
+                if needs_trans:
+                    has_needs_translation = True
+                if manually_added:
+                    has_manually_added = True
+                
+                # Display field status
+                self.syncer.logger.info(f"├─ {field}:")
+                
+                if translated:
+                    self.syncer.logger.info(f"│  ├─ ✅ Translated ({len(translated)}): {', '.join(translated)}")
+                
+                if manually_added:
+                    self.syncer.logger.info(f"│  ├─ 💾 Ready to Sync ({len(manually_added)}): {', '.join(manually_added)} [manually added]")
+                
+                if needs_trans:
+                    self.syncer.logger.info(f"│  ├─ ⚠️  Needs Translation ({len(needs_trans)}): {', '.join(needs_trans)}")
+                
+                if not needs_trans and not manually_added:
+                    self.syncer.logger.info(f"│  ├─ ✅ Fully Translated ({len(translated)} languages)")
+                
+                self.syncer.logger.info(f"│  └─ 🕐 Last synced: {last_synced}")
+            
+            # Update counts
+            if is_fully_translated:
+                fully_translated_count += 1
+            if has_needs_translation:
+                needs_translation_count += 1
+            if has_manually_added:
+                ready_to_sync_count += 1
+        
+        # Summary
+        self.syncer.logger.info("\n" + "-"*80)
+        self.syncer.logger.info("Summary:")
+        self.syncer.logger.info("-"*80)
+        self.syncer.logger.info(f"📝 Total templates tracked: {total_templates}")
+        self.syncer.logger.info(f"⚠️  Templates needing translation: {needs_translation_count}")
+        self.syncer.logger.info(f"💾 Templates ready to sync: {ready_to_sync_count}")
+        self.syncer.logger.info(f"✅ Fully translated templates: {fully_translated_count}")
+        self.syncer.logger.info(f"🔍 Templates scanned: {self.syncer.translation_stats['templates_scanned']}")
+        self.syncer.logger.info(f"🌐 Translations applied: {self.syncer.translation_stats['translations_applied']}")
         
     def run_sync(self) -> bool:
         """Run complete synchronization process"""
@@ -527,6 +850,9 @@ class TemplateSyncManager:
             self.syncer.logger.error(f"Master file not found: {self.syncer.master_file}")
             return False
             
+        # Detect manually added translations before syncing
+        self.syncer.detect_manually_added_translations()
+        
         success = True
         for lang, lang_file in self.syncer.language_files.items():
             try:
@@ -545,14 +871,25 @@ class TemplateSyncManager:
                 self.syncer.logger.info(f"   - {tag}")
             self.syncer.logger.info(f"   💡 You can manually remove these from {self.syncer.tag_mappings_file} if they are no longer needed")
         
-        # Save tag mappings if new tags were discovered
+        # Save tag mappings and untranslated templates
+        needs_save = False
+        
         if self.syncer.new_tags:
             self.syncer.logger.info(f"\n🆕 New tags discovered: {len(self.syncer.new_tags)}")
             for tag in sorted(self.syncer.new_tags):
                 self.syncer.logger.info(f"   - {tag}")
-            self.syncer.logger.info(f"\n💾 Saving updated tag mappings...")
+            needs_save = True
+        
+        if self.syncer.untranslated_templates:
+            self.syncer.logger.info(f"\n💾 Saving translation tracking data...")
+            needs_save = True
+        
+        if needs_save:
             self.syncer.save_tag_mappings()
-            self.syncer.logger.info(f"✅ Please review and update translations for new tags in: {self.syncer.tag_mappings_file}")
+            self.syncer.logger.info(f"✅ Saved to: {self.syncer.tag_mappings_file}")
+        
+        # Generate translation report
+        self.generate_translation_report()
         
         # Print summary
         self.syncer.logger.info(f"\n📊 Synchronization Summary:")
