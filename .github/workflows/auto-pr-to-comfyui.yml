@@ -1,0 +1,174 @@
+name: Auto PR to ComfyUI on Version Bump
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "pyproject.toml"
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout workflow_templates repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Get full history for changelog generation
+      
+      - name: Get current version
+        id: current_version
+        run: |
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Current version: $VERSION"
+      
+      - name: Get previous version
+        id: previous_version
+        run: |
+          # Get the previous version tag
+          PREV_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1)
+          if [ -z "$PREV_TAG" ]; then
+            echo "version=0.0.0" >> $GITHUB_OUTPUT
+            echo "No previous version tag found, using 0.0.0"
+          else
+            PREV_VERSION=${PREV_TAG#v}
+            echo "version=$PREV_VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$PREV_TAG" >> $GITHUB_OUTPUT
+            echo "Previous version: $PREV_VERSION (tag: $PREV_TAG)"
+          fi
+      
+      - name: Check if version changed
+        id: version_check
+        run: |
+          CURRENT="${{ steps.current_version.outputs.version }}"
+          PREVIOUS="${{ steps.previous_version.outputs.version }}"
+          
+          if [ "$CURRENT" != "$PREVIOUS" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Version bumped from $PREVIOUS to $CURRENT"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No version change detected"
+          fi
+      
+      - name: Generate changelog
+        id: changelog
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          PREV_TAG="${{ steps.previous_version.outputs.tag }}"
+          CURRENT_VERSION="${{ steps.current_version.outputs.version }}"
+          
+          # Create changelog file
+          CHANGELOG_FILE="pr_changelog.md"
+          
+          echo "## Update workflow templates to v${CURRENT_VERSION}" > $CHANGELOG_FILE
+          echo "" >> $CHANGELOG_FILE
+          echo "### 📦 Package Information" >> $CHANGELOG_FILE
+          echo "- **PyPI**: https://pypi.org/project/comfyui-workflow-templates/${CURRENT_VERSION}/" >> $CHANGELOG_FILE
+          echo "- **Release**: https://github.com/Comfy-Org/workflow_templates/releases/tag/v${CURRENT_VERSION}" >> $CHANGELOG_FILE
+          echo "" >> $CHANGELOG_FILE
+          
+          if [ -n "$PREV_TAG" ]; then
+            echo "### 📝 Changes since ${PREV_TAG}" >> $CHANGELOG_FILE
+            echo "" >> $CHANGELOG_FILE
+            
+            # Get merged PRs
+            echo "#### Merged Pull Requests" >> $CHANGELOG_FILE
+            git log ${PREV_TAG}..HEAD --merges --pretty=format:"- %s (%h)" | grep -i "Merge pull request" | sed 's/Merge pull request/PR/' >> $CHANGELOG_FILE || echo "- No merged PRs found" >> $CHANGELOG_FILE
+            echo "" >> $CHANGELOG_FILE
+            
+            # Get commits (excluding merge commits)
+            echo "#### Commits" >> $CHANGELOG_FILE
+            git log ${PREV_TAG}..HEAD --no-merges --pretty=format:"- %s (%h)" >> $CHANGELOG_FILE
+            echo "" >> $CHANGELOG_FILE
+          else
+            echo "### 📝 Initial Release" >> $CHANGELOG_FILE
+            echo "" >> $CHANGELOG_FILE
+            echo "This is the initial automated sync of the workflow-templates package." >> $CHANGELOG_FILE
+            echo "" >> $CHANGELOG_FILE
+          fi
+          
+          echo "" >> $CHANGELOG_FILE
+          echo "---" >> $CHANGELOG_FILE
+          echo "*This is an automated draft PR created by the workflow-templates sync workflow.*" >> $CHANGELOG_FILE
+          
+          echo "changelog_file=$CHANGELOG_FILE" >> $GITHUB_OUTPUT
+          
+          echo "📄 Generated changelog:"
+          cat $CHANGELOG_FILE
+      
+      - name: Checkout ComfyUI fork
+        if: steps.version_check.outputs.changed == 'true'
+        uses: actions/checkout@v4
+        with:
+          repository: 'comfyui-wiki/ComfyUI'
+          token: ${{ secrets.COMFYUI_FORK_TOKEN }}
+          path: comfyui-fork
+          fetch-depth: 1
+      
+      - name: Create branch and update requirements.txt
+        if: steps.version_check.outputs.changed == 'true'
+        working-directory: comfyui-fork
+        run: |
+          # Configure git
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create branch with version and timestamp
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          VERSION="${{ steps.current_version.outputs.version }}"
+          BRANCH_NAME="update-workflow-templates-${VERSION}-${TIMESTAMP}"
+          
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "🌿 Created branch: $BRANCH_NAME"
+          
+          # Update requirements.txt
+          if [ -f requirements.txt ]; then
+            sed -i "s/comfyui-workflow-templates==.*/comfyui-workflow-templates==${VERSION}/" requirements.txt
+            echo "✅ Updated requirements.txt to version ${VERSION}"
+            git add requirements.txt
+            git commit -m "chore: update workflow-templates to v${VERSION}"
+          else
+            echo "⚠️ Warning: requirements.txt not found!"
+            exit 1
+          fi
+      
+      - name: Push to fork
+        if: steps.version_check.outputs.changed == 'true'
+        working-directory: comfyui-fork
+        run: |
+          git push origin ${{ env.BRANCH_NAME }}
+          echo "✅ Pushed branch ${{ env.BRANCH_NAME }} to fork"
+      
+      - name: Create draft PR
+        if: steps.version_check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.COMFYUI_FORK_TOKEN }}
+        run: |
+          VERSION="${{ steps.current_version.outputs.version }}"
+          CHANGELOG_FILE="${{ steps.changelog.outputs.changelog_file }}"
+          
+          # Create PR from fork to upstream
+          PR_URL=$(gh pr create \
+            --repo comfyanonymous/ComfyUI \
+            --base master \
+            --head comfyui-wiki:${{ env.BRANCH_NAME }} \
+            --title "Update workflow templates to v${VERSION}" \
+            --body-file "$CHANGELOG_FILE" \
+            --draft)
+          
+          echo "✅ Draft PR created: $PR_URL"
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+      
+      - name: Send notification
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          VERSION="${{ steps.current_version.outputs.version }}"
+          echo "🎉 Successfully created draft PR for version ${VERSION}"
+          echo "📝 PR URL: ${{ env.PR_URL }}"
+          echo ""
+          echo "👉 You will receive a GitHub notification for the draft PR"
+          echo "📧 Check your GitHub notifications at: https://github.com/notifications"
+
