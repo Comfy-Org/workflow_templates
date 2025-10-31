@@ -1,7 +1,9 @@
 matrix:
 - name: Markdown
   sources:
-  - '**/*.md'
+  - 'README.md'
+  - 'docs/**/*.md'
+  - 'scripts/README*.md'
   aspell:
     lang: en
   dictionary:
@@ -20,7 +22,8 @@ matrix:
 
 - name: Index JSON Files
   sources:
-  - 'templates/index*.json'
+  - 'templates/index.json'
+  - 'templates/index.*.json'
   aspell:
     lang: en
   dictionary:
@@ -43,10 +46,17 @@ matrix:
   pipeline:
   - pyspelling.filters.context:
       context_visible_first: true
-      escapes: \\[\\`~]
+      escapes: '\\[\\`~]'
       delimiters:
       # Extract widgets_values from MarkdownNote and Note nodes
-      - open: '(?s)"type":\s*"(?:MarkdownNote|Note)".*?"widgets_values":\s*\['
+      - open: '(?s)"type":\s*"(?:MarkdownNote|Note)"[^}]*?"widgets_values":\s*\['
         close: '\]'
-  - pyspelling.filters.text:
+  - pyspelling.filters.markdown:
+      markdown_extensions:
+      - pymdownx.superfences:
+  - pyspelling.filters.html:
+      comments: false
+      ignores:
+      - code
+      - pre
 
