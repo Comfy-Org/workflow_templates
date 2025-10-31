@@ -60,7 +60,7 @@ jobs:
               report = 'Unable to read model analysis report';
             }
             
-            const comment = `## ❌ Model Analysis Check Failed
+            const commentBody = `## ❌ Model Analysis Check Failed
             
             Model configuration issues were found in your template files that need to be fixed.
             
@@ -83,19 +83,48 @@ jobs:
             
             3. **Markdown link errors**:
                - Ensure \`[filename.safetensors](url)\` links have consistent filenames between text and URL
+               - Note: Civitai links are automatically whitelisted as they use model IDs instead of filenames
             
             4. **Subgraph nodes**:
                - Note: Subgraph nodes (UUID-type) are automatically skipped from model validation
                - Their model configurations are handled within the subgraph definition
             
-            Please fix these issues and resubmit.`;
+            Please fix these issues and resubmit.
             
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
+            ---
+            *This comment is automatically updated by the Model Analysis workflow.*`;
+            
+            // Find existing comment
+            const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: comment
+              issue_number: context.issue.number,
             });
+            
+            const botComment = comments.find(comment => 
+              comment.user.type === 'Bot' && 
+              comment.body.includes('Model Analysis Check')
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: commentBody
+              });
+              console.log('Updated existing comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: commentBody
+              });
+              console.log('Created new comment');
+            }
     
       - name: Fail job if model analysis issues found
         if: steps.model_analysis.outputs.model_analysis_failed == 'true'
