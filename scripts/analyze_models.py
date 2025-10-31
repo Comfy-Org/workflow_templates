@@ -149,10 +149,24 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
     return result
 
 def analyze_markdown_links(result: Dict):
-    """Check if markdown safetensors links are consistent (text matches filename in URL)."""
+    """Check if markdown safetensors links are consistent (text matches filename in URL).
+    
+    Whitelisted URLs (skipped from validation):
+    - Civitai URLs: Use model IDs instead of filenames in paths
+    """
+    # Whitelist patterns for URLs that don't need filename validation
+    whitelist_patterns = [
+        r'civitai\.com',  # Civitai uses model IDs, not filenames
+    ]
+    
     for link in result['markdown_links']:
         text_name = link['text']
         url = link['url']
+        
+        # Skip validation for whitelisted URLs
+        if any(re.search(pattern, url, re.IGNORECASE) for pattern in whitelist_patterns):
+            continue
+        
         # Extract filename from URL path (ignore query string)
         m = re.search(r'/([^/?]+\.safetensors)(?:[?]|$)', url)
         if m:
