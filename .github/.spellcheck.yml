@@ -1,0 +1,52 @@
+matrix:
+- name: Markdown
+  sources:
+  - '**/*.md'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.markdown:
+      markdown_extensions:
+      - pymdownx.superfences:
+  - pyspelling.filters.html:
+      comments: false
+      ignores:
+      - code
+      - pre
+
+- name: Index JSON Files
+  sources:
+  - 'templates/index*.json'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.text:
+
+- name: Workflow JSON Files
+  sources:
+  - 'templates/*.json'
+  - '!templates/index*.json'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      escapes: \\[\\`~]
+      delimiters:
+      # Extract widgets_values from MarkdownNote and Note nodes
+      - open: '(?s)"type":\s*"(?:MarkdownNote|Note)".*?"widgets_values":\s*\['
+        close: '\]'
+  - pyspelling.filters.text:
+
