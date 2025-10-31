@@ -1,7 +1,7 @@
 {
   "id": "89cbbecd-10c7-4fe6-ae28-5078159eb4cb",
   "revision": 0,
-  "last_node_id": 13,
+  "last_node_id": 14,
   "last_link_id": 26,
   "nodes": [
     {
@@ -68,48 +68,6 @@
         "dpmpp_2m",
         "karras",
         1
-      ]
-    },
-    {
-      "id": 7,
-      "type": "CLIPTextEncode",
-      "pos": [
-        -117.46131896972656,
-        343.2137145996094
-      ],
-      "size": [
-        425.27801513671875,
-        180.6060791015625
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 26
-        }
-      ],
-      "outputs": [
-        {
-          "label": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "slot_index": 0,
-          "links": [
-            6
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CLIPTextEncode",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.18"
-      },
-      "widgets_values": [
-        "(worst quality, low quality:1.4), (bad anatomy), text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry, deformed face"
       ]
     },
     {
@@ -191,117 +149,6 @@
       ]
     },
     {
-      "id": 13,
-      "type": "LoraLoader",
-      "pos": [
-        -470,
-        340
-      ],
-      "size": [
-        315,
-        126
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 4,
-      "inputs": [
-        {
-          "label": "model",
-          "name": "model",
-          "type": "MODEL",
-          "link": 22
-        },
-        {
-          "label": "clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 24
-        }
-      ],
-      "outputs": [
-        {
-          "label": "MODEL",
-          "name": "MODEL",
-          "type": "MODEL",
-          "slot_index": 0,
-          "links": [
-            23
-          ]
-        },
-        {
-          "label": "CLIP",
-          "name": "CLIP",
-          "type": "CLIP",
-          "slot_index": 1,
-          "links": [
-            25,
-            26
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoraLoader",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.18",
-        "models": [
-          {
-            "name": "MoXinV1.safetensors",
-            "url": "https://civitai.com/api/download/models/14856?type=Model&format=SafeTensor&size=full&fp=fp16",
-            "directory": "loras"
-          }
-        ]
-      },
-      "widgets_values": [
-        "MoXinV1.safetensors",
-        0.5,
-        1
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
-      "id": 6,
-      "type": "CLIPTextEncode",
-      "pos": [
-        -117.46131896972656,
-        143.21365356445312
-      ],
-      "size": [
-        422.84503173828125,
-        164.31304931640625
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "label": "clip",
-          "name": "clip",
-          "type": "CLIP",
-          "link": 25
-        }
-      ],
-      "outputs": [
-        {
-          "label": "CONDITIONING",
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "slot_index": 0,
-          "links": [
-            4
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "CLIPTextEncode",
-        "cnr_id": "comfy-core",
-        "ver": "0.3.18"
-      },
-      "widgets_values": [
-        "upperbody shot, 1girl,solo,chibi,long hairs, happy, laugh, hugging a teddy bear, looking at viewers, dancing stand, cute, soft color, flowers in background, many flowers, among flowers, best quality, highres, delicate details,"
-      ]
-    },
-    {
       "id": 5,
       "type": "EmptyLatentImage",
       "pos": [
@@ -336,6 +183,66 @@
         768,
         768,
         1
+      ]
+    },
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        -841.1585083007812,
+        149.66726684570312
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "MODEL",
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            17
+          ]
+        },
+        {
+          "label": "CLIP",
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 1,
+          "links": [
+            18
+          ]
+        },
+        {
+          "label": "VAE",
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 2,
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.18",
+        "models": [
+          {
+            "name": "dreamshaper_8.safetensors",
+            "url": "https://civitai.com/api/download/models/128713?type=Model&format=SafeTensor&size=pruned&fp=fp16",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": [
+        "dreamshaper_8.safetensors"
       ]
     },
     {
@@ -402,25 +309,36 @@
         "blindbox_v1_mix.safetensors",
         0.75,
         1
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
+      ]
     },
     {
-      "id": 4,
-      "type": "CheckpointLoaderSimple",
+      "id": 13,
+      "type": "LoraLoader",
       "pos": [
-        -841.1585083007812,
-        149.66726684570312
+        -470,
+        340
       ],
       "size": [
         315,
-        98
+        126
       ],
       "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
+      "order": 4,
+      "mode": 4,
+      "inputs": [
+        {
+          "label": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 22
+        },
+        {
+          "label": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 24
+        }
+      ],
       "outputs": [
         {
           "label": "MODEL",
@@ -428,7 +346,7 @@
           "type": "MODEL",
           "slot_index": 0,
           "links": [
-            17
+            23
           ]
         },
         {
@@ -437,47 +355,127 @@
           "type": "CLIP",
           "slot_index": 1,
           "links": [
-            18
-          ]
-        },
-        {
-          "label": "VAE",
-          "name": "VAE",
-          "type": "VAE",
-          "slot_index": 2,
-          "links": [
-            8
+            25,
+            26
           ]
         }
       ],
       "properties": {
-        "Node name for S&R": "CheckpointLoaderSimple",
+        "Node name for S&R": "LoraLoader",
         "cnr_id": "comfy-core",
         "ver": "0.3.18",
         "models": [
           {
-            "name": "dreamshaper_8.safetensors",
-            "url": "https://civitai.com/api/download/models/128713?type=Model&format=SafeTensor&size=pruned&fp=fp16",
-            "directory": "checkpoints"
+            "name": "MoXinV1.safetensors",
+            "url": "https://civitai.com/api/download/models/14856?type=Model&format=SafeTensor&size=full&fp=fp16",
+            "directory": "loras"
           }
         ]
       },
       "widgets_values": [
-        "dreamshaper_8.safetensors"
+        "MoXinV1.safetensors",
+        0.5,
+        1
+      ]
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -117.46131896972656,
+        143.21365356445312
       ],
-      "color": "#322",
-      "bgcolor": "#533"
+      "size": [
+        422.84503173828125,
+        164.31304931640625
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 25
+        }
+      ],
+      "outputs": [
+        {
+          "label": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.18"
+      },
+      "widgets_values": [
+        "upperbody shot, 1girl,solo,chibi,long hairs, happy, laugh, hugging a teddy bear, looking at viewers, dancing stand, cute, soft color, flowers in background, many flowers, among flowers, best quality, highres, delicate details,"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -117.46131896972656,
+        343.2137145996094
+      ],
+      "size": [
+        425.27801513671875,
+        180.6060791015625
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "clip",
+          "name": "clip",
+          "type": "CLIP",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "label": "CONDITIONING",
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.18"
+      },
+      "widgets_values": [
+        "(worst quality, low quality:1.4), (bad anatomy), text, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, watermark, username, blurry, deformed face"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
     },
     {
       "id": 12,
       "type": "MarkdownNote",
       "pos": [
-        -843.087158203125,
-        337.3919982910156
+        -1200,
+        150
       ],
       "size": [
-        312,
-        136
+        340,
+        410
       ],
       "flags": {},
       "order": 2,
@@ -486,7 +484,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "### Learn more about this workflow\n\n> [LoRA - ComfyUI_examples](https://comfyanonymous.github.io/ComfyUI_examples/lora/) — Overview\n> \n> [Multiple LoRAs - docs.comfy.org](https://docs.comfy.org/tutorials/basic/multiple-loras) — Detailed guide to using multiple LoRAs"
+        "[Tutorials](https://docs.comfy.org/tutorials/basic/multiple-loras)\n\n\n## Model links\n\n**checkpoints**\n\n- [dreamshaper_8.safetensors](https://civitai.com/api/download/models/128713?type=Model&format=SafeTensor&size=pruned&fp=fp16)\n\n**loras**\n\n- [MoXinV1.safetensors](https://civitai.com/api/download/models/14856?type=Model&format=SafeTensor&size=full&fp=fp16)\n- [blindbox_v1_mix.safetensors](https://civitai.com/api/download/models/32988?type=Model&format=SafeTensor&size=full&fp=fp16)\n\n\nModel Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 checkpoints/\n│   │      └── dreamshaper_8.safetensors\n│   └── 📂 loras/\n│          ├── MoXinV1.safetensors\n│          └── blindbox_v1_mix.safetensors\n```\n\n\n## Report issue\nIf you found any issues when running this workflow, [report template issue here](https://github.com/Comfy-Org/workflow_templates/issues)"
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -601,10 +599,17 @@
   "groups": [],
   "config": {},
   "extra": {
+    "ds": {
+      "scale": 0.8819073258966708,
+      "offset": [
+        1664.838858001161,
+        226.25029336000762
+      ]
+    },
+    "frontendVersion": "1.31.1",
     "node_versions": {
       "comfy-core": "v0.3.9"
-    },
-    "frontendVersion": "1.19.4"
+    }
   },
   "version": 0.4
 }
