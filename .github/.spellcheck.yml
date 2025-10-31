@@ -23,7 +23,6 @@ matrix:
 - name: Index JSON Files
   sources:
   - 'templates/index.json'
-  - 'templates/index.*.json'
   aspell:
     lang: en
   dictionary:
@@ -31,7 +30,15 @@ matrix:
     - .github/.wordlist.txt
     encoding: utf-8
   pipeline:
-  - pyspelling.filters.text:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      delimiters:
+      # Extract only "title" field values
+      - open: '"title":\s*"'
+        close: '"'
+      # Extract only "description" field values
+      - open: '"description":\s*"'
+        close: '"'
 
 - name: Workflow JSON Files
   sources:
