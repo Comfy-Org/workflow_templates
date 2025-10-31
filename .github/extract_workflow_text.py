@@ -5,7 +5,6 @@ Only extracts widgets_values from MarkdownNote and Note type nodes.
 """
 import json
 import sys
-import io
 
 def extract_text_from_workflow(content):
     """Extract text from widgets_values in MarkdownNote and Note nodes."""
@@ -37,28 +36,20 @@ def extract_text_from_workflow(content):
                 
                 # Extract text from widgets_values
                 for value in widgets_values:
-                    if isinstance(value, str):
+                    if isinstance(value, str) and value.strip():
                         extracted_text.append(value)
-                    elif isinstance(value, (list, dict)):
-                        # Convert complex values to string
-                        extracted_text.append(str(value))
         
-        return '\n\n'.join(extracted_text) if extracted_text else ''
+        return '\n\n---SPELLCHECK_SEPARATOR---\n\n'.join(extracted_text) if extracted_text else ''
     
     except json.JSONDecodeError:
         return ''
     except Exception as e:
-        print(f"Error processing workflow: {e}", file=sys.stderr)
+        # Silent error - return empty string
         return ''
 
 
-def main():
-    """Read from stdin and output extracted text to stdout."""
+if __name__ == '__main__':
     content = sys.stdin.read()
     result = extract_text_from_workflow(content)
     sys.stdout.write(result)
-
-
-if __name__ == '__main__':
-    main()
 

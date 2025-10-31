@@ -46,11 +46,11 @@ matrix:
   pipeline:
   - pyspelling.filters.context:
       context_visible_first: true
-      escapes: '\\[\\`~]'
       delimiters:
-      # Extract widgets_values from MarkdownNote and Note nodes
-      - open: '(?s)"type":\s*"(?:MarkdownNote|Note)"[^}]*?"widgets_values":\s*\['
-        close: '\]'
+      # Only extract content inside widgets_values arrays for MarkdownNote/Note nodes
+      # This matches: "type": "MarkdownNote" (or Note), followed by "widgets_values": ["content here"]
+      - open: '(?s)"type":\s*"(?:MarkdownNote|Note)"(?:[^{]|{(?:[^{}]|{[^{}]*})*})*?"widgets_values":\s*\[\s*"'
+        close: '"\s*(?:,|\])'
   - pyspelling.filters.markdown:
       markdown_extensions:
       - pymdownx.superfences:
