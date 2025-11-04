@@ -42,25 +42,44 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node dependencies
+        run: npm ci
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
 
-      - name: Install build dependencies
-        run: python -m pip install build
-
-      - name: Setup package
+      - name: Install build tooling
         run: |
-          mkdir -p comfyui_workflow_templates/templates/
-          cp -r templates/* comfyui_workflow_templates/templates/
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip build
 
-      - name: Build package
-        run: python -m build
+      - name: Sync manifest and bundle assets
+        run: |
+          source .venv/bin/activate
+          python scripts/sync_bundles.py
+
+      - name: Build packages
+        run: |
+          source .venv/bin/activate
+          rm -rf dist
+          mkdir dist
+          for pkg in core media_api media_video media_image media_other meta; do
+            python -m build --outdir dist packages/$pkg
+          done
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
+          packages-dir: dist
           password: ${{ secrets.PYPI_TOKEN }}
           attestations: false
 
