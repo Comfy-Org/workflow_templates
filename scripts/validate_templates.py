@@ -158,30 +158,49 @@ def check_required_thumbnails(index_data: List[Dict], templates_dir: Path) -> Tu
     return len(errors) == 0, errors
 
 
-def find_model_loader_nodes(template_data: Dict, models: List[Dict]) -> List[Tuple[str, str, str]]:
-    """Find nodes that use models from the models array in their widget values."""
-    model_nodes = []
+def iter_all_nodes(template_data: Dict) -> List[Dict]:
+    """Return a flat list of all nodes, including those inside subgraphs.
+
+    Some workflows place loader nodes inside definitions.subgraphs[].nodes.
+    The validation must inspect both top-level nodes and subgraph nodes.
+    """
+    nodes: List[Dict] = []
+    # Top-level nodes
+    if isinstance(template_data.get('nodes'), list):
+        nodes.extend([n for n in template_data['nodes'] if isinstance(n, dict)])
+
+    # Subgraph nodes
+    definitions = template_data.get('definitions') or {}
+    subgraphs = definitions.get('subgraphs') or []
+    for sg in subgraphs:
+        if isinstance(sg, dict):
+            sg_nodes = sg.get('nodes') or []
+            nodes.extend([n for n in sg_nodes if isinstance(n, dict)])
+
+    return nodes
+
+
+def find_model_loader_nodes(nodes: List[Dict], models: List[Dict]) -> List[Tuple[str, str, str]]:
+    """Find nodes that use models from the provided models array in their widget values."""
+    model_nodes: List[Tuple[str, str, str]] = []
     model_names = {model.get('name', '') for model in models}
-    
-    # Look in the nodes array
-    nodes = template_data.get('nodes', [])
+
     for node in nodes:
-        if isinstance(node, dict):
-            node_id = str(node.get('id', 'unknown'))
-            node_type = node.get('type', 'unknown')
-            widgets_values = node.get('widgets_values', [])
-            
-            # Check if any widget value matches a model name
-            for widget_value in widgets_values:
-                if isinstance(widget_value, str) and widget_value in model_names:
-                    model_nodes.append((node_id, node_type, widget_value))
-    
+        node_id = str(node.get('id', 'unknown'))
+        node_type = node.get('type', 'unknown')
+        widgets_values = node.get('widgets_values', [])
+
+        # Check if any widget value matches a model name
+        for widget_value in widgets_values:
+            if isinstance(widget_value, str) and widget_value in model_names:
+                model_nodes.append((node_id, node_type, widget_value))
+
     return model_nodes
 
 
 def check_model_metadata_format(index_data: List[Dict], templates_dir: Path) -> Tuple[bool, List[str]]:
     """Check for top-level models arrays and validate node property models have corresponding widget values."""
-    errors = []
+    errors: List[str] = []
     
     # Get all template names from index
     template_names = set()
@@ -209,8 +228,8 @@ def check_model_metadata_format(index_data: List[Dict], templates_dir: Path) -> 
                 errors.append(f"FAIL: {template_name}.json has {len(models)} models in top-level 'models' array")
                 
                 # Try to suggest where models should be placed
-                model_nodes = find_model_loader_nodes(template_data, models)
-                
+                all_nodes = iter_all_nodes(template_data)
+                model_nodes = find_model_loader_nodes(all_nodes, models)
                 if model_nodes:
                     errors.append(f"  → Suggestion: Move models to node properties for these model loader nodes:")
                     for node_id, node_type, model_name in model_nodes:
@@ -224,36 +243,38 @@ def check_model_metadata_format(index_data: List[Dict], templates_dir: Path) -> 
                     name = model.get('name', 'unknown')
                     directory = model.get('directory', 'unknown')
                     errors.append(f"    - {name} (directory: {directory})")
-        
-        # NEW: Validate that models in node properties have corresponding widget values
-        nodes = template_data.get('nodes', [])
-        widget_values_by_node = {}
-        node_models = []
-        
-        # Collect widget values and models from each node
-        for node in nodes:
-            if isinstance(node, dict):
-                node_id = str(node.get('id', 'unknown'))
-                widgets_values = node.get('widgets_values', [])
-                widget_values_by_node[node_id] = [
-                    v for v in widgets_values if isinstance(v, str)
-                ]
-                
-                properties = node.get('properties', {})
-                if isinstance(properties, dict) and 'models' in properties:
-                    models_list = properties['models']
-                    if isinstance(models_list, list):
-                        for model in models_list:
-                            if isinstance(model, dict):
-                                model_name = model.get('name', '')
-                                if model_name:
-                                    node_models.append((node_id, node.get('type', 'unknown'), model_name))
-        
+        # Validate that models in node properties have corresponding widget values
+        all_nodes = iter_all_nodes(template_data)
+
+        # Build widget values map for all nodes
+        widget_values_by_node: Dict[str, List[str]] = {}
+        node_models: List[Tuple[str, str, str]] = []  # (node_id, node_type, model_name)
+
+        for node in all_nodes:
+            node_id = str(node.get('id', 'unknown'))
+            node_type = node.get('type', 'unknown')
+            widgets_values = node.get('widgets_values', [])
+            widget_values_by_node[node_id] = [
+                v for v in widgets_values if isinstance(v, str)
+            ]
+
+            properties = node.get('properties', {})
+            if isinstance(properties, dict) and 'models' in properties:
+                models_list = properties['models']
+                if isinstance(models_list, list):
+                    for model in models_list:
+                        if isinstance(model, dict):
+                            model_name = model.get('name', '')
+                            if model_name:
+                                node_models.append((node_id, node_type, model_name))
+
         # Validate each model has corresponding widget value
         for node_id, node_type, model_name in node_models:
             node_widget_values = widget_values_by_node.get(node_id, [])
             if model_name not in node_widget_values:
-                errors.append(f"ERROR: {template_name}.json - Model '{model_name}' in node {node_id} ({node_type}) properties but not in widget_values")
+                errors.append(
+                    f"ERROR: {template_name}.json - Model '{model_name}' in node {node_id} ({node_type}) properties but not in widget_values"
+                )
                 errors.append(f"  → Widget values: {node_widget_values}")
     
     return len(errors) == 0, errors
