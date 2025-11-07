@@ -150,6 +150,11 @@ def build_manifest():
                 f"{template_id}*.gif",
                 f"{template_id}*.mp4",
                 f"{template_id}*.webm",
+                f"{template_id}*.mp3",
+                f"{template_id}*.wav",
+                f"{template_id}*.ogg",
+                f"{template_id}*.flac",
+                f"{template_id}*.m4a",
             ]
             seen = set()
             for pattern in media_patterns:
