@@ -213,9 +213,11 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
 
 def write_manifest(manifest: dict, dry_run: bool = False) -> None:
     payload = json.dumps(manifest, indent=2)
+    SAMPLE_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     SAMPLE_MANIFEST.write_text(payload)
     if dry_run:
         return
+    CORE_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     CORE_MANIFEST.write_text(payload)
 
 
