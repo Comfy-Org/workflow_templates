@@ -32,6 +32,8 @@ Publishing a package on PyPI automatically creates the project if it does not al
 git checkout refactor/package-of-packages
 git pull
 
+./scripts/bump_versions.py --dry-run   # inspect what will be bumped
+./scripts/bump_versions.py             # apply version bumps
 ./run_full_validation.sh
 ```
 
