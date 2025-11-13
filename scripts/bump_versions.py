@@ -18,9 +18,10 @@ import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
+import os
 from typing import Dict, Iterable, List, Mapping, Set
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(os.environ.get("WORKFLOW_TEMPLATES_ROOT", Path(__file__).resolve().parents[1]))
 BUNDLES_FILE = ROOT / "bundles.json"
 
 def run_git(args: List[str]) -> str:
@@ -92,7 +93,9 @@ BUNDLE_TO_PACKAGE = {
 }
 
 VERSION_RE = re.compile(r"^(version\s*=\s*)\"(\d+\.\d+\.\d+)\"", re.MULTILINE)
-DEPENDENCY_RE_TEMPLATE = "(\"{}>=)(\\d+\\.\\d+\\.\\d+)(\")"
+def dependency_regex(pip_name: str) -> re.Pattern[str]:
+    escaped = re.escape(pip_name)
+    return re.compile(rf'("{escaped}>=)(\d+\.\d+\.\d+)(")')
 
 
 def load_versions() -> Dict[str, str]:
@@ -201,7 +204,7 @@ def packages_to_bump(base_ref: str) -> Set[str]:
 
 def write_version(path: Path, new_version: str) -> None:
     text = path.read_text()
-    updated, count = VERSION_RE.subn(rf"\1\"{new_version}\"", text, count=1)
+    updated, count = VERSION_RE.subn(rf'\1"{new_version}"', text, count=1)
     if count == 0:  # pragma: no cover - guard
         raise SystemExit(f"Failed to update version in {path}")
     path.write_text(updated)
@@ -210,9 +213,8 @@ def write_version(path: Path, new_version: str) -> None:
 def update_dependencies(pyproject_path: Path, versions: Mapping[str, str]) -> None:
     text = pyproject_path.read_text()
     for pkg, cfg in PACKAGE_CONFIGS.items():
-        pip_name = cfg.pip_name
-        pattern = re.compile(DEPENDENCY_RE_TEMPLATE.format(pip_name))
-        text = pattern.sub(rf"\1{versions[pkg]}\3", text)
+        pattern = dependency_regex(cfg.pip_name)
+        text = pattern.sub(rf"\g<1>{versions[pkg]}\g<3>", text)
     pyproject_path.write_text(text)
 
 
