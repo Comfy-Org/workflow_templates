@@ -87,7 +87,17 @@ def temp_repo(tmp_path):
     meta_project.write_text(meta_project.read_text() + "\n" + deps_block)
 
     (repo / "bundles.json").write_text(
-        """{\n  \"media-image\": [\"foo_template\"],\n  \"media-api\": [],\n  \"media-video\": [],\n  \"media-other\": []\n}\n"""
+        dedent(
+            """
+            {
+              "media-image": ["foo_template"],
+              "media-api": [],
+              "media-video": [],
+              "media-other": []
+            }
+            """
+        ).strip()
+        + "\n"
     )
     (repo / "templates" / "foo_template.json").write_text("{}\n")
 
