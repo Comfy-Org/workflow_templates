@@ -14,3 +14,13 @@ def get_templates_path():
     except Exception as e:
         print(f"Error accessing templates: {e}")
         return None
+
+def get_subgraphs_path():
+    """Return the absolute path to the subgraphs directory"""
+    try:
+        return str(
+            importlib.resources.files("comfyui_workflow_templates") / "subgraphs"
+        )
+    except Exception as e:
+        print(f"Error accessing subgraphs: {e}")
+        return None
