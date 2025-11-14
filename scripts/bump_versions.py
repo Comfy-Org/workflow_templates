@@ -21,11 +21,17 @@ from pathlib import Path
 import os
 from typing import Dict, Iterable, List, Mapping, Set
 
-ROOT = Path(os.environ.get("WORKFLOW_TEMPLATES_ROOT", Path(__file__).resolve().parents[1]))
+ROOT = Path(
+    os.environ.get("WORKFLOW_TEMPLATES_ROOT", Path(__file__).resolve().parents[1])
+)
 BUNDLES_FILE = ROOT / "bundles.json"
 
 def run_git(args: List[str]) -> str:
-    return subprocess.check_output(["git", *args], cwd=ROOT, stderr=subprocess.PIPE).decode().strip()
+    return (
+        subprocess.check_output(["git", *args], cwd=ROOT, stderr=subprocess.PIPE)
+        .decode()
+        .strip()
+    )
 
 
 def default_base_ref() -> str:
