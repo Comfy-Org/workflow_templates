@@ -19,12 +19,13 @@ new templates" and "Publishing" for the exact steps.
     - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
     - [5 — Compress Assets](#5--compress-assets)
     - [6 — Rename and Move Files](#6--rename-and-move-files)
-    - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
-    - [8 — Embed Models](#8--embed-models)
-    - [9 — Embed Node Versions (optional)](#9--embed-node-versions-optional)
-    - [10 — Add Documentation Nodes (optional)](#10--add-documentation-nodes-optional)
-    - [11 — Bump Version and Create PR](#11--bump-version-and-create-pr)
-    - [12 — Add Translations](#12--add-translations)
+    - [7 — Assign Bundle & Sync Assets](#7--assign-bundle--sync-assets)
+    - [8 — Add Entry to `index.json`](#8--add-entry-to-indexjson)
+    - [9 — Embed Models](#9--embed-models)
+    - [10 — Embed Node Versions (optional)](#10--embed-node-versions-optional)
+    - [11 — Add Documentation Nodes (optional)](#11--add-documentation-nodes-optional)
+    - [12 — Bump Version and Create PR](#12--bump-version-and-create-pr)
+    - [13 — Add Translations](#13--add-translations)
 
 ## Adding New Templates
 
