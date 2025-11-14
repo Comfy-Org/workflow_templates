@@ -1,6 +1,15 @@
 # workflow_templates
 
-ComfyUI workflow templates available in the app by clicking the **Workflow** button then the **Browse Templates** button.
+This repo hosts the official ComfyUI workflow templates. The repository now ships a
+**package-per-media** structure:
+
+- `packages/core` – manifest + loader helpers shipped as `comfyui-workflow-templates-core`
+- `packages/media_*` – the actual template JSON + preview assets for each media type
+- `packages/meta` and the root `pyproject.toml` – the `comfyui-workflow-templates` meta package that depends on all others
+
+Most contributors only touch the `templates/` folder and `bundles.json`, but the build
+pipeline now requires the helper scripts described below. See the sections on "Adding
+new templates" and "Publishing" for the exact steps.
 
 - [workflow\_templates](#workflow_templates)
   - [Adding New Templates](#adding-new-templates)
@@ -10,12 +19,13 @@ ComfyUI workflow templates available in the app by clicking the **Workflow** but
     - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
     - [5 — Compress Assets](#5--compress-assets)
     - [6 — Rename and Move Files](#6--rename-and-move-files)
-    - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
-    - [8 — Embed Models](#8--embed-models)
-    - [9 — Embed Node Versions (optional)](#9--embed-node-versions-optional)
-    - [10 — Add Documentation Nodes (optional)](#10--add-documentation-nodes-optional)
-    - [11 — Bump Version and Create PR](#11--bump-version-and-create-pr)
-    - [12 — Add Translations](#12--add-translations)
+    - [7 — Assign Bundle & Sync Assets](#7--assign-bundle--sync-assets)
+    - [8 — Add Entry to `index.json`](#8--add-entry-to-indexjson)
+    - [9 — Embed Models](#9--embed-models)
+    - [10 — Embed Node Versions (optional)](#10--embed-node-versions-optional)
+    - [11 — Add Documentation Nodes (optional)](#11--add-documentation-nodes-optional)
+    - [12 — Bump Version and Create PR](#12--bump-version-and-create-pr)
+    - [13 — Add Translations](#13--add-translations)
 
 ## Adding New Templates
 
@@ -93,7 +103,22 @@ text_to_video_wan-1.webp
 
 Then move the renamed files to your templates folder.
 
-### 7 — Add Entry to `index.json`
+### 7 — Assign Bundle & Sync Assets
+
+Each template lives in one bundle (`media-image`, `media-video`, etc.). Update
+[`bundles.json`](bundles.json) with the template ID so the correct media package ships it.
+After editing `templates/` or `bundles.json`, regenerate the manifest and copy assets into
+the package directories:
+
+```bash
+python scripts/sync_bundles.py
+# or via Nx
+npm run sync
+```
+
+This step must be run before committing; CI will fail if the manifest/bundles are out of sync.
+
+### 8 — Add Entry to `index.json`
 
 There's an [`index.json`](templates/index.json) file in the templates folder which is where template configurations are set. You will need to add your template to this file, using the fields outlined below:
 
@@ -166,7 +191,7 @@ Now you can start ComfyUI (or refresh browser if already running) and test that 
 >
 > Make sure to use double-quotes `"` instead of single-quotes `'` when adding things to json files
 
-### 8 — Embed Models
+### 9 — Embed Models
 
 Now we need to embed metadata for any models the template workflow uses. This way, the user can download and run the workflow without ever leaving ComfyUI.
 
@@ -296,7 +321,7 @@ You can find the `hash` and `hash_type` for a model on huggingface (see below)or
 >
 > Ensure that the filename being downloaded from the links matches the filenames in the `widgets_values` exactly.
 
-### 9 — Embed Node Versions (optional)
+### 10 — Embed Node Versions (optional)
 
 If your template requires a specific version of Comfy or a custom node, you can specify that using the same process as with models.
 
@@ -330,7 +355,7 @@ The Wan 2.1 workflow requires the SaveWEBM node which wasn't fully supported unt
 
 This can help diagnose issues when others run the workflow and ensure the workflow is more reproducible.
 
-### 10 — Add Documentation Nodes (optional)
+### 11 — Add Documentation Nodes (optional)
 
 If your template corresponds with a page on https://github.com/comfyanonymous/ComfyUI_examples, https://docs.comfy.org/custom-nodes/workflow_templates, etc., you can add a `MarkdownNote` node with links:
 
@@ -346,7 +371,22 @@ Raw markdown used:
 > [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/tutorials/video/wan/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
-### 11 — Bump Version and Create PR
+### 12 — Bump Version and Create PR
+
+Run the automated version helper before opening your PR. It looks at the latest git tag
+and bumps only the packages that changed (plus updates dependency pins):
+
+```bash
+./scripts/bump_versions.py --dry-run   # optional preview
+./scripts/bump_versions.py
+```
+
+Then run the full validation script (which regenerates manifests, runs lint/tests, and
+builds wheels):
+
+```bash
+./run_full_validation.sh
+```
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process has no hiccups and you can generate the thumbnail image on the first execution (if applicable).
 2. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
@@ -361,7 +401,7 @@ Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflo
 
 Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
 
-### 12 — Add Translations
+### 13 — Add Translations
 
 Make a PR in https://github.com/Comfy-Org/ComfyUI_frontend adding the mapping from your template filename (without extension) to the English display name title. The mapping goes in [`ComfyUI_frontend/src/locales/en/main.json`](https://github.com/Comfy-Org/ComfyUI_frontend/blob/9f0abac57ba0d5752c51198bf8a075b8336fdda1/src/locales/en/main.json#L480-L487).
 
