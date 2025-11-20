@@ -225,8 +225,6 @@ def packages_to_bump(base_ref: str) -> Set[str]:
     
     # Check each package individually against its own last pyproject change
     for pkg, cfg in PACKAGE_CONFIGS.items():
-        if pkg == "meta":  # Skip meta for now, handle it separately
-            continue
             
         # Get changes since this package's last pyproject.toml modification
         changed_files = git_changed_files_since_package_release(pkg, cfg)
