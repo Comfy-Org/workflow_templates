@@ -67,12 +67,36 @@ jobs:
           source .venv/bin/activate
           python scripts/sync_bundles.py
 
+      - name: Auto-bump package versions based on changes
+        run: |
+          source .venv/bin/activate
+          python scripts/bump_versions.py
+
+      - name: Determine changed packages
+        id: changed-packages
+        run: |
+          source .venv/bin/activate
+          # Get packages that were just bumped by bump_versions.py
+          CHANGED_OUTPUT=$(python scripts/bump_versions.py --dry-run 2>/dev/null || echo "")
+          
+          # Extract package names from bump_versions.py output
+          PACKAGES=$(echo "$CHANGED_OUTPUT" | grep -E '^\s*-\s+\w+:' | sed 's/.*- \([^:]*\):.*/\1/' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
+          
+          # If no packages detected or on manual trigger, build all packages
+          if [ -z "$PACKAGES" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PACKAGES="core media_api media_video media_image media_other meta"
+          fi
+          
+          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+          echo "Building packages: $PACKAGES"
+
       - name: Build packages
         run: |
           source .venv/bin/activate
           rm -rf dist
           mkdir dist
-          for pkg in core media_api media_video media_image media_other meta; do
+          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+            echo "Building package: $pkg"
             python -m build --outdir dist packages/$pkg
           done
 
