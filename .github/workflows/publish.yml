@@ -70,7 +70,15 @@ jobs:
       - name: Auto-bump package versions based on changes
         run: |
           source .venv/bin/activate
-          python scripts/bump_versions.py
+          # Use the previous version tag as base reference
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag found, using HEAD~1"
+            python scripts/bump_versions.py --base-ref HEAD~1
+          else
+            echo "Using previous tag: $PREV_TAG"
+            python scripts/bump_versions.py --base-ref "$PREV_TAG"
+          fi
 
       - name: Determine changed packages
         id: changed-packages
