@@ -69,32 +69,19 @@ jobs:
           source .venv/bin/activate
           python scripts/sync_bundles.py
 
-      - name: Auto-bump package versions based on changes
-        run: |
-          source .venv/bin/activate
-          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
-          if [ -z "$PREV_TAG" ]; then
-            python scripts/bump_versions.py --base-ref HEAD~1
-          else
-            python scripts/bump_versions.py --base-ref "$PREV_TAG"
-          fi
-
-      - name: Determine changed packages
+      - name: Auto-bump versions and determine packages to build
         id: changed-packages
         run: |
           source .venv/bin/activate
-          CHANGED_OUTPUT=$(python scripts/bump_versions.py --dry-run 2>/dev/null || echo "")
+          PACKAGES=$(python scripts/ci_version_manager.py | tail -1)
           
-          # Extract package names from bump_versions.py output
-          PACKAGES=$(echo "$CHANGED_OUTPUT" | grep -E '^\s*-\s+\w+:' | sed 's/.*- \([^:]*\):.*/\1/' | tr '\n' ' ' | sed 's/[[:space:]]*$//')
-          
-          # If no packages detected or on manual trigger, build all packages
-          if [ -z "$PACKAGES" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PACKAGES="core media_api media_video media_image media_other meta"
+          if [ -z "$PACKAGES" ]; then
+            echo "No packages to build"
+            echo "packages=" >> $GITHUB_OUTPUT
+          else
+            echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
+            echo "Building packages: $PACKAGES"
           fi
-          
-          echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
-          echo "Building packages: $PACKAGES"
 
       - name: Build packages
         run: |
