@@ -77,7 +77,8 @@ def bump_versions(packages: Set[str]) -> None:
                         parts = [parts[0], "0", "1"]
                     return f'version = "{".".join(parts)}"'
                 
-                updated = re.sub(r'version\s*=\s*"([^"]+)"', bump_version_match, text)
+                # Only bump the project version, not tool versions like ruff target-version
+                updated = re.sub(r'^version\s*=\s*"([^"]+)"', bump_version_match, text, flags=re.MULTILINE)
                 path.write_text(updated)
 
 def update_dependencies() -> None:

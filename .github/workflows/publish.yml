@@ -42,7 +42,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full history needed for tags and bump_versions.py
+          fetch-depth: 0  # Full history needed for tags
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -90,7 +90,12 @@ jobs:
           mkdir dist
           for pkg in ${{ steps.changed-packages.outputs.packages }}; do
             echo "Building package: $pkg"
-            python -m build --outdir dist packages/$pkg
+            if [ "$pkg" = "meta" ]; then
+              echo "Building root meta package"
+              python -m build --outdir dist .
+            else
+              python -m build --outdir dist packages/$pkg
+            fi
           done
 
       - name: Publish to PyPI
