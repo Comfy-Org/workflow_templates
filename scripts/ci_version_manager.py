@@ -69,7 +69,12 @@ def bump_versions(packages: Set[str]) -> None:
                 def bump_version_match(match):
                     version = match.group(1)
                     parts = version.split('.')
-                    parts[2] = str(int(parts[2]) + 1)
+                    if len(parts) >= 3:
+                        parts[2] = str(int(parts[2]) + 1)
+                    elif len(parts) == 2:
+                        parts.append("1")
+                    else:
+                        parts = [parts[0], "0", "1"]
                     return f'version = "{".".join(parts)}"'
                 
                 updated = re.sub(r'version\s*=\s*"([^"]+)"', bump_version_match, text)
