@@ -127,6 +127,29 @@ def git_changed_files(base_ref: str) -> List[str]:
     return [line.strip() for line in out.splitlines() if line.strip()]
 
 
+def get_last_pyproject_commit(pyproject_path: str) -> str:
+    """Find the last commit that modified a specific pyproject.toml file."""
+    try:
+        out = run_git(["log", "-1", "--format=%H", "--", pyproject_path])
+        return out.strip()
+    except subprocess.CalledProcessError:
+        return "HEAD~1"  # fallback if no history found
+
+
+def git_changed_files_since_package_release(pkg: str, cfg: PackageConfig) -> List[str]:
+    """Get changed files for a package since its last pyproject.toml change."""
+    # Find the last commit that changed this package's pyproject.toml
+    pyproject_path = str(cfg.pyproject_paths[0].relative_to(ROOT))
+    last_commit = get_last_pyproject_commit(pyproject_path)
+    
+    # Get all changes since that commit
+    try:
+        out = run_git(["diff", f"{last_commit}..HEAD", "--name-only"])
+        return [line.strip() for line in out.splitlines() if line.strip()]
+    except subprocess.CalledProcessError:
+        return []
+
+
 def load_bundles_from_git(ref: str) -> Mapping[str, List[str]]:
     try:
         raw = run_git(["show", f"{ref}:bundles.json"])
@@ -197,10 +220,34 @@ def packages_changed_from_paths(changed_files: Iterable[str]) -> Set[str]:
 
 
 def packages_to_bump(base_ref: str) -> Set[str]:
-    changed = git_changed_files(base_ref)
-    affected = packages_changed_from_paths(changed)
-    affected |= detect_template_asset_changes(changed)
-    affected |= detect_bundle_changes(base_ref)
+    """Determine which packages need version bumps based on changes since their last release."""
+    affected = set()
+    
+    # Check each package individually against its own last pyproject change
+    for pkg, cfg in PACKAGE_CONFIGS.items():
+        if pkg == "meta":  # Skip meta for now, handle it separately
+            continue
+            
+        # Get changes since this package's last pyproject.toml modification
+        changed_files = git_changed_files_since_package_release(pkg, cfg)
+        
+        # Check if this package's files changed
+        pkg_affected = packages_changed_from_paths(changed_files)
+        if pkg in pkg_affected:
+            affected.add(pkg)
+            continue
+            
+        # Check template asset changes for this package
+        template_affected = detect_template_asset_changes(changed_files)
+        if pkg in template_affected:
+            affected.add(pkg)
+            continue
+            
+        # Check bundle changes (this still needs global base_ref for bundles.json comparison)
+        if base_ref:
+            bundle_affected = detect_bundle_changes(base_ref)
+            if pkg in bundle_affected:
+                affected.add(pkg)
 
     # If any of the component bundles changed, make sure meta gets bumped too
     if affected & {"core", "media_api", "media_image", "media_other", "media_video"}:

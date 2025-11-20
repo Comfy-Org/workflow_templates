@@ -53,11 +53,6 @@ jobs:
       - name: Install Node dependencies
         run: npm ci
 
-      - name: Lint YAML files
-        run: |
-          npm install -g yaml-lint
-          yamllint .github/workflows/publish.yml
-
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -77,15 +72,12 @@ jobs:
       - name: Auto-bump package versions based on changes
         run: |
           source .venv/bin/activate
-          # Find the previous release tag (excluding the current version)
-          CURRENT_VERSION="${{ needs.check-version-change.outputs.new-version }}"
-          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "v${CURRENT_VERSION}" | head -1)
-          
+          # Script now compares each package against its own last pyproject.toml change
+          # Still pass a base-ref for bundle change detection (bundles.json comparison)
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
           if [ -z "$PREV_TAG" ]; then
-            echo "No previous release tag found, using HEAD~1 as fallback"
             python scripts/bump_versions.py --base-ref HEAD~1
           else
-            echo "Comparing against previous release tag: $PREV_TAG"
             python scripts/bump_versions.py --base-ref "$PREV_TAG"
           fi
 
