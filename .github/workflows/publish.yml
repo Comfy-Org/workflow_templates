@@ -62,7 +62,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install --upgrade pip build
+          pip install --upgrade pip build twine
 
       - name: Sync manifest and bundle assets
         run: |
@@ -83,27 +83,35 @@ jobs:
             echo "Building packages: $PACKAGES"
           fi
 
-      - name: Build packages
+      - name: Build and publish packages in dependency order
         run: |
           source .venv/bin/activate
           rm -rf dist
           mkdir dist
+          
+          # First build and publish non-meta packages
           for pkg in ${{ steps.changed-packages.outputs.packages }}; do
-            echo "Building package: $pkg"
+            if [ "$pkg" != "meta" ]; then
+              echo "Building package: $pkg"
+              python -m build --outdir dist packages/$pkg
+              echo "Publishing $pkg..."
+              twine upload dist/*$pkg* || echo "Package $pkg may already exist, continuing..."
+              rm -f dist/*$pkg*
+            fi
+          done
+          
+          # Then build and publish meta package
+          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
             if [ "$pkg" = "meta" ]; then
               echo "Building root meta package"
               python -m build --outdir dist .
-            else
-              python -m build --outdir dist packages/$pkg
+              echo "Publishing meta package..."
+              twine upload dist/comfyui_workflow_templates-*
             fi
           done
-
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist
-          password: ${{ secrets.PYPI_TOKEN }}
-          attestations: false
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
 
       - name: Create GitHub Release
         env:
