@@ -371,31 +371,22 @@ Raw markdown used:
 > [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/tutorials/video/wan/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
-### 12 — Bump Version and Create PR
-
-Run the automated version helper before opening your PR. It looks at the latest git tag
-and bumps only the packages that changed (plus updates dependency pins):
-
-```bash
-./scripts/bump_versions.py --dry-run   # optional preview
-./scripts/bump_versions.py
-```
-
-Then run the full validation script (which regenerates manifests, runs lint/tests, and
-builds wheels):
-
-```bash
-./run_full_validation.sh
-```
+### 12 — Create PR
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process has no hiccups and you can generate the thumbnail image on the first execution (if applicable).
 2. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
 3. Clone the fork to your system (if not a collaborator)
 4. Copy your new workflow and thumbnail(s) into the `templates` folder
 5. Add your changes to the `templates/index.json` file
-6. Bump the version in `pyproject.toml` ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
+6. **Bump the version in the root `pyproject.toml`** ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
 7. Commit and push changes
 8. Create a PR on https://github.com/Comfy-Org/workflow_templates
+
+Version bumping and package building are automated via CI/CD. Bumping the root `pyproject.toml` version automatically:
+- Detects which subpackages have changed since their last release
+- Bumps versions only for affected packages
+- Updates all dependency references
+- Builds and publishes packages to PyPI
 
 Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflow_templates/pull/16
 
