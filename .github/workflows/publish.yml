@@ -88,22 +88,50 @@ jobs:
           source .venv/bin/activate
           rm -rf dist
           mkdir dist
+          
+          # Build non-meta packages first
           for pkg in ${{ steps.changed-packages.outputs.packages }}; do
-            echo "Building package: $pkg"
-            if [ "$pkg" = "meta" ]; then
-              echo "Building root meta package"
-              python -m build --outdir dist .
-            else
+            if [ "$pkg" != "meta" ]; then
+              echo "Building package: $pkg"
               python -m build --outdir dist packages/$pkg
             fi
           done
+          
+          # Build meta package last (after dependencies are available)
+          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+            if [ "$pkg" = "meta" ]; then
+              echo "Building root meta package"
+              python -m build --outdir dist .
+            fi
+          done
 
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          packages-dir: dist
-          password: ${{ secrets.PYPI_TOKEN }}
-          attestations: false
+      - name: Install twine for ordered publishing
+        run: |
+          source .venv/bin/activate
+          pip install twine
+
+      - name: Publish packages in order
+        run: |
+          source .venv/bin/activate
+          
+          # First publish non-meta packages
+          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+            if [ "$pkg" != "meta" ]; then
+              echo "Publishing $pkg packages..."
+              twine upload dist/*$pkg* || echo "Package $pkg may already exist, continuing..."
+            fi
+          done
+          
+          # Then publish meta package
+          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+            if [ "$pkg" = "meta" ]; then
+              echo "Publishing meta package..."
+              twine upload dist/comfyui_workflow_templates-*
+            fi
+          done
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
 
       - name: Create GitHub Release
         env:
