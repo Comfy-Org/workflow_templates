@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0  # Full history needed for tags and version comparison
 
       - name: Check if version actually changed
         id: check
@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history needed for tags and bump_versions.py
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -50,6 +52,11 @@ jobs:
 
       - name: Install Node dependencies
         run: npm ci
+
+      - name: Lint YAML files
+        run: |
+          npm install -g yaml-lint
+          yamllint .github/workflows/publish.yml
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -70,7 +77,17 @@ jobs:
       - name: Auto-bump package versions based on changes
         run: |
           source .venv/bin/activate
-          python scripts/bump_versions.py
+          # Find the previous release tag (excluding the current version)
+          CURRENT_VERSION="${{ needs.check-version-change.outputs.new-version }}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | grep -v "v${CURRENT_VERSION}" | head -1)
+          
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous release tag found, using HEAD~1 as fallback"
+            python scripts/bump_versions.py --base-ref HEAD~1
+          else
+            echo "Comparing against previous release tag: $PREV_TAG"
+            python scripts/bump_versions.py --base-ref "$PREV_TAG"
+          fi
 
       - name: Determine changed packages
         id: changed-packages
