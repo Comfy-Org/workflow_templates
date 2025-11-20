@@ -112,7 +112,7 @@ the package directories:
 
 ```bash
 python scripts/sync_bundles.py
-# or via Nx
+# or via Nx  
 npm run sync
 ```
 
