@@ -82,6 +82,9 @@ def bump_versions(packages: Set[str]) -> None:
                 path.write_text(updated)
 
 def update_dependencies() -> None:
+    """Update dependencies only for packages that were actually bumped"""
+    changed_packages = get_changed_packages()
+    
     version_re = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
     versions = {}
     
@@ -93,12 +96,17 @@ def update_dependencies() -> None:
         "media_other": "packages/media_other/pyproject.toml",
     }
     
+    # Only get versions for packages that were actually changed
     for pkg, path in pyprojects.items():
-        if Path(path).exists():
+        if pkg in changed_packages and Path(path).exists():
             text = Path(path).read_text()
             match = version_re.search(text)
             if match:
                 versions[pkg] = match.group(1)
+    
+    # Only update dependencies if we have changed packages
+    if not versions:
+        return
     
     for meta_path in ["pyproject.toml", "packages/meta/pyproject.toml"]:
         if Path(meta_path).exists():
