@@ -55,9 +55,11 @@ def get_changed_packages() -> Set[str]:
         return {"core", "media_api", "media_video", "media_image", "media_other", "meta"}
 
 def bump_versions(packages: Set[str]) -> None:
+    # Bump individual packages but never the root pyproject.toml meta version
     for pkg in packages:
         if pkg == "meta":
-            paths = ["packages/meta/pyproject.toml", "pyproject.toml"]
+            # Skip meta - version is manually controlled in root pyproject.toml
+            continue
         else:
             paths = [f"packages/{pkg}/pyproject.toml"]
         
@@ -82,8 +84,10 @@ def bump_versions(packages: Set[str]) -> None:
                 path.write_text(updated)
 
 def update_dependencies() -> None:
-    """Update dependencies only for packages that were actually bumped"""
+    """Update dependencies for packages that were actually bumped"""
     changed_packages = get_changed_packages()
+    # Remove meta from changed packages since we don't auto-bump it
+    non_meta_packages = changed_packages - {"meta"}
     
     version_re = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
     versions = {}
@@ -96,9 +100,9 @@ def update_dependencies() -> None:
         "media_other": "packages/media_other/pyproject.toml",
     }
     
-    # Only get versions for packages that were actually changed
+    # Only get versions for packages that were actually changed and bumped
     for pkg, path in pyprojects.items():
-        if pkg in changed_packages and Path(path).exists():
+        if pkg in non_meta_packages and Path(path).exists():
             text = Path(path).read_text()
             match = version_re.search(text)
             if match:
@@ -108,27 +112,35 @@ def update_dependencies() -> None:
     if not versions:
         return
     
-    for meta_path in ["pyproject.toml", "packages/meta/pyproject.toml"]:
-        if Path(meta_path).exists():
-            text = Path(meta_path).read_text()
-            
-            for pkg, version in versions.items():
-                pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
-                # Match the package name followed by any version specifier
-                pattern = rf'("{re.escape(pip_name)})[>!=]+[0-9.]+(")'
-                replacement = rf'\g<1>=={version}\g<2>'
-                text = re.sub(pattern, replacement, text)
-            
-            Path(meta_path).write_text(text)
+    # Only update root pyproject.toml (not packages/meta which is legacy)
+    meta_path = "pyproject.toml"
+    if Path(meta_path).exists():
+        text = Path(meta_path).read_text()
+        
+        for pkg, version in versions.items():
+            pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
+            # Match the package name followed by any version specifier
+            pattern = rf'("{re.escape(pip_name)})[>!=]+[0-9.]+(")'
+            replacement = rf'\g<1>=={version}\g<2>'
+            text = re.sub(pattern, replacement, text)
+        
+        Path(meta_path).write_text(text)
 
 if __name__ == "__main__":
     packages = get_changed_packages()
     print(f"Detected changed packages: {sorted(packages)}")
     
-    if packages:
-        bump_versions(packages)
+    # Only bump non-meta packages, meta is manually controlled
+    non_meta_packages = packages - {"meta"}
+    
+    if non_meta_packages:
+        bump_versions(packages)  # This function now filters out meta internally
         update_dependencies()
-        print(f"Bumped versions for: {sorted(packages)}")
-        print(" ".join(sorted(packages)))
+        print(f"Bumped versions for: {sorted(non_meta_packages)}")
+        
+    # Always include meta if it was detected as changed (for building)
+    build_packages = packages if packages else set()
+    if build_packages:
+        print(" ".join(sorted(build_packages)))
     else:
         print("")
