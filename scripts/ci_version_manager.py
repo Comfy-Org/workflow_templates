@@ -114,7 +114,8 @@ def update_dependencies() -> None:
             
             for pkg, version in versions.items():
                 pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
-                pattern = rf'("{re.escape(pip_name)})[>!=]+[^"]+(")'
+                # Match the package name followed by any version specifier
+                pattern = rf'("{re.escape(pip_name)})[>!=]+[0-9.]+(")'
                 replacement = rf'\g<1>=={version}\g<2>'
                 text = re.sub(pattern, replacement, text)
             
