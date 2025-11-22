@@ -64,11 +64,6 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip build twine
 
-      - name: Sync manifest and bundle assets
-        run: |
-          source .venv/bin/activate
-          python scripts/sync_bundles.py
-
       - name: Auto-bump versions and determine packages to build
         id: changed-packages
         run: |
@@ -82,6 +77,11 @@ jobs:
             echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
             echo "Building packages: $PACKAGES"
           fi
+
+      - name: Sync manifest and bundle assets
+        run: |
+          source .venv/bin/activate
+          python scripts/sync_bundles.py
 
       - name: Build and publish packages in dependency order
         run: |
