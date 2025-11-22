@@ -1,0 +1,44 @@
+name: Version Check and Auto-bump
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'templates/**'
+      - 'bundles.json'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Auto-bump versions if needed
+        run: |
+          python scripts/ci_version_manager.py
+          
+      - name: Commit version bumps to PR
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add packages/*/pyproject.toml pyproject.toml
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-bump package versions for template changes"
+            git push origin HEAD
+            echo "✅ Version bumps committed to PR"
+          else
+            echo "✅ No version changes needed"
+          fi
