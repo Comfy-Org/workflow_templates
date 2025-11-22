@@ -73,16 +73,43 @@ jobs:
       - name: Determine packages to build
         id: changed-packages
         run: |
-          source .venv/bin/activate
-          PACKAGES=$(python scripts/ci_version_manager.py | tail -1)
+          # Check what files changed in this commit (from PR merge)
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+          echo "Files changed in this commit:"
+          echo "$CHANGED_FILES"
           
-          # Always build meta package when root version changes (triggered by publish workflow)
-          if [ -z "$PACKAGES" ]; then
-            echo "No individual packages changed, but building meta package due to version change"
-            echo "packages=meta" >> $GITHUB_OUTPUT
-          else
+          PACKAGES=""
+          
+          # Check for package version changes
+          if echo "$CHANGED_FILES" | grep -q "packages/core/pyproject.toml"; then
+            PACKAGES="$PACKAGES core"
+          fi
+          if echo "$CHANGED_FILES" | grep -q "packages/media_api/pyproject.toml"; then
+            PACKAGES="$PACKAGES media_api"
+          fi
+          if echo "$CHANGED_FILES" | grep -q "packages/media_video/pyproject.toml"; then
+            PACKAGES="$PACKAGES media_video"
+          fi
+          if echo "$CHANGED_FILES" | grep -q "packages/media_image/pyproject.toml"; then
+            PACKAGES="$PACKAGES media_image"
+          fi
+          if echo "$CHANGED_FILES" | grep -q "packages/media_other/pyproject.toml"; then
+            PACKAGES="$PACKAGES media_other"
+          fi
+          
+          # Always build meta if root version changed or if any packages changed
+          if echo "$CHANGED_FILES" | grep -q "pyproject.toml" || [ -n "$PACKAGES" ]; then
+            PACKAGES="$PACKAGES meta"
+          fi
+          
+          PACKAGES=$(echo $PACKAGES | tr ' ' '\n' | sort | uniq | tr '\n' ' ' | xargs)
+          
+          if [ -n "$PACKAGES" ]; then
             echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
             echo "Building packages: $PACKAGES"
+          else
+            echo "packages=" >> $GITHUB_OUTPUT
+            echo "No packages to build"
           fi
 
       - name: Sync manifest and bundle assets
