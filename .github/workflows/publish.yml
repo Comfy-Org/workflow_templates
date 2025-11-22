@@ -83,6 +83,18 @@ jobs:
           source .venv/bin/activate
           python scripts/sync_bundles.py
 
+      - name: Commit version bumps
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add packages/*/pyproject.toml pyproject.toml
+          if ! git diff --cached --quiet; then
+            git commit -m "Auto-bump package versions for release"
+            echo "Version bumps committed"
+          else
+            echo "No version changes to commit"
+          fi
+
       - name: Build and publish packages in dependency order
         run: |
           source .venv/bin/activate
