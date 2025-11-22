@@ -3,74 +3,149 @@ import json
 import re
 import subprocess
 from pathlib import Path
-from typing import Set, List
+from typing import Set, List, Dict
 
 ROOT = Path.cwd()
 
 def run_git(args: List[str]) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT).decode().strip()
 
-def get_changed_packages() -> Set[str]:
+def get_current_version(pkg: str) -> str:
+    """Get current version of a package from its pyproject.toml"""
+    if pkg == "meta":
+        path = Path("pyproject.toml")
+    else:
+        path = Path(f"packages/{pkg}/pyproject.toml")
+    
+    if not path.exists():
+        return "0.0.0"
+    
+    text = path.read_text()
+    match = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
+    return match.group(1) if match else "0.0.0"
+
+def find_last_version_bump_commit(pkg: str, current_version: str) -> str:
+    """Find the commit where this package's version was last bumped to current_version"""
+    if pkg == "meta":
+        file_path = "pyproject.toml"
+    else:
+        file_path = f"packages/{pkg}/pyproject.toml"
+    
     try:
-        last_tag = run_git(["tag", "--sort=-version:refname", "--merged", "HEAD"]).split('\n')[0]
-        if not last_tag:
-            return {"core", "media_api", "media_video", "media_image", "media_other", "meta"}
+        # Get commit history for the pyproject.toml file
+        log_output = run_git(["log", "--oneline", "--follow", "--", file_path])
         
-        changed_files = run_git(["diff", f"{last_tag}..HEAD", "--name-only"]).split('\n')
-        affected = set()
+        for line in log_output.split('\n'):
+            if not line.strip():
+                continue
+            commit_hash = line.split()[0]
+            
+            # Check version in this commit
+            try:
+                old_content = run_git(["show", f"{commit_hash}:{file_path}"])
+                old_version_match = re.search(r'^version\s*=\s*"([^"]+)"', old_content, re.MULTILINE)
+                if old_version_match:
+                    old_version = old_version_match.group(1)
+                    if old_version == current_version:
+                        # This is where this version was introduced
+                        return commit_hash
+            except:
+                continue
+        
+        # Fallback: if we can't find the exact version bump, use HEAD~10 or first commit
+        try:
+            return run_git(["rev-list", "--max-count=1", "HEAD~10"])
+        except:
+            return run_git(["rev-list", "--max-count=1", "HEAD"])
+            
+    except:
+        # Ultimate fallback
+        return "HEAD~1"
+
+def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
+    """Get files that affect a specific package since the given commit"""
+    try:
+        changed_files = run_git(["diff", f"{since_commit}..HEAD", "--name-only"]).split('\n')
+        affecting_files = []
+        
+        bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
+        bundle_mapping = {
+            "media-api": "media_api",
+            "media-video": "media_video", 
+            "media-image": "media_image",
+            "media-other": "media_other"
+        }
+        
+        # Find which bundle this package corresponds to
+        pkg_bundle = None
+        for bundle_name, bundle_pkg in bundle_mapping.items():
+            if bundle_pkg == pkg:
+                pkg_bundle = bundle_name
+                break
         
         for file in changed_files:
-            if file.startswith("packages/core/"):
-                affected.add("core")
-            elif file.startswith("packages/media_api/") or "media-api" in file:
-                affected.add("media_api")
-            elif file.startswith("packages/media_video/") or "media-video" in file:
-                affected.add("media_video") 
-            elif file.startswith("packages/media_image/") or "media-image" in file:
-                affected.add("media_image")
-            elif file.startswith("packages/media_other/") or "media-other" in file:
-                affected.add("media_other")
-            elif file.startswith("packages/meta/") or file == "pyproject.toml":
-                affected.add("meta")
-            elif file.startswith("templates/") or file == "bundles.json":
+            file = file.strip()
+            if not file:
+                continue
+                
+            # Direct package directory changes
+            if file.startswith(f"packages/{pkg}/"):
+                affecting_files.append(file)
+            # Core package affects meta
+            elif pkg == "meta" and (file.startswith("packages/") or file == "pyproject.toml"):
+                affecting_files.append(file)
+            # Template files affecting this package's bundle
+            elif pkg_bundle and file.startswith("templates/"):
+                template_name = Path(file).stem.split('-')[0]
+                if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
+                    affecting_files.append(file)
+            # bundles.json changes affecting this package's bundle
+            elif pkg_bundle and file == "bundles.json":
                 try:
-                    bundles = json.loads(Path("bundles.json").read_text())
-                    bundle_mapping = {
-                        "media-api": "media_api",
-                        "media-video": "media_video", 
-                        "media-image": "media_image",
-                        "media-other": "media_other"
-                    }
-                    
-                    if file == "bundles.json":
-                        # If bundles.json changed, check which bundles were affected
-                        try:
-                            old_bundles = json.loads(run_git(["show", f"{last_tag}:bundles.json"]))
-                            for bundle_name, bundle_pkg in bundle_mapping.items():
-                                if bundles.get(bundle_name) != old_bundles.get(bundle_name):
-                                    affected.add(bundle_pkg)
-                        except:
-                            # If we can't get old bundles.json, assume all bundles changed
-                            for bundle_pkg in bundle_mapping.values():
-                                affected.add(bundle_pkg)
-                    elif file.startswith("templates/"):
-                        # Map template file to specific bundle
-                        template_name = Path(file).stem.split('-')[0]  # Remove -1.webp suffix
-                        for bundle_name, template_list in bundles.items():
-                            if template_name in template_list:
-                                if bundle_name in bundle_mapping:
-                                    affected.add(bundle_mapping[bundle_name])
-                                break
+                    # First check if bundles.json existed in the old commit
+                    run_git(["cat-file", "-e", f"{since_commit}:bundles.json"])
+                    old_bundles = json.loads(run_git(["show", f"{since_commit}:bundles.json"]))
+                    if bundles.get(pkg_bundle) != old_bundles.get(pkg_bundle):
+                        affecting_files.append(file)
+                except subprocess.CalledProcessError:
+                    # bundles.json didn't exist in old commit, so this is a new file affecting all bundles
+                    affecting_files.append(file)
                 except:
-                    # Fallback: if template/bundle analysis fails, mark all media packages as affected
-                    for bundle_pkg in bundle_mapping.values():
-                        affected.add(bundle_pkg)
+                    # Other error, assume it affects this package
+                    affecting_files.append(file)
         
-        if affected & {"core", "media_api", "media_video", "media_image", "media_other"}:
+        return affecting_files
+    except:
+        return []
+
+def get_changed_packages() -> Set[str]:
+    """Determine which packages need version bumps based on changes since their last version bump"""
+    try:
+        packages = ["core", "media_api", "media_video", "media_image", "media_other", "meta"]
+        affected = set()
+        
+        for pkg in packages:
+            current_version = get_current_version(pkg)
+            last_bump_commit = find_last_version_bump_commit(pkg, current_version)
+            affecting_files = get_files_affecting_package(pkg, last_bump_commit)
+            
+            if affecting_files:
+                affected.add(pkg)
+                print(f"Package {pkg} needs bump: {len(affecting_files)} files changed since version {current_version}")
+                for f in affecting_files[:5]:  # Show first 5 files
+                    print(f"  - {f}")
+                if len(affecting_files) > 5:
+                    print(f"  ... and {len(affecting_files) - 5} more files")
+            else:
+                print(f"Package {pkg} up to date since version {current_version}")
+        
+        # If any non-meta packages changed, also bump meta
+        if affected - {"meta"}:
             affected.add("meta")
             
         return affected
-    except:
+    except Exception as e:
+        print(f"Error in change detection: {e}")
         return {"core", "media_api", "media_video", "media_image", "media_other", "meta"}
 
 def bump_versions(packages: Set[str]) -> None:
