@@ -112,6 +112,11 @@ jobs:
             echo "No packages to build"
           fi
 
+      - name: Update main dependencies to match current subpackage versions
+        run: |
+          source .venv/bin/activate
+          python scripts/ci_version_manager.py --update-dependencies-only
+          
       - name: Sync manifest and bundle assets
         run: |
           source .venv/bin/activate
