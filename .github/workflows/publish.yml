@@ -76,9 +76,10 @@ jobs:
           source .venv/bin/activate
           PACKAGES=$(python scripts/ci_version_manager.py | tail -1)
           
+          # Always build meta package when root version changes (triggered by publish workflow)
           if [ -z "$PACKAGES" ]; then
-            echo "No packages to build"
-            echo "packages=" >> $GITHUB_OUTPUT
+            echo "No individual packages changed, but building meta package due to version change"
+            echo "packages=meta" >> $GITHUB_OUTPUT
           else
             echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
             echo "Building packages: $PACKAGES"
