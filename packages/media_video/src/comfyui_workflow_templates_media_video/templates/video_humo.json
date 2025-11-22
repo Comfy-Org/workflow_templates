@@ -1,0 +1,1077 @@
+{
+  "id": "428ebf59-f870-43e5-b3a9-ad0c0b7b33f4",
+  "revision": 0,
+  "last_node_id": 75,
+  "last_link_id": 147,
+  "nodes": [
+    {
+      "id": 38,
+      "type": "CLIPLoader",
+      "pos": [
+        -50,
+        208
+      ],
+      "size": [
+        390,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            74,
+            75
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "wan",
+        "default"
+      ]
+    },
+    {
+      "id": 39,
+      "type": "VAELoader",
+      "pos": [
+        -50,
+        356
+      ],
+      "size": [
+        390,
+        58
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            136,
+            137
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "wan_2.1_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wan_2.1_vae.safetensors"
+      ]
+    },
+    {
+      "id": 60,
+      "type": "CreateVideo",
+      "pos": [
+        850,
+        650
+      ],
+      "size": [
+        230,
+        80
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 143
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 120
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            119
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        25
+      ]
+    },
+    {
+      "id": 63,
+      "type": "VAEDecode",
+      "pos": [
+        850,
+        560
+      ],
+      "size": [
+        140,
+        46
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 132
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 136
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            143
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 61,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -50,
+        84
+      ],
+      "size": [
+        390,
+        82
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 122
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            124
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "models": [
+          {
+            "name": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 37,
+      "type": "UNETLoader",
+      "pos": [
+        -50,
+        -40
+      ],
+      "size": [
+        390,
+        82
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            122
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "humo_17B_fp8_e4m3fn.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/HuMo_ComfyUI/resolve/main/split_files/diffusion_models/humo_17B_fp8_e4m3fn.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "humo_17B_fp8_e4m3fn.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 65,
+      "type": "WanHuMoImageToVideo",
+      "pos": [
+        850,
+        -30
+      ],
+      "size": [
+        270,
+        210
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 139
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 140
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 137
+        },
+        {
+          "name": "audio_encoder_output",
+          "shape": 7,
+          "type": "AUDIO_ENCODER_OUTPUT",
+          "link": 141
+        },
+        {
+          "name": "ref_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 142
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            133
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "links": [
+            134
+          ]
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "links": [
+            135
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "WanHuMoImageToVideo"
+      },
+      "widgets_values": [
+        640,
+        640,
+        97,
+        1
+      ]
+    },
+    {
+      "id": 56,
+      "type": "AudioEncoderEncode",
+      "pos": [
+        850,
+        780
+      ],
+      "size": [
+        285.087890625,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio_encoder",
+          "type": "AUDIO_ENCODER",
+          "link": 115
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 147
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO_ENCODER_OUTPUT",
+          "type": "AUDIO_ENCODER_OUTPUT",
+          "links": [
+            141
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "AudioEncoderEncode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 57,
+      "type": "AudioEncoderLoader",
+      "pos": [
+        -50,
+        456
+      ],
+      "size": [
+        390,
+        60
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO_ENCODER",
+          "type": "AUDIO_ENCODER",
+          "links": [
+            115
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "AudioEncoderLoader",
+        "models": [
+          {
+            "name": "whisper_large_v3_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/HuMo_ComfyUI/resolve/main/split_files/audio_encoders/whisper_large_v3_fp16.safetensors",
+            "directory": "audio_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "whisper_large_v3_fp16.safetensors"
+      ]
+    },
+    {
+      "id": 66,
+      "type": "MarkdownNote",
+      "pos": [
+        -590,
+        70
+      ],
+      "size": [
+        500,
+        490
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model links",
+      "properties": {},
+      "widgets_values": [
+        "\n## Model links\n\n\n**diffusion_models**\n\n- [humo_17B_fp8_e4m3fn.safetensors](https://huggingface.co/Comfy-Org/HuMo_ComfyUI/resolve/main/split_files/diffusion_models/humo_17B_fp8_e4m3fn.safetensors)\n\n**loras**\n- [lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors)\n\n**text_encoders**\n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n**vae**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors)\n\n**audio_encoders**\n- [whisper_large_v3_fp16.safetensors](https://huggingface.co/Comfy-Org/HuMo_ComfyUI/resolve/main/split_files/audio_encoders/whisper_large_v3_fp16.safetensors)\n\n\n```\n📂 ComfyUI/\n├─ 📂 models/\n│   ├─ 📂 diffusion_models/\n│   │     └── humo_17B_fp8_e4m3fn.safetensors\n│   ├─ 📂 text_encoders/\n│   │     └── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   ├─ 📂 audio_encoders/\n│   │     └── whisper_large_v3_fp16.safetensors \n│   └─ 📂 vae/\n│            └──  wan_2.1_vae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        380,
+        60
+      ],
+      "size": [
+        420,
+        220
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            139
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "A young boy in sci-fi style clothing is talking to the camera in an alien desert."
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 64,
+      "type": "KSampler",
+      "pos": [
+        840,
+        250
+      ],
+      "size": [
+        270,
+        474
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 138
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 133
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 134
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 135
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            132
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        1067760026265042,
+        "randomize",
+        6,
+        1,
+        "uni_pc",
+        "simple",
+        1
+      ]
+    },
+    {
+      "id": 48,
+      "type": "ModelSamplingSD3",
+      "pos": [
+        420,
+        -90
+      ],
+      "size": [
+        280,
+        58
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 124
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            138
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "ModelSamplingSD3"
+      },
+      "widgets_values": [
+        8
+      ]
+    },
+    {
+      "id": 67,
+      "type": "MarkdownNote",
+      "pos": [
+        -590,
+        -90
+      ],
+      "size": [
+        500,
+        120
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: About HuMo",
+      "properties": {},
+      "widgets_values": [
+        "HuMo is a human-centric video generation tool that creates controllable, high-quality human videos from multimodal inputs (text, images, audio), supporting text-image guided customization, text-audio driven audio-motion sync, and 480P(832x480)/720P(1280x720) resolutions.\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 75,
+      "type": "MarkdownNote",
+      "pos": [
+        380,
+        1020
+      ],
+      "size": [
+        430,
+        100
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: About HuMo",
+      "properties": {},
+      "widgets_values": [
+        "If you want to use your recorded audio, please connect the audio output to the nodes that were previously linked to the LoadAudio node."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        380,
+        320
+      ],
+      "size": [
+        425.27801513671875,
+        180.6060791015625
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            140
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Negative Prompt)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 59,
+      "type": "SaveVideo",
+      "pos": [
+        1150,
+        -80
+      ],
+      "size": [
+        1070,
+        1168
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 119
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 68,
+      "type": "RecordAudio",
+      "pos": [
+        440,
+        830
+      ],
+      "size": [
+        270,
+        112
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "RecordAudio"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 49,
+      "type": "LoadImage",
+      "pos": [
+        10,
+        640
+      ],
+      "size": [
+        274.080078125,
+        314.00006103515625
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            142
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "video_humo_reference_image.png",
+        "image"
+      ]
+    },
+    {
+      "id": 58,
+      "type": "LoadAudio",
+      "pos": [
+        430,
+        640
+      ],
+      "size": [
+        285.087890625,
+        136
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            120,
+            147
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "video_humo_input_audio.wav",
+        null,
+        null
+      ]
+    }
+  ],
+  "links": [
+    [
+      74,
+      38,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      75,
+      38,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      115,
+      57,
+      0,
+      56,
+      0,
+      "AUDIO_ENCODER"
+    ],
+    [
+      119,
+      60,
+      0,
+      59,
+      0,
+      "VIDEO"
+    ],
+    [
+      120,
+      58,
+      0,
+      60,
+      1,
+      "AUDIO"
+    ],
+    [
+      122,
+      37,
+      0,
+      61,
+      0,
+      "MODEL"
+    ],
+    [
+      124,
+      61,
+      0,
+      48,
+      0,
+      "MODEL"
+    ],
+    [
+      132,
+      64,
+      0,
+      63,
+      0,
+      "LATENT"
+    ],
+    [
+      133,
+      65,
+      0,
+      64,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      134,
+      65,
+      1,
+      64,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      135,
+      65,
+      2,
+      64,
+      3,
+      "LATENT"
+    ],
+    [
+      136,
+      39,
+      0,
+      63,
+      1,
+      "VAE"
+    ],
+    [
+      137,
+      39,
+      0,
+      65,
+      2,
+      "VAE"
+    ],
+    [
+      138,
+      48,
+      0,
+      64,
+      0,
+      "MODEL"
+    ],
+    [
+      139,
+      6,
+      0,
+      65,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      140,
+      7,
+      0,
+      65,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      141,
+      56,
+      0,
+      65,
+      3,
+      "AUDIO_ENCODER_OUTPUT"
+    ],
+    [
+      142,
+      49,
+      0,
+      65,
+      4,
+      "IMAGE"
+    ],
+    [
+      143,
+      63,
+      0,
+      60,
+      0,
+      "IMAGE"
+    ],
+    [
+      147,
+      58,
+      0,
+      56,
+      1,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step 1 - Load models",
+      "bounding": [
+        -70,
+        -120,
+        430,
+        660
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step 4 - Prompt",
+      "bounding": [
+        370,
+        -10,
+        450,
+        550
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Step 3 - Upload or record audio",
+      "bounding": [
+        370,
+        550,
+        450,
+        420
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Step2 - Upload reference image",
+      "bounding": [
+        -70,
+        550,
+        430,
+        420
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Step 5 - Video size",
+      "bounding": [
+        840,
+        -100,
+        290,
+        293.6000061035156
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5024794688220987,
+      "offset": [
+        748.712585289151,
+        452.86254113586153
+      ]
+    },
+    "frontendVersion": "1.27.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

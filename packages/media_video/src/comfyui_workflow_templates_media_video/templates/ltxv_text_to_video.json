@@ -1,0 +1,765 @@
+{
+  "id": "44b59e39-769c-43b9-a97c-651f369294c8",
+  "revision": 0,
+  "last_node_id": 79,
+  "last_link_id": 184,
+  "nodes": [
+    {
+      "id": 38,
+      "type": "CLIPLoader",
+      "pos": [
+        60,
+        190
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            74,
+            75
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "t5xxl_fp16.safetensors",
+            "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp16.safetensors?download=true",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "t5xxl_fp16.safetensors",
+        "ltxv",
+        "default"
+      ]
+    },
+    {
+      "id": 44,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        60,
+        40
+      ],
+      "size": [
+        320,
+        100
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            181
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": null
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 2,
+          "links": [
+            87
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "models": [
+          {
+            "name": "ltx-video-2b-v0.9.safetensors",
+            "url": "https://huggingface.co/Lightricks/LTX-Video/resolve/main/ltx-video-2b-v0.9.safetensors?download=true",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ltx-video-2b-v0.9.safetensors"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        420,
+        380
+      ],
+      "size": [
+        425.2799987792969,
+        180.61000061035156
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 75
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            170
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Negative Prompt)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "low quality, worst quality, deformed, distorted, disfigured, motion smear, motion artifacts, fused fingers, bad anatomy, weird hand, ugly"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        420,
+        180
+      ],
+      "size": [
+        422.8500061035156,
+        164.30999755859375
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 74
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            169
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "A woman with long brown hair and light skin smiles at another woman with long blonde hair. The woman with brown hair wears a black jacket and has a small, barely noticeable mole on her right cheek. The camera angle is a close-up, focused on the woman with brown hair's face. The lighting is warm and natural, likely from the setting sun, casting a soft glow on the scene. The scene appears to be real-life footage."
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 76,
+      "type": "Note",
+      "pos": [
+        420,
+        40
+      ],
+      "size": [
+        420,
+        90
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "This model needs long descriptive prompts, if the prompt is too short the quality will suffer greatly."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 70,
+      "type": "EmptyLTXVLatentVideo",
+      "pos": [
+        60,
+        390
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            168,
+            175
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyLTXVLatentVideo"
+      },
+      "widgets_values": [
+        768,
+        512,
+        97,
+        1
+      ]
+    },
+    {
+      "id": 72,
+      "type": "SamplerCustom",
+      "pos": [
+        890,
+        340
+      ],
+      "size": [
+        330,
+        230
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 181
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 166
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 167
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 172
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 182
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 175
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            171
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustom"
+      },
+      "widgets_values": [
+        true,
+        497797676867141,
+        "randomize",
+        3
+      ]
+    },
+    {
+      "id": 73,
+      "type": "KSamplerSelect",
+      "pos": [
+        890,
+        240
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            172
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "euler"
+      ]
+    },
+    {
+      "id": 71,
+      "type": "LTXVScheduler",
+      "pos": [
+        890,
+        40
+      ],
+      "size": [
+        315,
+        154
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "latent",
+          "shape": 7,
+          "type": "LATENT",
+          "link": 168
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "slot_index": 0,
+          "links": [
+            182
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVScheduler"
+      },
+      "widgets_values": [
+        30,
+        2.05,
+        0.95,
+        true,
+        0.1
+      ]
+    },
+    {
+      "id": 69,
+      "type": "LTXVConditioning",
+      "pos": [
+        630,
+        620
+      ],
+      "size": [
+        223.8699951171875,
+        78
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 169
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 170
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            166
+          ]
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "slot_index": 1,
+          "links": [
+            167
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LTXVConditioning"
+      },
+      "widgets_values": [
+        25
+      ]
+    },
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        1250,
+        0
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 171
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 87
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            183
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 78,
+      "type": "CreateVideo",
+      "pos": [
+        1250,
+        90
+      ],
+      "size": [
+        220,
+        80
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 183
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            184
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        24
+      ]
+    },
+    {
+      "id": 79,
+      "type": "SaveVideo",
+      "pos": [
+        1250,
+        220
+      ],
+      "size": [
+        450,
+        370
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 184
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 77,
+      "type": "MarkdownNote",
+      "pos": [
+        -190,
+        0
+      ],
+      "size": [
+        225,
+        88
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "🛈 [Learn more about this workflow](https://comfyanonymous.github.io/ComfyUI_examples/ltxv/)"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      74,
+      38,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      75,
+      38,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      87,
+      44,
+      2,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      166,
+      69,
+      0,
+      72,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      167,
+      69,
+      1,
+      72,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      168,
+      70,
+      0,
+      71,
+      0,
+      "LATENT"
+    ],
+    [
+      169,
+      6,
+      0,
+      69,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      170,
+      7,
+      0,
+      69,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      171,
+      72,
+      0,
+      8,
+      0,
+      "LATENT"
+    ],
+    [
+      172,
+      73,
+      0,
+      72,
+      3,
+      "SAMPLER"
+    ],
+    [
+      175,
+      70,
+      0,
+      72,
+      5,
+      "LATENT"
+    ],
+    [
+      181,
+      44,
+      0,
+      72,
+      0,
+      "MODEL"
+    ],
+    [
+      182,
+      71,
+      0,
+      72,
+      4,
+      "SIGMAS"
+    ],
+    [
+      183,
+      8,
+      0,
+      78,
+      0,
+      "IMAGE"
+    ],
+    [
+      184,
+      78,
+      0,
+      79,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step1 - Load models",
+      "bounding": [
+        50,
+        -30,
+        340,
+        339.6000061035156
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step3 - Prompt",
+      "bounding": [
+        410,
+        -30,
+        445.280029296875,
+        604.2099609375
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Step2 - Video size",
+      "bounding": [
+        50,
+        320,
+        340,
+        220
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Custom sampler",
+      "bounding": [
+        880,
+        -30,
+        350,
+        613.5999755859375
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.2666661150000043,
+      "offset": [
+        282.3491595411123,
+        142.22408251179098
+      ]
+    },
+    "frontendVersion": "1.25.3"
+  },
+  "version": 0.4
+}

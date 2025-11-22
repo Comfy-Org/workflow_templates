@@ -1,0 +1,767 @@
+{
+  "id": "38d4a359-349a-444f-acc1-acba3173c650",
+  "revision": 0,
+  "last_node_id": 41,
+  "last_link_id": 78,
+  "nodes": [
+    {
+      "id": 28,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        630,
+        100
+      ],
+      "size": [
+        202.5337890625,
+        106
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 33
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 34
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 35
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 36
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 49
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            46
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 20,
+      "type": "KSamplerSelect",
+      "pos": [
+        290,
+        430
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        "euler"
+      ]
+    },
+    {
+      "id": 21,
+      "type": "RandomNoise",
+      "pos": [
+        290,
+        110
+      ],
+      "size": [
+        310,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        822957660815591,
+        "randomize"
+      ]
+    },
+    {
+      "id": 27,
+      "type": "DualCFGGuider",
+      "pos": [
+        290,
+        240
+      ],
+      "size": [
+        310,
+        166
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 53
+        },
+        {
+          "name": "cond1",
+          "type": "CONDITIONING",
+          "link": 77
+        },
+        {
+          "name": "cond2",
+          "type": "CONDITIONING",
+          "link": 76
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 45
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "slot_index": 0,
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DualCFGGuider",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        5,
+        2,
+        "regular"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "BasicScheduler",
+      "pos": [
+        290,
+        530
+      ],
+      "size": [
+        210,
+        106
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 52
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        "simple",
+        20,
+        1
+      ]
+    },
+    {
+      "id": 13,
+      "type": "VAELoader",
+      "pos": [
+        -520,
+        360
+      ],
+      "size": [
+        290,
+        60
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42",
+        "models": [
+          {
+            "name": "ae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ae.safetensors"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "CLIPLoader",
+      "pos": [
+        -520,
+        210
+      ],
+      "size": [
+        290,
+        106
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            10,
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42",
+        "models": [
+          {
+            "name": "qwen_2.5_vl_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Omnigen2_ComfyUI_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_fp16.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen_2.5_vl_fp16.safetensors",
+        "omnigen2",
+        "default"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "UNETLoader",
+      "pos": [
+        -520,
+        90
+      ],
+      "size": [
+        290,
+        82
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            52,
+            53
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42",
+        "models": [
+          {
+            "name": "omnigen2_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Omnigen2_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/omnigen2_fp16.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "omnigen2_fp16.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        610,
+        580
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 46
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 11,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        -513.6055297851562,
+        523.306640625
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            49
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ]
+    },
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        865.3943481445312,
+        71.77716827392578
+      ],
+      "size": [
+        555.366943359375,
+        580.708984375
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 9
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -180.14205932617188,
+        91.97244262695312
+      ],
+      "size": [
+        426.5657043457031,
+        138.57876586914062
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            77
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        "A cat with a crown lounging on a velvet throne, royal atmosphere, luxurious fabric texture, regal pose, detailed fur, ornate crown, dramatic lighting"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -177.5792694091797,
+        278.33154296875
+      ],
+      "size": [
+        418.45758056640625,
+        132.5428924560547
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            45,
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.42"
+      },
+      "widgets_values": [
+        "blurry, low quality, distorted, ugly, bad anatomy, deformed, poorly drawn"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 41,
+      "type": "MarkdownNote",
+      "pos": [
+        -890,
+        50
+      ],
+      "size": [
+        340,
+        400
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model links",
+      "properties": {},
+      "widgets_values": [
+        "[Docs](http://docs.comfy.org/tutorials/image/omnigen/omnigen2)\n## Model links\n\n**diffusion model**\n\n- [omnigen2_fp16.safetensors](https://huggingface.co/Comfy-Org/Omnigen2_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/omnigen2_fp16.safetensors)\n\n**vae**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/blob/main/split_files/vae/ae.safetensors)\n\n**text encoder**\n\n- [qwen_2.5_vl_fp16.safetensors](https://huggingface.co/Comfy-Org/Omnigen2_ComfyUI_repackaged/resolve/main/split_files/text_encoders/qwen_2.5_vl_fp16.safetensors)\n\nFile save location\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── omnigen2_fp16.safetensors\n│   ├── 📂 vae/\n│   │   └── ae.safetensor\n│   └── 📂 text_encoders/\n│       └── qwen_2.5_vl_fp16.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      9,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      10,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      11,
+      10,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      14,
+      13,
+      0,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      33,
+      21,
+      0,
+      28,
+      0,
+      "NOISE"
+    ],
+    [
+      34,
+      27,
+      0,
+      28,
+      1,
+      "GUIDER"
+    ],
+    [
+      35,
+      20,
+      0,
+      28,
+      2,
+      "SAMPLER"
+    ],
+    [
+      36,
+      23,
+      0,
+      28,
+      3,
+      "SIGMAS"
+    ],
+    [
+      45,
+      7,
+      0,
+      27,
+      3,
+      "CONDITIONING"
+    ],
+    [
+      46,
+      28,
+      0,
+      8,
+      0,
+      "LATENT"
+    ],
+    [
+      49,
+      11,
+      0,
+      28,
+      4,
+      "LATENT"
+    ],
+    [
+      52,
+      12,
+      0,
+      23,
+      0,
+      "MODEL"
+    ],
+    [
+      53,
+      12,
+      0,
+      27,
+      0,
+      "MODEL"
+    ],
+    [
+      76,
+      7,
+      0,
+      27,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      77,
+      6,
+      0,
+      27,
+      1,
+      "CONDITIONING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step 1 - Load models",
+      "bounding": [
+        -530,
+        20,
+        320,
+        410
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step 3 - Prompt",
+      "bounding": [
+        -190,
+        20,
+        450,
+        410
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Custom Sampling",
+      "bounding": [
+        280,
+        20,
+        561.83544921875,
+        630.7272338867188
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Step 2 - image size",
+      "bounding": [
+        -530,
+        450,
+        320.3025817871094,
+        192.70652770996094
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.683013455365071,
+      "offset": [
+        260.5088244392041,
+        362.7687967524388
+      ]
+    },
+    "frontendVersion": "1.28.6",
+    "groupNodes": {}
+  },
+  "version": 0.4
+}

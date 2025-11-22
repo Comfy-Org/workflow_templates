@@ -1,0 +1,6182 @@
+{
+  "id": "ba1df054-50a8-4da2-b45a-25b4dde3cc2f",
+  "revision": 0,
+  "last_node_id": 283,
+  "last_link_id": 714,
+  "nodes": [
+    {
+      "id": 158,
+      "type": "PixelPerfectResolution",
+      "pos": [
+        -1320,
+        800
+      ],
+      "size": [
+        291.71484375,
+        106
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "original_image",
+          "type": "IMAGE",
+          "link": 347
+        },
+        {
+          "name": "image_gen_width",
+          "type": "INT",
+          "link": 448,
+          "widget": {
+            "name": "image_gen_width"
+          }
+        },
+        {
+          "name": "image_gen_height",
+          "type": "INT",
+          "link": 449,
+          "widget": {
+            "name": "image_gen_height"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RESOLUTION (INT)",
+          "type": "INT",
+          "links": [
+            360,
+            361
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PixelPerfectResolution",
+        "cnr_id": "comfyui_controlnet_aux",
+        "ver": "59b027e088c1c8facf7258f6e392d16d204b4d27"
+      },
+      "widgets_values": [
+        512,
+        512,
+        "Just Resize"
+      ]
+    },
+    {
+      "id": 145,
+      "type": "LoadVideo",
+      "pos": [
+        -1730,
+        410
+      ],
+      "size": [
+        360,
+        434
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            297
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "video_wan2_2_14B_animate_original_video.mp4",
+        "image"
+      ]
+    },
+    {
+      "id": 108,
+      "type": "DownloadAndLoadSAM2Model",
+      "pos": [
+        -1310,
+        1130
+      ],
+      "size": [
+        320,
+        140
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "sam2_model",
+          "type": "SAM2MODEL",
+          "links": [
+            235
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DownloadAndLoadSAM2Model",
+        "cnr_id": "ComfyUI-segment-anything-2",
+        "ver": "c59676b008a76237002926f684d0ca3a9b29ac54"
+      },
+      "widgets_values": [
+        "sam2_hiera_base_plus.safetensors",
+        "video",
+        "cuda",
+        "fp16"
+      ]
+    },
+    {
+      "id": 124,
+      "type": "PreviewImage",
+      "pos": [
+        -860,
+        1900
+      ],
+      "size": [
+        250,
+        270
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 675
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 127,
+      "type": "MaskPreview",
+      "pos": [
+        -870,
+        1540
+      ],
+      "size": [
+        260,
+        260
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 691
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "MaskPreview",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 103,
+      "type": "Note",
+      "pos": [
+        -1300,
+        660
+      ],
+      "size": [
+        260,
+        88
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "The Image Scale node is to prevent you from inputting an oversized video. A large size video will take a very long time to preprocess.\n\nPlease update this setting according to the video size you input\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 227,
+      "type": "MarkdownNote",
+      "pos": [
+        -1300,
+        2100
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Switch to Move mode",
+      "properties": {},
+      "widgets_values": [
+        "The model has two modes:\n- Mix: character replace\n- Move: Pose transfer\n\nIf you want to switch to **Move** mode, please disconnect **Background_video** and **Character_mask** output from the **WanAnimateToVideo** node.\n\nBypass will still pass the input video to the **WanAnimateToVideo** node, so please disconnect them."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 229,
+      "type": "PointsEditor",
+      "pos": [
+        -2150,
+        1100
+      ],
+      "size": [
+        685,
+        940
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 456
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive_coords",
+          "type": "STRING",
+          "links": [
+            438
+          ]
+        },
+        {
+          "name": "negative_coords",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "bbox",
+          "type": "BBOX",
+          "links": null
+        },
+        {
+          "name": "bbox_mask",
+          "type": "MASK",
+          "links": null
+        },
+        {
+          "name": "cropped_image",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PointsEditor",
+        "cnr_id": "comfyui-kjnodes",
+        "ver": "e81f33508b0821ea2f53f4f46a833fa6215626bd",
+        "points": "PointsEditor",
+        "neg_points": "PointsEditor",
+        "imgData": {
+          "name": "bg_image",
+          "base64": [
+            "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"
+          ]
+        }
+      },
+      "widgets_values": [
+        "{\"positive\":[{\"x\":256,\"y\":256}],\"negative\":[{\"x\":0,\"y\":0}]}",
+        "[{\"x\":256,\"y\":256}]",
+        "[{\"x\":0,\"y\":0}]",
+        "[{}]",
+        "[{}]",
+        "xyxy",
+        640,
+        640,
+        false
+      ]
+    },
+    {
+      "id": 212,
+      "type": "ImageScale",
+      "pos": [
+        -1300,
+        490
+      ],
+      "size": [
+        270,
+        130
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 425
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 446
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 447
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            422,
+            423,
+            456,
+            457,
+            662
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScale",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "lanczos",
+        512,
+        512,
+        "center"
+      ]
+    },
+    {
+      "id": 100,
+      "type": "DWPreprocessor",
+      "pos": [
+        -960,
+        400
+      ],
+      "size": [
+        294.72265625,
+        222
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 422
+        },
+        {
+          "name": "resolution",
+          "type": "INT",
+          "link": 360,
+          "shape": 7,
+          "widget": {
+            "name": "resolution"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            484,
+            532,
+            704
+          ]
+        },
+        {
+          "name": "POSE_KEYPOINT",
+          "type": "POSE_KEYPOINT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DWPreprocessor",
+        "cnr_id": "comfyui_controlnet_aux",
+        "ver": "59b027e088c1c8facf7258f6e392d16d204b4d27"
+      },
+      "widgets_values": [
+        "disable",
+        "disable",
+        "enable",
+        512,
+        "yolox_l.onnx",
+        "dw-ll_ucoco_384_bs5.torchscript.pt",
+        "disable"
+      ]
+    },
+    {
+      "id": 101,
+      "type": "DWPreprocessor",
+      "pos": [
+        -960,
+        690
+      ],
+      "size": [
+        294.72265625,
+        222
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 423
+        },
+        {
+          "name": "resolution",
+          "type": "INT",
+          "link": 361,
+          "shape": 7,
+          "widget": {
+            "name": "resolution"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            485,
+            533,
+            705
+          ]
+        },
+        {
+          "name": "POSE_KEYPOINT",
+          "type": "POSE_KEYPOINT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DWPreprocessor",
+        "cnr_id": "comfyui_controlnet_aux",
+        "ver": "59b027e088c1c8facf7258f6e392d16d204b4d27"
+      },
+      "widgets_values": [
+        "enable",
+        "enable",
+        "disable",
+        512,
+        "yolox_l.onnx",
+        "dw-ll_ucoco_384_bs5.torchscript.pt",
+        "disable"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "GetVideoComponents",
+      "pos": [
+        -1730,
+        780
+      ],
+      "size": [
+        190,
+        70
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 297
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            347,
+            425
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            478,
+            526,
+            698
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 21,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -990,
+        -280
+      ],
+      "size": [
+        420,
+        230
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            480,
+            528,
+            700
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "The character is dancing in the room"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 1,
+      "type": "CLIPTextEncode",
+      "pos": [
+        -990,
+        50
+      ],
+      "size": [
+        425.27801513671875,
+        180.6060791015625
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            481,
+            529,
+            701
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Negative Prompt)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 9,
+      "type": "CLIPVisionEncode",
+      "pos": [
+        -2150,
+        860
+      ],
+      "size": [
+        253.60000610351562,
+        78
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 19,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip_vision",
+          "type": "CLIP_VISION",
+          "link": 4
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 344
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CLIP_VISION_OUTPUT",
+          "type": "CLIP_VISION_OUTPUT",
+          "slot_index": 0,
+          "links": [
+            482,
+            530,
+            702
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPVisionEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "none"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        -2150,
+        380
+      ],
+      "size": [
+        340,
+        440
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            344,
+            483,
+            531,
+            703
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "video_wan2_2_14B_animate_reference_image.png",
+        "image"
+      ]
+    },
+    {
+      "id": 126,
+      "type": "MarkdownNote",
+      "pos": [
+        -2150,
+        2110
+      ],
+      "size": [
+        760,
+        240
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: About Points Editor",
+      "properties": {},
+      "widgets_values": [
+        "## How to load image \n\nYou can right-click on the canvas, then choose Load Image. Or you can run the workflow once, and it will automatically get the first frame of the input video.\n\n## Add new green points\n\nGreen points are used to mark the area that you want to detect.\nPress the Shift key, then use the left click to add new green points.\n\n## Add new red points\n\nRed points are used to mark the area you want to exclude.\nPress the Shift key, then use the right click to add new red points.\n\n## Clear all points\n\nClick the **New canvas** to clear all points"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 107,
+      "type": "Sam2Segmentation",
+      "pos": [
+        -1310,
+        1330
+      ],
+      "size": [
+        320,
+        190
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "sam2_model",
+          "type": "SAM2MODEL",
+          "link": 235
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 457
+        },
+        {
+          "name": "coordinates_positive",
+          "type": "STRING",
+          "link": 438,
+          "shape": 7
+        },
+        {
+          "name": "coordinates_negative",
+          "type": "STRING",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "bboxes",
+          "type": "BBOX",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null,
+          "shape": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            661
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Sam2Segmentation",
+        "cnr_id": "ComfyUI-segment-anything-2",
+        "ver": "c59676b008a76237002926f684d0ca3a9b29ac54"
+      },
+      "widgets_values": [
+        true,
+        false
+      ]
+    },
+    {
+      "id": 274,
+      "type": "GrowMask",
+      "pos": [
+        -1280,
+        1610
+      ],
+      "size": [
+        270,
+        82
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 661
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            660
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GrowMask",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        10,
+        true
+      ]
+    },
+    {
+      "id": 275,
+      "type": "DrawMaskOnImage",
+      "pos": [
+        -1280,
+        1920
+      ],
+      "size": [
+        270,
+        78
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 662
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 659
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            675,
+            676,
+            677,
+            706
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DrawMaskOnImage",
+        "cnr_id": "comfyui-kjnodes",
+        "ver": "623b5913dc7f240fd8b26422e99f8849a21c5473"
+      },
+      "widgets_values": [
+        "0, 0, 0"
+      ]
+    },
+    {
+      "id": 276,
+      "type": "BlockifyMask",
+      "pos": [
+        -1280,
+        1750
+      ],
+      "size": [
+        270,
+        60
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "masks",
+          "type": "MASK",
+          "link": 660
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            659,
+            691,
+            692,
+            693,
+            707
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BlockifyMask",
+        "cnr_id": "comfyui-kjnodes",
+        "ver": "00da1910634fbf314d407608efb281ae6f7f1ba2"
+      },
+      "widgets_values": [
+        32
+      ]
+    },
+    {
+      "id": 278,
+      "type": "063b0ee8-c72b-442b-8029-dd3d5f4b6650",
+      "pos": [
+        610,
+        -190
+      ],
+      "size": [
+        410,
+        446
+      ],
+      "flags": {},
+      "order": 37,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 696
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 697
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 698
+        },
+        {
+          "label": "last_batch_images",
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 710
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 700
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 701
+        },
+        {
+          "name": "clip_vision_output",
+          "type": "CLIP_VISION_OUTPUT",
+          "link": 702
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": 703
+        },
+        {
+          "name": "face_video",
+          "type": "IMAGE",
+          "link": 704
+        },
+        {
+          "name": "pose_video",
+          "type": "IMAGE",
+          "link": 705
+        },
+        {
+          "name": "background_video",
+          "type": "IMAGE",
+          "link": 706
+        },
+        {
+          "name": "character_mask",
+          "type": "MASK",
+          "link": 707
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 708
+        },
+        {
+          "name": "video_frame_offset",
+          "type": "INT",
+          "widget": {
+            "name": "video_frame_offset"
+          },
+          "link": 711
+        }
+      ],
+      "outputs": [
+        {
+          "label": "batch image output",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "video_frame_offset",
+          "type": "INT",
+          "links": []
+        },
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            695
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "width"
+          ],
+          [
+            "-1",
+            "video_frame_offset"
+          ],
+          [
+            "-1",
+            "seed"
+          ],
+          [
+            "-1",
+            "steps"
+          ],
+          [
+            "-1",
+            "cfg"
+          ],
+          [
+            "-1",
+            "sampler_name"
+          ],
+          [
+            "-1",
+            "scheduler"
+          ],
+          [
+            "-1",
+            "fps"
+          ]
+        ],
+        "cnr_id": "comfy-core",
+        "ver": "0.3.60"
+      },
+      "widgets_values": [
+        1280,
+        0,
+        387378783691198,
+        6,
+        1,
+        "euler",
+        "simple",
+        16
+      ]
+    },
+    {
+      "id": 242,
+      "type": "975ed319-ca2b-461e-b42a-8e2704ba902f",
+      "pos": [
+        130,
+        -180
+      ],
+      "size": [
+        410,
+        446
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 524
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 525
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 526
+        },
+        {
+          "label": "last_batch_images",
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 527
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 528
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 529
+        },
+        {
+          "name": "clip_vision_output",
+          "type": "CLIP_VISION_OUTPUT",
+          "link": 530
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": 531
+        },
+        {
+          "name": "face_video",
+          "type": "IMAGE",
+          "link": 532
+        },
+        {
+          "name": "pose_video",
+          "type": "IMAGE",
+          "link": 533
+        },
+        {
+          "name": "background_video",
+          "type": "IMAGE",
+          "link": 677
+        },
+        {
+          "name": "character_mask",
+          "type": "MASK",
+          "link": 693
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 536
+        },
+        {
+          "name": "video_frame_offset",
+          "type": "INT",
+          "widget": {
+            "name": "video_frame_offset"
+          },
+          "link": 537
+        }
+      ],
+      "outputs": [
+        {
+          "label": "batch_images",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            710
+          ]
+        },
+        {
+          "name": "video_frame_offset",
+          "type": "INT",
+          "links": [
+            711
+          ]
+        },
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            540
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "width"
+          ],
+          [
+            "-1",
+            "video_frame_offset"
+          ],
+          [
+            "-1",
+            "seed"
+          ],
+          [
+            "-1",
+            "steps"
+          ],
+          [
+            "-1",
+            "cfg"
+          ],
+          [
+            "-1",
+            "sampler_name"
+          ],
+          [
+            "-1",
+            "scheduler"
+          ],
+          [
+            "-1",
+            "fps"
+          ]
+        ],
+        "cnr_id": "comfy-core",
+        "ver": "0.3.60"
+      },
+      "widgets_values": [
+        1280,
+        0,
+        387378783691198,
+        6,
+        1,
+        "euler",
+        "simple",
+        16
+      ]
+    },
+    {
+      "id": 277,
+      "type": "SaveVideo",
+      "pos": [
+        610,
+        320
+      ],
+      "size": [
+        420,
+        558
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 695
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.60"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 238,
+      "type": "MarkdownNote",
+      "pos": [
+        110,
+        1110
+      ],
+      "size": [
+        420,
+        120
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Extend video length",
+      "properties": {},
+      "widgets_values": [
+        "Copy this group then link the \"Batch images\" and the \"video_frame_offset\" to the next extend subgraph"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 243,
+      "type": "SaveVideo",
+      "pos": [
+        140,
+        330
+      ],
+      "size": [
+        420,
+        558
+      ],
+      "flags": {},
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 540
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.60"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 232,
+      "type": "90db3fa1-b7fd-4c97-90a4-3e9533589dce",
+      "pos": [
+        -420,
+        -180
+      ],
+      "size": [
+        450,
+        430
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 477
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 478
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 479
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 480
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 481
+        },
+        {
+          "name": "clip_vision_output",
+          "type": "CLIP_VISION_OUTPUT",
+          "link": 482
+        },
+        {
+          "name": "reference_image",
+          "type": "IMAGE",
+          "link": 483
+        },
+        {
+          "name": "face_video",
+          "type": "IMAGE",
+          "link": 484
+        },
+        {
+          "name": "pose_video",
+          "type": "IMAGE",
+          "link": 485
+        },
+        {
+          "name": "background_video",
+          "type": "IMAGE",
+          "link": 676
+        },
+        {
+          "name": "character_mask",
+          "type": "MASK",
+          "link": 692
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 488
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 489
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            490
+          ]
+        },
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            527
+          ]
+        },
+        {
+          "name": "video_frame_offset",
+          "type": "INT",
+          "links": [
+            537
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "width"
+          ],
+          [
+            "-1",
+            "height"
+          ],
+          [
+            "-1",
+            "fps"
+          ],
+          [
+            "-1",
+            "seed"
+          ],
+          [
+            "-1",
+            "steps"
+          ],
+          [
+            "-1",
+            "cfg"
+          ],
+          [
+            "-1",
+            "sampler_name"
+          ],
+          [
+            "-1",
+            "scheduler"
+          ]
+        ],
+        "cnr_id": "comfy-core",
+        "ver": "0.3.60"
+      },
+      "widgets_values": [
+        640,
+        640,
+        16,
+        1106558644923357,
+        6,
+        1,
+        "euler",
+        "simple"
+      ]
+    },
+    {
+      "id": 19,
+      "type": "SaveVideo",
+      "pos": [
+        -410,
+        330
+      ],
+      "size": [
+        460,
+        558
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 490
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 99,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -1800,
+        -50
+      ],
+      "size": [
+        306.36004638671875,
+        82
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 226
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            227
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "models": [
+          {
+            "name": "WanAnimate_relight_lora_fp16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/LoRAs/Wan22_relight/WanAnimate_relight_lora_fp16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "WanAnimate_relight_lora_fp16.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 226,
+      "type": "MarkdownNote",
+      "pos": [
+        -2830,
+        -380
+      ],
+      "size": [
+        590,
+        160
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Make sure these custom nodes are installed.",
+      "properties": {},
+      "widgets_values": [
+        "In this template, we have used three custom nodes. For users who don't know how to install a custom node, please refer to [How to install custom node](https://docs.comfy.org/installation/install_custom_node).\n\n## Custom nodes\n\n- [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux)\n- [ComfyUI-KJNodes](https://github.com/kijai/ComfyUI-KJNodes/)\n- [ComfyUI-segment-anything-2](https://github.com/kijai/ComfyUI-segment-anything-2)\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 44,
+      "type": "MarkdownNote",
+      "pos": [
+        -2830,
+        -170
+      ],
+      "size": [
+        590,
+        590
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model links",
+      "properties": {},
+      "widgets_values": [
+        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/wan2-2-animate\n) \n\n## Model links\n\n**diffusion_models**       \n- [Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors](https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/Wan22Animate/Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors)\n- [wan2.2_animate_14B_bf16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_animate_14B_bf16.safetensors)\n\n**loras**\n- [lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors)\n- [WanAnimate_relight_lora_fp16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/LoRAs/Wan22_relight/WanAnimate_relight_lora_fp16.safetensors)\n\n**clip_visions**\n- [clip_vision_h.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors)\n\n**vae**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors)\n\n**text_encoders**   \n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   ├─── Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors\n│   │   └─── wan2.2_animate_14B_bf16.safetensors\n│   ├───📂 loras/\n│   │   ├─── lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors\n│   │   └─── WanAnimate_relight_lora_fp16.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   ├───📂 clip_visions/ \n│   │   └─── clip_vision_h.safetensors\n│   └───📂 vae/\n│       └── wan_2.1_vae.safetensors\n```\n# Report issue\n\nIf you have any problems while using this workflow, please report template-related issues via this link: [report the template issue here](https://github.com/Comfy-Org/workflow_templates/issues)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "CLIPLoader",
+      "pos": [
+        -1400,
+        -260
+      ],
+      "size": [
+        306.36004638671875,
+        106
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            1,
+            18
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "models": [
+          {
+            "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "wan",
+        "default"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "VAELoader",
+      "pos": [
+        -1400,
+        180
+      ],
+      "size": [
+        310,
+        60
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            479,
+            525,
+            697
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "models": [
+          {
+            "name": "wan_2.1_vae.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wan_2.1_vae.safetensors"
+      ]
+    },
+    {
+      "id": 60,
+      "type": "ModelSamplingSD3",
+      "pos": [
+        -1380,
+        -30
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 227
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            477,
+            524,
+            696
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingSD3",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        8
+      ]
+    },
+    {
+      "id": 4,
+      "type": "CLIPVisionLoader",
+      "pos": [
+        -2160,
+        160
+      ],
+      "size": [
+        306.36004638671875,
+        58
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP_VISION",
+          "type": "CLIP_VISION",
+          "slot_index": 0,
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPVisionLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "models": [
+          {
+            "name": "clip_vision_h.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/clip_vision/clip_vision_h.safetensors",
+            "directory": "clip_vision"
+          }
+        ]
+      },
+      "widgets_values": [
+        "clip_vision_h.safetensors"
+      ]
+    },
+    {
+      "id": 18,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -1800,
+        -190
+      ],
+      "size": [
+        310,
+        82
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 16
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            226
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "models": [
+          {
+            "name": "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "lightx2v_I2V_14B_480p_cfg_step_distill_rank64_bf16.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 20,
+      "type": "UNETLoader",
+      "pos": [
+        -2160,
+        -90
+      ],
+      "size": [
+        306.36004638671875,
+        82
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59",
+        "models": [
+          {
+            "name": "Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy_fp8_scaled/resolve/main/Wan22Animate/Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Wan2_2-Animate-14B_fp8_e4m3fn_scaled_KJ.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 160,
+      "type": "PrimitiveInt",
+      "pos": [
+        -1020,
+        -500
+      ],
+      "size": [
+        240,
+        82
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            447,
+            449,
+            489
+          ]
+        }
+      ],
+      "title": "Height",
+      "properties": {
+        "Node name for S&R": "PrimitiveInt",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        640,
+        "fixed"
+      ]
+    },
+    {
+      "id": 159,
+      "type": "PrimitiveInt",
+      "pos": [
+        -750,
+        -500
+      ],
+      "size": [
+        240,
+        82
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            446,
+            448,
+            488,
+            536,
+            708
+          ]
+        }
+      ],
+      "title": "Width",
+      "properties": {
+        "Node name for S&R": "PrimitiveInt",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.59"
+      },
+      "widgets_values": [
+        640,
+        "fixed"
+      ]
+    },
+    {
+      "id": 161,
+      "type": "MarkdownNote",
+      "pos": [
+        -460,
+        -570
+      ],
+      "size": [
+        370,
+        88
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: about size",
+      "properties": {},
+      "widgets_values": [
+        "Due to the **WanAnimateToVideo** node input limit. The width and height must be multiples of 16.\n\nBy default, we set it to a smaller size. This is in case you don't have enough VRAM and input a large size, which may cause an out-of-memory issue."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      1,
+      0,
+      "CLIP"
+    ],
+    [
+      4,
+      4,
+      0,
+      9,
+      0,
+      "CLIP_VISION"
+    ],
+    [
+      16,
+      20,
+      0,
+      18,
+      0,
+      "MODEL"
+    ],
+    [
+      18,
+      2,
+      0,
+      21,
+      0,
+      "CLIP"
+    ],
+    [
+      226,
+      18,
+      0,
+      99,
+      0,
+      "MODEL"
+    ],
+    [
+      227,
+      99,
+      0,
+      60,
+      0,
+      "MODEL"
+    ],
+    [
+      235,
+      108,
+      0,
+      107,
+      0,
+      "SAM2MODEL"
+    ],
+    [
+      297,
+      145,
+      0,
+      23,
+      0,
+      "VIDEO"
+    ],
+    [
+      344,
+      10,
+      0,
+      9,
+      1,
+      "IMAGE"
+    ],
+    [
+      347,
+      23,
+      0,
+      158,
+      0,
+      "IMAGE"
+    ],
+    [
+      360,
+      158,
+      0,
+      100,
+      1,
+      "INT"
+    ],
+    [
+      361,
+      158,
+      0,
+      101,
+      1,
+      "INT"
+    ],
+    [
+      422,
+      212,
+      0,
+      100,
+      0,
+      "IMAGE"
+    ],
+    [
+      423,
+      212,
+      0,
+      101,
+      0,
+      "IMAGE"
+    ],
+    [
+      425,
+      23,
+      0,
+      212,
+      0,
+      "IMAGE"
+    ],
+    [
+      438,
+      229,
+      0,
+      107,
+      2,
+      "STRING"
+    ],
+    [
+      446,
+      159,
+      0,
+      212,
+      1,
+      "INT"
+    ],
+    [
+      447,
+      160,
+      0,
+      212,
+      2,
+      "INT"
+    ],
+    [
+      448,
+      159,
+      0,
+      158,
+      1,
+      "INT"
+    ],
+    [
+      449,
+      160,
+      0,
+      158,
+      2,
+      "INT"
+    ],
+    [
+      456,
+      212,
+      0,
+      229,
+      0,
+      "IMAGE"
+    ],
+    [
+      457,
+      212,
+      0,
+      107,
+      1,
+      "IMAGE"
+    ],
+    [
+      477,
+      60,
+      0,
+      232,
+      0,
+      "MODEL"
+    ],
+    [
+      478,
+      23,
+      1,
+      232,
+      1,
+      "AUDIO"
+    ],
+    [
+      479,
+      3,
+      0,
+      232,
+      2,
+      "VAE"
+    ],
+    [
+      480,
+      21,
+      0,
+      232,
+      3,
+      "CONDITIONING"
+    ],
+    [
+      481,
+      1,
+      0,
+      232,
+      4,
+      "CONDITIONING"
+    ],
+    [
+      482,
+      9,
+      0,
+      232,
+      5,
+      "CLIP_VISION_OUTPUT"
+    ],
+    [
+      483,
+      10,
+      0,
+      232,
+      6,
+      "IMAGE"
+    ],
+    [
+      484,
+      100,
+      0,
+      232,
+      7,
+      "IMAGE"
+    ],
+    [
+      485,
+      101,
+      0,
+      232,
+      8,
+      "IMAGE"
+    ],
+    [
+      488,
+      159,
+      0,
+      232,
+      11,
+      "INT"
+    ],
+    [
+      489,
+      160,
+      0,
+      232,
+      12,
+      "INT"
+    ],
+    [
+      490,
+      232,
+      0,
+      19,
+      0,
+      "VIDEO"
+    ],
+    [
+      524,
+      60,
+      0,
+      242,
+      0,
+      "MODEL"
+    ],
+    [
+      525,
+      3,
+      0,
+      242,
+      1,
+      "VAE"
+    ],
+    [
+      526,
+      23,
+      1,
+      242,
+      2,
+      "AUDIO"
+    ],
+    [
+      527,
+      232,
+      1,
+      242,
+      3,
+      "IMAGE"
+    ],
+    [
+      528,
+      21,
+      0,
+      242,
+      4,
+      "CONDITIONING"
+    ],
+    [
+      529,
+      1,
+      0,
+      242,
+      5,
+      "CONDITIONING"
+    ],
+    [
+      530,
+      9,
+      0,
+      242,
+      6,
+      "CLIP_VISION_OUTPUT"
+    ],
+    [
+      531,
+      10,
+      0,
+      242,
+      7,
+      "IMAGE"
+    ],
+    [
+      532,
+      100,
+      0,
+      242,
+      8,
+      "IMAGE"
+    ],
+    [
+      533,
+      101,
+      0,
+      242,
+      9,
+      "IMAGE"
+    ],
+    [
+      536,
+      159,
+      0,
+      242,
+      12,
+      "INT"
+    ],
+    [
+      537,
+      232,
+      2,
+      242,
+      13,
+      "INT"
+    ],
+    [
+      540,
+      242,
+      2,
+      243,
+      0,
+      "VIDEO"
+    ],
+    [
+      659,
+      276,
+      0,
+      275,
+      1,
+      "MASK"
+    ],
+    [
+      660,
+      274,
+      0,
+      276,
+      0,
+      "MASK"
+    ],
+    [
+      661,
+      107,
+      0,
+      274,
+      0,
+      "MASK"
+    ],
+    [
+      662,
+      212,
+      0,
+      275,
+      0,
+      "IMAGE"
+    ],
+    [
+      675,
+      275,
+      0,
+      124,
+      0,
+      "IMAGE"
+    ],
+    [
+      676,
+      275,
+      0,
+      232,
+      9,
+      "IMAGE"
+    ],
+    [
+      677,
+      275,
+      0,
+      242,
+      10,
+      "IMAGE"
+    ],
+    [
+      691,
+      276,
+      0,
+      127,
+      0,
+      "MASK"
+    ],
+    [
+      692,
+      276,
+      0,
+      232,
+      10,
+      "MASK"
+    ],
+    [
+      693,
+      276,
+      0,
+      242,
+      11,
+      "MASK"
+    ],
+    [
+      695,
+      278,
+      2,
+      277,
+      0,
+      "VIDEO"
+    ],
+    [
+      696,
+      60,
+      0,
+      278,
+      0,
+      "MODEL"
+    ],
+    [
+      697,
+      3,
+      0,
+      278,
+      1,
+      "VAE"
+    ],
+    [
+      698,
+      23,
+      1,
+      278,
+      2,
+      "AUDIO"
+    ],
+    [
+      700,
+      21,
+      0,
+      278,
+      4,
+      "CONDITIONING"
+    ],
+    [
+      701,
+      1,
+      0,
+      278,
+      5,
+      "CONDITIONING"
+    ],
+    [
+      702,
+      9,
+      0,
+      278,
+      6,
+      "CLIP_VISION_OUTPUT"
+    ],
+    [
+      703,
+      10,
+      0,
+      278,
+      7,
+      "IMAGE"
+    ],
+    [
+      704,
+      100,
+      0,
+      278,
+      8,
+      "IMAGE"
+    ],
+    [
+      705,
+      101,
+      0,
+      278,
+      9,
+      "IMAGE"
+    ],
+    [
+      706,
+      275,
+      0,
+      278,
+      10,
+      "IMAGE"
+    ],
+    [
+      707,
+      276,
+      0,
+      278,
+      11,
+      "MASK"
+    ],
+    [
+      708,
+      159,
+      0,
+      278,
+      12,
+      "INT"
+    ],
+    [
+      710,
+      242,
+      0,
+      278,
+      3,
+      "IMAGE"
+    ],
+    [
+      711,
+      242,
+      1,
+      278,
+      13,
+      "INT"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step 1 - Load models",
+      "bounding": [
+        -2190,
+        -360,
+        1130,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step 3 - Upload referece image",
+      "bounding": [
+        -2220,
+        300,
+        450,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Step 2 - Prompt",
+      "bounding": [
+        -1050,
+        -360,
+        560,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Step 4 - Load original video",
+      "bounding": [
+        -1750,
+        300,
+        1260,
+        640
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Sampling + video output",
+      "bounding": [
+        -470,
+        -360,
+        550,
+        1400
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 13,
+      "title": "Character Mask and Background Video Preprocessing",
+      "bounding": [
+        -2210,
+        960,
+        1720,
+        1440
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 16,
+      "title": "Video size",
+      "bounding": [
+        -1040,
+        -600,
+        550,
+        220
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 14,
+      "title": "Character mask",
+      "bounding": [
+        -1290,
+        1540,
+        290,
+        283.6000061035156
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 15,
+      "title": "Background_video",
+      "bounding": [
+        -1290,
+        1840,
+        290,
+        170
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 17,
+      "title": "Video extend",
+      "bounding": [
+        100,
+        -360,
+        480,
+        1400
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 18,
+      "title": "Video extend",
+      "bounding": [
+        600,
+        -360,
+        460,
+        1400
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "90db3fa1-b7fd-4c97-90a4-3e9533589dce",
+        "version": 1,
+        "state": {
+          "lastGroupId": 16,
+          "lastNodeId": 231,
+          "lastLinkId": 482,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Video Sampling and output(Subgraph)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -348.07421875,
+            -104,
+            138.07421875,
+            420
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            880,
+            -4,
+            141.841796875,
+            100
+          ]
+        },
+        "inputs": [
+          {
+            "id": "a65c1a6f-1c56-4db6-bc46-0d762e228140",
+            "name": "model",
+            "type": "MODEL",
+            "linkIds": [
+              454
+            ],
+            "localized_name": "model",
+            "pos": [
+              -230,
+              -84
+            ]
+          },
+          {
+            "id": "f60a003a-5f70-4edb-87d2-49249b63ac60",
+            "name": "audio",
+            "type": "AUDIO",
+            "linkIds": [
+              463
+            ],
+            "localized_name": "audio",
+            "shape": 7,
+            "pos": [
+              -230,
+              -64
+            ]
+          },
+          {
+            "id": "3eba0674-9407-48ab-8416-23357fefa5e4",
+            "name": "vae",
+            "type": "VAE",
+            "linkIds": [
+              464,
+              471
+            ],
+            "localized_name": "vae",
+            "pos": [
+              -230,
+              -44
+            ]
+          },
+          {
+            "id": "8c5ba174-3dac-4830-989d-2ffd194a4638",
+            "name": "positive",
+            "type": "CONDITIONING",
+            "linkIds": [
+              467
+            ],
+            "localized_name": "positive",
+            "pos": [
+              -230,
+              -24
+            ]
+          },
+          {
+            "id": "1047fa35-1365-4dfc-b7f1-a5869b601a89",
+            "name": "negative",
+            "type": "CONDITIONING",
+            "linkIds": [
+              470
+            ],
+            "localized_name": "negative",
+            "pos": [
+              -230,
+              -4
+            ]
+          },
+          {
+            "id": "04a00ce5-40d1-46a0-9478-9aba0778b80b",
+            "name": "clip_vision_output",
+            "type": "CLIP_VISION_OUTPUT",
+            "linkIds": [
+              474
+            ],
+            "localized_name": "clip_vision_output",
+            "shape": 7,
+            "pos": [
+              -230,
+              16
+            ]
+          },
+          {
+            "id": "9ed8853f-bd73-4728-be35-ed4d4a177059",
+            "name": "reference_image",
+            "type": "IMAGE",
+            "linkIds": [
+              475
+            ],
+            "localized_name": "reference_image",
+            "shape": 7,
+            "pos": [
+              -230,
+              36
+            ]
+          },
+          {
+            "id": "2b62e853-eb8b-4d69-bf22-1f0822d3e56d",
+            "name": "face_video",
+            "type": "IMAGE",
+            "linkIds": [
+              459
+            ],
+            "localized_name": "face_video",
+            "shape": 7,
+            "pos": [
+              -230,
+              56
+            ]
+          },
+          {
+            "id": "3136835f-c045-4f05-a970-3adafd321465",
+            "name": "pose_video",
+            "type": "IMAGE",
+            "linkIds": [
+              461
+            ],
+            "localized_name": "pose_video",
+            "shape": 7,
+            "pos": [
+              -230,
+              76
+            ]
+          },
+          {
+            "id": "5ad7efd4-462f-41d0-8340-4afd50c5f348",
+            "name": "background_video",
+            "type": "IMAGE",
+            "linkIds": [
+              419
+            ],
+            "localized_name": "background_video",
+            "shape": 7,
+            "pos": [
+              -230,
+              96
+            ]
+          },
+          {
+            "id": "ca1d3a4d-4e24-4d7e-8f09-806712fd4bc9",
+            "name": "character_mask",
+            "type": "MASK",
+            "linkIds": [
+              418
+            ],
+            "localized_name": "character_mask",
+            "shape": 7,
+            "pos": [
+              -230,
+              116
+            ]
+          },
+          {
+            "id": "f39fd571-8756-4c88-bc40-9055450f6e00",
+            "name": "width",
+            "type": "INT",
+            "linkIds": [
+              450
+            ],
+            "localized_name": "width",
+            "pos": [
+              -230,
+              136
+            ]
+          },
+          {
+            "id": "02628a20-dd6c-44e6-9012-b6d0bf61a93f",
+            "name": "height",
+            "type": "INT",
+            "linkIds": [
+              451
+            ],
+            "localized_name": "height",
+            "pos": [
+              -230,
+              156
+            ]
+          },
+          {
+            "id": "066ae061-5d3e-473f-8a83-8517c605e63d",
+            "name": "fps",
+            "type": "FLOAT",
+            "linkIds": [
+              477
+            ],
+            "pos": [
+              -230,
+              176
+            ]
+          },
+          {
+            "id": "fbbe4cdd-2580-486a-8d7c-53f1dc0a4034",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [
+              478
+            ],
+            "pos": [
+              -230,
+              196
+            ]
+          },
+          {
+            "id": "4bf86876-244b-49d0-a6f5-f8b98de0ac50",
+            "name": "steps",
+            "type": "INT",
+            "linkIds": [
+              479
+            ],
+            "pos": [
+              -230,
+              216
+            ]
+          },
+          {
+            "id": "43112400-97ac-4ab9-8c6e-1bd62e32f8d4",
+            "name": "cfg",
+            "type": "FLOAT",
+            "linkIds": [
+              480
+            ],
+            "pos": [
+              -230,
+              236
+            ]
+          },
+          {
+            "id": "294b0d0a-7b7b-4953-8a86-37440b22099b",
+            "name": "sampler_name",
+            "type": "COMBO",
+            "linkIds": [
+              481
+            ],
+            "pos": [
+              -230,
+              256
+            ]
+          },
+          {
+            "id": "37d706a5-cf01-4275-917d-ffda1eb0af23",
+            "name": "scheduler",
+            "type": "COMBO",
+            "linkIds": [
+              482
+            ],
+            "pos": [
+              -230,
+              276
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "321201d9-6a87-48bc-a8e3-2d13f32a546f",
+            "name": "VIDEO",
+            "type": "VIDEO",
+            "linkIds": [
+              17
+            ],
+            "localized_name": "VIDEO",
+            "pos": [
+              900,
+              16
+            ]
+          },
+          {
+            "id": "bc8f831d-427d-4b69-9bfc-50760cbb1ee4",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              187,
+              208
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              900,
+              36
+            ]
+          },
+          {
+            "id": "2b09b619-743f-45f6-a120-44694d4018b6",
+            "name": "video_frame_offset",
+            "type": "INT",
+            "linkIds": [
+              439
+            ],
+            "localized_name": "video_frame_offset",
+            "pos": [
+              900,
+              56
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 57,
+            "type": "TrimVideoLatent",
+            "pos": [
+              240,
+              110
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 157
+              },
+              {
+                "localized_name": "trim_amount",
+                "name": "trim_amount",
+                "type": "INT",
+                "widget": {
+                  "name": "trim_amount"
+                },
+                "link": 152
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  127
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "TrimVideoLatent",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              0
+            ]
+          },
+          {
+            "id": 58,
+            "type": "VAEDecode",
+            "pos": [
+              290,
+              230
+            ],
+            "size": [
+              210,
+              46
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 127
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 464
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "slot_index": 0,
+                "links": [
+                  187,
+                  208,
+                  440
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAEDecode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 62,
+            "type": "WanAnimateToVideo",
+            "pos": [
+              -150,
+              -200
+            ],
+            "size": [
+              324.751953125,
+              358
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 467
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 470
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 471
+              },
+              {
+                "localized_name": "clip_vision_output",
+                "name": "clip_vision_output",
+                "shape": 7,
+                "type": "CLIP_VISION_OUTPUT",
+                "link": 474
+              },
+              {
+                "localized_name": "reference_image",
+                "name": "reference_image",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 475
+              },
+              {
+                "localized_name": "face_video",
+                "name": "face_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 459
+              },
+              {
+                "localized_name": "pose_video",
+                "name": "pose_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 461
+              },
+              {
+                "localized_name": "background_video",
+                "name": "background_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 419
+              },
+              {
+                "localized_name": "character_mask",
+                "name": "character_mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 418
+              },
+              {
+                "localized_name": "continue_motion",
+                "name": "continue_motion",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 450
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 451
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "links": [
+                  154
+                ]
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "links": [
+                  155
+                ]
+              },
+              {
+                "localized_name": "latent",
+                "name": "latent",
+                "type": "LATENT",
+                "links": [
+                  156
+                ]
+              },
+              {
+                "localized_name": "trim_latent",
+                "name": "trim_latent",
+                "type": "INT",
+                "links": [
+                  152
+                ]
+              },
+              {
+                "localized_name": "trim_image",
+                "name": "trim_image",
+                "type": "INT",
+                "links": [
+                  442
+                ]
+              },
+              {
+                "localized_name": "video_frame_offset",
+                "name": "video_frame_offset",
+                "type": "INT",
+                "links": [
+                  439
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WanAnimateToVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              640,
+              640,
+              77,
+              1,
+              5,
+              0
+            ]
+          },
+          {
+            "id": 230,
+            "type": "ImageFromBatch",
+            "pos": [
+              550,
+              240
+            ],
+            "size": [
+              270,
+              82
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 440
+              },
+              {
+                "localized_name": "batch_index",
+                "name": "batch_index",
+                "type": "INT",
+                "widget": {
+                  "name": "batch_index"
+                },
+                "link": 442
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  441
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageFromBatch",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              0,
+              4096
+            ]
+          },
+          {
+            "id": 15,
+            "type": "CreateVideo",
+            "pos": [
+              550,
+              100
+            ],
+            "size": [
+              270,
+              78
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "images",
+                "name": "images",
+                "type": "IMAGE",
+                "link": 441
+              },
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": 463
+              },
+              {
+                "localized_name": "fps",
+                "name": "fps",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "fps"
+                },
+                "link": 477
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VIDEO",
+                "name": "VIDEO",
+                "type": "VIDEO",
+                "links": [
+                  17
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CreateVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              16
+            ]
+          },
+          {
+            "id": 63,
+            "type": "KSampler",
+            "pos": [
+              240,
+              -200
+            ],
+            "size": [
+              270,
+              262
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 454
+              },
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 154
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 155
+              },
+              {
+                "localized_name": "latent_image",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 156
+              },
+              {
+                "localized_name": "seed",
+                "name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": 478
+              },
+              {
+                "localized_name": "steps",
+                "name": "steps",
+                "type": "INT",
+                "widget": {
+                  "name": "steps"
+                },
+                "link": 479
+              },
+              {
+                "localized_name": "cfg",
+                "name": "cfg",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "cfg"
+                },
+                "link": 480
+              },
+              {
+                "localized_name": "sampler_name",
+                "name": "sampler_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "sampler_name"
+                },
+                "link": 481
+              },
+              {
+                "localized_name": "scheduler",
+                "name": "scheduler",
+                "type": "COMBO",
+                "widget": {
+                  "name": "scheduler"
+                },
+                "link": 482
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  157
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "KSampler",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              1106558644923357,
+              "randomize",
+              6,
+              1,
+              "euler",
+              "simple",
+              1
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 154,
+            "origin_id": 62,
+            "origin_slot": 0,
+            "target_id": 63,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 155,
+            "origin_id": 62,
+            "origin_slot": 1,
+            "target_id": 63,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 156,
+            "origin_id": 62,
+            "origin_slot": 2,
+            "target_id": 63,
+            "target_slot": 3,
+            "type": "LATENT"
+          },
+          {
+            "id": 157,
+            "origin_id": 63,
+            "origin_slot": 0,
+            "target_id": 57,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 152,
+            "origin_id": 62,
+            "origin_slot": 3,
+            "target_id": 57,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 441,
+            "origin_id": 230,
+            "origin_slot": 0,
+            "target_id": 15,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 127,
+            "origin_id": 57,
+            "origin_slot": 0,
+            "target_id": 58,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 440,
+            "origin_id": 58,
+            "origin_slot": 0,
+            "target_id": 230,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 442,
+            "origin_id": 62,
+            "origin_slot": 4,
+            "target_id": 230,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 454,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 63,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 463,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 15,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 464,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 58,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 471,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 62,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 467,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 62,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 470,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 62,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 474,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 62,
+            "target_slot": 3,
+            "type": "CLIP_VISION_OUTPUT"
+          },
+          {
+            "id": 475,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 62,
+            "target_slot": 4,
+            "type": "IMAGE"
+          },
+          {
+            "id": 459,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 62,
+            "target_slot": 5,
+            "type": "IMAGE"
+          },
+          {
+            "id": 461,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 62,
+            "target_slot": 6,
+            "type": "IMAGE"
+          },
+          {
+            "id": 419,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 62,
+            "target_slot": 7,
+            "type": "IMAGE"
+          },
+          {
+            "id": 418,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 62,
+            "target_slot": 8,
+            "type": "MASK"
+          },
+          {
+            "id": 450,
+            "origin_id": -10,
+            "origin_slot": 11,
+            "target_id": 62,
+            "target_slot": 10,
+            "type": "INT"
+          },
+          {
+            "id": 451,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 62,
+            "target_slot": 11,
+            "type": "INT"
+          },
+          {
+            "id": 17,
+            "origin_id": 15,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "VIDEO"
+          },
+          {
+            "id": 187,
+            "origin_id": 58,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 208,
+            "origin_id": 58,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 439,
+            "origin_id": 62,
+            "origin_slot": 5,
+            "target_id": -20,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 477,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 15,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 478,
+            "origin_id": -10,
+            "origin_slot": 14,
+            "target_id": 63,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 479,
+            "origin_id": -10,
+            "origin_slot": 15,
+            "target_id": 63,
+            "target_slot": 5,
+            "type": "INT"
+          },
+          {
+            "id": 480,
+            "origin_id": -10,
+            "origin_slot": 16,
+            "target_id": 63,
+            "target_slot": 6,
+            "type": "FLOAT"
+          },
+          {
+            "id": 481,
+            "origin_id": -10,
+            "origin_slot": 17,
+            "target_id": 63,
+            "target_slot": 7,
+            "type": "COMBO"
+          },
+          {
+            "id": 482,
+            "origin_id": -10,
+            "origin_slot": 18,
+            "target_id": 63,
+            "target_slot": 8,
+            "type": "COMBO"
+          }
+        ],
+        "extra": {}
+      },
+      {
+        "id": "975ed319-ca2b-461e-b42a-8e2704ba902f",
+        "version": 1,
+        "state": {
+          "lastGroupId": 16,
+          "lastNodeId": 241,
+          "lastLinkId": 532,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Video Extend(Subgraph)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -651.841796875,
+            735,
+            141.841796875,
+            440
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1500,
+            855,
+            141.841796875,
+            100
+          ]
+        },
+        "inputs": [
+          {
+            "id": "03e04825-a16a-49e3-a221-d5fdf1d789e5",
+            "name": "model",
+            "type": "MODEL",
+            "linkIds": [
+              455
+            ],
+            "localized_name": "model",
+            "pos": [
+              -530,
+              755
+            ]
+          },
+          {
+            "id": "2dbbbe45-a5c2-4de3-a04e-7d2735b98b28",
+            "name": "vae",
+            "type": "VAE",
+            "linkIds": [
+              465,
+              472
+            ],
+            "localized_name": "vae",
+            "pos": [
+              -530,
+              775
+            ]
+          },
+          {
+            "id": "054fc2d8-105a-4174-9931-a31c4d6e359f",
+            "name": "audio",
+            "type": "AUDIO",
+            "linkIds": [
+              466
+            ],
+            "localized_name": "audio",
+            "shape": 7,
+            "pos": [
+              -530,
+              795
+            ]
+          },
+          {
+            "id": "cdef9f72-f783-4185-9830-fa3a809a1956",
+            "name": "image1",
+            "type": "IMAGE",
+            "linkIds": [
+              491,
+              492
+            ],
+            "localized_name": "image1",
+            "label": "last_batch_images",
+            "pos": [
+              -530,
+              815
+            ]
+          },
+          {
+            "id": "a1344d9e-b216-4854-98b0-974ed4a6f209",
+            "name": "positive",
+            "type": "CONDITIONING",
+            "linkIds": [
+              468
+            ],
+            "localized_name": "positive",
+            "pos": [
+              -530,
+              835
+            ]
+          },
+          {
+            "id": "52c93856-9e6c-495c-ac56-d1ae2c5d4bc6",
+            "name": "negative",
+            "type": "CONDITIONING",
+            "linkIds": [
+              469
+            ],
+            "localized_name": "negative",
+            "pos": [
+              -530,
+              855
+            ]
+          },
+          {
+            "id": "d795f564-a054-484e-ac38-d633ad688212",
+            "name": "clip_vision_output",
+            "type": "CLIP_VISION_OUTPUT",
+            "linkIds": [
+              473
+            ],
+            "localized_name": "clip_vision_output",
+            "shape": 7,
+            "pos": [
+              -530,
+              875
+            ]
+          },
+          {
+            "id": "049d8ac0-c7d0-4f3e-80ea-b60e00289f9d",
+            "name": "reference_image",
+            "type": "IMAGE",
+            "linkIds": [
+              476
+            ],
+            "localized_name": "reference_image",
+            "shape": 7,
+            "pos": [
+              -530,
+              895
+            ]
+          },
+          {
+            "id": "7a51a6a4-870b-41fa-9251-97ad64c7c43f",
+            "name": "face_video",
+            "type": "IMAGE",
+            "linkIds": [
+              460
+            ],
+            "localized_name": "face_video",
+            "shape": 7,
+            "pos": [
+              -530,
+              915
+            ]
+          },
+          {
+            "id": "42ec4e45-9e9e-4b2c-b13f-28def3a7ade6",
+            "name": "pose_video",
+            "type": "IMAGE",
+            "linkIds": [
+              462
+            ],
+            "localized_name": "pose_video",
+            "shape": 7,
+            "pos": [
+              -530,
+              935
+            ]
+          },
+          {
+            "id": "00095787-d8f1-4f37-a2d5-a7760f559dae",
+            "name": "background_video",
+            "type": "IMAGE",
+            "linkIds": [
+              420
+            ],
+            "localized_name": "background_video",
+            "shape": 7,
+            "pos": [
+              -530,
+              955
+            ]
+          },
+          {
+            "id": "d96de1c8-0a3b-45bd-a5cf-eb2b46f91c67",
+            "name": "character_mask",
+            "type": "MASK",
+            "linkIds": [
+              421
+            ],
+            "localized_name": "character_mask",
+            "shape": 7,
+            "pos": [
+              -530,
+              975
+            ]
+          },
+          {
+            "id": "972c7951-4edc-4acf-a1d8-9836f2c7070b",
+            "name": "width",
+            "type": "INT",
+            "linkIds": [
+              452,
+              453
+            ],
+            "localized_name": "width",
+            "pos": [
+              -530,
+              995
+            ]
+          },
+          {
+            "id": "f4dccdf8-27bc-43ee-8795-86d2868f31c9",
+            "name": "video_frame_offset",
+            "type": "INT",
+            "linkIds": [
+              493
+            ],
+            "localized_name": "video_frame_offset",
+            "pos": [
+              -530,
+              1015
+            ]
+          },
+          {
+            "id": "6b9cd8d4-b128-4217-99b7-eaee92b62047",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [
+              526
+            ],
+            "pos": [
+              -530,
+              1035
+            ]
+          },
+          {
+            "id": "a81a7a57-c040-4b6a-9bee-8763f60e42a1",
+            "name": "steps",
+            "type": "INT",
+            "linkIds": [
+              527
+            ],
+            "pos": [
+              -530,
+              1055
+            ]
+          },
+          {
+            "id": "af1f93e3-2c56-403c-90ef-5466a2273ee6",
+            "name": "cfg",
+            "type": "FLOAT",
+            "linkIds": [
+              528
+            ],
+            "pos": [
+              -530,
+              1075
+            ]
+          },
+          {
+            "id": "c5dc7502-4f9a-49a1-8e4c-adca0809dbf1",
+            "name": "sampler_name",
+            "type": "COMBO",
+            "linkIds": [
+              529
+            ],
+            "pos": [
+              -530,
+              1095
+            ]
+          },
+          {
+            "id": "cd71c877-d6a5-41f1-b3f2-6a115ae4df96",
+            "name": "scheduler",
+            "type": "COMBO",
+            "linkIds": [
+              530
+            ],
+            "pos": [
+              -530,
+              1115
+            ]
+          },
+          {
+            "id": "ef516bbf-aac9-48df-acbb-13a767cadaed",
+            "name": "fps",
+            "type": "FLOAT",
+            "linkIds": [
+              531
+            ],
+            "pos": [
+              -530,
+              1135
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "64b8d4c3-be0f-473b-aae4-0f56167c1bad",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              532
+            ],
+            "localized_name": "IMAGE",
+            "label": "batch_images",
+            "pos": [
+              1520,
+              875
+            ]
+          },
+          {
+            "id": "f33e2c31-73c7-4e9f-8d43-cd7d4b39f9de",
+            "name": "video_frame_offset",
+            "type": "INT",
+            "linkIds": [
+              523
+            ],
+            "localized_name": "video_frame_offset",
+            "pos": [
+              1520,
+              895
+            ]
+          },
+          {
+            "id": "aefce3c5-5b36-47c8-a922-aa488ff30d26",
+            "name": "VIDEO",
+            "type": "VIDEO",
+            "linkIds": [
+              524
+            ],
+            "pos": [
+              1520,
+              915
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 87,
+            "type": "VAEDecode",
+            "pos": [
+              410,
+              1160
+            ],
+            "size": [
+              210,
+              46
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 220
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 465
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "slot_index": 0,
+                "links": [
+                  185
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAEDecode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 92,
+            "type": "TrimVideoLatent",
+            "pos": [
+              410,
+              1060
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 219
+              },
+              {
+                "localized_name": "trim_amount",
+                "name": "trim_amount",
+                "type": "INT",
+                "widget": {
+                  "name": "trim_amount"
+                },
+                "link": 218
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  220
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "TrimVideoLatent",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              0
+            ]
+          },
+          {
+            "id": 85,
+            "type": "ImageFromBatch",
+            "pos": [
+              410,
+              1240
+            ],
+            "size": [
+              270,
+              82
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 185
+              },
+              {
+                "localized_name": "batch_index",
+                "name": "batch_index",
+                "type": "INT",
+                "widget": {
+                  "name": "batch_index"
+                },
+                "link": 212
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  445
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageFromBatch",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              0,
+              4096
+            ]
+          },
+          {
+            "id": 90,
+            "type": "WanAnimateToVideo",
+            "pos": [
+              -90,
+              750
+            ],
+            "size": [
+              324.751953125,
+              358
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 468
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 469
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 472
+              },
+              {
+                "localized_name": "clip_vision_output",
+                "name": "clip_vision_output",
+                "shape": 7,
+                "type": "CLIP_VISION_OUTPUT",
+                "link": 473
+              },
+              {
+                "localized_name": "reference_image",
+                "name": "reference_image",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 476
+              },
+              {
+                "localized_name": "face_video",
+                "name": "face_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 460
+              },
+              {
+                "localized_name": "pose_video",
+                "name": "pose_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 462
+              },
+              {
+                "localized_name": "background_video",
+                "name": "background_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 420
+              },
+              {
+                "localized_name": "character_mask",
+                "name": "character_mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 421
+              },
+              {
+                "localized_name": "continue_motion",
+                "name": "continue_motion",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 492
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 452
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 453
+              },
+              {
+                "localized_name": "video_frame_offset",
+                "name": "video_frame_offset",
+                "type": "INT",
+                "widget": {
+                  "name": "video_frame_offset"
+                },
+                "link": 493
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "links": [
+                  213
+                ]
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "links": [
+                  214
+                ]
+              },
+              {
+                "localized_name": "latent",
+                "name": "latent",
+                "type": "LATENT",
+                "links": [
+                  215
+                ]
+              },
+              {
+                "localized_name": "trim_latent",
+                "name": "trim_latent",
+                "type": "INT",
+                "links": [
+                  218
+                ]
+              },
+              {
+                "localized_name": "trim_image",
+                "name": "trim_image",
+                "type": "INT",
+                "links": [
+                  212
+                ]
+              },
+              {
+                "localized_name": "video_frame_offset",
+                "name": "video_frame_offset",
+                "type": "INT",
+                "links": [
+                  523
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WanAnimateToVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              1280,
+              1280,
+              77,
+              1,
+              5,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "type": "CreateVideo",
+            "pos": [
+              900,
+              820
+            ],
+            "size": [
+              210,
+              78
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "images",
+                "name": "images",
+                "type": "IMAGE",
+                "link": 191
+              },
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": 466
+              },
+              {
+                "localized_name": "fps",
+                "name": "fps",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "fps"
+                },
+                "link": 531
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VIDEO",
+                "name": "VIDEO",
+                "type": "VIDEO",
+                "links": [
+                  524
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CreateVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              16
+            ]
+          },
+          {
+            "id": 91,
+            "type": "KSampler",
+            "pos": [
+              410,
+              750
+            ],
+            "size": [
+              270,
+              262
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 455
+              },
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 213
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 214
+              },
+              {
+                "localized_name": "latent_image",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 215
+              },
+              {
+                "localized_name": "seed",
+                "name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": 526
+              },
+              {
+                "localized_name": "steps",
+                "name": "steps",
+                "type": "INT",
+                "widget": {
+                  "name": "steps"
+                },
+                "link": 527
+              },
+              {
+                "localized_name": "cfg",
+                "name": "cfg",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "cfg"
+                },
+                "link": 528
+              },
+              {
+                "localized_name": "sampler_name",
+                "name": "sampler_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "sampler_name"
+                },
+                "link": 529
+              },
+              {
+                "localized_name": "scheduler",
+                "name": "scheduler",
+                "type": "COMBO",
+                "widget": {
+                  "name": "scheduler"
+                },
+                "link": 530
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  219
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "KSampler",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              387378783691198,
+              "fixed",
+              6,
+              1,
+              "euler",
+              "simple",
+              1
+            ]
+          },
+          {
+            "id": 86,
+            "type": "ImageBatch",
+            "pos": [
+              940,
+              720
+            ],
+            "size": [
+              220,
+              46
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image1",
+                "name": "image1",
+                "type": "IMAGE",
+                "link": 491
+              },
+              {
+                "localized_name": "image2",
+                "name": "image2",
+                "type": "IMAGE",
+                "link": 445
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  191,
+                  532
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageBatch",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": []
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 213,
+            "origin_id": 90,
+            "origin_slot": 0,
+            "target_id": 91,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 214,
+            "origin_id": 90,
+            "origin_slot": 1,
+            "target_id": 91,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 215,
+            "origin_id": 90,
+            "origin_slot": 2,
+            "target_id": 91,
+            "target_slot": 3,
+            "type": "LATENT"
+          },
+          {
+            "id": 220,
+            "origin_id": 92,
+            "origin_slot": 0,
+            "target_id": 87,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 191,
+            "origin_id": 86,
+            "origin_slot": 0,
+            "target_id": 88,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 219,
+            "origin_id": 91,
+            "origin_slot": 0,
+            "target_id": 92,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 218,
+            "origin_id": 90,
+            "origin_slot": 3,
+            "target_id": 92,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 445,
+            "origin_id": 85,
+            "origin_slot": 0,
+            "target_id": 86,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 185,
+            "origin_id": 87,
+            "origin_slot": 0,
+            "target_id": 85,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 212,
+            "origin_id": 90,
+            "origin_slot": 4,
+            "target_id": 85,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 455,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 91,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 465,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 87,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 472,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 90,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 466,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 88,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 491,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 86,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 492,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 90,
+            "target_slot": 9,
+            "type": "IMAGE"
+          },
+          {
+            "id": 468,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 90,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 469,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 90,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 473,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 90,
+            "target_slot": 3,
+            "type": "CLIP_VISION_OUTPUT"
+          },
+          {
+            "id": 476,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 90,
+            "target_slot": 4,
+            "type": "IMAGE"
+          },
+          {
+            "id": 460,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 90,
+            "target_slot": 5,
+            "type": "IMAGE"
+          },
+          {
+            "id": 462,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 90,
+            "target_slot": 6,
+            "type": "IMAGE"
+          },
+          {
+            "id": 420,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 90,
+            "target_slot": 7,
+            "type": "IMAGE"
+          },
+          {
+            "id": 421,
+            "origin_id": -10,
+            "origin_slot": 11,
+            "target_id": 90,
+            "target_slot": 8,
+            "type": "MASK"
+          },
+          {
+            "id": 452,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 90,
+            "target_slot": 10,
+            "type": "INT"
+          },
+          {
+            "id": 453,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 90,
+            "target_slot": 11,
+            "type": "INT"
+          },
+          {
+            "id": 493,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 90,
+            "target_slot": 12,
+            "type": "INT"
+          },
+          {
+            "id": 523,
+            "origin_id": 90,
+            "origin_slot": 5,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 524,
+            "origin_id": 88,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 2,
+            "type": "VIDEO"
+          },
+          {
+            "id": 526,
+            "origin_id": -10,
+            "origin_slot": 14,
+            "target_id": 91,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 527,
+            "origin_id": -10,
+            "origin_slot": 15,
+            "target_id": 91,
+            "target_slot": 5,
+            "type": "INT"
+          },
+          {
+            "id": 528,
+            "origin_id": -10,
+            "origin_slot": 16,
+            "target_id": 91,
+            "target_slot": 6,
+            "type": "FLOAT"
+          },
+          {
+            "id": 529,
+            "origin_id": -10,
+            "origin_slot": 17,
+            "target_id": 91,
+            "target_slot": 7,
+            "type": "COMBO"
+          },
+          {
+            "id": 530,
+            "origin_id": -10,
+            "origin_slot": 18,
+            "target_id": 91,
+            "target_slot": 8,
+            "type": "COMBO"
+          },
+          {
+            "id": 531,
+            "origin_id": -10,
+            "origin_slot": 19,
+            "target_id": 88,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 532,
+            "origin_id": 86,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          }
+        ],
+        "extra": {}
+      },
+      {
+        "id": "063b0ee8-c72b-442b-8029-dd3d5f4b6650",
+        "version": 1,
+        "state": {
+          "lastGroupId": 16,
+          "lastNodeId": 241,
+          "lastLinkId": 532,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Video Extend(Subgraph)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -651.841796875,
+            735,
+            141.841796875,
+            440
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1500,
+            855,
+            142.0703125,
+            100
+          ]
+        },
+        "inputs": [
+          {
+            "id": "03e04825-a16a-49e3-a221-d5fdf1d789e5",
+            "name": "model",
+            "type": "MODEL",
+            "linkIds": [
+              455
+            ],
+            "localized_name": "model",
+            "pos": [
+              -530,
+              755
+            ]
+          },
+          {
+            "id": "2dbbbe45-a5c2-4de3-a04e-7d2735b98b28",
+            "name": "vae",
+            "type": "VAE",
+            "linkIds": [
+              465,
+              472
+            ],
+            "localized_name": "vae",
+            "pos": [
+              -530,
+              775
+            ]
+          },
+          {
+            "id": "054fc2d8-105a-4174-9931-a31c4d6e359f",
+            "name": "audio",
+            "type": "AUDIO",
+            "linkIds": [
+              466
+            ],
+            "localized_name": "audio",
+            "shape": 7,
+            "pos": [
+              -530,
+              795
+            ]
+          },
+          {
+            "id": "cdef9f72-f783-4185-9830-fa3a809a1956",
+            "name": "image1",
+            "type": "IMAGE",
+            "linkIds": [
+              491,
+              492
+            ],
+            "localized_name": "image1",
+            "label": "last_batch_images",
+            "pos": [
+              -530,
+              815
+            ]
+          },
+          {
+            "id": "a1344d9e-b216-4854-98b0-974ed4a6f209",
+            "name": "positive",
+            "type": "CONDITIONING",
+            "linkIds": [
+              468
+            ],
+            "localized_name": "positive",
+            "pos": [
+              -530,
+              835
+            ]
+          },
+          {
+            "id": "52c93856-9e6c-495c-ac56-d1ae2c5d4bc6",
+            "name": "negative",
+            "type": "CONDITIONING",
+            "linkIds": [
+              469
+            ],
+            "localized_name": "negative",
+            "pos": [
+              -530,
+              855
+            ]
+          },
+          {
+            "id": "d795f564-a054-484e-ac38-d633ad688212",
+            "name": "clip_vision_output",
+            "type": "CLIP_VISION_OUTPUT",
+            "linkIds": [
+              473
+            ],
+            "localized_name": "clip_vision_output",
+            "shape": 7,
+            "pos": [
+              -530,
+              875
+            ]
+          },
+          {
+            "id": "049d8ac0-c7d0-4f3e-80ea-b60e00289f9d",
+            "name": "reference_image",
+            "type": "IMAGE",
+            "linkIds": [
+              476
+            ],
+            "localized_name": "reference_image",
+            "shape": 7,
+            "pos": [
+              -530,
+              895
+            ]
+          },
+          {
+            "id": "7a51a6a4-870b-41fa-9251-97ad64c7c43f",
+            "name": "face_video",
+            "type": "IMAGE",
+            "linkIds": [
+              460
+            ],
+            "localized_name": "face_video",
+            "shape": 7,
+            "pos": [
+              -530,
+              915
+            ]
+          },
+          {
+            "id": "42ec4e45-9e9e-4b2c-b13f-28def3a7ade6",
+            "name": "pose_video",
+            "type": "IMAGE",
+            "linkIds": [
+              462
+            ],
+            "localized_name": "pose_video",
+            "shape": 7,
+            "pos": [
+              -530,
+              935
+            ]
+          },
+          {
+            "id": "00095787-d8f1-4f37-a2d5-a7760f559dae",
+            "name": "background_video",
+            "type": "IMAGE",
+            "linkIds": [
+              420
+            ],
+            "localized_name": "background_video",
+            "shape": 7,
+            "pos": [
+              -530,
+              955
+            ]
+          },
+          {
+            "id": "d96de1c8-0a3b-45bd-a5cf-eb2b46f91c67",
+            "name": "character_mask",
+            "type": "MASK",
+            "linkIds": [
+              421
+            ],
+            "localized_name": "character_mask",
+            "shape": 7,
+            "pos": [
+              -530,
+              975
+            ]
+          },
+          {
+            "id": "972c7951-4edc-4acf-a1d8-9836f2c7070b",
+            "name": "width",
+            "type": "INT",
+            "linkIds": [
+              452,
+              453
+            ],
+            "localized_name": "width",
+            "pos": [
+              -530,
+              995
+            ]
+          },
+          {
+            "id": "f4dccdf8-27bc-43ee-8795-86d2868f31c9",
+            "name": "video_frame_offset",
+            "type": "INT",
+            "linkIds": [
+              493
+            ],
+            "localized_name": "video_frame_offset",
+            "pos": [
+              -530,
+              1015
+            ]
+          },
+          {
+            "id": "6b9cd8d4-b128-4217-99b7-eaee92b62047",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [
+              526
+            ],
+            "pos": [
+              -530,
+              1035
+            ]
+          },
+          {
+            "id": "a81a7a57-c040-4b6a-9bee-8763f60e42a1",
+            "name": "steps",
+            "type": "INT",
+            "linkIds": [
+              527
+            ],
+            "pos": [
+              -530,
+              1055
+            ]
+          },
+          {
+            "id": "af1f93e3-2c56-403c-90ef-5466a2273ee6",
+            "name": "cfg",
+            "type": "FLOAT",
+            "linkIds": [
+              528
+            ],
+            "pos": [
+              -530,
+              1075
+            ]
+          },
+          {
+            "id": "c5dc7502-4f9a-49a1-8e4c-adca0809dbf1",
+            "name": "sampler_name",
+            "type": "COMBO",
+            "linkIds": [
+              529
+            ],
+            "pos": [
+              -530,
+              1095
+            ]
+          },
+          {
+            "id": "cd71c877-d6a5-41f1-b3f2-6a115ae4df96",
+            "name": "scheduler",
+            "type": "COMBO",
+            "linkIds": [
+              530
+            ],
+            "pos": [
+              -530,
+              1115
+            ]
+          },
+          {
+            "id": "ef516bbf-aac9-48df-acbb-13a767cadaed",
+            "name": "fps",
+            "type": "FLOAT",
+            "linkIds": [
+              531
+            ],
+            "pos": [
+              -530,
+              1135
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "64b8d4c3-be0f-473b-aae4-0f56167c1bad",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              532
+            ],
+            "localized_name": "IMAGE",
+            "label": "batch image output",
+            "pos": [
+              1520,
+              875
+            ]
+          },
+          {
+            "id": "f33e2c31-73c7-4e9f-8d43-cd7d4b39f9de",
+            "name": "video_frame_offset",
+            "type": "INT",
+            "linkIds": [
+              523
+            ],
+            "localized_name": "video_frame_offset",
+            "pos": [
+              1520,
+              895
+            ]
+          },
+          {
+            "id": "aefce3c5-5b36-47c8-a922-aa488ff30d26",
+            "name": "VIDEO",
+            "type": "VIDEO",
+            "linkIds": [
+              524
+            ],
+            "pos": [
+              1520,
+              915
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 87,
+            "type": "VAEDecode",
+            "pos": [
+              410,
+              1160
+            ],
+            "size": [
+              210,
+              46
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 220
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 465
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "slot_index": 0,
+                "links": [
+                  185
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAEDecode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 92,
+            "type": "TrimVideoLatent",
+            "pos": [
+              410,
+              1060
+            ],
+            "size": [
+              270,
+              58
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 219
+              },
+              {
+                "localized_name": "trim_amount",
+                "name": "trim_amount",
+                "type": "INT",
+                "widget": {
+                  "name": "trim_amount"
+                },
+                "link": 218
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  220
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "TrimVideoLatent",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              0
+            ]
+          },
+          {
+            "id": 85,
+            "type": "ImageFromBatch",
+            "pos": [
+              410,
+              1240
+            ],
+            "size": [
+              270,
+              82
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 185
+              },
+              {
+                "localized_name": "batch_index",
+                "name": "batch_index",
+                "type": "INT",
+                "widget": {
+                  "name": "batch_index"
+                },
+                "link": 212
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  445
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageFromBatch",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              0,
+              4096
+            ]
+          },
+          {
+            "id": 90,
+            "type": "WanAnimateToVideo",
+            "pos": [
+              -90,
+              750
+            ],
+            "size": [
+              324.751953125,
+              358
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 468
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 469
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 472
+              },
+              {
+                "localized_name": "clip_vision_output",
+                "name": "clip_vision_output",
+                "shape": 7,
+                "type": "CLIP_VISION_OUTPUT",
+                "link": 473
+              },
+              {
+                "localized_name": "reference_image",
+                "name": "reference_image",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 476
+              },
+              {
+                "localized_name": "face_video",
+                "name": "face_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 460
+              },
+              {
+                "localized_name": "pose_video",
+                "name": "pose_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 462
+              },
+              {
+                "localized_name": "background_video",
+                "name": "background_video",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 420
+              },
+              {
+                "localized_name": "character_mask",
+                "name": "character_mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 421
+              },
+              {
+                "localized_name": "continue_motion",
+                "name": "continue_motion",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 492
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 452
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 453
+              },
+              {
+                "localized_name": "video_frame_offset",
+                "name": "video_frame_offset",
+                "type": "INT",
+                "widget": {
+                  "name": "video_frame_offset"
+                },
+                "link": 493
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "links": [
+                  213
+                ]
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "links": [
+                  214
+                ]
+              },
+              {
+                "localized_name": "latent",
+                "name": "latent",
+                "type": "LATENT",
+                "links": [
+                  215
+                ]
+              },
+              {
+                "localized_name": "trim_latent",
+                "name": "trim_latent",
+                "type": "INT",
+                "links": [
+                  218
+                ]
+              },
+              {
+                "localized_name": "trim_image",
+                "name": "trim_image",
+                "type": "INT",
+                "links": [
+                  212
+                ]
+              },
+              {
+                "localized_name": "video_frame_offset",
+                "name": "video_frame_offset",
+                "type": "INT",
+                "links": [
+                  523
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "WanAnimateToVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              1280,
+              1280,
+              77,
+              1,
+              5,
+              0
+            ]
+          },
+          {
+            "id": 88,
+            "type": "CreateVideo",
+            "pos": [
+              900,
+              820
+            ],
+            "size": [
+              210,
+              78
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "images",
+                "name": "images",
+                "type": "IMAGE",
+                "link": 191
+              },
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": 466
+              },
+              {
+                "localized_name": "fps",
+                "name": "fps",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "fps"
+                },
+                "link": 531
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VIDEO",
+                "name": "VIDEO",
+                "type": "VIDEO",
+                "links": [
+                  524
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CreateVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              16
+            ]
+          },
+          {
+            "id": 86,
+            "type": "ImageBatch",
+            "pos": [
+              940,
+              720
+            ],
+            "size": [
+              140,
+              46
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "image1",
+                "name": "image1",
+                "type": "IMAGE",
+                "link": 491
+              },
+              {
+                "localized_name": "image2",
+                "name": "image2",
+                "type": "IMAGE",
+                "link": 445
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  191,
+                  532
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageBatch",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 91,
+            "type": "KSampler",
+            "pos": [
+              410,
+              750
+            ],
+            "size": [
+              270,
+              262
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 4,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 455
+              },
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 213
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 214
+              },
+              {
+                "localized_name": "latent_image",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 215
+              },
+              {
+                "localized_name": "seed",
+                "name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": 526
+              },
+              {
+                "localized_name": "steps",
+                "name": "steps",
+                "type": "INT",
+                "widget": {
+                  "name": "steps"
+                },
+                "link": 527
+              },
+              {
+                "localized_name": "cfg",
+                "name": "cfg",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "cfg"
+                },
+                "link": 528
+              },
+              {
+                "localized_name": "sampler_name",
+                "name": "sampler_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "sampler_name"
+                },
+                "link": 529
+              },
+              {
+                "localized_name": "scheduler",
+                "name": "scheduler",
+                "type": "COMBO",
+                "widget": {
+                  "name": "scheduler"
+                },
+                "link": 530
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  219
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "KSampler",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.59"
+            },
+            "widgets_values": [
+              387378783691198,
+              "fixed",
+              6,
+              1,
+              "euler",
+              "simple",
+              1
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 213,
+            "origin_id": 90,
+            "origin_slot": 0,
+            "target_id": 91,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 214,
+            "origin_id": 90,
+            "origin_slot": 1,
+            "target_id": 91,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 215,
+            "origin_id": 90,
+            "origin_slot": 2,
+            "target_id": 91,
+            "target_slot": 3,
+            "type": "LATENT"
+          },
+          {
+            "id": 220,
+            "origin_id": 92,
+            "origin_slot": 0,
+            "target_id": 87,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 191,
+            "origin_id": 86,
+            "origin_slot": 0,
+            "target_id": 88,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 219,
+            "origin_id": 91,
+            "origin_slot": 0,
+            "target_id": 92,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 218,
+            "origin_id": 90,
+            "origin_slot": 3,
+            "target_id": 92,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 445,
+            "origin_id": 85,
+            "origin_slot": 0,
+            "target_id": 86,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 185,
+            "origin_id": 87,
+            "origin_slot": 0,
+            "target_id": 85,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 212,
+            "origin_id": 90,
+            "origin_slot": 4,
+            "target_id": 85,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 455,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 91,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 465,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 87,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 472,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 90,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 466,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 88,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 491,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 86,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 492,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 90,
+            "target_slot": 9,
+            "type": "IMAGE"
+          },
+          {
+            "id": 468,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 90,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 469,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 90,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 473,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 90,
+            "target_slot": 3,
+            "type": "CLIP_VISION_OUTPUT"
+          },
+          {
+            "id": 476,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 90,
+            "target_slot": 4,
+            "type": "IMAGE"
+          },
+          {
+            "id": 460,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 90,
+            "target_slot": 5,
+            "type": "IMAGE"
+          },
+          {
+            "id": 462,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 90,
+            "target_slot": 6,
+            "type": "IMAGE"
+          },
+          {
+            "id": 420,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 90,
+            "target_slot": 7,
+            "type": "IMAGE"
+          },
+          {
+            "id": 421,
+            "origin_id": -10,
+            "origin_slot": 11,
+            "target_id": 90,
+            "target_slot": 8,
+            "type": "MASK"
+          },
+          {
+            "id": 452,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 90,
+            "target_slot": 10,
+            "type": "INT"
+          },
+          {
+            "id": 453,
+            "origin_id": -10,
+            "origin_slot": 12,
+            "target_id": 90,
+            "target_slot": 11,
+            "type": "INT"
+          },
+          {
+            "id": 493,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 90,
+            "target_slot": 12,
+            "type": "INT"
+          },
+          {
+            "id": 523,
+            "origin_id": 90,
+            "origin_slot": 5,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 524,
+            "origin_id": 88,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 2,
+            "type": "VIDEO"
+          },
+          {
+            "id": 526,
+            "origin_id": -10,
+            "origin_slot": 14,
+            "target_id": 91,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 527,
+            "origin_id": -10,
+            "origin_slot": 15,
+            "target_id": 91,
+            "target_slot": 5,
+            "type": "INT"
+          },
+          {
+            "id": 528,
+            "origin_id": -10,
+            "origin_slot": 16,
+            "target_id": 91,
+            "target_slot": 6,
+            "type": "FLOAT"
+          },
+          {
+            "id": 529,
+            "origin_id": -10,
+            "origin_slot": 17,
+            "target_id": 91,
+            "target_slot": 7,
+            "type": "COMBO"
+          },
+          {
+            "id": 530,
+            "origin_id": -10,
+            "origin_slot": 18,
+            "target_id": 91,
+            "target_slot": 8,
+            "type": "COMBO"
+          },
+          {
+            "id": 531,
+            "origin_id": -10,
+            "origin_slot": 19,
+            "target_id": 88,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 532,
+            "origin_id": 86,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          }
+        ],
+        "extra": {}
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.2755949068864249,
+      "offset": [
+        3761.4008595142814,
+        997.7831727528201
+      ]
+    },
+    "frontendVersion": "1.32.1",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

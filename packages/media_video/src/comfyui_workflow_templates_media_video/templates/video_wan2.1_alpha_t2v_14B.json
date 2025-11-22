@@ -1,0 +1,1002 @@
+{
+  "id": "c265fdcc-11cd-4a1d-9a0d-bc37c45667d6",
+  "revision": 0,
+  "last_node_id": 92,
+  "last_link_id": 178,
+  "nodes": [
+    {
+      "id": 82,
+      "type": "ImageToMask",
+      "pos": [
+        640,
+        780
+      ],
+      "size": [
+        270,
+        58
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 162
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            169
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageToMask",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        "red"
+      ]
+    },
+    {
+      "id": 84,
+      "type": "InvertMask",
+      "pos": [
+        640,
+        710
+      ],
+      "size": [
+        270,
+        26
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 169
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            175
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "InvertMask",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        150,
+        650
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 35
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 76
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            173
+          ]
+        }
+      ],
+      "title": "RGB VAE Decode",
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 52,
+      "type": "VAEDecode",
+      "pos": [
+        150,
+        770
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 108
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 107
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            162
+          ]
+        }
+      ],
+      "title": "Alpha VAE Decode",
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 86,
+      "type": "JoinImageWithAlpha",
+      "pos": [
+        640,
+        620
+      ],
+      "size": [
+        270,
+        46
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 173
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 175
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            176
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 7,
+      "type": "CLIPTextEncode",
+      "pos": [
+        150,
+        340
+      ],
+      "size": [
+        425.27801513671875,
+        180.6060791015625
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 117
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            52
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Negative Prompt) Useless s",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 80,
+      "type": "SaveAnimatedWEBP",
+      "pos": [
+        970,
+        -130
+      ],
+      "size": [
+        1020,
+        1166
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 176
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveAnimatedWEBP",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        "ComfyUI",
+        16,
+        true,
+        80,
+        "default"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "CLIPTextEncode",
+      "pos": [
+        160,
+        130
+      ],
+      "size": [
+        422.84503173828125,
+        164.31304931640625
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 118
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            46
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        "\"Medium shot. A little girl holds a bubble wand and blows out colorful bubbles that float and pop in the air. The background of this video is transparent. Realistic style.\"\t"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 40,
+      "type": "EmptyHunyuanLatentVideo",
+      "pos": [
+        200,
+        -100
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            91
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyHunyuanLatentVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        832,
+        480,
+        33,
+        1
+      ]
+    },
+    {
+      "id": 37,
+      "type": "UNETLoader",
+      "pos": [
+        -260,
+        -100
+      ],
+      "size": [
+        370,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            142
+          ]
+        }
+      ],
+      "title": "Load Wan 2.1 t2v 14B",
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62",
+        "models": [
+          {
+            "name": "wan2.1_t2v_14B_fp8_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_14B_fp8_scaled.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wan2.1_t2v_14B_fp8_scaled.safetensors",
+        "default"
+      ]
+    },
+    {
+      "id": 38,
+      "type": "CLIPLoader",
+      "pos": [
+        -260,
+        310
+      ],
+      "size": [
+        370,
+        106
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            117,
+            118
+          ]
+        }
+      ],
+      "title": "Load Text Encoder",
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62",
+        "models": [
+          {
+            "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+        "wan",
+        "default"
+      ]
+    },
+    {
+      "id": 65,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -260,
+        170
+      ],
+      "size": [
+        370,
+        82
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 143
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            144
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62",
+        "models": [
+          {
+            "name": "wan_alpha_2.1_rgba_lora.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/loras/wan_alpha_2.1_rgba_lora.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wan_alpha_2.1_rgba_lora.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 39,
+      "type": "VAELoader",
+      "pos": [
+        -260,
+        650
+      ],
+      "size": [
+        370,
+        58
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62",
+        "models": [
+          {
+            "name": "wan_alpha_2.1_vae_rgb_channel.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_alpha_2.1_vae_rgb_channel.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wan_alpha_2.1_vae_rgb_channel.safetensors"
+      ]
+    },
+    {
+      "id": 51,
+      "type": "VAELoader",
+      "pos": [
+        -260,
+        780
+      ],
+      "size": [
+        370,
+        58
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            107
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62",
+        "models": [
+          {
+            "name": "wan_alpha_2.1_vae_alpha_channel.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_alpha_2.1_vae_alpha_channel.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "wan_alpha_2.1_vae_alpha_channel.safetensors"
+      ]
+    },
+    {
+      "id": 48,
+      "type": "ModelSamplingSD3",
+      "pos": [
+        620,
+        -130
+      ],
+      "size": [
+        310,
+        58
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 144
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            95
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingSD3",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        5
+      ]
+    },
+    {
+      "id": 3,
+      "type": "KSampler",
+      "pos": [
+        620,
+        -30
+      ],
+      "size": [
+        310,
+        550
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 95
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 46
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 52
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 91
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            35,
+            108
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62"
+      },
+      "widgets_values": [
+        558449140107503,
+        "randomize",
+        20,
+        6,
+        "uni_pc",
+        "simple",
+        1
+      ]
+    },
+    {
+      "id": 92,
+      "type": "MarkdownNote",
+      "pos": [
+        610,
+        -280
+      ],
+      "size": [
+        320,
+        100
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "KSampler Setting",
+      "properties": {},
+      "widgets_values": [
+        "| Parameter | Default  | with 4steps lightning |\n|-----------|--------------------------------|------------------|\n| steps     | 20                             | 4              |\n| cfg       | 6.0                            | 1.0              |"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 88,
+      "type": "MarkdownNote",
+      "pos": [
+        -820,
+        -140
+      ],
+      "size": [
+        530,
+        500
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model links",
+      "properties": {},
+      "widgets_values": [
+        "**Diffusion Model**\n- [wan2.1_t2v_14B_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_14B_fp8_scaled.safetensors)\n- [wan2.1_t2v_14B_bf16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_t2v_14B_bf16.safetensors) if you need the original model weights, download this one.\n\n**LoRA**\n- [lightx2v_T2V_14B_cfg_step_distill_v2_lora_rank64_bf16.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_T2V_14B_cfg_step_distill_v2_lora_rank64_bf16.safetensors)\n- [wan_alpha_2.1_rgba_lora.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/loras/wan_alpha_2.1_rgba_lora.safetensors)\n\n**VAE**\n- [wan_alpha_2.1_vae_rgb_channel.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_alpha_2.1_vae_rgb_channel.safetensors)\n-[wan_alpha_2.1_vae_alpha_channel.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_alpha_2.1_vae_alpha_channel.safetensors)\n\n**Text Encoder**   \n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n\nFile save location\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   ├── wan2.1_t2v_14B_bf16.safetensors\n│   │   └── wan2.1_t2v_14B_fp8_scaled.safetensors\n│   ├───📂 loras/\n│   │   ├───lightx2v_T2V_14B_cfg_step_distill_v2_lora_rank64_bf16.safetensors\n│   │   └─── wan_alpha_2.1_rgba_lora.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   └───📂 vae/\n│   │   ├── wan_alpha_2.1_vae_rgb_channel.safetensors\n│       └── wan_alpha_2.1_vae_alpha_channel.safetensors\n```\n# Report issue\n\nIf you have any problems while using this workflow, please report template-related issues via this link: [report the template issue here](https://github.com/Comfy-Org/workflow_templates/issues)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 59,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -260,
+        40
+      ],
+      "size": [
+        370,
+        82
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 142
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            143
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.62",
+        "models": [
+          {
+            "name": "lightx2v_T2V_14B_cfg_step_distill_v2_lora_rank64_bf16.safetensors",
+            "url": "https://huggingface.co/Kijai/WanVideo_comfy/resolve/main/Lightx2v/lightx2v_T2V_14B_cfg_step_distill_v2_lora_rank64_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "lightx2v_T2V_14B_cfg_step_distill_v2_lora_rank64_bf16.safetensors",
+        1
+      ]
+    }
+  ],
+  "links": [
+    [
+      35,
+      3,
+      0,
+      8,
+      0,
+      "LATENT"
+    ],
+    [
+      46,
+      6,
+      0,
+      3,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      52,
+      7,
+      0,
+      3,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      76,
+      39,
+      0,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      91,
+      40,
+      0,
+      3,
+      3,
+      "LATENT"
+    ],
+    [
+      95,
+      48,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      107,
+      51,
+      0,
+      52,
+      1,
+      "VAE"
+    ],
+    [
+      108,
+      3,
+      0,
+      52,
+      0,
+      "LATENT"
+    ],
+    [
+      117,
+      38,
+      0,
+      7,
+      0,
+      "CLIP"
+    ],
+    [
+      118,
+      38,
+      0,
+      6,
+      0,
+      "CLIP"
+    ],
+    [
+      142,
+      37,
+      0,
+      59,
+      0,
+      "MODEL"
+    ],
+    [
+      143,
+      59,
+      0,
+      65,
+      0,
+      "MODEL"
+    ],
+    [
+      144,
+      65,
+      0,
+      48,
+      0,
+      "MODEL"
+    ],
+    [
+      162,
+      52,
+      0,
+      82,
+      0,
+      "IMAGE"
+    ],
+    [
+      169,
+      82,
+      0,
+      84,
+      0,
+      "MASK"
+    ],
+    [
+      173,
+      8,
+      0,
+      86,
+      0,
+      "IMAGE"
+    ],
+    [
+      175,
+      84,
+      0,
+      86,
+      1,
+      "MASK"
+    ],
+    [
+      176,
+      86,
+      0,
+      80,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step 3 - Prompt",
+      "bounding": [
+        140,
+        60,
+        452.84503173828125,
+        474.2060852050781
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step2 - Video Size",
+      "bounding": [
+        140,
+        -170,
+        450,
+        220
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Step 1- Load models",
+      "bounding": [
+        -270,
+        -170,
+        390,
+        1030
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Decoding",
+      "bounding": [
+        140,
+        550,
+        800,
+        300
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7043673508521221,
+      "offset": [
+        786.4786491937239,
+        480.3784258620371
+      ]
+    },
+    "frontendVersion": "1.32.1",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

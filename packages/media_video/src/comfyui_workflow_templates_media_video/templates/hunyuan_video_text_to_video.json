@@ -1,0 +1,934 @@
+{
+  "id": "b07dba9f-f409-47a6-84bb-a6639b2a70da",
+  "revision": 0,
+  "last_node_id": 80,
+  "last_link_id": 217,
+  "nodes": [
+    {
+      "id": 11,
+      "type": "DualCLIPLoader",
+      "pos": [
+        -40,
+        250
+      ],
+      "size": [
+        350,
+        130
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            205
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "DualCLIPLoader",
+        "models": [
+          {
+            "name": "clip_l.safetensors",
+            "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true",
+            "directory": "text_encoders"
+          },
+          {
+            "name": "llava_llama3_fp8_scaled.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged/resolve/main/split_files/text_encoders/llava_llama3_fp8_scaled.safetensors?download=true",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "clip_l.safetensors",
+        "llava_llama3_fp8_scaled.safetensors",
+        "hunyuan_video",
+        "default"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "UNETLoader",
+      "pos": [
+        -40,
+        130
+      ],
+      "size": [
+        350,
+        82
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            190,
+            209
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "models": [
+          {
+            "name": "hunyuan_video_t2v_720p_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged/resolve/main/split_files/diffusion_models/hunyuan_video_t2v_720p_bf16.safetensors?download=true",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "hunyuan_video_t2v_720p_bf16.safetensors",
+        "default"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 77,
+      "type": "Note",
+      "pos": [
+        -40,
+        0
+      ],
+      "size": [
+        350,
+        88
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Select a fp8 weight_dtype if you are running out of  memory."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 10,
+      "type": "VAELoader",
+      "pos": [
+        -40,
+        430
+      ],
+      "size": [
+        350,
+        60
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 0,
+          "links": [
+            206,
+            211
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "models": [
+          {
+            "name": "hunyuan_video_vae_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/HunyuanVideo_repackaged/resolve/main/split_files/vae/hunyuan_video_vae_bf16.safetensors?download=true",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "hunyuan_video_vae_bf16.safetensors"
+      ]
+    },
+    {
+      "id": 44,
+      "type": "CLIPTextEncode",
+      "pos": [
+        360,
+        0
+      ],
+      "size": [
+        422.8500061035156,
+        164.30999755859375
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 205
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            175
+          ]
+        }
+      ],
+      "title": "CLIP Text Encode (Positive Prompt)",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "anime style anime girl with massive fennec ears and one big fluffy tail, she has blonde hair long hair blue eyes wearing a pink sweater and a long blue skirt walking in a beautiful outdoor scenery with snow mountains in the background"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 45,
+      "type": "EmptyHunyuanLatentVideo",
+      "pos": [
+        -30,
+        600
+      ],
+      "size": [
+        315,
+        130
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            180
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptyHunyuanLatentVideo"
+      },
+      "widgets_values": [
+        848,
+        480,
+        73,
+        1
+      ]
+    },
+    {
+      "id": 16,
+      "type": "KSamplerSelect",
+      "pos": [
+        820,
+        320
+      ],
+      "size": [
+        250,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect"
+      },
+      "widgets_values": [
+        "euler"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "BasicScheduler",
+      "pos": [
+        820,
+        420
+      ],
+      "size": [
+        250,
+        106
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 190
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "simple",
+        20,
+        1
+      ]
+    },
+    {
+      "id": 22,
+      "type": "BasicGuider",
+      "pos": [
+        820,
+        230
+      ],
+      "size": [
+        250,
+        50
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 195
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 129
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "slot_index": 0,
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 67,
+      "type": "ModelSamplingSD3",
+      "pos": [
+        820,
+        130
+      ],
+      "size": [
+        260,
+        60
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 209
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            195
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingSD3"
+      },
+      "widgets_values": [
+        7
+      ]
+    },
+    {
+      "id": 25,
+      "type": "RandomNoise",
+      "pos": [
+        820,
+        0
+      ],
+      "size": [
+        260,
+        82
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise"
+      },
+      "widgets_values": [
+        1,
+        "randomize"
+      ],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 13,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1110,
+        10
+      ],
+      "size": [
+        272.3599853515625,
+        124.54000091552734
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 37
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 30
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 19
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 20
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 180
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            181,
+            210
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 26,
+      "type": "FluxGuidance",
+      "pos": [
+        470,
+        230
+      ],
+      "size": [
+        317.3999938964844,
+        58
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 175
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            129
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxGuidance"
+      },
+      "widgets_values": [
+        6
+      ],
+      "color": "#233",
+      "bgcolor": "#355"
+    },
+    {
+      "id": 73,
+      "type": "VAEDecodeTiled",
+      "pos": [
+        1420,
+        -40
+      ],
+      "size": [
+        210,
+        150
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 210
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 211
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            216
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeTiled"
+      },
+      "widgets_values": [
+        256,
+        64,
+        64,
+        8
+      ]
+    },
+    {
+      "id": 74,
+      "type": "Note",
+      "pos": [
+        1670,
+        -50
+      ],
+      "size": [
+        210,
+        170
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Use the tiled decode node by default because most people will need it.\n\nLower the tile_size and overlap if you run out of memory."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        1420,
+        -140
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 181
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 206
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 79,
+      "type": "CreateVideo",
+      "pos": [
+        1420,
+        160
+      ],
+      "size": [
+        220,
+        80
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 216
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            217
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        24
+      ]
+    },
+    {
+      "id": 80,
+      "type": "SaveVideo",
+      "pos": [
+        1420,
+        290
+      ],
+      "size": [
+        690,
+        470
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 217
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 78,
+      "type": "MarkdownNote",
+      "pos": [
+        -300,
+        -40
+      ],
+      "size": [
+        225,
+        88
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "🛈 [Learn more about this workflow](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_video/)"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      19,
+      16,
+      0,
+      13,
+      2,
+      "SAMPLER"
+    ],
+    [
+      20,
+      17,
+      0,
+      13,
+      3,
+      "SIGMAS"
+    ],
+    [
+      30,
+      22,
+      0,
+      13,
+      1,
+      "GUIDER"
+    ],
+    [
+      37,
+      25,
+      0,
+      13,
+      0,
+      "NOISE"
+    ],
+    [
+      129,
+      26,
+      0,
+      22,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      175,
+      44,
+      0,
+      26,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      180,
+      45,
+      0,
+      13,
+      4,
+      "LATENT"
+    ],
+    [
+      181,
+      13,
+      0,
+      8,
+      0,
+      "LATENT"
+    ],
+    [
+      190,
+      12,
+      0,
+      17,
+      0,
+      "MODEL"
+    ],
+    [
+      195,
+      67,
+      0,
+      22,
+      0,
+      "MODEL"
+    ],
+    [
+      205,
+      11,
+      0,
+      44,
+      0,
+      "CLIP"
+    ],
+    [
+      206,
+      10,
+      0,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      209,
+      12,
+      0,
+      67,
+      0,
+      "MODEL"
+    ],
+    [
+      210,
+      13,
+      0,
+      73,
+      0,
+      "LATENT"
+    ],
+    [
+      211,
+      10,
+      0,
+      73,
+      1,
+      "VAE"
+    ],
+    [
+      216,
+      73,
+      0,
+      79,
+      0,
+      "IMAGE"
+    ],
+    [
+      217,
+      79,
+      0,
+      80,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step1 - Load models",
+      "bounding": [
+        -50,
+        -70,
+        370,
+        573.5999755859375
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step3 - Prompt",
+      "bounding": [
+        350,
+        -70,
+        442.8499755859375,
+        247.91000366210938
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Step2 - Video size",
+      "bounding": [
+        -50,
+        520,
+        370,
+        220
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Custom sampler",
+      "bounding": [
+        810,
+        -70,
+        582.3599853515625,
+        609.5999755859375
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7818181818181826,
+      "offset": [
+        759.4032257844112,
+        52.65515011834005
+      ]
+    },
+    "groupNodes": {},
+    "frontendVersion": "1.25.3"
+  },
+  "version": 0.4
+}
