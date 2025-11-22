@@ -210,8 +210,8 @@ def update_dependencies() -> None:
         
         for pkg, version in versions.items():
             pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
-            pattern = rf'("{re.escape(pip_name)}")[>]=([0-9.]+)(")'
-            replacement = rf'\g<1>>={version}\g<3>'
+            pattern = rf'("{re.escape(pip_name)})==([0-9.]+)(")'
+            replacement = rf'\g<1>=={version}\g<3>'
             text = re.sub(pattern, replacement, text)
         
         Path(meta_path).write_text(text)
