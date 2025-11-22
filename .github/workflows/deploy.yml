@@ -1,0 +1,71 @@
+name: Deploy Template Manager
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'admin/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./admin
+      run: npm ci
+    
+    - name: Type check
+      working-directory: ./admin
+      run: npx nuxi typecheck
+    
+    - name: Build project
+      working-directory: ./admin
+      run: npm run build
+    
+    - name: Test build output
+      working-directory: ./admin
+      run: |
+        ls -la .output/
+        ls -la .output/server/
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'admin/package-lock.json'
+    
+    - name: Install dependencies
+      working-directory: ./admin
+      run: npm ci
+    
+    - name: Build for production
+      working-directory: ./admin
+      run: npm run build
+    
+    - name: Deploy to Vercel
+      uses: amondnet/vercel-action@v25
+      with:
+        vercel-token: ${{ secrets.VERCEL_TOKEN }}
+        vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+        vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: ./admin
+        vercel-args: '--prod'

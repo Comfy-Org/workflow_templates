@@ -1,0 +1,130 @@
+name: Process Template Submission
+
+on:
+  repository_dispatch:
+    types: [template-submission]
+
+jobs:
+  process-template:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Validate template data
+      run: |
+        echo "Template name: ${{ github.event.client_payload.name }}"
+        echo "Template category: ${{ github.event.client_payload.category }}"
+        echo "Template files: ${{ github.event.client_payload.files }}"
+    
+    - name: Create template directory
+      run: |
+        mkdir -p "templates/${{ github.event.client_payload.name }}"
+    
+    - name: Process template files
+      run: |
+        # This would decode base64 files and save them
+        echo "Processing template files..."
+        # Add actual file processing logic here
+    
+    - name: Update bundles.json
+      run: |
+        # Update bundles.json with new template
+        python -c "
+        import json
+        import sys
+        
+        try:
+            with open('templates/bundles.json', 'r') as f:
+                bundles = json.load(f)
+        except FileNotFoundError:
+            bundles = {}
+        
+        category = '${{ github.event.client_payload.category }}'
+        template_name = '${{ github.event.client_payload.name }}'
+        
+        if category not in bundles:
+            bundles[category] = []
+        
+        if template_name not in bundles[category]:
+            bundles[category].append(template_name)
+        
+        with open('templates/bundles.json', 'w') as f:
+            json.dump(bundles, f, indent=2)
+        "
+    
+    - name: Update index.json
+      run: |
+        # Update index.json with template metadata
+        echo "Updating index.json..."
+        # Add actual index update logic here
+    
+    - name: Bump version
+      run: |
+        # Bump version in pyproject.toml
+        python -c "
+        import re
+        
+        try:
+            with open('pyproject.toml', 'r') as f:
+                content = f.read()
+            
+            version_match = re.search(r'version\s*=\s*\"(\d+)\.(\d+)\.(\d+)\"', content)
+            if version_match:
+                major, minor, patch = map(int, version_match.groups())
+                new_version = f'{major}.{minor}.{patch + 1}'
+                
+                new_content = re.sub(
+                    r'version\s*=\s*\"\d+\.\d+\.\d+\"',
+                    f'version = \"{new_version}\"',
+                    content
+                )
+                
+                with open('pyproject.toml', 'w') as f:
+                    f.write(new_content)
+                
+                print(f'Version bumped to {new_version}')
+            else:
+                print('No version found to bump')
+        except FileNotFoundError:
+            print('pyproject.toml not found')
+        "
+    
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add .
+        git commit -m "Add template: ${{ github.event.client_payload.name }}
+        
+        🤖 Generated with Template Manager
+        
+        Co-Authored-By: Template Manager <noreply@comfyui.com>" || exit 0
+        git push
+    
+    - name: Create release
+      if: contains(github.event.client_payload.name, '_release')
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ steps.version.outputs.version }}
+        release_name: Release v${{ steps.version.outputs.version }}
+        body: |
+          New template added: ${{ github.event.client_payload.name }}
+          
+          Auto-generated release from template submission.
+        draft: false
+        prerelease: false
