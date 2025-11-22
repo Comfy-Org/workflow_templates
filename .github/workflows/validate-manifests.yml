@@ -1,0 +1,49 @@
+name: Validate Manifests
+
+on:
+  pull_request:
+    paths:
+      - 'templates/**'
+      - 'packages/*/src/*/manifest.json'
+      - 'scripts/validate_manifests.py'
+  push:
+    branches: [main]
+    paths:
+      - 'templates/**'
+      - 'packages/*/src/*/manifest.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+      
+      - name: Validate manifest entries
+        run: |
+          cd ${{ github.workspace }}
+          python scripts/validate_manifests.py
+      
+      - name: Check for orphaned templates
+        run: |
+          echo "🔍 Checking for templates without manifest entries..."
+          cd templates
+          orphaned=0
+          for json_file in *.json; do
+            if ! grep -q "\"$json_file\"" ../packages/core/src/comfyui_workflow_templates_core/manifest.json; then
+              echo "⚠️  Orphaned template: $json_file"
+              orphaned=$((orphaned + 1))
+            fi
+          done
+          if [ $orphaned -gt 0 ]; then
+            echo "❌ Found $orphaned orphaned template(s). Run sync_bundles.py to fix."
+            exit 1
+          else
+            echo "✅ No orphaned templates found"
+          fi
