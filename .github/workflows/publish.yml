@@ -17,7 +17,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0  # Full history needed for tags and version comparison
 
       - name: Check if version actually changed
@@ -46,7 +46,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0  # Full history needed for tags
 
       - name: Set up Node.js
@@ -88,18 +88,14 @@ jobs:
           source .venv/bin/activate
           python scripts/sync_bundles.py
 
-      - name: Commit version bumps
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add packages/*/pyproject.toml pyproject.toml
-          if ! git diff --cached --quiet; then
-            git commit -m "Auto-bump package versions for release"
-            git push origin HEAD:main
-            echo "Version bumps committed and pushed"
-          else
-            echo "No version changes to commit"
-          fi
+      - name: Create Pull Request for version bumps
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: "Auto-bump package versions for release"
+          title: "Auto-bump package versions"
+          body: "Automated version bumps for packages with changes"
+          branch: "auto-bump-versions"
+          delete-branch: true
 
       - name: Build and publish packages in dependency order
         run: |
