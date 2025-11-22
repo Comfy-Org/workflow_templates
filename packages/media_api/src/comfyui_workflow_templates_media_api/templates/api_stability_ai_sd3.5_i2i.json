@@ -1,0 +1,289 @@
+{
+  "id": "7a9b9238-d961-4305-9894-bf4ae73f5bd2",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 7,
+  "nodes": [
+    {
+      "id": 11,
+      "type": "LoadImage",
+      "pos": [
+        -134.7727508544922,
+        632.3964233398438
+      ],
+      "size": [
+        315,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "api_stability_ai_sd3.5_i2i_input_image.jpg",
+        "image"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -133.6640625,
+        1006.9987182617188
+      ],
+      "size": [
+        309.25,
+        266.54998779296875
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "PrimitiveStringMultiline",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        735.2999267578125,
+        633.3601684570312
+      ],
+      "size": [
+        315,
+        270
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 6,
+      "type": "StabilityStableImageSD_3_5Node",
+      "pos": [
+        223.26992797851562,
+        629.5799560546875
+      ],
+      "size": [
+        496.2400207519531,
+        346.17999267578125
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "name": "negative_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "Node name for S&R": "StabilityStableImageSD_3_5Node",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Micro-scale diorama style, An astronaut in a white spacesuit with red stripes, walking on a grassy field dotted with colorful miniature flowers, A large, bright full moon looms in the background of a clear blue sky,The scene has a toy-like, miniature aesthetic with sharp focus and exaggeratedly vivid colors.\n",
+        "sd3.5-large",
+        "1:1",
+        "isometric",
+        4,
+        2535425653,
+        "randomize",
+        0.6000000000000001
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 12,
+      "type": "MarkdownNote",
+      "pos": [
+        -489.8588562011719,
+        634.4539184570312
+      ],
+      "size": [
+        328.91754150390625,
+        403.1273193359375
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "About Stable Diffusion 3.5 Image Node",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "[Tutorial](https://docs.comfy.org/tutorials/api-nodes/stability-ai/stable-diffusion-3-5-image) \n\n### Required Parameters\n- **prompt**: Describes desired image content; detailed descriptions yield better results\n- **model**: Selects specific SD 3.5 model version\n- **aspect_ratio**: Sets output image ratio, only effective in text-to-image mode\n- **style_preset**: Chooses preset style affecting overall artistic style\n- **cfg_scale**: Controls adherence to prompt (1.0-10.0), higher values = closer to prompt\n- **seed**: Controls randomness; same seed produces similar image structures\n\n### Optional Parameters\n- **image**: Provides reference image for image-to-image mode\n- **negative_prompt**: Specifies unwanted elements in the output\n- **image_denoise**: Controls how much original image is preserved (0.0-1.0)\n  - 0.0: Completely preserves original image\n  - 1.0: Almost ignores original image, similar to text-to-image\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 13,
+      "type": "MarkdownNote",
+      "pos": [
+        -490,
+        1090
+      ],
+      "size": [
+        326.5185852050781,
+        286.05029296875
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "About API Node",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.1",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "[About API Node](https://docs.comfy.org/tutorials/api-nodes/overview) \n\nTo use the API, you must be in a secure network environment:\n\n- Allows access from `127.0.0.1` or `localhost`.\n\n- Use our API Node in website services starting with `https`\n\n- Make sure you can normally connect to our API services (some regions may need a proxy).\n\n- Make sure you are logged in in the settings and that your account still has enough credits to cover the consumption of API calls.\n\n- On non-whitelisted sites or local area networks (LANs), please try to [log in using an API Key](https://docs.comfy.org/interface/user#logging-in-with-an-api-key)."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      5,
+      8,
+      0,
+      6,
+      1,
+      "STRING"
+    ],
+    [
+      6,
+      6,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      11,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.677947182222073,
+      "offset": [
+        668.5884585421245,
+        -247.7088618774305
+      ]
+    },
+    "frontendVersion": "1.27.10",
+    "ue_links": [],
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
