@@ -27,23 +27,23 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Auto-bump subpackage versions if needed
+      - name: Auto-bump package versions if needed
         run: |
-          python scripts/ci_version_manager.py --subpackages-only
+          python scripts/ci_version_manager.py
           
       - name: Sync manifests and bundles
         run: |
           python scripts/sync_bundles.py
           
-      - name: Commit subpackage version bumps and manifest updates to PR
+      - name: Commit version bumps and manifest updates to PR
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add packages/*/pyproject.toml packages/*/src/*/manifest.json
+          git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json
           if ! git diff --cached --quiet; then
-            git commit -m "Auto-bump subpackage versions and sync manifests for template changes"
+            git commit -m "Auto-bump package versions and sync manifests for template changes"
             git push origin HEAD
-            echo "✅ Subpackage version bumps and manifest updates committed to PR"
+            echo "✅ Package version bumps and manifest updates committed to PR"
           else
-            echo "✅ No subpackage version or manifest changes needed"
+            echo "✅ No package version or manifest changes needed"
           fi
