@@ -217,17 +217,34 @@ def update_dependencies() -> None:
         Path(meta_path).write_text(text)
 
 if __name__ == "__main__":
-    packages = get_changed_packages()
-    print(f"Detected changed packages: {sorted(packages)}")
+    import sys
     
-    non_meta_packages = packages - {"meta"}
+    # Check for special flags
+    subpackages_only = "--subpackages-only" in sys.argv
+    update_deps_only = "--update-dependencies-only" in sys.argv
     
-    if non_meta_packages:
-        bump_versions(packages)
+    if update_deps_only:
+        print("Updating main dependencies to match current subpackage versions...")
         update_dependencies()
-        print(f"Auto-bumped individual packages: {sorted(non_meta_packages)}")
+        print("✅ Main dependencies updated")
+        packages = set()  # No packages to build in this mode
+    else:
+        packages = get_changed_packages()
+        print(f"Detected changed packages: {sorted(packages)}")
         
-    # Output all packages that need building (including meta if changed)
+        non_meta_packages = packages - {"meta"}
+        
+        if non_meta_packages:
+            bump_versions(packages)
+            
+            if subpackages_only:
+                print(f"Auto-bumped subpackages only: {sorted(non_meta_packages)}")
+                print("Skipping main dependency updates (--subpackages-only mode)")
+            else:
+                update_dependencies()
+                print(f"Auto-bumped packages and updated dependencies: {sorted(non_meta_packages)}")
+        
+    # Output all packages that need building (including meta if changed)  
     if packages:
         print(" ".join(sorted(packages)))
     else:
