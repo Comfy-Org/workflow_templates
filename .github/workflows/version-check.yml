@@ -31,15 +31,19 @@ jobs:
         run: |
           python scripts/ci_version_manager.py
           
-      - name: Commit version bumps to PR
+      - name: Sync manifests and bundles
+        run: |
+          python scripts/sync_bundles.py
+          
+      - name: Commit version bumps and manifest updates to PR
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add packages/*/pyproject.toml pyproject.toml
+          git add packages/*/pyproject.toml pyproject.toml packages/*/src/*/manifest.json packages/*/src/*/*
           if ! git diff --cached --quiet; then
-            git commit -m "Auto-bump package versions for template changes"
+            git commit -m "Auto-bump package versions and sync manifests for template changes"
             git push origin HEAD
-            echo "✅ Version bumps committed to PR"
+            echo "✅ Version bumps and manifest updates committed to PR"
           else
-            echo "✅ No version changes needed"
+            echo "✅ No version or manifest changes needed"
           fi
