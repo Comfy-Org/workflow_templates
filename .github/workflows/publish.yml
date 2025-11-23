@@ -23,8 +23,8 @@ jobs:
       - name: Check if version actually changed
         id: check
         run: |
-          OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep 'version = ' | cut -d'"' -f2)
-          NEW_VERSION=$(grep 'version = ' pyproject.toml | cut -d'"' -f2)
+          OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
+          NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
           if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "Main version unchanged ($NEW_VERSION), skipping publish"
