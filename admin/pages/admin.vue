@@ -575,6 +575,7 @@ const {
   getNamePatterns, 
   getAllTags, 
   getAllModels,
+  getAllTemplateNames,
   getAllTutorialUrls,
   getAllComfyuiVersions,
   getTemplateStats,
@@ -772,14 +773,9 @@ const validateFilename = async () => {
   // Check uniqueness against existing templates
   const allExistingNames = new Set<string>()
   
-  // Parse through categories to get all template names
-  templatesIndex.categories.forEach((category: any) => {
-    category.templates?.forEach((template: any) => {
-      if (template.name) {
-        allExistingNames.add(template.name)
-      }
-    })
-  })
+  // Get all existing template names
+  const existingNames = getAllTemplateNames()
+  existingNames.forEach(name => allExistingNames.add(name))
   
   if (allExistingNames.has(form.value.name)) {
     validationErrors.value.name = 'This template name already exists. Please choose a unique name.'

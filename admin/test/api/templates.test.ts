@@ -12,7 +12,8 @@ describe('Template API', () => {
           {
             id: 1,
             type: 'LoadCheckpoint',
-            widgets_values: ['test_model.safetensors', 'positive', 'negative']
+            widgets_values: ['test_model.safetensors', 'positive', 'negative'],
+            properties: undefined as any
           }
         ]
       }
@@ -23,7 +24,7 @@ describe('Template API', () => {
           url: 'https://example.com/model.safetensors',
           directory: 'checkpoints',
           displayName: 'Test Model',
-          hash: 'abc123'
+          hash: 'abc123' as string | undefined
         }
       ]
 
@@ -67,7 +68,7 @@ describe('Template API', () => {
           directory: 'checkpoints',
           displayName: 'Test Model'
           // No hash property
-        }
+        } as { name: string; url: string; directory: string; displayName: string; hash?: string }
       ]
 
       const modelsByName = models.reduce((acc, model) => {

@@ -78,6 +78,7 @@ export const useTemplateData = () => {
 
     return {
       totalTemplates: allTemplates.length,
+      allTemplateNames: Array.from(new Set(allTemplates.map(t => t.name).filter(Boolean))).sort(),
       namePatterns: Array.from(namePatterns).sort(),
       popularTags: Array.from(allTags).sort(),
       mediaTypes: Array.from(allMediaTypes).sort(),
@@ -164,6 +165,11 @@ export const useTemplateData = () => {
     return existingTemplates.value?.models || []
   }
   
+  // Get all existing template names
+  const getAllTemplateNames = (): string[] => {
+    return existingTemplates.value?.allTemplateNames || []
+  }
+  
   // Get tutorial URLs
   const getAllTutorialUrls = (): string[] => {
     return existingTemplates.value?.tutorialUrls || []
@@ -192,6 +198,7 @@ export const useTemplateData = () => {
     getCategoryTitles,
     getAllTags,
     getAllModels,
+    getAllTemplateNames,
     getAllTutorialUrls,
     getAllComfyuiVersions,
     getTemplateStats
