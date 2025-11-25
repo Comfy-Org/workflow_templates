@@ -63,10 +63,31 @@ def find_last_version_bump_commit(pkg: str, current_version: str) -> str:
         return "HEAD~1"
 
 def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
-    """Get files that affect a specific package since the given commit"""
+    """Get files that affect a specific package since the given commit, excluding CI auto-commits"""
     try:
-        changed_files = run_git(["diff", f"{since_commit}..HEAD", "--name-only"]).split('\n')
+        # Get all files changed since the reference commit
+        all_changed_files = run_git(["diff", f"{since_commit}..HEAD", "--name-only"]).split('\n')
+        
+        # Filter out files from CI auto-commits by checking commit messages
         affecting_files = []
+        for file in all_changed_files:
+            file = file.strip()
+            if not file:
+                continue
+                
+            # Get the commit that last modified this file
+            try:
+                last_commit = run_git(["log", "-1", "--format=%s", f"{since_commit}..HEAD", "--", file]).strip()
+                # Skip files that were last modified by CI auto-commits
+                if last_commit.startswith("Auto-bump package versions") or last_commit.startswith("chore: bump version"):
+                    continue
+            except:
+                pass  # If we can't get commit info, include the file
+                
+            affecting_files.append(file)
+        
+        # Filter to only files that affect this package
+        filtered_files = []
         
         bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
         bundle_mapping = {
@@ -83,22 +104,22 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                 pkg_bundle = bundle_name
                 break
         
-        for file in changed_files:
+        for file in affecting_files:
             file = file.strip()
             if not file:
                 continue
                 
             # Direct package directory changes
             if file.startswith(f"packages/{pkg}/"):
-                affecting_files.append(file)
+                filtered_files.append(file)
             # Core package affects meta
             elif pkg == "meta" and (file.startswith("packages/") or file == "pyproject.toml"):
-                affecting_files.append(file)
+                filtered_files.append(file)
             # Template files affecting this package's bundle
             elif pkg_bundle and file.startswith("templates/"):
                 template_name = Path(file).stem.split('-')[0]
                 if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
-                    affecting_files.append(file)
+                    filtered_files.append(file)
             # bundles.json changes affecting this package's bundle
             elif pkg_bundle and file == "bundles.json":
                 try:
@@ -106,15 +127,15 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                     run_git(["cat-file", "-e", f"{since_commit}:bundles.json"])
                     old_bundles = json.loads(run_git(["show", f"{since_commit}:bundles.json"]))
                     if bundles.get(pkg_bundle) != old_bundles.get(pkg_bundle):
-                        affecting_files.append(file)
+                        filtered_files.append(file)
                 except subprocess.CalledProcessError:
                     # bundles.json didn't exist in old commit, so this is a new file affecting all bundles
-                    affecting_files.append(file)
+                    filtered_files.append(file)
                 except:
                     # Other error, assume it affects this package
-                    affecting_files.append(file)
+                    filtered_files.append(file)
         
-        return affecting_files
+        return filtered_files
     except:
         return []
 
