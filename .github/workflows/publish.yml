@@ -1,5 +1,15 @@
 name: Publish to PyPI
 
+# This workflow publishes packages to PyPI and creates GitHub releases.
+# Triggers:
+#   1. When pyproject.toml changes on main branch (version bump from PR merge)  
+#   2. Manual dispatch (for recovery/debugging)
+# 
+# Features:
+#   - Version change detection (prevents unnecessary publishes)
+#   - Recovery mode (publishes packages out-of-sync with PyPI)
+#   - Dependency order publishing (subpackages before meta package)
+
 on:
   workflow_dispatch:
   push:
@@ -72,39 +82,35 @@ jobs:
       - name: Determine packages to build
         id: changed-packages
         run: |
-          # Check what files changed in this commit (from PR merge)
+          echo "=== Package Detection Logic ==="
+          
+          # Primary logic: Check what files changed in this commit (from PR merge)
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
           echo "Files changed in this commit:"
           echo "$CHANGED_FILES"
           
           PACKAGES=""
           
-          # Check for package version changes
-          if echo "$CHANGED_FILES" | grep -q "packages/core/pyproject.toml"; then
-            PACKAGES="$PACKAGES core"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_api/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_api"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_video/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_video"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_image/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_image"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_other/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_other"
-          fi
+          # Check for package version changes (primary trigger)
+          echo -e "\n--- Checking for changed package versions ---"
+          for pkg in core media_api media_video media_image media_other; do
+            if echo "$CHANGED_FILES" | grep -q "packages/$pkg/pyproject.toml"; then
+              PACKAGES="$PACKAGES $pkg"
+              echo "✓ Will publish $pkg (version file changed)"
+            fi
+          done
           
-          # Always build meta if root version changed or if any packages changed
+          # Always build meta if root version changed or if any subpackages changed
           if echo "$CHANGED_FILES" | grep -q "pyproject.toml" || [ -n "$PACKAGES" ]; then
             PACKAGES="$PACKAGES meta"
+            echo "✓ Will publish meta (root version changed or subpackages changed)"
           fi
           
-          # Recovery mode: if no packages from changes, check for out-of-sync versions
+          # Recovery mode: Check for packages out-of-sync with PyPI
           if [ -z "$PACKAGES" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "Checking for packages out of sync with PyPI..."
+            echo -e "\n--- Recovery Mode: Checking PyPI sync status ---"
             
+            # Check each subpackage
             for pkg_dir in packages/*/; do
               pkg_name=$(basename "$pkg_dir")
               pkg_pypi_name="comfyui-workflow-templates-${pkg_name//_/-}"
@@ -112,30 +118,34 @@ jobs:
               local_version=$(grep 'version = ' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
               pypi_version=$(curl -s "https://pypi.org/pypi/$pkg_pypi_name/json" | jq -r '.info.version // "0.0.0"' 2>/dev/null || echo "0.0.0")
               
+              echo "Package $pkg_name: local=$local_version, PyPI=$pypi_version"
               if [ "$local_version" != "$pypi_version" ]; then
                 PACKAGES="$PACKAGES $pkg_name"
-                echo "Recovery: Will publish $pkg_name (local=$local_version, PyPI=$pypi_version)"
+                echo "⚠️ Recovery: Will publish $pkg_name (version mismatch)"
               fi
             done
             
-            # Check meta package
+            # Check meta package  
             meta_local=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
             meta_pypi=$(curl -s "https://pypi.org/pypi/comfyui-workflow-templates/json" | jq -r '.info.version // "0.0.0"' 2>/dev/null || echo "0.0.0")
             
+            echo "Meta package: local=$meta_local, PyPI=$meta_pypi"
             if [ "$meta_local" != "$meta_pypi" ]; then
               PACKAGES="$PACKAGES meta"
-              echo "Recovery: Will publish meta (local=$meta_local, PyPI=$meta_pypi)"
+              echo "⚠️ Recovery: Will publish meta (version mismatch)"
             fi
           fi
           
+          # Clean up package list
           PACKAGES=$(echo $PACKAGES | tr ' ' '\n' | sort | uniq | tr '\n' ' ' | xargs)
           
+          echo -e "\n=== Final Decision ==="
           if [ -n "$PACKAGES" ]; then
             echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
-            echo "Building packages: $PACKAGES"
+            echo "📦 Will build and publish: $PACKAGES"
           else
             echo "packages=" >> $GITHUB_OUTPUT
-            echo "No packages to build"
+            echo "✅ No packages need publishing - all versions match PyPI"
           fi
 
       - name: Sync manifest and bundle assets
