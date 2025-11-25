@@ -1,5 +1,15 @@
 name: Publish to PyPI
 
+# This workflow publishes packages to PyPI and creates GitHub releases.
+# Triggers:
+#   1. When pyproject.toml changes on main branch (version bump from PR merge)  
+#   2. Manual dispatch (for recovery/debugging)
+# 
+# Features:
+#   - Version change detection (prevents unnecessary publishes)
+#   - Recovery mode (publishes packages out-of-sync with PyPI)
+#   - Dependency order publishing (subpackages before meta package)
+
 on:
   workflow_dispatch:
   push:
@@ -10,6 +20,10 @@ on:
 jobs:
   check-version-change:
     runs-on: ubuntu-latest
+    # Prevent concurrent publish workflows to avoid race conditions
+    concurrency:
+      group: publish-workflow
+      cancel-in-progress: false
     outputs:
       version-changed: ${{ steps.check.outputs.changed }}
       new-version: ${{ steps.check.outputs.version }}
@@ -72,49 +86,115 @@ jobs:
       - name: Determine packages to build
         id: changed-packages
         run: |
-          # Check what files changed in this commit (from PR merge)
+          echo "=== Package Detection Logic ==="
+          
+          # Primary logic: Check what files changed in this commit (from PR merge)
           CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
           echo "Files changed in this commit:"
           echo "$CHANGED_FILES"
           
           PACKAGES=""
           
-          # Check for package version changes
-          if echo "$CHANGED_FILES" | grep -q "packages/core/pyproject.toml"; then
-            PACKAGES="$PACKAGES core"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_api/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_api"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_video/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_video"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_image/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_image"
-          fi
-          if echo "$CHANGED_FILES" | grep -q "packages/media_other/pyproject.toml"; then
-            PACKAGES="$PACKAGES media_other"
-          fi
+          # Check for package version changes (primary trigger)
+          echo -e "\n--- Checking for changed package versions ---"
+          for pkg in core media_api media_video media_image media_other; do
+            if echo "$CHANGED_FILES" | grep -q "packages/$pkg/pyproject.toml"; then
+              PACKAGES="$PACKAGES $pkg"
+              echo "✓ Will publish $pkg (version file changed)"
+            fi
+          done
           
-          # Always build meta if root version changed or if any packages changed
+          # Always build meta if root version changed or if any subpackages changed
           if echo "$CHANGED_FILES" | grep -q "pyproject.toml" || [ -n "$PACKAGES" ]; then
             PACKAGES="$PACKAGES meta"
+            echo "✓ Will publish meta (root version changed or subpackages changed)"
           fi
           
+          # Recovery mode: Check for packages out-of-sync with PyPI
+          # Only run if no packages detected OR manual dispatch (for forced recovery)
+          if [ -z "$PACKAGES" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo -e "\n--- Recovery Mode: Checking PyPI sync status ---"
+            
+            # Check each subpackage
+            for pkg_dir in packages/*/; do
+              pkg_name=$(basename "$pkg_dir")
+              pkg_pypi_name="comfyui-workflow-templates-${pkg_name//_/-}"
+              
+              local_version=$(./scripts/ci/get_version.sh "$pkg_dir/pyproject.toml")
+              
+              # Fetch PyPI version with robust error handling
+              pypi_version=$(./scripts/ci/get_pypi_version.sh "$pkg_pypi_name")
+              if [[ "$pypi_version" == "0.0.0" ]]; then
+                echo "⚠️ Could not fetch PyPI data for $pkg_pypi_name, assuming not published"
+              fi
+              
+              echo "Package $pkg_name: local=$local_version, PyPI=$pypi_version"
+              if [ "$local_version" != "$pypi_version" ]; then
+                PACKAGES="$PACKAGES $pkg_name"
+                echo "⚠️ Recovery: Will publish $pkg_name (version mismatch)"
+              fi
+            done
+            
+            # Check meta package  
+            meta_local=$(./scripts/ci/get_version.sh "pyproject.toml")
+            meta_pypi=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates")
+            if [[ "$meta_pypi" == "0.0.0" ]]; then
+              echo "⚠️ Could not fetch PyPI data for meta package, assuming not published"
+            fi
+            
+            echo "Meta package: local=$meta_local, PyPI=$meta_pypi"
+            if [ "$meta_local" != "$meta_pypi" ]; then
+              PACKAGES="$PACKAGES meta"
+              echo "⚠️ Recovery: Will publish meta (version mismatch)"
+            fi
+          fi
+          
+          # Clean up package list
           PACKAGES=$(echo $PACKAGES | tr ' ' '\n' | sort | uniq | tr '\n' ' ' | xargs)
           
+          echo -e "\n=== Final Decision ==="
           if [ -n "$PACKAGES" ]; then
             echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
-            echo "Building packages: $PACKAGES"
+            echo "📦 Will build and publish: $PACKAGES"
+            
+            # Validate that we have valid version numbers for all packages to be published
+            echo -e "\n--- Version Validation ---"
+            for pkg in $PACKAGES; do
+              if [ "$pkg" = "meta" ]; then
+                version=$(./scripts/ci/get_version.sh "pyproject.toml")
+                file="pyproject.toml"
+              else
+                version=$(./scripts/ci/get_version.sh "packages/$pkg/pyproject.toml")
+                file="packages/$pkg/pyproject.toml"
+              fi
+              
+              # Semantic version validation (supports pre-release and build metadata)
+              if ! echo "$version" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\-]+)?(\+[a-zA-Z0-9\-]+)?$' >/dev/null; then
+                echo "❌ Invalid version format '$version' in $file"
+                echo "Expected semantic version format: x.y.z[-prerelease][+build] (e.g., 1.2.3, 1.2.3-alpha, 1.2.3+build)"
+                exit 1
+              fi
+              
+              echo "✓ $pkg: $version (valid)"
+            done
           else
             echo "packages=" >> $GITHUB_OUTPUT
-            echo "No packages to build"
+            echo "✅ No packages need publishing - all versions match PyPI"
           fi
+
+      - name: Validate bundles before publishing
+        run: |
+          echo "=== Pre-publish Bundle Validation ==="
+          # Safety check: ensure all templates are assigned to bundles
+          # This should never fail if PR validation worked, but adding as failsafe
+          ./scripts/ci/validate_bundles.sh
 
       - name: Sync manifest and bundle assets
         run: |
           source .venv/bin/activate
+          echo "=== Syncing manifests and bundle assets ==="
           python scripts/sync_bundles.py
+          echo "✅ Manifest and bundle sync complete"
 
       - name: Build and publish packages in dependency order
         run: |
@@ -122,26 +202,59 @@ jobs:
           rm -rf dist
           mkdir dist
           
+          PACKAGES="${{ steps.changed-packages.outputs.packages }}"
+          echo "=== Building and Publishing Packages ==="
+          echo "Packages to process: $PACKAGES"
+          
+          if [ -z "$PACKAGES" ]; then
+            echo "✅ No packages to build"
+            exit 0
+          fi
+          
           # First build and publish non-meta packages
-          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+          echo -e "\n--- Building Subpackages ---"
+          for pkg in $PACKAGES; do
             if [ "$pkg" != "meta" ]; then
-              echo "Building package: $pkg"
-              python -m build --outdir dist packages/$pkg
-              echo "Publishing $pkg..."
-              twine upload dist/*$pkg* || echo "Package $pkg may already exist, continuing..."
+              echo "📦 Building package: $pkg"
+              
+              if ! python -m build --outdir dist packages/$pkg; then
+                echo "❌ Failed to build package $pkg"
+                exit 1
+              fi
+              
+              echo "🚀 Publishing $pkg to PyPI..."
+              if ! twine upload dist/*$pkg* 2>/dev/null; then
+                echo "⚠️ Upload failed for $pkg (may already exist), continuing..."
+              else
+                echo "✅ Successfully published $pkg"
+              fi
+              
               rm -f dist/*$pkg*
             fi
           done
           
           # Then build and publish meta package
-          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+          echo -e "\n--- Building Meta Package ---"
+          for pkg in $PACKAGES; do
             if [ "$pkg" = "meta" ]; then
-              echo "Building root meta package"
-              python -m build --outdir dist .
-              echo "Publishing meta package..."
-              twine upload dist/comfyui_workflow_templates-*
+              echo "📦 Building root meta package"
+              
+              if ! python -m build --outdir dist .; then
+                echo "❌ Failed to build meta package"
+                exit 1
+              fi
+              
+              echo "🚀 Publishing meta package to PyPI..."
+              if ! twine upload dist/comfyui_workflow_templates-*; then
+                echo "❌ Failed to upload meta package"
+                exit 1
+              fi
+              
+              echo "✅ Successfully published meta package"
             fi
           done
+          
+          echo -e "\n🎉 All packages published successfully!"
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
