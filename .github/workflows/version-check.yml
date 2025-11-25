@@ -26,9 +26,9 @@ permissions:
 jobs:
   version-check:
     runs-on: ubuntu-latest
-    # Prevent concurrent version-check runs on same PR
+    # Prevent concurrent version-check runs on same PR (unique per fork+branch)
     concurrency:
-      group: version-check-${{ github.head_ref }}
+      group: version-check-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.repo.full_name }}
       cancel-in-progress: true
     steps:
       - name: Checkout PR
