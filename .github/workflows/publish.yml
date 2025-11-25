@@ -120,7 +120,7 @@ jobs:
               pkg_name=$(basename "$pkg_dir")
               pkg_pypi_name="comfyui-workflow-templates-${pkg_name//_/-}"
               
-              local_version=$(grep 'version = ' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
+              local_version=$(./scripts/ci/get_version.sh "$pkg_dir/pyproject.toml")
               
               # Fetch PyPI version with robust error handling
               pypi_version=$(./scripts/ci/get_pypi_version.sh "$pkg_pypi_name")
@@ -136,7 +136,7 @@ jobs:
             done
             
             # Check meta package  
-            meta_local=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+            meta_local=$(./scripts/ci/get_version.sh "pyproject.toml")
             meta_pypi=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates")
             if [[ "$meta_pypi" == "0.0.0" ]]; then
               echo "⚠️ Could not fetch PyPI data for meta package, assuming not published"
@@ -161,10 +161,10 @@ jobs:
             echo -e "\n--- Version Validation ---"
             for pkg in $PACKAGES; do
               if [ "$pkg" = "meta" ]; then
-                version=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+                version=$(./scripts/ci/get_version.sh "pyproject.toml")
                 file="pyproject.toml"
               else
-                version=$(grep 'version = ' "packages/$pkg/pyproject.toml" | cut -d'"' -f2)
+                version=$(./scripts/ci/get_version.sh "packages/$pkg/pyproject.toml")
                 file="packages/$pkg/pyproject.toml"
               fi
               
