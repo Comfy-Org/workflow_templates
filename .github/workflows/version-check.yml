@@ -72,14 +72,14 @@ jobs:
             # Commit with retry logic in case of conflicts
             if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
               echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-              git pull origin HEAD --rebase
+              git pull origin "${{ github.head_ref }}" --rebase
               git commit -m "Auto-bump package versions and sync manifests for template changes"
             fi
             
             # Push with retry logic
             if ! git push origin HEAD; then
               echo "⚠️ Push failed, retrying after pull..."
-              git pull origin HEAD --rebase
+              git pull origin "${{ github.head_ref }}" --rebase
               git push origin HEAD
             fi
             
