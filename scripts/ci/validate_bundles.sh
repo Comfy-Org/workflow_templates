@@ -28,8 +28,8 @@ for template_file in templates/*.json; do
   fi
   
   template_name=$(basename "$template_file" .json)
-  # Use jq for precise JSON parsing to avoid substring false matches
-  if ! jq -e --arg template "$template_name" '.[] | select(. == $template)' bundles.json >/dev/null 2>&1; then
+  # Use jq for precise JSON parsing to avoid substring false matches  
+  if ! jq -e --arg template "$template_name" 'to_entries[] | .value[] | select(. == $template)' bundles.json >/dev/null 2>&1; then
     MISSING_TEMPLATES="$MISSING_TEMPLATES $template_name"
   fi
 done
