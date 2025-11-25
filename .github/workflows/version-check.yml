@@ -26,6 +26,10 @@ permissions:
 jobs:
   version-check:
     runs-on: ubuntu-latest
+    # Prevent concurrent version-check runs on same PR
+    concurrency:
+      group: version-check-${{ github.head_ref }}
+      cancel-in-progress: true
     steps:
       - name: Checkout PR
         uses: actions/checkout@v4
@@ -64,8 +68,21 @@ jobs:
           
           if ! git diff --cached --quiet; then
             echo "📝 Changes detected - committing to PR branch"
-            git commit -m "Auto-bump package versions and sync manifests for template changes"
-            git push origin HEAD
+            
+            # Commit with retry logic in case of conflicts
+            if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
+              echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
+              git pull origin HEAD --rebase
+              git commit -m "Auto-bump package versions and sync manifests for template changes"
+            fi
+            
+            # Push with retry logic
+            if ! git push origin HEAD; then
+              echo "⚠️ Push failed, retrying after pull..."
+              git pull origin HEAD --rebase
+              git push origin HEAD
+            fi
+            
             echo "✅ Package version bumps and manifest updates committed to PR"
           else
             echo "✅ No package version or manifest changes needed"

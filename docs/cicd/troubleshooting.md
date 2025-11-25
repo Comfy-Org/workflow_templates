@@ -2,6 +2,24 @@
 
 ## Common Issues
 
+### ❌ Network/API Failures  
+**Cause:** PyPI API timeouts, rate limiting, network issues  
+**Symptoms:** "Could not fetch PyPI data", recovery mode failures  
+**Fix:** Workflows now have timeouts, retries, and fallbacks to "0.0.0"  
+**Manual:** Re-run publish workflow after network issues resolve
+
+### ❌ Concurrent Workflow Conflicts
+**Cause:** Multiple workflows running simultaneously  
+**Symptoms:** Git conflicts, "failed to push" errors  
+**Fix:** Added concurrency controls to prevent parallel runs  
+**Manual:** Wait for other workflows to complete, then re-run
+
+### ❌ Invalid Version Formats
+**Cause:** Non-semantic versions (e.g., "1.2", "v1.0.0", "1.2.3-beta")  
+**Symptoms:** "Invalid version format" in publish workflow  
+**Fix:** Use semantic versioning (x.y.z format) in pyproject.toml files  
+**Manual:** Fix version format and re-run version-check workflow
+
 ### ❌ "bundles.json missing template assignments"
 **Cause:** Added templates without updating `bundles.json`  
 **Fix:** Add template IDs to appropriate bundle:

@@ -20,6 +20,10 @@ on:
 jobs:
   check-version-change:
     runs-on: ubuntu-latest
+    # Prevent concurrent publish workflows to avoid race conditions
+    concurrency:
+      group: publish-workflow
+      cancel-in-progress: false
     outputs:
       version-changed: ${{ steps.check.outputs.changed }}
       new-version: ${{ steps.check.outputs.version }}
@@ -116,7 +120,15 @@ jobs:
               pkg_pypi_name="comfyui-workflow-templates-${pkg_name//_/-}"
               
               local_version=$(grep 'version = ' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
-              pypi_version=$(curl -s "https://pypi.org/pypi/$pkg_pypi_name/json" | jq -r '.info.version // "0.0.0"' 2>/dev/null || echo "0.0.0")
+              
+              # Robust PyPI version fetch with timeout and fallback
+              pypi_response=$(curl -s --max-time 10 --retry 2 "https://pypi.org/pypi/$pkg_pypi_name/json" 2>/dev/null || echo "")
+              if [ -n "$pypi_response" ]; then
+                pypi_version=$(echo "$pypi_response" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['info']['version'])" 2>/dev/null || echo "0.0.0")
+              else
+                pypi_version="0.0.0"
+                echo "⚠️ Could not fetch PyPI data for $pkg_pypi_name, assuming not published"
+              fi
               
               echo "Package $pkg_name: local=$local_version, PyPI=$pypi_version"
               if [ "$local_version" != "$pypi_version" ]; then
@@ -127,7 +139,13 @@ jobs:
             
             # Check meta package  
             meta_local=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
-            meta_pypi=$(curl -s "https://pypi.org/pypi/comfyui-workflow-templates/json" | jq -r '.info.version // "0.0.0"' 2>/dev/null || echo "0.0.0")
+            meta_response=$(curl -s --max-time 10 --retry 2 "https://pypi.org/pypi/comfyui-workflow-templates/json" 2>/dev/null || echo "")
+            if [ -n "$meta_response" ]; then
+              meta_pypi=$(echo "$meta_response" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['info']['version'])" 2>/dev/null || echo "0.0.0")
+            else
+              meta_pypi="0.0.0"
+              echo "⚠️ Could not fetch PyPI data for meta package, assuming not published"
+            fi
             
             echo "Meta package: local=$meta_local, PyPI=$meta_pypi"
             if [ "$meta_local" != "$meta_pypi" ]; then
@@ -143,15 +161,61 @@ jobs:
           if [ -n "$PACKAGES" ]; then
             echo "packages=$PACKAGES" >> $GITHUB_OUTPUT
             echo "📦 Will build and publish: $PACKAGES"
+            
+            # Validate that we have valid version numbers for all packages to be published
+            echo -e "\n--- Version Validation ---"
+            for pkg in $PACKAGES; do
+              if [ "$pkg" = "meta" ]; then
+                version=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+                file="pyproject.toml"
+              else
+                version=$(grep 'version = ' "packages/$pkg/pyproject.toml" | cut -d'"' -f2)
+                file="packages/$pkg/pyproject.toml"
+              fi
+              
+              # Basic semantic version validation (x.y.z format)
+              if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+                echo "❌ Invalid version format '$version' in $file"
+                echo "Expected semantic version format: x.y.z (e.g., 1.2.3)"
+                exit 1
+              fi
+              
+              echo "✓ $pkg: $version (valid)"
+            done
           else
             echo "packages=" >> $GITHUB_OUTPUT
             echo "✅ No packages need publishing - all versions match PyPI"
           fi
 
+      - name: Validate bundles before publishing
+        run: |
+          echo "=== Pre-publish Bundle Validation ==="
+          # Safety check: ensure all templates are assigned to bundles
+          # This should never fail if PR validation worked, but adding as failsafe
+          
+          # Check if any .json files in templates/ are missing from bundles.json
+          MISSING_TEMPLATES=""
+          for template_file in templates/*.json; do
+            template_name=$(basename "$template_file" .json)
+            if ! grep -q "\"$template_name\"" bundles.json; then
+              MISSING_TEMPLATES="$MISSING_TEMPLATES $template_name"
+            fi
+          done
+          
+          if [ -n "$MISSING_TEMPLATES" ]; then
+            echo "🚨 CRITICAL: Templates not assigned to bundles:$MISSING_TEMPLATES"
+            echo "This should have been caught in PR validation!"
+            exit 1
+          fi
+          
+          echo "✅ All templates properly assigned to bundles"
+
       - name: Sync manifest and bundle assets
         run: |
           source .venv/bin/activate
+          echo "=== Syncing manifests and bundle assets ==="
           python scripts/sync_bundles.py
+          echo "✅ Manifest and bundle sync complete"
 
       - name: Build and publish packages in dependency order
         run: |
@@ -159,26 +223,59 @@ jobs:
           rm -rf dist
           mkdir dist
           
+          PACKAGES="${{ steps.changed-packages.outputs.packages }}"
+          echo "=== Building and Publishing Packages ==="
+          echo "Packages to process: $PACKAGES"
+          
+          if [ -z "$PACKAGES" ]; then
+            echo "✅ No packages to build"
+            exit 0
+          fi
+          
           # First build and publish non-meta packages
-          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+          echo -e "\n--- Building Subpackages ---"
+          for pkg in $PACKAGES; do
             if [ "$pkg" != "meta" ]; then
-              echo "Building package: $pkg"
-              python -m build --outdir dist packages/$pkg
-              echo "Publishing $pkg..."
-              twine upload dist/*$pkg* || echo "Package $pkg may already exist, continuing..."
+              echo "📦 Building package: $pkg"
+              
+              if ! python -m build --outdir dist packages/$pkg; then
+                echo "❌ Failed to build package $pkg"
+                exit 1
+              fi
+              
+              echo "🚀 Publishing $pkg to PyPI..."
+              if ! twine upload dist/*$pkg* 2>/dev/null; then
+                echo "⚠️ Upload failed for $pkg (may already exist), continuing..."
+              else
+                echo "✅ Successfully published $pkg"
+              fi
+              
               rm -f dist/*$pkg*
             fi
           done
           
           # Then build and publish meta package
-          for pkg in ${{ steps.changed-packages.outputs.packages }}; do
+          echo -e "\n--- Building Meta Package ---"
+          for pkg in $PACKAGES; do
             if [ "$pkg" = "meta" ]; then
-              echo "Building root meta package"
-              python -m build --outdir dist .
-              echo "Publishing meta package..."
-              twine upload dist/comfyui_workflow_templates-*
+              echo "📦 Building root meta package"
+              
+              if ! python -m build --outdir dist .; then
+                echo "❌ Failed to build meta package"
+                exit 1
+              fi
+              
+              echo "🚀 Publishing meta package to PyPI..."
+              if ! twine upload dist/comfyui_workflow_templates-*; then
+                echo "❌ Failed to upload meta package"
+                exit 1
+              fi
+              
+              echo "✅ Successfully published meta package"
             fi
           done
+          
+          echo -e "\n🎉 All packages published successfully!"
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
