@@ -121,12 +121,9 @@ jobs:
               
               local_version=$(grep 'version = ' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
               
-              # Robust PyPI version fetch with timeout and fallback
-              pypi_response=$(curl -s --max-time 10 --retry 2 "https://pypi.org/pypi/$pkg_pypi_name/json" 2>/dev/null || echo "")
-              if [ -n "$pypi_response" ]; then
-                pypi_version=$(echo "$pypi_response" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['info']['version'])" 2>/dev/null || echo "0.0.0")
-              else
-                pypi_version="0.0.0"
+              # Fetch PyPI version with robust error handling
+              pypi_version=$(./scripts/ci/get_pypi_version.sh "$pkg_pypi_name")
+              if [[ "$pypi_version" == "0.0.0" ]]; then
                 echo "⚠️ Could not fetch PyPI data for $pkg_pypi_name, assuming not published"
               fi
               
@@ -139,11 +136,8 @@ jobs:
             
             # Check meta package  
             meta_local=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
-            meta_response=$(curl -s --max-time 10 --retry 2 "https://pypi.org/pypi/comfyui-workflow-templates/json" 2>/dev/null || echo "")
-            if [ -n "$meta_response" ]; then
-              meta_pypi=$(echo "$meta_response" | python3 -c "import json, sys; data=json.load(sys.stdin); print(data['info']['version'])" 2>/dev/null || echo "0.0.0")
-            else
-              meta_pypi="0.0.0"
+            meta_pypi=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates")
+            if [[ "$meta_pypi" == "0.0.0" ]]; then
               echo "⚠️ Could not fetch PyPI data for meta package, assuming not published"
             fi
             
@@ -192,23 +186,7 @@ jobs:
           echo "=== Pre-publish Bundle Validation ==="
           # Safety check: ensure all templates are assigned to bundles
           # This should never fail if PR validation worked, but adding as failsafe
-          
-          # Check if any .json files in templates/ are missing from bundles.json
-          MISSING_TEMPLATES=""
-          for template_file in templates/*.json; do
-            template_name=$(basename "$template_file" .json)
-            if ! grep -q "\"$template_name\"" bundles.json; then
-              MISSING_TEMPLATES="$MISSING_TEMPLATES $template_name"
-            fi
-          done
-          
-          if [ -n "$MISSING_TEMPLATES" ]; then
-            echo "🚨 CRITICAL: Templates not assigned to bundles:$MISSING_TEMPLATES"
-            echo "This should have been caught in PR validation!"
-            exit 1
-          fi
-          
-          echo "✅ All templates properly assigned to bundles"
+          ./scripts/ci/validate_bundles.sh
 
       - name: Sync manifest and bundle assets
         run: |
