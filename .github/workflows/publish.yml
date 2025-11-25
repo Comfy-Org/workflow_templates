@@ -168,10 +168,10 @@ jobs:
                 file="packages/$pkg/pyproject.toml"
               fi
               
-              # Basic semantic version validation (x.y.z format)
-              if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              # Semantic version validation (supports pre-release and build metadata)
+              if ! echo "$version" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9\-]+)?(\+[a-zA-Z0-9\-]+)?$' >/dev/null; then
                 echo "❌ Invalid version format '$version' in $file"
-                echo "Expected semantic version format: x.y.z (e.g., 1.2.3)"
+                echo "Expected semantic version format: x.y.z[-prerelease][+build] (e.g., 1.2.3, 1.2.3-alpha, 1.2.3+build)"
                 exit 1
               fi
               
