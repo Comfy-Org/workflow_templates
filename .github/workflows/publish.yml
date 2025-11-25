@@ -101,6 +101,33 @@ jobs:
             PACKAGES="$PACKAGES meta"
           fi
           
+          # Recovery mode: if no packages from changes, check for out-of-sync versions
+          if [ -z "$PACKAGES" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Checking for packages out of sync with PyPI..."
+            
+            for pkg_dir in packages/*/; do
+              pkg_name=$(basename "$pkg_dir")
+              pkg_pypi_name="comfyui-workflow-templates-${pkg_name//_/-}"
+              
+              local_version=$(grep 'version = ' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
+              pypi_version=$(curl -s "https://pypi.org/pypi/$pkg_pypi_name/json" | jq -r '.info.version // "0.0.0"' 2>/dev/null || echo "0.0.0")
+              
+              if [ "$local_version" != "$pypi_version" ]; then
+                PACKAGES="$PACKAGES $pkg_name"
+                echo "Recovery: Will publish $pkg_name (local=$local_version, PyPI=$pypi_version)"
+              fi
+            done
+            
+            # Check meta package
+            meta_local=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+            meta_pypi=$(curl -s "https://pypi.org/pypi/comfyui-workflow-templates/json" | jq -r '.info.version // "0.0.0"' 2>/dev/null || echo "0.0.0")
+            
+            if [ "$meta_local" != "$meta_pypi" ]; then
+              PACKAGES="$PACKAGES meta"
+              echo "Recovery: Will publish meta (local=$meta_local, PyPI=$meta_pypi)"
+            fi
+          fi
+          
           PACKAGES=$(echo $PACKAGES | tr ' ' '\n' | sort | uniq | tr '\n' ' ' | xargs)
           
           if [ -n "$PACKAGES" ]; then
