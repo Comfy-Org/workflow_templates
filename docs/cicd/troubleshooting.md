@@ -53,8 +53,8 @@ gh workflow run "Publish to PyPI"
 ```bash
 # Check all package versions vs PyPI
 for pkg in core media-api media-video media-image media-other; do
-  local=$(grep 'version = ' packages/${pkg//-/_}/pyproject.toml | cut -d'"' -f2)
-  pypi=$(curl -s https://pypi.org/pypi/comfyui-workflow-templates-$pkg/json | jq -r '.info.version')
+  local=$(./scripts/ci/get_version.sh "packages/${pkg//-/_}/pyproject.toml")
+  pypi=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates-$pkg")
   echo "$pkg: local=$local pypi=$pypi"
 done
 ```

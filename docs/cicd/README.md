@@ -46,6 +46,7 @@ Template Added → Version Check → Package Bump → Publish → PyPI + GitHub 
 ### CI Utilities  
 - `scripts/ci/validate_bundles.sh` - Bundle assignment validation (shared)
 - `scripts/ci/get_pypi_version.sh` - Robust PyPI version fetching (shared)
+- `scripts/ci/get_version.sh` - Consistent pyproject.toml version extraction (shared)
 
 ## Validation Rules
 - All templates in `templates/*.json` MUST be assigned in `bundles.json`
