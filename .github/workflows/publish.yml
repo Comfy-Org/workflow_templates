@@ -11,7 +11,6 @@ name: Publish to PyPI
 #   - Dependency order publishing (subpackages before meta package)
 
 on:
-  workflow_dispatch:
   push:
     branches: [main]
     paths:
@@ -57,7 +56,7 @@ jobs:
 
   publish:
     needs: check-version-change
-    if: needs.check-version-change.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.check-version-change.outputs.version-changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -118,8 +117,8 @@ jobs:
           fi
           
           # Recovery mode: Check for packages out-of-sync with PyPI
-          # Only run if no packages detected OR manual dispatch (for forced recovery)
-          if [ -z "$PACKAGES" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          # Only run if no packages detected from normal change detection
+          if [ -z "$PACKAGES" ]; then
             echo -e "\n--- Recovery Mode: Checking PyPI sync status ---"
             
             # Check each subpackage
