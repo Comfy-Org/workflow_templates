@@ -39,13 +39,20 @@ jobs:
         run: |
           OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
           NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+          
+          # Check if version already exists on PyPI to prevent "File already exists" errors
+          PYPI_VERSION=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates")
+          
           if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
             echo "Main version unchanged ($NEW_VERSION), skipping publish"
+          elif [ "$NEW_VERSION" = "$PYPI_VERSION" ]; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version $NEW_VERSION already exists on PyPI, skipping publish"
           else
             echo "changed=true" >> $GITHUB_OUTPUT
             echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-            echo "Version changed from $OLD_VERSION to $NEW_VERSION"
+            echo "Version changed from $OLD_VERSION to $NEW_VERSION (PyPI has $PYPI_VERSION)"
           fi
 
   publish:
