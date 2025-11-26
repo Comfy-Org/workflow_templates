@@ -89,4 +89,4 @@ This script regenerates the manifest, rebuilds all six wheels into `./dist/`, ru
 
 1. In PyPI, under each project, add a Trusted Publisher for your repo (`comfy-org/workflow_templates` → `Publishing` → `Settings`).
 2. Update `.github/workflows/publish.yml` to use the OIDC `pypi` publish action without storing secrets (check PyPI docs).
-3. Test by triggering the workflow via `workflow_dispatch`.
+3. Publishing happens automatically when pyproject.toml changes are merged to main branch.

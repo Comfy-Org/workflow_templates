@@ -103,7 +103,6 @@ The script automatically detects and categorizes assets:
 The workflow is automatically triggered on:
 - Push to `main` branch (changes to `input/`, `templates/index.json`, or the script itself)
 - Pull requests with relevant changes
-- Manual workflow dispatch
 
 #### Automatic Commits
 
