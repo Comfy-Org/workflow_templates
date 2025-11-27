@@ -19,13 +19,13 @@ new templates" and "Publishing" for the exact steps.
     - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
     - [5 — Compress Assets](#5--compress-assets)
     - [6 — Rename and Move Files](#6--rename-and-move-files)
-    - [7 — Assign Bundle & Sync Assets](#7--assign-bundle--sync-assets)
+    - [7 — Assign Bundle \& Sync Assets](#7--assign-bundle--sync-assets)
     - [8 — Add Entry to `index.json`](#8--add-entry-to-indexjson)
     - [9 — Embed Models](#9--embed-models)
     - [10 — Embed Node Versions (optional)](#10--embed-node-versions-optional)
     - [11 — Add Documentation Nodes (optional)](#11--add-documentation-nodes-optional)
-    - [12 — Bump Version and Create PR](#12--bump-version-and-create-pr)
-    - [13 — Add Translations](#13--add-translations)
+    - [12 — Sync Translations](#12--sync-translations)
+    - [13 — Create PR](#13--create-pr)
 
 ## Adding New Templates
 
@@ -371,16 +371,54 @@ Raw markdown used:
 > [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/tutorials/video/wan/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
-### 12 — Create PR
+### 12 — Sync Translations
+
+Before creating your PR, sync your template to all language versions using the translation management script.
+
+1. Run the translation sync script:
+   ```bash
+   python3 scripts/sync_i18n.py --templates-dir templates
+   ```
+
+2. The script will:
+   - Auto-sync technical fields (models, date, size, etc.) to all language files
+   - Detect untranslated title/description fields
+   - Add your template to `scripts/i18n.json` for translation tracking
+   - Generate language-specific template files (index.zh.json, index.ja.json, etc.)
+
+3. (Optional) Add translations in `scripts/i18n.json`:
+   ```json
+   {
+     "templates": {
+       "your_template_name": {
+         "title": {
+           "en": "Your Template Title",
+           "zh": "您的模板标题"
+         },
+         "description": {
+           "en": "Your template description",
+           "zh": "您的模板描述"
+         }
+       }
+     }
+   }
+   ```
+
+4. Run sync again to apply your translations
+
+For detailed instructions, see [scripts/I18N_GUIDE.md](scripts/I18N_GUIDE.md).
+
+### 13 — Create PR
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process has no hiccups and you can generate the thumbnail image on the first execution (if applicable).
-2. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
-3. Clone the fork to your system (if not a collaborator)
-4. Copy your new workflow and thumbnail(s) into the `templates` folder
-5. Add your changes to the `templates/index.json` file
-6. **Bump the version in the root `pyproject.toml`** ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
-7. Commit and push changes
-8. Create a PR on https://github.com/Comfy-Org/workflow_templates
+2. Verify all language files (index.zh.json, index.ja.json, etc.) are synced and committed
+3. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
+4. Clone the fork to your system (if not a collaborator)
+5. Copy your new workflow and thumbnail(s) into the `templates` folder
+6. Add your changes to the `templates/index.json` file
+7. **Bump the version in the root `pyproject.toml`** ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
+8. Commit and push changes
+9. Create a PR on https://github.com/Comfy-Org/workflow_templates
 
 Version bumping and package building are automated via CI/CD. Bumping the root `pyproject.toml` version automatically:
 - Detects which subpackages have changed since their last release
@@ -391,13 +429,3 @@ Version bumping and package building are automated via CI/CD. Bumping the root `
 Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflow_templates/pull/16
 
 Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
-
-### 13 — Add Translations
-
-Make a PR in https://github.com/Comfy-Org/ComfyUI_frontend adding the mapping from your template filename (without extension) to the English display name title. The mapping goes in [`ComfyUI_frontend/src/locales/en/main.json`](https://github.com/Comfy-Org/ComfyUI_frontend/blob/9f0abac57ba0d5752c51198bf8a075b8336fdda1/src/locales/en/main.json#L480-L487).
-
-If you added a new category, do the same in the [categories section of the translation mappings](https://github.com/Comfy-Org/ComfyUI_frontend/blob/9f0abac57ba0d5752c51198bf8a075b8336fdda1/src/locales/en/main.json#L433).
-
-You can edit the file and make a PR directly on the GitHub website.
-
-Here is the PR I made for the Wan template translations: https://github.com/Comfy-Org/ComfyUI_frontend/pull/3042
