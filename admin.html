@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComfyUI Template Manager</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .card { background: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; margin-bottom: 30px; text-align: center; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: 500; color: #555; }
+        input, textarea, select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        input:focus, textarea:focus, select:focus { outline: none; border-color: #007acc; box-shadow: 0 0 0 3px rgba(0,122,204,0.1); }
+        textarea { min-height: 100px; resize: vertical; }
+        .file-upload { border: 2px dashed #ddd; padding: 20px; text-align: center; border-radius: 4px; cursor: pointer; }
+        .file-upload:hover { border-color: #007acc; }
+        .file-upload.dragover { border-color: #007acc; background: #f0f8ff; }
+        .btn { background: #007acc; color: white; border: none; padding: 12px 24px; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .btn:hover { background: #005fa3; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .success { background: #d4edda; color: #155724; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
+        .error { background: #f8d7da; color: #721c24; padding: 10px; border-radius: 4px; margin-bottom: 20px; }
+        .preview { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; padding: 10px; margin-top: 10px; font-family: monospace; font-size: 12px; }
+        .thumbnail-preview { max-width: 200px; margin: 10px 0; border-radius: 4px; }
+        .inline-group { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🎨 Add New ComfyUI Template</h1>
+            
+            <div id="status"></div>
+            
+            <form id="templateForm">
+                <!-- Basic Info -->
+                <div class="form-group">
+                    <label for="templateName">Template Name *</label>
+                    <input type="text" id="templateName" required placeholder="e.g., my_awesome_workflow">
+                    <small>Will be used for filename and auto-naming thumbnails</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">Display Title</label>
+                    <input type="text" id="title" placeholder="e.g., My Awesome Workflow">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description *</label>
+                    <textarea id="description" required placeholder="Brief description of what this workflow does..."></textarea>
+                </div>
+                
+                <!-- Media Type & Category -->
+                <div class="inline-group">
+                    <div class="form-group">
+                        <label for="mediaType">Media Type *</label>
+                        <select id="mediaType" required>
+                            <option value="">Select type...</option>
+                            <option value="image">Image</option>
+                            <option value="video">Video</option>
+                            <option value="audio">Audio</option>
+                            <option value="3d">3D</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="category">Bundle Category</label>
+                        <select id="category">
+                            <option value="media-image">Image Templates</option>
+                            <option value="media-video">Video Templates</option>
+                            <option value="media-api">API Templates</option>
+                            <option value="media-other">Other Templates</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- File Uploads -->
+                <div class="form-group">
+                    <label for="workflowFile">Workflow JSON File *</label>
+                    <div class="file-upload" onclick="document.getElementById('workflowFile').click()">
+                        <input type="file" id="workflowFile" accept=".json" style="display: none;" required>
+                        <p>Click to upload workflow JSON file</p>
+                    </div>
+                    <div id="workflowPreview"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="thumbnail1">Primary Thumbnail</label>
+                    <div class="file-upload" onclick="document.getElementById('thumbnail1').click()">
+                        <input type="file" id="thumbnail1" accept="image/*" style="display: none;">
+                        <p>Click to upload primary thumbnail (will be saved as [name]-1.webp)</p>
+                    </div>
+                    <div id="thumb1Preview"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="thumbnail2">Secondary Thumbnail (Optional)</label>
+                    <div class="file-upload" onclick="document.getElementById('thumbnail2').click()">
+                        <input type="file" id="thumbnail2" accept="image/*" style="display: none;">
+                        <p>Click to upload secondary thumbnail (will be saved as [name]-2.webp)</p>
+                    </div>
+                    <div id="thumb2Preview"></div>
+                </div>
+                
+                <!-- Optional Fields -->
+                <div class="form-group">
+                    <label for="tags">Tags (comma separated)</label>
+                    <input type="text" id="tags" placeholder="e.g., Text to Image, ControlNet, SDXL">
+                </div>
+                
+                <div class="form-group">
+                    <label for="models">Required Models (comma separated)</label>
+                    <input type="text" id="models" placeholder="e.g., SDXL, ControlNet-Canny">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tutorialUrl">Tutorial URL</label>
+                    <input type="url" id="tutorialUrl" placeholder="https://docs.comfy.org/...">
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">🚀 Add Template</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-update category based on media type
+        document.getElementById('mediaType').addEventListener('change', function() {
+            const category = document.getElementById('category');
+            const mediaType = this.value;
+            
+            if (mediaType === 'image') category.value = 'media-image';
+            else if (mediaType === 'video') category.value = 'media-video';
+            else if (mediaType === 'audio') category.value = 'media-other';
+            else if (mediaType === '3d') category.value = 'media-other';
+        });
+        
+        // File upload previews
+        document.getElementById('workflowFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const json = JSON.parse(e.target.result);
+                        document.getElementById('workflowPreview').innerHTML = 
+                            `<div class="preview">✅ Valid JSON workflow (${Object.keys(json).length} nodes)</div>`;
+                    } catch (err) {
+                        document.getElementById('workflowPreview').innerHTML = 
+                            `<div class="preview" style="color: red;">❌ Invalid JSON: ${err.message}</div>`;
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        document.getElementById('thumbnail1').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('thumb1Preview').innerHTML = 
+                        `<img src="${e.target.result}" class="thumbnail-preview" alt="Thumbnail 1">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        document.getElementById('thumbnail2').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('thumb2Preview').innerHTML = 
+                        `<img src="${e.target.result}" class="thumbnail-preview" alt="Thumbnail 2">`;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Form submission
+        document.getElementById('templateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const statusDiv = document.getElementById('status');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Processing...';
+            
+            try {
+                const formData = new FormData();
+                
+                // Collect form data
+                formData.append('templateName', document.getElementById('templateName').value);
+                formData.append('title', document.getElementById('title').value);
+                formData.append('description', document.getElementById('description').value);
+                formData.append('mediaType', document.getElementById('mediaType').value);
+                formData.append('category', document.getElementById('category').value);
+                formData.append('tags', document.getElementById('tags').value);
+                formData.append('models', document.getElementById('models').value);
+                formData.append('tutorialUrl', document.getElementById('tutorialUrl').value);
+                
+                // Add files
+                const workflowFile = document.getElementById('workflowFile').files[0];
+                const thumb1 = document.getElementById('thumbnail1').files[0];
+                const thumb2 = document.getElementById('thumbnail2').files[0];
+                
+                if (workflowFile) formData.append('workflowFile', workflowFile);
+                if (thumb1) formData.append('thumbnail1', thumb1);
+                if (thumb2) formData.append('thumbnail2', thumb2);
+                
+                // Submit to backend
+                const response = await fetch('/api/add-template', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    statusDiv.innerHTML = '<div class="success">✅ Template added successfully! Files updated and changes committed to git.</div>';
+                    document.getElementById('templateForm').reset();
+                    // Clear previews
+                    document.getElementById('workflowPreview').innerHTML = '';
+                    document.getElementById('thumb1Preview').innerHTML = '';
+                    document.getElementById('thumb2Preview').innerHTML = '';
+                } else {
+                    const error = await response.text();
+                    statusDiv.innerHTML = `<div class="error">❌ Error: ${error}</div>`;
+                }
+                
+            } catch (error) {
+                statusDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🚀 Add Template';
+            }
+        });
+    </script>
+</body>
+</html>
