@@ -44,6 +44,7 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `mediaSubtype` | string | ✅ | Thumbnail format: "webp", "mp3", "mp4", etc. |
 | `thumbnailVariant` | string | ❌ | Hover effect: "compareSlider", "hoverDissolve", "hoverZoom", "zoomHover" |
 | `tutorialUrl` | string | ❌ | Link to documentation |
+| `searchRanking` | number | ❌ | Search priority (0-1000, higher = better ranking) |
 
 ## Naming Conventions
 
@@ -103,12 +104,13 @@ Run validation before submitting PRs:
 python scripts/validate_templates.py
 ```
 
-This checks:
-- ✅ JSON schema compliance
+This validates:
+- ✅ **All index*.json files** - Main + 9 locale variants 
+- ✅ JSON schema compliance for all fields
 - ✅ File consistency (all referenced files exist)
 - ✅ No duplicate template names
 - ✅ Required thumbnails present
-- ✅ Valid JSON syntax
+- ✅ Model metadata format compliance
 
 ## Adding New Templates
 

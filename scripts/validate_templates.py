@@ -289,42 +289,72 @@ def main():
     script_dir = Path(__file__).parent
     repo_root = script_dir.parent
     templates_dir = repo_root / 'templates'
-    index_path = templates_dir / 'index.json'
     schema_path = templates_dir / 'index.schema.json'
     
     print("🔍 Validating ComfyUI Workflow Templates...")
     print(f"   Templates directory: {templates_dir}")
     
-    # Check required files exist
-    if not index_path.exists():
-        print(f"❌ Error: index.json not found at {index_path}")
-        return 1
-    
+    # Check schema exists
     if not schema_path.exists():
         print(f"❌ Error: index.schema.json not found at {schema_path}")
         return 1
     
-    # Load index.json
+    # Find all index*.json files (excluding schema)
+    index_files = []
+    for file_path in templates_dir.glob('index*.json'):
+        if file_path.name != 'index.schema.json':
+            index_files.append(file_path)
+    
+    if not index_files:
+        print(f"❌ Error: No index*.json files found in {templates_dir}")
+        return 1
+        
+    print(f"   Found {len(index_files)} index files: {[f.name for f in index_files]}")
+    
+    # Use main index.json for file consistency checks (templates are the same across locales)
+    main_index_path = templates_dir / 'index.json'
+    if not main_index_path.exists():
+        print(f"❌ Error: main index.json not found at {main_index_path}")
+        return 1
+    
+    # Load main index.json for consistency checks
     try:
-        index_data = load_json(index_path)
+        main_index_data = load_json(main_index_path)
     except Exception as e:
-        print(f"❌ Error loading index.json: {e}")
+        print(f"❌ Error loading main index.json: {e}")
         return 1
     
     all_errors = []
     all_warnings = []
     
     # Run validations
-    print("\n1️⃣  Validating against JSON schema...")
-    valid, errors = validate_schema(index_data, schema_path)
-    if valid:
-        print("   ✅ Schema validation passed")
+    print("\n1️⃣  Validating all index files against JSON schema...")
+    schema_all_valid = True
+    for index_file in index_files:
+        print(f"   Validating {index_file.name}...")
+        try:
+            index_data = load_json(index_file)
+            valid, errors = validate_schema(index_data, schema_path)
+            if valid:
+                print(f"     ✅ {index_file.name} schema validation passed")
+            else:
+                print(f"     ❌ {index_file.name} schema validation failed")
+                schema_all_valid = False
+                # Prefix errors with filename for clarity
+                prefixed_errors = [f"{index_file.name}: {error}" for error in errors]
+                all_errors.extend(prefixed_errors)
+        except Exception as e:
+            print(f"     ❌ Error loading {index_file.name}: {e}")
+            all_errors.append(f"{index_file.name}: Failed to load - {e}")
+            schema_all_valid = False
+    
+    if schema_all_valid:
+        print("   ✅ All index files passed schema validation")
     else:
-        print("   ❌ Schema validation failed")
-        all_errors.extend(errors)
+        print("   ❌ Some index files failed schema validation")
     
     print("\n2️⃣  Checking file consistency...")
-    valid, errors, warnings = check_file_consistency(index_data, templates_dir)
+    valid, errors, warnings = check_file_consistency(main_index_data, templates_dir)
     if valid and not warnings:
         print("   ✅ File consistency check passed")
     elif valid and warnings:
@@ -335,7 +365,7 @@ def main():
     all_warnings.extend(warnings)
     
     print("\n3️⃣  Checking for duplicate names...")
-    valid, errors = check_duplicate_names(index_data)
+    valid, errors = check_duplicate_names(main_index_data)
     if valid:
         print("   ✅ No duplicate names found")
     else:
@@ -343,7 +373,7 @@ def main():
         all_errors.extend(errors)
     
     print("\n4️⃣  Checking required thumbnails...")
-    valid, errors = check_required_thumbnails(index_data, templates_dir)
+    valid, errors = check_required_thumbnails(main_index_data, templates_dir)
     if valid:
         print("   ✅ All templates have thumbnails")
     else:
@@ -351,7 +381,7 @@ def main():
         all_errors.extend(errors)
     
     print("\n5️⃣  Checking model metadata format...")
-    valid, errors = check_model_metadata_format(index_data, templates_dir)
+    valid, errors = check_model_metadata_format(main_index_data, templates_dir)
     if valid:
         print("   ✅ All templates use correct model metadata format")
     else:
