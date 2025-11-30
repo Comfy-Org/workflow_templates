@@ -103,12 +103,26 @@ Run validation before submitting PRs:
 python scripts/validate_templates.py
 ```
 
-This checks:
-- ✅ JSON schema compliance
+This validates:
+- ✅ **All index*.json files** - Main + 9 locale variants 
+- ✅ JSON schema compliance for all fields
 - ✅ File consistency (all referenced files exist)
 - ✅ No duplicate template names
 - ✅ Required thumbnails present
-- ✅ Valid JSON syntax
+- ✅ Model metadata format compliance
+
+## New Fields
+
+### searchRanking (Optional)
+```json
+{
+  "searchRanking": 850
+}
+```
+- **Type**: Number (0-1000)
+- **Purpose**: Prioritize templates in search results
+- **Higher values** = better ranking/more prominent placement
+- **Usage**: Add to high-quality, popular, or featured templates
 
 ## Adding New Templates
 
