@@ -44,6 +44,7 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `mediaSubtype` | string | ✅ | Thumbnail format: "webp", "mp3", "mp4", etc. |
 | `thumbnailVariant` | string | ❌ | Hover effect: "compareSlider", "hoverDissolve", "hoverZoom", "zoomHover" |
 | `tutorialUrl` | string | ❌ | Link to documentation |
+| `searchRanking` | number | ❌ | Search priority (0-1000, higher = better ranking) |
 
 ## Naming Conventions
 
@@ -110,19 +111,6 @@ This validates:
 - ✅ No duplicate template names
 - ✅ Required thumbnails present
 - ✅ Model metadata format compliance
-
-## New Fields
-
-### searchRanking (Optional)
-```json
-{
-  "searchRanking": 850
-}
-```
-- **Type**: Number (0-1000)
-- **Purpose**: Prioritize templates in search results
-- **Higher values** = better ranking/more prominent placement
-- **Usage**: Add to high-quality, popular, or featured templates
 
 ## Adding New Templates
 
