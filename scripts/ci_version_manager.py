@@ -225,9 +225,9 @@ if __name__ == "__main__":
     if non_meta_packages:
         bump_versions(packages)
         update_dependencies()
-        print(f"Auto-bumped individual packages: {sorted(non_meta_packages)}")
+        print(f"Auto-bumped packages and updated dependencies: {sorted(non_meta_packages)}")
         
-    # Output all packages that need building (including meta if changed)
+    # Output all packages that need building (including meta if changed)  
     if packages:
         print(" ".join(sorted(packages)))
     else:

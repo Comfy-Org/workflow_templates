@@ -1,4 +1,4 @@
-name: Deploy Template Manager
+name: Deploy Template CMS
 
 on:
   push:
@@ -18,22 +18,22 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: 'admin/package-lock.json'
+        cache-dependency-path: 'apps/template-cms/package-lock.json'
     
     - name: Install dependencies
-      working-directory: ./admin
+      working-directory: ./apps/template-cms
       run: npm ci
     
     - name: Type check
-      working-directory: ./admin
+      working-directory: ./apps/template-cms
       run: npx nuxi typecheck
     
     - name: Build project
-      working-directory: ./admin
+      working-directory: ./apps/template-cms
       run: npm run build
     
     - name: Test build output
-      working-directory: ./admin
+      working-directory: ./apps/template-cms
       run: |
         ls -la .output/
         ls -la .output/server/
@@ -51,14 +51,14 @@ jobs:
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: 'admin/package-lock.json'
+        cache-dependency-path: 'apps/template-cms/package-lock.json'
     
     - name: Install dependencies
-      working-directory: ./admin
+      working-directory: ./apps/template-cms
       run: npm ci
     
     - name: Build for production
-      working-directory: ./admin
+      working-directory: ./apps/template-cms
       run: npm run build
     
     - name: Deploy to Vercel
@@ -67,5 +67,5 @@ jobs:
         vercel-token: ${{ secrets.VERCEL_TOKEN }}
         vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
         vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-        working-directory: ./admin
+        working-directory: ./apps/template-cms
         vercel-args: '--prod'

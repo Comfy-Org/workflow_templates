@@ -23,16 +23,15 @@ jobs:
       - name: Check if version actually changed
         id: check
         run: |
-          CURRENT_VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          PREVIOUS_VERSION=$(git show HEAD~1:pyproject.toml | python -c "import tomllib, sys; print(tomllib.load(sys.stdin.buffer)['project']['version'])")
-
-          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
-            echo "Version changed from $PREVIOUS_VERSION to $CURRENT_VERSION"
-          else
+          OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
+          NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
             echo "changed=false" >> $GITHUB_OUTPUT
-            echo "Version unchanged: $CURRENT_VERSION"
+            echo "Main version unchanged ($NEW_VERSION), skipping publish"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+            echo "Version changed from $OLD_VERSION to $NEW_VERSION"
           fi
 
   publish:
