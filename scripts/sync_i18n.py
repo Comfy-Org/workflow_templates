@@ -410,10 +410,16 @@ class TemplateSyncManager:
         # Auto-sync fields
         for field in self.syncer.auto_sync_fields:
             if field in master_template:
+                # Add or update field from master
                 if field not in target_template or target_template[field] != master_template[field]:
                     updated_template[field] = master_template[field]
                     changes_made = True
                     self.syncer.logger.info(f"  ✓ Auto-synced {field}: {master_template[field]}")
+            elif field in target_template:
+                # Remove field that no longer exists in master
+                del updated_template[field]
+                changes_made = True
+                self.syncer.logger.info(f"  🗑️ Removed {field} (no longer in master)")
                     
         # Handle tags - always translate using i18n data
         if "tags" in master_template:
