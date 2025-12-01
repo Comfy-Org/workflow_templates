@@ -79,6 +79,23 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
     }
 
     # Check for markdown safetensors links in all string fields
+    def extract_url_with_balanced_parens(text: str, start_pos: int) -> Tuple[str, int]:
+        """Extract URL handling balanced parentheses."""
+        depth = 1
+        pos = start_pos
+        while pos < len(text) and depth > 0:
+            char = text[pos]
+            if char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+                if depth == 0:
+                    break
+            elif char in ' \t\n\r':
+                break
+            pos += 1
+        return text[start_pos:pos], pos
+
     def find_markdown_links(obj):
         if isinstance(obj, dict):
             for v in obj.values():
@@ -87,11 +104,15 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
             for v in obj:
                 find_markdown_links(v)
         elif isinstance(obj, str):
-            # Markdown link: [filename.safetensors](url)
-            for match in re.finditer(r'\[([^\]]+?\.safetensors)]\(([^)]+)\)', obj):
+            # Markdown link: [filename.safetensors](url) with balanced parentheses
+            pattern = r'\[([^\]]+?\.safetensors)\]\('
+            for match in re.finditer(pattern, obj):
+                text_name = match.group(1)
+                start_pos = match.end()
+                url, _ = extract_url_with_balanced_parens(obj, start_pos)
                 result['markdown_links'].append({
-                    'text': match.group(1),
-                    'url': match.group(2)
+                    'text': text_name,
+                    'url': url
                 })
     find_markdown_links(data)
 
