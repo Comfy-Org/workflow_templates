@@ -6,10 +6,10 @@
 
 ```bash
 # Normal sync
-python3 sync_i18n.py --templates-dir ./templates
+python3 scripts/sync_i18n.py --templates-dir ./templates
 
 # Preview changes without modifying files
-python3 sync_i18n.py --templates-dir ./templates --dry-run
+python3 scripts/sync_i18n.py --templates-dir ./templates --dry-run
 ```
 
 ## Workflow
@@ -17,7 +17,7 @@ python3 sync_i18n.py --templates-dir ./templates --dry-run
 ### Adding a New Template
 
 1. Add template to `templates/index.json`
-2. Run `python3 sync_i18n.py --templates-dir ./templates`
+2. Run `python3 scripts/sync_i18n.py --templates-dir ./templates`
 3. Check `i18n.json` - new template will be added to `_status.pending_templates`
 4. Add translations in `i18n.json` under `templates` section
 5. Run sync again to apply translations
