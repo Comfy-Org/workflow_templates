@@ -204,7 +204,7 @@ class TemplateSyncer:
     def get_template_translation(self, template_name: str, field: str, target_lang: str) -> Optional[str]:
         """
         Get translation for a template field from i18n data
-        Returns translation if available and different from English, None otherwise
+        Returns translation if available, None otherwise
         """
         templates_data = self.i18n_data.get("templates", {})
         
@@ -216,13 +216,11 @@ class TemplateSyncer:
             return None
         
         field_data = template_data[field]
-        en_value = field_data.get('en', '')
         
-        # Check if we have a translation for this language
+        # Return translation for this language if it exists
         if target_lang in field_data:
             translation = field_data[target_lang]
-            # Only return if it's actually a translation (different from English)
-            if translation != en_value and translation:
+            if translation:
                 return translation
         
         return None
@@ -431,50 +429,30 @@ class TemplateSyncManager:
                 else:
                     self.syncer.logger.info(f"  ➕ Added tags: {translated_tags}")
                         
-        # Handle language-specific fields with translation detection and application
+        # Handle language-specific fields - sync from i18n.json if available
         for field in self.syncer.language_specific_fields:
             if field in master_template:
                 en_value = master_template[field]
-                current_value = target_template.get(field, en_value)
+                current_value = target_template.get(field)
                 
-                # First, check if we have a translation in i18n data
+                # Get translation from i18n data
                 translation = self.syncer.get_template_translation(template_name, field, lang)
                 
                 if translation:
-                    # We have a translation in i18n data, apply it
+                    # Apply translation from i18n
                     if current_value != translation:
                         updated_template[field] = translation
                         changes_made = True
                         self.syncer.translation_stats['translations_applied'] += 1
                         self.syncer.logger.info(f"  🌐 Applied translation from i18n for {field}: '{translation}'")
-                        
-                        # Update pending status
-                        self.syncer.update_pending_status(template_name, field, en_value, lang, translation)
-                elif field not in target_template:
-                    # Add missing language-specific field from English
+                elif current_value is None:
+                    # Field doesn't exist in target, use English as fallback for new templates
                     updated_template[field] = en_value
                     changes_made = True
-                    self.syncer.logger.info(f"  ➕ Added missing {field}: {en_value}")
-                    
-                    # Mark as needing translation
-                    self.syncer.update_pending_status(template_name, field, en_value, lang, en_value)
-                elif self.sync_options.get("force_sync_language_fields", False):
-                    # Only update if explicitly forced
-                    if self.syncer.compare_field_values(field, current_value, en_value):
-                        updated_template[field] = en_value
-                        changes_made = True
-                        self.syncer.logger.info(f"  ✓ Force-synced {field}: {en_value}")
+                    self.syncer.logger.info(f"  ➕ Added missing {field} (no i18n translation): '{en_value}'")
                 else:
-                    # Check if current value is same as English (untranslated)
-                    if current_value == en_value:
-                        self.syncer.logger.info(f"  ⚠️  Untranslated {field} detected in {lang}: '{current_value}'")
-                        self.syncer.update_pending_status(template_name, field, en_value, lang, current_value)
-                    else:
-                        # Different from English, it's translated
-                        self.syncer.logger.info(f"  ⏭ Preserved translated {field}: '{current_value}' (English: '{en_value}')")
-                        
-                        # Update status to mark as translated
-                        self.syncer.update_pending_status(template_name, field, en_value, lang, current_value)
+                    # No translation in i18n but field exists, preserve existing value
+                    self.syncer.logger.debug(f"  ⏭ Preserved existing {field}: '{current_value}' (no i18n translation)")
         
         # Track that we scanned this template
         self.syncer.translation_stats['templates_scanned'] += 1
@@ -566,8 +544,21 @@ class TemplateSyncManager:
                     _, _, existing_template = target_index[template_name]
                     new_template = self.sync_template_data(template, existing_template, template_name, lang)
                 else:
-                    # Add new template
+                    # Add new template - also apply translations from i18n
                     new_template = template.copy()
+                    
+                    # Apply translations from i18n for new templates
+                    for field in self.syncer.language_specific_fields:
+                        if field in template:
+                            translation = self.syncer.get_template_translation(template_name, field, lang)
+                            if translation:
+                                new_template[field] = translation
+                                self.syncer.logger.info(f"  🌐 Applied i18n translation for new template {field}: '{translation}'")
+                    
+                    # Translate tags for new templates
+                    if "tags" in template:
+                        new_template["tags"] = self.syncer.translate_tags(template["tags"], lang)
+                    
                     self.stats['templates_added'] += 1
                     self.syncer.logger.info(f"  ➕ Added new template: {template_name}")
                     
