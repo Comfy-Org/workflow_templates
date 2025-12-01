@@ -444,8 +444,9 @@ class TemplateSyncManager:
                 # Get translation from i18n data
                 translation = self.syncer.get_template_translation(template_name, field, lang)
                 
-                if translation:
-                    # Apply translation from i18n
+                # Only apply translation if it's actually translated (different from English)
+                if translation and translation != en_value:
+                    # Apply real translation from i18n
                     if current_value != translation:
                         updated_template[field] = translation
                         changes_made = True
@@ -455,10 +456,10 @@ class TemplateSyncManager:
                     # Field doesn't exist in target, use English as fallback for new templates
                     updated_template[field] = en_value
                     changes_made = True
-                    self.syncer.logger.info(f"  ➕ Added missing {field} (no i18n translation): '{en_value}'")
+                    self.syncer.logger.info(f"  ➕ Added missing {field} (no translation): '{en_value}'")
                 else:
-                    # No translation in i18n but field exists, preserve existing value
-                    self.syncer.logger.debug(f"  ⏭ Preserved existing {field}: '{current_value}' (no i18n translation)")
+                    # No real translation in i18n (or it's a placeholder), preserve existing value
+                    self.syncer.logger.debug(f"  ⏭ Preserved existing {field}: '{current_value}'")
         
         # Track that we scanned this template
         self.syncer.translation_stats['templates_scanned'] += 1
@@ -624,8 +625,126 @@ class TemplateSyncManager:
         self.syncer.logger.info(f"🔍 Templates scanned: {self.syncer.translation_stats['templates_scanned']}")
         self.syncer.logger.info(f"🌐 Translations applied: {self.syncer.translation_stats['translations_applied']}")
         
+    def collect_new_templates_from_language_files(self):
+        """
+        Step 1: Collect translations for NEW templates only (templates not in i18n.json yet)
+        """
+        master_data = self.syncer.load_json_file(self.syncer.master_file)
+        master_index = self.syncer.build_template_index(master_data)
+        templates_data = self.syncer.i18n_data.get("templates", {})
+        
+        collected_count = 0
+        new_templates = set()
+        
+        # Find templates that exist in master but not in i18n
+        for template_name in master_index.keys():
+            if template_name not in templates_data:
+                new_templates.add(template_name)
+        
+        if not new_templates:
+            self.syncer.logger.info(f"  ℹ️ No new templates found")
+            return
+        
+        self.syncer.logger.info(f"  📋 Found {len(new_templates)} new templates")
+        
+        for lang, lang_file in self.syncer.language_files.items():
+            target_file = self.syncer.templates_dir / lang_file
+            if not target_file.exists():
+                continue
+            
+            target_data = self.syncer.load_json_file(target_file)
+            target_index = self.syncer.build_template_index(target_data)
+            
+            for template_name in new_templates:
+                if template_name not in target_index:
+                    continue
+                
+                _, _, target_template = target_index[template_name]
+                _, _, master_template = master_index[template_name]
+                
+                # Initialize template in i18n
+                if template_name not in templates_data:
+                    templates_data[template_name] = {}
+                
+                for field in self.syncer.language_specific_fields:
+                    if field not in target_template:
+                        continue
+                    
+                    target_value = target_template[field]
+                    en_value = master_template.get(field, "")
+                    
+                    # Initialize field in i18n
+                    if field not in templates_data[template_name]:
+                        templates_data[template_name][field] = {"en": en_value}
+                    
+                    field_data = templates_data[template_name][field]
+                    
+                    # Only update if it's different from English (meaning it's translated)
+                    if lang not in field_data and target_value != en_value:
+                        field_data[lang] = target_value
+                        collected_count += 1
+        
+        self.syncer.i18n_data["templates"] = templates_data
+        
+        if collected_count > 0:
+            self.syncer.logger.info(f"  ✅ Collected {collected_count} translations for new templates")
+    
+    def collect_all_translations_from_language_files(self):
+        """
+        Step 3: Collect ALL translations from language files to i18n.json (after sync)
+        """
+        master_data = self.syncer.load_json_file(self.syncer.master_file)
+        master_index = self.syncer.build_template_index(master_data)
+        
+        collected_count = 0
+        
+        for lang, lang_file in self.syncer.language_files.items():
+            target_file = self.syncer.templates_dir / lang_file
+            if not target_file.exists():
+                continue
+            
+            target_data = self.syncer.load_json_file(target_file)
+            target_index = self.syncer.build_template_index(target_data)
+            
+            for template_name, (_, _, target_template) in target_index.items():
+                # Only collect translations for templates that exist in master
+                if template_name not in master_index:
+                    continue
+                
+                _, _, master_template = master_index[template_name]
+                
+                # Ensure template exists in i18n
+                if template_name not in self.syncer.i18n_data["templates"]:
+                    self.syncer.i18n_data["templates"][template_name] = {}
+                
+                for field in self.syncer.language_specific_fields:
+                    if field not in target_template:
+                        continue
+                    
+                    target_value = target_template[field]
+                    en_value = master_template.get(field, "")
+                    
+                    # Ensure field exists in i18n
+                    if field not in self.syncer.i18n_data["templates"][template_name]:
+                        self.syncer.i18n_data["templates"][template_name][field] = {"en": en_value}
+                    
+                    field_data = self.syncer.i18n_data["templates"][template_name][field]
+                    
+                    # Update i18n with current value from language file
+                    if field_data.get(lang) != target_value:
+                        field_data[lang] = target_value
+                        collected_count += 1
+        
+        if collected_count > 0:
+            self.syncer.logger.info(f"  ✅ Collected {collected_count} translations to i18n.json")
+
     def run_sync(self) -> bool:
-        """Run complete synchronization process"""
+        """
+        Run complete synchronization process:
+        1. Collect translations for NEW templates only from language files
+        2. Sync i18n.json translations to all language files
+        3. Collect ALL translations from language files back to i18n.json
+        """
         self.syncer.logger.info("🚀 Starting template synchronization...")
         self.syncer.logger.info(f"Master file: {self.syncer.master_file}")
         self.syncer.logger.info(f"i18n file: {self.syncer.i18n_file}")
@@ -634,7 +753,13 @@ class TemplateSyncManager:
         if not self.syncer.master_file.exists():
             self.syncer.logger.error(f"Master file not found: {self.syncer.master_file}")
             return False
-            
+        
+        # Step 1: Collect translations for NEW templates only
+        self.syncer.logger.info("\n📥 Step 1: Collecting translations for new templates...")
+        self.collect_new_templates_from_language_files()
+        
+        # Step 2: Sync i18n.json translations to all language files
+        self.syncer.logger.info("\n🔄 Step 2: Syncing i18n.json to language files...")
         success = True
         for lang, lang_file in self.syncer.language_files.items():
             try:
@@ -643,6 +768,10 @@ class TemplateSyncManager:
             except Exception as e:
                 self.syncer.logger.error(f"Failed to sync {lang}: {e}")
                 success = False
+        
+        # Step 3: Collect ALL translations from language files back to i18n.json
+        self.syncer.logger.info("\n📥 Step 3: Collecting all translations to i18n.json...")
+        self.collect_all_translations_from_language_files()
                 
         # Check for unused tags in i18n data
         unused_tags = set(self.syncer.i18n_data.get("tags", {}).keys()) - self.syncer.used_tags
