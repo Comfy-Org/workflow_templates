@@ -14,25 +14,70 @@ from pathlib import Path
 from typing import Set, List, Dict, Tuple
 
 
-def extract_urls_from_markdown(text: str) -> Set[str]:
-    """Extract URLs from markdown text."""
-    urls = set()
+def extract_url_with_balanced_parens(text: str, start_pos: int) -> Tuple[str, int]:
+    """
+    Extract URL from text starting at start_pos, handling balanced parentheses.
+    
+    Returns:
+        Tuple of (url, end_position)
+    """
+    depth = 1
+    pos = start_pos
+    
+    while pos < len(text) and depth > 0:
+        char = text[pos]
+        if char == '(':
+            depth += 1
+        elif char == ')':
+            depth -= 1
+            if depth == 0:
+                break
+        elif char in ' \t\n\r':
+            # Stop at whitespace
+            break
+        pos += 1
+    
+    return text[start_pos:pos], pos
 
-    # Markdown links: [text](url)
-    markdown_links = re.findall(r'\[([^\]]+)\]\(([^)]+)\)', text)
-    for _, url in markdown_links:
+
+def extract_urls_from_markdown(text: str) -> Set[str]:
+    """Extract URLs from markdown text, handling parentheses in URLs."""
+    urls = set()
+    extracted_ranges = []  # Track ranges that have been extracted as markdown links
+
+    # Find markdown links: [text](url) with balanced parentheses
+    # Use a more careful approach to handle URLs with parentheses
+    pattern = r'\[([^\]]+)\]\('
+    for match in re.finditer(pattern, text):
+        start_pos = match.end()
+        url, end_pos = extract_url_with_balanced_parens(text, start_pos)
+        
         if url.startswith('http'):
-            # Clean up URL (remove trailing punctuation)
-            url = url.rstrip('.,;:!?)')
+            # Clean up URL (remove trailing punctuation, but preserve balanced parens)
+            url = url.rstrip('.,;:!?')
             urls.add(url)
+            extracted_ranges.append((match.start(), end_pos + 1))  # +1 for closing )
 
     # Plain URLs (but not those already in markdown links)
-    # Remove markdown links first to avoid duplicates
-    text_without_markdown = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', '', text)
-    plain_urls = re.findall(r'https?://[^\s<>"{}|\\^`\[\]()]+', text_without_markdown)
-    for url in plain_urls:
-        url = url.rstrip('.,;:!?)')
-        urls.add(url)
+    # Build text without markdown links to avoid duplicates
+    text_without_markdown = text
+    for start, end in sorted(extracted_ranges, reverse=True):
+        text_without_markdown = text_without_markdown[:start] + text_without_markdown[end:]
+    
+    # Match plain URLs - allow parentheses but try to balance them
+    plain_url_pattern = r'https?://[^\s<>"{}|\\^`\[\]]+'
+    for match in re.finditer(plain_url_pattern, text_without_markdown):
+        url = match.group()
+        # Try to balance parentheses in plain URLs
+        open_parens = url.count('(')
+        close_parens = url.count(')')
+        # If more closing parens, trim from the end
+        while close_parens > open_parens and url.endswith(')'):
+            url = url[:-1]
+            close_parens -= 1
+        url = url.rstrip('.,;:!?')
+        if url:
+            urls.add(url)
 
     return urls
 
