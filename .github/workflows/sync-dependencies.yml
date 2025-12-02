@@ -185,7 +185,7 @@ jobs:
             if [ -f "$pkg_dir/pyproject.toml" ]; then
               pkg_name=$(basename "$pkg_dir")
               current_version=$(grep -E '^\s*version\s*=' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
-              SUBPACKAGE_INFO="$SUBPACKAGE_INFO- **$pkg_name**: \`$current_version\`\n"
+              SUBPACKAGE_INFO="$SUBPACKAGE_INFO- **$pkg_name**: \\\`$current_version\\\`\n"
             fi
           done
           
@@ -194,7 +194,7 @@ jobs:
             SUMMARY="## 🔄 Package Dependencies Synchronized
 
 ### Main Package Version
-- **comfyui-workflow-templates**: \`$MAIN_VERSION\`
+- **comfyui-workflow-templates**: \\\`$MAIN_VERSION\\\`
 
 ### Current Subpackage Versions
 $SUBPACKAGE_INFO
@@ -203,16 +203,16 @@ $SUBPACKAGE_INFO
 Dependencies have been **automatically updated** to match current subpackage versions.
 
 ### Changes Made
-\`\`\`diff
+\\\`\\\`\\\`diff
 $(cat dependency_changes.diff)
-\`\`\`
+\\\`\\\`\\\`
 
 The main package dependencies are now in sync with the latest subpackage versions."
           else
             SUMMARY="## ✅ Package Dependencies Already in Sync
 
 ### Main Package Version
-- **comfyui-workflow-templates**: \`$MAIN_VERSION\`
+- **comfyui-workflow-templates**: \\\`$MAIN_VERSION\\\`
 
 ### Current Subpackage Versions
 $SUBPACKAGE_INFO
