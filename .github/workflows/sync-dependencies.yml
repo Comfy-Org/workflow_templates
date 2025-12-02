@@ -179,51 +179,65 @@ jobs:
         run: |
           MAIN_VERSION="${{ needs.check-main-version-change.outputs.new-version }}"
           
-          # Read current subpackage versions
-          SUBPACKAGE_INFO=""
+          # Create summary file first
+          echo "## 🔄 Package Dependencies Synchronized" > /tmp/summary_updated.md
+          echo "" >> /tmp/summary_updated.md
+          echo "### Main Package Version" >> /tmp/summary_updated.md
+          echo "- **comfyui-workflow-templates**: \`$MAIN_VERSION\`" >> /tmp/summary_updated.md
+          echo "" >> /tmp/summary_updated.md
+          echo "### Current Subpackage Versions" >> /tmp/summary_updated.md
+          
+          # Add subpackage versions
           for pkg_dir in packages/*/; do
             if [ -f "$pkg_dir/pyproject.toml" ]; then
               pkg_name=$(basename "$pkg_dir")
               current_version=$(grep -E '^\s*version\s*=' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
-              SUBPACKAGE_INFO="$SUBPACKAGE_INFO- **$pkg_name**: \`$current_version\`\n"
+              echo "- **$pkg_name**: \`$current_version\`" >> /tmp/summary_updated.md
             fi
           done
           
-          # Create summary
+          echo "" >> /tmp/summary_updated.md
+          echo "### ✅ Status" >> /tmp/summary_updated.md
+          echo "Dependencies have been **automatically updated** to match current subpackage versions." >> /tmp/summary_updated.md
+          echo "" >> /tmp/summary_updated.md
+          echo "### Changes Made" >> /tmp/summary_updated.md
+          echo "\`\`\`diff" >> /tmp/summary_updated.md
+          cat dependency_changes.diff >> /tmp/summary_updated.md
+          echo "\`\`\`" >> /tmp/summary_updated.md
+          echo "" >> /tmp/summary_updated.md
+          echo "The main package dependencies are now in sync with the latest subpackage versions." >> /tmp/summary_updated.md
+          
+          # Create already in sync summary
+          echo "## ✅ Package Dependencies Already in Sync" > /tmp/summary_synced.md
+          echo "" >> /tmp/summary_synced.md
+          echo "### Main Package Version" >> /tmp/summary_synced.md
+          echo "- **comfyui-workflow-templates**: \`$MAIN_VERSION\`" >> /tmp/summary_synced.md
+          echo "" >> /tmp/summary_synced.md
+          echo "### Current Subpackage Versions" >> /tmp/summary_synced.md
+          
+          # Add subpackage versions
+          for pkg_dir in packages/*/; do
+            if [ -f "$pkg_dir/pyproject.toml" ]; then
+              pkg_name=$(basename "$pkg_dir")
+              current_version=$(grep -E '^\s*version\s*=' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
+              echo "- **$pkg_name**: \`$current_version\`" >> /tmp/summary_synced.md
+            fi
+          done
+          
+          echo "" >> /tmp/summary_synced.md
+          echo "### Status" >> /tmp/summary_synced.md
+          echo "No dependency updates were needed. All dependencies are already synchronized." >> /tmp/summary_synced.md
+          
+          # Choose the appropriate summary
           if [ "${{ steps.check-changes.outputs.dependencies-updated }}" = "true" ]; then
-            SUMMARY="## 🔄 Package Dependencies Synchronized
-
-### Main Package Version
-- **comfyui-workflow-templates**: \`$MAIN_VERSION\`
-
-### Current Subpackage Versions
-$SUBPACKAGE_INFO
-
-### ✅ Status
-Dependencies have been **automatically updated** to match current subpackage versions.
-
-### Changes Made
-\`\`\`diff
-$(cat dependency_changes.diff)
-\`\`\`
-
-The main package dependencies are now in sync with the latest subpackage versions."
+            SUMMARY_FILE="/tmp/summary_updated.md"
           else
-            SUMMARY="## ✅ Package Dependencies Already in Sync
-
-### Main Package Version
-- **comfyui-workflow-templates**: \`$MAIN_VERSION\`
-
-### Current Subpackage Versions
-$SUBPACKAGE_INFO
-
-### Status
-No dependency updates were needed. All dependencies are already synchronized."
+            SUMMARY_FILE="/tmp/summary_synced.md"
           fi
           
-          # Save summary to output (escape newlines for GitHub Actions)
+          # Save summary to output
           echo "summary<<EOF" >> $GITHUB_OUTPUT
-          echo "$SUMMARY" >> $GITHUB_OUTPUT
+          cat "$SUMMARY_FILE" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Commit dependency updates
@@ -270,38 +284,25 @@ No dependency updates were needed. All dependencies are already synchronized."
             let comment;
             
             if (mainVersionChanged === 'false') {
-              comment = `## 🔍 Dependency Sync Check
-
-**Status**: No action needed
-**Reason**: Main package version was not changed in this PR.
-
-The dependency sync workflow only runs when the main package version (in \`pyproject.toml\`) is updated.`;
+              comment = '## 🔍 Dependency Sync Check\n\n' +
+                        '**Status**: No action needed\n' +
+                        '**Reason**: Main package version was not changed in this PR.\n\n' +
+                        'The dependency sync workflow only runs when the main package version (in `pyproject.toml`) is updated.';
             } else if (syncJobStatus === 'success') {
               const summary = `${{ needs.sync-dependencies.outputs.sync-summary }}`;
-              comment = summary + `
-
----
-*🤖 This comment was automatically generated by the Dependency Sync workflow*`;
+              comment = summary + '\n\n---\n*🤖 This comment was automatically generated by the Dependency Sync workflow*';
             } else if (syncJobStatus === 'failure') {
-              comment = `## ❌ Dependency Sync Failed
-
-**Status**: Failed to synchronize dependencies
-**Main Version**: \`${{ needs.check-main-version-change.outputs.new-version }}\`
-
-The dependency synchronization process encountered an error. Please check the workflow logs for details.
-
----
-*🤖 This comment was automatically generated by the Dependency Sync workflow*`;
+              comment = '## ❌ Dependency Sync Failed\n\n' +
+                        '**Status**: Failed to synchronize dependencies\n' +
+                        '**Main Version**: `${{ needs.check-main-version-change.outputs.new-version }}`\n\n' +
+                        'The dependency synchronization process encountered an error. Please check the workflow logs for details.\n\n' +
+                        '---\n*🤖 This comment was automatically generated by the Dependency Sync workflow*';
             } else {
-              comment = `## ⏭️ Dependency Sync Skipped
-
-**Status**: Sync job was skipped
-**Main Version**: \`${{ needs.check-main-version-change.outputs.new-version }}\`
-
-The dependency sync workflow was triggered but the sync job did not run. This may occur if there were issues with the workflow conditions.
-
----
-*🤖 This comment was automatically generated by the Dependency Sync workflow*`;
+              comment = '## ⏭️ Dependency Sync Skipped\n\n' +
+                        '**Status**: Sync job was skipped\n' +
+                        '**Main Version**: `${{ needs.check-main-version-change.outputs.new-version }}`\n\n' +
+                        'The dependency sync workflow was triggered but the sync job did not run. This may occur if there were issues with the workflow conditions.\n\n' +
+                        '---\n*🤖 This comment was automatically generated by the Dependency Sync workflow*';
             }
 
             // Post comment
