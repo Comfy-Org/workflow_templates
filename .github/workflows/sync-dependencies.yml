@@ -5,10 +5,18 @@ name: Sync Package Dependencies
 # match the latest subpackage versions (post auto-bump).
 
 on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'pyproject.toml'
   push:
     branches: [main]
     paths:
       - 'pyproject.toml'
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   check-main-version-change:
@@ -22,30 +30,43 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Get PR number from merge commit
+      - name: Get PR number
         id: get-pr
         run: |
-          # Try to extract PR number from commit message (for merge commits)
-          PR_NUMBER=$(git log --format=%B -n 1 | grep -o '#[0-9]\+' | head -1 | sed 's/#//')
-          if [ -n "$PR_NUMBER" ]; then
-            echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
-            echo "Found PR number: #$PR_NUMBER"
+          # For PR events, use the PR number directly; for push events, try to extract from commit message
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "pr-number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "Found PR number from event: #${{ github.event.pull_request.number }}"
           else
-            echo "pr-number=" >> $GITHUB_OUTPUT
-            echo "No PR number found in commit message"
+            # Try to extract PR number from commit message (for merge commits)
+            PR_NUMBER=$(git log --format=%B -n 1 | grep -o '#[0-9]\+' | head -1 | sed 's/#//')
+            if [ -n "$PR_NUMBER" ]; then
+              echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
+              echo "Found PR number from commit: #$PR_NUMBER"
+            else
+              echo "pr-number=" >> $GITHUB_OUTPUT
+              echo "No PR number found in commit message"
+            fi
           fi
 
       - name: Check if main package version changed
         id: check
         run: |
-          # Get the latest commits to ensure we're reading post auto-bump state
-          git pull origin main || true
-          
-          OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
-          NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
-          
-          echo "Previous main version: $OLD_VERSION"
-          echo "Current main version: $NEW_VERSION"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PR events, compare with base branch
+            git fetch origin ${{ github.base_ref }}
+            OLD_VERSION=$(git show origin/${{ github.base_ref }}:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
+            NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+            echo "Base branch (${{ github.base_ref }}) version: $OLD_VERSION"
+            echo "PR branch version: $NEW_VERSION"
+          else
+            # For push events, compare with previous commit
+            git pull origin main || true
+            OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
+            NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+            echo "Previous main version: $OLD_VERSION"
+            echo "Current main version: $NEW_VERSION"
+          fi
           
           if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -253,7 +274,11 @@ jobs:
 
           Co-Authored-By: Claude <noreply@anthropic.com>"
           
-          git push origin main
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git push origin HEAD:${{ github.head_ref }}
+          else
+            git push origin main
+          fi
           
           echo "✅ Dependencies synchronized and committed"
 
