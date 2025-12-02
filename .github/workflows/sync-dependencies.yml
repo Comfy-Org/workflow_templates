@@ -91,6 +91,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          ref: ${{ github.head_ref || github.ref }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -275,8 +277,12 @@ jobs:
           Co-Authored-By: Claude <noreply@anthropic.com>"
           
           if [ "${{ github.event_name }}" = "pull_request" ]; then
+            # For PR context, pull latest changes from the head branch and then push
+            git pull origin ${{ github.head_ref }} --rebase || git pull origin ${{ github.head_ref }}
             git push origin HEAD:${{ github.head_ref }}
           else
+            # For main branch push context
+            git pull origin main --rebase || git pull origin main
             git push origin main
           fi
           
