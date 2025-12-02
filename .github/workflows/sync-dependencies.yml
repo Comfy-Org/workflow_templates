@@ -185,7 +185,7 @@ jobs:
             if [ -f "$pkg_dir/pyproject.toml" ]; then
               pkg_name=$(basename "$pkg_dir")
               current_version=$(grep -E '^\s*version\s*=' "$pkg_dir/pyproject.toml" | cut -d'"' -f2)
-              SUBPACKAGE_INFO="$SUBPACKAGE_INFO- **$pkg_name**: \\\`$current_version\\\`\n"
+              SUBPACKAGE_INFO="$SUBPACKAGE_INFO- **$pkg_name**: \`$current_version\`\n"
             fi
           done
           
@@ -194,7 +194,7 @@ jobs:
             SUMMARY="## 🔄 Package Dependencies Synchronized
 
 ### Main Package Version
-- **comfyui-workflow-templates**: \\\`$MAIN_VERSION\\\`
+- **comfyui-workflow-templates**: \`$MAIN_VERSION\`
 
 ### Current Subpackage Versions
 $SUBPACKAGE_INFO
@@ -203,16 +203,16 @@ $SUBPACKAGE_INFO
 Dependencies have been **automatically updated** to match current subpackage versions.
 
 ### Changes Made
-\\\`\\\`\\\`diff
+\`\`\`diff
 $(cat dependency_changes.diff)
-\\\`\\\`\\\`
+\`\`\`
 
 The main package dependencies are now in sync with the latest subpackage versions."
           else
             SUMMARY="## ✅ Package Dependencies Already in Sync
 
 ### Main Package Version
-- **comfyui-workflow-templates**: \\\`$MAIN_VERSION\\\`
+- **comfyui-workflow-templates**: \`$MAIN_VERSION\`
 
 ### Current Subpackage Versions
 $SUBPACKAGE_INFO
@@ -275,7 +275,7 @@ No dependency updates were needed. All dependencies are already synchronized."
 **Status**: No action needed
 **Reason**: Main package version was not changed in this PR.
 
-The dependency sync workflow only runs when the main package version (in \\\`pyproject.toml\\\`) is updated.`;
+The dependency sync workflow only runs when the main package version (in \`pyproject.toml\`) is updated.`;
             } else if (syncJobStatus === 'success') {
               const summary = `${{ needs.sync-dependencies.outputs.sync-summary }}`;
               comment = summary + `
@@ -286,7 +286,7 @@ The dependency sync workflow only runs when the main package version (in \\\`pyp
               comment = `## ❌ Dependency Sync Failed
 
 **Status**: Failed to synchronize dependencies
-**Main Version**: \\\`${{ needs.check-main-version-change.outputs.new-version }}\\\`
+**Main Version**: \`${{ needs.check-main-version-change.outputs.new-version }}\`
 
 The dependency synchronization process encountered an error. Please check the workflow logs for details.
 
@@ -296,7 +296,7 @@ The dependency synchronization process encountered an error. Please check the wo
               comment = `## ⏭️ Dependency Sync Skipped
 
 **Status**: Sync job was skipped
-**Main Version**: \\\`${{ needs.check-main-version-change.outputs.new-version }}\\\`
+**Main Version**: \`${{ needs.check-main-version-change.outputs.new-version }}\`
 
 The dependency sync workflow was triggered but the sync job did not run. This may occur if there were issues with the workflow conditions.
 
