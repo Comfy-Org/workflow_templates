@@ -9,10 +9,6 @@ on:
     types: [opened, synchronize]
     paths:
       - 'pyproject.toml'
-  push:
-    branches: [main]
-    paths:
-      - 'pyproject.toml'
 
 permissions:
   contents: write
@@ -33,40 +29,18 @@ jobs:
       - name: Get PR number
         id: get-pr
         run: |
-          # For PR events, use the PR number directly; for push events, try to extract from commit message
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            echo "pr-number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-            echo "Found PR number from event: #${{ github.event.pull_request.number }}"
-          else
-            # Try to extract PR number from commit message (for merge commits)
-            PR_NUMBER=$(git log --format=%B -n 1 | grep -o '#[0-9]\+' | head -1 | sed 's/#//')
-            if [ -n "$PR_NUMBER" ]; then
-              echo "pr-number=$PR_NUMBER" >> $GITHUB_OUTPUT
-              echo "Found PR number from commit: #$PR_NUMBER"
-            else
-              echo "pr-number=" >> $GITHUB_OUTPUT
-              echo "No PR number found in commit message"
-            fi
-          fi
+          echo "pr-number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "Found PR number from event: #${{ github.event.pull_request.number }}"
 
       - name: Check if main package version changed
         id: check
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # For PR events, compare with base branch
-            git fetch origin ${{ github.base_ref }}
-            OLD_VERSION=$(git show origin/${{ github.base_ref }}:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
-            NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
-            echo "Base branch (${{ github.base_ref }}) version: $OLD_VERSION"
-            echo "PR branch version: $NEW_VERSION"
-          else
-            # For push events, compare with previous commit
-            git pull origin main || true
-            OLD_VERSION=$(git show HEAD~1:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
-            NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
-            echo "Previous main version: $OLD_VERSION"
-            echo "Current main version: $NEW_VERSION"
-          fi
+          # Compare PR branch with base branch
+          git fetch origin ${{ github.base_ref }}
+          OLD_VERSION=$(git show origin/${{ github.base_ref }}:pyproject.toml | grep -E '^\s*version\s*=' | cut -d'"' -f2)
+          NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | cut -d'"' -f2)
+          echo "Base branch (${{ github.base_ref }}) version: $OLD_VERSION"
+          echo "PR branch version: $NEW_VERSION"
           
           if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -74,6 +48,7 @@ jobs:
             echo "✅ Main package version changed from $OLD_VERSION to $NEW_VERSION"
           else
             echo "changed=false" >> $GITHUB_OUTPUT
+            echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
             echo "ℹ️ Main package version unchanged ($NEW_VERSION)"
           fi
 
@@ -276,15 +251,9 @@ jobs:
 
           Co-Authored-By: Claude <noreply@anthropic.com>"
           
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            # For PR context, pull latest changes from the head branch and then push
-            git pull origin ${{ github.head_ref }} --rebase || git pull origin ${{ github.head_ref }}
-            git push origin HEAD:${{ github.head_ref }}
-          else
-            # For main branch push context
-            git pull origin main --rebase || git pull origin main
-            git push origin main
-          fi
+          # Pull latest changes from the PR head branch and then push
+          git pull origin ${{ github.head_ref }} --rebase || git pull origin ${{ github.head_ref }}
+          git push origin HEAD:${{ github.head_ref }}
           
           echo "✅ Dependencies synchronized and committed"
 
@@ -296,52 +265,3 @@ jobs:
           echo "Dependencies updated: ${{ steps.check-changes.outputs.dependencies-updated }}"
           echo "This workflow ensures all dependencies are in sync when main version changes."
 
-  comment-on-pr:
-    needs: [check-main-version-change, sync-dependencies]
-    if: always() && needs.check-main-version-change.outputs.pr-number != ''
-    runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-    steps:
-      - name: Comment on PR with sync status
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const prNumber = ${{ needs.check-main-version-change.outputs.pr-number }};
-            const mainVersionChanged = '${{ needs.check-main-version-change.outputs.main-version-changed }}';
-            const syncJobStatus = '${{ needs.sync-dependencies.result }}';
-            const dependenciesUpdated = '${{ needs.sync-dependencies.outputs.dependencies-updated }}';
-            
-            let comment;
-            
-            if (mainVersionChanged === 'false') {
-              comment = '## 🔍 Dependency Sync Check\n\n' +
-                        '**Status**: No action needed\n' +
-                        '**Reason**: Main package version was not changed in this PR.\n\n' +
-                        'The dependency sync workflow only runs when the main package version (in `pyproject.toml`) is updated.';
-            } else if (syncJobStatus === 'success') {
-              const summary = `${{ needs.sync-dependencies.outputs.sync-summary }}`;
-              comment = summary + '\n\n---\n*🤖 This comment was automatically generated by the Dependency Sync workflow*';
-            } else if (syncJobStatus === 'failure') {
-              comment = '## ❌ Dependency Sync Failed\n\n' +
-                        '**Status**: Failed to synchronize dependencies\n' +
-                        '**Main Version**: `${{ needs.check-main-version-change.outputs.new-version }}`\n\n' +
-                        'The dependency synchronization process encountered an error. Please check the workflow logs for details.\n\n' +
-                        '---\n*🤖 This comment was automatically generated by the Dependency Sync workflow*';
-            } else {
-              comment = '## ⏭️ Dependency Sync Skipped\n\n' +
-                        '**Status**: Sync job was skipped\n' +
-                        '**Main Version**: `${{ needs.check-main-version-change.outputs.new-version }}`\n\n' +
-                        'The dependency sync workflow was triggered but the sync job did not run. This may occur if there were issues with the workflow conditions.\n\n' +
-                        '---\n*🤖 This comment was automatically generated by the Dependency Sync workflow*';
-            }
-
-            // Post comment
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: prNumber,
-              body: comment
-            });
-            
-            console.log(`Posted comment to PR #${prNumber}`);
