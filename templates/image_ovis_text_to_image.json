@@ -1,58 +1,9 @@
 {
   "id": "9ae6082b-c7f4-433c-9971-7a8f65a3ea65",
   "revision": 0,
-  "last_node_id": 55,
-  "last_link_id": 61,
+  "last_node_id": 53,
+  "last_link_id": 51,
   "nodes": [
-    {
-      "id": 39,
-      "type": "CLIPLoader",
-      "pos": [
-        130.2638101844517,
-        435.2545050421948
-      ],
-      "size": [
-        270,
-        106
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "CLIP",
-          "type": "CLIP",
-          "links": [
-            44
-          ]
-        }
-      ],
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.3.73",
-        "Node name for S&R": "CLIPLoader",
-        "models": [
-          {
-            "name": "qwen_3_4b.safetensors",
-            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
-            "directory": "text_encoders"
-          }
-        ]
-      },
-      "widgets_values": [
-        "qwen_3_4b.safetensors",
-        "lumina2",
-        "default"
-      ]
-    },
     {
       "id": 40,
       "type": "VAELoader",
@@ -65,7 +16,7 @@
         58
       ],
       "flags": {},
-      "order": 1,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -101,32 +52,38 @@
       ]
     },
     {
-      "id": 42,
-      "type": "ConditioningZeroOut",
+      "id": 43,
+      "type": "VAEDecode",
       "pos": [
-        660.2638101844517,
-        725.2545050421948
+        1240,
+        170
       ],
       "size": [
-        197.712890625,
-        26
+        210,
+        46
       ],
       "flags": {},
-      "order": 7,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 36
+          "name": "samples",
+          "type": "LATENT",
+          "link": 38
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 39
         }
       ],
       "outputs": [
         {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
           "links": [
-            42
+            45
           ]
         }
       ],
@@ -139,8 +96,8 @@
         "secondTabOffset": 80,
         "secondTabWidth": 65,
         "cnr_id": "comfy-core",
-        "ver": "0.3.73",
-        "Node name for S&R": "ConditioningZeroOut"
+        "ver": "0.3.64",
+        "Node name for S&R": "VAEDecode"
       },
       "widgets_values": []
     },
@@ -156,7 +113,7 @@
         82
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -164,7 +121,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            54
+            37
           ]
         }
       ],
@@ -181,23 +138,141 @@
         "Node name for S&R": "UNETLoader",
         "models": [
           {
-            "name": "z_image_turbo_bf16.safetensors",
-            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "name": "ovis_image_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Ovis-Image/resolve/main/split_files/diffusion_models/ovis_image_bf16.safetensors",
             "directory": "diffusion_models"
           }
         ]
       },
       "widgets_values": [
-        "z_image_turbo_bf16.safetensors",
+        "ovis_image_bf16.safetensors",
         "default"
+      ]
+    },
+    {
+      "id": 39,
+      "type": "CLIPLoader",
+      "pos": [
+        130.2638101844517,
+        435.2545050421948
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            44,
+            47
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.73",
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "ovis_2.5.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/Ovis-Image/resolve/main/split_files/text_encoders/ovis_2.5.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "ovis_2.5.safetensors",
+        "ovis",
+        "default"
+      ]
+    },
+    {
+      "id": 44,
+      "type": "KSampler",
+      "pos": [
+        900.2638101844517,
+        375.2545050421948
+      ],
+      "size": [
+        315,
+        474
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 40
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 41
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 48
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        775709856082329,
+        "randomize",
+        20,
+        5,
+        "euler",
+        "simple",
+        1
       ]
     },
     {
       "id": 41,
       "type": "EmptySD3LatentImage",
       "pos": [
-        130.2638101844517,
-        735.2545050421948
+        130,
+        750
       ],
       "size": [
         260,
@@ -247,7 +322,7 @@
         660
       ],
       "flags": {},
-      "order": 11,
+      "order": 10,
       "mode": 0,
       "inputs": [
         {
@@ -270,52 +345,36 @@
         "Node name for S&R": "SaveImage"
       },
       "widgets_values": [
-        "z-image"
+        "ovis_2.5"
       ]
     },
     {
-      "id": 44,
-      "type": "KSampler",
+      "id": 49,
+      "type": "CLIPTextEncode",
       "pos": [
-        900.2638101844517,
-        375.2545050421948
+        448.46909055213695,
+        580.7916314551437
       ],
       "size": [
-        315,
-        474
+        408.2119158862329,
+        175.9928736562805
       ],
       "flags": {},
-      "order": 9,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
-          "name": "model",
-          "type": "MODEL",
-          "link": 40
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 41
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 42
-        },
-        {
-          "name": "latent_image",
-          "type": "LATENT",
-          "link": 43
+          "name": "clip",
+          "type": "CLIP",
+          "link": 47
         }
       ],
       "outputs": [
         {
-          "name": "LATENT",
-          "type": "LATENT",
-          "slot_index": 0,
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
           "links": [
-            38
+            48
           ]
         }
       ],
@@ -328,38 +387,34 @@
         "secondTabOffset": 80,
         "secondTabWidth": 65,
         "cnr_id": "comfy-core",
-        "ver": "0.3.64",
-        "Node name for S&R": "KSampler"
+        "ver": "0.3.73",
+        "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        481119356637814,
-        "randomize",
-        9,
-        1,
-        "res_multistep",
-        "simple",
-        1
-      ]
+        "blurry, worst quality, low quality, jpeg artifacts, signature, watermark, username, error, deformed hands, bad anatomy, extra limbs, poorly drawn hands, poorly drawn face, mutation, deformed, extra eyes, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, cross-eyed, bad proportions, missing arms, missing legs, extra digit, fewer digits, cropped"
+      ],
+      "color": "#322",
+      "bgcolor": "#533"
     },
     {
       "id": 47,
       "type": "ModelSamplingAuraFlow",
       "pos": [
-        900.2638101844517,
-        265.2545050421948
+        900,
+        270
       ],
       "size": [
         310,
         60
       ],
       "flags": {},
-      "order": 8,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
           "name": "model",
           "type": "MODEL",
-          "link": 60
+          "link": 37
         }
       ],
       "outputs": [
@@ -389,68 +444,18 @@
       ]
     },
     {
-      "id": 43,
-      "type": "VAEDecode",
-      "pos": [
-        1240,
-        170
-      ],
-      "size": [
-        210,
-        46
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "samples",
-          "type": "LATENT",
-          "link": 38
-        },
-        {
-          "name": "vae",
-          "type": "VAE",
-          "link": 39
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "slot_index": 0,
-          "links": [
-            45
-          ]
-        }
-      ],
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.3.64",
-        "Node name for S&R": "VAEDecode"
-      },
-      "widgets_values": []
-    },
-    {
       "id": 45,
       "type": "CLIPTextEncode",
       "pos": [
-        450.2638101844517,
-        305.2545050421948
+        443.0220695236953,
+        320.45322000921504
       ],
       "size": [
-        410,
-        370
+        418.94042056883495,
+        215.3307241591545
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -464,7 +469,6 @@
           "name": "CONDITIONING",
           "type": "CONDITIONING",
           "links": [
-            36,
             41
           ]
         }
@@ -482,87 +486,30 @@
         "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        "Latina female with thick wavy hair, harbor boats and pastel houses behind. Breezy seaside light, warm tones, cinematic close-up."
+        "Child lying on bed with balloons, streamers, and plush toys, surreal dreamlike scene. Close-up, centered on the child and surrounding objects. Soft, diffused lighting."
       ],
       "color": "#232",
       "bgcolor": "#353"
     },
     {
-      "id": 48,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        460,
-        140
-      ],
-      "size": [
-        370,
-        82
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 54
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            60
-          ]
-        }
-      ],
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.3.75",
-        "Node name for S&R": "LoraLoaderModelOnly",
-        "models": [
-          {
-            "name": "pixel_art_style_z_image_turbo.safetensors",
-            "url": "https://huggingface.co/tarn59/pixel_art_style_lora_z_image_turbo/resolve/main/pixel_art_style_z_image_turbo.safetensors",
-            "directory": "loras"
-          }
-        ]
-      },
-      "widgets_values": [
-        "pixel_art_style_z_image_turbo.safetensors",
-        1
-      ]
-    },
-    {
-      "id": 35,
+      "id": 53,
       "type": "MarkdownNote",
       "pos": [
-        -390,
+        -420,
         270
       ],
       "size": [
-        490,
-        400
+        530,
+        490
       ],
-      "flags": {
-        "collapsed": false
-      },
+      "flags": {},
       "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Model link",
       "properties": {},
       "widgets_values": [
-        "## Report workflow issue\n\nIf you found any issues when running this workflow, [report template issue here](https://github.com/Comfy-Org/workflow_templates/issues)\n\n\n## Model links\n\n**text_encoders**\n\n- [qwen_3_4b.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors)\n\n**loras**\n\n- [pixel_art_style_z_image_turbo.safetensors](https://huggingface.co/tarn59/pixel_art_style_lora_z_image_turbo/resolve/main/pixel_art_style_z_image_turbo.safetensors)\n\n**diffusion_models**\n\n- [z_image_turbo_bf16.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors)\n\n**vae**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors)\n\n\nModel Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 text_encoders/\n│   │      └── qwen_3_4b.safetensors\n│   ├── 📂 loras/\n│   │      └── pixel_art_style_z_image_turbo.safetensors\n│   ├── 📂 diffusion_models/\n│   │      └── z_image_turbo_bf16.safetensors\n│   └── 📂 vae/\n│          └── ae.safetensors\n```\n"
+        "\n## Report issue\n\nIf you found any issues when running this workflow, [report template issue here](https://github.com/Comfy-Org/workflow_templates/issues)\n\n## Model links\n\n[Comfy-Org/Ovis-Image](https://huggingface.co/Comfy-Org/Ovis-Image)\n\n**text_encoders**\n\n- [ovis_2.5.safetensors](https://huggingface.co/Comfy-Org/Ovis-Image/resolve/main/split_files/text_encoders/ovis_2.5.safetensors)\n\n**diffusion_models**\n\n- [ovis_image_bf16.safetensors](https://huggingface.co/Comfy-Org/Ovis-Image/resolve/main/split_files/diffusion_models/ovis_image_bf16.safetensors)\n\n**vae**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors)\n\n\nModel Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 text_encoders/\n│   │      └── ovis_2.5.safetensors\n│   ├── 📂 diffusion_models/\n│   │      └── ovis_image_bf16.safetensors\n│   └── 📂 vae/\n│          └── ae.safetensors\n```\n\n"
       ],
       "color": "#432",
       "bgcolor": "#653"
@@ -570,12 +517,12 @@
   ],
   "links": [
     [
-      36,
-      45,
+      37,
+      46,
       0,
-      42,
+      47,
       0,
-      "CONDITIONING"
+      "MODEL"
     ],
     [
       38,
@@ -610,14 +557,6 @@
       "CONDITIONING"
     ],
     [
-      42,
-      42,
-      0,
-      44,
-      2,
-      "CONDITIONING"
-    ],
-    [
       43,
       41,
       0,
@@ -642,20 +581,20 @@
       "IMAGE"
     ],
     [
-      54,
-      46,
+      47,
+      39,
       0,
-      48,
+      49,
       0,
-      "MODEL"
+      "CLIP"
     ],
     [
-      60,
       48,
+      49,
       0,
-      47,
-      0,
-      "MODEL"
+      44,
+      2,
+      "CONDITIONING"
     ]
   ],
   "groups": [
@@ -697,31 +636,18 @@
       "color": "#3f789e",
       "font_size": 24,
       "flags": {}
-    },
-    {
-      "id": 5,
-      "title": "Ctrl-B to enable LoRA input",
-      "bounding": [
-        430,
-        70,
-        440,
-        160
-      ],
-      "color": "#3f789e",
-      "font_size": 24,
-      "flags": {}
     }
   ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4599010788543567,
+      "scale": 0.9117391576817793,
       "offset": [
-        1666.2764967812222,
-        589.9486780052241
+        1073.6285492652614,
+        -1.498239380722083
       ]
     },
-    "frontendVersion": "1.32.9",
+    "frontendVersion": "1.33.10",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
