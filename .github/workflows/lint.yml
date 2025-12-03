@@ -4,11 +4,17 @@ on:
   push:
     branches: [main]
     paths:
-      - '.github/workflows/lint.yml'
+      - '.github/workflows/*.yml'
+      - '.github/workflows/*.yaml'
+      - '*.yml'
+      - '*.yaml'
   pull_request:
     branches: [main]
     paths:
-      - '.github/workflows/lint.yml'
+      - '.github/workflows/*.yml'
+      - '.github/workflows/*.yaml'
+      - '*.yml'
+      - '*.yaml'
 
 jobs:
   yaml-lint:
@@ -17,13 +23,85 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: "20"
+          python-version: "3.x"
 
-      - name: Install YAML linter
-        run: npm install -g yaml-lint
+      - name: Install yamllint
+        run: pip install yamllint
 
-      - name: Lint YAML files
-        run: yamllint .github/workflows/*.{yml,yaml}
+      - name: Create yamllint config
+        run: |
+          cat > .yamllint.yml << 'EOF'
+          extends: default
+          rules:
+            line-length:
+              max: 120
+              level: warning
+            comments:
+              min-spaces-from-content: 1
+            braces:
+              max-spaces-inside: 1
+              max-spaces-inside-empty: 0
+            brackets:
+              max-spaces-inside: 1
+              max-spaces-inside-empty: 0
+            indentation:
+              spaces: 2
+          EOF
+
+      - name: Lint GitHub Actions workflows
+        run: |
+          echo "🔍 Linting GitHub Actions workflows..."
+          if ! yamllint .github/workflows/; then
+            echo "❌ YAML lint errors found in workflows"
+            echo "::error::YAML formatting issues in GitHub Actions workflows"
+            exit 1
+          fi
+          echo "✅ All workflow files passed YAML linting"
+
+      - name: Lint other YAML files
+        run: |
+          echo "🔍 Linting other YAML files..."
+          # Find all YAML files in repo (excluding node_modules, .git, etc.)
+          YAML_FILES=$(find . -name "*.yml" -o -name "*.yaml" | grep -v -E '(node_modules|\.git|\.venv|dist)' | grep -v '.yamllint.yml')
+          
+          if [ -z "$YAML_FILES" ]; then
+            echo "ℹ️ No additional YAML files found"
+            exit 0
+          fi
+          
+          echo "Found YAML files: $YAML_FILES"
+          
+          if ! echo "$YAML_FILES" | xargs yamllint; then
+            echo "❌ YAML lint errors found in project files"
+            echo "::error::YAML formatting issues in project files"
+            exit 1
+          fi
+          echo "✅ All project YAML files passed linting"
+
+      - name: Validate workflow syntax
+        run: |
+          echo "🔍 Validating GitHub Actions workflow syntax..."
+          # Use GitHub's own action syntax validation
+          for file in .github/workflows/*.yml .github/workflows/*.yaml; do
+            if [[ -f "$file" ]]; then
+              echo "Validating $file..."
+              # Basic syntax check - yamllint already validated YAML syntax
+              # Check for required fields
+              if ! grep -q "^name:" "$file"; then
+                echo "::error file=$file::Missing required 'name' field"
+                exit 1
+              fi
+              if ! grep -q "^on:" "$file"; then
+                echo "::error file=$file::Missing required 'on' field" 
+                exit 1
+              fi
+              if ! grep -q "^jobs:" "$file"; then
+                echo "::error file=$file::Missing required 'jobs' field"
+                exit 1
+              fi
+            fi
+          done
+          echo "✅ All workflows have required structure"
