@@ -93,26 +93,78 @@ jobs:
         run: |
           echo "=== Package Detection Logic ==="
 
-          # Primary logic: Check what files changed in this commit (from PR merge)
-          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
-          echo "Files changed in this commit:"
+          # Find the last successful publish by looking for the latest git tag
+          LAST_PUBLISH_TAG=$(git tag --sort=-version:refname | head -1)
+          if [ -z "$LAST_PUBLISH_TAG" ]; then
+            echo "⚠️ No previous publish tags found, using HEAD~10 as reference"
+            LAST_PUBLISH_REF="HEAD~10"
+          else
+            LAST_PUBLISH_REF="$LAST_PUBLISH_TAG"
+            echo "📋 Last publish was: $LAST_PUBLISH_TAG"
+          fi
+
+          # Check what files changed since last publish (not just current commit)
+          CHANGED_FILES=$(git diff --name-only "$LAST_PUBLISH_REF"..HEAD)
+          echo "Files changed since last publish ($LAST_PUBLISH_REF):"
           echo "$CHANGED_FILES"
 
           PACKAGES=""
 
-          # Check for package version changes (primary trigger)
-          echo -e "\n--- Checking for changed package versions ---"
+          # Check for package version changes since last publish
+          echo -e "\n--- Checking for changed package versions since last publish ---"
           for pkg in core media_api media_video media_image media_other; do
             if echo "$CHANGED_FILES" | grep -q "packages/$pkg/pyproject.toml"; then
-              PACKAGES="$PACKAGES $pkg"
-              echo "✓ Will publish $pkg (version file changed)"
+              # Verify the version actually changed by comparing versions
+              OLD_VERSION=""
+              NEW_VERSION=""
+              
+              # Get old version from last publish
+              if git show "$LAST_PUBLISH_REF:packages/$pkg/pyproject.toml" > /dev/null 2>&1; then
+                OLD_VERSION=$(git show "$LAST_PUBLISH_REF:packages/$pkg/pyproject.toml" | grep -E '^\s*version\s*=' | cut -d'"' -f2 || echo "0.0.0")
+              fi
+              
+              # Get current version
+              if [ -f "packages/$pkg/pyproject.toml" ]; then
+                NEW_VERSION=$(grep -E '^\s*version\s*=' "packages/$pkg/pyproject.toml" | cut -d'"' -f2 || echo "0.0.0")
+              fi
+              
+              if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+                PACKAGES="$PACKAGES $pkg"
+                echo "✓ Will publish $pkg (version changed: $OLD_VERSION → $NEW_VERSION)"
+              else
+                echo "  $pkg version unchanged ($NEW_VERSION), skipping"
+              fi
             fi
           done
 
-          # Always build meta if root version changed or if any subpackages changed
-          if echo "$CHANGED_FILES" | grep -q "pyproject.toml" || [ -n "$PACKAGES" ]; then
+          # Check if root meta package version changed
+          ROOT_VERSION_CHANGED=false
+          if echo "$CHANGED_FILES" | grep -q "^pyproject.toml$"; then
+            OLD_META_VERSION=""
+            NEW_META_VERSION=""
+            
+            # Get old meta version
+            if git show "$LAST_PUBLISH_REF:pyproject.toml" > /dev/null 2>&1; then
+              OLD_META_VERSION=$(git show "$LAST_PUBLISH_REF:pyproject.toml" | grep -E '^\s*version\s*=' | cut -d'"' -f2 || echo "0.0.0")
+            fi
+            
+            # Get current meta version
+            NEW_META_VERSION=$(grep -E '^\s*version\s*=' "pyproject.toml" | cut -d'"' -f2 || echo "0.0.0")
+            
+            if [ "$OLD_META_VERSION" != "$NEW_META_VERSION" ]; then
+              ROOT_VERSION_CHANGED=true
+              echo "✓ Meta package version changed: $OLD_META_VERSION → $NEW_META_VERSION"
+            fi
+          fi
+
+          # Always build meta if root version changed OR if any subpackages need publishing
+          if [ "$ROOT_VERSION_CHANGED" = "true" ] || [ -n "$PACKAGES" ]; then
             PACKAGES="$PACKAGES meta"
-            echo "✓ Will publish meta (root version changed or subpackages changed)"
+            if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+              echo "✓ Will publish meta (root version changed)"
+            else
+              echo "✓ Will publish meta (subpackages changed, need meta dependency update)"
+            fi
           fi
 
           # Recovery mode: Check for packages out-of-sync with PyPI

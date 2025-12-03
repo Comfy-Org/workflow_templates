@@ -200,11 +200,15 @@ def bump_versions(packages: Set[str]) -> None:
 def update_dependencies() -> None:
     """Update root meta package dependencies to match auto-bumped individual packages
     
-    NOTE: Only updates to versions that are already available on PyPI to prevent
-    broken dependencies during the publish window.
+    Updates dependencies immediately when subpackages are bumped, and also bumps
+    the meta package version to trigger publishing of all changes together.
     """
     changed_packages = get_changed_packages()
     non_meta_packages = changed_packages - {"meta"}
+    
+    if not non_meta_packages:
+        print("ℹ️ No subpackages changed, no dependency updates needed")
+        return
     
     version_re = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
     versions = {}
@@ -224,45 +228,34 @@ def update_dependencies() -> None:
             match = version_re.search(text)
             if match:
                 new_version = match.group(1)
+                versions[pkg] = new_version
                 pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
-                
-                # Check if this version is available on PyPI before using it
-                try:
-                    pypi_check = subprocess.run([
-                        "python3", "-c", 
-                        f"import urllib.request,json; "
-                        f"resp=urllib.request.urlopen('https://pypi.org/pypi/{pip_name}/json'); "
-                        f"data=json.load(resp); "
-                        f"versions=list(data['releases'].keys()); "
-                        f"exit(0 if '{new_version}' in versions else 1)"
-                    ], capture_output=True, timeout=10)
-                    
-                    if pypi_check.returncode == 0:
-                        versions[pkg] = new_version
-                        print(f"✅ {pip_name}=={new_version} confirmed available on PyPI")
-                    else:
-                        print(f"⚠️ {pip_name}=={new_version} not yet on PyPI - skipping meta update")
-                except:
-                    # On network/timeout errors, don't update to avoid breaking deps
-                    print(f"⚠️ Cannot verify {pip_name}=={new_version} on PyPI - skipping meta update")
-    
-    if not versions:
-        print("ℹ️ No PyPI-verified versions to update in meta package")
-        return
+                print(f"📦 Will update meta dependency: {pip_name}=={new_version}")
     
     # Update root pyproject.toml dependencies to match bumped package versions
     meta_path = "pyproject.toml"
     if Path(meta_path).exists():
         text = Path(meta_path).read_text()
         
+        # Update dependencies
         for pkg, version in versions.items():
             pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
             pattern = rf'("{re.escape(pip_name)})==([0-9.]+)(")'
             replacement = rf'\g<1>=={version}\g<3>'
             text = re.sub(pattern, replacement, text)
         
+        # Also bump the meta package version to trigger publishing
+        current_meta_version = get_current_version("meta")
+        new_meta_version = bump_version(current_meta_version)
+        
+        # Update meta version in pyproject.toml
+        meta_version_pattern = r'^(version\s*=\s*")([^"]+)(")'
+        meta_version_replacement = rf'\g<1>{new_meta_version}\g<3>'
+        text = re.sub(meta_version_pattern, meta_version_replacement, text, flags=re.MULTILINE)
+        
         Path(meta_path).write_text(text)
         print(f"✅ Updated meta package dependencies: {list(versions.keys())}")
+        print(f"✅ Bumped meta package version: {current_meta_version} → {new_meta_version}")
 
 if __name__ == "__main__":
     packages = get_changed_packages()
@@ -271,9 +264,14 @@ if __name__ == "__main__":
     non_meta_packages = packages - {"meta"}
     
     if non_meta_packages:
+        # First bump subpackage versions
         bump_versions(packages)
+        # Then update dependencies and bump meta version
         update_dependencies()
+        # Meta is now also changed due to dependency and version updates
+        packages.add("meta")
         print(f"Auto-bumped packages and updated dependencies: {sorted(non_meta_packages)}")
+        print(f"Meta package also updated to trigger coordinated publish")
         
     # Output all packages that need building (including meta if changed)  
     if packages:
