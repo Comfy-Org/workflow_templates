@@ -198,11 +198,7 @@ def bump_versions(packages: Set[str]) -> None:
                 path.write_text(updated)
 
 def update_dependencies() -> None:
-    """Update root meta package dependencies to match auto-bumped individual packages
-    
-    NOTE: Only updates to versions that are already available on PyPI to prevent
-    broken dependencies during the publish window.
-    """
+    """Update root meta package dependencies to match auto-bumped individual packages"""
     changed_packages = get_changed_packages()
     non_meta_packages = changed_packages - {"meta"}
     
@@ -223,31 +219,9 @@ def update_dependencies() -> None:
             text = Path(path).read_text()
             match = version_re.search(text)
             if match:
-                new_version = match.group(1)
-                pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
-                
-                # Check if this version is available on PyPI before using it
-                try:
-                    pypi_check = subprocess.run([
-                        "python3", "-c", 
-                        f"import urllib.request,json; "
-                        f"resp=urllib.request.urlopen('https://pypi.org/pypi/{pip_name}/json'); "
-                        f"data=json.load(resp); "
-                        f"versions=list(data['releases'].keys()); "
-                        f"exit(0 if '{new_version}' in versions else 1)"
-                    ], capture_output=True, timeout=10)
-                    
-                    if pypi_check.returncode == 0:
-                        versions[pkg] = new_version
-                        print(f"✅ {pip_name}=={new_version} confirmed available on PyPI")
-                    else:
-                        print(f"⚠️ {pip_name}=={new_version} not yet on PyPI - skipping meta update")
-                except:
-                    # On network/timeout errors, don't update to avoid breaking deps
-                    print(f"⚠️ Cannot verify {pip_name}=={new_version} on PyPI - skipping meta update")
+                versions[pkg] = match.group(1)
     
     if not versions:
-        print("ℹ️ No PyPI-verified versions to update in meta package")
         return
     
     # Update root pyproject.toml dependencies to match bumped package versions
@@ -262,7 +236,6 @@ def update_dependencies() -> None:
             text = re.sub(pattern, replacement, text)
         
         Path(meta_path).write_text(text)
-        print(f"✅ Updated meta package dependencies: {list(versions.keys())}")
 
 if __name__ == "__main__":
     packages = get_changed_packages()
