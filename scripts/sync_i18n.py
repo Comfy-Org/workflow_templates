@@ -79,6 +79,8 @@ class TemplateSyncer:
         self.new_tags = set()  # Track new tags discovered during sync
         self.used_tags = set()  # Track tags that are actually used in templates
         self.used_categories = set()  # Track categories that are actually used
+        self.new_category_titles = set()  # Track new category titles discovered during sync
+        self.new_category_fields = set()  # Track new category field values (like "MODELS", "GENERATION TYPE") discovered during sync
         self.translation_stats = {
             'templates_scanned': 0,
             'untranslated_found': 0,
@@ -189,7 +191,7 @@ class TemplateSyncer:
         return [self.translate_tag(tag, target_lang) for tag in tags]
     
     def translate_category(self, category: str, target_lang: str) -> str:
-        """Translate a category to target language using i18n data"""
+        """Translate a category field (like 'MODELS', 'GENERATION TYPE') to target language using i18n data"""
         self.used_categories.add(category)
         
         categories_data = self.i18n_data.get("categories", {})
@@ -198,8 +200,60 @@ class TemplateSyncer:
             if target_lang in lang_mappings:
                 return lang_mappings[target_lang]
         
-        # Category not found in mappings - return English
+        # Category not found in mappings - track it as new
+        if category not in categories_data:
+            self.new_category_fields.add(category)
+            self.logger.warning(f"  ⚠️  New category field discovered: '{category}' (using English temporarily)")
+            
+            # Add to mappings with English as default for all languages
+            self.i18n_data["categories"][category] = {
+                lang: category for lang in self.language_files.keys()
+            }
+        
+        # Return English as fallback
         return category
+    
+    def get_category_title_translation(self, category_title: str, target_lang: str) -> Optional[str]:
+        """
+        Get translation for a category title from i18n data
+        Returns translation if available, None otherwise
+        Similar to get_template_translation but for category titles
+        """
+        categories_data = self.i18n_data.get("categories", {})
+        
+        if category_title in categories_data:
+            lang_mappings = categories_data[category_title]
+            if target_lang in lang_mappings:
+                translation = lang_mappings[target_lang]
+                if translation and translation != category_title:
+                    return translation
+        
+        return None
+    
+    def translate_category_title(self, category_title: str, target_lang: str) -> str:
+        """
+        Translate a category title (like 'Image', 'Use cases') to target language using i18n data
+        Similar to translate_tag but for category titles
+        """
+        categories_data = self.i18n_data.get("categories", {})
+        
+        if category_title in categories_data:
+            lang_mappings = categories_data[category_title]
+            if target_lang in lang_mappings:
+                return lang_mappings[target_lang]
+        
+        # Category title not found in mappings - track it as new
+        if category_title not in categories_data:
+            self.new_category_titles.add(category_title)
+            self.logger.warning(f"  ⚠️  New category title discovered: '{category_title}' (using English temporarily)")
+            
+            # Add to mappings with English as default for all languages
+            self.i18n_data["categories"][category_title] = {
+                lang: category_title for lang in self.language_files.keys()
+            }
+        
+        # Return English as fallback
+        return category_title
     
     def get_template_translation(self, template_name: str, field: str, target_lang: str) -> Optional[str]:
         """
@@ -505,9 +559,14 @@ class TemplateSyncManager:
             if "isEssential" in master_category:
                 new_category["isEssential"] = master_category["isEssential"]
                 
-            # Copy category if it exists, translate it
+            # Handle category field - translate it using i18n data
             if "category" in master_category:
-                new_category["category"] = master_category["category"]
+                master_category_value = master_category["category"]
+                # Translate category field (like "MODELS", "GENERATION TYPE")
+                translated_category = self.syncer.translate_category(master_category_value, lang)
+                new_category["category"] = translated_category
+                if translated_category != master_category_value:
+                    self.syncer.logger.info(f"  🏷️  Translated category field: {master_category_value} → {translated_category}")
                 
             # Copy icon if it exists
             if "icon" in master_category:
@@ -518,16 +577,31 @@ class TemplateSyncManager:
                 existing_category = target_data[matching_idx]
                 used_target_indices.add(matching_idx)
                 
-                # Use translated title from i18n or existing
+                # Handle category title - sync from i18n.json if available (similar to template title/description)
                 if "title" in master_category:
                     master_title = master_category["title"]
-                    translated_title = self.syncer.translate_category(master_title, lang)
+                    current_title = existing_category.get("title")
                     
-                    # If no translation in i18n, use existing title from target
-                    if translated_title == master_title and "title" in existing_category:
-                        new_category["title"] = existing_category["title"]
+                    # Get translation from i18n data
+                    translation = self.syncer.get_category_title_translation(master_title, lang)
+                    
+                    # Only apply translation if it's actually translated (different from English)
+                    if translation and translation != master_title:
+                        # Apply real translation from i18n
+                        if current_title != translation:
+                            new_category["title"] = translation
+                            self.syncer.translation_stats['translations_applied'] += 1
+                            self.syncer.logger.info(f"  🌐 Applied category title translation from i18n: '{translation}'")
+                        else:
+                            new_category["title"] = current_title
+                    elif current_title is None:
+                        # Field doesn't exist in target, use English as fallback for new categories
+                        new_category["title"] = master_title
+                        self.syncer.logger.info(f"  ➕ Added missing category title (no translation): '{master_title}'")
                     else:
-                        new_category["title"] = translated_title
+                        # No real translation in i18n (or it's a placeholder), preserve existing value
+                        new_category["title"] = current_title
+                        self.syncer.logger.debug(f"  ⏭ Preserved existing category title: '{current_title}'")
                     
                     self.syncer.logger.info(f"  🔗 Matched category '{master_category['moduleName']}' with existing category (title: '{new_category['title']}')")
                 else:
@@ -537,7 +611,19 @@ class TemplateSyncManager:
                 # No matching category found, use translated title from i18n or master
                 if "title" in master_category:
                     master_title = master_category["title"]
-                    new_category["title"] = self.syncer.translate_category(master_title, lang)
+                    
+                    # Get translation from i18n data
+                    translation = self.syncer.get_category_title_translation(master_title, lang)
+                    
+                    # Only apply translation if it's actually translated (different from English)
+                    if translation and translation != master_title:
+                        new_category["title"] = translation
+                        self.syncer.translation_stats['translations_applied'] += 1
+                        self.syncer.logger.info(f"  🌐 Applied category title translation from i18n: '{translation}'")
+                    else:
+                        # Use translated title using translate_category_title (which handles new titles)
+                        new_category["title"] = self.syncer.translate_category_title(master_title, lang)
+                    
                     if matching_idx is None:
                         self.syncer.logger.info(f"  ➕ Added new category: '{master_category['moduleName']}' (title: '{new_category['title']}')")
                 
@@ -628,12 +714,15 @@ class TemplateSyncManager:
     def collect_new_templates_from_language_files(self):
         """
         Step 1: Collect translations for NEW templates only (templates not in i18n.json yet)
+        Also collects category title translations for new categories
         """
         master_data = self.syncer.load_json_file(self.syncer.master_file)
         master_index = self.syncer.build_template_index(master_data)
         templates_data = self.syncer.i18n_data.get("templates", {})
+        categories_data = self.syncer.i18n_data.get("categories", {})
         
         collected_count = 0
+        category_title_collected_count = 0
         new_templates = set()
         
         # Find templates that exist in master but not in i18n
@@ -641,11 +730,29 @@ class TemplateSyncManager:
             if template_name not in templates_data:
                 new_templates.add(template_name)
         
-        if not new_templates:
-            self.syncer.logger.info(f"  ℹ️ No new templates found")
+        # Find category titles and category fields that exist in master but not in i18n
+        new_category_titles = set()
+        new_category_fields = set()
+        for master_category in master_data:
+            if "title" in master_category:
+                master_title = master_category["title"]
+                if master_title not in categories_data:
+                    new_category_titles.add(master_title)
+            if "category" in master_category:
+                master_category_field = master_category["category"]
+                if master_category_field not in categories_data:
+                    new_category_fields.add(master_category_field)
+        
+        if not new_templates and not new_category_titles and not new_category_fields:
+            self.syncer.logger.info(f"  ℹ️ No new templates, category titles, or category fields found")
             return
         
-        self.syncer.logger.info(f"  📋 Found {len(new_templates)} new templates")
+        if new_templates:
+            self.syncer.logger.info(f"  📋 Found {len(new_templates)} new templates")
+        if new_category_titles:
+            self.syncer.logger.info(f"  📋 Found {len(new_category_titles)} new category titles")
+        if new_category_fields:
+            self.syncer.logger.info(f"  📋 Found {len(new_category_fields)} new category fields")
         
         for lang, lang_file in self.syncer.language_files.items():
             target_file = self.syncer.templates_dir / lang_file
@@ -655,6 +762,7 @@ class TemplateSyncManager:
             target_data = self.syncer.load_json_file(target_file)
             target_index = self.syncer.build_template_index(target_data)
             
+            # Collect template translations
             for template_name in new_templates:
                 if template_name not in target_index:
                     continue
@@ -683,20 +791,73 @@ class TemplateSyncManager:
                     if lang not in field_data and target_value != en_value:
                         field_data[lang] = target_value
                         collected_count += 1
+            
+            # Collect category title and category field translations for new categories
+            for master_category in master_data:
+                # Find matching category in target data
+                matching_idx = self.syncer.find_matching_category(master_category, target_data)
+                
+                if matching_idx is None:
+                    continue
+                
+                target_category = target_data[matching_idx]
+                
+                # Collect category title translations for new categories
+                if "title" in master_category:
+                    master_title = master_category["title"]
+                    if master_title in new_category_titles and "title" in target_category:
+                        target_title = target_category["title"]
+                        
+                        # Initialize category title in i18n
+                        if master_title not in categories_data:
+                            categories_data[master_title] = {
+                                lang_code: master_title for lang_code in self.syncer.language_files.keys()
+                            }
+                        
+                        category_data = categories_data[master_title]
+                        
+                        # Only update if it's different from English (meaning it's translated)
+                        if lang not in category_data and target_title != master_title:
+                            category_data[lang] = target_title
+                            category_title_collected_count += 1
+                
+                # Collect category field translations for new categories
+                if "category" in master_category:
+                    master_category_field = master_category["category"]
+                    if master_category_field in new_category_fields and "category" in target_category:
+                        target_category_field = target_category["category"]
+                        
+                        # Initialize category field in i18n
+                        if master_category_field not in categories_data:
+                            categories_data[master_category_field] = {
+                                lang_code: master_category_field for lang_code in self.syncer.language_files.keys()
+                            }
+                        
+                        category_field_data = categories_data[master_category_field]
+                        
+                        # Only update if it's different from English (meaning it's translated)
+                        if lang not in category_field_data and target_category_field != master_category_field:
+                            category_field_data[lang] = target_category_field
+                            category_title_collected_count += 1
         
         self.syncer.i18n_data["templates"] = templates_data
+        self.syncer.i18n_data["categories"] = categories_data
         
         if collected_count > 0:
             self.syncer.logger.info(f"  ✅ Collected {collected_count} translations for new templates")
+        if category_title_collected_count > 0:
+            self.syncer.logger.info(f"  ✅ Collected {category_title_collected_count} translations for new category titles")
     
     def collect_all_translations_from_language_files(self):
         """
         Step 3: Collect ALL translations from language files to i18n.json (after sync)
+        Includes both template translations and category title translations
         """
         master_data = self.syncer.load_json_file(self.syncer.master_file)
         master_index = self.syncer.build_template_index(master_data)
         
         collected_count = 0
+        category_title_collected_count = 0
         
         for lang, lang_file in self.syncer.language_files.items():
             target_file = self.syncer.templates_dir / lang_file
@@ -706,6 +867,7 @@ class TemplateSyncManager:
             target_data = self.syncer.load_json_file(target_file)
             target_index = self.syncer.build_template_index(target_data)
             
+            # Collect template translations
             for template_name, (_, _, target_template) in target_index.items():
                 # Only collect translations for templates that exist in master
                 if template_name not in master_index:
@@ -734,9 +896,61 @@ class TemplateSyncManager:
                     if field_data.get(lang) != target_value:
                         field_data[lang] = target_value
                         collected_count += 1
+            
+            # Collect category title and category field translations
+            # Use find_matching_category to match categories reliably
+            for master_category in master_data:
+                # Find matching category in target data
+                matching_idx = self.syncer.find_matching_category(master_category, target_data)
+                
+                if matching_idx is None:
+                    # No matching category found, skip
+                    continue
+                
+                target_category = target_data[matching_idx]
+                
+                # Collect category title translations
+                if "title" in master_category and "title" in target_category:
+                    master_title = master_category["title"]
+                    target_title = target_category["title"]
+                    
+                    # Ensure category title exists in i18n
+                    if master_title not in self.syncer.i18n_data["categories"]:
+                        # Initialize with English for all languages
+                        self.syncer.i18n_data["categories"][master_title] = {
+                            lang_code: master_title for lang_code in self.syncer.language_files.keys()
+                        }
+                    
+                    category_data = self.syncer.i18n_data["categories"][master_title]
+                    
+                    # Update i18n with current value from language file
+                    if category_data.get(lang) != target_title:
+                        category_data[lang] = target_title
+                        category_title_collected_count += 1
+                
+                # Collect category field translations (like "MODELS", "GENERATION TYPE")
+                if "category" in master_category and "category" in target_category:
+                    master_category_field = master_category["category"]
+                    target_category_field = target_category["category"]
+                    
+                    # Ensure category field exists in i18n
+                    if master_category_field not in self.syncer.i18n_data["categories"]:
+                        # Initialize with English for all languages
+                        self.syncer.i18n_data["categories"][master_category_field] = {
+                            lang_code: master_category_field for lang_code in self.syncer.language_files.keys()
+                        }
+                    
+                    category_field_data = self.syncer.i18n_data["categories"][master_category_field]
+                    
+                    # Update i18n with current value from language file
+                    if category_field_data.get(lang) != target_category_field:
+                        category_field_data[lang] = target_category_field
+                        category_title_collected_count += 1
         
         if collected_count > 0:
-            self.syncer.logger.info(f"  ✅ Collected {collected_count} translations to i18n.json")
+            self.syncer.logger.info(f"  ✅ Collected {collected_count} template translations to i18n.json")
+        if category_title_collected_count > 0:
+            self.syncer.logger.info(f"  ✅ Collected {category_title_collected_count} category title translations to i18n.json")
 
     def run_sync(self) -> bool:
         """
@@ -791,6 +1005,18 @@ class TemplateSyncManager:
                 self.syncer.logger.info(f"   - {tag}")
             needs_save = True
         
+        if self.syncer.new_category_titles:
+            self.syncer.logger.info(f"\n🆕 New category titles discovered: {len(self.syncer.new_category_titles)}")
+            for title in sorted(self.syncer.new_category_titles):
+                self.syncer.logger.info(f"   - {title}")
+            needs_save = True
+        
+        if self.syncer.new_category_fields:
+            self.syncer.logger.info(f"\n🆕 New category fields discovered: {len(self.syncer.new_category_fields)}")
+            for field in sorted(self.syncer.new_category_fields):
+                self.syncer.logger.info(f"   - {field}")
+            needs_save = True
+        
         if self.syncer.i18n_data["_status"]["pending_templates"]:
             self.syncer.logger.info(f"\n💾 Saving translation tracking data...")
             needs_save = True
@@ -811,6 +1037,10 @@ class TemplateSyncManager:
         self.syncer.logger.info(f"   Fields updated: {self.stats['fields_updated']}")
         if self.syncer.new_tags:
             self.syncer.logger.info(f"   New tags found: {len(self.syncer.new_tags)}")
+        if self.syncer.new_category_titles:
+            self.syncer.logger.info(f"   New category titles found: {len(self.syncer.new_category_titles)}")
+        if self.syncer.new_category_fields:
+            self.syncer.logger.info(f"   New category fields found: {len(self.syncer.new_category_fields)}")
         
         return success
 
