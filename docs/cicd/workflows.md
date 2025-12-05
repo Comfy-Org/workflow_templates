@@ -35,13 +35,8 @@ version_check → determine_packages → build_packages → publish_pypi → git
 ## Manual Operations
 
 ### Force Publish Missing Packages
-Recovery happens automatically when packages are out-of-sync. For manual intervention:
 ```bash
-# Create PR with version bump to trigger publish
-git checkout -b fix-package-sync
-# Edit pyproject.toml version or package versions 
-git add . && git commit -m "Fix package sync"
-gh pr create --title "Fix package sync" --body "Manual version fix"
+gh workflow run "Publish to PyPI"  # Triggers recovery mode
 ```
 
 ### Re-sync Manifests
