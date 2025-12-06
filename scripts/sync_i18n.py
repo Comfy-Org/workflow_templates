@@ -53,7 +53,7 @@ class TemplateSyncer:
         # Configuration for field handling
         self.auto_sync_fields = {
             "models", "date", "size", "vram", "mediaType", "mediaSubtype", 
-            "tutorialUrl", "thumbnailVariant"
+            "tutorialUrl", "thumbnailVariant", "requiresCustomNodes"
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
