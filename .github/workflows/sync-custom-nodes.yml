@@ -1,0 +1,92 @@
+name: Sync Custom Nodes Requirements
+
+# This workflow automatically syncs requiresCustomNodes field in all index files
+# when templates are changed in PRs.
+# 
+# Process:
+#   1. Scans all template JSON files (excluding index files) for cnr_id values
+#   2. Extracts all non-comfy-core cnr_ids for each template
+#   3. Updates requiresCustomNodes field in all index.[locale].json files
+#   4. Commits changes back to PR branch if any updates were made
+#
+# This ensures that the requiresCustomNodes field is always up-to-date
+# and synchronized across all language versions of the index files.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'templates/**/*.json'
+      - 'scripts/sync_custom_nodes.py'
+      - '.github/workflows/sync-custom-nodes.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-custom-nodes:
+    runs-on: ubuntu-latest
+    # Prevent concurrent runs on same PR (unique per fork+branch)
+    concurrency:
+      group: sync-custom-nodes-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.repo.full_name }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Sync custom nodes requirements
+        id: sync
+        run: |
+          echo "=== Syncing custom nodes requirements ==="
+          python scripts/sync_custom_nodes.py --templates-dir ./templates
+          echo "✅ Custom nodes sync complete"
+          
+      - name: Commit custom nodes updates to PR
+        run: |
+          echo "=== Committing custom nodes updates to PR ==="
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Stage all potential changes from custom nodes sync
+          git add templates/index*.json
+          
+          if ! git diff --cached --quiet; then
+            echo "📝 Changes detected - committing to PR branch"
+            
+            # Commit with retry logic in case of conflicts
+            if ! git commit -m "Auto-sync requiresCustomNodes field in index files"; then
+              echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
+              if ! git pull origin "${{ github.head_ref }}" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git commit -m "Auto-sync requiresCustomNodes field in index files"
+            fi
+            
+            # Push with retry logic
+            if ! git push origin HEAD; then
+              echo "⚠️ Push failed, retrying after pull..."
+              if ! git pull origin "${{ github.head_ref }}" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git push origin HEAD
+            fi
+            
+            echo "✅ Custom nodes requirements updates committed to PR"
+          else
+            echo "✅ No custom nodes requirements changes needed"
+          fi
+
