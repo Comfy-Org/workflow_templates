@@ -3,14 +3,15 @@ name: Version Check and Auto-bump
 # This workflow automatically bumps package versions when templates change.
 # 
 # Process:
-#   1. Detects which packages have template changes (via git history)
-#   2. Bumps version numbers for affected packages 
-#   3. Updates meta package dependencies (exact pinning)
-#   4. Validates bundles.json completeness
-#   5. Syncs manifests with SHA256 hashes
+#   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
+#   2. Validates bundles.json completeness
+#   3. Detects which packages have template changes (via git history)
+#   4. Bumps version numbers for affected packages (including core if manifest changed)
+#   5. Updates meta package dependencies (exact pinning)
 #   6. Commits changes back to PR branch
 #
 # Critical: sync_bundles.py validates that ALL templates are assigned to bundles
+# Note: Manifest sync must run BEFORE version detection so core package changes are detected
 
 on:
   pull_request:
@@ -43,19 +44,21 @@ jobs:
         with:
           python-version: "3.x"
 
-      - name: Auto-bump package versions if needed
-        run: |
-          echo "=== Analyzing template changes and bumping versions ==="
-          python scripts/ci_version_manager.py
-          echo "✅ Version analysis complete"
-          
-      - name: Sync manifests and bundles  
+      - name: Sync manifests and bundles (first)
         run: |
           echo "=== Validating bundles.json and syncing manifests ==="
           # This step validates that all templates are assigned to bundles
           # and generates updated manifest files with SHA256 hashes
+          # Must run BEFORE version detection so core package manifest.json changes are detected
           python scripts/sync_bundles.py
           echo "✅ Manifest sync complete"
+          
+      - name: Auto-bump package versions if needed
+        run: |
+          echo "=== Analyzing template changes and bumping versions ==="
+          # This runs AFTER manifest sync so it can detect core package changes
+          python scripts/ci_version_manager.py
+          echo "✅ Version analysis complete"
           
       - name: Commit version bumps and manifest updates to PR
         run: |

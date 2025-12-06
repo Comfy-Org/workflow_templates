@@ -66,7 +66,19 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     """Get files that affect a specific package since the given commit, excluding CI auto-commits"""
     try:
         # Get all files changed since the reference commit
-        all_changed_files = run_git(["diff", f"{since_commit}..HEAD", "--name-only"]).split('\n')
+        committed_files = set(run_git(["diff", f"{since_commit}..HEAD", "--name-only"]).split('\n'))
+        
+        # Also check for unstaged changes in working directory (important for core package manifest.json)
+        # This handles the case where sync_bundles.py modified manifest.json but it's not yet committed
+        unstaged_set = set()
+        try:
+            unstaged_output = run_git(["diff", "--name-only", "HEAD"])
+            unstaged_set = set(unstaged_output.split('\n')) if unstaged_output.strip() else set()
+        except:
+            pass  # If we can't get unstaged files, continue with committed changes only
+        
+        # Combine committed and unstaged changes
+        all_changed_files = committed_files | unstaged_set
         
         # Filter out files from CI auto-commits by checking commit messages
         affecting_files = []
@@ -75,7 +87,13 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
             if not file:
                 continue
                 
-            # Get the commit that last modified this file
+            # For unstaged files, skip the commit check and include them directly
+            # (they are new changes from sync_bundles.py that haven't been committed yet)
+            if file in unstaged_set:
+                affecting_files.append(file)
+                continue
+                
+            # For committed files, check if they were modified by CI auto-commits
             try:
                 last_commit = run_git(["log", "-1", "--format=%s", f"{since_commit}..HEAD", "--", file]).strip()
                 # Skip files that were last modified by CI auto-commits
