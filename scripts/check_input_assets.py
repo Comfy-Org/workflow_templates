@@ -107,11 +107,12 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
     if missing_assets:
         report.append(f"\n## ❌ Validation Failed\n")
         report.append(f"**{len(missing_assets)} missing asset(s)** found that need to be added to the `input/` folder.\n")
+        report.append(f"✅ **{len(valid_assets)} asset(s)** successfully validated.\n")
     else:
         report.append(f"\n## ✅ Validation Passed\n")
         report.append(f"All {len(valid_assets)} referenced asset(s) are present in the `input/` folder.\n")
     
-    # Missing assets details
+    # Missing assets details - only show if there are missing assets
     if missing_assets:
         report.append("\n## Missing Assets\n")
         report.append("The following assets are referenced in workflow files but not found in `input/`:\n\n")
@@ -123,15 +124,8 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
         
         report.append("\n**Action Required:** Please add the missing files to the `input/` directory.\n")
     
-    # Valid assets summary
-    if valid_assets:
-        report.append("\n## Valid Assets\n")
-        report.append(f"{len(valid_assets)} asset(s) successfully validated:\n\n")
-        report.append("| Workflow File | Node Type | Asset Filename |\n")
-        report.append("|---------------|-----------|----------------|\n")
-        
-        for asset in sorted(valid_assets, key=lambda x: (x["workflow"], x["filename"])):
-            report.append(f"| `{asset['workflow']}` | `{asset['node_type']}` | `{asset['filename']}` |\n")
+    # Valid assets summary - only show count, not full list (to keep report concise)
+    # The full list is still available in the artifact if needed
     
     return "".join(report)
 
