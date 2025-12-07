@@ -1,0 +1,89 @@
+name: Template Bug Report
+description: Report mistakes in workflow templates
+title: "[Template Bug]: "
+labels: ["bug", "template"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ Important Notice
+        
+        This repository is **only for reporting workflow template mistakes**. 
+        
+        - **ComfyUI Core Issues**: [ComfyUI Issues](https://github.com/comfyanonymous/ComfyUI/issues)
+        - **Frontend Issues**: [ComfyUI Frontend Issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)
+
+  - type: checkboxes
+    id: issue_confirmation
+    attributes:
+      label: Confirmation
+      description: I have confirmed this is a template mistake (not a ComfyUI core issue, missing nodes/models, or Nodes 2.0 compatibility issue)
+      options:
+        - label: I have confirmed this is a workflow template mistake
+          required: true
+
+  - type: input
+    id: template_name
+    attributes:
+      label: Template Name
+      description: Name of the template with the mistake
+      placeholder: Template name
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem_description
+    attributes:
+      label: Problem Description
+      description: Describe the problem you encountered
+      placeholder: What went wrong? What did you expect vs what actually happened?
+      value: ""
+    validations:
+      required: true
+
+  - type: dropdown
+    id: comfyui_mode
+    attributes:
+      label: ComfyUI Mode
+      description: Which mode are you using?
+      options:
+        - Legacy Mode
+        - Nodes 2.0 Mode
+      default: 0
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 🔧 Common Issues
+        
+        **Nodes 2.0 Mode**: If experiencing instability, try switching to Legacy Mode first (Settings → Menu → Disable Nodes 2.0). If the issue is resolved, it's a compatibility issue, not a template mistake.
+        
+        **Subgraph Templates**: If this template uses subgraphs, please review the [Subgraph Documentation](https://docs.comfy.org/interface/features/subgraph) first.
+        **Missing Custom Nodes**: If this template uses custom nodes, please review the [Custom Nodes Installation Documentation](https://docs.comfy.org/installation/install_custom_node) first.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## 📸 Required Information
+        
+        Please provide the following:
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Screenshots
+        - Screenshot of the template/workflow showing the issue
+        - Screenshot of error messages (if any)
+        - **Screenshot of Settings → About page** (for environment info)
+
+  - type: textarea
+    id: error_message
+    attributes:
+      label: Error Message / Logs
+      description: **REQUIRED** - Paste the complete error message and logs from ComfyUI console or terminal
+      placeholder: Paste error message and logs here...
+      render: text
+    validations:
+      required: true
