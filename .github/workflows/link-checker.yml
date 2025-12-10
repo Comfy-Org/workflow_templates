@@ -176,7 +176,8 @@ jobs:
               }
             }
 
-            const lycheeErrorsOnly = errors.length ? errors.join('\n') : lycheeReport;
+            const hasParsedErrors = errors.length > 0;
+            const lycheeErrorsOnly = hasParsedErrors ? errors.join('\n') : '';
 
             // Read excluded links report
             let excludedReport = '';
@@ -188,10 +189,13 @@ jobs:
 
             // Truncate if too long (GitHub comment limit)
             const maxLength = 60000;
-            if (lycheeErrorsOnly.length > maxLength) {
-              lycheeReport = lycheeErrorsOnly.substring(0, maxLength) + '\n\n...(Report truncated due to length)';
+            if (hasParsedErrors) {
+              lycheeReport =
+                lycheeErrorsOnly.length > maxLength
+                  ? lycheeErrorsOnly.substring(0, maxLength) + '\n\n...(Report truncated due to length)'
+                  : lycheeErrorsOnly;
             } else {
-              lycheeReport = lycheeErrorsOnly;
+              lycheeReport = 'Lychee reported an error (non-zero exit) but no broken-link rows were parsed. Please check artifacts for details.';
             }
 
             const comment = `## 🔗 Broken Links Found in Workflow Files
