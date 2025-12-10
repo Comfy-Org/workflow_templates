@@ -57,6 +57,8 @@ jobs:
           echo "Checking extracted links..."
           link_errors=false
 
+          # lychee may exit non-zero for bad links; disable -e to keep script running
+          set +e
           lychee \
             --verbose \
             --no-progress \
@@ -72,6 +74,7 @@ jobs:
             links_to_check.txt
 
           LYCHEE_EXIT=$?
+          set -e
 
           # If lychee itself failed (non-accepted status codes, network errors, etc.)
           if [ $LYCHEE_EXIT -ne 0 ]; then
