@@ -55,6 +55,10 @@ jobs:
         if: steps.extract_links.outputs.extract_failed == 'false'
         run: |
           echo "Checking extracted links..."
+          link_errors=false
+
+          # lychee may exit non-zero for bad links; disable -e to keep script running
+          set +e
           lychee \
             --verbose \
             --no-progress \
@@ -67,22 +71,40 @@ jobs:
             --exclude 'x\.com' \
             --format markdown \
             --output lychee-report.md \
-            links_to_check.txt \
-            || echo "link_errors=true" >> $GITHUB_OUTPUT
+            links_to_check.txt
+
+          LYCHEE_EXIT=$?
+          set -e
+
+          # If lychee itself failed (non-accepted status codes, network errors, etc.)
+          if [ $LYCHEE_EXIT -ne 0 ]; then
+            link_errors=true
+          fi
 
           if [ -f lychee-report.md ]; then
             cat lychee-report.md
-            # Check if there are actual error links (not just the "Errors" section header)
-            # Look for lines starting with "| [" after "🚫 Errors" which indicate actual broken links
-            if grep -q "🚫 Errors" lychee-report.md && sed -n '/🚫 Errors/,/^$/p' lychee-report.md | grep -q "^| \["; then
-              echo "link_errors=true" >> $GITHUB_OUTPUT
-              echo "::error::Broken links found in workflow files"
-            else
-              echo "link_errors=false" >> $GITHUB_OUTPUT
+
+            # Table-format errors (previous behavior)
+            if sed -n '/🚫 Errors/,/^$/p' lychee-report.md | grep -q "^| \["; then
+              link_errors=true
             fi
-          else
-            echo "link_errors=false" >> $GITHUB_OUTPUT
+
+            # Bullet-format errors (e.g., "* [404] ...") under "Errors in ..." sections
+            if awk '
+              /Errors in/ { err=1; next }
+              /^## / { err=0 }
+              err && /^\* \[/ { exit 0 }
+              END { exit 1 }
+            ' lychee-report.md; then
+              link_errors=true
+            fi
+
+            if [ "$link_errors" = true ]; then
+              echo "::error::Broken links found in workflow files"
+            fi
           fi
+
+          echo "link_errors=$link_errors" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Generate excluded links report
@@ -117,6 +139,46 @@ jobs:
               lycheeReport = 'Unable to read lychee report';
             }
 
+            // Keep only error rows (bullet or table), drop successful links/redirects
+            const lycheeLines = lycheeReport.split('\n');
+            const errors = [];
+            let inErrorBlock = false;
+
+            for (const line of lycheeLines) {
+              // Start/end detection for lychee sections
+              if (line.startsWith('### Errors in')) {
+                inErrorBlock = true;
+                continue;
+              }
+              if (line.startsWith('## ') && !line.startsWith('### Errors in')) {
+                inErrorBlock = false;
+              }
+
+              // Bullet-format errors
+              if (inErrorBlock && line.startsWith('* [')) {
+                errors.push(line);
+                continue;
+              }
+
+              // Table-format errors under "🚫 Errors" sections
+              if (line.startsWith('🚫 Errors')) {
+                inErrorBlock = true;
+                continue;
+              }
+              if (inErrorBlock && line.startsWith('| [')) {
+                errors.push(line);
+                continue;
+              }
+
+              // Blank line ends current block
+              if (inErrorBlock && line.trim() === '') {
+                inErrorBlock = false;
+              }
+            }
+
+            const hasParsedErrors = errors.length > 0;
+            const lycheeErrorsOnly = hasParsedErrors ? errors.join('\n') : '';
+
             // Read excluded links report
             let excludedReport = '';
             try {
@@ -127,8 +189,13 @@ jobs:
 
             // Truncate if too long (GitHub comment limit)
             const maxLength = 60000;
-            if (lycheeReport.length > maxLength) {
-              lycheeReport = lycheeReport.substring(0, maxLength) + '\n\n...(Report truncated due to length)';
+            if (hasParsedErrors) {
+              lycheeReport =
+                lycheeErrorsOnly.length > maxLength
+                  ? lycheeErrorsOnly.substring(0, maxLength) + '\n\n...(Report truncated due to length)'
+                  : lycheeErrorsOnly;
+            } else {
+              lycheeReport = 'Lychee reported an error (non-zero exit) but no broken-link rows were parsed. Please check artifacts for details.';
             }
 
             const comment = `## 🔗 Broken Links Found in Workflow Files

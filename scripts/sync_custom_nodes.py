@@ -27,12 +27,16 @@ import re
 class CustomNodesSyncer:
     """Main class for syncing custom nodes requirements"""
     
-    def __init__(self, templates_dir: str, dry_run: bool = False):
+    def __init__(self, templates_dir: str, dry_run: bool = False, whitelist_file: Optional[str] = None):
         self.templates_dir = Path(templates_dir).resolve()
         self.dry_run = dry_run
+        self.whitelist_file = Path(whitelist_file).resolve() if whitelist_file else Path(__file__).with_name("whitelist.json")
         
         # Setup logging
         self.setup_logging()
+        
+        # Skip list for templates that should not be scanned or updated
+        self.skip_templates = self.load_skip_templates()
         
         # Language files mapping
         self.language_files = {
@@ -59,6 +63,34 @@ class CustomNodesSyncer:
             ]
         )
         self.logger = logging.getLogger(__name__)
+    
+    def load_skip_templates(self) -> Set[str]:
+        """
+        Load template names to skip from whitelist.json.
+        
+        Returns:
+            Set of template names that should be ignored when scanning/updating
+        """
+        if not self.whitelist_file.exists():
+            self.logger.warning(f"Whitelist file not found: {self.whitelist_file}")
+            return set()
+        
+        try:
+            with open(self.whitelist_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+            
+            skip_list = data.get("whitelist", {}).get("skip_templates", [])
+            skip_set = {name for name in skip_list if isinstance(name, str) and name.strip()}
+            
+            if skip_set:
+                self.logger.info(f"Loaded {len(skip_set)} whitelisted template(s) to skip: {sorted(skip_set)}")
+            else:
+                self.logger.info("No templates to skip in whitelist.")
+            
+            return skip_set
+        except Exception as e:
+            self.logger.error(f"Failed to load whitelist file {self.whitelist_file}: {e}")
+            return set()
         
     def extract_cnr_ids_from_template(self, template_path: Path) -> Set[str]:
         """
@@ -107,6 +139,10 @@ class CustomNodesSyncer:
             
             # Extract template name (filename without .json extension)
             template_name = file_path.stem
+            
+            if template_name in self.skip_templates:
+                self.logger.info(f"  Skipping {template_name} (whitelisted)")
+                continue
             
             # Extract cnr_ids from this template
             cnr_ids = self.extract_cnr_ids_from_template(file_path)
@@ -190,6 +226,10 @@ class CustomNodesSyncer:
             for template in templates:
                 template_name = template.get('name')
                 if not template_name:
+                    continue
+                
+                if template_name in self.skip_templates:
+                    self.logger.debug(f"  Skipping requiresCustomNodes update for {template_name} in {lang} (whitelisted)")
                     continue
                 
                 # Get expected cnr_ids for this template
@@ -276,11 +316,13 @@ Examples:
                        help='Directory containing template files (default: ./templates)')
     parser.add_argument('--dry-run', action='store_true', 
                        help='Show what would be done without making changes')
+    parser.add_argument('--whitelist-file', default=None,
+                       help='Path to whitelist.json (default: scripts/whitelist.json)')
     
     args = parser.parse_args()
     
     try:
-        syncer = CustomNodesSyncer(args.templates_dir, args.dry_run)
+        syncer = CustomNodesSyncer(args.templates_dir, args.dry_run, args.whitelist_file)
         success = syncer.run_sync()
         sys.exit(0 if success else 1)
         
