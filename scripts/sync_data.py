@@ -501,14 +501,27 @@ class TemplateSyncManager:
                 changes_made = True
                 self.syncer.logger.info(f"  🗑️ Removed {field} (no longer in master)")
         
-        # Handle vram data filling - use size data when vram is missing
-        if "vram" not in updated_template and "size" in updated_template:
-            updated_template["vram"] = updated_template["size"]
-            changes_made = True
-            self.syncer.logger.info(f"  💾 Auto-filled vram using size: {updated_template['size']}")
-            
-            # Mark this template for vram/size data updates in i18n
-            self.syncer.mark_template_for_vram_size_update(template_name)
+        # Handle vram data filling - use size data when vram is missing or 0
+        if "size" in updated_template:
+            if updated_template["size"] > 0:
+                # If vram is missing or 0, use size data
+                if "vram" not in updated_template or updated_template.get("vram", 0) == 0:
+                    updated_template["vram"] = updated_template["size"]
+                    changes_made = True
+                    self.syncer.logger.info(f"  💾 Auto-filled vram using size: {updated_template['size']}")
+                    
+                    # Mark this template for vram/size data updates in i18n
+                    self.syncer.mark_template_for_vram_size_update(template_name)
+            else:  # size == 0
+                # If size is 0, ensure vram field exists and is 0
+                if "vram" not in updated_template:
+                    updated_template["vram"] = 0
+                    changes_made = True
+                    self.syncer.logger.info(f"  💾 Added vram=0 because size is 0")
+                elif updated_template["vram"] != 0:
+                    updated_template["vram"] = 0
+                    changes_made = True
+                    self.syncer.logger.info(f"  💾 Set vram to 0 because size is 0")
                     
         # Handle tags - always translate using i18n data
         if "tags" in master_template:
@@ -987,9 +1000,56 @@ class TemplateSyncManager:
         if category_title_collected_count > 0:
             self.syncer.logger.info(f"  ✅ Collected {category_title_collected_count} category title translations to i18n.json")
 
+    def fix_master_vram_data(self):
+        """
+        Fix vram data in the master index.json file before synchronization
+        """
+        self.syncer.logger.info("\n🔧 Step 0: Fixing vram data in master file...")
+        
+        # Load master data
+        master_data = self.syncer.load_json_file(self.syncer.master_file)
+        changes_made = False
+        fixed_templates = []
+        
+        for category in master_data:
+            for template in category.get("templates", []):
+                template_name = template.get("name", "")
+                
+                # Apply vram fixing logic
+                if "size" in template:
+                    if template["size"] > 0:
+                        # If vram is missing or 0, use size data
+                        if "vram" not in template or template.get("vram", 0) == 0:
+                            template["vram"] = template["size"]
+                            changes_made = True
+                            fixed_templates.append(template_name)
+                            self.syncer.logger.info(f"  ✓ Fixed vram for '{template_name}': {template['size']}")
+                    else:  # size == 0
+                        # If size is 0, ensure vram field exists and is 0
+                        if "vram" not in template:
+                            template["vram"] = 0
+                            changes_made = True
+                            fixed_templates.append(template_name)
+                            self.syncer.logger.info(f"  ✓ Added vram=0 for '{template_name}' (size is 0)")
+                        elif template["vram"] != 0:
+                            template["vram"] = 0
+                            changes_made = True
+                            fixed_templates.append(template_name)
+                            self.syncer.logger.info(f"  ✓ Set vram to 0 for '{template_name}' (size is 0)")
+        
+        # Save the fixed master file
+        if changes_made:
+            self.syncer.save_json_file(self.syncer.master_file, master_data)
+            self.syncer.logger.info(f"  💾 Fixed {len(fixed_templates)} templates in master file")
+            for template in fixed_templates:
+                self.syncer.logger.info(f"    - {template}")
+        else:
+            self.syncer.logger.info(f"  ✅ Master file vram data is already correct")
+
     def run_sync(self) -> bool:
         """
         Run complete synchronization process:
+        0. Fix vram data in master index.json file
         1. Collect translations for NEW templates only from language files
         2. Sync i18n.json translations to all language files
         3. Collect ALL translations from language files back to i18n.json
@@ -1002,6 +1062,9 @@ class TemplateSyncManager:
         if not self.syncer.master_file.exists():
             self.syncer.logger.error(f"Master file not found: {self.syncer.master_file}")
             return False
+        
+        # Step 0: Fix vram data in master file first
+        self.fix_master_vram_data()
         
         # Step 1: Collect translations for NEW templates only
         self.syncer.logger.info("\n📥 Step 1: Collecting translations for new templates...")

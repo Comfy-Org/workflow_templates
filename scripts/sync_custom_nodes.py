@@ -94,22 +94,23 @@ class CustomNodesSyncer:
         
     def extract_cnr_ids_from_template(self, template_path: Path) -> Set[str]:
         """
-        Extract all non-comfy-core cnr_id values from a template JSON file.
+        Extract all non-comfy-core cnr_id values from a template JSON file using string matching.
         
         Returns:
             Set of unique cnr_id values (excluding 'comfy-core' and empty strings)
         """
         try:
             with open(template_path, 'r', encoding='utf-8') as f:
-                data = json.load(f)
+                content = f.read()
             
             cnr_ids = set()
-            nodes = data.get('nodes', [])
             
-            for node in nodes:
-                properties = node.get('properties', {})
-                cnr_id = properties.get('cnr_id', '')
-                
+            # Use regex to find all cnr_id patterns
+            import re
+            cnr_pattern = r'"cnr_id":\s*"([^"]+)"'
+            matches = re.findall(cnr_pattern, content)
+            
+            for cnr_id in matches:
                 # Only collect non-empty, non-comfy-core cnr_ids
                 if cnr_id and cnr_id != 'comfy-core':
                     cnr_ids.add(cnr_id)
