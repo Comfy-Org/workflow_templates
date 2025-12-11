@@ -81,6 +81,7 @@ class TemplateSyncer:
         self.used_categories = set()  # Track categories that are actually used
         self.new_category_titles = set()  # Track new category titles discovered during sync
         self.new_category_fields = set()  # Track new category field values (like "MODELS", "GENERATION TYPE") discovered during sync
+        self.vram_size_update_templates = set()  # Track templates that need vram/size data updates in i18n
         self.translation_stats = {
             'templates_scanned': 0,
             'untranslated_found': 0,
@@ -108,7 +109,11 @@ class TemplateSyncer:
             return {
                 "_status": {
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
-                    "pending_templates": {}
+                    "pending_templates": {},
+                    "vram_size_update_templates": {
+                        "comment": "Templates that need vram and size data management in i18n.json",
+                        "templates": []
+                    }
                 },
                 "templates": {},
                 "tags": {},
@@ -123,7 +128,16 @@ class TemplateSyncer:
             if "_status" not in data:
                 data["_status"] = {
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
-                    "pending_templates": {}
+                    "pending_templates": {},
+                    "vram_size_update_templates": {
+                        "comment": "Templates that need vram and size data management in i18n.json",
+                        "templates": []
+                    }
+                }
+            if "vram_size_update_templates" not in data["_status"]:
+                data["_status"]["vram_size_update_templates"] = {
+                    "comment": "Templates that need vram and size data management in i18n.json",
+                    "templates": []
                 }
             if "templates" not in data:
                 data["templates"] = {}
@@ -140,7 +154,11 @@ class TemplateSyncer:
             return {
                 "_status": {
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
-                    "pending_templates": {}
+                    "pending_templates": {},
+                    "vram_size_update_templates": {
+                        "comment": "Templates that need vram and size data management in i18n.json",
+                        "templates": []
+                    }
                 },
                 "templates": {},
                 "tags": {},
@@ -278,6 +296,14 @@ class TemplateSyncer:
                 return translation
         
         return None
+    
+    def mark_template_for_vram_size_update(self, template_name: str):
+        """
+        Mark a template for vram/size data updates in i18n.json
+        This indicates that vram and size values should be managed in i18n.json
+        """
+        self.vram_size_update_templates.add(template_name)
+        self.logger.info(f"  🏷️  Marked template '{template_name}' for vram/size data management in i18n")
     
     def update_pending_status(self, template_name: str, field: str, en_value: str, target_lang: str, current_value: str):
         """
@@ -474,6 +500,15 @@ class TemplateSyncManager:
                 del updated_template[field]
                 changes_made = True
                 self.syncer.logger.info(f"  🗑️ Removed {field} (no longer in master)")
+        
+        # Handle vram data filling - use size data when vram is missing
+        if "vram" not in updated_template and "size" in updated_template:
+            updated_template["vram"] = updated_template["size"]
+            changes_made = True
+            self.syncer.logger.info(f"  💾 Auto-filled vram using size: {updated_template['size']}")
+            
+            # Mark this template for vram/size data updates in i18n
+            self.syncer.mark_template_for_vram_size_update(template_name)
                     
         # Handle tags - always translate using i18n data
         if "tags" in master_template:
@@ -1017,6 +1052,15 @@ class TemplateSyncManager:
                 self.syncer.logger.info(f"   - {field}")
             needs_save = True
         
+        # Update vram_size_update_templates in i18n data
+        if self.syncer.vram_size_update_templates:
+            vram_size_update_list = list(self.syncer.vram_size_update_templates)
+            self.syncer.i18n_data["_status"]["vram_size_update_templates"]["templates"] = vram_size_update_list
+            self.syncer.logger.info(f"\n🔧 Templates marked for vram/size data management: {len(vram_size_update_list)}")
+            for template in sorted(vram_size_update_list):
+                self.syncer.logger.info(f"   - {template}")
+            needs_save = True
+        
         if self.syncer.i18n_data["_status"]["pending_templates"]:
             self.syncer.logger.info(f"\n💾 Saving translation tracking data...")
             needs_save = True
@@ -1041,6 +1085,8 @@ class TemplateSyncManager:
             self.syncer.logger.info(f"   New category titles found: {len(self.syncer.new_category_titles)}")
         if self.syncer.new_category_fields:
             self.syncer.logger.info(f"   New category fields found: {len(self.syncer.new_category_fields)}")
+        if self.syncer.vram_size_update_templates:
+            self.syncer.logger.info(f"   Templates marked for vram/size management: {len(self.syncer.vram_size_update_templates)}")
         
         return success
 
