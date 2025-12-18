@@ -13,7 +13,7 @@ BUNDLE_SAMPLES = {
         "api_bfl_flux_1_kontext_multiple_images_input",
     ],
     "media-image": [
-        "01_qwen_t2i_subgraphed",
+        "01_get_started_text_to_image",
         "02_qwen_Image_edit_subgraphed",
     ],
     "media-other": [

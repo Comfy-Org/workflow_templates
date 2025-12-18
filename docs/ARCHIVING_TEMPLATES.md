@@ -44,6 +44,7 @@ After the script completes, check:
 
 - ✅ The `archived/` folder contains template JSON and thumbnail files
 - ✅ `archived/archived_i18n.json` contains template translation data
+- ✅ `archived/index.json` contains the archived templates main index
 - ✅ `archived/index.[locale].json` files contain template localized indices
 - ✅ Templates have been removed from main index files
 - ✅ Template references have been removed from `bundles.json`
@@ -109,6 +110,7 @@ File structure after archiving:
 ```
 archived/
 ├── archived_i18n.json              # Translation data for all archived templates
+├── index.json                       # Main index for archived templates
 ├── index.ar.json                    # Arabic index
 ├── index.es.json                    # Spanish index
 ├── index.fr.json                    # French index

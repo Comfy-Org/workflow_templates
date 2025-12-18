@@ -12,10 +12,9 @@ This script:
 """
 
 import json
-import os
 import shutil
 from pathlib import Path
-from typing import Dict, List, Any, Set, Optional
+from typing import Any, Dict, List, Optional
 
 # Base paths
 BASE_DIR = Path(__file__).parent.parent
@@ -24,6 +23,7 @@ ARCHIVED_DIR = BASE_DIR / "archived"
 SCRIPTS_DIR = BASE_DIR / "scripts"
 BUNDLES_FILE = BASE_DIR / "bundles.json"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
+ARCHIVED_INDEX_FILE = ARCHIVED_DIR / "index.json"
 I18N_FILE = SCRIPTS_DIR / "i18n.json"
 ARCHIVED_I18N_FILE = ARCHIVED_DIR / "archived_i18n.json"
 
@@ -235,17 +235,61 @@ def update_archived_index_locale(template_name: str, locale_file: Path, archived
     return locale_data
 
 
-def remove_from_index(template_name: str, index_data: List[Dict]) -> None:
-    """Remove template from main index.json."""
+def update_archived_index(template_name: str, index_data: List[Dict]) -> List[Dict]:
+    """Move template from templates/index.json to archived/index.json, preserving category structure."""
+    archived_template = None
+    source_category = None
+
     for category in index_data:
-        if "templates" in category:
-            original_count = len(category["templates"])
+        template = find_template_in_category(template_name, category)
+        if template:
+            archived_template = template
+            source_category = category
             category["templates"] = [
-                t for t in category["templates"]
-                if t.get("name") != template_name
+                t for t in category["templates"] if t.get("name") != template_name
             ]
-            if len(category["templates"]) < original_count:
-                print(f"  Removed from index.json")
+            break
+
+    if not archived_template:
+        print(f"  Template {template_name} not found in index.json")
+        return index_data
+
+    if ARCHIVED_INDEX_FILE.exists():
+        archived_data = load_json(ARCHIVED_INDEX_FILE)
+    else:
+        archived_data = []
+
+    found_category = False
+    for archived_category in archived_data:
+        if source_category and (
+            archived_category.get("moduleName") == source_category.get("moduleName")
+            and archived_category.get("type") == source_category.get("type")
+            and archived_category.get("category") == source_category.get("category")
+        ):
+            if not any(
+                t.get("name") == template_name
+                for t in archived_category.get("templates", [])
+            ):
+                archived_category.setdefault("templates", []).append(archived_template)
+                print("  Added to archived/index.json")
+            found_category = True
+            break
+
+    if not found_category and source_category:
+        archived_category = {
+            "moduleName": source_category.get("moduleName"),
+            "type": source_category.get("type"),
+            "category": source_category.get("category"),
+            "icon": source_category.get("icon"),
+            "title": source_category.get("title"),
+            "templates": [archived_template],
+        }
+        archived_data.append(archived_category)
+        print("  Created category and added to archived/index.json")
+
+    save_json(ARCHIVED_INDEX_FILE, archived_data)
+    print("  Removed from index.json")
+    return index_data
 
 
 def main():
@@ -302,8 +346,8 @@ def main():
 
         # 5. Remove from original index.[locale].json (already done in update_archived_index_locale)
 
-        # 6. Remove from main index.json
-        remove_from_index(template_name, index_data)
+        # 6. Move from templates/index.json to archived/index.json
+        index_data = update_archived_index(template_name, index_data)
 
         print()
 
