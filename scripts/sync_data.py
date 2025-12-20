@@ -68,7 +68,8 @@ class TemplateSyncer:
             "fr": "index.fr.json",
             "ru": "index.ru.json",
             "tr": "index.tr.json",
-            "ar": "index.ar.json"
+            "ar": "index.ar.json",
+            "pt-BR": "index.pt-BR.json"
         }
         
         # Setup logging first
