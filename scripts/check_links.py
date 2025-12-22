@@ -11,7 +11,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Set, List, Dict, Tuple
+from typing import Set, List, Dict, Tuple, Optional
 
 
 def extract_url_with_balanced_parens(text: str, start_pos: int) -> Tuple[str, int]:
@@ -138,15 +138,65 @@ def extract_links_from_workflow(file_path: Path) -> Dict[str, List[Tuple[str, st
     }
 
 
-def extract_all_links() -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
+def load_whitelist_skip_urls() -> Set[str]:
+    """Load skip_urls from whitelist.json."""
+    whitelist_path = Path('scripts/whitelist.json')
+    skip_urls = set()
+    
+    try:
+        with open(whitelist_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            whitelist = data.get('whitelist', {})
+            skip_urls_list = whitelist.get('skip_urls', [])
+            skip_urls = set(skip_urls_list)
+            if skip_urls:
+                print(f"Loaded {len(skip_urls)} URLs from whitelist skip_urls", file=sys.stderr)
+    except FileNotFoundError:
+        print(f"Warning: {whitelist_path} not found, skipping URL whitelist", file=sys.stderr)
+    except Exception as e:
+        print(f"Warning: Error loading whitelist: {e}", file=sys.stderr)
+    
+    return skip_urls
+
+
+def should_skip_url(url: str, skip_urls: Set[str]) -> bool:
+    """Check if URL should be skipped based on whitelist."""
+    # Exact match
+    if url in skip_urls:
+        return True
+    
+    # Pattern match (support for partial URLs or regex patterns)
+    for skip_pattern in skip_urls:
+        # If pattern contains regex special chars, try regex match
+        if any(char in skip_pattern for char in ['*', '?', '^', '$', '[', ']', '(', ')', '{', '}', '|', '+', '.']):
+            try:
+                if re.search(skip_pattern, url):
+                    return True
+            except re.error:
+                # If regex fails, fall back to substring match
+                if skip_pattern in url:
+                    return True
+        else:
+            # Simple substring match
+            if skip_pattern in url:
+                return True
+    
+    return False
+
+
+def extract_all_links(filter_skip_urls: bool = False) -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
     """
     Extract all links from all workflow JSON files.
+
+    Args:
+        filter_skip_urls: If True, filter out URLs in whitelist skip_urls
 
     Returns:
         Dict mapping file paths to extracted links
     """
     templates_dir = Path('templates')
     all_links = {}
+    skip_urls = load_whitelist_skip_urls() if filter_skip_urls else set()
 
     if not templates_dir.exists():
         print(f"Error: {templates_dir} directory not found", file=sys.stderr)
@@ -157,6 +207,20 @@ def extract_all_links() -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
 
     for json_file in json_files:
         links = extract_links_from_workflow(json_file)
+        
+        # Filter out skipped URLs if requested
+        if filter_skip_urls and skip_urls:
+            filtered_model_urls = [
+                (url, context) for url, context in links['model_urls']
+                if not should_skip_url(url, skip_urls)
+            ]
+            filtered_markdown_urls = [
+                (url, context) for url, context in links['markdown_urls']
+                if not should_skip_url(url, skip_urls)
+            ]
+            links['model_urls'] = filtered_model_urls
+            links['markdown_urls'] = filtered_markdown_urls
+        
         if links['model_urls'] or links['markdown_urls']:
             all_links[str(json_file)] = links
 
@@ -165,9 +229,10 @@ def extract_all_links() -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
 
 def command_extract():
     """Extract links and save to files for lychee to check."""
-    all_links = extract_all_links()
+    skip_urls = load_whitelist_skip_urls()
+    all_links = extract_all_links(filter_skip_urls=True)
 
-    # Collect all unique URLs
+    # Collect all unique URLs (already filtered by extract_all_links)
     all_urls = set()
     url_sources = {}  # Map URL to list of sources
 
@@ -178,6 +243,8 @@ def command_extract():
                 url_sources[url] = []
             url_sources[url].append(f"{file_path}: {context}")
 
+    if skip_urls:
+        print(f"\nSkipped URLs from whitelist skip_urls: {len(skip_urls)} patterns", file=sys.stderr)
     print(f"\nFound {len(all_urls)} unique URLs across {len(all_links)} files")
 
     # Save URLs to file for lychee
@@ -205,7 +272,7 @@ def command_extract():
 
 def command_report():
     """Generate a detailed report showing which files contain which links."""
-    all_links = extract_all_links()
+    all_links = extract_all_links(filter_skip_urls=True)
 
     print("\n" + "="*80)
     print("LINK EXTRACTION REPORT")
@@ -231,6 +298,9 @@ def command_report_excluded():
     """Generate a report of links that match exclusion patterns."""
     import subprocess
 
+    # Load skip URLs from whitelist
+    skip_urls = load_whitelist_skip_urls()
+    
     # Load exclusion patterns from .lycheeignore
     exclusion_patterns = []
     try:
@@ -240,28 +310,49 @@ def command_report_excluded():
                 if line and not line.startswith('#'):
                     exclusion_patterns.append(line)
     except FileNotFoundError:
-        print("No .lycheeignore file found")
-        return
+        pass  # .lycheeignore is optional
 
-    if not exclusion_patterns:
-        print("No exclusion patterns found in .lycheeignore")
-        return
-
-    # Get all unique URLs
-    all_links = extract_all_links()
+    # Get all unique URLs (before filtering)
+    templates_dir = Path('templates')
     all_urls = set()
     url_sources = {}
+    skipped_urls = set()
 
-    for file_path, links in all_links.items():
-        for url, context in links['model_urls'] + links['markdown_urls']:
-            all_urls.add(url)
-            if url not in url_sources:
-                url_sources[url] = []
-            url_sources[url].append(f"{file_path}: {context}")
+    if templates_dir.exists():
+        json_files = list(templates_dir.glob('*.json'))
+        for json_file in json_files:
+            links = extract_links_from_workflow(json_file)
+            for url, context in links['model_urls'] + links['markdown_urls']:
+                all_urls.add(url)
+                if url not in url_sources:
+                    url_sources[url] = []
+                url_sources[url].append(f"{json_file}: {context}")
+                
+                # Check if URL should be skipped
+                if should_skip_url(url, skip_urls):
+                    skipped_urls.add(url)
+
+    # Print whitelist skipped URLs report
+    if skipped_urls:
+        print(f"\n### ✅ Whitelist Skipped URLs ({len(skipped_urls)} URLs)")
+        print("\nThese URLs are excluded from checking via whitelist.json skip_urls:")
+        print()
+        for url in sorted(skipped_urls):
+            sources = url_sources.get(url, [])
+            print(f"  - {url}")
+            for source in sources[:3]:  # Show first 3 sources
+                print(f"    ({source})")
+            if len(sources) > 3:
+                print(f"    ... and {len(sources) - 3} more sources")
+        print()
 
     # Check each URL against exclusion patterns
     excluded_urls = []
     for url in sorted(all_urls):
+        # Skip if already in whitelist skip_urls
+        if url in skipped_urls:
+            continue
+            
         for pattern in exclusion_patterns:
             # Simple regex match
             if re.search(pattern, url):

@@ -34,6 +34,7 @@ import os
 import logging
 import argparse
 import sys
+import csv
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
@@ -52,8 +53,18 @@ class TemplateSyncer:
         
         # Configuration for field handling
         self.auto_sync_fields = {
-            "models", "date", "size", "vram", "mediaType", "mediaSubtype", 
-            "tutorialUrl", "thumbnailVariant", "requiresCustomNodes"
+            "models",
+            "date",
+            "size",
+            "vram",
+            "mediaType",
+            "mediaSubtype", 
+            "tutorialUrl",
+            "thumbnailVariant",
+            "requiresCustomNodes",
+            "usage",
+            "searchRank"
+            "visibility",
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
@@ -68,7 +79,8 @@ class TemplateSyncer:
             "fr": "index.fr.json",
             "ru": "index.ru.json",
             "tr": "index.tr.json",
-            "ar": "index.ar.json"
+            "ar": "index.ar.json",
+            "pt-BR": "index.pt-BR.json"
         }
         
         # Setup logging first
@@ -76,6 +88,8 @@ class TemplateSyncer:
         
         # Load i18n data
         self.i18n_data = self.load_i18n()
+        # Load usage data from CSV file (if exists)
+        self.usage_data = self.load_usage_data()
         self.new_tags = set()  # Track new tags discovered during sync
         self.used_tags = set()  # Track tags that are actually used in templates
         self.used_categories = set()  # Track categories that are actually used
@@ -164,6 +178,41 @@ class TemplateSyncer:
                 "tags": {},
                 "categories": {}
             }
+    
+    def load_usage_data(self) -> Dict[str, int]:
+        """Load usage data from CSV file if it exists"""
+        # CSV file is in temp directory (sibling to templates directory)
+        temp_dir = self.templates_dir.parent / "temp"
+        usage_csv_file = temp_dir / "usage.csv"
+        
+        usage_data = {}
+        
+        if not usage_csv_file.exists():
+            self.logger.info(f"Usage CSV file not found: {usage_csv_file} (skipping usage data sync)")
+            return usage_data
+        
+        try:
+            with open(usage_csv_file, 'r', encoding='utf-8') as f:
+                reader = csv.reader(f)
+                # Skip header row
+                next(reader, None)
+                
+                for row in reader:
+                    if len(row) >= 3:
+                        # Format: Metric,workflow_name,usage_count
+                        workflow_name = row[1].strip()
+                        try:
+                            usage_count = int(row[2].strip())
+                            usage_data[workflow_name] = usage_count
+                        except (ValueError, IndexError):
+                            # Skip invalid rows
+                            continue
+            
+            self.logger.info(f"Loaded usage data for {len(usage_data)} templates from {usage_csv_file}")
+        except Exception as e:
+            self.logger.warning(f"Failed to load usage data from {usage_csv_file}: {e} (continuing without usage data)")
+        
+        return usage_data
             
     def save_i18n(self):
         """Save i18n data to JSON file"""
@@ -1003,8 +1052,9 @@ class TemplateSyncManager:
     def fix_master_vram_data(self):
         """
         Fix vram data in the master index.json file before synchronization
+        Also syncs usage data from CSV if available
         """
-        self.syncer.logger.info("\n🔧 Step 0: Fixing vram data in master file...")
+        self.syncer.logger.info("\n🔧 Step 0: Fixing vram data and syncing usage data in master file...")
         
         # Load master data
         master_data = self.syncer.load_json_file(self.syncer.master_file)
@@ -1036,6 +1086,14 @@ class TemplateSyncManager:
                             changes_made = True
                             fixed_templates.append(template_name)
                             self.syncer.logger.info(f"  ✓ Set vram to 0 for '{template_name}' (size is 0)")
+                
+                # Handle usage data - sync from CSV if available
+                if self.syncer.usage_data and template_name in self.syncer.usage_data:
+                    usage_value = self.syncer.usage_data[template_name]
+                    if "usage" not in template or template["usage"] != usage_value:
+                        template["usage"] = usage_value
+                        changes_made = True
+                        self.syncer.logger.info(f"  📊 Updated usage for '{template_name}': {usage_value}")
         
         # Save the fixed master file
         if changes_made:
