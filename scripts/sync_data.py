@@ -64,6 +64,7 @@ class TemplateSyncer:
             "requiresCustomNodes",
             "usage",
             "searchRank"
+            "visibility",
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
