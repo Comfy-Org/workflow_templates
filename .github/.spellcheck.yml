@@ -1,0 +1,69 @@
+matrix:
+- name: Markdown
+  sources:
+  - 'README.md'
+  - 'docs/**/*.md'
+  - 'scripts/README*.md'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.markdown:
+      markdown_extensions:
+      - pymdownx.superfences:
+  - pyspelling.filters.html:
+      comments: false
+      ignores:
+      - code
+      - pre
+
+- name: Index JSON Files
+  sources:
+  - 'templates/index.json'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      delimiters:
+      # Extract only "title" field values
+      - open: '"title":\s*"'
+        close: '"'
+      # Extract only "description" field values
+      - open: '"description":\s*"'
+        close: '"'
+
+- name: Workflow JSON Files
+  sources:
+  - 'templates/*.json'
+  - '!templates/index*.json'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      delimiters:
+      # Only extract content inside widgets_values arrays for MarkdownNote/Note nodes
+      # This matches: "type": "MarkdownNote" (or Note), followed by "widgets_values": ["content here"]
+      - open: '(?s)"type":\s*"(?:MarkdownNote|Note)"(?:[^{]|{(?:[^{}]|{[^{}]*})*})*?"widgets_values":\s*\[\s*"'
+        close: '"\s*(?:,|\])'
+  - pyspelling.filters.markdown:
+      markdown_extensions:
+      - pymdownx.superfences:
+  - pyspelling.filters.html:
+      comments: false
+      ignores:
+      - code
+      - pre
+
