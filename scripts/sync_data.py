@@ -63,8 +63,8 @@ class TemplateSyncer:
             "thumbnailVariant",
             "requiresCustomNodes",
             "usage",
-            "searchRank"
-            "visibility",
+            "searchRank",
+            "includeOnDistributions"
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
