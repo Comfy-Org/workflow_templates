@@ -22,8 +22,8 @@ def load_json(file_path: Path) -> Dict:
         return json.load(f)
 
 
-def validate_schema(index_data: List[Dict], schema_path: Path) -> Tuple[bool, List[str]]:
-    """Validate index.json against JSON schema."""
+def validate_schema(index_data: List[Dict], schema_path: Path, file_name: str = "index.json") -> Tuple[bool, List[str]]:
+    """Validate index.json against JSON schema with enhanced error reporting."""
     errors = []
     
     try:
@@ -31,12 +31,31 @@ def validate_schema(index_data: List[Dict], schema_path: Path) -> Tuple[bool, Li
         jsonschema.validate(instance=index_data, schema=schema)
         return True, []
     except jsonschema.ValidationError as e:
-        errors.append(f"Schema validation error: {e.message}")
-        if e.path:
-            errors.append(f"  at path: {'.'.join(str(p) for p in e.path)}")
+        # Enhanced error reporting for GitHub Actions
+        path_str = ".".join(str(p) for p in e.path) if e.path else "root"
+        error_msg = f"Schema validation error at {path_str}: {e.message}"
+        
+        # Try to find the specific template name if error is in a template
+        if e.path and len(e.path) >= 3 and e.path[1] == "templates":
+            try:
+                category_idx = e.path[0]
+                template_idx = e.path[2]
+                template_name = index_data[category_idx]["templates"][template_idx].get("name", "unknown")
+                error_msg = f"Template '{template_name}': {e.message}"
+            except (IndexError, KeyError, TypeError):
+                pass
+        
+        errors.append(error_msg)
+        
+        # Add validation context
+        if hasattr(e, 'absolute_path'):
+            errors.append(f"  Path: {'.'.join(str(p) for p in e.absolute_path)}")
+        if hasattr(e, 'schema_path'):
+            errors.append(f"  Schema rule: {'.'.join(str(p) for p in e.schema_path)}")
+            
         return False, errors
     except Exception as e:
-        errors.append(f"Unexpected error during validation: {str(e)}")
+        errors.append(f"Unexpected error during schema validation: {str(e)}")
         return False, errors
 
 
@@ -327,6 +346,9 @@ def main():
     all_errors = []
     all_warnings = []
     
+    # Check for GitHub Actions environment
+    is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
+    
     # Run validations
     print("\n1️⃣  Validating all index files against JSON schema...")
     schema_all_valid = True
@@ -334,18 +356,26 @@ def main():
         print(f"   Validating {index_file.name}...")
         try:
             index_data = load_json(index_file)
-            valid, errors = validate_schema(index_data, schema_path)
+            valid, errors = validate_schema(index_data, schema_path, index_file.name)
             if valid:
                 print(f"     ✅ {index_file.name} schema validation passed")
+                # GitHub Actions annotation for success
+                if is_github_actions:
+                    print(f"::notice file=templates/{index_file.name}::Schema validation passed")
             else:
                 print(f"     ❌ {index_file.name} schema validation failed")
                 schema_all_valid = False
-                # Prefix errors with filename for clarity
-                prefixed_errors = [f"{index_file.name}: {error}" for error in errors]
-                all_errors.extend(prefixed_errors)
+                # Enhanced GitHub Actions annotations
+                for error in errors:
+                    if is_github_actions:
+                        print(f"::error file=templates/{index_file.name}::{error}")
+                    all_errors.append(f"{index_file.name}: {error}")
         except Exception as e:
             print(f"     ❌ Error loading {index_file.name}: {e}")
-            all_errors.append(f"{index_file.name}: Failed to load - {e}")
+            error_msg = f"Failed to load {index_file.name}: {e}"
+            if is_github_actions:
+                print(f"::error file=templates/{index_file.name}::{error_msg}")
+            all_errors.append(error_msg)
             schema_all_valid = False
     
     if schema_all_valid:
@@ -388,30 +418,66 @@ def main():
         print("   ❌ Templates using deprecated top-level models format found")
         all_errors.extend(errors)
     
-    # Print warnings
+    # Print warnings with enhanced annotations
     if all_warnings:
-        print("\nWarnings:")
+        print(f"\nWarnings ({len(all_warnings)}):")
         for warning in all_warnings:
             print(f"  ⚠️  {warning}")
-            # GitHub Actions annotation
+            # Enhanced GitHub Actions annotation with better categorization
             if is_github_actions:
-                print(f"::warning file=templates/index.json::{warning}")
+                if "not referenced" in warning.lower():
+                    print(f"::warning file=templates/index.json,title=Orphaned File::{warning}")
+                elif "missing" in warning.lower():
+                    print(f"::warning file=templates/index.json,title=Missing File::{warning}")
+                else:
+                    print(f"::warning file=templates/index.json::{warning}")
     
-    # Summary
+    # Summary with detailed GitHub Actions annotations
     print("\n" + "="*50)
     if all_errors:
-        print(f"❌ Validation failed with {len(all_errors)} error(s):\n")
-        for error in all_errors:
-            print(f"   • {error}")
-            # GitHub Actions annotation for errors
-            if is_github_actions:
-                print(f"::error file=templates/index.json::{error}")
+        print(f"❌ Validation failed with {len(all_errors)} error(s):")
+        
+        # Categorize errors for better reporting
+        schema_errors = [e for e in all_errors if "schema" in e.lower()]
+        file_errors = [e for e in all_errors if "not found" in e.lower() or "missing" in e.lower()]
+        other_errors = [e for e in all_errors if e not in schema_errors and e not in file_errors]
+        
+        if schema_errors:
+            print(f"\n📋 Schema Errors ({len(schema_errors)}):")
+            for error in schema_errors:
+                print(f"   • {error}")
+        
+        if file_errors:
+            print(f"\n📁 File Errors ({len(file_errors)}):")
+            for error in file_errors:
+                print(f"   • {error}")
+        
+        if other_errors:
+            print(f"\n🔧 Other Errors ({len(other_errors)}):")
+            for error in other_errors:
+                print(f"   • {error}")
+        
+        # GitHub Actions summary annotation
+        if is_github_actions:
+            error_summary = f"Validation failed: {len(schema_errors)} schema, {len(file_errors)} file, {len(other_errors)} other errors"
+            print(f"::error title=Validation Failed::{error_summary}")
+        
         return 1
     else:
+        success_msg = f"✅ All validations passed!"
         if all_warnings:
-            print(f"✅ All validations passed with {len(all_warnings)} warning(s)!")
-        else:
-            print("✅ All validations passed!")
+            success_msg = f"✅ All validations passed with {len(all_warnings)} warning(s)!"
+        
+        print(success_msg)
+        
+        # GitHub Actions success annotation
+        if is_github_actions:
+            files_validated = len(index_files)
+            summary = f"Successfully validated {files_validated} index files"
+            if all_warnings:
+                summary += f" with {len(all_warnings)} warnings"
+            print(f"::notice title=Validation Success::{summary}")
+        
         return 0
 
 
