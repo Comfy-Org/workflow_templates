@@ -327,7 +327,7 @@
         "| Model                                                         | 480P | 720P |\n| ------------------------------------------------------------ | ---- | ---- |\n| [VACE-1.3B](https://huggingface.co/Wan-AI/Wan2.1-VACE-1.3B) | ✅   | ❌   |\n| [VACE-14B](https://huggingface.co/Wan-AI/Wan2.1-VACE-14B)   | ✅   | ✅   |"
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     },
     {
       "id": 58,
@@ -940,7 +940,7 @@
         "## Default\n\n- steps:20\n- cfg:6.0\n\n## For CausVid LoRA\n\n- steps: 2-4\n- cfg: 1.0\n\n"
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     },
     {
       "id": 131,
@@ -1300,7 +1300,7 @@
         "Currently (May 18, 2025), the Comfy Core nodes lack relevant nodes for obtaining image size or video frames. Here, we can use the Preview image to indirectly obtain the image size and the total number of video frames.\n\nYou can use custom nodes such as image size acquisition to optimize the step of size modification.\n"
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     },
     {
       "id": 142,
@@ -1323,7 +1323,7 @@
         "Here, you need to manually set the size of the video after outpainting. Since the native nodes currently do not support the relevant functions, you can use some custom nodes to improve this step. Additionally, because the step size of the size setting for the WanVaceToVideo node is 16, the number you enter must be divisible by 16.    "
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     },
     {
       "id": 156,
@@ -1347,7 +1347,7 @@
         "The generation quality of the 14B model is better, but it takes longer to generate. If you have already downloaded the model, you can choose to directly use the nodes above, or just modify the model loaded by the loader node.\n\nThe corresponding LoRA should match the Diffusion Model. For example, the LoRA corresponding to the 14B diffusion model is the 14B LoRA. "
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     },
     {
       "id": 184,
@@ -1371,7 +1371,7 @@
         "We have added CausVid LoRA by default to achieve acceleration. However, in some cases, the video may shake and become blurry. You might need to test different LoRA intensities to get the best results, which should be between 0.3 and 0.7. If you don't need it, you can use the bypass mode to disable it, and then restore the settings of `KSampler` to the default ones.\n"
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     },
     {
       "id": 183,
@@ -1394,7 +1394,7 @@
         "[Tutorial](https://docs.comfy.org/tutorials/video/wan/vace)\n\n##  14B Support 480P 720P\n\n**Diffusion Model**\n- [wan2.1_vace_14B_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_vace_14B_fp16.safetensors)\n\n**LoRA**\n- [Wan21_CausVid_14B_T2V_lora_rank32.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/blob/main/Wan21_CausVid_14B_T2V_lora_rank32.safetensors)\n\nFYI: It takes about 40 minutes to run to completion at 81 frames per second in 720P resolution with the RTX 4090 when testing the workflow.  \nAfter using Wan21_CausVid_14B_T2V_lora_rank32.safetensors, it probably only takes about 4 minutes. \n\n## 1.3B Support 480P only\n\n**Diffusion Model**\n- [wan2.1_vace_1.3B_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/diffusion_models/wan2.1_vace_1.3B_fp16.safetensors)\n\n**LoRA**\n- [Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors](https://huggingface.co/Kijai/WanVideo_comfy/blob/main/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors)\n\nFYI: After using Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors, it probably only takes about 2 minutes. \n## Other Models\n\n* You may already have these models if you use Wan workflow before.\n\n**VAE**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors?download=true)\n\n**Text encoders**   Chose one of following model\n- [umt5_xxl_fp16.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp16.safetensors?download=true)\n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true)\n\n> You can choose between fp16 of fp8; I used fp16 to match what kijai's wrapper is compatible with.\n\nFile save location\n\n```\nComfyUI/\n├── models/\n│   ├── diffusion_models/\n│   │   ├-── wan2.1_vace_14B_fp16.safetensors\n│   │   └─── wan2.1_vace_1.3B_fp16.safetensors \n│   ├── text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors # or fp16\n│   ├── loras/\n│   │   ├── Wan21_CausVid_14B_T2V_lora_rank32.safetensors\n│   │   └── Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors\n│   └── vae/\n│       └──  wan_2.1_vae.safetensors\n```\n"
       ],
       "color": "#432",
-      "bgcolor": "#653"
+      "bgcolor": "#000"
     }
   ],
   "links": [
