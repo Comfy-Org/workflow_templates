@@ -119,3 +119,34 @@ jobs:
             repo: context.repo.repo,
             body: comment
           });
+    
+    - name: Validation Summary
+      if: always()
+      run: |
+        echo "📊 Template Validation Summary"
+        echo "============================="
+        
+        # Collect status from all steps
+        VALIDATION_STATUS="${{ steps.validation.outputs.validation_status || 'not-run' }}"
+        THIRD_PARTY_FOUND="${{ steps.third_party_check.outputs.third_party_found || 'false' }}"
+        THUMBNAIL_ISSUES="${{ steps.thumbnail_check.outputs.thumbnail_issues || 'false' }}"
+        
+        echo "🔍 Schema & Structure Validation: $VALIDATION_STATUS"
+        echo "📄 JSON Syntax Check: $([ '${{ steps.json-check.outcome }}' = 'success' ] && echo 'passed' || echo 'failed')"
+        echo "📏 File Size Check: $([ '${{ steps.size-check.outcome }}' = 'success' ] && echo 'completed' || echo 'failed')"
+        echo "🔧 Third-party Nodes: $([ '$THIRD_PARTY_FOUND' = 'true' ] && echo 'found (warning)' || echo 'clean')"
+        echo "🖼️ Thumbnail Validation: $([ '$THUMBNAIL_ISSUES' = 'true' ] && echo 'issues found' || echo 'passed')"
+        
+        # Overall status
+        if [ "$VALIDATION_STATUS" = "passed" ] && [ "${{ steps.json-check.outcome }}" = "success" ]; then
+          if [ "$THIRD_PARTY_FOUND" = "true" ] || [ "$THUMBNAIL_ISSUES" = "true" ]; then
+            echo "::warning title=Validation Complete::✅ Core validation passed with warnings"
+            echo "🟡 Overall Status: PASSED WITH WARNINGS"
+          else
+            echo "::notice title=Validation Complete::✅ All validations passed successfully"
+            echo "🟢 Overall Status: ALL CHECKS PASSED"
+          fi
+        else
+          echo "::error title=Validation Complete::❌ Validation failed - issues must be resolved"
+          echo "🔴 Overall Status: FAILED"
+        fi
