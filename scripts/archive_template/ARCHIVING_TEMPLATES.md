@@ -1,8 +1,13 @@
 # Template Archiving Guide
 
-This document explains how to use the archiving script to move templates marked as `archived` to the archived folder.
+This document explains how to use the archiving script to move templates marked as `archived` to the archived folder, and how to restore archived templates back to active status.
 
 ## Overview
+
+The script performs two operations in sequence:
+
+1. **Restore Process**: When templates in `archived/index.json` have `"status": "active"`, the script will restore them back to the active templates folder
+2. **Archive Process**: When templates in `templates/index.json` have `"status": "archived"`, the script will move them to the archived folder
 
 When a template is marked with `"status": "archived"`, the archiving script will automatically:
 1. Move template files and related resources to the `archived/` folder
@@ -35,8 +40,10 @@ In `templates/index.json`, find the template you want to archive and add the `"s
 Execute from the project root directory:
 
 ```bash
-python3 scripts/archive_templates.py
+python3 scripts/archive_template/archive_templates.py
 ```
+
+The script will first check for templates to restore (with `status: "active"` in `archived/index.json`), then process templates to archive (with `status: "archived"` in `templates/index.json`).
 
 ### 3. Verify Results
 
@@ -51,7 +58,21 @@ After the script completes, check:
 
 ## Script Execution Flow
 
-The script processes each archived template in the following steps:
+The script runs in two phases:
+
+### Phase 1: Restore Process
+
+The script first checks `archived/index.json` for templates with `"status": "active"` and restores them:
+
+1. **Restore Files**: Move template JSON and thumbnail files from `archived/` back to `templates/`
+2. **Restore i18n**: Move translation data from `archived/archived_i18n.json` back to `scripts/i18n.json`
+3. **Restore Locale Indexes**: Move template entries from `archived/index.[locale].json` back to `templates/index.[locale].json`
+4. **Restore Main Index**: Move template entries from `archived/index.json` back to `templates/index.json`
+5. **Remove Status**: Remove the `"status": "active"` field from restored templates
+
+### Phase 2: Archive Process
+
+The script then processes each archived template (with `"status": "archived"` in `templates/index.json`) in the following steps:
 
 ### Step 1: Move Files
 - Move `{template_name}.json` to `archived/`
@@ -78,6 +99,27 @@ The script processes each archived template in the following steps:
 ## Output Example
 
 The script displays detailed processing information during execution:
+
+### Restore Process (if any active templates found)
+
+```
+Starting template restoration process...
+
+Found 1 template(s) to restore:
+  - hidream_e1_1 (HiDream E1.1图像编辑)
+
+Restoring: hidream_e1_1
+  Restored hidream_e1_1.json from archived/
+  Restored hidream_e1_1-1.webp from archived/
+  Restored i18n data for hidream_e1_1
+  Restored to index.zh.json
+  Restored to index.json
+
+Saving restored files...
+Restoration complete!
+```
+
+### Archive Process
 
 ```
 Starting template archiving process...
@@ -155,21 +197,55 @@ archived/
 
 ## Restoring Archived Templates
 
-To restore an archived template:
+The script now supports automatic restoration of archived templates! Simply mark the template as active in the archived index:
+
+### Method: Automatic Restoration (Recommended)
+
+1. Open `archived/index.json`
+2. Find the template you want to restore
+3. Add or change the `status` field to `"active"`:
+
+```json
+{
+  "name": "hidream_e1_1",
+  "title": "HiDream E1.1图像编辑",
+  "status": "active",
+  ...
+}
+```
+
+4. Run the archiving script:
+
+```bash
+python3 scripts/archive_template/archive_templates.py
+```
+
+The script will automatically:
+- Restore template files from `archived/` to `templates/`
+- Restore i18n translations from `archived/archived_i18n.json` to `scripts/i18n.json`
+- Restore template entries in all index files
+- Remove the `"status": "active"` field after restoration
+
+### Manual Restoration (if needed)
+
+If you prefer to restore manually:
 
 1. Copy template files from `archived/` back to `templates/`
 2. Copy translation data from `archived/archived_i18n.json` back to `scripts/i18n.json` under the `templates` key
 3. Copy template data from `archived/index.[locale].json` back to corresponding `templates/index.[locale].json` files
-4. Copy template data from `archived/index.[locale].json` back to `templates/index.json`
+4. Copy template data from `archived/index.json` back to `templates/index.json`
 5. If needed, add template name back to the appropriate array in `bundles.json`
-6. Remove the `"status": "archived"` field from the template definition
+6. Remove the `"status"` field from the template definition (if present)
 
 ## Related Files
 
-- Script location: `scripts/archive_templates.py`
+- Script location: `scripts/archive_template/archive_templates.py`
 - Main index: `templates/index.json`
+- Archived main index: `archived/index.json`
 - Localized indices: `templates/index.[locale].json`
+- Archived localized indices: `archived/index.[locale].json`
 - Translation data: `scripts/i18n.json`
+- Archived translation data: `archived/archived_i18n.json`
 - Bundle configuration: `bundles.json`
 
 ## Contributing
