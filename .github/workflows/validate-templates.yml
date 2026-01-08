@@ -31,8 +31,37 @@ jobs:
         pip install jsonschema
     
     - name: Run validation script
-      run: python scripts/validate_templates.py
-    
+      id: validation
+      run: |
+        python scripts/validate_templates.py 2>&1 | tee validation_output.txt
+        echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
+      continue-on-error: true
+
+    - name: Comment on PR with validation errors
+      if: steps.validation.outputs.exit_code != '0' && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const fs = require('fs');
+          let output = '';
+          try {
+            output = fs.readFileSync('validation_output.txt', 'utf8');
+          } catch (error) {
+            output = 'Unable to read validation output';
+          }
+
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `## ❌ Template Validation Failed
+
+\`\`\`
+${output}
+\`\`\``
+          });
+
     - name: Check JSON syntax
       run: |
         echo "Checking JSON syntax..."
@@ -94,24 +123,16 @@ jobs:
             report = 'Unable to read thumbnail validation report';
           }
           
-          const comment = `## ❌ Thumbnail Validation Issues Found
-          
-          Your template has thumbnail configuration issues that need to be resolved.
-          
-          **Why this matters:** Templates need proper thumbnails to provide users with visual previews. Templates with special thumbnail variants like "compareSlider" or "hoverDissolve" require specific thumbnail files to work correctly.
-          
-          ### Validation Report:
-          \`\`\`
-          ${report}
-          \`\`\`
-          
-          ### How to Fix:
-          1. **Missing thumbnails**: Ensure each template has at least one thumbnail file (e.g., \`template-1.webp\`)
-          2. **Incomplete dual thumbnails**: Templates with \`thumbnailVariant: "compareSlider"\` or \`"hoverDissolve"\` need both \`-1\` and \`-2\` thumbnail files
-          3. **Check file naming**: Thumbnail files should be named \`{template_name}-{number}.{extension}\`
-          4. **Verify file format**: Use the correct file extension (\`.webp\`, \`.mp3\`, etc.) as specified in the template's \`mediaSubtype\`
-          
-          **Note**: All templates must have proper thumbnails configured to ensure the best user experience when browsing templates.`;
+          const comment = `## ❌ Thumbnail Validation Failed
+
+\`\`\`
+${report}
+\`\`\`
+
+**Fix:**
+- Missing: Add \`template-1.webp\`
+- Dual thumbnails (\`compareSlider\`/\`hoverDissolve\`): Need both \`-1\` and \`-2\` files
+- Check naming: \`{name}-{number}.{ext}\``;
           
           github.rest.issues.createComment({
             issue_number: context.issue.number,
@@ -119,3 +140,9 @@ jobs:
             repo: context.repo.repo,
             body: comment
           });
+
+    - name: Fail workflow if validation failed
+      if: steps.validation.outputs.exit_code != '0' || steps.thumbnail_check.outputs.thumbnail_issues == 'true'
+      run: |
+        echo "❌ Validation failed"
+        exit 1

@@ -198,67 +198,12 @@ jobs:
               lycheeReport = 'Lychee reported an error (non-zero exit) but no broken-link rows were parsed. Please check artifacts for details.';
             }
 
-            const comment = `## 🔗 Broken Links Found in Workflow Files
-
-            The link checker found broken or unreachable links in your workflow JSON files.
-
-            **Why this matters:** Broken model download links will prevent users from using the workflows properly. All URLs in \`properties.models[].url\` fields and MarkdownNote/Note widgets must be valid and accessible.
-
-            ### ❌ Failed Links:
+            const comment = `## ❌ Broken Links Found
 
             ${lycheeReport}
 
-            ${excludedReport ? '---\n\n' + excludedReport + '\n\n**Note:** These links are intentionally excluded from checking. If you need to modify the exclusion rules, edit \`.lycheeignore\`.\n\n' : ''}
-
-            ### Common Issues:
-
-            1. **404 Not Found**: The file or page doesn't exist
-               - Verify the URL is correct
-               - Check if the file was moved or renamed
-               - Update to the correct URL
-
-            2. **Timeout**: Server didn't respond in time
-               - Verify the URL is correct
-               - Check if the server is temporarily down
-               - Try accessing the URL manually
-
-            3. **Connection Failed**: Unable to reach the server
-               - Verify the domain exists
-               - Check if the repository/file was deleted
-
-            ### How to Fix:
-
-            1. **For model URLs in \`properties.models[].url\`:**
-               - Update the URL to a valid download link
-               - Ensure the model file is still available
-               - Test the URL manually before committing
-
-            2. **For links in MarkdownNote/Note widgets:**
-               - Update or remove broken documentation links
-               - Ensure all referenced resources are accessible
-
-            ### Testing Links Locally:
-
-            \`\`\`bash
-            # Extract and check links
-            python3 scripts/check_links.py extract
-            lychee links_to_check.txt
-
-            # View detailed report
-            python3 scripts/check_links.py report
-
-            # View excluded links
-            python3 scripts/check_links.py report-excluded
-            \`\`\`
-
-            ### 📦 Detailed Reports
-
-            For a complete list of all links and their sources, download the artifacts from this workflow run:
-            - \`link_report_detailed.txt\` - Full detailed report showing all links and which files contain them
-            - \`excluded_links.txt\` - Complete list of excluded links
-            - \`lychee-report.md\` - Full lychee check report
-
-            **Note**: All links in workflow files must be valid and accessible before merging to ensure users can download required models and access documentation.`;
+            ${excludedReport ? '**Excluded:**\n' + excludedReport + '\n\n' : ''}
+            **Fix:** Update or remove broken URLs in workflow files. Check artifacts for full report.`;
 
             github.rest.issues.createComment({
               issue_number: context.issue.number,
