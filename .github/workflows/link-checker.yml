@@ -145,34 +145,22 @@ jobs:
             let inErrorBlock = false;
 
             for (const line of lycheeLines) {
-              // Start/end detection for lychee sections
-              if (line.startsWith('### Errors in')) {
-                inErrorBlock = true;
-                continue;
-              }
-              if (line.startsWith('## ') && !line.startsWith('### Errors in')) {
-                inErrorBlock = false;
-              }
-
-              // Bullet-format errors
-              if (inErrorBlock && line.startsWith('* [')) {
-                errors.push(line);
-                continue;
+              // End error block when hitting a new section
+              if (line.startsWith('##')) {
+                if (line.startsWith('### Errors in') || line.startsWith('🚫 Errors')) {
+                  inErrorBlock = true;
+                  continue;
+                } else {
+                  inErrorBlock = false;
+                  continue;
+                }
               }
 
-              // Table-format errors under "🚫 Errors" sections
-              if (line.startsWith('🚫 Errors')) {
-                inErrorBlock = true;
-                continue;
-              }
-              if (inErrorBlock && line.startsWith('| [')) {
-                errors.push(line);
-                continue;
-              }
-
-              // Blank line ends current block
-              if (inErrorBlock && line.trim() === '') {
-                inErrorBlock = false;
+              // Capture error lines
+              if (inErrorBlock) {
+                if (line.startsWith('* [') || line.startsWith('| [')) {
+                  errors.push(line);
+                }
               }
             }
 
