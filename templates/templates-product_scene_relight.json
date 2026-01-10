@@ -121,48 +121,6 @@
       "bgcolor": "#353"
     },
     {
-      "id": 15,
-      "type": "94a7e2c4-f61f-4641-a52c-758479d9b975",
-      "pos": [
-        -1430,
-        -140
-      ],
-      "size": [
-        170,
-        46
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 4,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image1",
-          "type": "IMAGE",
-          "link": 21
-        },
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 22
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            33
-          ]
-        }
-      ],
-      "properties": {
-        "proxyWidgets": []
-      },
-      "widgets_values": []
-    },
-    {
       "id": 23,
       "type": "SaveImage",
       "pos": [
@@ -336,6 +294,48 @@
       "widgets_values": [
         "Task: Realistic Product Compositing with Material Preservation Goal: Insert the product from Input 2 into Input 1, ensuring placement is logical and lighting interacts accurately with the product's specific material properties.\n\nInput Image(s):\n\nInput 1 (Scene)\nInput 2 (Product): {product_description}\n\nManual Material Breakdown (Critical): To ensure correct light interaction, treat the product as having the following physical properties:\n\nPrimary Material: [e.g., Matte Plastic / Brushed Aluminum / Clear Glass]\n\nReflectivity: [e.g., Low (dull reflections) / High (mirror-like)]\n\nTexture: [e.g., Smooth / Grainy / Porous]\n\nReaction to Light: [e.g., \"Should absorb light with soft highlights, no sharp glares\"]\n\nSecondary Material (if any): [e.g., Gold Foil Label / Glossy Cap]\n\nReaction to Light: [e.g., \"Should catch sharp, bright specular highlights from the environment\"]\n\nProcess:\nScene Analysis: Identify the logical ground plane/surface in Input 1.\n\nPlacement: Scale Input 2 uniformly (maintain aspect ratio) and place it on the surface.\n\nMaterial-Based Relighting:\n\nDo not simply overlay the scene colors onto the product.\nInstead, map the environment light from Input 1 onto the contours of Input 2 based on the material definitions above.\n\nExample: If the material is Matte, only the edge lighting and general ambient tone should change; do not add sharp reflections.\n\nExample: If the material is Glossy, reflect the scene's details on the surface.\n\nShadows: Generate contact shadows that match the hardness/softness of shadows in the rest of the scene.\n\nTechnical Requirements:\nAlbedo Preservation: The intrinsic color of the product (e.g., \"Brand Red\") must not be washed out by the scene's lighting color.\n\nTexture Fidelity: Do not smooth out surface details (grain, bumps) during the blending process.\n\nScaling: No non-uniform stretching.\n\nOutput: A composite where the lighting confirms the materiality of the product (e.g., makes the plastic look like plastic, not metal)."
       ]
+    },
+    {
+      "id": 15,
+      "type": "94a7e2c4-f61f-4641-a52c-758479d9b975",
+      "pos": [
+        -1430,
+        -140
+      ],
+      "size": [
+        170,
+        46
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": []
+      },
+      "widgets_values": []
     }
   ],
   "links": [
@@ -404,8 +404,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 14,
-          "lastLinkId": 20,
+          "lastNodeId": 15,
+          "lastLinkId": 23,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -414,8 +414,8 @@
         "inputNode": {
           "id": -10,
           "bounding": [
-            -1750,
-            -145,
+            -1880,
+            -140,
             120,
             80
           ]
@@ -423,8 +423,8 @@
         "outputNode": {
           "id": -20,
           "bounding": [
-            -1333.87890625,
-            -135,
+            -1080,
+            -160,
             120,
             60
           ]
@@ -435,13 +435,13 @@
             "name": "image1",
             "type": "IMAGE",
             "linkIds": [
-              15,
-              16
+              16,
+              22
             ],
             "localized_name": "image1",
             "pos": [
-              -1650,
-              -125
+              -1780,
+              -120
             ]
           },
           {
@@ -453,8 +453,8 @@
             ],
             "localized_name": "image",
             "pos": [
-              -1650,
-              -105
+              -1780,
+              -100
             ]
           }
         ],
@@ -464,45 +464,53 @@
             "name": "IMAGE",
             "type": "IMAGE",
             "linkIds": [
-              14
+              21
             ],
             "localized_name": "IMAGE",
             "pos": [
-              -1313.87890625,
-              -115
+              -1060,
+              -140
             ]
           }
         ],
         "widgets": [],
         "nodes": [
           {
-            "id": 7,
-            "type": "ImageBatch",
+            "id": 15,
+            "type": "BatchImagesNode",
             "pos": [
-              -1570,
-              -150
+              -1420,
+              -170
             ],
             "size": [
-              140,
-              46
+              169.23046875,
+              66
             ],
-            "flags": {
-              "collapsed": true
-            },
+            "flags": {},
             "order": 2,
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "image1",
-                "name": "image1",
+                "label": "image0",
+                "localized_name": "images.image0",
+                "name": "images.image0",
                 "type": "IMAGE",
-                "link": 15
+                "link": 22
               },
               {
-                "localized_name": "image2",
-                "name": "image2",
+                "label": "image1",
+                "localized_name": "images.image1",
+                "name": "images.image1",
                 "type": "IMAGE",
-                "link": 9
+                "link": 23
+              },
+              {
+                "label": "image2",
+                "localized_name": "images.image2",
+                "name": "images.image2",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
               }
             ],
             "outputs": [
@@ -511,28 +519,27 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  14
+                  21
                 ]
               }
             ],
             "properties": {
-              "Node name for S&R": "ImageBatch"
-            },
-            "widgets_values": []
+              "Node name for S&R": "BatchImagesNode"
+            }
           },
           {
             "id": 5,
             "type": "GetImageSize",
             "pos": [
-              -1569.3336281582374,
-              -87.3333192319028
+              -1710,
+              -30
             ],
             "size": [
               210,
               136
             ],
             "flags": {
-              "collapsed": true
+              "collapsed": false
             },
             "order": 0,
             "mode": 0,
@@ -577,7 +584,7 @@
             "id": 6,
             "type": "ResizeAndPadImage",
             "pos": [
-              -1570,
+              -1450,
               -30
             ],
             "size": [
@@ -585,7 +592,7 @@
               130
             ],
             "flags": {
-              "collapsed": true
+              "collapsed": false
             },
             "order": 1,
             "mode": 0,
@@ -621,7 +628,7 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  9
+                  23
                 ]
               }
             ],
@@ -639,14 +646,6 @@
         "groups": [],
         "links": [
           {
-            "id": 9,
-            "origin_id": 6,
-            "origin_slot": 0,
-            "target_id": 7,
-            "target_slot": 1,
-            "type": "IMAGE"
-          },
-          {
             "id": 4,
             "origin_id": 5,
             "origin_slot": 0,
@@ -661,14 +660,6 @@
             "target_id": 6,
             "target_slot": 2,
             "type": "INT"
-          },
-          {
-            "id": 15,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 7,
-            "target_slot": 0,
-            "type": "IMAGE"
           },
           {
             "id": 16,
@@ -687,11 +678,27 @@
             "type": "IMAGE"
           },
           {
-            "id": 14,
-            "origin_id": 7,
+            "id": 21,
+            "origin_id": 15,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 22,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 15,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 23,
+            "origin_id": 6,
+            "origin_slot": 0,
+            "target_id": 15,
+            "target_slot": 1,
             "type": "IMAGE"
           }
         ],
@@ -704,13 +711,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6722068840229184,
+      "scale": 1.3940068280855902,
       "offset": [
-        2469.5202795241644,
-        521.0803572815084
+        1902.121132651144,
+        351.9877945599146
       ]
     },
-    "frontendVersion": "1.36.1",
+    "frontendVersion": "1.37.6",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,

@@ -109,50 +109,6 @@
       ]
     },
     {
-      "id": 29,
-      "type": "62df1500-5aa3-4efd-95e7-cd3db70f1ded",
-      "pos": [
-        1550,
-        120
-      ],
-      "size": [
-        170,
-        46
-      ],
-      "flags": {
-        "collapsed": true
-      },
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 32
-        },
-        {
-          "name": "image_1",
-          "type": "IMAGE",
-          "link": 33
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            34
-          ]
-        }
-      ],
-      "properties": {
-        "proxyWidgets": [],
-        "cnr_id": "comfy-core",
-        "ver": "0.4.0"
-      },
-      "widgets_values": []
-    },
-    {
       "id": 10,
       "type": "SaveImage",
       "pos": [
@@ -451,6 +407,50 @@
       ],
       "color": "#232",
       "bgcolor": "#353"
+    },
+    {
+      "id": 29,
+      "type": "62df1500-5aa3-4efd-95e7-cd3db70f1ded",
+      "pos": [
+        1550,
+        120
+      ],
+      "size": [
+        170,
+        46
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 32
+        },
+        {
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": 33
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [],
+        "cnr_id": "comfy-core",
+        "ver": "0.4.0"
+      },
+      "widgets_values": []
     }
   ],
   "links": [
@@ -543,8 +543,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 32,
-          "lastLinkId": 36,
+          "lastNodeId": 33,
+          "lastLinkId": 40,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -553,8 +553,8 @@
         "inputNode": {
           "id": -10,
           "bounding": [
-            1390,
-            130,
+            900,
+            150,
             120,
             80
           ]
@@ -562,8 +562,8 @@
         "outputNode": {
           "id": -20,
           "bounding": [
-            1806.12109375,
-            140,
+            2720,
+            30,
             120,
             60
           ]
@@ -575,12 +575,12 @@
             "type": "IMAGE",
             "linkIds": [
               30,
-              31
+              39
             ],
             "localized_name": "image",
             "pos": [
-              1490,
-              150
+              1000,
+              170
             ]
           },
           {
@@ -592,8 +592,8 @@
             ],
             "localized_name": "image_1",
             "pos": [
-              1490,
-              170
+              1000,
+              190
             ]
           }
         ],
@@ -603,30 +603,94 @@
             "name": "IMAGE",
             "type": "IMAGE",
             "linkIds": [
-              20
+              37
             ],
             "localized_name": "IMAGE",
             "pos": [
-              1826.12109375,
-              160
+              2740,
+              50
             ]
           }
         ],
         "widgets": [],
         "nodes": [
           {
+            "id": 17,
+            "type": "ResizeAndPadImage",
+            "pos": [
+              1820,
+              260
+            ],
+            "size": [
+              270,
+              130
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 35
+              },
+              {
+                "localized_name": "target_width",
+                "name": "target_width",
+                "type": "INT",
+                "widget": {
+                  "name": "target_width"
+                },
+                "link": 16
+              },
+              {
+                "localized_name": "target_height",
+                "name": "target_height",
+                "type": "INT",
+                "widget": {
+                  "name": "target_height"
+                },
+                "link": 17
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  40
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ResizeAndPadImage",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.76"
+            },
+            "widgets_values": [
+              512,
+              512,
+              "black",
+              "area"
+            ]
+          },
+          {
             "id": 16,
             "type": "GetImageSize",
             "pos": [
-              1570,
-              130
+              1640,
+              270
             ],
             "size": [
               140,
               70
             ],
             "flags": {
-              "collapsed": true
+              "collapsed": false
             },
             "order": 1,
             "mode": 0,
@@ -673,8 +737,8 @@
             "id": 29,
             "type": "RemBGSession+",
             "pos": [
-              1570,
-              310
+              1170,
+              430
             ],
             "size": [
               270,
@@ -686,12 +750,12 @@
             "inputs": [],
             "outputs": [
               {
+                "localized_name": "REMBG_SESSION",
                 "name": "REMBG_SESSION",
                 "type": "REMBG_SESSION",
                 "links": [
                   32
-                ],
-                "localized_name": "REMBG_SESSION"
+                ]
               }
             ],
             "properties": {
@@ -708,7 +772,7 @@
             "id": 30,
             "type": "ImageRemoveBackground+",
             "pos": [
-              1570,
+              1520,
               440
             ],
             "size": [
@@ -716,37 +780,37 @@
               46
             ],
             "flags": {},
-            "order": 4,
+            "order": 3,
             "mode": 0,
             "inputs": [
               {
+                "localized_name": "rembg_session",
                 "name": "rembg_session",
                 "type": "REMBG_SESSION",
-                "link": 32,
-                "localized_name": "rembg_session"
+                "link": 32
               },
               {
+                "localized_name": "image",
                 "name": "image",
                 "type": "IMAGE",
-                "link": 33,
-                "localized_name": "image"
+                "link": 33
               }
             ],
             "outputs": [
               {
+                "localized_name": "IMAGE",
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
                   34,
                   35
-                ],
-                "localized_name": "IMAGE"
+                ]
               },
               {
+                "localized_name": "MASK",
                 "name": "MASK",
                 "type": "MASK",
-                "links": null,
-                "localized_name": "MASK"
+                "links": null
               }
             ],
             "properties": {
@@ -757,131 +821,50 @@
             "widgets_values": []
           },
           {
-            "id": 18,
-            "type": "ImageBatch",
+            "id": 32,
+            "type": "PreviewImage",
             "pos": [
-              1570,
-              240
+              2280,
+              340
             ],
             "size": [
-              140,
-              50
+              230,
+              400
             ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 3,
-            "mode": 0,
+            "flags": {},
+            "order": 5,
+            "mode": 4,
             "inputs": [
               {
-                "localized_name": "image1",
-                "name": "image1",
+                "localized_name": "images",
+                "name": "images",
                 "type": "IMAGE",
-                "link": 31
-              },
-              {
-                "localized_name": "image2",
-                "name": "image2",
-                "type": "IMAGE",
-                "link": 19
+                "link": 38
               }
             ],
-            "outputs": [
-              {
-                "localized_name": "IMAGE",
-                "name": "IMAGE",
-                "type": "IMAGE",
-                "links": [
-                  20,
-                  36
-                ]
-              }
-            ],
+            "outputs": [],
+            "title": "Preview Batched Images",
             "properties": {
-              "Node name for S&R": "ImageBatch",
+              "Node name for S&R": "PreviewImage",
               "cnr_id": "comfy-core",
-              "ver": "0.3.76"
+              "ver": "0.4.0"
             },
             "widgets_values": []
-          },
-          {
-            "id": 17,
-            "type": "ResizeAndPadImage",
-            "pos": [
-              1570,
-              180
-            ],
-            "size": [
-              270,
-              130
-            ],
-            "flags": {
-              "collapsed": true
-            },
-            "order": 2,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "image",
-                "name": "image",
-                "type": "IMAGE",
-                "link": 35
-              },
-              {
-                "localized_name": "target_width",
-                "name": "target_width",
-                "type": "INT",
-                "widget": {
-                  "name": "target_width"
-                },
-                "link": 16
-              },
-              {
-                "localized_name": "target_height",
-                "name": "target_height",
-                "type": "INT",
-                "widget": {
-                  "name": "target_height"
-                },
-                "link": 17
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "IMAGE",
-                "name": "IMAGE",
-                "type": "IMAGE",
-                "links": [
-                  19
-                ]
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "ResizeAndPadImage",
-              "cnr_id": "comfy-core",
-              "ver": "0.3.76"
-            },
-            "widgets_values": [
-              512,
-              512,
-              "black",
-              "area"
-            ]
           },
           {
             "id": 31,
             "type": "PreviewImage",
             "pos": [
-              1570,
-              540
+              1830,
+              470
             ],
             "size": [
               240,
               310
             ],
             "flags": {},
-            "order": 5,
-            "mode": 0,
+            "order": 4,
+            "mode": 4,
             "inputs": [
               {
                 "localized_name": "images",
@@ -900,33 +883,56 @@
             "widgets_values": []
           },
           {
-            "id": 32,
-            "type": "PreviewImage",
+            "id": 33,
+            "type": "BatchImagesNode",
             "pos": [
-              1900,
-              210
+              1910,
+              130
             ],
             "size": [
-              230,
-              400
+              169.23046875,
+              66
             ],
             "flags": {},
             "order": 6,
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
+                "label": "image0",
+                "localized_name": "images.image0",
+                "name": "images.image0",
                 "type": "IMAGE",
-                "link": 36
+                "link": 39
+              },
+              {
+                "label": "image1",
+                "localized_name": "images.image1",
+                "name": "images.image1",
+                "type": "IMAGE",
+                "link": 40
+              },
+              {
+                "label": "image2",
+                "localized_name": "images.image2",
+                "name": "images.image2",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
               }
             ],
-            "outputs": [],
-            "title": "Preview Batched Images",
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  37,
+                  38
+                ]
+              }
+            ],
             "properties": {
-              "Node name for S&R": "PreviewImage",
-              "cnr_id": "comfy-core",
-              "ver": "0.4.0"
+              "Node name for S&R": "BatchImagesNode"
             },
             "widgets_values": []
           }
@@ -950,34 +956,10 @@
             "type": "INT"
           },
           {
-            "id": 19,
-            "origin_id": 17,
-            "origin_slot": 0,
-            "target_id": 18,
-            "target_slot": 1,
-            "type": "IMAGE"
-          },
-          {
             "id": 30,
             "origin_id": -10,
             "origin_slot": 0,
             "target_id": 16,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
-          {
-            "id": 31,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 18,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
-          {
-            "id": 20,
-            "origin_id": 18,
-            "origin_slot": 0,
-            "target_id": -20,
             "target_slot": 0,
             "type": "IMAGE"
           },
@@ -1014,11 +996,35 @@
             "type": "IMAGE"
           },
           {
-            "id": 36,
-            "origin_id": 18,
+            "id": 37,
+            "origin_id": 33,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 38,
+            "origin_id": 33,
             "origin_slot": 0,
             "target_id": 32,
             "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 39,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 33,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 40,
+            "origin_id": 17,
+            "origin_slot": 0,
+            "target_id": 33,
+            "target_slot": 1,
             "type": "IMAGE"
           }
         ],
@@ -1030,19 +1036,19 @@
   },
   "config": {},
   "extra": {
-    "ds": {
-      "scale": 0.362538599684064,
-      "offset": [
-        1334.508368994827,
-        401.3543741047113
-      ]
-    },
-    "frontendVersion": "1.34.8",
+    "frontendVersion": "1.37.6",
+    "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
     "VHS_KeepIntermediate": true,
-    "workflowRendererVersion": "LG"
+    "ds": {
+      "scale": 0.9403317594257539,
+      "offset": [
+        -760.5719330479835,
+        150.92017326967346
+      ]
+    }
   },
   "version": 0.4
 }
