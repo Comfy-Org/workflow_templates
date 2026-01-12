@@ -17,6 +17,7 @@ from typing import List, Dict, Tuple, Optional
 ASSET_NODE_TYPES = [
     "LoadImage",
     "LoadAudio", 
+    "VHS_LoadVideo", 
     "LoadVideo"
 ]
 
