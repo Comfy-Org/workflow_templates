@@ -45,52 +45,14 @@ jobs:
           python-version: "3.x"
 
       - name: Sync manifests and bundles (first)
-        id: sync_bundles
         run: |
           echo "=== Validating bundles.json and syncing manifests ==="
           # This step validates that all templates are assigned to bundles
           # and generates updated manifest files with SHA256 hashes
           # Must run BEFORE version detection so core package manifest.json changes are detected
-          python scripts/sync_bundles.py 2>&1 | tee sync_bundles_output.txt
-          echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
-          if [ "${PIPESTATUS[0]}" -eq 0 ]; then
-            echo "✅ Manifest sync complete"
-          fi
-        continue-on-error: true
-
-      - name: Comment on PR with sync errors
-        if: steps.sync_bundles.outputs.exit_code != '0' && github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            let output = '';
-            try {
-              output = fs.readFileSync('sync_bundles_output.txt', 'utf8');
-            } catch (error) {
-              output = 'Unable to read sync bundles output';
-            }
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## ❌ Bundle Sync Failed
-
-\`\`\`
-${output}
-\`\`\`
-
-**Fix:** Ensure all templates are assigned to bundles in \`bundles.json\`.`
-            });
-
-      - name: Fail workflow if sync failed
-        if: steps.sync_bundles.outputs.exit_code != '0'
-        run: |
-          echo "❌ Bundle sync failed"
-          exit 1
-
+          python scripts/sync_bundles.py
+          echo "✅ Manifest sync complete"
+          
       - name: Auto-bump package versions if needed
         run: |
           echo "=== Analyzing template changes and bumping versions ==="
