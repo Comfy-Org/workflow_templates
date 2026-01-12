@@ -34,7 +34,7 @@ This will:
 Generate the upload JSON file for asset deployment:
 
 ```bash
-python scripts/check_input_assets.py --generate-upload-json
+python3 scripts/check_input_assets.py --generate-upload-json
 ```
 
 This will:

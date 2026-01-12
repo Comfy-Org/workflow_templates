@@ -17,6 +17,7 @@ from typing import List, Dict, Tuple, Optional
 ASSET_NODE_TYPES = [
     "LoadImage",
     "LoadAudio", 
+    "VHS_LoadVideo", 
     "LoadVideo"
 ]
 
@@ -59,9 +60,16 @@ def extract_asset_references(workflow_file: Path, node_types: List[str]) -> List
         if node_type in node_types:
             widgets_values = node.get("widgets_values", [])
             # The first element in widgets_values is typically the filename
-            if widgets_values and len(widgets_values) > 0:
-                asset_filename = widgets_values[0]
-                if asset_filename:  # Skip empty strings
+            # Handle both list and dict formats
+            if widgets_values:
+                asset_filename = None
+                if isinstance(widgets_values, list) and len(widgets_values) > 0:
+                    asset_filename = widgets_values[0]
+                elif isinstance(widgets_values, dict):
+                    # Try common keys for filename
+                    asset_filename = widgets_values.get("image") or widgets_values.get("video") or widgets_values.get("audio")
+                
+                if asset_filename:  # Skip empty strings and None
                     assets.append({
                         "node_id": node.get("id"),
                         "node_type": node_type,
