@@ -7,7 +7,7 @@ cnr_id information from nodes. It then updates the requiresCustomNodes field
 in all index.[locale].json files to keep them synchronized.
 
 Usage:
-    python sync_custom_nodes.py --templates-dir ./templates
+    python3 sync_custom_nodes.py --templates-dir ./templates
     python sync_custom_nodes.py --templates-dir ./templates --dry-run
 
 Author: Auto-generated
