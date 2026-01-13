@@ -210,6 +210,7 @@ class CustomNodesSyncer:
     def update_index_file(self, lang: str, template_cnr_ids: Dict[str, Set[str]]) -> bool:
         """
         Update requiresCustomNodes field in an index file.
+        Only adds new custom nodes, never removes existing ones.
         
         Returns:
             True if changes were made, False otherwise
@@ -235,27 +236,35 @@ class CustomNodesSyncer:
                 
                 # Get expected cnr_ids for this template
                 expected_cnr_ids = template_cnr_ids.get(template_name, set())
-                expected_list = sorted(list(expected_cnr_ids)) if expected_cnr_ids else None
                 
                 # Get current requiresCustomNodes
                 current_list = template.get('requiresCustomNodes')
                 
-                # Update if different
-                if expected_list is None:
-                    # No custom nodes required, remove field if it exists
-                    if current_list is not None:
-                        del template['requiresCustomNodes']
+                # If current_list exists, preserve it and merge with expected
+                if current_list is not None:
+                    # Convert current list to set for merging
+                    current_set = set(current_list)
+                    
+                    # Merge with expected cnr_ids (union operation)
+                    merged_set = current_set | expected_cnr_ids
+                    merged_list = sorted(list(merged_set))
+                    
+                    # Only update if there are new additions
+                    if merged_list != current_list:
+                        template['requiresCustomNodes'] = merged_list
                         changes_made = True
-                        self.logger.info(f"  Removed requiresCustomNodes from {template_name} in {lang}")
-                else:
-                    # Custom nodes required, update field
-                    if current_list != expected_list:
-                        template['requiresCustomNodes'] = expected_list
-                        changes_made = True
-                        if current_list is None:
-                            self.logger.info(f"  Added requiresCustomNodes to {template_name} in {lang}: {expected_list}")
-                        else:
-                            self.logger.info(f"  Updated requiresCustomNodes for {template_name} in {lang}: {current_list} -> {expected_list}")
+                        added_items = sorted(list(merged_set - current_set))
+                        self.logger.info(f"  Added to requiresCustomNodes for {template_name} in {lang}: {added_items}")
+                        self.logger.info(f"    Current: {current_list} -> New: {merged_list}")
+                
+                # If no current list but we have expected cnr_ids, add them
+                elif expected_cnr_ids:
+                    expected_list = sorted(list(expected_cnr_ids))
+                    template['requiresCustomNodes'] = expected_list
+                    changes_made = True
+                    self.logger.info(f"  Added requiresCustomNodes to {template_name} in {lang}: {expected_list}")
+                
+                # If neither current nor expected exists, do nothing (preserve absence)
         
         if changes_made:
             self.save_index_file(lang, data)
