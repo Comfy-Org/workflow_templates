@@ -39,6 +39,17 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
 
+# Import sync_bundles module
+# Add scripts directory to path to ensure we can import sync_bundles
+_scripts_dir = Path(__file__).parent
+if str(_scripts_dir) not in sys.path:
+    sys.path.insert(0, str(_scripts_dir))
+
+try:
+    import sync_bundles
+except ImportError:
+    sync_bundles = None
+
 
 class TemplateSyncer:
     """Main class for template synchronization operations"""
@@ -1049,6 +1060,36 @@ class TemplateSyncManager:
         if category_title_collected_count > 0:
             self.syncer.logger.info(f"  ✅ Collected {category_title_collected_count} category title translations to i18n.json")
 
+    def sync_bundles(self):
+        """
+        Sync manifest and bundle package assets using sync_bundles module
+        """
+        if sync_bundles is None:
+            raise ImportError("sync_bundles module is not available")
+        
+        dry_run = self.syncer.dry_run
+        
+        try:
+            # Build manifest
+            self.syncer.logger.info("  Building manifest...")
+            manifest = sync_bundles.build_manifest()
+            
+            # Write manifest
+            self.syncer.logger.info("  Writing manifest...")
+            sync_bundles.write_manifest(manifest, dry_run=dry_run)
+            
+            # Sync bundle directories
+            self.syncer.logger.info("  Syncing bundle directories...")
+            sync_bundles.sync_bundle_directories(manifest, dry_run=dry_run)
+            
+            target = sync_bundles.CORE_MANIFEST if not dry_run else sync_bundles.SAMPLE_MANIFEST
+            self.syncer.logger.info(f"  ✅ Wrote manifest to {target}")
+            if not dry_run:
+                self.syncer.logger.info("  ✅ Synced media assets into package directories")
+        except SystemExit as e:
+            # sync_bundles uses SystemExit for errors, convert to exception
+            raise Exception(f"Bundle sync failed: {e}")
+    
     def fix_master_vram_data(self):
         """
         Fix vram data in the master index.json file before synchronization
@@ -1111,6 +1152,7 @@ class TemplateSyncManager:
         1. Collect translations for NEW templates only from language files
         2. Sync i18n.json translations to all language files
         3. Collect ALL translations from language files back to i18n.json
+        4. Sync bundles (manifest and bundle package assets)
         """
         self.syncer.logger.info("🚀 Starting template synchronization...")
         self.syncer.logger.info(f"Master file: {self.syncer.master_file}")
@@ -1208,6 +1250,18 @@ class TemplateSyncManager:
             self.syncer.logger.info(f"   New category fields found: {len(self.syncer.new_category_fields)}")
         if self.syncer.vram_size_update_templates:
             self.syncer.logger.info(f"   Templates marked for vram/size management: {len(self.syncer.vram_size_update_templates)}")
+        
+        # Step 4: Sync bundles (manifest and bundle package assets)
+        if sync_bundles is not None:
+            self.syncer.logger.info("\n📦 Step 4: Syncing bundles (manifest and package assets)...")
+            try:
+                self.sync_bundles()
+            except Exception as e:
+                self.syncer.logger.error(f"Failed to sync bundles: {e}")
+                # Don't fail the entire sync if bundle sync fails, but log the error
+                success = False
+        else:
+            self.syncer.logger.warning("\n⚠️  sync_bundles module not available, skipping bundle synchronization")
         
         return success
 
