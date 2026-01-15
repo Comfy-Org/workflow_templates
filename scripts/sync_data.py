@@ -50,6 +50,11 @@ try:
 except ImportError:
     sync_bundles = None
 
+try:
+    import check_input_assets
+except ImportError:
+    check_input_assets = None
+
 
 class TemplateSyncer:
     """Main class for template synchronization operations"""
@@ -1090,6 +1095,81 @@ class TemplateSyncManager:
             # sync_bundles uses SystemExit for errors, convert to exception
             raise Exception(f"Bundle sync failed: {e}")
     
+    def check_input_assets(self):
+        """
+        Validate input assets referenced in workflow files using check_input_assets module
+        """
+        if check_input_assets is None:
+            raise ImportError("check_input_assets module is not available")
+        
+        try:
+            # Get repository root (parent of scripts directory)
+            repo_root = self.syncer.templates_dir.parent
+            templates_dir = repo_root / "templates"
+            inputs_dir = repo_root / "input"
+            
+            # Find workflow files
+            self.syncer.logger.info("  Finding workflow files...")
+            workflow_files = check_input_assets.find_workflow_files(templates_dir)
+            self.syncer.logger.info(f"  Found {len(workflow_files)} workflow files")
+            
+            # Extract all asset references
+            self.syncer.logger.info("  Extracting asset references...")
+            all_assets = []
+            for workflow_file in workflow_files:
+                assets = check_input_assets.extract_asset_references(
+                    workflow_file, 
+                    check_input_assets.ASSET_NODE_TYPES
+                )
+                all_assets.extend(assets)
+            
+            self.syncer.logger.info(f"  Found {len(all_assets)} asset references")
+            
+            # Validate assets
+            self.syncer.logger.info("  Validating assets...")
+            valid_assets, missing_assets = check_input_assets.validate_assets(all_assets, inputs_dir)
+            
+            # Generate report
+            report = check_input_assets.generate_report(
+                valid_assets, 
+                missing_assets, 
+                len(workflow_files),
+                check_input_assets.ASSET_NODE_TYPES
+            )
+            
+            # Save report
+            report_file = repo_root / "asset_validation_report.md"
+            if not self.syncer.dry_run:
+                with open(report_file, 'w', encoding='utf-8') as f:
+                    f.write(report)
+                self.syncer.logger.info(f"  ✅ Report saved to: {report_file}")
+            
+            # Generate and save upload JSON file
+            self.syncer.logger.info("  Generating upload JSON...")
+            base_url = "https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/"
+            upload_data = check_input_assets.generate_upload_json(inputs_dir, templates_dir, base_url)
+            upload_file = repo_root / "workflow_template_input_files.json"
+            
+            if not self.syncer.dry_run:
+                with open(upload_file, 'w', encoding='utf-8') as f:
+                    json.dump(upload_data, f, indent=2, ensure_ascii=False)
+                self.syncer.logger.info(f"  ✅ Generated {len(upload_data['assets'])} asset entries")
+                self.syncer.logger.info(f"  ✅ Upload JSON saved to: {upload_file}")
+            else:
+                self.syncer.logger.info(f"  [DRY RUN] Would generate {len(upload_data['assets'])} asset entries")
+            
+            # Log summary
+            if missing_assets:
+                self.syncer.logger.warning(f"  ⚠️  Validation found {len(missing_assets)} missing asset(s)")
+                self.syncer.logger.warning(f"  ✅ {len(valid_assets)} asset(s) successfully validated")
+            else:
+                self.syncer.logger.info(f"  ✅ Validation passed: All {len(valid_assets)} asset(s) found")
+            
+            return len(missing_assets) == 0
+            
+        except Exception as e:
+            raise Exception(f"Input assets validation failed: {e}")
+    
     def fix_master_vram_data(self):
         """
         Fix vram data in the master index.json file before synchronization
@@ -1153,6 +1233,7 @@ class TemplateSyncManager:
         2. Sync i18n.json translations to all language files
         3. Collect ALL translations from language files back to i18n.json
         4. Sync bundles (manifest and bundle package assets)
+        5. Check input assets (validate referenced assets exist)
         """
         self.syncer.logger.info("🚀 Starting template synchronization...")
         self.syncer.logger.info(f"Master file: {self.syncer.master_file}")
@@ -1262,6 +1343,20 @@ class TemplateSyncManager:
                 success = False
         else:
             self.syncer.logger.warning("\n⚠️  sync_bundles module not available, skipping bundle synchronization")
+        
+        # Step 5: Check input assets
+        if check_input_assets is not None:
+            self.syncer.logger.info("\n🔍 Step 5: Validating input assets...")
+            try:
+                validation_passed = self.check_input_assets()
+                if not validation_passed:
+                    self.syncer.logger.warning("  ⚠️  Input assets validation found missing assets (see report for details)")
+                    # Don't fail the entire sync if validation fails, but log the warning
+            except Exception as e:
+                self.syncer.logger.error(f"Failed to validate input assets: {e}")
+                # Don't fail the entire sync if validation fails, but log the error
+        else:
+            self.syncer.logger.warning("\n⚠️  check_input_assets module not available, skipping input assets validation")
         
         return success
 
