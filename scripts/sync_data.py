@@ -55,6 +55,11 @@ try:
 except ImportError:
     check_input_assets = None
 
+try:
+    import analyze_models
+except ImportError:
+    analyze_models = None
+
 
 class TemplateSyncer:
     """Main class for template synchronization operations"""
@@ -538,6 +543,7 @@ class TemplateSyncManager:
     def __init__(self, syncer: TemplateSyncer, sync_options: Dict[str, Any]):
         self.syncer = syncer
         self.sync_options = sync_options
+        self.errors: List[str] = []
         self.stats = {
             'files_processed': 0,
             'templates_added': 0,
@@ -545,6 +551,9 @@ class TemplateSyncManager:
             'templates_updated': 0,
             'fields_updated': 0
         }
+    
+    def record_error(self, message: str):
+        self.errors.append(message)
         
     def sync_template_data(self, master_template: Dict[str, Any], target_template: Dict[str, Any], 
                           template_name: str, lang: str) -> Dict[str, Any]:
@@ -961,7 +970,7 @@ class TemplateSyncManager:
         if category_title_collected_count > 0:
             self.syncer.logger.info(f"  ✅ Collected {category_title_collected_count} translations for new category titles")
     
-    def collect_all_translations_from_language_files(self):
+    def collect_all_translations_from_language_files(self) -> Tuple[int, int]:
         """
         Step 3: Collect ALL translations from language files to i18n.json (after sync)
         Includes both template translations and category title translations
@@ -1064,6 +1073,42 @@ class TemplateSyncManager:
             self.syncer.logger.info(f"  ✅ Collected {collected_count} template translations to i18n.json")
         if category_title_collected_count > 0:
             self.syncer.logger.info(f"  ✅ Collected {category_title_collected_count} category title translations to i18n.json")
+        
+        return collected_count, category_title_collected_count
+    
+    def sync_i18n_from_master(self) -> int:
+        """
+        Sync English title/description in i18n.json from master index.json.
+        Returns number of fields updated.
+        """
+        master_data = self.syncer.load_json_file(self.syncer.master_file)
+        master_index = self.syncer.build_template_index(master_data)
+        templates_data = self.syncer.i18n_data.get("templates", {})
+        updated_fields = 0
+        
+        for template_name, (_, _, master_template) in master_index.items():
+            # Ensure template exists
+            if template_name not in templates_data:
+                templates_data[template_name] = {}
+            
+            for field in self.syncer.language_specific_fields:
+                if field not in master_template:
+                    continue
+                
+                en_value = master_template[field]
+                if field not in templates_data[template_name]:
+                    templates_data[template_name][field] = {}
+                
+                field_data = templates_data[template_name][field]
+                if field_data.get("en") != en_value:
+                    field_data["en"] = en_value
+                    updated_fields += 1
+        
+        self.syncer.i18n_data["templates"] = templates_data
+        if updated_fields > 0:
+            self.syncer.logger.info(f"  ✅ Synced {updated_fields} English field(s) from master index.json")
+        
+        return updated_fields
 
     def sync_bundles(self):
         """
@@ -1234,6 +1279,7 @@ class TemplateSyncManager:
         3. Collect ALL translations from language files back to i18n.json
         4. Sync bundles (manifest and bundle package assets)
         5. Check input assets (validate referenced assets exist)
+        6. Analyze model references and generate report
         """
         self.syncer.logger.info("🚀 Starting template synchronization...")
         self.syncer.logger.info(f"Master file: {self.syncer.master_file}")
@@ -1247,8 +1293,12 @@ class TemplateSyncManager:
         # Step 0: Fix vram data in master file first
         self.fix_master_vram_data()
         
-        # Step 1: Collect translations for NEW templates only
-        self.syncer.logger.info("\n📥 Step 1: Collecting translations for new templates...")
+        # Step 1: Sync English fields to i18n.json from master file
+        self.syncer.logger.info("\n📥 Step 1: Syncing English fields to i18n.json...")
+        en_fields_updated = self.sync_i18n_from_master()
+        
+        # Step 1b: Collect translations for NEW templates only
+        self.syncer.logger.info("\n📥 Step 1b: Collecting translations for new templates...")
         self.collect_new_templates_from_language_files()
         
         # Step 2: Sync i18n.json translations to all language files
@@ -1259,12 +1309,12 @@ class TemplateSyncManager:
                 if not self.sync_language_file(lang, lang_file):
                     success = False
             except Exception as e:
-                self.syncer.logger.error(f"Failed to sync {lang}: {e}")
+                self.record_error(f"Sync language file failed ({lang}): {e}")
                 success = False
         
         # Step 3: Collect ALL translations from language files back to i18n.json
         self.syncer.logger.info("\n📥 Step 3: Collecting all translations to i18n.json...")
-        self.collect_all_translations_from_language_files()
+        collected_count, category_title_collected_count = self.collect_all_translations_from_language_files()
                 
         # Check for unused tags in i18n data
         unused_tags = set(self.syncer.i18n_data.get("tags", {}).keys()) - self.syncer.used_tags
@@ -1277,6 +1327,12 @@ class TemplateSyncManager:
         
         # Save i18n data
         needs_save = False
+        
+        if en_fields_updated > 0:
+            needs_save = True
+        
+        if collected_count > 0 or category_title_collected_count > 0:
+            needs_save = True
         
         if self.syncer.new_tags:
             self.syncer.logger.info(f"\n🆕 New tags discovered: {len(self.syncer.new_tags)}")
@@ -1338,7 +1394,7 @@ class TemplateSyncManager:
             try:
                 self.sync_bundles()
             except Exception as e:
-                self.syncer.logger.error(f"Failed to sync bundles: {e}")
+                self.record_error(f"Bundle sync failed: {e}")
                 # Don't fail the entire sync if bundle sync fails, but log the error
                 success = False
         else:
@@ -1350,13 +1406,49 @@ class TemplateSyncManager:
             try:
                 validation_passed = self.check_input_assets()
                 if not validation_passed:
-                    self.syncer.logger.warning("  ⚠️  Input assets validation found missing assets (see report for details)")
+                    self.record_error("Input assets validation found missing assets (see report for details)")
                     # Don't fail the entire sync if validation fails, but log the warning
             except Exception as e:
-                self.syncer.logger.error(f"Failed to validate input assets: {e}")
+                self.record_error(f"Input assets validation failed: {e}")
                 # Don't fail the entire sync if validation fails, but log the error
         else:
             self.syncer.logger.warning("\n⚠️  check_input_assets module not available, skipping input assets validation")
+
+        # Step 6: Analyze model references
+        if analyze_models is not None:
+            self.syncer.logger.info("\n🧪 Step 6: Analyzing model references...")
+            try:
+                repo_root = self.syncer.templates_dir.parent
+                whitelist_config = analyze_models.load_whitelist_config()
+                results, statistics = analyze_models.analyze_all_templates(
+                    str(self.syncer.templates_dir),
+                    whitelist_config
+                )
+                report = analyze_models.generate_report(results, statistics)
+                report_path = repo_root / "model_analysis_report.md"
+                with open(report_path, 'w', encoding='utf-8') as f:
+                    f.write(report)
+                self.syncer.logger.info(f"  ✅ Model analysis report saved to: {report_path}")
+                
+                if (
+                    statistics.get('files_with_errors')
+                    or statistics.get('markdown_link_errors')
+                    or statistics.get('model_link_errors')
+                ):
+                    self.record_error("Model analysis found issues (see model_analysis_report.md)")
+                    success = False
+            except Exception as e:
+                self.record_error(f"Model analysis failed: {e}")
+                success = False
+        else:
+            self.syncer.logger.warning("\n⚠️  analyze_models module not available, skipping model analysis")
+        
+        if self.errors:
+            self.syncer.logger.error("\n❌ Errors summary:")
+            for err in self.errors:
+                self.syncer.logger.error(f"  - {err}")
+        else:
+            self.syncer.logger.info("\n✅ No errors detected.")
         
         return success
 
@@ -1384,7 +1476,7 @@ Translation System:
   - _status: Tracks pending translations
         """
     )
-    parser.add_argument('--templates-dir', default='.', help='Directory containing template files')
+    parser.add_argument('--templates-dir', default='./templates', help='Directory containing template files')
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
     parser.add_argument('--force-sync-language-fields', action='store_true', 
                        help='Force sync language-specific fields (title, description) - overwrite existing translations')
