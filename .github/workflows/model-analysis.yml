@@ -6,7 +6,7 @@ on:
       - 'templates/**.json'
       - 'scripts/analyze_models.py'
       - '.github/workflows/model-analysis.yml'
-  pull_request:
+  pull_request_target:
     paths:
       - 'templates/**.json'
       - 'scripts/analyze_models.py'
@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -45,7 +47,7 @@ jobs:
         continue-on-error: true
     
       - name: Comment on PR about model analysis results (failures only)
-        if: github.event_name == 'pull_request' && steps.model_analysis.outputs.model_analysis_failed == 'true'
+        if: github.event_name == 'pull_request_target' && steps.model_analysis.outputs.model_analysis_failed == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
