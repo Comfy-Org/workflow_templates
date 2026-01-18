@@ -71,26 +71,33 @@ jobs:
           # Stage all potential changes from version bumps and manifest sync
           git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json
 
-          # Commit with retry logic in case of conflicts
-          if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
-            echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
-            fi
-            git commit -m "Auto-bump package versions and sync manifests for template changes"
-          fi
+          # Check if there are changes to commit
+          if ! git diff --cached --quiet; then
+            echo "📝 Changes detected - committing to PR branch"
 
-          # Push with retry logic
-          if ! git push origin HEAD; then
-            echo "⚠️ Push failed, retrying after pull..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
+            # Commit with retry logic in case of conflicts
+            if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
+              echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
+              if ! git pull origin "${{ github.head_ref }}" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git commit -m "Auto-bump package versions and sync manifests for template changes"
             fi
-            git push origin HEAD
-          fi
 
-          echo "✅ Package version bumps and manifest updates committed to PR"
+            # Push with retry logic
+            if ! git push origin HEAD; then
+              echo "⚠️ Push failed, retrying after pull..."
+              if ! git pull origin "${{ github.head_ref }}" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git push origin HEAD
+            fi
+
+            echo "✅ Package version bumps and manifest updates committed to PR"
+          else
+            echo "✅ No package version or manifest changes needed"
+          fi

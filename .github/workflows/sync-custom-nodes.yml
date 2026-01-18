@@ -62,27 +62,34 @@ jobs:
           # Stage all potential changes from custom nodes sync
           git add templates/index*.json
 
-          # Commit with retry logic in case of conflicts
-          if ! git commit -m "Auto-sync requiresCustomNodes field in index files"; then
-            echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
-            fi
-            git commit -m "Auto-sync requiresCustomNodes field in index files"
-          fi
+          # Check if there are changes to commit
+          if ! git diff --cached --quiet; then
+            echo "📝 Changes detected - committing to PR branch"
 
-          # Push with retry logic
-          if ! git push origin HEAD; then
-            echo "⚠️ Push failed, retrying after pull..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
+            # Commit with retry logic in case of conflicts
+            if ! git commit -m "Auto-sync requiresCustomNodes field in index files"; then
+              echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
+              if ! git pull origin "${{ github.head_ref }}" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git commit -m "Auto-sync requiresCustomNodes field in index files"
             fi
-            git push origin HEAD
-          fi
 
-          echo "✅ Custom nodes requirements updates committed to PR"
+            # Push with retry logic
+            if ! git push origin HEAD; then
+              echo "⚠️ Push failed, retrying after pull..."
+              if ! git pull origin "${{ github.head_ref }}" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git push origin HEAD
+            fi
+
+            echo "✅ Custom nodes requirements updates committed to PR"
+          else
+            echo "✅ No custom nodes requirements changes needed"
+          fi
 
