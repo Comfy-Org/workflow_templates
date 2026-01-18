@@ -22,7 +22,9 @@ permissions:
 jobs:
   generate-json:
     runs-on: ubuntu-latest
-    
+    # Only run on same-repo PRs and push events (skip fork PRs as they can't auto-commit)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -74,33 +76,33 @@ jobs:
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
+
           if [ -n "$(git status --porcelain workflow_template_input_files.json)" ]; then
             git add workflow_template_input_files.json
-            
+
             # Commit message
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               COMMIT_MSG="chore: update workflow_template_input_files.json (PR #${{ github.event.pull_request.number }})"
             else
               COMMIT_MSG="chore: update workflow_template_input_files.json [skip ci]"
             fi
-            
+
             git commit -m "$COMMIT_MSG"
-            
+
             # Push to the appropriate branch
             if [ "${{ github.event_name }}" = "pull_request" ]; then
               git push origin HEAD:${{ github.head_ref }}
             else
               git push
             fi
-            
+
             echo "✅ Changes committed and pushed"
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "ℹ️ No changes to commit"
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Comment on PR (only if changes were made)
         if: github.event_name == 'pull_request' && steps.commit.outputs.has_changes == 'true'
         uses: actions/github-script@v7

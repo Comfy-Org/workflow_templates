@@ -16,9 +16,7 @@ on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'templates/**/*.json'
-      - 'scripts/sync_custom_nodes.py'
-      - '.github/workflows/sync-custom-nodes.yml'
+      - 'templates/**.json'
 
 permissions:
   contents: write
@@ -27,6 +25,8 @@ permissions:
 jobs:
   sync-custom-nodes:
     runs-on: ubuntu-latest
+    # Only run on same-repo PRs (skip fork PRs as they can't auto-commit)
+    if: github.event.pull_request.head.repo.full_name == github.repository
     # Prevent concurrent runs on same PR (unique per fork+branch)
     concurrency:
       group: sync-custom-nodes-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.repo.full_name }}
@@ -50,19 +50,20 @@ jobs:
           echo "=== Syncing custom nodes requirements ==="
           python scripts/sync_custom_nodes.py --templates-dir ./templates
           echo "✅ Custom nodes sync complete"
-          
+
       - name: Commit custom nodes updates to PR
         run: |
           echo "=== Committing custom nodes updates to PR ==="
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           # Stage all potential changes from custom nodes sync
           git add templates/index*.json
-          
+
+          # Check if there are changes to commit
           if ! git diff --cached --quiet; then
             echo "📝 Changes detected - committing to PR branch"
-            
+
             # Commit with retry logic in case of conflicts
             if ! git commit -m "Auto-sync requiresCustomNodes field in index files"; then
               echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
@@ -73,7 +74,7 @@ jobs:
               fi
               git commit -m "Auto-sync requiresCustomNodes field in index files"
             fi
-            
+
             # Push with retry logic
             if ! git push origin HEAD; then
               echo "⚠️ Push failed, retrying after pull..."
@@ -84,7 +85,7 @@ jobs:
               fi
               git push origin HEAD
             fi
-            
+
             echo "✅ Custom nodes requirements updates committed to PR"
           else
             echo "✅ No custom nodes requirements changes needed"
