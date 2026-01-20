@@ -1,0 +1,95 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TemplateCard from '../../components/TemplateCard.astro';
+
+const templates = await getCollection('templates');
+const sortedTemplates = templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'ComfyUI Workflow Templates',
+  description: 'Browse free, ready-to-use ComfyUI workflow templates for image generation, video creation, audio synthesis, and more.',
+  url: 'https://templates.comfy.org/templates/',
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: sortedTemplates.map((template, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `https://templates.comfy.org/templates/${template.data.name}/`,
+    })),
+  },
+};
+---
+
+<BaseLayout
+  title="ComfyUI Workflow Templates - Free AI Generation Workflows"
+  description="Browse free, ready-to-use ComfyUI workflow templates for image generation, video creation, audio synthesis, and more. Featuring Flux, SDXL, Wan, and other popular models."
+  structuredData={structuredData}
+>
+  <div class="templates-page">
+    <header class="page-header">
+      <h1>ComfyUI Workflow Templates</h1>
+      <p class="subtitle">
+        Free, ready-to-use workflows for AI image generation, video creation, and more.
+        Featuring popular models like Flux, SDXL, Wan, and Qwen.
+      </p>
+    </header>
+
+    <div class="templates-grid">
+      {sortedTemplates.map((template) => (
+        <TemplateCard
+          name={template.data.name}
+          title={template.data.title || template.data.name}
+          description={template.data.description}
+          mediaType={template.data.mediaType}
+          tags={template.data.tags}
+          models={template.data.models}
+          usage={template.data.usage}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .templates-page {
+    padding: 1rem 0;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0 0 1rem;
+  }
+
+  .subtitle {
+    font-size: 1.125rem;
+    color: #6b7280;
+    max-width: 600px;
+    margin: 0 auto;
+  }
+
+  .templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .page-header h1 {
+      font-size: 1.875rem;
+    }
+
+    .templates-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

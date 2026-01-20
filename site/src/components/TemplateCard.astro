@@ -1,0 +1,138 @@
+---
+interface Props {
+  name: string;
+  title: string;
+  description: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  tags?: string[];
+  models?: string[];
+  usage?: number;
+}
+
+const { name, title, description, mediaType, tags = [], models = [], usage } = Astro.props;
+
+const mediaTypeIcons: Record<string, string> = {
+  image: '🖼️',
+  video: '🎬',
+  audio: '🎵',
+  '3d': '🎮',
+};
+
+const formatUsage = (count: number): string => {
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k`;
+  }
+  return count.toString();
+};
+---
+
+<a href={`/templates/${name}/`} class="template-card">
+  <div class="card-header">
+    <span class="media-type">{mediaTypeIcons[mediaType]}</span>
+    {usage !== undefined && (
+      <span class="usage-count">{formatUsage(usage)} uses</span>
+    )}
+  </div>
+  
+  <h3 class="card-title">{title}</h3>
+  <p class="card-description">{description}</p>
+  
+  <div class="card-footer">
+    {models.length > 0 && (
+      <div class="models">
+        {models.slice(0, 2).map((model) => (
+          <span class="model-tag">{model}</span>
+        ))}
+      </div>
+    )}
+    {tags.length > 0 && (
+      <div class="tags">
+        {tags.slice(0, 3).map((tag) => (
+          <span class="tag">{tag}</span>
+        ))}
+      </div>
+    )}
+  </div>
+</a>
+
+<style>
+  .template-card {
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.2s, transform 0.2s;
+  }
+
+  .template-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+  }
+
+  .media-type {
+    font-size: 1.5rem;
+  }
+
+  .usage-count {
+    font-size: 0.75rem;
+    color: #6b7280;
+    background: #f3f4f6;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
+
+  .card-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #111827;
+  }
+
+  .card-description {
+    margin: 0 0 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    line-height: 1.5;
+    flex-grow: 1;
+  }
+
+  .card-footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .models, .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .model-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: #f3f4f6;
+    color: #374151;
+    border-radius: 4px;
+  }
+</style>
