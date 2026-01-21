@@ -7,15 +7,18 @@ interface Props {
   tags?: string[];
   models?: string[];
   usage?: number;
+  thumbnails?: string[];
 }
 
-const { name, title, description, mediaType, tags = [], models = [], usage } = Astro.props;
+const { name, title, description, mediaType, tags = [], usage, thumbnails = [] } = Astro.props;
 
-const mediaTypeIcons: Record<string, string> = {
-  image: '🖼️',
-  video: '🎬',
-  audio: '🎵',
-  '3d': '🎮',
+const primaryThumbnail = thumbnails[0] || null;
+
+const mediaTypeLabels: Record<string, string> = {
+  image: 'Image',
+  video: 'Video',
+  audio: 'Audio',
+  '3d': '3D',
 };
 
 const formatUsage = (count: number): string => {
@@ -27,31 +30,33 @@ const formatUsage = (count: number): string => {
 ---
 
 <a href={`/templates/${name}/`} class="template-card">
-  <div class="card-header">
-    <span class="media-type">{mediaTypeIcons[mediaType]}</span>
-    {usage !== undefined && (
-      <span class="usage-count">{formatUsage(usage)} uses</span>
-    )}
-  </div>
+  {primaryThumbnail ? (
+    <div class="card-image">
+      <img 
+        src={`/thumbnails/${primaryThumbnail}`} 
+        alt={`${title} example`}
+        loading="lazy"
+      />
+      <span class="media-badge">{mediaTypeLabels[mediaType]}</span>
+    </div>
+  ) : (
+    <div class="card-image placeholder">
+      <span class="media-badge">{mediaTypeLabels[mediaType]}</span>
+    </div>
+  )}
   
-  <h3 class="card-title">{title}</h3>
-  <p class="card-description">{description}</p>
-  
-  <div class="card-footer">
-    {models.length > 0 && (
-      <div class="models">
-        {models.slice(0, 2).map((model) => (
-          <span class="model-tag">{model}</span>
-        ))}
-      </div>
-    )}
-    {tags.length > 0 && (
-      <div class="tags">
-        {tags.slice(0, 3).map((tag) => (
-          <span class="tag">{tag}</span>
-        ))}
-      </div>
-    )}
+  <div class="card-body">
+    <h3 class="card-title">{title}</h3>
+    <p class="card-description">{description}</p>
+    
+    <div class="card-meta">
+      {usage !== undefined && (
+        <span class="usage">{formatUsage(usage)} runs</span>
+      )}
+      {tags.length > 0 && (
+        <span class="tag">{tags[0]}</span>
+      )}
+    </div>
   </div>
 </a>
 
@@ -59,80 +64,142 @@ const formatUsage = (count: number): string => {
   .template-card {
     display: flex;
     flex-direction: column;
-    padding: 1.5rem;
     background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
     text-decoration: none;
     color: inherit;
+    overflow: hidden;
     transition: box-shadow 0.2s, transform 0.2s;
   }
 
   .template-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
     transform: translateY(-2px);
   }
 
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-  }
-
-  .media-type {
-    font-size: 1.5rem;
-  }
-
-  .usage-count {
-    font-size: 0.75rem;
-    color: #6b7280;
+  .card-image {
+    position: relative;
+    aspect-ratio: 16 / 10;
     background: #f3f4f6;
-    padding: 0.25rem 0.5rem;
+    overflow: hidden;
+  }
+
+  .card-image.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #e0e7ff 0%, #f0e7ff 100%);
+  }
+
+  .card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s;
+  }
+
+  .template-card:hover .card-image img {
+    transform: scale(1.05);
+  }
+
+  .media-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.25rem 0.625rem;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 500;
     border-radius: 4px;
+    backdrop-filter: blur(4px);
+  }
+
+  .card-body {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    flex-grow: 1;
   }
 
   .card-title {
     margin: 0 0 0.5rem;
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
     color: #111827;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
   .card-description {
-    margin: 0 0 1rem;
+    margin: 0;
     font-size: 0.875rem;
     color: #6b7280;
     line-height: 1.5;
     flex-grow: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 
-  .card-footer {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-
-  .models, .tags {
+  .card-meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.375rem;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f3f4f6;
   }
 
-  .model-tag {
+  .usage {
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    background: #dbeafe;
-    color: #1d4ed8;
-    border-radius: 4px;
-    font-weight: 500;
+    color: #6b7280;
   }
 
   .tag {
     font-size: 0.75rem;
-    padding: 0.25rem 0.5rem;
+    padding: 0.125rem 0.5rem;
     background: #f3f4f6;
     color: #374151;
     border-radius: 4px;
+  }
+
+  /* Dark mode */
+  @media (prefers-color-scheme: dark) {
+    .template-card {
+      background: #1f2937;
+      border-color: #374151;
+    }
+
+    .card-image {
+      background: #374151;
+    }
+
+    .card-image.placeholder {
+      background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
+    }
+
+    .card-title {
+      color: #f9fafb;
+    }
+
+    .card-description {
+      color: #9ca3af;
+    }
+
+    .card-meta {
+      border-color: #374151;
+    }
+
+    .tag {
+      background: #374151;
+      color: #d1d5db;
+    }
   }
 </style>

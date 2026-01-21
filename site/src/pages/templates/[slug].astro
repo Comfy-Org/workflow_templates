@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import TryOnCloudButton from '../../components/TryOnCloudButton.astro';
 
 export async function getStaticPaths() {
   const templates = await getCollection('templates');
@@ -14,32 +13,33 @@ export async function getStaticPaths() {
 const { template } = Astro.props;
 const { data } = template;
 
-const title = `${data.title || data.name} - ComfyUI Workflow Template`;
+const title = `${data.title || data.name} - ComfyUI Workflow`;
 const canonicalUrl = `https://templates.comfy.org/templates/${data.name}/`;
+
+// Get available thumbnails for this template
+const thumbnails = data.thumbnails || [];
+const primaryThumbnail = thumbnails[0] || null;
+
+// Check if workflow preview exists
+const workflowPreviewPath = `/previews/${data.name}.png`;
 
 const structuredData = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: data.title || data.name,
+  '@type': 'TechArticle',
+  headline: data.title || data.name,
   description: data.description,
-  applicationCategory: 'AI Workflow',
-  operatingSystem: 'Cross-platform',
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
+  image: primaryThumbnail ? `https://templates.comfy.org/thumbnails/${primaryThumbnail}` : undefined,
+  datePublished: data.date,
+  author: {
+    '@type': 'Organization',
+    name: 'Comfy Org',
   },
-  aggregateRating: data.usage ? {
-    '@type': 'AggregateRating',
-    ratingValue: '4.5',
-    ratingCount: Math.floor(data.usage / 10),
-  } : undefined,
 };
 
 const faqStructuredData = data.faqItems?.length ? {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
-  mainEntity: data.faqItems.map((item) => ({
+  mainEntity: data.faqItems.map((item: { question: string; answer: string }) => ({
     '@type': 'Question',
     name: item.question,
     acceptedAnswer: {
@@ -50,111 +50,221 @@ const faqStructuredData = data.faqItems?.length ? {
 } : null;
 
 const mediaTypeLabels: Record<string, string> = {
-  image: 'Image Generation',
-  video: 'Video Generation',
-  audio: 'Audio Generation',
-  '3d': '3D Generation',
+  image: 'Image',
+  video: 'Video',
+  audio: 'Audio',
+  '3d': '3D',
 };
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+}
+
+function formatSize(bytes: number): string {
+  const gb = bytes / (1024 * 1024 * 1024);
+  return `${gb.toFixed(1)} GB`;
+}
 ---
 
 <BaseLayout
   title={title}
-  description={data.metaDescription}
+  description={data.metaDescription || data.description}
   canonicalUrl={canonicalUrl}
   ogType="article"
   structuredData={structuredData}
 >
-  <article class="template-detail">
-    <header class="template-header">
-      <div class="breadcrumb">
-        <a href="/templates/">Templates</a>
-        <span class="separator">/</span>
-        <span>{data.title || data.name}</span>
+  <article class="article">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/templates/">← All Templates</a>
+    </nav>
+
+    <!-- Article Header -->
+    <header class="article-header">
+      <div class="meta-line">
+        <span class="category">{mediaTypeLabels[data.mediaType]} Generation</span>
+        <span class="separator">·</span>
+        <time datetime={data.date}>{formatDate(data.date)}</time>
+        {data.usage !== undefined && (
+          <>
+            <span class="separator">·</span>
+            <span>{data.usage.toLocaleString()} runs</span>
+          </>
+        )}
       </div>
       
       <h1>{data.title || data.name}</h1>
       
-      <div class="template-meta">
-        <span class="media-type">{mediaTypeLabels[data.mediaType]}</span>
-        {data.usage !== undefined && (
-          <span class="usage">{data.usage.toLocaleString()} uses</span>
-        )}
-        {data.openSource === false && (
-          <span class="api-badge">Uses Cloud API</span>
-        )}
-      </div>
-
-      <div class="cta-section">
-        <TryOnCloudButton templateName={data.name} size="large" />
-      </div>
+      <p class="lead">{data.description}</p>
     </header>
 
-    <section class="description-section">
-      <h2>About This Workflow</h2>
-      <p>{data.extendedDescription}</p>
-    </section>
-
-    {data.models && data.models.length > 0 && (
-      <section class="models-section">
-        <h2>Models Used</h2>
-        <div class="model-list">
-          {data.models.map((model) => (
-            <span class="model-badge">{model}</span>
-          ))}
-        </div>
-      </section>
+    <!-- Hero Image - Primary Thumbnail -->
+    {primaryThumbnail && (
+      <figure class="hero-image">
+        <img 
+          src={`/thumbnails/${primaryThumbnail}`} 
+          alt={`Example output from ${data.title || data.name}`}
+          loading="eager"
+        />
+        <figcaption>Example output generated by this workflow</figcaption>
+      </figure>
     )}
 
-    <section class="how-to-section">
-      <h2>How to Use This Template</h2>
-      <ol class="steps-list">
-        {data.howToUse.map((step) => (
-          <li>{step}</li>
-        ))}
-      </ol>
-    </section>
+    <!-- Quick Actions Bar -->
+    <div class="action-bar">
+      <a href={`https://comfyui.run/?template=${data.name}`} class="primary-action">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        Run on Comfy Cloud
+      </a>
+      <div class="secondary-info">
+        {data.openSource === false && (
+          <span class="info-badge api">Uses Cloud API</span>
+        )}
+        {data.vram && (
+          <span class="info-badge">VRAM: {formatSize(data.vram)}</span>
+        )}
+      </div>
+    </div>
 
-    {data.suggestedUseCases && data.suggestedUseCases.length > 0 && (
-      <section class="use-cases-section">
-        <h2>Suggested Use Cases</h2>
-        <ul class="use-cases-list">
-          {data.suggestedUseCases.map((useCase) => (
-            <li>{useCase}</li>
-          ))}
-        </ul>
+    <!-- Main Content -->
+    <div class="article-content">
+      
+      <!-- About Section -->
+      <section>
+        <h2>About This Workflow</h2>
+        <p>{data.extendedDescription || data.description}</p>
       </section>
-    )}
 
-    {data.tags && data.tags.length > 0 && (
-      <section class="tags-section">
-        <h2>Tags</h2>
-        <div class="tag-list">
-          {data.tags.map((tag) => (
-            <span class="tag">{tag}</span>
-          ))}
-        </div>
+      <!-- Additional Output Examples -->
+      {thumbnails.length > 1 && (
+        <section>
+          <h2>More Examples</h2>
+          <div class="gallery">
+            {thumbnails.slice(1).map((thumb: string) => (
+              <figure class="gallery-item">
+                <img 
+                  src={`/thumbnails/${thumb}`} 
+                  alt={`Additional example from ${data.title || data.name}`}
+                  loading="lazy"
+                />
+              </figure>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <!-- How to Use -->
+      {data.howToUse && data.howToUse.length > 0 && (
+        <section>
+          <h2>How to Use</h2>
+          <ol class="steps">
+            {data.howToUse.map((step: string, index: number) => (
+              <li>
+                <span class="step-number">{index + 1}</span>
+                <span class="step-text">{step}</span>
+              </li>
+            ))}
+          </ol>
+        </section>
+      )}
+
+      <!-- Workflow Preview -->
+      <section>
+        <h2>Workflow Structure</h2>
+        <figure class="workflow-preview">
+          <img 
+            src={workflowPreviewPath} 
+            alt={`Node graph for ${data.title || data.name}`}
+            loading="lazy"
+          />
+          <figcaption>Visual representation of the ComfyUI node graph</figcaption>
+        </figure>
       </section>
-    )}
 
-    {data.faqItems && data.faqItems.length > 0 && (
-      <section class="faq-section">
-        <h2>Frequently Asked Questions</h2>
-        <div class="faq-list">
-          {data.faqItems.map((item) => (
-            <div class="faq-item">
-              <h3>{item.question}</h3>
-              <p>{item.answer}</p>
-            </div>
-          ))}
-        </div>
+      <!-- Use Cases -->
+      {data.suggestedUseCases && data.suggestedUseCases.length > 0 && (
+        <section>
+          <h2>Use Cases</h2>
+          <ul class="use-cases">
+            {data.suggestedUseCases.map((useCase: string) => (
+              <li>{useCase}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      <!-- Technical Details -->
+      <section class="details-section">
+        <h2>Details</h2>
+        <dl class="details-grid">
+          {data.models && data.models.length > 0 && (
+            <>
+              <dt>Models</dt>
+              <dd>
+                <div class="tag-list">
+                  {data.models.map((model: string) => (
+                    <span class="tag">{model}</span>
+                  ))}
+                </div>
+              </dd>
+            </>
+          )}
+          {data.tags && data.tags.length > 0 && (
+            <>
+              <dt>Tags</dt>
+              <dd>
+                <div class="tag-list">
+                  {data.tags.map((tag: string) => (
+                    <span class="tag">{tag}</span>
+                  ))}
+                </div>
+              </dd>
+            </>
+          )}
+          {data.size && (
+            <>
+              <dt>Download Size</dt>
+              <dd>{formatSize(data.size)}</dd>
+            </>
+          )}
+        </dl>
       </section>
-    )}
 
-    <section class="cta-footer">
-      <h2>Ready to Get Started?</h2>
-      <p>Try this workflow instantly on Comfy Cloud - no setup required.</p>
-      <TryOnCloudButton templateName={data.name} size="large" />
-    </section>
+      <!-- FAQ -->
+      {data.faqItems && data.faqItems.length > 0 && (
+        <section>
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            {data.faqItems.map((item: { question: string; answer: string }) => (
+              <details class="faq-item">
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+      )}
+
+    </div>
+
+    <!-- Footer CTA -->
+    <footer class="article-footer">
+      <h2>Ready to try it?</h2>
+      <p>Run this workflow instantly in the cloud. No setup required.</p>
+      <a href={`https://comfyui.run/?template=${data.name}`} class="primary-action large">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        Run on Comfy Cloud
+      </a>
+    </footer>
   </article>
 </BaseLayout>
 
@@ -163,190 +273,476 @@ const mediaTypeLabels: Record<string, string> = {
 )}
 
 <style>
-  .template-detail {
-    max-width: 800px;
+  .article {
+    max-width: 720px;
     margin: 0 auto;
+    padding: 2rem 1rem;
   }
 
+  /* Breadcrumb */
   .breadcrumb {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
   }
 
   .breadcrumb a {
     color: #6366f1;
     text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
   }
 
   .breadcrumb a:hover {
     text-decoration: underline;
   }
 
+  /* Header */
+  .article-header {
+    margin-bottom: 2rem;
+  }
+
+  .meta-line {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.75rem;
+  }
+
+  .category {
+    color: #6366f1;
+    font-weight: 500;
+  }
+
   .separator {
     color: #d1d5db;
   }
 
-  .template-header {
-    margin-bottom: 2rem;
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #111827;
+    line-height: 1.2;
+    margin: 0 0 1rem;
+    letter-spacing: -0.02em;
   }
 
-  .template-header h1 {
-    font-size: 2.25rem;
+  .lead {
+    font-size: 1.25rem;
+    color: #4b5563;
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* Hero Image */
+  .hero-image {
+    margin: 2rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #f3f4f6;
+  }
+
+  .hero-image img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .hero-image figcaption,
+  .workflow-preview figcaption {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+    text-align: center;
+    background: #f9fafb;
+  }
+
+  /* Action Bar */
+  .action-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    margin-bottom: 3rem;
+  }
+
+  .primary-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: #111827;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .primary-action:hover {
+    background: #1f2937;
+  }
+
+  .primary-action.large {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+  }
+
+  .secondary-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .info-badge {
+    padding: 0.375rem 0.75rem;
+    background: white;
+    color: #374151;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    font-size: 0.813rem;
+  }
+
+  .info-badge.api {
+    background: #fef3c7;
+    border-color: #fcd34d;
+    color: #92400e;
+  }
+
+  /* Article Content */
+  .article-content {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    color: #374151;
+  }
+
+  .article-content section {
+    margin-bottom: 3rem;
+  }
+
+  .article-content h2 {
+    font-size: 1.5rem;
     font-weight: 700;
     color: #111827;
     margin: 0 0 1rem;
+    padding-top: 0.5rem;
   }
 
-  .template-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .media-type {
-    padding: 0.375rem 0.75rem;
-    background: #dbeafe;
-    color: #1d4ed8;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .usage {
-    padding: 0.375rem 0.75rem;
-    background: #f3f4f6;
-    color: #374151;
-    border-radius: 6px;
-    font-size: 0.875rem;
-  }
-
-  .api-badge {
-    padding: 0.375rem 0.75rem;
-    background: #fef3c7;
-    color: #92400e;
-    border-radius: 6px;
-    font-size: 0.875rem;
-    font-weight: 500;
-  }
-
-  .cta-section {
-    margin-top: 1.5rem;
-  }
-
-  section {
-    margin-bottom: 2.5rem;
-  }
-
-  section h2 {
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #111827;
+  .article-content p {
     margin: 0 0 1rem;
   }
 
-  .description-section p {
-    color: #4b5563;
-    line-height: 1.75;
+  /* Gallery */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+
+  .gallery-item {
     margin: 0;
-  }
-
-  .model-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .model-badge {
-    padding: 0.5rem 1rem;
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    color: white;
-    border-radius: 6px;
-    font-weight: 500;
-  }
-
-  .steps-list {
-    margin: 0;
-    padding-left: 1.5rem;
-  }
-
-  .steps-list li {
-    margin-bottom: 0.75rem;
-    color: #4b5563;
-    line-height: 1.6;
-  }
-
-  .use-cases-list {
-    margin: 0;
-    padding-left: 1.5rem;
-  }
-
-  .use-cases-list li {
-    margin-bottom: 0.5rem;
-    color: #4b5563;
-  }
-
-  .tag-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-  }
-
-  .tag {
-    padding: 0.375rem 0.75rem;
+    border-radius: 8px;
+    overflow: hidden;
     background: #f3f4f6;
-    color: #374151;
-    border-radius: 6px;
+  }
+
+  .gallery-item img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Steps */
+  .steps {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: step;
+  }
+
+  .steps li {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+  }
+
+  .step-number {
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #6366f1;
+    color: white;
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-radius: 50%;
+  }
+
+  .step-text {
+    flex: 1;
+    padding-top: 0.25rem;
+  }
+
+  /* Workflow Preview */
+  .workflow-preview {
+    margin: 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #1a1a2e;
+  }
+
+  .workflow-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  /* Use Cases */
+  .use-cases {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .use-cases li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .use-cases li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: #6366f1;
+    font-weight: 600;
+  }
+
+  /* Details */
+  .details-section {
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 12px;
+  }
+
+  .details-section h2 {
+    padding-top: 0;
+  }
+
+  .details-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem 1.5rem;
+    margin: 0;
+  }
+
+  .details-grid dt {
+    font-weight: 600;
+    color: #6b7280;
     font-size: 0.875rem;
   }
 
+  .details-grid dd {
+    margin: 0;
+  }
+
+  /* Tags */
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+  }
+
+  .tag {
+    padding: 0.25rem 0.625rem;
+    background: white;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    border-radius: 4px;
+    font-size: 0.813rem;
+  }
+
+  /* FAQ */
   .faq-list {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 0.5rem;
   }
 
-  .faq-item h3 {
-    font-size: 1.125rem;
+  .faq-item {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .faq-item summary {
+    padding: 1rem;
     font-weight: 600;
+    color: #111827;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .faq-item summary::after {
+    content: "+";
+    font-size: 1.25rem;
+    color: #6b7280;
+  }
+
+  .faq-item[open] summary::after {
+    content: "−";
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item p {
+    margin: 0;
+    padding: 0 1rem 1rem;
+    color: #4b5563;
+  }
+
+  /* Footer */
+  .article-footer {
+    text-align: center;
+    padding: 3rem 2rem;
+    margin-top: 3rem;
+    background: linear-gradient(135deg, #f0f9ff 0%, #faf5ff 100%);
+    border-radius: 16px;
+  }
+
+  .article-footer h2 {
+    font-size: 1.75rem;
     color: #111827;
     margin: 0 0 0.5rem;
   }
 
-  .faq-item p {
-    color: #4b5563;
-    margin: 0;
-    line-height: 1.6;
-  }
-
-  .cta-footer {
-    text-align: center;
-    padding: 2rem;
-    background: #f9fafb;
-    border-radius: 12px;
-    margin-top: 3rem;
-  }
-
-  .cta-footer h2 {
-    margin-bottom: 0.5rem;
-  }
-
-  .cta-footer p {
+  .article-footer p {
     color: #6b7280;
     margin: 0 0 1.5rem;
   }
 
+  /* Responsive */
   @media (max-width: 640px) {
-    .template-header h1 {
+    .article {
+      padding: 1rem;
+    }
+
+    h1 {
       font-size: 1.75rem;
     }
 
-    section h2 {
-      font-size: 1.25rem;
+    .lead {
+      font-size: 1.125rem;
+    }
+
+    .action-bar {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .primary-action {
+      justify-content: center;
+    }
+
+    .details-grid {
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
+    }
+
+    .details-grid dt {
+      margin-top: 0.5rem;
+    }
+  }
+
+  /* Dark mode support */
+  @media (prefers-color-scheme: dark) {
+    h1 {
+      color: #f9fafb;
+    }
+
+    .lead {
+      color: #9ca3af;
+    }
+
+    .article-content {
+      color: #d1d5db;
+    }
+
+    .article-content h2 {
+      color: #f9fafb;
+    }
+
+    .hero-image,
+    .gallery-item {
+      background: #1f2937;
+    }
+
+    .hero-image figcaption,
+    .workflow-preview figcaption {
+      background: #111827;
+      color: #9ca3af;
+    }
+
+    .action-bar,
+    .details-section {
+      background: #1f2937;
+    }
+
+    .info-badge {
+      background: #374151;
+      border-color: #4b5563;
+      color: #d1d5db;
+    }
+
+    .steps li {
+      background: #1f2937;
+    }
+
+    .tag {
+      background: #374151;
+      border-color: #4b5563;
+      color: #d1d5db;
+    }
+
+    .faq-item {
+      border-color: #374151;
+    }
+
+    .faq-item summary {
+      color: #f9fafb;
+    }
+
+    .faq-item p {
+      color: #9ca3af;
+    }
+
+    .article-footer {
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+    }
+
+    .article-footer h2 {
+      color: #f9fafb;
+    }
+
+    .article-footer p {
+      color: #a5b4fc;
     }
   }
 </style>

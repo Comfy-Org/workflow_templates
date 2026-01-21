@@ -14,6 +14,11 @@ const templates = defineCollection({
     requiresCustomNodes: z.array(z.string()).optional(),
     usage: z.number().optional(),
 
+    // Synced assets
+    thumbnails: z.array(z.string()).default([]),
+    size: z.number().optional(),
+    vram: z.number().optional(),
+
     // AI-generated content
     extendedDescription: z.string(),
     howToUse: z.array(z.string()),
