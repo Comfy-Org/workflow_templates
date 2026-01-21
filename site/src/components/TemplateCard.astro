@@ -14,12 +14,14 @@ const { name, title, description, mediaType, tags = [], usage, thumbnails = [] }
 
 const primaryThumbnail = thumbnails[0] || null;
 
-const mediaTypeLabels: Record<string, string> = {
-  image: 'Image',
-  video: 'Video',
-  audio: 'Audio',
-  '3d': '3D',
+const mediaTypeConfig: Record<string, { label: string; color: string }> = {
+  image: { label: 'Image', color: 'bg-blue-500' },
+  video: { label: 'Video', color: 'bg-purple-500' },
+  audio: { label: 'Audio', color: 'bg-green-500' },
+  '3d': { label: '3D', color: 'bg-orange-500' },
 };
+
+const config = mediaTypeConfig[mediaType] || { label: mediaType, color: 'bg-gray-500' };
 
 const formatUsage = (count: number): string => {
   if (count >= 1000) {
@@ -29,177 +31,59 @@ const formatUsage = (count: number): string => {
 };
 ---
 
-<a href={`/templates/${name}/`} class="template-card">
-  {primaryThumbnail ? (
-    <div class="card-image">
+<a 
+  href={`/templates/${name}/`} 
+  class="group block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200"
+>
+  <!-- Thumbnail -->
+  <div class="aspect-video bg-gray-100 relative overflow-hidden">
+    {primaryThumbnail ? (
       <img 
         src={`/thumbnails/${primaryThumbnail}`} 
-        alt={`${title} example`}
+        alt={`${title} example output`}
         loading="lazy"
+        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
       />
-      <span class="media-badge">{mediaTypeLabels[mediaType]}</span>
-    </div>
-  ) : (
-    <div class="card-image placeholder">
-      <span class="media-badge">{mediaTypeLabels[mediaType]}</span>
-    </div>
-  )}
-  
-  <div class="card-body">
-    <h3 class="card-title">{title}</h3>
-    <p class="card-description">{description}</p>
+    ) : (
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
+        <span class="text-4xl text-indigo-300">🎨</span>
+      </div>
+    )}
     
-    <div class="card-meta">
-      {usage !== undefined && (
-        <span class="usage">{formatUsage(usage)} runs</span>
-      )}
+    <!-- Media type badge -->
+    <span class={`absolute top-3 left-3 px-2 py-1 text-xs font-medium text-white rounded ${config.color}`}>
+      {config.label}
+    </span>
+  </div>
+  
+  <!-- Content -->
+  <div class="p-4">
+    <h3 class="font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+      {title}
+    </h3>
+    
+    <p class="text-sm text-gray-600 line-clamp-2 mb-3">
+      {description}
+    </p>
+    
+    <!-- Meta -->
+    <div class="flex items-center justify-between text-xs text-gray-500">
+      <div class="flex items-center gap-2">
+        {usage !== undefined && (
+          <span class="flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            {formatUsage(usage)} runs
+          </span>
+        )}
+      </div>
+      
       {tags.length > 0 && (
-        <span class="tag">{tags[0]}</span>
+        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+          {tags[0]}
+        </span>
       )}
     </div>
   </div>
 </a>
-
-<style>
-  .template-card {
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    text-decoration: none;
-    color: inherit;
-    overflow: hidden;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-
-  .template-card:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    transform: translateY(-2px);
-  }
-
-  .card-image {
-    position: relative;
-    aspect-ratio: 16 / 10;
-    background: #f3f4f6;
-    overflow: hidden;
-  }
-
-  .card-image.placeholder {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #e0e7ff 0%, #f0e7ff 100%);
-  }
-
-  .card-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.3s;
-  }
-
-  .template-card:hover .card-image img {
-    transform: scale(1.05);
-  }
-
-  .media-badge {
-    position: absolute;
-    top: 0.75rem;
-    left: 0.75rem;
-    padding: 0.25rem 0.625rem;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: 4px;
-    backdrop-filter: blur(4px);
-  }
-
-  .card-body {
-    display: flex;
-    flex-direction: column;
-    padding: 1rem;
-    flex-grow: 1;
-  }
-
-  .card-title {
-    margin: 0 0 0.5rem;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #111827;
-    line-height: 1.3;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .card-description {
-    margin: 0;
-    font-size: 0.875rem;
-    color: #6b7280;
-    line-height: 1.5;
-    flex-grow: 1;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  .card-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.75rem;
-    padding-top: 0.75rem;
-    border-top: 1px solid #f3f4f6;
-  }
-
-  .usage {
-    font-size: 0.75rem;
-    color: #6b7280;
-  }
-
-  .tag {
-    font-size: 0.75rem;
-    padding: 0.125rem 0.5rem;
-    background: #f3f4f6;
-    color: #374151;
-    border-radius: 4px;
-  }
-
-  /* Dark mode */
-  @media (prefers-color-scheme: dark) {
-    .template-card {
-      background: #1f2937;
-      border-color: #374151;
-    }
-
-    .card-image {
-      background: #374151;
-    }
-
-    .card-image.placeholder {
-      background: linear-gradient(135deg, #312e81 0%, #4c1d95 100%);
-    }
-
-    .card-title {
-      color: #f9fafb;
-    }
-
-    .card-description {
-      color: #9ca3af;
-    }
-
-    .card-meta {
-      border-color: #374151;
-    }
-
-    .tag {
-      background: #374151;
-      color: #d1d5db;
-    }
-  }
-</style>

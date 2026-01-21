@@ -1,5 +1,6 @@
 ---
 import SEOHead from '../components/SEOHead.astro';
+import '../styles/global.css';
 
 interface Props {
   title: string;
@@ -14,7 +15,7 @@ const { title, description, canonicalUrl, ogImage, ogType, structuredData } = As
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
   <head>
     <SEOHead
       title={title}
@@ -25,146 +26,55 @@ const { title, description, canonicalUrl, ogImage, ogType, structuredData } = As
       structuredData={structuredData}
     />
   </head>
-  <body>
-    <header class="site-header">
-      <nav class="nav-container">
-        <a href="/" class="logo">
-          <span class="logo-text">ComfyUI Templates</span>
+  <body class="min-h-screen flex flex-col bg-white text-gray-900 antialiased">
+    <header class="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
+      <nav class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="flex items-center gap-2 font-bold text-xl text-gray-900 hover:text-indigo-600 transition-colors">
+          <svg class="w-8 h-8 text-indigo-600" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <span>ComfyUI Templates</span>
         </a>
-        <div class="nav-links">
-          <a href="/templates/">All Templates</a>
+        <div class="flex items-center gap-6">
+          <a href="/templates/" class="text-gray-600 hover:text-gray-900 font-medium transition-colors">
+            Browse Templates
+          </a>
+          <a 
+            href="https://www.comfy.org/" 
+            target="_blank" 
+            rel="noopener"
+            class="hidden sm:inline-flex items-center gap-1 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Visit Comfy.org
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+            </svg>
+          </a>
         </div>
       </nav>
     </header>
     
-    <main>
+    <main class="flex-1">
       <slot />
     </main>
     
-    <footer class="site-footer">
-      <div class="footer-container">
-        <p>&copy; 2026 Comfy Org. All rights reserved.</p>
-        <div class="footer-links">
-          <a href="https://comfy.org" target="_blank" rel="noopener">Comfy.org</a>
-          <a href="https://cloud.comfy.org" target="_blank" rel="noopener">Comfy Cloud</a>
-          <a href="https://docs.comfy.org" target="_blank" rel="noopener">Documentation</a>
+    <footer class="bg-gray-50 border-t border-gray-200">
+      <div class="max-w-6xl mx-auto px-4 py-8">
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+          <p class="text-gray-500 text-sm">&copy; 2026 Comfy Org. Open source workflows for everyone.</p>
+          <div class="flex items-center gap-6">
+            <a href="https://www.comfy.org" target="_blank" rel="noopener" class="text-gray-500 hover:text-gray-700 text-sm transition-colors">
+              Comfy.org
+            </a>
+            <a href="https://docs.comfy.org" target="_blank" rel="noopener" class="text-gray-500 hover:text-gray-700 text-sm transition-colors">
+              Docs
+            </a>
+            <a href="https://github.com/comfyanonymous/ComfyUI" target="_blank" rel="noopener" class="text-gray-500 hover:text-gray-700 text-sm transition-colors">
+              GitHub
+            </a>
+          </div>
         </div>
       </div>
     </footer>
   </body>
 </html>
-
-<style is:global>
-  * {
-    box-sizing: border-box;
-  }
-
-  html {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    line-height: 1.6;
-    color: #1f2937;
-  }
-
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-  main {
-    flex: 1;
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-  }
-
-  a {
-    color: #6366f1;
-  }
-
-  a:hover {
-    color: #4f46e5;
-  }
-</style>
-
-<style>
-  .site-header {
-    background: #fff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem;
-  }
-
-  .nav-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .logo {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  .logo-text {
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #111827;
-  }
-
-  .nav-links {
-    display: flex;
-    gap: 1.5rem;
-  }
-
-  .nav-links a {
-    text-decoration: none;
-    color: #4b5563;
-    font-weight: 500;
-  }
-
-  .nav-links a:hover {
-    color: #6366f1;
-  }
-
-  .site-footer {
-    background: #f9fafb;
-    border-top: 1px solid #e5e7eb;
-    padding: 2rem 1rem;
-    margin-top: auto;
-  }
-
-  .footer-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-  }
-
-  .footer-container p {
-    margin: 0;
-    color: #6b7280;
-    font-size: 0.875rem;
-  }
-
-  .footer-links {
-    display: flex;
-    gap: 1.5rem;
-  }
-
-  .footer-links a {
-    text-decoration: none;
-    color: #6b7280;
-    font-size: 0.875rem;
-  }
-
-  .footer-links a:hover {
-    color: #6366f1;
-  }
-</style>
