@@ -7,6 +7,8 @@ const templates = defineCollection({
     title: z.string().optional(),
     description: z.string(),
     mediaType: z.enum(['image', 'video', 'audio', '3d']),
+    mediaSubtype: z.string().optional(),
+    thumbnailVariant: z.enum(['compareSlider', 'hoverDissolve', 'zoomHover']).optional(),
     tags: z.array(z.string()).optional(),
     models: z.array(z.string()).optional(),
     date: z.string().optional(),

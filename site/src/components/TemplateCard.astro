@@ -1,18 +1,30 @@
 ---
+import ThumbnailDisplay from './ThumbnailDisplay.astro';
+
 interface Props {
   name: string;
   title: string;
   description: string;
   mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover';
   tags?: string[];
   models?: string[];
   usage?: number;
   thumbnails?: string[];
 }
 
-const { name, title, description, mediaType, tags = [], usage, thumbnails = [] } = Astro.props;
-
-const primaryThumbnail = thumbnails[0] || null;
+const { 
+  name, 
+  title, 
+  description, 
+  mediaType, 
+  mediaSubtype,
+  thumbnailVariant,
+  tags = [], 
+  usage, 
+  thumbnails = [] 
+} = Astro.props;
 
 const mediaTypeConfig: Record<string, { label: string; color: string }> = {
   image: { label: 'Image', color: 'bg-blue-500' },
@@ -36,13 +48,14 @@ const formatUsage = (count: number): string => {
   class="group block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200"
 >
   <!-- Thumbnail -->
-  <div class="aspect-video bg-gray-100 relative overflow-hidden">
-    {primaryThumbnail ? (
-      <img 
-        src={`/thumbnails/${primaryThumbnail}`} 
-        alt={`${title} example output`}
-        loading="lazy"
-        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+  <div class="aspect-video bg-gray-100 relative">
+    {thumbnails.length > 0 ? (
+      <ThumbnailDisplay 
+        thumbnails={thumbnails}
+        title={title}
+        variant={thumbnailVariant}
+        mediaSubtype={mediaSubtype}
+        class="w-full h-full"
       />
     ) : (
       <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
@@ -51,7 +64,7 @@ const formatUsage = (count: number): string => {
     )}
     
     <!-- Media type badge -->
-    <span class={`absolute top-3 left-3 px-2 py-1 text-xs font-medium text-white rounded ${config.color}`}>
+    <span class={`absolute top-3 left-3 px-2 py-1 text-xs font-medium text-white rounded ${config.color} z-10`}>
       {config.label}
     </span>
   </div>
