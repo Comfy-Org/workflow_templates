@@ -474,7 +474,7 @@ class TemplateSyncer:
                 try:
                     array_content = json.loads(f"[{content}]")
                     if all(isinstance(item, str) for item in array_content) and len(content) < 200:
-                        return f"[{', '.join(json.dumps(item, ensure_ascii=False) for item in array_content)}]"
+                        return f"[{','.join(json.dumps(item, ensure_ascii=False) for item in array_content)}]"
                 except:
                     pass
                 return match.group(0)
@@ -558,22 +558,12 @@ class TemplateSyncManager:
     def sync_template_data(self, master_template: Dict[str, Any], target_template: Dict[str, Any], 
                           template_name: str, lang: str) -> Dict[str, Any]:
         """Sync data from master template to target template"""
-        updated_template = target_template.copy()
+        # Start with master_template to preserve field order from master
+        updated_template = master_template.copy()
         changes_made = False
         
-        # Auto-sync fields
-        for field in self.syncer.auto_sync_fields:
-            if field in master_template:
-                # Add or update field from master
-                if field not in target_template or target_template[field] != master_template[field]:
-                    updated_template[field] = master_template[field]
-                    changes_made = True
-                    self.syncer.logger.info(f"  ✓ Auto-synced {field}: {master_template[field]}")
-            elif field in target_template:
-                # Remove field that no longer exists in master
-                del updated_template[field]
-                changes_made = True
-                self.syncer.logger.info(f"  🗑️ Removed {field} (no longer in master)")
+        # Since we start from master_template, all fields are already in correct order
+        # We only need to update translated fields and handle special cases
         
         # Handle vram data filling - use size data when vram is missing or 0
         if "size" in updated_template:
@@ -596,20 +586,17 @@ class TemplateSyncManager:
                     updated_template["vram"] = 0
                     changes_made = True
                     self.syncer.logger.info(f"  💾 Set vram to 0 because size is 0")
-                    
+        
         # Handle tags - always translate using i18n data
         if "tags" in master_template:
             # Translate tags from English to target language
             translated_tags = self.syncer.translate_tags(master_template["tags"], lang)
             
-            # Update if different or missing
-            if "tags" not in target_template or target_template["tags"] != translated_tags:
-                updated_template["tags"] = translated_tags
+            # Update tags (they're already in updated_template from master, just need translation)
+            updated_template["tags"] = translated_tags
+            if translated_tags != master_template["tags"]:
                 changes_made = True
-                if translated_tags != master_template["tags"]:
-                    self.syncer.logger.info(f"  🏷️  Translated tags: {master_template['tags']} → {translated_tags}")
-                else:
-                    self.syncer.logger.info(f"  ➕ Added tags: {translated_tags}")
+                self.syncer.logger.info(f"  🏷️  Translated tags: {master_template['tags']} → {translated_tags}")
                         
         # Handle language-specific fields - sync from i18n.json if available
         for field in self.syncer.language_specific_fields:
@@ -623,19 +610,12 @@ class TemplateSyncManager:
                 # Only apply translation if it's actually translated (different from English)
                 if translation and translation != en_value:
                     # Apply real translation from i18n
+                    updated_template[field] = translation
                     if current_value != translation:
-                        updated_template[field] = translation
                         changes_made = True
                         self.syncer.translation_stats['translations_applied'] += 1
                         self.syncer.logger.info(f"  🌐 Applied translation from i18n for {field}: '{translation}'")
-                elif current_value is None:
-                    # Field doesn't exist in target, use English as fallback for new templates
-                    updated_template[field] = en_value
-                    changes_made = True
-                    self.syncer.logger.info(f"  ➕ Added missing {field} (no translation): '{en_value}'")
-                else:
-                    # No real translation in i18n (or it's a placeholder), preserve existing value
-                    self.syncer.logger.debug(f"  ⏭ Preserved existing {field}: '{current_value}'")
+                # If no translation, keep English value from master (already in updated_template)
         
         # Track that we scanned this template
         self.syncer.translation_stats['templates_scanned'] += 1
