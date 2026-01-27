@@ -1,0 +1,56 @@
+name: Deploy Template Site
+
+on:
+  workflow_dispatch: # Manual trigger for initial development
+  # Uncomment after stable deployment is verified:
+  # workflow_run:
+  #   workflows: ["Publish to PyPI"]
+  #   types: [completed]
+  #   branches: [main]
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    # Uncomment when using workflow_run trigger:
+    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: site
+
+      - name: Sync templates
+        run: npm run sync
+        working-directory: site
+
+      - name: Generate AI content
+        run: npm run generate:ai
+        working-directory: site
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+      - name: Generate workflow previews
+        run: npm run generate:previews
+        working-directory: site
+
+      - name: Build Astro site
+        run: npm run build
+        working-directory: site
+
+      - name: Deploy to Vercel
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: site
+          vercel-args: '--prod'
