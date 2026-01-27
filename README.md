@@ -1,31 +1,37 @@
 # workflow_templates
 
-This repo hosts the official ComfyUI workflow templates. The repository now ships a
-**package-per-media** structure:
+This repo hosts the official ComfyUI **workflow templates** and **subgraph blueprints**.
+
+## Overview
+
+| Content | Description | Package |
+|---------|-------------|---------|
+| **Workflow Templates** | Full standalone workflows for the template picker | `comfyui-workflow-templates` |
+| **Subgraph Blueprints** | Reusable node components that appear in the node palette | `comfyui-subgraph-blueprints` |
+
+The repository uses a **package-per-media** structure:
 
 - `packages/core` – manifest + loader helpers shipped as `comfyui-workflow-templates-core`
-- `packages/media_*` – the actual template JSON + preview assets for each media type
-- `packages/meta` and the root `pyproject.toml` – the `comfyui-workflow-templates` meta package that depends on all others
+- `packages/media_*` – workflow template JSON + preview assets for each media type
+- `packages/blueprints` – subgraph blueprint JSON + preview assets as `comfyui-subgraph-blueprints`
+- `packages/meta` and the root `pyproject.toml` – the `comfyui-workflow-templates` meta package
 
-Most contributors only touch the `templates/` folder and `bundles.json`, but the build
-pipeline now requires the helper scripts described below. See the sections on "Adding
-new templates" and "Publishing" for the exact steps.
+## Quick Start
+
+| Task | Commands |
+|------|----------|
+| Add a workflow template | Edit `templates/`, `bundles.json`, then `python scripts/sync_bundles.py` |
+| Add a subgraph blueprint | Edit `blueprints/`, `blueprints_bundles.json`, then `python scripts/sync_blueprints.py` |
+| Import external blueprints | Copy JSONs to `blueprints/`, then `python scripts/import_blueprints.py` |
+
+---
 
 - [workflow\_templates](#workflow_templates)
+  - [Overview](#overview)
+  - [Quick Start](#quick-start)
   - [Adding New Templates](#adding-new-templates)
-    - [1 — Find Templates Folder](#1--find-templates-folder)
-    - [2 — Obtain Workflow](#2--obtain-workflow)
-    - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
-    - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
-    - [5 — Compress Assets](#5--compress-assets)
-    - [6 — Rename and Move Files](#6--rename-and-move-files)
-    - [7 — Assign Bundle \& Sync Assets](#7--assign-bundle--sync-assets)
-    - [8 — Add Entry to `index.json`](#8--add-entry-to-indexjson)
-    - [9 — Embed Models](#9--embed-models)
-    - [10 — Embed Node Versions (optional)](#10--embed-node-versions-optional)
-    - [11 — Add Documentation Nodes (optional)](#11--add-documentation-nodes-optional)
-    - [12 — Sync Translations](#12--sync-translations)
-    - [13 — Create PR](#13--create-pr)
+  - [Adding New Blueprints](#adding-new-blueprints)
+  - [Validation](#validation)
 
 ## Adding New Templates
 
@@ -429,3 +435,107 @@ Version bumping and package building are automated via CI/CD. Bumping the root `
 Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflow_templates/pull/16
 
 Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
+
+---
+
+## Adding New Blueprints
+
+Subgraph Blueprints are reusable workflow components that appear as single nodes in ComfyUI. They use the native ComfyUI subgraph format.
+
+For detailed documentation, see [docs/BLUEPRINTS.md](docs/BLUEPRINTS.md).
+
+### Quick Guide
+
+#### Option 1: Import from External Source
+
+1. Copy blueprint JSON files to `blueprints/` directory
+2. Run the import script to normalize names and generate metadata:
+   ```bash
+   python scripts/import_blueprints.py
+   ```
+3. Sync to packages:
+   ```bash
+   python scripts/sync_blueprints.py
+   ```
+
+#### Option 2: Create in ComfyUI
+
+1. Build your workflow in ComfyUI
+2. Select nodes → Right-click → "Create Subgraph"
+3. Export the workflow JSON
+4. Copy to `blueprints/` with a snake_case filename (e.g., `text_to_image_flux.json`)
+5. Run import and sync scripts
+
+### Blueprint File Structure
+
+```
+blueprints/
+├── index.json                        # Generated metadata for UI
+├── index.schema.json                 # Validation schema
+├── text_to_image_flux_1_dev.json     # Blueprint (native ComfyUI subgraph format)
+├── text_to_image_flux_1_dev-1.webp   # Thumbnail (optional)
+└── ...
+```
+
+### Blueprint JSON Format
+
+Blueprints use the native ComfyUI subgraph format with `definitions.subgraphs`:
+
+```json
+{
+  "id": "workflow-uuid",
+  "nodes": [{"id": -1, "type": "subgraph-uuid", ...}],
+  "definitions": {
+    "subgraphs": [{
+      "id": "subgraph-uuid",
+      "name": "Text to Image (Flux.1 Dev)",
+      "inputs": [
+        {"name": "text", "type": "STRING"},
+        {"name": "width", "type": "INT"}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE"}
+      ],
+      "nodes": [...],
+      "links": [...]
+    }]
+  }
+}
+```
+
+### Sync Commands
+
+```bash
+# Import and normalize external blueprints
+python scripts/import_blueprints.py
+
+# Generate manifest and sync to packages
+python scripts/sync_blueprints.py
+```
+
+### Create PR
+
+1. Test the blueprint in ComfyUI
+2. Ensure `python scripts/sync_blueprints.py` produces no changes
+3. Bump version in root `pyproject.toml`
+4. Create PR
+
+---
+
+## Validation
+
+CI automatically validates:
+
+| Check | Templates | Blueprints |
+|-------|-----------|------------|
+| JSON syntax | ✅ | ✅ |
+| Schema validation | ✅ | ✅ |
+| Bundle consistency | ✅ | ✅ |
+| Manifest sync | ✅ | ✅ |
+| Thumbnails | ✅ | ❌ (optional) |
+
+Run locally before committing:
+```bash
+python scripts/sync_bundles.py      # Templates
+python scripts/sync_blueprints.py   # Blueprints
+```

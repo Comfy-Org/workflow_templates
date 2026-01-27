@@ -1,0 +1,85 @@
+name: Validate Blueprints
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'blueprints/**'
+      - 'blueprints_bundles.json'
+      - 'scripts/sync_blueprints.py'
+      - 'scripts/import_blueprints.py'
+      - 'scripts/validate_blueprints.py'
+      - '.github/workflows/validate-blueprints.yml'
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+    paths:
+      - 'blueprints/**'
+      - 'blueprints_bundles.json'
+      - 'scripts/sync_blueprints.py'
+      - 'scripts/import_blueprints.py'
+      - 'scripts/validate_blueprints.py'
+      - '.github/workflows/validate-blueprints.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema
+
+      - name: Validate blueprints
+        run: python scripts/validate_blueprints.py
+
+      - name: Verify import_blueprints.py was run
+        run: |
+          python scripts/import_blueprints.py
+          if git diff --quiet blueprints/index.json blueprints_bundles.json; then
+            echo "✅ index.json and blueprints_bundles.json are up to date"
+          else
+            echo "❌ import_blueprints.py produced changes. Run: python scripts/import_blueprints.py"
+            git diff blueprints/index.json blueprints_bundles.json
+            exit 1
+          fi
+
+      - name: Verify sync_blueprints.py was run
+        run: |
+          python scripts/sync_blueprints.py
+          if git diff --quiet packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json packages/blueprints/; then
+            echo "✅ Manifest and assets are up to date"
+          else
+            echo "❌ sync_blueprints.py produced changes. Run: python scripts/sync_blueprints.py"
+            git diff --name-only packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json packages/blueprints/
+            exit 1
+          fi
+
+      - name: Comment on PR with validation errors
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Blueprint Validation Failed
+
+            Please ensure:
+            1. Run \`python scripts/validate_blueprints.py\` to check for errors
+            2. Run \`python scripts/import_blueprints.py\` to update index.json and bundles
+            3. Run \`python scripts/sync_blueprints.py\` to sync manifest and assets
+
+            See the workflow logs for details.`
+            });
