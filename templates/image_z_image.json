@@ -1,8 +1,8 @@
 {
   "id": "9ae6082b-c7f4-433c-9971-7a8f65a3ea65",
   "revision": 0,
-  "last_node_id": 72,
-  "last_link_id": 83,
+  "last_node_id": 75,
+  "last_link_id": 85,
   "nodes": [
     {
       "id": 63,
@@ -185,14 +185,14 @@
         "Node name for S&R": "UNETLoader",
         "models": [
           {
-            "name": "z_image_turbo_bf16.safetensors",
-            "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+            "name": "z_image.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/diffusion_models/z_image.safetensors",
             "directory": "diffusion_models"
           }
         ]
       },
       "widgets_values": [
-        "z-image-private/z_image_old_bf16.safetensors",
+        "z_image.safetensors",
         "default"
       ]
     },
@@ -244,74 +244,6 @@
         "qwen_3_4b.safetensors",
         "lumina2",
         "default"
-      ]
-    },
-    {
-      "id": 69,
-      "type": "KSampler",
-      "pos": [
-        1035,
-        -50
-      ],
-      "size": [
-        310,
-        490
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 74
-        },
-        {
-          "name": "positive",
-          "type": "CONDITIONING",
-          "link": 75
-        },
-        {
-          "name": "negative",
-          "type": "CONDITIONING",
-          "link": 83
-        },
-        {
-          "name": "latent_image",
-          "type": "LATENT",
-          "link": 77
-        }
-      ],
-      "outputs": [
-        {
-          "name": "LATENT",
-          "type": "LATENT",
-          "slot_index": 0,
-          "links": [
-            72
-          ]
-        }
-      ],
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.3.64",
-        "Node name for S&R": "KSampler"
-      },
-      "widgets_values": [
-        118438939909052,
-        "randomize",
-        30,
-        4,
-        "res_multistep",
-        "simple",
-        1
       ]
     },
     {
@@ -388,30 +320,110 @@
       "bgcolor": "#535"
     },
     {
-      "id": 35,
-      "type": "MarkdownNote",
+      "id": 9,
+      "type": "SaveImage",
       "pos": [
-        -290,
-        -160
+        1380,
+        -40
       ],
       "size": [
-        510,
-        600
+        740,
+        650
       ],
-      "flags": {
-        "collapsed": false
-      },
-      "order": 4,
+      "flags": {},
+      "order": 11,
       "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Model link",
-      "properties": {},
-      "widgets_values": [
-        "## Report workflow issue\n\nIf you found any issues when running this workflow, [report template issue here](https://github.com/Comfy-Org/workflow_templates/issues)\n\n\n## Model links\n\n**text_encoders**\n\n- [qwen_3_4b.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors)\n\n**loras**\n\n- [pixel_art_style_z_image_turbo.safetensors](https://huggingface.co/tarn59/pixel_art_style_lora_z_image_turbo/resolve/main/pixel_art_style_z_image_turbo.safetensors)\n\n**diffusion_models**\n\n- [z_image_turbo_bf16.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors)\n\n**vae**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors)\n\n\nModel Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 text_encoders/\n│   │      └── qwen_3_4b.safetensors\n│   ├── 📂 loras/\n│   │      └── pixel_art_style_z_image_turbo.safetensors\n│   ├── 📂 diffusion_models/\n│   │      └── z_image_turbo_bf16.safetensors\n│   └── 📂 vae/\n│          └── ae.safetensors\n```\n"
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 79
+        }
       ],
-      "color": "#432",
-      "bgcolor": "#000"
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "z-image"
+      ]
+    },
+    {
+      "id": 69,
+      "type": "KSampler",
+      "pos": [
+        1035,
+        -50
+      ],
+      "size": [
+        310,
+        490
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 74
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 75
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 83
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 77
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            72
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        909396553000551,
+        "randomize",
+        50,
+        4,
+        "res_multistep",
+        "simple",
+        1
+      ]
     },
     {
       "id": 68,
@@ -425,7 +437,7 @@
         110
       ],
       "flags": {},
-      "order": 5,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -451,8 +463,8 @@
         "Node name for S&R": "EmptySD3LatentImage"
       },
       "widgets_values": [
-        720,
-        1280,
+        1024,
+        1024,
         1
       ]
     },
@@ -500,48 +512,36 @@
         "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        "一幅极具梦幻质感的莲花特写，花瓣呈现出类似玻璃的通透质感，轻薄如蝉翼，带着晶莹的光泽，表面凝结的水珠仿佛镶嵌在水晶上的碎钻，折射出柔和的光线，让粉橙渐变的花瓣层次更加通透。背景是朦胧的浅白与清新的荷叶绿，与花瓣的玻璃感相互映衬，整体画面在澄澈的透明质感与柔和的色彩渐变中，呈现出一种脱离现实的梦幻美感，仿佛这不是一朵真实的花，而是一件用琉璃雕琢而成的艺术品。"
+        "This is a realistic-style close-up portrait. The girl in the frame seems to have emerged from soft light. She has deep brown curly hair, with a few strands of loose hair gently clinging to her cheeks that have a faint pink blush. Her skin is as delicate as if covered with a layer of shimmering tulle. Her eyes are clear yet slightly distant, looking beyond the camera. Her lips have a natural pinkish hue, and her expression is calm with a touch of confused tenderness. Transparent, crinkled decorations similar to organza or laser material are twisted in her hair and around her neck and shoulders. Under the refraction of soft light, they radiate rainbow-like light spots. Pink, blue, gold, and silver interweave into a hazy halo, wrapping her in a soft and translucent fantasy world. The overall color tone is a low-saturation macaron color system. The light, as if crushed, spreads all over the frame, creating an atmosphere that is both gentle and fragile, as if it will dissipate into the air along with the light spots in the next second. Professional portrait photography, high resolution, rich details, realistic texture, natural light and shadow."
       ],
       "color": "#232",
       "bgcolor": "#353"
     },
     {
-      "id": 9,
-      "type": "SaveImage",
+      "id": 35,
+      "type": "MarkdownNote",
       "pos": [
-        1380,
-        -40
+        -290,
+        -160
       ],
       "size": [
-        740,
-        650
+        510,
+        600
       ],
-      "flags": {},
-      "order": 11,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 79
-        }
-      ],
-      "outputs": [],
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.3.64",
-        "Node name for S&R": "SaveImage"
+      "flags": {
+        "collapsed": false
       },
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model link",
+      "properties": {},
       "widgets_values": [
-        "z-image/z-image"
-      ]
+        "## Report workflow issue\n\nIf you found any issues when running this workflow, [report template issue here](https://github.com/Comfy-Org/workflow_templates/issues)\n\n\n## Model links\n\n**text_encoders**\n\n- [qwen_3_4b.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors)\n\n**loras**\n\n- [pixel_art_style_z_image_turbo.safetensors](https://huggingface.co/tarn59/pixel_art_style_lora_z_image_turbo/resolve/main/pixel_art_style_z_image_turbo.safetensors)\n\n**diffusion_models**\n\n- [z_image.safetensors](https://huggingface.co/Comfy-Org/z_image/resolve/main/split_files/diffusion_models/z_image.safetensors)\n\n**vae**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors)\n\n\nModel Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 text_encoders/\n│   │      └── qwen_3_4b.safetensors\n│   ├── 📂 loras/\n│   │      └── pixel_art_style_z_image_turbo.safetensors\n│   ├── 📂 diffusion_models/\n│   │      └── z_image.safetensors\n│   └── 📂 vae/\n│          └── ae.safetensors\n```\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -670,10 +670,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7175903892665053,
+      "scale": 0.4455671739178892,
       "offset": [
-        1182.6386022190788,
-        600.8453134609824
+        1757.0277790384423,
+        868.0933588276354
       ]
     },
     "frontendVersion": "1.37.11",
