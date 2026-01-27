@@ -211,7 +211,7 @@ def get_blueprint_entry(blueprint_id: str) -> BlueprintEntry:
     """Return manifest entry for the given blueprint id."""
     manifest = load_blueprints_manifest()
     if manifest is None:
-        raise KeyError(f"Blueprints manifest not found")
+        raise KeyError("Blueprints manifest not found")
     try:
         return manifest.blueprints[blueprint_id]
     except KeyError as exc:
@@ -243,7 +243,8 @@ def get_blueprint_asset_path(blueprint_id: str, filename: str) -> str:
     asset = package_files / "blueprints" / filename
     if not asset.exists():
         raise FileNotFoundError(
-            f"Asset '{filename}' for blueprint '{blueprint_id}' not found in package '{package_name}'"
+            f"Asset '{filename}' for blueprint '{blueprint_id}' "
+            f"not found in package '{package_name}'"
         )
     return str(asset)
 
