@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ComfyUI Subgraph Blueprints Index",
+  "description": "Schema for validating the blueprints index.json metadata file. Note: The actual blueprint JSON files use the native ComfyUI subgraph format.",
+  "type": "array",
+  "items": {
+    "$ref": "#/definitions/blueprintCategory"
+  },
+  "definitions": {
+    "blueprintCategory": {
+      "type": "object",
+      "required": ["moduleName", "title", "blueprints"],
+      "properties": {
+        "moduleName": {
+          "type": "string",
+          "description": "Module identifier for the category",
+          "pattern": "^[a-zA-Z0-9_-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display name for the category"
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the category"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Icon for the category"
+        },
+        "blueprints": {
+          "type": "array",
+          "description": "Array of subgraph blueprints in this category",
+          "items": {
+            "$ref": "#/definitions/blueprintInfo"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "blueprintInfo": {
+      "type": "object",
+      "required": ["name", "title", "description", "mediaType", "mediaSubtype"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Blueprint filename without .json extension (snake_case)",
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Display title (extracted from definitions.subgraphs[0].name)"
+        },
+        "description": {
+          "type": "string",
+          "description": "Brief description of what the blueprint does"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video", "audio", "3d"],
+          "description": "Type of output media this blueprint produces"
+        },
+        "mediaSubtype": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9]+$",
+          "description": "File extension/format of the thumbnail"
+        },
+        "thumbnailVariant": {
+          "type": "string",
+          "enum": ["compareSlider", "hoverDissolve", "hoverZoom", "zoomHover"],
+          "description": "Optional thumbnail hover effect"
+        },
+        "tutorialUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Optional URL to tutorial or documentation"
+        },
+        "tags": {
+          "type": "array",
+          "description": "Array of tags for categorizing and filtering",
+          "items": {
+            "type": "string"
+          }
+        },
+        "inputs": {
+          "type": "array",
+          "description": "Exposed input slots (extracted from definitions.subgraphs[0].inputs)",
+          "items": {
+            "$ref": "#/definitions/slotInfo"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "description": "Exposed output slots (extracted from definitions.subgraphs[0].outputs)",
+          "items": {
+            "$ref": "#/definitions/slotInfo"
+          }
+        },
+        "models": {
+          "type": "array",
+          "description": "Array of model filenames used by this blueprint",
+          "items": {
+            "type": "string"
+          }
+        },
+        "requiresCustomNodes": {
+          "type": "array",
+          "description": "Array of custom node package IDs required",
+          "items": {
+            "type": "string"
+          }
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when the blueprint was created or last updated"
+        },
+        "version": {
+          "type": "string",
+          "description": "Version from definitions.subgraphs[0].version"
+        }
+      },
+      "additionalProperties": false
+    },
+    "slotInfo": {
+      "type": "object",
+      "required": ["name", "type"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Slot name"
+        },
+        "type": {
+          "type": "string",
+          "description": "ComfyUI type (IMAGE, LATENT, MODEL, CONDITIONING, STRING, INT, etc.)"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

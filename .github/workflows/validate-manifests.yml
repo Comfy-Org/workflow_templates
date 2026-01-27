@@ -5,13 +5,19 @@ on:
     types: [opened, synchronize]
     paths:
       - 'templates/**'
+      - 'blueprints/**'
       - 'packages/*/src/*/manifest.json'
+      - 'packages/*/src/*/*.json'
       - 'scripts/validate_manifests.py'
+      - 'scripts/sync_bundles.py'
+      - 'scripts/sync_blueprints.py'
   push:
     branches: [main]
     paths:
       - 'templates/**'
+      - 'blueprints/**'
       - 'packages/*/src/*/manifest.json'
+      - 'packages/*/src/*/*.json'
 
 jobs:
   validate:
@@ -29,6 +35,7 @@ jobs:
       - name: Sync manifests first
         run: |
           python scripts/sync_bundles.py
+          python scripts/sync_blueprints.py
           
       - name: Validate manifest entries
         run: |
@@ -51,4 +58,26 @@ jobs:
             exit 1
           else
             echo "✅ No orphaned templates found"
+          fi
+
+      - name: Check for orphaned blueprints
+        run: |
+          echo "🔍 Checking for blueprints without manifest entries..."
+          cd blueprints
+          orphaned=0
+          for json_file in *.json; do
+            # Skip index files
+            if [[ "$json_file" == index* ]]; then
+              continue
+            fi
+            if ! grep -q "\"$json_file\"" ../packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json; then
+              echo "⚠️  Orphaned blueprint: $json_file"
+              orphaned=$((orphaned + 1))
+            fi
+          done
+          if [ $orphaned -gt 0 ]; then
+            echo "❌ Found $orphaned orphaned blueprint(s). Run sync_blueprints.py to fix."
+            exit 1
+          else
+            echo "✅ No orphaned blueprints found"
           fi

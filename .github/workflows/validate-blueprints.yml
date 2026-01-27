@@ -1,0 +1,205 @@
+name: Validate Blueprints
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'blueprints/**'
+      - 'blueprints_bundles.json'
+      - 'scripts/sync_blueprints.py'
+      - 'scripts/import_blueprints.py'
+      - '.github/workflows/validate-blueprints.yml'
+  pull_request:
+    types: [opened, synchronize]
+    branches: [main]
+    paths:
+      - 'blueprints/**'
+      - 'blueprints_bundles.json'
+      - 'scripts/sync_blueprints.py'
+      - 'scripts/import_blueprints.py'
+      - '.github/workflows/validate-blueprints.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install jsonschema
+
+      - name: Check JSON syntax
+        run: |
+          echo "Checking blueprint JSON syntax..."
+          for file in blueprints/*.json; do
+            if ! python -m json.tool "$file" > /dev/null 2>&1; then
+              echo "❌ Invalid JSON syntax in $file"
+              exit 1
+            fi
+          done
+          echo "✅ All blueprint JSON files have valid syntax"
+
+      - name: Validate index.json against schema
+        run: |
+          python3 -c "
+          import json
+          import jsonschema
+
+          with open('blueprints/index.schema.json') as f:
+              schema = json.load(f)
+          with open('blueprints/index.json') as f:
+              index = json.load(f)
+
+          try:
+              jsonschema.validate(index, schema)
+              print('✅ index.json validates against schema')
+          except jsonschema.ValidationError as e:
+              print(f'❌ Schema validation failed: {e.message}')
+              exit(1)
+          "
+
+      - name: Validate blueprint structure
+        run: |
+          python3 -c "
+          import json
+          import sys
+          from pathlib import Path
+
+          errors = []
+          blueprints_dir = Path('blueprints')
+
+          for bp_file in sorted(blueprints_dir.glob('*.json')):
+              if bp_file.name.startswith('index'):
+                  continue
+
+              try:
+                  with bp_file.open() as f:
+                      data = json.load(f)
+
+                  # Check for required structure
+                  if 'definitions' not in data:
+                      errors.append(f'{bp_file.name}: Missing \"definitions\" key')
+                      continue
+
+                  subgraphs = data.get('definitions', {}).get('subgraphs', [])
+                  if not subgraphs:
+                      errors.append(f'{bp_file.name}: Missing \"definitions.subgraphs\" array')
+                      continue
+
+                  sg = subgraphs[0]
+                  if 'name' not in sg:
+                      errors.append(f'{bp_file.name}: Missing subgraph name')
+                  if 'inputs' not in sg:
+                      errors.append(f'{bp_file.name}: Missing subgraph inputs')
+                  if 'outputs' not in sg:
+                      errors.append(f'{bp_file.name}: Missing subgraph outputs')
+                  if 'nodes' not in sg:
+                      errors.append(f'{bp_file.name}: Missing subgraph nodes')
+
+              except json.JSONDecodeError as e:
+                  errors.append(f'{bp_file.name}: Invalid JSON - {e}')
+
+          if errors:
+              print('❌ Blueprint validation errors:')
+              for err in errors:
+                  print(f'  - {err}')
+              sys.exit(1)
+          else:
+              print('✅ All blueprints have valid structure')
+          "
+
+      - name: Check blueprints_bundles.json consistency
+        run: |
+          python3 -c "
+          import json
+          import sys
+          from pathlib import Path
+
+          with open('blueprints_bundles.json') as f:
+              bundles = json.load(f)
+
+          blueprint_ids = set(bundles.get('blueprints', []))
+
+          # Find all blueprint files (excluding index files)
+          blueprints_dir = Path('blueprints')
+          on_disk = {
+              p.stem for p in blueprints_dir.glob('*.json')
+              if not p.name.startswith('index')
+          }
+
+          missing_from_bundles = on_disk - blueprint_ids
+          missing_on_disk = blueprint_ids - on_disk
+
+          errors = []
+          if missing_from_bundles:
+              errors.append(f'Blueprints not in bundles.json: {sorted(missing_from_bundles)}')
+          if missing_on_disk:
+              errors.append(f'Bundles.json references missing files: {sorted(missing_on_disk)}')
+
+          if errors:
+              print('❌ Bundle consistency errors:')
+              for err in errors:
+                  print(f'  - {err}')
+              print()
+              print('Run: python scripts/import_blueprints.py')
+              sys.exit(1)
+          else:
+              print('✅ blueprints_bundles.json is consistent with blueprint files')
+          "
+
+      - name: Verify import_blueprints.py was run
+        run: |
+          echo "Running import_blueprints.py to check for drift..."
+          python scripts/import_blueprints.py
+
+          echo "Checking for uncommitted changes to index.json and bundles..."
+          if git diff --quiet blueprints/index.json blueprints_bundles.json; then
+            echo "✅ index.json and blueprints_bundles.json are up to date"
+          else
+            echo "❌ import_blueprints.py produced changes. Run: python scripts/import_blueprints.py"
+            git diff blueprints/index.json blueprints_bundles.json
+            exit 1
+          fi
+
+      - name: Verify sync_blueprints.py was run
+        run: |
+          echo "Running sync_blueprints.py to check for drift..."
+          python scripts/sync_blueprints.py
+
+          echo "Checking for uncommitted changes to manifest and assets..."
+          if git diff --quiet packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json packages/blueprints/; then
+            echo "✅ Manifest and assets are up to date"
+          else
+            echo "❌ sync_blueprints.py produced changes. Run: python scripts/sync_blueprints.py"
+            git diff --name-only packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json packages/blueprints/
+            exit 1
+          fi
+
+      - name: Comment on PR with validation errors
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ❌ Blueprint Validation Failed
+
+            Please ensure:
+            1. All blueprint JSON files have valid syntax
+            2. Run \`python scripts/import_blueprints.py\` to update index.json and bundles
+            3. Run \`python scripts/sync_blueprints.py\` to sync manifest and assets
+
+            See the workflow logs for details.`
+            });
