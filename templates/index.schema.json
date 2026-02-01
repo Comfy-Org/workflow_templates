@@ -148,7 +148,55 @@
           "enum": ["cloud", "local", "desktop", "mac", "windows"]
         },
         "description": "Distributions on which the template is included"
+      },
+      "logos": {
+        "type": "array",
+        "description": "Logo overlays to display on the template thumbnail",
+        "items": {
+          "$ref": "#/definitions/logoInfo"
+        }
       }
+      },
+      "additionalProperties": false
+    },
+    "logoInfo": {
+      "type": "object",
+      "required": ["provider"],
+      "properties": {
+        "provider": {
+          "oneOf": [
+            {
+              "type": "string",
+              "description": "Single provider name matching index_logo.json"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Array of provider names for stacked logos"
+            }
+          ],
+          "description": "Provider name(s) matching index_logo.json. String for single, array for stacked logos."
+        },
+        "label": {
+          "type": "string",
+          "description": "Custom label text. If omitted, defaults to provider names joined with ' & '"
+        },
+        "gap": {
+          "type": "number",
+          "description": "Gap between stacked logos in pixels. Negative for overlap effect. Default: -6"
+        },
+        "position": {
+          "type": "string",
+          "description": "Tailwind positioning classes (e.g., 'top-2 left-2', 'bottom-2 right-2')"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Opacity 0-1, default 0.85"
+        }
       },
       "additionalProperties": false
     }
