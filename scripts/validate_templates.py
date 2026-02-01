@@ -158,6 +158,56 @@ def check_required_thumbnails(index_data: List[Dict], templates_dir: Path) -> Tu
     return len(errors) == 0, errors
 
 
+def check_logo_references(index_data: List[Dict], templates_dir: Path) -> Tuple[bool, List[str]]:
+    """Check that all logo provider references in templates exist in index_logo.json."""
+    errors = []
+    
+    # Load logo index
+    logo_index_path = templates_dir / 'index_logo.json'
+    if not logo_index_path.exists():
+        return True, []  # No logo index, skip validation
+    
+    try:
+        logo_index = load_json(logo_index_path)
+    except Exception as e:
+        errors.append(f"Failed to load index_logo.json: {e}")
+        return False, errors
+    
+    # index_logo.json should be a dict mapping provider names to logo paths
+    if not isinstance(logo_index, dict):
+        errors.append("index_logo.json should be a key-value object mapping provider names to logo paths")
+        return False, errors
+    
+    # Check that all logo files referenced in index_logo.json exist
+    for provider, logo_path in logo_index.items():
+        full_path = templates_dir / logo_path
+        if not full_path.exists():
+            errors.append(f"Logo file not found for provider '{provider}': {logo_path}")
+    
+    # Check that all provider references in templates exist in logo index
+    for category in index_data:
+        for template in category.get('templates', []):
+            logos = template.get('logos', [])
+            template_name = template.get('name', 'unknown')
+            
+            for logo_info in logos:
+                provider = logo_info.get('provider')
+                if provider is None:
+                    continue
+                
+                # Provider can be a string or array of strings
+                providers = provider if isinstance(provider, list) else [provider]
+                
+                for p in providers:
+                    if p not in logo_index:
+                        errors.append(
+                            f"Template '{template_name}' references unknown logo provider '{p}' "
+                            f"(not found in index_logo.json)"
+                        )
+    
+    return len(errors) == 0, errors
+
+
 def iter_all_nodes(template_data: Dict) -> List[Dict]:
     """Return a flat list of all nodes, including those inside subgraphs.
 
@@ -299,10 +349,10 @@ def main():
         print(f"❌ Error: index.schema.json not found at {schema_path}")
         return 1
     
-    # Find all index*.json files (excluding schema)
+    # Find all index*.json files (excluding schema and logo index)
     index_files = []
     for file_path in templates_dir.glob('index*.json'):
-        if file_path.name != 'index.schema.json':
+        if file_path.name not in ('index.schema.json', 'index_logo.json'):
             index_files.append(file_path)
     
     if not index_files:
@@ -386,6 +436,14 @@ def main():
         print("   ✅ All templates use correct model metadata format")
     else:
         print("   ❌ Templates using deprecated top-level models format found")
+        all_errors.extend(errors)
+    
+    print("\n6️⃣  Checking logo references...")
+    valid, errors = check_logo_references(main_index_data, templates_dir)
+    if valid:
+        print("   ✅ All logo provider references are valid")
+    else:
+        print("   ❌ Invalid logo references found")
         all_errors.extend(errors)
     
     # Print warnings
