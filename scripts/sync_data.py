@@ -85,7 +85,8 @@ class TemplateSyncer:
             "requiresCustomNodes",
             "usage",
             "searchRank",
-            "includeOnDistributions"
+            "includeOnDistributions",
+            "logos"
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}

@@ -168,6 +168,18 @@ def build_manifest():
                             "sha256": sha256_for_file(asset_path),
                         }
                     )
+            
+            # Special case for index_logo which uses assets in templates/logo/ folder
+            if template_id == "index_logo":
+                logo_dir = TEMPLATES_DIR / "logo"
+                if logo_dir.is_dir():
+                    for logo_file in sorted(logo_dir.glob("*")):
+                        if logo_file.is_file() and not logo_file.name.startswith("."):
+                            assets.append({
+                                "filename": f"logo/{logo_file.name}",
+                                "sha256": sha256_for_file(logo_file),
+                            })
+            
             templates.append(
                 {
                     "id": template_id,
@@ -208,7 +220,10 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
             if not src.exists():
                 # Some optional assets (e.g., preview) may not exist; skip silently.
                 continue
-            shutil.copy2(src, target_root / asset["filename"])
+            
+            dest = target_root / asset["filename"]
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
 
 
 def write_manifest(manifest: dict, dry_run: bool = False) -> None:
