@@ -193,17 +193,43 @@ def analyze_markdown_links(result: Dict):
 
         # Special handling for HuggingFace URLs - accept both /resolve/ and /blob/ paths
         if re.search(r'huggingface\.co', url, re.IGNORECASE):
-            # Match HuggingFace patterns: /resolve/branch/filename or /blob/branch/filename
-            m = re.search(r'/(?:resolve|blob)/[^/]+/([^/?]+\.safetensors)(?:[?]|$)', url)
+            # Match HuggingFace patterns: /resolve/branch/[...paths.../]filename.safetensors or /blob/branch/[...paths.../]filename.safetensors
+            # Extract the final filename from any depth of subdirectories (or no subdirectories)
+            m = re.search(r'/(?:resolve|blob)/[^/]+/(?:.+/)?([^/?]+\.safetensors)(?:[?]|$)', url)
             if m:
                 url_name = m.group(1)
-                if text_name != url_name:
+                # Check if text_name is also a URL (text contains full URL instead of just filename)
+                text_is_url = text_name.startswith('http://') or text_name.startswith('https://')
+                if text_is_url:
+                    # Extract filename from text URL as well
+                    text_match = re.search(r'/(?:resolve|blob)/[^/]+/(?:.+/)?([^/?]+\.safetensors)(?:[?]|$)', text_name)
+                    if text_match:
+                        text_filename = text_match.group(1)
+                        if text_filename != url_name:
+                            result['analysis']['markdown_link_errors'].append({
+                                'text': text_name,
+                                'url': url,
+                                'url_name': url_name
+                            })
+                    # If text is a URL but we can't extract filename, report error
+                    elif text_name != url:
+                        result['analysis']['markdown_link_errors'].append({
+                            'text': text_name,
+                            'url': url,
+                            'url_name': url_name
+                        })
+                elif text_name != url_name:
                     result['analysis']['markdown_link_errors'].append({
                         'text': text_name,
                         'url': url,
                         'url_name': url_name
                     })
             else:
+                # Check if this is just a repository link without a file path
+                # Repository links like https://huggingface.co/org/model-name should be skipped
+                if not re.search(r'/(?:resolve|blob)/', url):
+                    # Skip validation for repository-only links
+                    continue
                 result['analysis']['markdown_link_errors'].append({
                     'text': text_name,
                     'url': url,
