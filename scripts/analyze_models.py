@@ -171,39 +171,61 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
 
 def analyze_markdown_links(result: Dict):
     """Check if markdown safetensors links are consistent (text matches filename in URL).
-    
+
     Whitelisted URLs (skipped from validation):
     - Civitai URLs: Use model IDs instead of filenames in paths
+
+    Special handling:
+    - HuggingFace URLs: Accept both /resolve/ and /blob/ paths as valid
     """
     # Whitelist patterns for URLs that don't need filename validation
     whitelist_patterns = [
         r'civitai\.com',  # Civitai uses model IDs, not filenames
     ]
-    
+
     for link in result['markdown_links']:
         text_name = link['text']
         url = link['url']
-        
+
         # Skip validation for whitelisted URLs
         if any(re.search(pattern, url, re.IGNORECASE) for pattern in whitelist_patterns):
             continue
-        
-        # Extract filename from URL path (ignore query string)
-        m = re.search(r'/([^/?]+\.safetensors)(?:[?]|$)', url)
-        if m:
-            url_name = m.group(1)
-            if text_name != url_name:
+
+        # Special handling for HuggingFace URLs - accept both /resolve/ and /blob/ paths
+        if re.search(r'huggingface\.co', url, re.IGNORECASE):
+            # Match HuggingFace patterns: /resolve/branch/filename or /blob/branch/filename
+            m = re.search(r'/(?:resolve|blob)/[^/]+/([^/?]+\.safetensors)(?:[?]|$)', url)
+            if m:
+                url_name = m.group(1)
+                if text_name != url_name:
+                    result['analysis']['markdown_link_errors'].append({
+                        'text': text_name,
+                        'url': url,
+                        'url_name': url_name
+                    })
+            else:
                 result['analysis']['markdown_link_errors'].append({
                     'text': text_name,
                     'url': url,
-                    'url_name': url_name
+                    'url_name': None
                 })
         else:
-            result['analysis']['markdown_link_errors'].append({
-                'text': text_name,
-                'url': url,
-                'url_name': None
-            })
+            # Extract filename from URL path (ignore query string)
+            m = re.search(r'/([^/?]+\.safetensors)(?:[?]|$)', url)
+            if m:
+                url_name = m.group(1)
+                if text_name != url_name:
+                    result['analysis']['markdown_link_errors'].append({
+                        'text': text_name,
+                        'url': url,
+                        'url_name': url_name
+                    })
+            else:
+                result['analysis']['markdown_link_errors'].append({
+                    'text': text_name,
+                    'url': url,
+                    'url_name': None
+                })
 
 def analyze_matching(result: Dict, whitelist_config: Dict = None):
     """Check widgets_values and properties.models matching, skip MarkdownNote/Note nodes and subgraph nodes for properties.models check."""
