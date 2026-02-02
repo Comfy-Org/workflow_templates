@@ -133,7 +133,7 @@ class TemplateSyncer:
             format=log_format,
             handlers=[
                 logging.StreamHandler(sys.stdout),
-                logging.FileHandler(self.templates_dir / 'sync.log', encoding='utf-8')
+                logging.FileHandler(self.templates_dir.parent / 'sync.log', encoding='utf-8')
             ]
         )
         self.logger = logging.getLogger(__name__)
