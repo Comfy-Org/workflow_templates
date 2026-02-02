@@ -1241,6 +1241,12 @@ class TemplateSyncManager:
                         template["usage"] = usage_value
                         changes_made = True
                         self.syncer.logger.info(f"  📊 Updated usage for '{template_name}': {usage_value}")
+                else:
+                    # If usage has no data (missing or not in CSV), fill with 0
+                    if "usage" not in template:
+                        template["usage"] = 0
+                        changes_made = True
+                        self.syncer.logger.info(f"  📊 Filled missing usage with 0 for '{template_name}'")
         
         # Save the fixed master file
         if changes_made:
