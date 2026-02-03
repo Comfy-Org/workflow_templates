@@ -294,38 +294,53 @@ def check_model_metadata_format(index_data: List[Dict], templates_dir: Path) -> 
                     directory = model.get('directory', 'unknown')
                     errors.append(f"    - {name} (directory: {directory})")
         # Validate that models in node properties have corresponding widget values
-        all_nodes = iter_all_nodes(template_data)
+        # Process each scope (top-level and subgraphs) separately to avoid node ID conflicts
+        def validate_nodes_scope(nodes: List[Dict], scope_name: str = ""):
+            """Validate nodes within a single scope (top-level or a specific subgraph)."""
+            widget_values_by_node: Dict[str, List[str]] = {}
+            node_models: List[Tuple[str, str, str]] = []  # (node_id, node_type, model_name)
 
-        # Build widget values map for all nodes
-        widget_values_by_node: Dict[str, List[str]] = {}
-        node_models: List[Tuple[str, str, str]] = []  # (node_id, node_type, model_name)
+            for node in nodes:
+                node_id = str(node.get('id', 'unknown'))
+                node_type = node.get('type', 'unknown')
+                widgets_values = node.get('widgets_values', [])
+                widget_values_by_node[node_id] = [
+                    v for v in widgets_values if isinstance(v, str)
+                ]
 
-        for node in all_nodes:
-            node_id = str(node.get('id', 'unknown'))
-            node_type = node.get('type', 'unknown')
-            widgets_values = node.get('widgets_values', [])
-            widget_values_by_node[node_id] = [
-                v for v in widgets_values if isinstance(v, str)
-            ]
+                properties = node.get('properties', {})
+                if isinstance(properties, dict) and 'models' in properties:
+                    models_list = properties['models']
+                    if isinstance(models_list, list):
+                        for model in models_list:
+                            if isinstance(model, dict):
+                                model_name = model.get('name', '')
+                                if model_name:
+                                    node_models.append((node_id, node_type, model_name))
 
-            properties = node.get('properties', {})
-            if isinstance(properties, dict) and 'models' in properties:
-                models_list = properties['models']
-                if isinstance(models_list, list):
-                    for model in models_list:
-                        if isinstance(model, dict):
-                            model_name = model.get('name', '')
-                            if model_name:
-                                node_models.append((node_id, node_type, model_name))
+            # Validate each model has corresponding widget value
+            for node_id, node_type, model_name in node_models:
+                node_widget_values = widget_values_by_node.get(node_id, [])
+                if model_name not in node_widget_values:
+                    scope_info = f" in {scope_name}" if scope_name else ""
+                    errors.append(
+                        f"ERROR: {template_name}.json{scope_info} - Model '{model_name}' in node {node_id} ({node_type}) properties but not in widget_values"
+                    )
+                    errors.append(f"  → Widget values: {node_widget_values}")
 
-        # Validate each model has corresponding widget value
-        for node_id, node_type, model_name in node_models:
-            node_widget_values = widget_values_by_node.get(node_id, [])
-            if model_name not in node_widget_values:
-                errors.append(
-                    f"ERROR: {template_name}.json - Model '{model_name}' in node {node_id} ({node_type}) properties but not in widget_values"
-                )
-                errors.append(f"  → Widget values: {node_widget_values}")
+        # Validate top-level nodes
+        if isinstance(template_data.get('nodes'), list):
+            validate_nodes_scope(template_data['nodes'], "top-level")
+
+        # Validate each subgraph separately
+        definitions = template_data.get('definitions') or {}
+        subgraphs = definitions.get('subgraphs') or []
+        for idx, sg in enumerate(subgraphs):
+            if isinstance(sg, dict):
+                sg_id = sg.get('id', f'subgraph-{idx}')
+                sg_nodes = sg.get('nodes') or []
+                if sg_nodes:
+                    validate_nodes_scope(sg_nodes, f"subgraph {sg_id}")
     
     return len(errors) == 0, errors
 
