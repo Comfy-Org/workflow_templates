@@ -86,7 +86,13 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
     all_files = set(f.name for f in templates_dir.iterdir() if f.is_file())
     
     # Exclude special files
-    special_files = {'index.json', 'index.zh.json', 'index.zh-TW.json', 'index.ja.json', 'index.ko.json', 'index.es.json', 'index.fr.json', 'index.ru.json', 'index.schema.json', '.gitignore', 'README.md'}
+    special_files = {
+        'index.json', 'index.zh.json', 'index.zh-TW.json', 'index.ja.json',
+        'index.ko.json', 'index.es.json', 'index.fr.json', 'index.ru.json',
+        'index.tr.json', 'index.ar.json', 'index.pt-BR.json',  # Additional language files
+        'index.schema.json', 'index_logo.json', 'fuse_options.json',  # Auxiliary files
+        '.gitignore', 'README.md'
+    }
     all_files -= special_files
     
     # Separate workflow and media files
