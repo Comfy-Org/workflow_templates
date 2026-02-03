@@ -44,13 +44,19 @@ interface PreviewOptions {
 }
 
 function extractNodes(workflow: Workflow): WorkflowNode[] {
-  return workflow.nodes.map((node) => ({
-    id: node.id,
-    type: node.type,
-    pos: node.pos,
-    size: node.size,
-    bgcolor: node.bgcolor,
-  }));
+  if (!workflow.nodes || !Array.isArray(workflow.nodes)) {
+    return [];
+  }
+
+  return workflow.nodes
+    .filter((node) => node.pos && node.size)
+    .map((node) => ({
+      id: node.id,
+      type: node.type,
+      pos: node.pos,
+      size: node.size,
+      bgcolor: node.bgcolor,
+    }));
 }
 
 function extractLinks(workflow: Workflow): WorkflowLink[] {
@@ -58,14 +64,16 @@ function extractLinks(workflow: Workflow): WorkflowLink[] {
     return [];
   }
 
-  return workflow.links.map((link) => ({
-    id: link[0],
-    sourceId: link[1],
-    sourceSlot: link[2],
-    targetId: link[3],
-    targetSlot: link[4],
-    type: link[5],
-  }));
+  return workflow.links
+    .filter((link) => Array.isArray(link) && link.length >= 6)
+    .map((link) => ({
+      id: link[0],
+      sourceId: link[1],
+      sourceSlot: link[2],
+      targetId: link[3],
+      targetSlot: link[4],
+      type: link[5],
+    }));
 }
 
 function calculateBounds(nodes: WorkflowNode[]): Bounds {
@@ -102,14 +110,14 @@ function calculateScale(
   bounds: Bounds,
   canvasWidth: number,
   canvasHeight: number,
-  padding: number = 0.85
+  fillFactor: number = 0.85
 ): number {
   if (bounds.width === 0 || bounds.height === 0) {
     return 1;
   }
 
-  const scaleX = (canvasWidth * padding) / bounds.width;
-  const scaleY = (canvasHeight * padding) / bounds.height;
+  const scaleX = (canvasWidth * fillFactor) / bounds.width;
+  const scaleY = (canvasHeight * fillFactor) / bounds.height;
 
   return Math.min(scaleX, scaleY);
 }
@@ -120,7 +128,13 @@ async function generateWorkflowPreview(
   options: PreviewOptions = { width: 500, height: 400 }
 ): Promise<void> {
   const workflowContent = await readFile(workflowPath, 'utf-8');
-  const workflow: Workflow = JSON.parse(workflowContent);
+
+  let workflow: Workflow;
+  try {
+    workflow = JSON.parse(workflowContent);
+  } catch {
+    throw new Error(`Invalid JSON in workflow file: ${workflowPath}`);
+  }
 
   const nodes = extractNodes(workflow);
   const links = extractLinks(workflow);
@@ -140,12 +154,15 @@ async function generateWorkflowPreview(
   const offsetY =
     (options.height - bounds.height * scale) / 2 - bounds.minY * scale;
 
+  // Build node lookup map for O(1) access
+  const nodeMap = new Map(nodes.map((n) => [n.id, n]));
+
   // Draw links
   ctx.strokeStyle = '#60a5fa';
   ctx.lineWidth = 1;
   for (const link of links) {
-    const source = nodes.find((n) => n.id === link.sourceId);
-    const target = nodes.find((n) => n.id === link.targetId);
+    const source = nodeMap.get(link.sourceId);
+    const target = nodeMap.get(link.targetId);
     if (source && target) {
       const [sx, sy] = source.pos;
       const [sw, sh] = source.size;
@@ -234,7 +251,8 @@ async function main(): Promise<void> {
       console.log(`[GENERATED] ${name}`);
       generated++;
     } catch (error) {
-      console.error(`[ERROR] ${name}:`, error);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(`[ERROR] ${name}: ${message}`);
       errors++;
     }
   }
@@ -246,6 +264,7 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  console.error('Fatal error:', error);
+  const message = error instanceof Error ? error.message : String(error);
+  console.error('Fatal error:', message);
   process.exit(1);
 });
