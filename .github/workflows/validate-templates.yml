@@ -51,15 +51,13 @@ jobs:
             output = 'Unable to read validation output';
           }
 
+          const body = '## ❌ Template Validation Failed\n\n```\n' + output + '\n```';
+
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: `## ❌ Template Validation Failed
-
-\`\`\`
-${output}
-\`\`\``
+            body: body
           });
 
     - name: Check JSON syntax
@@ -123,17 +121,13 @@ ${output}
             report = 'Unable to read thumbnail validation report';
           }
           
-          const comment = `## ❌ Thumbnail Validation Failed
+          const comment = '## ❌ Thumbnail Validation Failed\n\n```\n' +
+            report +
+            '\n```\n\n**Fix:**\n' +
+            '- Missing: Add `template-1.webp`\n' +
+            '- Dual thumbnails (`compareSlider`/`hoverDissolve`): Need both `-1` and `-2` files\n' +
+            '- Check naming: `{name}-{number}.{ext}`';
 
-\`\`\`
-${report}
-\`\`\`
-
-**Fix:**
-- Missing: Add \`template-1.webp\`
-- Dual thumbnails (\`compareSlider\`/\`hoverDissolve\`): Need both \`-1\` and \`-2\` files
-- Check naming: \`{name}-{number}.{ext}\``;
-          
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
