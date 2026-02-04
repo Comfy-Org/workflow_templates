@@ -1,44 +1,59 @@
 # ComfyUI Template Site
 
-Static site for browsing and discovering ComfyUI workflow templates.
+Static site for browsing and discovering ComfyUI workflow templates with AI-generated content.
 
 ## Quick Start
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Copy environment file and add your OpenAI API key
 cp .env.example .env
 
 # Run development server
-npm run dev
+pnpm run dev
 ```
 
-## npm Scripts
+## Commands
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start Astro development server |
-| `npm run sync` | Sync templates from `../templates/` to content collection |
-| `npm run generate:ai` | Generate AI descriptions and FAQs |
-| `npm run generate:previews` | Generate workflow preview images |
-| `npm run build` | Full build (runs sync, generate:ai, generate:previews, then astro build) |
-| `npm run preview` | Preview production build locally |
+| Command | Description |
+|---------|-------------|
+| `pnpm run dev` | Start Astro development server |
+| `pnpm run sync` | Sync templates from `../templates/` to content collection |
+| `pnpm run sync:tutorials` | Sync tutorials from docs repo |
+| `pnpm run generate:ai` | Generate AI descriptions and FAQs |
+| `pnpm run generate:ai:test` | Test with first template only |
+| `pnpm run generate:previews` | Generate workflow preview images |
+| `pnpm run build` | Full build (runs sync, generate:ai, generate:previews, then astro build) |
+| `pnpm run preview` | Preview production build locally |
 
 ## Skipping AI Generation
 
 To skip AI content generation (useful for quick local builds):
 
 ```bash
-SKIP_AI_GENERATION=true npm run build
+SKIP_AI_GENERATION=true pnpm run build
 ```
 
 Or set `SKIP_AI_GENERATION=true` in your `.env` file.
 
 When skipped, templates will use placeholder content for AI-generated fields.
 
-## Human Overrides
+## AI Content Generation
+
+### Content Templates
+
+Four content template types for different user intents:
+
+| Template | Target User | SEO Focus |
+|----------|-------------|-----------|
+| **tutorial** | Beginners | "How to [task] in ComfyUI" |
+| **showcase** | Creators | "[Model] examples" |
+| **comparison** | Researchers | "best [task] workflow" |
+| **breakthrough** | Early adopters | "[Model] new features" |
+
+### Human Overrides
 
 To manually edit AI-generated content for a specific template:
 
@@ -63,6 +78,14 @@ To manually edit AI-generated content for a specific template:
 | `suggestedUseCases` | string[] | Example use cases |
 | `faqItems` | object[] | FAQ questions and answers |
 | `humanEdited` | boolean | Set to `true` to prevent AI regeneration |
+
+### Adding Knowledge
+
+Improve AI output by adding documentation:
+
+- `knowledge/models/{model-name}.md` - Model capabilities
+- `knowledge/concepts/{concept-name}.md` - Domain concepts
+- `knowledge/prompts/{template-type}.md` - Content templates
 
 ## Environment Variables
 
@@ -90,8 +113,14 @@ site/
 │   └── components/
 ├── scripts/
 │   ├── sync-templates.ts       # Sync from ../templates/
+│   ├── sync-tutorials.ts       # Sync tutorials from docs repo
 │   ├── generate-ai.ts          # AI content generation
 │   └── generate-previews.ts    # Workflow preview images
+├── knowledge/
+│   ├── prompts/                # Content template prompts
+│   ├── models/                 # Model documentation
+│   ├── concepts/               # Domain concepts
+│   └── tutorials/              # Synced tutorials (git-ignored)
 ├── overrides/
 │   └── templates/              # Human edits (committed)
 ├── public/
@@ -116,3 +145,10 @@ Configure these in GitHub repository settings:
 ### Manual Deployment
 
 Trigger a deploy from the Actions tab using the "Deploy Template Site" workflow.
+
+## Related Documentation
+
+- [AI Content Generation Strategy](../docs/ai-content-generation-strategy.md)
+- [Implementation Roadmap](../docs/ROADMAP.md)
+- [Template Site PRD](../docs/template-site-prd.md)
+- [Template Site Design](../docs/template-site-design.md)

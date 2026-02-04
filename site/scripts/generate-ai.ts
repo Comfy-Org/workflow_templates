@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
 import { existsSync } from 'fs';
+import { createHash } from 'crypto';
 import path from 'path';
 
 interface TemplateInfo {
@@ -18,12 +19,15 @@ interface TemplateInfo {
   vram?: number;
 }
 
+type ContentTemplate = 'tutorial' | 'showcase' | 'comparison' | 'breakthrough';
+
 interface GeneratedContent {
   extendedDescription: string;
   howToUse: string[];
   metaDescription: string;
   suggestedUseCases: string[];
   faqItems?: Array<{ question: string; answer: string }>;
+  contentTemplate?: ContentTemplate;
   lastAIGeneration?: string;
 }
 
@@ -35,6 +39,11 @@ interface Override extends Partial<GeneratedContent> {
   humanEdited?: boolean;
 }
 
+interface WorkflowNode {
+  type?: string;
+  [key: string]: unknown;
+}
+
 interface WorkflowAnalysis {
   hasInputImage: boolean;
   hasInputVideo: boolean;
@@ -42,11 +51,22 @@ interface WorkflowAnalysis {
   nodeTypes: string[];
 }
 
+interface TutorialMeta {
+  title: string;
+  description: string;
+  filePath: string;
+  category: string;
+  models: string[];
+  concepts: string[];
+}
+
 interface GenerationContext {
   template: TemplateInfo;
   workflow: WorkflowAnalysis;
   modelDocs: Record<string, string>;
   conceptDocs: Record<string, string>;
+  contentTemplate: ContentTemplate;
+  tutorialContext?: string;
 }
 
 const CACHE_DIR = '.content-cache';
@@ -55,16 +75,49 @@ const OVERRIDES_DIR = 'overrides/templates';
 const KNOWLEDGE_DIR = 'knowledge';
 const TEMPLATES_INDEX = '../templates/index.json';
 
+interface CLIOptions {
+  testMode: boolean;
+  templateFilter: string | null;
+  skipAI: boolean;
+}
+
+function parseArgs(): CLIOptions {
+  const args = process.argv.slice(2);
+  const options: CLIOptions = {
+    testMode: false,
+    templateFilter: null,
+    skipAI: process.env.SKIP_AI_GENERATION === 'true',
+  };
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '--test') {
+      options.testMode = true;
+    } else if (args[i] === '--template' && args[i + 1]) {
+      options.templateFilter = args[++i];
+    } else if (args[i] === '--skip-ai') {
+      options.skipAI = true;
+    }
+  }
+
+  return options;
+}
+
 async function loadKnowledgeBase(): Promise<{
   models: Record<string, string>;
   concepts: Record<string, string>;
   systemPrompt: string;
+  contentTemplatePrompts: Record<ContentTemplate, string>;
+  tutorials: TutorialMeta[];
+  tutorialContent: Record<string, string>;
 }> {
   const modelsDir = path.join(KNOWLEDGE_DIR, 'models');
   const conceptsDir = path.join(KNOWLEDGE_DIR, 'concepts');
+  const promptsDir = path.join(KNOWLEDGE_DIR, 'prompts');
+  const tutorialsDir = path.join(KNOWLEDGE_DIR, 'tutorials');
 
   const models: Record<string, string> = {};
   const concepts: Record<string, string> = {};
+  const tutorialContent: Record<string, string> = {};
 
   if (existsSync(modelsDir)) {
     const files = await readdir(modelsDir);
@@ -86,30 +139,66 @@ async function loadKnowledgeBase(): Promise<{
     }
   }
 
-  const systemPrompt = await readFile(
-    path.join(KNOWLEDGE_DIR, 'prompts', 'system.md'),
-    'utf-8'
-  );
+  const systemPromptPath = path.join(promptsDir, 'system.md');
+  if (!existsSync(systemPromptPath)) {
+    throw new Error(`System prompt not found at ${systemPromptPath}`);
+  }
+  const systemPrompt = await readFile(systemPromptPath, 'utf-8');
 
-  return { models, concepts, systemPrompt };
+  const contentTemplatePrompts: Record<ContentTemplate, string> = {
+    tutorial: '',
+    showcase: '',
+    comparison: '',
+    breakthrough: '',
+  };
+
+  for (const template of Object.keys(contentTemplatePrompts) as ContentTemplate[]) {
+    const templatePath = path.join(promptsDir, `${template}.md`);
+    if (existsSync(templatePath)) {
+      contentTemplatePrompts[template] = await readFile(templatePath, 'utf-8');
+    }
+  }
+
+  let tutorials: TutorialMeta[] = [];
+  const tutorialIndexPath = path.join(tutorialsDir, '_index.json');
+  if (existsSync(tutorialIndexPath)) {
+    tutorials = JSON.parse(await readFile(tutorialIndexPath, 'utf-8'));
+    
+    for (const tutorial of tutorials) {
+      const tutorialPath = path.join(tutorialsDir, tutorial.filePath);
+      if (existsSync(tutorialPath)) {
+        tutorialContent[tutorial.filePath] = await readFile(tutorialPath, 'utf-8');
+      }
+    }
+  }
+
+  return { models, concepts, systemPrompt, contentTemplatePrompts, tutorials, tutorialContent };
 }
 
 async function loadOverride(templateName: string): Promise<Override | null> {
   const overridePath = path.join(OVERRIDES_DIR, `${templateName}.json`);
-  if (existsSync(overridePath)) {
+  if (!existsSync(overridePath)) return null;
+
+  try {
     const content = await readFile(overridePath, 'utf-8');
     return JSON.parse(content);
+  } catch (error) {
+    console.error(`Warning: Failed to parse override for ${templateName}:`, error);
+    return null;
   }
-  return null;
 }
 
 async function loadCache(templateName: string): Promise<CachedContent | null> {
   const cachePath = path.join(CACHE_DIR, `${templateName}.json`);
-  if (existsSync(cachePath)) {
+  if (!existsSync(cachePath)) return null;
+
+  try {
     const content = await readFile(cachePath, 'utf-8');
     return JSON.parse(content);
+  } catch (error) {
+    console.error(`Warning: Failed to parse cache for ${templateName}:`, error);
+    return null;
   }
-  return null;
 }
 
 async function saveCache(
@@ -128,7 +217,7 @@ function computeTemplateHash(template: TemplateInfo): string {
     tags: template.tags,
     models: template.models,
   };
-  return Buffer.from(JSON.stringify(relevant)).toString('base64').slice(0, 32);
+  return createHash('sha256').update(JSON.stringify(relevant)).digest('hex').slice(0, 32);
 }
 
 function shouldRegenerate(
@@ -145,13 +234,14 @@ function applyOverrides(
 ): GeneratedContent {
   if (!override) return content;
 
-  const merged = { ...content };
-  for (const [key, value] of Object.entries(override)) {
-    if (value !== null && key !== 'humanEdited') {
-      (merged as any)[key] = value;
-    }
-  }
-  return merged;
+  return {
+    extendedDescription: override.extendedDescription ?? content.extendedDescription,
+    howToUse: override.howToUse ?? content.howToUse,
+    metaDescription: override.metaDescription ?? content.metaDescription,
+    suggestedUseCases: override.suggestedUseCases ?? content.suggestedUseCases,
+    faqItems: override.faqItems ?? content.faqItems,
+    lastAIGeneration: override.lastAIGeneration ?? content.lastAIGeneration,
+  };
 }
 
 async function analyzeWorkflow(workflowPath: string): Promise<WorkflowAnalysis> {
@@ -166,26 +256,28 @@ async function analyzeWorkflow(workflowPath: string): Promise<WorkflowAnalysis> 
 
   try {
     const content = await readFile(workflowPath, 'utf-8');
-    const workflow = JSON.parse(content);
+    const workflow = JSON.parse(content) as { nodes?: WorkflowNode[] };
 
-    const nodes = workflow.nodes || [];
-    const nodeTypes = nodes.map((n: any) => n.type).filter(Boolean);
+    const nodes: WorkflowNode[] = workflow.nodes || [];
+    const nodeTypes: string[] = nodes
+      .map((n) => n.type)
+      .filter((t): t is string => typeof t === 'string');
 
     const hasInputImage = nodeTypes.some(
-      (t: string) =>
+      (t) =>
         t.toLowerCase().includes('loadimage') ||
         t.toLowerCase().includes('image input')
     );
     const hasInputVideo = nodeTypes.some(
-      (t: string) =>
+      (t) =>
         t.toLowerCase().includes('loadvideo') ||
         t.toLowerCase().includes('video input')
     );
 
     let outputType = 'image';
-    if (nodeTypes.some((t: string) => t.toLowerCase().includes('video'))) {
+    if (nodeTypes.some((t) => t.toLowerCase().includes('video'))) {
       outputType = 'video';
-    } else if (nodeTypes.some((t: string) => t.toLowerCase().includes('audio'))) {
+    } else if (nodeTypes.some((t) => t.toLowerCase().includes('audio'))) {
       outputType = 'audio';
     }
 
@@ -225,10 +317,107 @@ function pickRelevantDocs(
   return result;
 }
 
+function selectContentTemplate(
+  template: TemplateInfo,
+  workflow: WorkflowAnalysis
+): ContentTemplate {
+  const name = template.name.toLowerCase();
+  const title = (template.title || '').toLowerCase();
+  const description = template.description.toLowerCase();
+  const models = (template.models || []).map(m => m.toLowerCase());
+  const date = template.date ? new Date(template.date) : null;
+  
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+  const isRecent = date && date > threeMonthsAgo;
+  
+  const breakthroughKeywords = ['2.0', '2.1', '2.2', 'new', 'v2', 'pro', 'ultra', 'turbo'];
+  const hasBreakthroughSignals = breakthroughKeywords.some(kw => 
+    name.includes(kw) || title.includes(kw) || models.some(m => m.includes(kw))
+  );
+  
+  if (isRecent && hasBreakthroughSignals) {
+    return 'breakthrough';
+  }
+  
+  const comparisonKeywords = ['vs', 'compare', 'alternative', 'better', 'best'];
+  const hasComparisonSignals = comparisonKeywords.some(kw =>
+    name.includes(kw) || title.includes(kw) || description.includes(kw)
+  );
+  
+  if (hasComparisonSignals) {
+    return 'comparison';
+  }
+  
+  const showcaseKeywords = ['gallery', 'showcase', 'example', 'demo', 'style'];
+  const hasShowcaseSignals = showcaseKeywords.some(kw =>
+    name.includes(kw) || title.includes(kw)
+  );
+  const isVisuallyOriented = template.mediaType === 'image' || template.mediaType === 'video';
+  
+  if (hasShowcaseSignals || (isVisuallyOriented && (template.usage || 0) > 1000)) {
+    return 'showcase';
+  }
+  
+  return 'tutorial';
+}
+
+function findRelevantTutorial(
+  template: TemplateInfo,
+  tutorials: TutorialMeta[],
+  tutorialContent: Record<string, string>
+): string | undefined {
+  const templateModels = (template.models || []).map(m => m.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const templateTags = (template.tags || []).map(t => t.toLowerCase().replace(/[^a-z0-9]/g, ''));
+  
+  let bestMatch: { tutorial: TutorialMeta; score: number } | null = null;
+  
+  for (const tutorial of tutorials) {
+    let score = 0;
+    
+    for (const model of tutorial.models) {
+      if (templateModels.some(tm => tm.includes(model) || model.includes(tm))) {
+        score += 3;
+      }
+    }
+    
+    for (const concept of tutorial.concepts) {
+      const normalizedConcept = concept.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (templateTags.some(tt => tt.includes(normalizedConcept) || normalizedConcept.includes(tt))) {
+        score += 1;
+      }
+    }
+    
+    if (tutorial.category === template.mediaType) {
+      score += 2;
+    }
+    
+    if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = { tutorial, score };
+    }
+  }
+  
+  if (bestMatch && bestMatch.score >= 3) {
+    return tutorialContent[bestMatch.tutorial.filePath];
+  }
+  
+  return undefined;
+}
+
 function buildPrompt(ctx: GenerationContext): string {
+  const tutorialSection = ctx.tutorialContext 
+    ? `
+# Related Tutorial Reference
+Use this existing tutorial as a style and content guide:
+${ctx.tutorialContext.slice(0, 2000)}
+${ctx.tutorialContext.length > 2000 ? '\n[... truncated for length]' : ''}
+`
+    : '';
+
   return `
 # Task
 Generate SEO-optimized content for a ComfyUI workflow template page.
+Use the "${ctx.contentTemplate}" content style.
 
 # Template Data
 Name: ${ctx.template.title || ctx.template.name}
@@ -246,7 +435,7 @@ Key Nodes: ${ctx.workflow.nodeTypes.slice(0, 10).join(', ')}
 
 # Model Context
 ${ctx.template.models?.map((m) => ctx.modelDocs[m.toLowerCase()] || '').join('\n\n') || 'No specific model documentation available.'}
-
+${tutorialSection}
 # Output Format (JSON)
 {
   "extendedDescription": "2-3 paragraphs (150-250 words). Explain what this template does, who it's for, and the key models/techniques. Include model names naturally.",
@@ -284,11 +473,16 @@ ${ctx.template.models?.map((m) => ctx.modelDocs[m.toLowerCase()] || '').join('\n
 async function generateContent(
   ctx: GenerationContext,
   systemPrompt: string,
+  contentTemplatePrompt: string,
   openai: OpenAI
 ): Promise<GeneratedContent> {
   const userPrompt = buildPrompt(ctx);
 
-  const fullSystemPrompt = systemPrompt
+  const combinedSystemPrompt = contentTemplatePrompt 
+    ? `${systemPrompt}\n\n---\n\n${contentTemplatePrompt}`
+    : systemPrompt;
+
+  const fullSystemPrompt = combinedSystemPrompt
     .replace(
       '{model_docs}',
       Object.entries(ctx.modelDocs)
@@ -313,23 +507,92 @@ async function generateContent(
     max_tokens: 1500,
   });
 
-  const content = JSON.parse(response.choices[0].message.content!);
-  return validateContent(content);
+  const rawContent = response.choices[0]?.message?.content;
+  if (!rawContent) {
+    throw new Error(`Empty response from OpenAI for template: ${ctx.template.name}`);
+  }
+  const content = JSON.parse(rawContent);
+  return validateContent(content, ctx.contentTemplate);
 }
 
-function validateContent(content: any): GeneratedContent {
+interface QualityCheck {
+  passed: boolean;
+  issues: string[];
+  score: number;
+}
+
+function checkContentQuality(content: GeneratedContent, template: TemplateInfo): QualityCheck {
+  const issues: string[] = [];
+  let score = 100;
+
+  const wordCount = content.extendedDescription.split(/\s+/).length;
+  if (wordCount < 100) {
+    issues.push(`Description too short: ${wordCount} words (min 100)`);
+    score -= 20;
+  } else if (wordCount < 150) {
+    issues.push(`Description could be longer: ${wordCount} words (target 150-250)`);
+    score -= 10;
+  }
+
+  if (content.howToUse.length < 4) {
+    issues.push(`Not enough steps: ${content.howToUse.length} (min 4)`);
+    score -= 15;
+  }
+
+  if (!content.faqItems || content.faqItems.length < 2) {
+    issues.push(`Not enough FAQ items: ${content.faqItems?.length || 0} (min 2)`);
+    score -= 10;
+  }
+
+  const models = template.models || [];
+  const descLower = content.extendedDescription.toLowerCase();
+  const missingModels = models.filter(m => !descLower.includes(m.toLowerCase()));
+  if (missingModels.length > 0) {
+    issues.push(`Missing model mentions: ${missingModels.join(', ')}`);
+    score -= 5 * missingModels.length;
+  }
+
+  if (!descLower.includes('comfyui')) {
+    issues.push('Missing "ComfyUI" keyword');
+    score -= 5;
+  }
+
+  if (content.metaDescription.length > 160) {
+    issues.push(`Meta description too long: ${content.metaDescription.length} chars (max 160)`);
+    score -= 5;
+  } else if (content.metaDescription.length < 80) {
+    issues.push(`Meta description too short: ${content.metaDescription.length} chars (min 80)`);
+    score -= 5;
+  }
+
+  return {
+    passed: score >= 60,
+    issues,
+    score: Math.max(0, score),
+  };
+}
+
+function validateContent(content: unknown, contentTemplate: ContentTemplate): GeneratedContent {
+  const parsed = content as Record<string, unknown>;
   return {
     extendedDescription:
-      content.extendedDescription || 'Description not available.',
-    howToUse: Array.isArray(content.howToUse)
-      ? content.howToUse
+      typeof parsed.extendedDescription === 'string'
+        ? parsed.extendedDescription
+        : 'Description not available.',
+    howToUse: Array.isArray(parsed.howToUse)
+      ? (parsed.howToUse as string[])
       : ['Load the template', 'Configure inputs', 'Run the workflow'],
     metaDescription:
-      content.metaDescription?.slice(0, 160) || 'ComfyUI workflow template',
-    suggestedUseCases: Array.isArray(content.suggestedUseCases)
-      ? content.suggestedUseCases
+      typeof parsed.metaDescription === 'string'
+        ? parsed.metaDescription.slice(0, 160)
+        : 'ComfyUI workflow template',
+    suggestedUseCases: Array.isArray(parsed.suggestedUseCases)
+      ? (parsed.suggestedUseCases as string[])
       : [],
-    faqItems: Array.isArray(content.faqItems) ? content.faqItems : [],
+    faqItems: Array.isArray(parsed.faqItems)
+      ? (parsed.faqItems as Array<{ question: string; answer: string }>)
+      : [],
+    contentTemplate,
   };
 }
 
@@ -344,10 +607,16 @@ function getPlaceholderContent(template: TemplateInfo): GeneratedContent {
 }
 
 async function main() {
-  const skipAI = process.env.SKIP_AI_GENERATION === 'true';
+  const options = parseArgs();
 
   console.log('🤖 AI Content Generation Pipeline');
-  console.log(`   Mode: ${skipAI ? 'PLACEHOLDER (no API calls)' : 'FULL AI GENERATION'}`);
+  console.log(`   Mode: ${options.skipAI ? 'PLACEHOLDER (no API calls)' : 'FULL AI GENERATION'}`);
+  if (options.testMode) {
+    console.log(`   Test mode: Will process only first template and print output`);
+  }
+  if (options.templateFilter) {
+    console.log(`   Filter: Only processing template "${options.templateFilter}"`);
+  }
   console.log('');
 
   // Load templates index
@@ -357,21 +626,44 @@ async function main() {
     process.exit(1);
   }
 
-  const categories = JSON.parse(await readFile(TEMPLATES_INDEX, 'utf-8'));
+  const categories = JSON.parse(await readFile(TEMPLATES_INDEX, 'utf-8')) as Array<{
+    templates?: TemplateInfo[];
+  }>;
 
   // Flatten all templates
-  const allTemplates: TemplateInfo[] = categories.flatMap(
-    (cat: any) => cat.templates || []
+  let allTemplates: TemplateInfo[] = categories.flatMap(
+    (cat) => cat.templates || []
   );
 
-  // Sort by usage and take top 50
-  const top50 = allTemplates
-    .filter((t) => t.usage !== undefined)
-    .sort((a, b) => (b.usage || 0) - (a.usage || 0))
-    .slice(0, 50);
+  // Apply template filter if specified
+  if (options.templateFilter) {
+    const filterLower = options.templateFilter.toLowerCase();
+    allTemplates = allTemplates.filter(
+      (t) => t.name.toLowerCase().includes(filterLower)
+    );
+    if (allTemplates.length === 0) {
+      console.error(`❌ No templates found matching: ${options.templateFilter}`);
+      console.error('   Available templates:');
+      const all = categories.flatMap((cat) => cat.templates || []);
+      all.slice(0, 10).forEach((t) => console.error(`     - ${t.name}`));
+      if (all.length > 10) console.error(`     ... and ${all.length - 10} more`);
+      process.exit(1);
+    }
+  }
 
-  // If no usage data, just take all templates
-  const templatesToProcess = top50.length > 0 ? top50 : allTemplates.slice(0, 50);
+  // Sort by usage and take top 50 (unless filtering or testing)
+  let templatesToProcess: TemplateInfo[];
+  if (options.templateFilter) {
+    templatesToProcess = allTemplates;
+  } else if (options.testMode) {
+    templatesToProcess = allTemplates.slice(0, 1);
+  } else {
+    const top50 = allTemplates
+      .filter((t) => t.usage !== undefined)
+      .sort((a, b) => (b.usage || 0) - (a.usage || 0))
+      .slice(0, 50);
+    templatesToProcess = top50.length > 0 ? top50 : allTemplates.slice(0, 50);
+  }
 
   console.log(`📦 Processing ${templatesToProcess.length} templates...`);
   console.log('');
@@ -386,13 +678,15 @@ async function main() {
   console.log(`📚 Loaded knowledge base:`);
   console.log(`   - Models: ${Object.keys(knowledge.models).join(', ') || 'none'}`);
   console.log(`   - Concepts: ${Object.keys(knowledge.concepts).join(', ') || 'none'}`);
+  console.log(`   - Tutorials: ${knowledge.tutorials.length || 0}`);
+  console.log(`   - Content templates: ${Object.keys(knowledge.contentTemplatePrompts).filter(k => knowledge.contentTemplatePrompts[k as ContentTemplate]).join(', ') || 'none'}`);
   console.log('');
 
   // Initialize OpenAI client (only if not skipping)
   let openai: OpenAI | null = null;
-  if (!skipAI) {
+  if (!options.skipAI) {
     if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ OPENAI_API_KEY not set. Use SKIP_AI_GENERATION=true for placeholder mode.');
+      console.error('❌ OPENAI_API_KEY not set. Use SKIP_AI_GENERATION=true or --skip-ai for placeholder mode.');
       process.exit(1);
     }
     openai = new OpenAI();
@@ -403,28 +697,13 @@ async function main() {
   for (const template of templatesToProcess) {
     const outPath = path.join(OUTPUT_DIR, `${template.name}.json`);
 
-    // Load existing content to preserve synced fields like thumbnails
-    let existingContent: Record<string, unknown> = {};
-    if (existsSync(outPath)) {
-      try {
-        existingContent = JSON.parse(await readFile(outPath, 'utf-8'));
-      } catch {
-        // Ignore parse errors
-      }
-    }
-
-    // Preserve thumbnails from sync script
-    const preservedFields = {
-      thumbnails: existingContent.thumbnails || [],
-    };
-
     // Check for human override
     const override = await loadOverride(template.name);
     if (override?.humanEdited) {
       console.log(`⏭️  [SKIP] ${template.name} - human edited`);
       await writeFile(
         outPath,
-        JSON.stringify({ ...template, ...preservedFields, ...override, humanEdited: true }, null, 2)
+        JSON.stringify({ ...template, ...override, humanEdited: true }, null, 2)
       );
       stats.skipped++;
       continue;
@@ -437,18 +716,22 @@ async function main() {
       const merged = applyOverrides(cached, override);
       await writeFile(
         outPath,
-        JSON.stringify({ ...template, ...preservedFields, ...merged }, null, 2)
+        JSON.stringify({ ...template, ...merged }, null, 2)
       );
       stats.cached++;
       continue;
     }
 
-    if (skipAI) {
+    if (options.skipAI) {
       console.log(`📝 [PLACEHOLDER] ${template.name}`);
       const placeholder = getPlaceholderContent(template);
+      if (options.testMode) {
+        console.log('\n📄 Generated placeholder content:');
+        console.log(JSON.stringify({ ...template, ...placeholder }, null, 2));
+      }
       await writeFile(
         outPath,
-        JSON.stringify({ ...template, ...preservedFields, ...placeholder }, null, 2)
+        JSON.stringify({ ...template, ...placeholder }, null, 2)
       );
       stats.placeholder++;
       continue;
@@ -458,18 +741,43 @@ async function main() {
     const workflowPath = `../templates/${template.name}.json`;
     const workflow = await analyzeWorkflow(workflowPath);
 
+    // Select content template type
+    const contentTemplate = selectContentTemplate(template, workflow);
+    
+    // Find relevant tutorial context
+    const tutorialContext = findRelevantTutorial(
+      template,
+      knowledge.tutorials,
+      knowledge.tutorialContent
+    );
+
     // Build context
     const ctx: GenerationContext = {
       template,
       workflow,
       modelDocs: pickRelevantDocs(template.models || [], knowledge.models),
       conceptDocs: pickRelevantDocs(template.tags || [], knowledge.concepts),
+      contentTemplate,
+      tutorialContext,
     };
 
     // Generate AI content
-    console.log(`🤖 [GENERATE] ${template.name}`);
+    const tutorialNote = tutorialContext ? ' (with tutorial context)' : '';
+    console.log(`🤖 [GENERATE:${contentTemplate.toUpperCase()}] ${template.name}${tutorialNote}`);
     try {
-      const content = await generateContent(ctx, knowledge.systemPrompt, openai!);
+      const content = await generateContent(
+        ctx,
+        knowledge.systemPrompt,
+        knowledge.contentTemplatePrompts[contentTemplate],
+        openai!
+      );
+      
+      // Quality check
+      const quality = checkContentQuality(content, template);
+      if (!quality.passed) {
+        console.log(`   ⚠️  Quality score: ${quality.score}/100`);
+        quality.issues.slice(0, 3).forEach(issue => console.log(`      - ${issue}`));
+      }
 
       // Save to cache with hash
       const cacheContent: CachedContent = {
@@ -481,9 +789,15 @@ async function main() {
 
       // Apply overrides and write
       const merged = applyOverrides(content, override);
+      
+      if (options.testMode) {
+        console.log('\n📄 Generated AI content:');
+        console.log(JSON.stringify({ ...template, ...merged }, null, 2));
+      }
+      
       await writeFile(
         outPath,
-        JSON.stringify({ ...template, ...preservedFields, ...merged }, null, 2)
+        JSON.stringify({ ...template, ...merged }, null, 2)
       );
       stats.generated++;
     } catch (error) {
@@ -492,7 +806,7 @@ async function main() {
       const placeholder = getPlaceholderContent(template);
       await writeFile(
         outPath,
-        JSON.stringify({ ...template, ...preservedFields, ...placeholder }, null, 2)
+        JSON.stringify({ ...template, ...placeholder }, null, 2)
       );
       stats.placeholder++;
     }
