@@ -1,0 +1,62 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TemplateCard from '../../components/TemplateCard.astro';
+
+const templates = await getCollection('templates');
+const sortedTemplates = templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'ComfyUI Workflow Templates',
+  description: 'Browse free, ready-to-use ComfyUI workflow templates for image generation, video creation, audio synthesis, and more.',
+  url: 'https://templates.comfy.org/templates/',
+};
+---
+
+<BaseLayout
+  title="ComfyUI Workflow Templates - Free AI Generation Workflows"
+  description="Browse free, ready-to-use ComfyUI workflow templates for image generation, video creation, audio synthesis, and more."
+  structuredData={structuredData}
+>
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+        Workflow Templates
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Ready-to-use ComfyUI workflows for AI image generation, video creation, and more. 
+        Click any template to learn more and run it instantly.
+      </p>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="flex justify-center gap-8 mb-12 text-sm text-gray-500">
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+        {sortedTemplates.length} templates
+      </span>
+      <span>Updated daily</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {sortedTemplates.map((template) => (
+        <TemplateCard
+          name={template.data.name}
+          title={template.data.title || template.data.name}
+          description={template.data.description}
+          mediaType={template.data.mediaType}
+          mediaSubtype={template.data.mediaSubtype}
+          thumbnailVariant={template.data.thumbnailVariant}
+          tags={template.data.tags}
+          models={template.data.models}
+          usage={template.data.usage}
+          thumbnails={template.data.thumbnails}
+        />
+      ))}
+    </div>
+  </div>
+</BaseLayout>

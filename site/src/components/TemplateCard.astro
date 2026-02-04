@@ -1,0 +1,102 @@
+---
+import ThumbnailDisplay from './ThumbnailDisplay.astro';
+
+interface Props {
+  name: string;
+  title: string;
+  description: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover';
+  tags?: string[];
+  models?: string[];
+  usage?: number;
+  thumbnails?: string[];
+}
+
+const { 
+  name, 
+  title, 
+  description, 
+  mediaType, 
+  mediaSubtype,
+  thumbnailVariant,
+  tags = [], 
+  usage, 
+  thumbnails = [] 
+} = Astro.props;
+
+const mediaTypeConfig: Record<string, { label: string; color: string }> = {
+  image: { label: 'Image', color: 'bg-blue-500' },
+  video: { label: 'Video', color: 'bg-purple-500' },
+  audio: { label: 'Audio', color: 'bg-green-500' },
+  '3d': { label: '3D', color: 'bg-orange-500' },
+};
+
+const config = mediaTypeConfig[mediaType] || { label: mediaType, color: 'bg-gray-500' };
+
+const formatUsage = (count: number): string => {
+  if (count >= 1000) {
+    return `${(count / 1000).toFixed(1)}k`;
+  }
+  return count.toString();
+};
+---
+
+<a 
+  href={`/templates/${name}/`} 
+  class="group block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200"
+>
+  <!-- Thumbnail -->
+  <div class="aspect-video bg-gray-100 relative">
+    {thumbnails.length > 0 ? (
+      <ThumbnailDisplay 
+        thumbnails={thumbnails}
+        title={title}
+        variant={thumbnailVariant}
+        mediaSubtype={mediaSubtype}
+        class="w-full h-full"
+      />
+    ) : (
+      <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
+        <span class="text-4xl text-indigo-300">🎨</span>
+      </div>
+    )}
+    
+    <!-- Media type badge -->
+    <span class={`absolute top-3 left-3 px-2 py-1 text-xs font-medium text-white rounded ${config.color} z-10`}>
+      {config.label}
+    </span>
+  </div>
+  
+  <!-- Content -->
+  <div class="p-4">
+    <h3 class="font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors">
+      {title}
+    </h3>
+    
+    <p class="text-sm text-gray-600 line-clamp-2 mb-3">
+      {description}
+    </p>
+    
+    <!-- Meta -->
+    <div class="flex items-center justify-between text-xs text-gray-500">
+      <div class="flex items-center gap-2">
+        {usage !== undefined && (
+          <span class="flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            {formatUsage(usage)} runs
+          </span>
+        )}
+      </div>
+      
+      {tags.length > 0 && (
+        <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+          {tags[0]}
+        </span>
+      )}
+    </div>
+  </div>
+</a>
