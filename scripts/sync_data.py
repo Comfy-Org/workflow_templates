@@ -60,6 +60,11 @@ try:
 except ImportError:
     analyze_models = None
 
+try:
+    import validate_templates
+except ImportError:
+    validate_templates = None
+
 
 class TemplateSyncer:
     """Main class for template synchronization operations"""
@@ -133,7 +138,7 @@ class TemplateSyncer:
             format=log_format,
             handlers=[
                 logging.StreamHandler(sys.stdout),
-                logging.FileHandler(self.templates_dir / 'sync.log', encoding='utf-8')
+                logging.FileHandler(self.templates_dir.parent / 'sync.log', encoding='utf-8')
             ]
         )
         self.logger = logging.getLogger(__name__)
@@ -1241,6 +1246,12 @@ class TemplateSyncManager:
                         template["usage"] = usage_value
                         changes_made = True
                         self.syncer.logger.info(f"  📊 Updated usage for '{template_name}': {usage_value}")
+                else:
+                    # If usage has no data (missing or not in CSV), fill with 0
+                    if "usage" not in template:
+                        template["usage"] = 0
+                        changes_made = True
+                        self.syncer.logger.info(f"  📊 Filled missing usage with 0 for '{template_name}'")
         
         # Save the fixed master file
         if changes_made:
@@ -1410,7 +1421,7 @@ class TemplateSyncManager:
                 with open(report_path, 'w', encoding='utf-8') as f:
                     f.write(report)
                 self.syncer.logger.info(f"  ✅ Model analysis report saved to: {report_path}")
-                
+
                 if (
                     statistics.get('files_with_errors')
                     or statistics.get('markdown_link_errors')
@@ -1423,7 +1434,24 @@ class TemplateSyncManager:
                 success = False
         else:
             self.syncer.logger.warning("\n⚠️  analyze_models module not available, skipping model analysis")
-        
+
+        # Step 7: Validate templates
+        if validate_templates is not None:
+            self.syncer.logger.info("\n✅ Step 7: Validating templates...")
+            try:
+                # Run the validation main function
+                validation_result = validate_templates.main()
+                if validation_result != 0:
+                    self.record_error("Template validation failed (see validation output above)")
+                    success = False
+                else:
+                    self.syncer.logger.info("  ✅ All template validations passed")
+            except Exception as e:
+                self.record_error(f"Template validation failed: {e}")
+                success = False
+        else:
+            self.syncer.logger.warning("\n⚠️  validate_templates module not available, skipping template validation")
+
         if self.errors:
             self.syncer.logger.error("\n❌ Errors summary:")
             for err in self.errors:
