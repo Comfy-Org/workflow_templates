@@ -6,14 +6,15 @@ import HreflangTags from '../../components/HreflangTags.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 
-function slugify(tag: string): string {
-  return tag
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-
 export async function getStaticPaths() {
+  // Define slugify inside getStaticPaths to ensure it's available during Astro's production build
+  function slugify(tag: string): string {
+    return tag
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
   const templates = await getCollection('templates');
 
   const tagMap = new Map<
