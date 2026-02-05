@@ -74,13 +74,18 @@ jobs:
 
       - name: Validate JSON syntax
         run: |
+          set -e
           echo "Validating JSON syntax..."
-          find src -name "*.json" -type f | while read file; do
+          FAILED=0
+          for file in $(find src -name "*.json" -type f); do
             if ! jq empty "$file" 2>/dev/null; then
               echo "❌ Invalid JSON: $file"
-              exit 1
+              FAILED=1
             fi
           done
+          if [ "$FAILED" -eq 1 ]; then
+            exit 1
+          fi
           echo "✅ All JSON files have valid syntax"
 
       - name: Validate template index against schema

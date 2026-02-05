@@ -43,7 +43,10 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Update translations
-        run: pnpm locale
+        run: |
+          # Mask the API key to prevent accidental exposure in logs
+          echo "::add-mask::$OPENAI_API_KEY"
+          pnpm locale
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 

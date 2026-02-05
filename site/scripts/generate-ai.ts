@@ -69,12 +69,17 @@ interface GenerationContext {
   tutorialContext?: string;
 }
 
-const CACHE_DIR = '.content-cache';
+// Use import.meta.url to get the script's directory for reliable path resolution
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const SITE_ROOT = path.resolve(__dirname, '..');
+const TEMPLATES_ROOT = path.resolve(SITE_ROOT, '..', 'templates');
+
+const CACHE_DIR = path.join(SITE_ROOT, '.content-cache');
 const CACHE_MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
-const OUTPUT_DIR = 'src/content/templates';
-const OVERRIDES_DIR = 'overrides/templates';
-const KNOWLEDGE_DIR = 'knowledge';
-const TEMPLATES_INDEX = '../templates/index.json';
+const OUTPUT_DIR = path.join(SITE_ROOT, 'src/content/templates');
+const OVERRIDES_DIR = path.join(SITE_ROOT, 'overrides/templates');
+const KNOWLEDGE_DIR = path.join(SITE_ROOT, 'knowledge');
+const TEMPLATES_INDEX = path.join(TEMPLATES_ROOT, 'index.json');
 
 const CACHE_VERSION = '1'; // Increment to invalidate all caches
 const DEFAULT_MODEL = 'gpt-4o';
@@ -892,7 +897,7 @@ async function main() {
     }
 
     // Analyze workflow
-    const workflowPath = `../templates/${template.name}.json`;
+    const workflowPath = path.join(TEMPLATES_ROOT, `${template.name}.json`);
     const workflow = await analyzeWorkflow(workflowPath);
 
     // Select content template type
