@@ -11,6 +11,7 @@ on:
       - 'scripts/validate_templates.py'
       - 'scripts/validate_thumbnails.py'
       - '.github/workflows/validate-templates.yml'
+      - 'templates/index.schema.json'
 
 jobs:
   validate:
@@ -28,7 +29,13 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install jsonschema
+        pip install jsonschema check-jsonschema
+    
+    - name: Validate index.json against schema
+      run: |
+        echo "Validating templates/index.json against schema..."
+        check-jsonschema --schemafile templates/index.schema.json templates/index.json
+        echo "✅ index.json is valid against schema"
     
     - name: Run validation script
       id: validation

@@ -5,10 +5,14 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/lint.yml'
+      - '.yamllint.yml'
+      - '**/*.sh'
   pull_request:
     branches: [main]
     paths:
       - '.github/workflows/lint.yml'
+      - '.yamllint.yml'
+      - '**/*.sh'
 
 jobs:
   yaml-lint:
@@ -17,13 +21,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          node-version: "20"
+          python-version: '3.11'
 
-      - name: Install YAML linter
-        run: npm install -g yaml-lint
+      - name: Install yamllint
+        run: pip install yamllint
 
       - name: Lint YAML files
-        run: yamllint .github/workflows/*.{yml,yaml}
+        run: yamllint .github/workflows/
+
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find shell scripts
+        id: find-scripts
+        run: |
+          scripts=$(find . -name "*.sh" -type f | tr '\n' ' ')
+          echo "scripts=$scripts" >> "$GITHUB_OUTPUT"
+          if [ -z "$scripts" ]; then
+            echo "No shell scripts found"
+          else
+            echo "Found scripts: $scripts"
+          fi
+
+      - name: Run shellcheck
+        if: steps.find-scripts.outputs.scripts != ''
+        run: |
+          shellcheck --version
+          find . -name "*.sh" -type f -exec shellcheck {} +

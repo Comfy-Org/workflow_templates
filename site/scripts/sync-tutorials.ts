@@ -3,7 +3,7 @@
  * Tutorials are used as context for AI content generation.
  */
 
-import { readFile, writeFile, mkdir, readdir, copyFile, stat } from 'fs/promises';
+import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
@@ -21,7 +21,10 @@ interface TutorialMeta {
   concepts: string[];
 }
 
-function extractFrontmatter(content: string): { frontmatter: Record<string, string>; body: string } {
+function extractFrontmatter(content: string): {
+  frontmatter: Record<string, string>;
+  body: string;
+} {
   const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
   if (!match) return { frontmatter: {}, body: content };
 
@@ -45,10 +48,10 @@ function extractFrontmatter(content: string): { frontmatter: Record<string, stri
 
 function extractModelsFromContent(content: string): string[] {
   const models: Set<string> = new Set();
-  
+
   const modelPatterns = [
-    /flux[.\-]?1?[.\-]?\w*/gi,
-    /wan[.\-]?\d*\.?\d*\w*/gi,
+    /flux[.-]?1?[.-]?\w*/gi,
+    /wan[.-]?\d*\.?\d*\w*/gi,
     /qwen\w*/gi,
     /sdxl\w*/gi,
     /hunyuan\w*/gi,
@@ -82,7 +85,7 @@ function extractConceptsFromContent(content: string, category: string): string[]
     'image-to-video': /image.?to.?video|i2v/i,
     'text-to-video': /text.?to.?video|t2v/i,
     upscale: /upscal/i,
-    'img2img': /img2img|image.?to.?image/i,
+    img2img: /img2img|image.?to.?image/i,
     lora: /lora/i,
     vae: /\bvae\b/i,
     'voice-cloning': /voice.?clon/i,
@@ -98,13 +101,13 @@ function extractConceptsFromContent(content: string, category: string): string[]
   return [...concepts];
 }
 
-async function findTutorialFiles(dir: string, category = ''): Promise<string[]> {
+async function findTutorialFiles(dir: string, _category = ''): Promise<string[]> {
   const files: string[] = [];
-  
+
   if (!existsSync(dir)) return files;
 
   const entries = await readdir(dir, { withFileTypes: true });
-  
+
   for (const entry of entries) {
     const fullPath = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -119,7 +122,7 @@ async function findTutorialFiles(dir: string, category = ''): Promise<string[]> 
 }
 
 function cleanMdxContent(content: string): string {
-  let cleaned = content
+  const cleaned = content
     .replace(/<a[^>]*>[\s\S]*?<\/a>/g, '')
     .replace(/<Note>[\s\S]*?<\/Note>/g, (match) => {
       const text = match.replace(/<\/?Note>/g, '').trim();
@@ -128,7 +131,7 @@ function cleanMdxContent(content: string): string {
     .replace(/<[^>]+>/g, '')
     .replace(/!\[([^\]]*)\]\([^)]+\)/g, '[Image: $1]')
     .replace(/\n{3,}/g, '\n\n');
-  
+
   return cleaned.trim();
 }
 
@@ -158,7 +161,7 @@ async function syncTutorials(): Promise<void> {
     try {
       const content = await readFile(filePath, 'utf-8');
       const { frontmatter, body } = extractFrontmatter(content);
-      
+
       if (!frontmatter.title) {
         console.log(`⏭️  Skipping ${relativePath} (no title)`);
         continue;
@@ -217,7 +220,7 @@ ${cleanedContent}
   const sortedModels = Object.entries(modelMentions)
     .sort((a, b) => b[1].length - a[1].length)
     .slice(0, 10);
-  
+
   for (const [model, tutorials] of sortedModels) {
     console.log(`   ${model}: ${tutorials.length} tutorials`);
   }

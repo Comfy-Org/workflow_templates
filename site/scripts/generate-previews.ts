@@ -3,6 +3,10 @@ import { readFile, writeFile, mkdir, readdir, stat } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import os from 'os';
+
+// Parallel processing configuration
+const CONCURRENCY = Math.max(1, os.cpus().length - 1);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -149,10 +153,8 @@ async function generateWorkflowPreview(
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, options.width, options.height);
 
-  const offsetX =
-    (options.width - bounds.width * scale) / 2 - bounds.minX * scale;
-  const offsetY =
-    (options.height - bounds.height * scale) / 2 - bounds.minY * scale;
+  const offsetX = (options.width - bounds.width * scale) / 2 - bounds.minX * scale;
+  const offsetY = (options.height - bounds.height * scale) / 2 - bounds.minY * scale;
 
   // Build node lookup map for O(1) access
   const nodeMap = new Map(nodes.map((n) => [n.id, n]));
@@ -182,12 +184,7 @@ async function generateWorkflowPreview(
     const [width, height] = node.size;
 
     ctx.fillStyle = node.bgcolor || '#374151';
-    ctx.fillRect(
-      x * scale + offsetX,
-      y * scale + offsetY,
-      width * scale,
-      height * scale
-    );
+    ctx.fillRect(x * scale + offsetX, y * scale + offsetY, width * scale, height * scale);
   }
 
   // Save
@@ -209,7 +206,32 @@ async function shouldRegeneratePreview(
   return workflowStat.mtime > previewStat.mtime;
 }
 
+async function processInParallel<T, R>(
+  items: T[],
+  processor: (item: T) => Promise<R>,
+  concurrency: number
+): Promise<R[]> {
+  const results: R[] = [];
+  const queue = [...items];
+
+  async function worker(): Promise<void> {
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (item !== undefined) {
+        results.push(await processor(item));
+      }
+    }
+  }
+
+  const workers = Array(Math.min(concurrency, items.length))
+    .fill(null)
+    .map(() => worker());
+  await Promise.all(workers);
+  return results;
+}
+
 async function main(): Promise<void> {
+  const startTime = Date.now();
   const templatesDir = path.resolve(__dirname, '../../templates');
   const outputDir = path.resolve(__dirname, '../public/previews');
 
@@ -226,38 +248,42 @@ async function main(): Promise<void> {
   });
 
   console.log(`Found ${workflowFiles.length} workflow files`);
+  console.log(`Using ${CONCURRENCY} parallel workers`);
 
   let generated = 0;
   let skipped = 0;
   let errors = 0;
 
-  for (const file of workflowFiles) {
-    const name = path.basename(file, '.json');
-    const workflowPath = path.join(templatesDir, file);
-    const outputPath = path.join(outputDir, `${name}.png`);
+  // Process files in parallel
+  await processInParallel(
+    workflowFiles,
+    async (file) => {
+      const name = path.basename(file, '.json');
+      const workflowPath = path.join(templatesDir, file);
+      const outputPath = path.join(outputDir, `${name}.png`);
 
-    try {
-      const needsRegeneration = await shouldRegeneratePreview(
-        workflowPath,
-        outputPath
-      );
+      try {
+        const needsRegeneration = await shouldRegeneratePreview(workflowPath, outputPath);
 
-      if (!needsRegeneration) {
-        skipped++;
-        continue;
+        if (!needsRegeneration) {
+          skipped++;
+          return;
+        }
+
+        await generateWorkflowPreview(workflowPath, outputPath);
+        console.log(`[GENERATED] ${name}`);
+        generated++;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error(`[ERROR] ${name}: ${message}`);
+        errors++;
       }
+    },
+    CONCURRENCY
+  );
 
-      await generateWorkflowPreview(workflowPath, outputPath);
-      console.log(`[GENERATED] ${name}`);
-      generated++;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error(`[ERROR] ${name}: ${message}`);
-      errors++;
-    }
-  }
-
-  console.log(`\nSummary:`);
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+  console.log(`\nSummary (${elapsed}s):`);
   console.log(`  Generated: ${generated}`);
   console.log(`  Skipped (cached): ${skipped}`);
   console.log(`  Errors: ${errors}`);

@@ -70,15 +70,43 @@ interface GenerationContext {
 }
 
 const CACHE_DIR = '.content-cache';
+const CACHE_MANIFEST_PATH = path.join(CACHE_DIR, '_manifest.json');
 const OUTPUT_DIR = 'src/content/templates';
 const OVERRIDES_DIR = 'overrides/templates';
 const KNOWLEDGE_DIR = 'knowledge';
 const TEMPLATES_INDEX = '../templates/index.json';
 
+const CACHE_VERSION = '1'; // Increment to invalidate all caches
+const DEFAULT_MODEL = 'gpt-4o';
+
+interface CacheManifest {
+  version: string;
+  promptsHash: string;
+  entries: Record<string, CacheEntry>;
+  lastUpdated: string;
+}
+
+interface CacheEntry {
+  templateHash: string;
+  promptsHash: string;
+  generatedAt: string;
+  model: string;
+}
+
+interface CacheStats {
+  hits: number;
+  misses: number;
+  regenerated: number;
+  skipped: number;
+  placeholder: number;
+}
+
 interface CLIOptions {
   testMode: boolean;
   templateFilter: string | null;
   skipAI: boolean;
+  force: boolean;
+  dryRun: boolean;
 }
 
 function parseArgs(): CLIOptions {
@@ -87,6 +115,8 @@ function parseArgs(): CLIOptions {
     testMode: false,
     templateFilter: null,
     skipAI: process.env.SKIP_AI_GENERATION === 'true',
+    force: false,
+    dryRun: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -96,10 +126,91 @@ function parseArgs(): CLIOptions {
       options.templateFilter = args[++i];
     } else if (args[i] === '--skip-ai') {
       options.skipAI = true;
+    } else if (args[i] === '--force') {
+      options.force = true;
+    } else if (args[i] === '--dry-run') {
+      options.dryRun = true;
     }
   }
 
   return options;
+}
+
+async function computePromptsHash(): Promise<string> {
+  const promptsDir = path.join(KNOWLEDGE_DIR, 'prompts');
+  const files = ['system.md', 'tutorial.md', 'showcase.md', 'comparison.md', 'breakthrough.md'];
+  const contents: string[] = [];
+
+  for (const file of files) {
+    const filePath = path.join(promptsDir, file);
+    if (existsSync(filePath)) {
+      contents.push(await readFile(filePath, 'utf-8'));
+    }
+  }
+
+  return createHash('sha256')
+    .update(CACHE_VERSION + contents.join(''))
+    .digest('hex')
+    .slice(0, 32);
+}
+
+async function loadCacheManifest(): Promise<CacheManifest> {
+  if (!existsSync(CACHE_MANIFEST_PATH)) {
+    return {
+      version: CACHE_VERSION,
+      promptsHash: '',
+      entries: {},
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+
+  try {
+    const content = await readFile(CACHE_MANIFEST_PATH, 'utf-8');
+    return JSON.parse(content);
+  } catch {
+    return {
+      version: CACHE_VERSION,
+      promptsHash: '',
+      entries: {},
+      lastUpdated: new Date().toISOString(),
+    };
+  }
+}
+
+async function saveCacheManifest(manifest: CacheManifest): Promise<void> {
+  manifest.lastUpdated = new Date().toISOString();
+  await writeFile(CACHE_MANIFEST_PATH, JSON.stringify(manifest, null, 2));
+}
+
+function shouldRegenerateWithManifest(
+  template: TemplateInfo,
+  manifest: CacheManifest,
+  currentPromptsHash: string,
+  forceRegenerate: boolean
+): { regenerate: boolean; reason: string } {
+  if (forceRegenerate) {
+    return { regenerate: true, reason: 'force flag' };
+  }
+
+  const entry = manifest.entries[template.name];
+  if (!entry) {
+    return { regenerate: true, reason: 'not in cache' };
+  }
+
+  if (manifest.version !== CACHE_VERSION) {
+    return { regenerate: true, reason: 'cache version changed' };
+  }
+
+  if (entry.promptsHash !== currentPromptsHash) {
+    return { regenerate: true, reason: 'prompts changed' };
+  }
+
+  const currentTemplateHash = computeTemplateHash(template);
+  if (entry.templateHash !== currentTemplateHash) {
+    return { regenerate: true, reason: 'template metadata changed' };
+  }
+
+  return { regenerate: false, reason: 'cache valid' };
 }
 
 async function loadKnowledgeBase(): Promise<{
@@ -163,7 +274,7 @@ async function loadKnowledgeBase(): Promise<{
   const tutorialIndexPath = path.join(tutorialsDir, '_index.json');
   if (existsSync(tutorialIndexPath)) {
     tutorials = JSON.parse(await readFile(tutorialIndexPath, 'utf-8'));
-    
+
     for (const tutorial of tutorials) {
       const tutorialPath = path.join(tutorialsDir, tutorial.filePath);
       if (existsSync(tutorialPath)) {
@@ -201,10 +312,7 @@ async function loadCache(templateName: string): Promise<CachedContent | null> {
   }
 }
 
-async function saveCache(
-  templateName: string,
-  content: GeneratedContent
-): Promise<void> {
+async function saveCache(templateName: string, content: GeneratedContent): Promise<void> {
   const cachePath = path.join(CACHE_DIR, `${templateName}.json`);
   await writeFile(cachePath, JSON.stringify(content, null, 2));
 }
@@ -220,18 +328,7 @@ function computeTemplateHash(template: TemplateInfo): string {
   return createHash('sha256').update(JSON.stringify(relevant)).digest('hex').slice(0, 32);
 }
 
-function shouldRegenerate(
-  template: TemplateInfo,
-  cached: CachedContent
-): boolean {
-  const currentHash = computeTemplateHash(template);
-  return cached.templateHash !== currentHash;
-}
-
-function applyOverrides(
-  content: GeneratedContent,
-  override: Override | null
-): GeneratedContent {
+function applyOverrides(content: GeneratedContent, override: Override | null): GeneratedContent {
   if (!override) return content;
 
   return {
@@ -264,14 +361,10 @@ async function analyzeWorkflow(workflowPath: string): Promise<WorkflowAnalysis> 
       .filter((t): t is string => typeof t === 'string');
 
     const hasInputImage = nodeTypes.some(
-      (t) =>
-        t.toLowerCase().includes('loadimage') ||
-        t.toLowerCase().includes('image input')
+      (t) => t.toLowerCase().includes('loadimage') || t.toLowerCase().includes('image input')
     );
     const hasInputVideo = nodeTypes.some(
-      (t) =>
-        t.toLowerCase().includes('loadvideo') ||
-        t.toLowerCase().includes('video input')
+      (t) => t.toLowerCase().includes('loadvideo') || t.toLowerCase().includes('video input')
     );
 
     let outputType = 'image';
@@ -297,19 +390,13 @@ async function analyzeWorkflow(workflowPath: string): Promise<WorkflowAnalysis> 
   }
 }
 
-function pickRelevantDocs(
-  keys: string[],
-  docs: Record<string, string>
-): Record<string, string> {
+function pickRelevantDocs(keys: string[], docs: Record<string, string>): Record<string, string> {
   const result: Record<string, string> = {};
   for (const key of keys) {
     const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
     for (const [docKey, docValue] of Object.entries(docs)) {
       const normalizedDocKey = docKey.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (
-        normalizedKey.includes(normalizedDocKey) ||
-        normalizedDocKey.includes(normalizedKey)
-      ) {
+      if (normalizedKey.includes(normalizedDocKey) || normalizedDocKey.includes(normalizedKey)) {
         result[docKey] = docValue;
       }
     }
@@ -319,46 +406,44 @@ function pickRelevantDocs(
 
 function selectContentTemplate(
   template: TemplateInfo,
-  workflow: WorkflowAnalysis
+  _workflow: WorkflowAnalysis
 ): ContentTemplate {
   const name = template.name.toLowerCase();
   const title = (template.title || '').toLowerCase();
   const description = template.description.toLowerCase();
-  const models = (template.models || []).map(m => m.toLowerCase());
+  const models = (template.models || []).map((m) => m.toLowerCase());
   const date = template.date ? new Date(template.date) : null;
-  
+
   const threeMonthsAgo = new Date();
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
   const isRecent = date && date > threeMonthsAgo;
-  
+
   const breakthroughKeywords = ['2.0', '2.1', '2.2', 'new', 'v2', 'pro', 'ultra', 'turbo'];
-  const hasBreakthroughSignals = breakthroughKeywords.some(kw => 
-    name.includes(kw) || title.includes(kw) || models.some(m => m.includes(kw))
+  const hasBreakthroughSignals = breakthroughKeywords.some(
+    (kw) => name.includes(kw) || title.includes(kw) || models.some((m) => m.includes(kw))
   );
-  
+
   if (isRecent && hasBreakthroughSignals) {
     return 'breakthrough';
   }
-  
+
   const comparisonKeywords = ['vs', 'compare', 'alternative', 'better', 'best'];
-  const hasComparisonSignals = comparisonKeywords.some(kw =>
-    name.includes(kw) || title.includes(kw) || description.includes(kw)
+  const hasComparisonSignals = comparisonKeywords.some(
+    (kw) => name.includes(kw) || title.includes(kw) || description.includes(kw)
   );
-  
+
   if (hasComparisonSignals) {
     return 'comparison';
   }
-  
+
   const showcaseKeywords = ['gallery', 'showcase', 'example', 'demo', 'style'];
-  const hasShowcaseSignals = showcaseKeywords.some(kw =>
-    name.includes(kw) || title.includes(kw)
-  );
+  const hasShowcaseSignals = showcaseKeywords.some((kw) => name.includes(kw) || title.includes(kw));
   const isVisuallyOriented = template.mediaType === 'image' || template.mediaType === 'video';
-  
+
   if (hasShowcaseSignals || (isVisuallyOriented && (template.usage || 0) > 1000)) {
     return 'showcase';
   }
-  
+
   return 'tutorial';
 }
 
@@ -367,45 +452,49 @@ function findRelevantTutorial(
   tutorials: TutorialMeta[],
   tutorialContent: Record<string, string>
 ): string | undefined {
-  const templateModels = (template.models || []).map(m => m.toLowerCase().replace(/[^a-z0-9]/g, ''));
-  const templateTags = (template.tags || []).map(t => t.toLowerCase().replace(/[^a-z0-9]/g, ''));
-  
+  const templateModels = (template.models || []).map((m) =>
+    m.toLowerCase().replace(/[^a-z0-9]/g, '')
+  );
+  const templateTags = (template.tags || []).map((t) => t.toLowerCase().replace(/[^a-z0-9]/g, ''));
+
   let bestMatch: { tutorial: TutorialMeta; score: number } | null = null;
-  
+
   for (const tutorial of tutorials) {
     let score = 0;
-    
+
     for (const model of tutorial.models) {
-      if (templateModels.some(tm => tm.includes(model) || model.includes(tm))) {
+      if (templateModels.some((tm) => tm.includes(model) || model.includes(tm))) {
         score += 3;
       }
     }
-    
+
     for (const concept of tutorial.concepts) {
       const normalizedConcept = concept.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (templateTags.some(tt => tt.includes(normalizedConcept) || normalizedConcept.includes(tt))) {
+      if (
+        templateTags.some((tt) => tt.includes(normalizedConcept) || normalizedConcept.includes(tt))
+      ) {
         score += 1;
       }
     }
-    
+
     if (tutorial.category === template.mediaType) {
       score += 2;
     }
-    
+
     if (score > 0 && (!bestMatch || score > bestMatch.score)) {
       bestMatch = { tutorial, score };
     }
   }
-  
+
   if (bestMatch && bestMatch.score >= 3) {
     return tutorialContent[bestMatch.tutorial.filePath];
   }
-  
+
   return undefined;
 }
 
 function buildPrompt(ctx: GenerationContext): string {
-  const tutorialSection = ctx.tutorialContext 
+  const tutorialSection = ctx.tutorialContext
     ? `
 # Related Tutorial Reference
 Use this existing tutorial as a style and content guide:
@@ -478,7 +567,7 @@ async function generateContent(
 ): Promise<GeneratedContent> {
   const userPrompt = buildPrompt(ctx);
 
-  const combinedSystemPrompt = contentTemplatePrompt 
+  const combinedSystemPrompt = contentTemplatePrompt
     ? `${systemPrompt}\n\n---\n\n${contentTemplatePrompt}`
     : systemPrompt;
 
@@ -546,7 +635,7 @@ function checkContentQuality(content: GeneratedContent, template: TemplateInfo):
 
   const models = template.models || [];
   const descLower = content.extendedDescription.toLowerCase();
-  const missingModels = models.filter(m => !descLower.includes(m.toLowerCase()));
+  const missingModels = models.filter((m) => !descLower.includes(m.toLowerCase()));
   if (missingModels.length > 0) {
     issues.push(`Missing model mentions: ${missingModels.join(', ')}`);
     score -= 5 * missingModels.length;
@@ -573,25 +662,49 @@ function checkContentQuality(content: GeneratedContent, template: TemplateInfo):
 }
 
 function validateContent(content: unknown, contentTemplate: ContentTemplate): GeneratedContent {
+  if (typeof content !== 'object' || content === null) {
+    throw new Error('Invalid content: expected object');
+  }
   const parsed = content as Record<string, unknown>;
+
+  // Validate howToUse array elements
+  const howToUse =
+    Array.isArray(parsed.howToUse) && parsed.howToUse.every((s) => typeof s === 'string')
+      ? (parsed.howToUse as string[])
+      : ['Load the template', 'Configure inputs', 'Run the workflow'];
+
+  // Validate suggestedUseCases array elements
+  const suggestedUseCases =
+    Array.isArray(parsed.suggestedUseCases) &&
+    parsed.suggestedUseCases.every((s) => typeof s === 'string')
+      ? (parsed.suggestedUseCases as string[])
+      : [];
+
+  // Validate faqItems array elements
+  const faqItems =
+    Array.isArray(parsed.faqItems) &&
+    parsed.faqItems.every(
+      (item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as Record<string, unknown>).question === 'string' &&
+        typeof (item as Record<string, unknown>).answer === 'string'
+    )
+      ? (parsed.faqItems as Array<{ question: string; answer: string }>)
+      : [];
+
   return {
     extendedDescription:
       typeof parsed.extendedDescription === 'string'
         ? parsed.extendedDescription
         : 'Description not available.',
-    howToUse: Array.isArray(parsed.howToUse)
-      ? (parsed.howToUse as string[])
-      : ['Load the template', 'Configure inputs', 'Run the workflow'],
+    howToUse,
     metaDescription:
       typeof parsed.metaDescription === 'string'
         ? parsed.metaDescription.slice(0, 160)
         : 'ComfyUI workflow template',
-    suggestedUseCases: Array.isArray(parsed.suggestedUseCases)
-      ? (parsed.suggestedUseCases as string[])
-      : [],
-    faqItems: Array.isArray(parsed.faqItems)
-      ? (parsed.faqItems as Array<{ question: string; answer: string }>)
-      : [],
+    suggestedUseCases,
+    faqItems,
     contentTemplate,
   };
 }
@@ -617,6 +730,12 @@ async function main() {
   if (options.templateFilter) {
     console.log(`   Filter: Only processing template "${options.templateFilter}"`);
   }
+  if (options.force) {
+    console.log(`   Force: Regenerating all content (ignoring cache)`);
+  }
+  if (options.dryRun) {
+    console.log(`   Dry run: Showing what would be regenerated (no changes)`);
+  }
   console.log('');
 
   // Load templates index
@@ -631,16 +750,12 @@ async function main() {
   }>;
 
   // Flatten all templates
-  let allTemplates: TemplateInfo[] = categories.flatMap(
-    (cat) => cat.templates || []
-  );
+  let allTemplates: TemplateInfo[] = categories.flatMap((cat) => cat.templates || []);
 
   // Apply template filter if specified
   if (options.templateFilter) {
     const filterLower = options.templateFilter.toLowerCase();
-    allTemplates = allTemplates.filter(
-      (t) => t.name.toLowerCase().includes(filterLower)
-    );
+    allTemplates = allTemplates.filter((t) => t.name.toLowerCase().includes(filterLower));
     if (allTemplates.length === 0) {
       console.error(`❌ No templates found matching: ${options.templateFilter}`);
       console.error('   Available templates:');
@@ -673,26 +788,47 @@ async function main() {
   await mkdir(CACHE_DIR, { recursive: true });
   await mkdir(OVERRIDES_DIR, { recursive: true });
 
+  // Load cache manifest and compute current prompts hash
+  const manifest = await loadCacheManifest();
+  const currentPromptsHash = await computePromptsHash();
+
+  console.log(`📊 Cache info:`);
+  console.log(`   - Version: ${CACHE_VERSION}`);
+  console.log(`   - Prompts hash: ${currentPromptsHash.slice(0, 8)}...`);
+  console.log(`   - Cached entries: ${Object.keys(manifest.entries).length}`);
+  if (manifest.promptsHash && manifest.promptsHash !== currentPromptsHash) {
+    console.log(`   ⚠️  Prompts changed since last run (will invalidate cache)`);
+  }
+  console.log('');
+
   // Load knowledge base
   const knowledge = await loadKnowledgeBase();
   console.log(`📚 Loaded knowledge base:`);
   console.log(`   - Models: ${Object.keys(knowledge.models).join(', ') || 'none'}`);
   console.log(`   - Concepts: ${Object.keys(knowledge.concepts).join(', ') || 'none'}`);
   console.log(`   - Tutorials: ${knowledge.tutorials.length || 0}`);
-  console.log(`   - Content templates: ${Object.keys(knowledge.contentTemplatePrompts).filter(k => knowledge.contentTemplatePrompts[k as ContentTemplate]).join(', ') || 'none'}`);
+  console.log(
+    `   - Content templates: ${
+      Object.keys(knowledge.contentTemplatePrompts)
+        .filter((k) => knowledge.contentTemplatePrompts[k as ContentTemplate])
+        .join(', ') || 'none'
+    }`
+  );
   console.log('');
 
-  // Initialize OpenAI client (only if not skipping)
+  // Initialize OpenAI client (only if not skipping and not dry run)
   let openai: OpenAI | null = null;
-  if (!options.skipAI) {
+  if (!options.skipAI && !options.dryRun) {
     if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ OPENAI_API_KEY not set. Use SKIP_AI_GENERATION=true or --skip-ai for placeholder mode.');
+      console.error(
+        '❌ OPENAI_API_KEY not set. Use SKIP_AI_GENERATION=true or --skip-ai for placeholder mode.'
+      );
       process.exit(1);
     }
     openai = new OpenAI();
   }
 
-  let stats = { skipped: 0, cached: 0, generated: 0, placeholder: 0 };
+  const stats: CacheStats = { hits: 0, misses: 0, regenerated: 0, skipped: 0, placeholder: 0 };
 
   for (const template of templatesToProcess) {
     const outPath = path.join(OUTPUT_DIR, `${template.name}.json`);
@@ -700,39 +836,57 @@ async function main() {
     // Check for human override
     const override = await loadOverride(template.name);
     if (override?.humanEdited) {
-      console.log(`⏭️  [SKIP] ${template.name} - human edited`);
-      await writeFile(
-        outPath,
-        JSON.stringify({ ...template, ...override, humanEdited: true }, null, 2)
-      );
+      if (options.dryRun) {
+        console.log(`⏭️  [SKIP] ${template.name} - human edited`);
+      } else {
+        console.log(`⏭️  [SKIP] ${template.name} - human edited`);
+        await writeFile(
+          outPath,
+          JSON.stringify({ ...template, ...override, humanEdited: true }, null, 2)
+        );
+      }
       stats.skipped++;
       continue;
     }
 
-    // Check cache
-    const cached = await loadCache(template.name);
-    if (cached && !shouldRegenerate(template, cached)) {
-      console.log(`💾 [CACHE] ${template.name}`);
-      const merged = applyOverrides(cached, override);
-      await writeFile(
-        outPath,
-        JSON.stringify({ ...template, ...merged }, null, 2)
-      );
-      stats.cached++;
+    // Check cache using manifest
+    const cacheCheck = shouldRegenerateWithManifest(
+      template,
+      manifest,
+      currentPromptsHash,
+      options.force
+    );
+
+    if (!cacheCheck.regenerate) {
+      const cached = await loadCache(template.name);
+      if (cached) {
+        if (options.dryRun) {
+          console.log(`💾 [CACHE HIT] ${template.name}`);
+        } else {
+          console.log(`💾 [CACHE HIT] ${template.name}`);
+          const merged = applyOverrides(cached, override);
+          await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
+        }
+        stats.hits++;
+        continue;
+      }
+    }
+
+    // Dry run: show what would be regenerated
+    if (options.dryRun) {
+      console.log(`🔄 [WOULD REGENERATE] ${template.name} - ${cacheCheck.reason}`);
+      stats.misses++;
       continue;
     }
 
     if (options.skipAI) {
-      console.log(`📝 [PLACEHOLDER] ${template.name}`);
+      console.log(`📝 [PLACEHOLDER] ${template.name} - ${cacheCheck.reason}`);
       const placeholder = getPlaceholderContent(template);
       if (options.testMode) {
         console.log('\n📄 Generated placeholder content:');
         console.log(JSON.stringify({ ...template, ...placeholder }, null, 2));
       }
-      await writeFile(
-        outPath,
-        JSON.stringify({ ...template, ...placeholder }, null, 2)
-      );
+      await writeFile(outPath, JSON.stringify({ ...template, ...placeholder }, null, 2));
       stats.placeholder++;
       continue;
     }
@@ -743,7 +897,7 @@ async function main() {
 
     // Select content template type
     const contentTemplate = selectContentTemplate(template, workflow);
-    
+
     // Find relevant tutorial context
     const tutorialContext = findRelevantTutorial(
       template,
@@ -763,7 +917,9 @@ async function main() {
 
     // Generate AI content
     const tutorialNote = tutorialContext ? ' (with tutorial context)' : '';
-    console.log(`🤖 [GENERATE:${contentTemplate.toUpperCase()}] ${template.name}${tutorialNote}`);
+    console.log(
+      `🤖 [GENERATE:${contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}${tutorialNote}`
+    );
     try {
       const content = await generateContent(
         ctx,
@@ -771,12 +927,12 @@ async function main() {
         knowledge.contentTemplatePrompts[contentTemplate],
         openai!
       );
-      
+
       // Quality check
       const quality = checkContentQuality(content, template);
       if (!quality.passed) {
         console.log(`   ⚠️  Quality score: ${quality.score}/100`);
-        quality.issues.slice(0, 3).forEach(issue => console.log(`      - ${issue}`));
+        quality.issues.slice(0, 3).forEach((issue) => console.log(`      - ${issue}`));
       }
 
       // Save to cache with hash
@@ -787,37 +943,47 @@ async function main() {
       };
       await saveCache(template.name, cacheContent);
 
+      // Update manifest
+      manifest.entries[template.name] = {
+        templateHash: computeTemplateHash(template),
+        promptsHash: currentPromptsHash,
+        generatedAt: new Date().toISOString(),
+        model: DEFAULT_MODEL,
+      };
+
       // Apply overrides and write
       const merged = applyOverrides(content, override);
-      
+
       if (options.testMode) {
         console.log('\n📄 Generated AI content:');
         console.log(JSON.stringify({ ...template, ...merged }, null, 2));
       }
-      
-      await writeFile(
-        outPath,
-        JSON.stringify({ ...template, ...merged }, null, 2)
-      );
-      stats.generated++;
+
+      await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
+      stats.regenerated++;
     } catch (error) {
       console.error(`   ❌ Error generating content: ${error}`);
       // Fall back to placeholder
       const placeholder = getPlaceholderContent(template);
-      await writeFile(
-        outPath,
-        JSON.stringify({ ...template, ...placeholder }, null, 2)
-      );
+      await writeFile(outPath, JSON.stringify({ ...template, ...placeholder }, null, 2));
       stats.placeholder++;
     }
   }
 
+  // Save updated manifest
+  manifest.version = CACHE_VERSION;
+  manifest.promptsHash = currentPromptsHash;
+  await saveCacheManifest(manifest);
+
   console.log('');
   console.log('✅ Done!');
-  console.log(`   Skipped (human edited): ${stats.skipped}`);
-  console.log(`   From cache: ${stats.cached}`);
-  console.log(`   AI generated: ${stats.generated}`);
-  console.log(`   Placeholders: ${stats.placeholder}`);
+  console.log('');
+  console.log('📊 Cache Statistics:');
+  console.log(`   Cache hits:    ${stats.hits}`);
+  console.log(`   Cache misses:  ${stats.misses}`);
+  console.log(`   Regenerated:   ${stats.regenerated}`);
+  console.log(`   Skipped:       ${stats.skipped}`);
+  console.log(`   Placeholders:  ${stats.placeholder}`);
 }
 
 main().catch((error) => {

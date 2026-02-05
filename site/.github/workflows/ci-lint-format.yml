@@ -1,0 +1,119 @@
+name: 'CI: Lint & Format'
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: site
+
+jobs:
+  lint-format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run ESLint
+        run: pnpm lint
+
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: TypeScript check
+        run: pnpm astro check
+
+  json-validation:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate JSON syntax
+        run: |
+          echo "Validating JSON syntax..."
+          find src -name "*.json" -type f | while read file; do
+            if ! jq empty "$file" 2>/dev/null; then
+              echo "❌ Invalid JSON: $file"
+              exit 1
+            fi
+          done
+          echo "✅ All JSON files have valid syntax"
+
+      - name: Validate template index against schema
+        run: |
+          echo "Validating template index files against schema..."
+          SCHEMA_PATH="../templates/index.schema.json"
+          if [ ! -f "$SCHEMA_PATH" ]; then
+            echo "⚠️ Schema not found at $SCHEMA_PATH, skipping schema validation"
+            exit 0
+          fi
+          pnpm exec ajv validate -s "$SCHEMA_PATH" -d "../templates/index.json" --strict=false
+          echo "✅ index.json validates against schema"
+          # Validate localized index files
+          for locale_file in ../templates/index.*.json; do
+            if [[ "$locale_file" != *"schema"* ]]; then
+              echo "Validating $locale_file..."
+              pnpm exec ajv validate -s "$SCHEMA_PATH" -d "$locale_file" --strict=false
+            fi
+          done
+          echo "✅ All template index files validate against schema"
+
+      - name: Validate i18n config consistency
+        run: |
+          echo "Checking i18n locale consistency..."
+          # Extract locales from config.ts
+          CONFIG_LOCALES=$(grep -oP "(?<=code: ')[^']+(?=')" src/i18n/config.ts | sort)
+          # Check ui.ts has all locales
+          UI_LOCALES=$(grep -oP "^\s+[a-z]{2}(-[A-Z]{2})?:" src/i18n/ui.ts | tr -d ' :' | sort)
+
+          if [ "$CONFIG_LOCALES" != "$UI_LOCALES" ]; then
+            echo "❌ Locale mismatch between config.ts and ui.ts"
+            echo "config.ts: $CONFIG_LOCALES"
+            echo "ui.ts: $UI_LOCALES"
+            exit 1
+          fi
+          echo "✅ Locale configuration consistent"

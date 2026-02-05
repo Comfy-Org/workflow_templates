@@ -2,33 +2,42 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import TemplateCard from '../../components/TemplateCard.astro';
+import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
 
+const locale = getLocaleFromPath(Astro.url.pathname);
 const templates = await getCollection('templates');
-const sortedTemplates = templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+const sortedTemplates = templates
+  .filter((tmpl) => !tmpl.id.includes('/'))
+  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+
+const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
+const canonicalUrl = `${siteUrl}${localizeUrl('/templates/', locale)}`;
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: 'ComfyUI Workflow Templates',
-  description: 'Browse free, ready-to-use ComfyUI workflow templates for image generation, video creation, audio synthesis, and more.',
-  url: 'https://templates.comfy.org/templates/',
+  name: t('meta.title', locale),
+  description: t('meta.description', locale),
+  url: canonicalUrl,
 };
 ---
 
 <BaseLayout
-  title="ComfyUI Workflow Templates - Free AI Generation Workflows"
-  description="Browse free, ready-to-use ComfyUI workflow templates for image generation, video creation, audio synthesis, and more."
+  title={`${t('meta.title', locale)} - Free AI Generation Workflows`}
+  description={t('meta.description', locale)}
+  canonicalUrl={canonicalUrl}
+  ogImage="/og-default.svg"
   structuredData={structuredData}
 >
   <div class="max-w-6xl mx-auto px-4 py-12">
     <!-- Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
-        Workflow Templates
+        {t('nav.templates', locale)}
       </h1>
       <p class="text-xl text-gray-600 max-w-2xl mx-auto">
-        Ready-to-use ComfyUI workflows for AI image generation, video creation, and more. 
-        Click any template to learn more and run it instantly.
+        {t('meta.description', locale)}
       </p>
     </div>
 
@@ -36,27 +45,31 @@ const structuredData = {
     <div class="flex justify-center gap-8 mb-12 text-sm text-gray-500">
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-green-500 rounded-full"></span>
-        {sortedTemplates.length} templates
+        {sortedTemplates.length}
+        {t('template.count', locale)}
       </span>
-      <span>Updated daily</span>
+      <span>{t('template.updated', locale)}</span>
     </div>
 
     <!-- Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {sortedTemplates.map((template) => (
-        <TemplateCard
-          name={template.data.name}
-          title={template.data.title || template.data.name}
-          description={template.data.description}
-          mediaType={template.data.mediaType}
-          mediaSubtype={template.data.mediaSubtype}
-          thumbnailVariant={template.data.thumbnailVariant}
-          tags={template.data.tags}
-          models={template.data.models}
-          usage={template.data.usage}
-          thumbnails={template.data.thumbnails}
-        />
-      ))}
+      {
+        sortedTemplates.map((template) => (
+          <TemplateCard
+            name={template.data.name}
+            title={template.data.title || template.data.name}
+            description={template.data.description}
+            mediaType={template.data.mediaType}
+            mediaSubtype={template.data.mediaSubtype}
+            thumbnailVariant={template.data.thumbnailVariant}
+            tags={template.data.tags}
+            models={template.data.models}
+            usage={template.data.usage}
+            thumbnails={template.data.thumbnails}
+            locale={locale}
+          />
+        ))
+      }
     </div>
   </div>
 </BaseLayout>
