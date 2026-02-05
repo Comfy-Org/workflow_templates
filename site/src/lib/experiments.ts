@@ -20,12 +20,10 @@ export interface ExperimentConfig {
 }
 
 /**
- * Extended Window interface for analytics globals
+ * Types for analytics globals (inline to avoid Window extension conflicts)
  */
-interface WindowWithAnalytics extends Window {
-  va?: (command: string, payload: Record<string, unknown>) => void;
-  gtag?: (command: string, event: string, params: Record<string, unknown>) => void;
-}
+type VaFunction = (command: string, payload: Record<string, unknown>) => void;
+type GtagFunction = (command: string, event: string, params: Record<string, unknown>) => void;
 
 const COOKIE_PREFIX = 'exp_';
 const COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 days
@@ -223,11 +221,12 @@ export function getVariantSync(experimentId: string, fallbackConfig: Experiment)
 export function trackExposure(experimentId: string, variant: string): void {
   if (typeof window === 'undefined') return;
 
-  const w = window as WindowWithAnalytics;
+  const va = (window as { va?: VaFunction }).va;
+  const gtag = (window as { gtag?: GtagFunction }).gtag;
 
   // Track via Vercel Analytics custom event
-  if (w.va) {
-    w.va('event', {
+  if (va) {
+    va('event', {
       name: 'experiment_exposure',
       data: {
         experiment_id: experimentId,
@@ -237,8 +236,8 @@ export function trackExposure(experimentId: string, variant: string): void {
   }
 
   // Also track via web-vitals attribution if available
-  if (w.gtag) {
-    w.gtag('event', 'experiment_exposure', {
+  if (gtag) {
+    gtag('event', 'experiment_exposure', {
       experiment_id: experimentId,
       variant: variant,
     });
@@ -254,10 +253,10 @@ export function trackConversion(experimentId: string, conversionType: string): v
   const variant = getVariantFromCookie(experimentId);
   if (!variant) return;
 
-  const w = window as WindowWithAnalytics;
+  const va = (window as { va?: VaFunction }).va;
 
-  if (w.va) {
-    w.va('event', {
+  if (va) {
+    va('event', {
       name: 'experiment_conversion',
       data: {
         experiment_id: experimentId,
