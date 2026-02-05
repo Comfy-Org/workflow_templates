@@ -7,7 +7,26 @@ import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 
-const DOCS_TUTORIALS_DIR = '/home/cbyrne/worktrees/docs/main/tutorials';
+// Try to find docs repo at common paths
+const POSSIBLE_DOCS_PATHS = [
+  // Worktree setup
+  '/home/cbyrne/worktrees/docs/main/tutorials',
+  // Adjacent repo setup
+  '../../../docs/tutorials',
+  '../../docs/tutorials',
+  // CI will typically not have docs repo
+];
+
+function findDocsTutorialsDir(): string | null {
+  for (const p of POSSIBLE_DOCS_PATHS) {
+    if (existsSync(p)) {
+      return p;
+    }
+  }
+  return null;
+}
+
+const DOCS_TUTORIALS_DIR = findDocsTutorialsDir();
 const KNOWLEDGE_TUTORIALS_DIR = 'knowledge/tutorials';
 const KNOWLEDGE_EXAMPLES_DIR = 'knowledge/examples';
 
@@ -138,10 +157,19 @@ function cleanMdxContent(content: string): string {
 async function syncTutorials(): Promise<void> {
   console.log('📚 Syncing tutorials from docs repo...\n');
 
+  if (!DOCS_TUTORIALS_DIR) {
+    console.log('⏭️  Skipping tutorial sync: docs repo not found at any expected path.');
+    console.log('   This is normal in CI. Tutorial knowledge is optional for AI generation.');
+    console.log('   Expected paths checked:');
+    for (const p of POSSIBLE_DOCS_PATHS) {
+      console.log(`   - ${p}`);
+    }
+    return;
+  }
+
   if (!existsSync(DOCS_TUTORIALS_DIR)) {
-    console.error(`❌ Docs tutorials directory not found: ${DOCS_TUTORIALS_DIR}`);
-    console.error('   Make sure the docs repo is available at the expected path.');
-    process.exit(1);
+    console.log('⏭️  Skipping tutorial sync: docs tutorials directory not accessible.');
+    return;
   }
 
   await mkdir(KNOWLEDGE_TUTORIALS_DIR, { recursive: true });
