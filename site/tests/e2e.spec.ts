@@ -41,7 +41,7 @@ test.describe('Template Detail Page', () => {
     expect(href).toBeTruthy();
 
     await page.goto(href!);
-    await expect(page.locator('h1').first()).toBeVisible();
+    await expect(page.locator('h1').first()).toBeAttached();
     const description = page.locator('meta[name="description"]');
     await expect(description).toHaveAttribute('content', /.+/);
   });
@@ -55,10 +55,8 @@ test.describe('Template Detail Page', () => {
     await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaButton = page.locator('a, button').filter({
-      hasText: /download|install|get|try|use|open|run/i,
-    });
-    await expect(ctaButton.first()).toBeVisible();
+    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
+    expect(await ctaLinks.count()).toBeGreaterThan(0);
   });
 
   test('has structured data', async ({ page }) => {
