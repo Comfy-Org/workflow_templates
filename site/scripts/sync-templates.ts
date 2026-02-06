@@ -79,6 +79,12 @@ const TEMPLATES_DIR = path.join(SITE_DIR, '..', 'templates');
 const CONTENT_DIR = path.join(SITE_DIR, 'src', 'content', 'templates');
 const THUMBNAILS_DIR = path.join(SITE_DIR, 'public', 'thumbnails');
 const WORKFLOWS_DIR = path.join(SITE_DIR, 'public', 'workflows');
+const LOGOS_SRC_DIR = path.join(TEMPLATES_DIR, 'logo');
+const LOGOS_DEST_DIR = path.join(SITE_DIR, 'public', 'logos');
+
+const LOGO_FILENAME_FIXES: Record<string, string> = {
+  'recarft.png': 'recraft.png',
+};
 
 const ASSET_EXTENSIONS = ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.mp3', '.mp4', '.webm'];
 
@@ -335,6 +341,30 @@ function ensureDirectories(locales: string[]): void {
   if (!fs.existsSync(WORKFLOWS_DIR)) {
     fs.mkdirSync(WORKFLOWS_DIR, { recursive: true });
   }
+
+  if (!fs.existsSync(LOGOS_DEST_DIR)) {
+    fs.mkdirSync(LOGOS_DEST_DIR, { recursive: true });
+  }
+}
+
+function syncLogos(): number {
+  if (!fs.existsSync(LOGOS_SRC_DIR)) {
+    console.warn('  Warning: logos source directory not found, skipping logo sync');
+    return 0;
+  }
+
+  let count = 0;
+  for (const file of fs.readdirSync(LOGOS_SRC_DIR)) {
+    if (!file.endsWith('.png') && !file.endsWith('.svg')) continue;
+    const src = path.join(LOGOS_SRC_DIR, file);
+    const destName = LOGO_FILENAME_FIXES[file] || file;
+    const dest = path.join(LOGOS_DEST_DIR, destName);
+    if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
+      fs.copyFileSync(src, dest);
+      count++;
+    }
+  }
+  return count;
 }
 
 function printHelp(): void {
@@ -522,10 +552,16 @@ function main(): void {
     }
   }
 
+  // Sync provider logos from templates/logo/
+  const logosSynced = syncLogos();
+
   console.log(`\n=== Sync complete ===`);
   console.log(`Total: ${syncedCount} template files synced`);
   for (const [locale, count] of Object.entries(stats)) {
     console.log(`  ${locale}: ${count}`);
+  }
+  if (logosSynced > 0) {
+    console.log(`Synced ${logosSynced} logos`);
   }
   if (orphansRemoved > 0) {
     console.log(`Removed ${orphansRemoved} orphan content files`);
