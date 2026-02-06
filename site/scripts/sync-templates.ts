@@ -121,9 +121,7 @@ function getTopByUsage(templates: TemplateInfo[], limit?: number): TemplateInfo[
 
 function findThumbnails(templateName: string): string[] {
   const extPattern = ASSET_EXTENSIONS.map((e) => escapeRegExp(e)).join('|');
-  const pattern = new RegExp(
-    `^${escapeRegExp(templateName)}-\\d+(${extPattern})$`
-  );
+  const pattern = new RegExp(`^${escapeRegExp(templateName)}-\\d+(${extPattern})$`);
   const files = fs.readdirSync(TEMPLATES_DIR);
   return files
     .filter((file) => pattern.test(file))
@@ -184,9 +182,7 @@ function createSyncedTemplate(template: TemplateInfo, locale: string): SyncedTem
 
 function copyThumbnails(templateName: string): void {
   const extPattern = ASSET_EXTENSIONS.map((e) => escapeRegExp(e)).join('|');
-  const pattern = new RegExp(
-    `^${escapeRegExp(templateName)}-\\d+(${extPattern})$`
-  );
+  const pattern = new RegExp(`^${escapeRegExp(templateName)}-\\d+(${extPattern})$`);
 
   const files = fs.readdirSync(TEMPLATES_DIR);
   for (const file of files) {

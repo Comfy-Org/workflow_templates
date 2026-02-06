@@ -10,7 +10,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'LAST UPDATE',
     'labels.categories': 'CATEGORIES',
     'cta.tryCloud': 'Try on Comfy Cloud',
-    'labels.workflowPreviewNote': 'This is a simplified visualization. The actual workflow may contain additional nodes and connections.',
+    'labels.workflowPreviewNote':
+      'This is a simplified visualization. The actual workflow may contain additional nodes and connections.',
     'labels.nodeUses': 'Uses',
     'meta.title': 'ComfyUI Workflow Templates',
     'meta.description': 'Browse free, ready-to-use ComfyUI workflow templates',
@@ -148,7 +149,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': '最終更新',
     'labels.categories': 'カテゴリー',
     'cta.tryCloud': 'Comfy Cloudで試す',
-    'labels.workflowPreviewNote': 'これは簡略化された視覚化です。実際のワークフローには追加のノードと接続が含まれる場合があります。',
+    'labels.workflowPreviewNote':
+      'これは簡略化された視覚化です。実際のワークフローには追加のノードと接続が含まれる場合があります。',
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI ワークフローテンプレート',
     'meta.description': '無料で使える ComfyUI ワークフローテンプレート',
@@ -194,7 +196,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': '최종 업데이트',
     'labels.categories': '카테고리',
     'cta.tryCloud': 'Comfy Cloud에서 사용해보기',
-    'labels.workflowPreviewNote': '이것은 간소화된 시각화입니다. 실제 워크플로우에는 추가 노드와 연결이 포함될 수 있습니다.',
+    'labels.workflowPreviewNote':
+      '이것은 간소화된 시각화입니다. 실제 워크플로우에는 추가 노드와 연결이 포함될 수 있습니다.',
     'labels.nodeUses': '사용',
     'meta.title': 'ComfyUI 워크플로우 템플릿',
     'meta.description': '무료로 사용 가능한 ComfyUI 워크플로우 템플릿',
@@ -240,7 +243,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'ÚLTIMA ACTUALIZACIÓN',
     'labels.categories': 'CATEGORÍAS',
     'cta.tryCloud': 'Probar en Comfy Cloud',
-    'labels.workflowPreviewNote': 'Esta es una visualización simplificada. El workflow real puede contener nodos y conexiones adicionales.',
+    'labels.workflowPreviewNote':
+      'Esta es una visualización simplificada. El workflow real puede contener nodos y conexiones adicionales.',
     'labels.nodeUses': 'Usa',
     'meta.title': 'Plantillas de ComfyUI',
     'meta.description': 'Explora plantillas gratuitas de ComfyUI',
@@ -286,7 +290,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'DERNIÈRE MISE À JOUR',
     'labels.categories': 'CATÉGORIES',
     'cta.tryCloud': 'Essayer sur Comfy Cloud',
-    'labels.workflowPreviewNote': 'Ceci est une visualisation simplifiée. Le workflow réel peut contenir des nœuds et connexions supplémentaires.',
+    'labels.workflowPreviewNote':
+      'Ceci est une visualisation simplifiée. Le workflow réel peut contenir des nœuds et connexions supplémentaires.',
     'labels.nodeUses': 'Utilise',
     'meta.title': 'Modèles ComfyUI',
     'meta.description': 'Parcourez les modèles ComfyUI gratuits',
@@ -332,7 +337,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ',
     'labels.categories': 'КАТЕГОРИИ',
     'cta.tryCloud': 'Попробовать в Comfy Cloud',
-    'labels.workflowPreviewNote': 'Это упрощённая визуализация. Фактический воркфлоу может содержать дополнительные узлы и связи.',
+    'labels.workflowPreviewNote':
+      'Это упрощённая визуализация. Фактический воркфлоу может содержать дополнительные узлы и связи.',
     'labels.nodeUses': 'Использует',
     'meta.title': 'Шаблоны ComfyUI',
     'meta.description': 'Бесплатные шаблоны ComfyUI',
@@ -378,7 +384,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'SON GÜNCELLEME',
     'labels.categories': 'KATEGORİLER',
     'cta.tryCloud': "Comfy Cloud'da Dene",
-    'labels.workflowPreviewNote': 'Bu basitleştirilmiş bir görselleştirmedir. Gerçek iş akışı ek düğümler ve bağlantılar içerebilir.',
+    'labels.workflowPreviewNote':
+      'Bu basitleştirilmiş bir görselleştirmedir. Gerçek iş akışı ek düğümler ve bağlantılar içerebilir.',
     'labels.nodeUses': 'Kullanır',
     'meta.title': 'ComfyUI Şablonları',
     'meta.description': 'Ücretsiz ComfyUI şablonlarına göz atın',
@@ -424,7 +431,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'آخر تحديث',
     'labels.categories': 'الفئات',
     'cta.tryCloud': 'جرب على Comfy Cloud',
-    'labels.workflowPreviewNote': 'هذا تصور مبسط. قد يحتوي سير العمل الفعلي على عقد واتصالات إضافية.',
+    'labels.workflowPreviewNote':
+      'هذا تصور مبسط. قد يحتوي سير العمل الفعلي على عقد واتصالات إضافية.',
     'labels.nodeUses': 'يستخدم',
     'meta.title': 'قوالب ComfyUI',
     'meta.description': 'تصفح قوالب ComfyUI المجانية',
@@ -470,7 +478,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'ÚLTIMA ATUALIZAÇÃO',
     'labels.categories': 'CATEGORIAS',
     'cta.tryCloud': 'Experimentar no Comfy Cloud',
-    'labels.workflowPreviewNote': 'Esta é uma visualização simplificada. O workflow real pode conter nós e conexões adicionais.',
+    'labels.workflowPreviewNote':
+      'Esta é uma visualização simplificada. O workflow real pode conter nós e conexões adicionais.',
     'labels.nodeUses': 'Usa',
     'meta.title': 'Templates ComfyUI',
     'meta.description': 'Explore templates gratuitos do ComfyUI',
