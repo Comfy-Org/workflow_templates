@@ -118,6 +118,33 @@
         "version": {
           "type": "string",
           "description": "Version from definitions.subgraphs[0].version"
+        },
+        "includeOnDistributions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["cloud", "localhost", "desktop"]
+          },
+          "description": "Distributions on which the blueprint is included. If omitted, the blueprint is included on all distributions."
+        },
+        "fileByDistribution": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "cloud": {
+              "type": "string",
+              "description": "Filename override for cloud distribution"
+            },
+            "localhost": {
+              "type": "string",
+              "description": "Filename override for localhost distribution"
+            },
+            "desktop": {
+              "type": "string",
+              "description": "Filename override for desktop distribution"
+            }
+          },
+          "description": "Per-distribution filename overrides. If absent, or if a key is missing, defaults to {name}.json"
         }
       },
       "additionalProperties": false
