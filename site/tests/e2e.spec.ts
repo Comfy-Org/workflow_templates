@@ -41,7 +41,7 @@ test.describe('Template Detail Page', () => {
     expect(href).toBeTruthy();
 
     await page.goto(href!);
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeVisible();
     const description = page.locator('meta[name="description"]');
     await expect(description).toHaveAttribute('content', /.+/);
   });
@@ -179,7 +179,7 @@ test.describe('UTM Parameter Tracking', () => {
     await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaLinks = page.locator('a[href*="comfy.org/get-started"]');
+    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
@@ -210,7 +210,7 @@ test.describe('UTM Parameter Tracking', () => {
     const slug = currentUrl.split('/templates/')[1]?.replace(/\/$/, '');
     expect(slug).toBeTruthy();
 
-    const ctaLinks = page.locator('a[href*="comfy.org/get-started"]');
+    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 

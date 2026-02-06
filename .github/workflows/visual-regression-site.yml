@@ -71,11 +71,8 @@ jobs:
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ No baseline snapshots found. Run 'pnpm run test:visual:update' locally and commit the snapshots." >> $GITHUB_STEP_SUMMARY
           fi
-
-      - name: Generate baseline snapshots (first run)
-        if: steps.snapshots.outputs.exists == 'false'
-        run: pnpm run test:visual:update
 
       - name: Run visual regression tests
         if: steps.snapshots.outputs.exists == 'true'
