@@ -64,7 +64,21 @@ jobs:
         env:
           SKIP_AI_GENERATION: 'true'
 
+      - name: Check if snapshots exist
+        id: snapshots
+        run: |
+          if [ -d "tests/visual.spec.ts-snapshots" ] && [ "$(ls tests/visual.spec.ts-snapshots/*.png 2>/dev/null | wc -l)" -gt 0 ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate baseline snapshots (first run)
+        if: steps.snapshots.outputs.exists == 'false'
+        run: pnpm run test:visual:update
+
       - name: Run visual regression tests
+        if: steps.snapshots.outputs.exists == 'true'
         run: pnpm run test:visual
 
       - name: Upload screenshot diffs
