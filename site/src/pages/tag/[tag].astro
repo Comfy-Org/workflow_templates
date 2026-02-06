@@ -5,17 +5,10 @@ import TemplateCard from '../../components/TemplateCard.astro';
 import HreflangTags from '../../components/HreflangTags.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
+import { slugify } from '../../lib/slugify';
 
 export async function getStaticPaths() {
-  // Define slugify inside getStaticPaths to ensure it's available during Astro's production build
-  function slugify(tag: string): string {
-    return tag
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '');
-  }
-
-  const templates = await getCollection('templates');
+  const templates = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
 
   const tagMap = new Map<
     string,
@@ -96,6 +89,7 @@ const breadcrumbStructuredData = {
   canonicalUrl={canonicalUrl}
   ogImage="/og-default.svg"
   structuredData={structuredData}
+  theme="dark"
 >
   <HreflangTags basePath={basePath} slot="head" />
   <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} />
@@ -103,20 +97,21 @@ const breadcrumbStructuredData = {
   <div class="max-w-6xl mx-auto px-4 py-12">
     <!-- Breadcrumb -->
     <nav class="mb-8">
-      <ol class="flex items-center gap-2 text-sm text-gray-500">
+      <ol class="flex items-center gap-2 text-sm text-white/50">
         <li>
-          <a href={localizeUrl('/', locale)} class="hover:text-indigo-600 transition-colors">Home</a
+          <a href={localizeUrl('/', locale)} data-astro-prefetch class="hover:text-white transition-colors">Home</a
           >
         </li>
         <li><span class="mx-1">/</span></li>
         <li>
           <a
             href={localizeUrl('/templates/', locale)}
-            class="hover:text-indigo-600 transition-colors">{t('nav.templates', locale)}</a
+            data-astro-prefetch
+            class="hover:text-white transition-colors">{t('nav.templates', locale)}</a
           >
         </li>
         <li><span class="mx-1">/</span></li>
-        <li class="text-gray-900 font-medium">{tagName}</li>
+        <li class="text-white font-medium">{tagName}</li>
       </ol>
     </nav>
 
@@ -135,10 +130,10 @@ const breadcrumbStructuredData = {
         </svg>
         Tag
       </div>
-      <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+      <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
         {tagName}
       </h1>
-      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+      <p class="text-xl text-white/70 max-w-2xl mx-auto">
         {templates.length} workflow{templates.length !== 1 ? 's' : ''} tagged with "{tagName}"
       </p>
     </div>
@@ -157,6 +152,7 @@ const breadcrumbStructuredData = {
             tags={template.data.tags}
             models={template.data.models}
             usage={template.data.usage}
+            date={template.data.date}
             thumbnails={template.data.thumbnails}
             locale={locale}
           />
@@ -168,7 +164,8 @@ const breadcrumbStructuredData = {
     <div class="mt-12 text-center">
       <a
         href={localizeUrl('/templates/', locale)}
-        class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+        data-astro-prefetch
+        class="inline-flex items-center gap-2 text-white/40 hover:text-white font-medium transition-colors"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path

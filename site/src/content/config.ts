@@ -49,6 +49,18 @@ const templateSchema = z.object({
   // Generated assets
   workflowPreviewPath: z.string().optional(),
 
+  // Logos
+  logos: z
+    .array(
+      z.object({
+        provider: z.union([z.string(), z.array(z.string())]),
+      })
+    )
+    .optional(),
+
+  // Search ranking
+  searchRank: z.number().optional(),
+
   // Override tracking
   humanEdited: z.boolean().default(false),
   lastAIGeneration: z.string().optional(),

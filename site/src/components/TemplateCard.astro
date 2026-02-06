@@ -13,6 +13,7 @@ interface Props {
   tags?: string[];
   models?: string[];
   usage?: number;
+  date?: string;
   thumbnails?: string[];
   locale?: Locale;
 }
@@ -26,6 +27,7 @@ const {
   thumbnailVariant,
   tags = [],
   usage,
+  date,
   thumbnails = [],
   locale = DEFAULT_LOCALE,
 } = Astro.props;
@@ -42,21 +44,28 @@ const mediaTypeConfig: Record<string, { label: string; color: string }> = {
 
 const config = mediaTypeConfig[mediaType] || { label: mediaType, color: 'bg-gray-500' };
 
-const formatUsage = (count: number): string => {
-  if (count >= 1000) {
-    return `${(count / 1000).toFixed(1)}k`;
-  }
-  return count.toString();
+const getPopularity = (count: number, dateStr?: string): { label: string; icon: boolean } => {
+  const ageDays = dateStr
+    ? Math.max(1, (Date.now() - new Date(dateStr).getTime()) / 86_400_000)
+    : 90;
+  const velocity = count / ageDays;
+
+  if (count >= 5000 || velocity >= 50) return { label: 'Very Popular', icon: true };
+  if (count >= 500 || velocity >= 10) return { label: 'Popular', icon: true };
+  if (velocity >= 3 || (ageDays <= 30 && count >= 50)) return { label: 'Trending', icon: true };
+  return { label: '', icon: false };
 };
+
+const popularity = usage !== undefined ? getPopularity(usage, date) : null;
 ---
 
 <a
   href={templateUrl}
-  class="group block bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:border-gray-300 transition-all duration-200"
+  class="group block bg-white/5 rounded-xl border border-white/10 overflow-hidden hover:border-white/20 transition-all duration-200"
   data-astro-prefetch
 >
   <!-- Thumbnail -->
-  <div class="aspect-video bg-gray-100 relative">
+  <div class="aspect-video bg-white/5 relative">
     {
       thumbnails.length > 0 ? (
         <ThumbnailDisplay
@@ -67,8 +76,10 @@ const formatUsage = (count: number): string => {
           class="w-full h-full"
         />
       ) : (
-        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-indigo-100 to-purple-100">
-          <span class="text-4xl text-indigo-300">🎨</span>
+        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+          <svg class="w-10 h-10 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+          </svg>
         </div>
       )
     }
@@ -84,20 +95,20 @@ const formatUsage = (count: number): string => {
   <!-- Content -->
   <div class="p-4">
     <h3
-      class="font-semibold text-gray-900 mb-1 line-clamp-1 group-hover:text-indigo-600 transition-colors"
+      class="font-semibold text-white mb-1 line-clamp-1 group-hover:text-[#F0FF41] transition-colors"
     >
       {title}
     </h3>
 
-    <p class="text-sm text-gray-600 line-clamp-2 mb-3">
+    <p class="text-sm text-white/60 line-clamp-2 mb-3">
       {description}
     </p>
 
     <!-- Meta -->
-    <div class="flex items-center justify-between text-xs text-gray-500">
+    <div class="flex items-center justify-between text-xs text-white/40">
       <div class="flex items-center gap-2">
         {
-          usage !== undefined && (
+          popularity?.label && (
             <span class="flex items-center gap-1">
               <svg
                 class="w-3.5 h-3.5"
@@ -113,7 +124,7 @@ const formatUsage = (count: number): string => {
                   d="M13 10V3L4 14h7v7l9-11h-7z"
                 />
               </svg>
-              {formatUsage(usage)} runs
+              {popularity.label}
             </span>
           )
         }
@@ -121,7 +132,7 @@ const formatUsage = (count: number): string => {
 
       {
         tags.length > 0 && (
-          <span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded">{tags[0]}</span>
+          <span class="px-2 py-0.5 bg-white/10 text-white/60 rounded">{tags[0]}</span>
         )
       }
     </div>

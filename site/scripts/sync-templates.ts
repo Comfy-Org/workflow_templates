@@ -80,6 +80,8 @@ const CONTENT_DIR = path.join(SITE_DIR, 'src', 'content', 'templates');
 const THUMBNAILS_DIR = path.join(SITE_DIR, 'public', 'thumbnails');
 const WORKFLOWS_DIR = path.join(SITE_DIR, 'public', 'workflows');
 
+const ASSET_EXTENSIONS = ['.webp', '.png', '.jpg', '.jpeg', '.gif', '.mp3', '.mp4', '.webm'];
+
 function loadTemplateIndex(locale: string): TemplateCategory[] | null {
   const filename = LOCALE_INDEX_FILES[locale];
   if (!filename) return null;
@@ -112,13 +114,16 @@ function getTopByUsage(templates: TemplateInfo[], limit?: number): TemplateInfo[
 }
 
 function findThumbnails(templateName: string): string[] {
-  const pattern = new RegExp(`^${escapeRegExp(templateName)}-\\d+\\.webp$`);
+  const extPattern = ASSET_EXTENSIONS.map((e) => escapeRegExp(e)).join('|');
+  const pattern = new RegExp(
+    `^${escapeRegExp(templateName)}-\\d+(${extPattern})$`
+  );
   const files = fs.readdirSync(TEMPLATES_DIR);
   return files
     .filter((file) => pattern.test(file))
     .sort((a, b) => {
-      const numA = parseInt(a.match(/-(\d+)\.webp$/)?.[1] || '0');
-      const numB = parseInt(b.match(/-(\d+)\.webp$/)?.[1] || '0');
+      const numA = parseInt(a.match(/-(\d+)\./)?.[1] || '0');
+      const numB = parseInt(b.match(/-(\d+)\./)?.[1] || '0');
       return numA - numB;
     });
 }
@@ -172,14 +177,16 @@ function createSyncedTemplate(template: TemplateInfo, locale: string): SyncedTem
 }
 
 function copyThumbnails(templateName: string): void {
-  const pattern = new RegExp(`^${escapeRegExp(templateName)}-\\d+\\.webp$`);
+  const extPattern = ASSET_EXTENSIONS.map((e) => escapeRegExp(e)).join('|');
+  const pattern = new RegExp(
+    `^${escapeRegExp(templateName)}-\\d+(${extPattern})$`
+  );
 
   const files = fs.readdirSync(TEMPLATES_DIR);
   for (const file of files) {
     if (pattern.test(file)) {
       const src = path.join(TEMPLATES_DIR, file);
       const dest = path.join(THUMBNAILS_DIR, file);
-      // Only copy if source is newer or dest doesn't exist
       if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
         fs.copyFileSync(src, dest);
       }
@@ -482,10 +489,49 @@ function main(): void {
     console.log(`  Synced ${stats[locale]} templates for ${locale}`);
   }
 
+  // Clean up orphan content JSONs not in index.json
+  const allIndexNames = new Set(allEnTemplates.map((t) => t.name));
+  let orphansRemoved = 0;
+
+  for (const locale of locales) {
+    const dir = locale === DEFAULT_LOCALE ? CONTENT_DIR : path.join(CONTENT_DIR, locale);
+    if (!fs.existsSync(dir)) continue;
+
+    for (const file of fs.readdirSync(dir)) {
+      if (!file.endsWith('.json')) continue;
+      const name = file.replace(/\.json$/, '');
+      if (!allIndexNames.has(name)) {
+        const filePath = path.join(dir, file);
+        fs.unlinkSync(filePath);
+        console.log(`  Removed orphan: ${locale === DEFAULT_LOCALE ? '' : locale + '/'}${file}`);
+        orphansRemoved++;
+      }
+    }
+  }
+
+  // Clean up orphan thumbnails not belonging to any indexed template
+  let orphanThumbsRemoved = 0;
+  if (fs.existsSync(THUMBNAILS_DIR)) {
+    for (const file of fs.readdirSync(THUMBNAILS_DIR)) {
+      const match = file.match(/^(.+)-\d+\.\w+$/);
+      if (match && !allIndexNames.has(match[1])) {
+        fs.unlinkSync(path.join(THUMBNAILS_DIR, file));
+        console.log(`  Removed orphan thumbnail: ${file}`);
+        orphanThumbsRemoved++;
+      }
+    }
+  }
+
   console.log(`\n=== Sync complete ===`);
   console.log(`Total: ${syncedCount} template files synced`);
   for (const [locale, count] of Object.entries(stats)) {
     console.log(`  ${locale}: ${count}`);
+  }
+  if (orphansRemoved > 0) {
+    console.log(`Removed ${orphansRemoved} orphan content files`);
+  }
+  if (orphanThumbsRemoved > 0) {
+    console.log(`Removed ${orphanThumbsRemoved} orphan thumbnails`);
   }
   console.log(`Content dir: ${CONTENT_DIR}`);
   console.log(`Thumbnails dir: ${THUMBNAILS_DIR}`);
