@@ -4,38 +4,38 @@
 
 ### 1.1 Available Source Data
 
-| Source | Location | Contents |
-|--------|----------|----------|
-| Template Index | `templates/index.json` | Categories, template metadata |
-| Workflow JSON | `templates/{name}.json` | Node graph, model requirements, embedded docs |
-| Thumbnails | `templates/{name}-{n}.webp` | Input/output previews |
-| Bundle Map | `bundles.json` | Template → package assignment |
-| Localized Index | `templates/index.{lang}.json` | 12 language variants (Milestone 2+) |
+| Source          | Location                      | Contents                                      |
+| --------------- | ----------------------------- | --------------------------------------------- |
+| Template Index  | `templates/index.json`        | Categories, template metadata                 |
+| Workflow JSON   | `templates/{name}.json`       | Node graph, model requirements, embedded docs |
+| Thumbnails      | `templates/{name}-{n}.webp`   | Input/output previews                         |
+| Bundle Map      | `bundles.json`                | Template → package assignment                 |
+| Localized Index | `templates/index.{lang}.json` | 12 language variants (Milestone 2+)           |
 
 ### 1.2 Template Metadata Schema
 
 ```typescript
 interface TemplateInfo {
   // Identity
-  name: string;                    // "templates-2x2_grid-iso_miniatures"
-  title?: string;                  // "Isometric Miniatures from a Selfie"
-  description: string;             // Brief description (1-2 sentences)
-  
+  name: string; // "templates-2x2_grid-iso_miniatures"
+  title?: string; // "Isometric Miniatures from a Selfie"
+  description: string; // Brief description (1-2 sentences)
+
   // Classification
   mediaType: 'image' | 'video' | 'audio' | '3d';
-  tags?: string[];                 // ["Portrait", "API", "Character"]
-  models?: string[];               // ["Nano Banana Pro", "Flux", "Qwen-Image-Edit"]
-  
+  tags?: string[]; // ["Portrait", "API", "Character"]
+  models?: string[]; // ["Nano Banana Pro", "Flux", "Qwen-Image-Edit"]
+
   // Metadata
-  date?: string;                   // "2026-01-19"
-  openSource?: boolean;            // true = runs locally, false = uses cloud APIs
-  requiresCustomNodes?: string[];  // ["comfyui-kjnodes"]
-  tutorialUrl?: string;            // Link to docs.comfy.org
-  
+  date?: string; // "2026-01-19"
+  openSource?: boolean; // true = runs locally, false = uses cloud APIs
+  requiresCustomNodes?: string[]; // ["comfyui-kjnodes"]
+  tutorialUrl?: string; // Link to docs.comfy.org
+
   // Stats
-  usage?: number;                  // Cloud usage count (for top 50 filtering)
-  size?: number;                   // Total model size (bytes)
-  vram?: number;                   // VRAM requirement (bytes)
+  usage?: number; // Cloud usage count (for top 50 filtering)
+  size?: number; // Total model size (bytes)
+  vram?: number; // VRAM requirement (bytes)
 }
 ```
 
@@ -43,26 +43,27 @@ interface TemplateInfo {
 
 ### 1.3 Data → SEO Feature Mapping
 
-| SEO Element | Source Data | Transformation |
-|-------------|-------------|----------------|
-| **Page Title** | `title \|\| name` | `{title} - ComfyUI Workflow Template` |
-| **H1** | `title` | Direct use, unique per page |
-| **H2 (How-to)** | `title + tags` | `How to {action} with {model} in ComfyUI` |
-| **H2 (Guide)** | Generated | `Step-by-Step Guide: {task}` |
-| **Meta Description** | AI-generated | 150-160 chars from template data |
-| **URL Slug** | `name` | `/templates/{name}/` |
-| **Open Graph Image** | `{name}-1.webp` | Primary output thumbnail |
-| **Structured Data** | Multiple fields | SoftwareApplication schema |
-| **Keywords** | `tags + models` | Natural inclusion in body text |
-| **Internal Links** | `tags`, `models`, category | Links to aggregation pages |
-| **Last Modified** | `date` | Sitemap `<lastmod>` |
-| **FAQ Schema** | AI-generated | "How to..." questions for PAA boxes |
+| SEO Element          | Source Data                | Transformation                            |
+| -------------------- | -------------------------- | ----------------------------------------- |
+| **Page Title**       | `title \|\| name`          | `{title} - ComfyUI Workflow Template`     |
+| **H1**               | `title`                    | Direct use, unique per page               |
+| **H2 (How-to)**      | `title + tags`             | `How to {action} with {model} in ComfyUI` |
+| **H2 (Guide)**       | Generated                  | `Step-by-Step Guide: {task}`              |
+| **Meta Description** | AI-generated               | 150-160 chars from template data          |
+| **URL Slug**         | `name`                     | `/templates/{name}/`                      |
+| **Open Graph Image** | `{name}-1.webp`            | Primary output thumbnail                  |
+| **Structured Data**  | Multiple fields            | SoftwareApplication schema                |
+| **Keywords**         | `tags + models`            | Natural inclusion in body text            |
+| **Internal Links**   | `tags`, `models`, category | Links to aggregation pages                |
+| **Last Modified**    | `date`                     | Sitemap `<lastmod>`                       |
+| **FAQ Schema**       | AI-generated               | "How to..." questions for PAA boxes       |
 
 ### 1.4 SEO Keyword Strategy
 
 **Primary H1:** Template title (unique, descriptive)
 
 **H2 Keyword Variations:**
+
 ```html
 <h1>Isometric Miniatures from a Selfie – ComfyUI Workflow</h1>
 <h2>How to Generate Isometric Figurines with Nano Banana Pro</h2>
@@ -72,6 +73,7 @@ interface TemplateInfo {
 ```
 
 **FAQ Schema for "People Also Ask":**
+
 ```json
 {
   "@type": "FAQPage",
@@ -94,13 +96,13 @@ interface TemplateInfo {
 
 ### 2.1 Why Astro
 
-| Criteria | Astro | VitePress |
-|----------|-------|-----------|
-| Core Web Vitals | 62% passing | ~50% |
-| Primary Use | Content-driven SEO sites | Documentation |
-| JSON → Pages | Native Content Collections | Custom loader |
-| Image Optimization | Built-in `<Image>` | Manual |
-| JS Payload | Zero by default | Vue runtime always |
+| Criteria           | Astro                      | VitePress          |
+| ------------------ | -------------------------- | ------------------ |
+| Core Web Vitals    | 62% passing                | ~50%               |
+| Primary Use        | Content-driven SEO sites   | Documentation      |
+| JSON → Pages       | Native Content Collections | Custom loader      |
+| Image Optimization | Built-in `<Image>`         | Manual             |
+| JS Payload         | Zero by default            | Vue runtime always |
 
 ### 2.2 Content Collections Setup
 
@@ -122,20 +124,24 @@ const templates = defineCollection({
     openSource: z.boolean().optional(),
     requiresCustomNodes: z.array(z.string()).optional(),
     usage: z.number().optional(),
-    
+
     // AI-generated content
     extendedDescription: z.string(),
     howToUse: z.array(z.string()),
     metaDescription: z.string(),
     suggestedUseCases: z.array(z.string()),
-    faqItems: z.array(z.object({
-      question: z.string(),
-      answer: z.string(),
-    })).optional(),
-    
+    faqItems: z
+      .array(
+        z.object({
+          question: z.string(),
+          answer: z.string(),
+        })
+      )
+      .optional(),
+
     // Generated assets
     workflowPreviewPath: z.string().optional(),
-    
+
     // Override tracking
     humanEdited: z.boolean().default(false),
     lastAIGeneration: z.string().optional(),
@@ -164,10 +170,10 @@ templates.comfy.org/
 
 ### 3.2 Domain Decision
 
-| Option | Implementation | SEO Impact |
-|--------|----------------|------------|
+| Option                | Implementation                    | SEO Impact                                 |
+| --------------------- | --------------------------------- | ------------------------------------------ |
 | `templates.comfy.org` | Subdomain DNS + Cloudflare/Vercel | Builds separate authority, easy to measure |
-| `comfy.org/templates` | Reverse proxy from main site | Inherits main domain authority |
+| `comfy.org/templates` | Reverse proxy from main site      | Inherits main domain authority             |
 
 **Recommendation:** Start with `templates.comfy.org` (simpler), can migrate later.
 
@@ -184,7 +190,7 @@ Chosen for immediate availability (org already has account).
 name: Deploy Template Site
 
 on:
-  workflow_dispatch:  # Manual trigger for initial development
+  workflow_dispatch: # Manual trigger for initial development
   # Uncomment after stable:
   # workflow_run:
   #   workflows: ["Publish to PyPI"]
@@ -196,36 +202,36 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: site/package-lock.json
-          
+
       - name: Install dependencies
         run: npm ci
         working-directory: site
-        
+
       - name: Sync templates
         run: npm run sync
         working-directory: site
-        
+
       - name: Generate AI content
         run: npm run generate:ai
         working-directory: site
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          
+
       - name: Generate workflow previews
         run: npm run generate:previews
         working-directory: site
-        
+
       - name: Build site
         run: npm run build
         working-directory: site
-        
+
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25
         with:
@@ -239,6 +245,7 @@ jobs:
 ### 4.2 Migration to Cloudflare Pages (Future)
 
 Migration is low-overhead:
+
 1. Create Cloudflare Pages project
 2. Swap GitHub Action (`cloudflare/pages-action@v1`)
 3. Update DNS CNAME
@@ -273,25 +280,27 @@ Create `site/README.md`:
 \`\`\`bash
 cd site
 npm install
-cp .env.example .env  # Add your OPENAI_API_KEY
+cp .env.example .env # Add your OPENAI_API_KEY
 
 # Development server (uses cached content)
+
 npm run dev
 
 # Full build with AI generation
+
 npm run build
 \`\`\`
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start dev server on localhost:4321 |
-| `npm run sync` | Sync templates from ../templates/ |
-| `npm run generate:ai` | Generate AI content (requires API key) |
-| `npm run generate:previews` | Render workflow preview images |
-| `npm run build` | Production build to dist/ |
-| `npm run preview` | Preview production build |
+| Command                     | Description                            |
+| --------------------------- | -------------------------------------- |
+| `npm run dev`               | Start dev server on localhost:4321     |
+| `npm run sync`              | Sync templates from ../templates/      |
+| `npm run generate:ai`       | Generate AI content (requires API key) |
+| `npm run generate:previews` | Render workflow preview images         |
+| `npm run build`             | Production build to dist/              |
+| `npm run preview`           | Preview production build               |
 
 ## Skipping AI Generation
 
@@ -311,9 +320,9 @@ This uses cached content from `.content-cache/` or placeholder text.
 
 \`\`\`json
 {
-  "extendedDescription": "Custom marketing copy...",
-  "howToUse": null,
-  "humanEdited": true
+"extendedDescription": "Custom marketing copy...",
+"howToUse": null,
+"humanEdited": true
 }
 \`\`\`
 ```
@@ -372,34 +381,32 @@ site/
 async function generateTemplateContent(template: TemplateInfo) {
   const overridePath = `overrides/templates/${template.name}.json`;
   const override = await loadIfExists(overridePath);
-  
+
   // If marked as human-edited, skip AI entirely
   if (override?.humanEdited) {
     return { ...getDefaults(template), ...override };
   }
-  
+
   // Check cache validity
   const cached = await loadCache(template.name);
   if (cached && !shouldRegenerate(template, cached)) {
     return applyOverrides(cached, override);
   }
-  
+
   // Generate AI content
   const aiContent = await callOpenAI(template);
   await saveCache(template.name, aiContent);
-  
+
   // Merge: override fields take precedence
   return applyOverrides(aiContent, override);
 }
 
 function applyOverrides(content: GeneratedContent, override?: Partial<GeneratedContent>) {
   if (!override) return content;
-  
+
   return {
     ...content,
-    ...Object.fromEntries(
-      Object.entries(override).filter(([_, v]) => v !== null)
-    ),
+    ...Object.fromEntries(Object.entries(override).filter(([_, v]) => v !== null)),
   };
 }
 ```
@@ -431,17 +438,18 @@ site/
 
 ### 7.2 Knowledge Sources
 
-| Source | URL | Content |
-|--------|-----|---------|
-| Node Docs | `github.com/Comfy-Org/embedded-docs` | Per-node documentation |
-| Comfy Docs | `docs.comfy.org` | Tutorials, concepts |
-| Comfy Blog | `blog.comfy.org` | Feature announcements |
-| HuggingFace | Model cards | Model capabilities, usage |
-| Registry API | `api.comfy.org/openapi` | Custom node metadata |
+| Source       | URL                                  | Content                   |
+| ------------ | ------------------------------------ | ------------------------- |
+| Node Docs    | `github.com/Comfy-Org/embedded-docs` | Per-node documentation    |
+| Comfy Docs   | `docs.comfy.org`                     | Tutorials, concepts       |
+| Comfy Blog   | `blog.comfy.org`                     | Feature announcements     |
+| HuggingFace  | Model cards                          | Model capabilities, usage |
+| Registry API | `api.comfy.org/openapi`              | Custom node metadata      |
 
 **embedded-docs Integration:**
 
 The embedded-docs repo contains a pipeline for node documentation. We can:
+
 1. Clone/submodule the repo
 2. Reference docs during AI generation
 3. Or run their pipeline to embed docs into our knowledge base
@@ -452,15 +460,18 @@ The embedded-docs repo contains a pipeline for node documentation. We can:
 <!-- knowledge/prompts/system.md -->
 
 # Role
+
 You are a technical content writer for ComfyUI, an AI image and video generation platform. Your goal is to create clear, accurate content that helps users discover and use workflow templates.
 
 # Voice & Tone
+
 - Professional but approachable
 - Technically accurate without jargon overload
 - Focus on outcomes and benefits (what can users CREATE)
 - Confident, not salesy
 
 # Constraints
+
 - ONLY use information from the provided context
 - NEVER invent model capabilities not in the data
 - NEVER mention pricing or costs
@@ -469,15 +480,18 @@ You are a technical content writer for ComfyUI, an AI image and video generation
 - Include the model names naturally in the content
 
 # SEO Guidelines
+
 - Include primary keyword (model name + task) in first paragraph
 - Use H2-style sections for scannability
 - Create FAQ items that match "How to..." search patterns
 - Keep meta description under 160 characters
 
 # Model Knowledge
+
 {model_docs}
 
 # Concept Knowledge
+
 {concept_docs}
 ```
 
@@ -505,7 +519,7 @@ Output Type: ${ctx.workflow.outputType}
 Key Nodes: ${ctx.workflow.nodeTypes.slice(0, 10).join(', ')}
 
 # Model Context
-${ctx.template.models?.map(m => ctx.modelDocs[m] || '').join('\n\n')}
+${ctx.template.models?.map((m) => ctx.modelDocs[m] || '').join('\n\n')}
 
 # Output Format (JSON)
 {
@@ -566,10 +580,10 @@ async function loadKnowledgeBase(): Promise<{
 }> {
   const modelsDir = 'knowledge/models';
   const conceptsDir = 'knowledge/concepts';
-  
+
   const models: Record<string, string> = {};
   const concepts: Record<string, string> = {};
-  
+
   // Load model docs
   if (existsSync(modelsDir)) {
     const files = await readdir(modelsDir);
@@ -578,7 +592,7 @@ async function loadKnowledgeBase(): Promise<{
       models[name] = await readFile(path.join(modelsDir, file), 'utf-8');
     }
   }
-  
+
   // Load concept docs
   if (existsSync(conceptsDir)) {
     const files = await readdir(conceptsDir);
@@ -587,63 +601,74 @@ async function loadKnowledgeBase(): Promise<{
       concepts[name] = await readFile(path.join(conceptsDir, file), 'utf-8');
     }
   }
-  
+
   const systemPrompt = await readFile('knowledge/prompts/system.md', 'utf-8');
-  
+
   return { models, concepts, systemPrompt };
 }
 
-async function generateContent(ctx: GenerationContext, systemPrompt: string): Promise<GeneratedContent> {
+async function generateContent(
+  ctx: GenerationContext,
+  systemPrompt: string
+): Promise<GeneratedContent> {
   const userPrompt = buildPrompt(ctx);
-  
+
   // Inject knowledge into system prompt
   const fullSystemPrompt = systemPrompt
-    .replace('{model_docs}', Object.entries(ctx.modelDocs)
-      .map(([name, doc]) => `## ${name}\n${doc}`).join('\n\n'))
-    .replace('{concept_docs}', Object.entries(ctx.conceptDocs)
-      .map(([name, doc]) => `## ${name}\n${doc}`).join('\n\n'));
-  
+    .replace(
+      '{model_docs}',
+      Object.entries(ctx.modelDocs)
+        .map(([name, doc]) => `## ${name}\n${doc}`)
+        .join('\n\n')
+    )
+    .replace(
+      '{concept_docs}',
+      Object.entries(ctx.conceptDocs)
+        .map(([name, doc]) => `## ${name}\n${doc}`)
+        .join('\n\n')
+    );
+
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
       { role: 'system', content: fullSystemPrompt },
-      { role: 'user', content: userPrompt }
+      { role: 'user', content: userPrompt },
     ],
     response_format: { type: 'json_object' },
     temperature: 0.7,
     max_tokens: 1500,
   });
-  
+
   const content = JSON.parse(response.choices[0].message.content!);
   return validateContent(content);
 }
 
 async function main() {
   const skipAI = process.env.SKIP_AI_GENERATION === 'true';
-  
+
   // Load templates
   const indexPath = '../templates/index.json';
   const categories = JSON.parse(await readFile(indexPath, 'utf-8'));
-  
+
   // Flatten and sort by usage
   const allTemplates = categories.flatMap((cat: any) => cat.templates);
   const top50 = allTemplates
     .filter((t: any) => t.usage !== undefined)
     .sort((a: any, b: any) => (b.usage || 0) - (a.usage || 0))
     .slice(0, 50);
-  
+
   console.log(`Processing ${top50.length} templates...`);
-  
+
   // Load knowledge base
   const knowledge = await loadKnowledgeBase();
-  
+
   // Ensure output directories
   await mkdir('src/content/templates', { recursive: true });
   await mkdir('.content-cache', { recursive: true });
-  
+
   for (const template of top50) {
     const outPath = `src/content/templates/${template.name}.json`;
-    
+
     // Check for human override
     const override = await loadOverride(template.name);
     if (override?.humanEdited) {
@@ -651,7 +676,7 @@ async function main() {
       await writeFile(outPath, JSON.stringify({ ...template, ...override }, null, 2));
       continue;
     }
-    
+
     // Check cache
     const cached = await loadCache(template.name);
     if (cached && !shouldRegenerate(template, cached)) {
@@ -660,23 +685,30 @@ async function main() {
       await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
       continue;
     }
-    
+
     if (skipAI) {
       console.log(`[PLACEHOLDER] ${template.name}`);
-      await writeFile(outPath, JSON.stringify({
-        ...template,
-        extendedDescription: template.description,
-        howToUse: ['Load the template', 'Configure inputs', 'Run the workflow'],
-        metaDescription: template.description.slice(0, 160),
-        suggestedUseCases: [],
-      }, null, 2));
+      await writeFile(
+        outPath,
+        JSON.stringify(
+          {
+            ...template,
+            extendedDescription: template.description,
+            howToUse: ['Load the template', 'Configure inputs', 'Run the workflow'],
+            metaDescription: template.description.slice(0, 160),
+            suggestedUseCases: [],
+          },
+          null,
+          2
+        )
+      );
       continue;
     }
-    
+
     // Analyze workflow
     const workflowPath = `../templates/${template.name}.json`;
     const workflow = await analyzeWorkflow(workflowPath);
-    
+
     // Build context
     const ctx: GenerationContext = {
       template,
@@ -684,19 +716,19 @@ async function main() {
       modelDocs: pickRelevantDocs(template.models || [], knowledge.models),
       conceptDocs: pickRelevantDocs(template.tags || [], knowledge.concepts),
     };
-    
+
     // Generate
     console.log(`[GENERATE] ${template.name}`);
     const content = await generateContent(ctx, knowledge.systemPrompt);
-    
+
     // Cache
     await saveCache(template.name, { ...content, lastAIGeneration: new Date().toISOString() });
-    
+
     // Apply overrides and write
     const merged = applyOverrides(content, override);
     await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
   }
-  
+
   console.log('Done!');
 }
 
@@ -713,7 +745,7 @@ Port the minimap renderer from ComfyUI_frontend:
 
 ```typescript
 // scripts/generate-previews.ts
-import { createCanvas } from 'canvas';  // node-canvas
+import { createCanvas } from 'canvas'; // node-canvas
 import { readFile, writeFile, mkdir } from 'fs/promises';
 
 interface MinimapNode {
@@ -734,40 +766,37 @@ async function generateWorkflowPreview(
   const workflow = JSON.parse(await readFile(workflowPath, 'utf-8'));
   const nodes = extractNodes(workflow);
   const links = extractLinks(workflow);
-  
+
   const bounds = calculateBounds(nodes);
   const scale = calculateScale(bounds, options.width, options.height, 0.85);
-  
+
   const canvas = createCanvas(options.width, options.height);
   const ctx = canvas.getContext('2d');
-  
+
   // Dark background
   ctx.fillStyle = '#1a1a2e';
   ctx.fillRect(0, 0, options.width, options.height);
-  
+
   const offsetX = (options.width - bounds.width * scale) / 2 - bounds.minX * scale;
   const offsetY = (options.height - bounds.height * scale) / 2 - bounds.minY * scale;
-  
+
   // Draw links
   ctx.strokeStyle = '#60a5fa';
   ctx.lineWidth = 1;
   for (const link of links) {
-    const source = nodes.find(n => n.id === link.sourceId);
-    const target = nodes.find(n => n.id === link.targetId);
+    const source = nodes.find((n) => n.id === link.sourceId);
+    const target = nodes.find((n) => n.id === link.targetId);
     if (source && target) {
       ctx.beginPath();
       ctx.moveTo(
         (source.x + source.width) * scale + offsetX,
         (source.y + source.height / 2) * scale + offsetY
       );
-      ctx.lineTo(
-        target.x * scale + offsetX,
-        (target.y + target.height / 2) * scale + offsetY
-      );
+      ctx.lineTo(target.x * scale + offsetX, (target.y + target.height / 2) * scale + offsetY);
       ctx.stroke();
     }
   }
-  
+
   // Draw nodes
   for (const node of nodes) {
     ctx.fillStyle = node.bgcolor || '#374151';
@@ -778,7 +807,7 @@ async function generateWorkflowPreview(
       node.height * scale
     );
   }
-  
+
   // Save
   const buffer = canvas.toBuffer('image/png');
   await writeFile(outputPath, buffer);
@@ -788,14 +817,17 @@ async function generateWorkflowPreview(
 ### 8.2 Caching Strategy
 
 ```typescript
-async function shouldRegeneratePreview(templateName: string, workflowPath: string): Promise<boolean> {
+async function shouldRegeneratePreview(
+  templateName: string,
+  workflowPath: string
+): Promise<boolean> {
   const previewPath = `public/previews/${templateName}.png`;
-  
+
   if (!existsSync(previewPath)) return true;
-  
+
   const workflowStat = await stat(workflowPath);
   const previewStat = await stat(previewPath);
-  
+
   return workflowStat.mtime > previewStat.mtime;
 }
 ```
@@ -809,12 +841,12 @@ async function shouldRegeneratePreview(templateName: string, workflowPath: strin
 Use the primary output thumbnail (`{name}-1.webp`) as the OG image.
 
 ```astro
-<!-- src/components/SEOHead.astro -->
 ---
 const { template } = Astro.props;
 const ogImage = `https://templates.comfy.org/thumbnails/${template.name}-1.webp`;
 ---
 
+<!-- src/components/SEOHead.astro -->
 <meta property="og:image" content={ogImage} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -825,8 +857,9 @@ const ogImage = `https://templates.comfy.org/thumbnails/${template.name}-1.webp`
 ### 9.2 Future Enhancement (Optional)
 
 Generate composite images with Sharp:
+
 - Left: Input thumbnail
-- Right: Output thumbnail  
+- Right: Output thumbnail
 - Bottom: Workflow preview strip
 
 ---
@@ -835,11 +868,11 @@ Generate composite images with Sharp:
 
 ### 10.1 Tool Selection
 
-| Tool | Purpose | Implementation |
-|------|---------|----------------|
-| **Vercel Analytics** | Core Web Vitals, page views | Built-in with Vercel |
-| **Mixpanel** | Conversion tracking, user flows | JS snippet + server events |
-| **Google Search Console** | SEO rankings, indexing | DNS verification |
+| Tool                      | Purpose                         | Implementation             |
+| ------------------------- | ------------------------------- | -------------------------- |
+| **Vercel Analytics**      | Core Web Vitals, page views     | Built-in with Vercel       |
+| **Mixpanel**              | Conversion tracking, user flows | JS snippet + server events |
+| **Google Search Console** | SEO rankings, indexing          | DNS verification           |
 
 ### 10.2 Events to Track
 
@@ -852,12 +885,12 @@ interface TemplatePageEvents {
     models: string[];
     source: 'organic' | 'direct' | 'referral';
   };
-  
+
   'Try Cloud Clicked': {
     template_name: string;
     button_location: 'hero' | 'sidebar' | 'footer';
   };
-  
+
   'Download Clicked': {
     template_name: string;
     download_type: 'workflow' | 'models';
@@ -871,7 +904,7 @@ interface TemplatePageEvents {
 <!-- src/layouts/BaseLayout.astro -->
 <script>
   import mixpanel from 'mixpanel-browser';
-  
+
   mixpanel.init(import.meta.env.PUBLIC_MIXPANEL_TOKEN, {
     track_pageview: true,
     persistence: 'localStorage',
@@ -882,22 +915,26 @@ interface TemplatePageEvents {
 ### 10.4 SEO Monitoring Playbook
 
 **Setup (Day 1):**
+
 1. Add site to Google Search Console
 2. Submit sitemap: `https://templates.comfy.org/sitemap-index.xml`
 3. Set up Ahrefs/Semrush project for keyword tracking
 
 **Weekly Check:**
+
 1. Search Console → Coverage → Check for indexing errors
 2. Search Console → Performance → Track impressions/clicks
 3. Mixpanel → Funnels → Template View → Cloud Click conversion
 
 **Monthly Review:**
+
 1. Keyword ranking changes (Ahrefs)
 2. Top performing templates by traffic
 3. Conversion rate by template category
 4. Core Web Vitals trends
 
 **Action Triggers:**
+
 - Indexing drops > 10% → Check for crawl errors
 - CTR < 2% for high-impression page → Improve meta description
 - Conversion < 1% on high-traffic page → A/B test CTA
@@ -924,24 +961,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          
+
       - name: Install dependencies
         run: npm ci
         working-directory: site
-        
+
       - name: Validate content schema
         run: npm run validate:content
         working-directory: site
-        
+
       - name: Check for broken links
         run: npm run check:links
         working-directory: site
-        
+
       - name: Lint HTML output
         run: npm run lint:html
         working-directory: site
@@ -969,10 +1006,10 @@ const overrideSchema = {
 async function validateOverrides() {
   const ajv = new Ajv();
   const validate = ajv.compile(overrideSchema);
-  
+
   const files = await glob('overrides/templates/*.json');
   let hasErrors = false;
-  
+
   for (const file of files) {
     const content = JSON.parse(await readFile(file, 'utf-8'));
     if (!validate(content)) {
@@ -981,7 +1018,7 @@ async function validateOverrides() {
       hasErrors = true;
     }
   }
-  
+
   if (hasErrors) process.exit(1);
 }
 ```
@@ -994,18 +1031,18 @@ Based on analysis of OpenArt.ai workflow pages:
 
 ### 12.1 Features They Have
 
-| Feature | OpenArt | Our Plan |
-|---------|---------|----------|
-| Workflow title/description | ✅ | ✅ |
-| Multiple thumbnails | ✅ (15+) | ✅ (2-3) |
-| Node details (grouped by pack) | ✅ | ✅ Milestone 2 |
-| Model details (checkpoints, LoRAs) | ✅ | ✅ |
-| Author profile | ✅ | ❌ (official templates) |
-| Reviews/ratings | ✅ | P2 |
-| Download counts | ✅ | ✅ (usage field) |
-| Version history | ✅ | ❌ |
-| Custom node links to GitHub | ✅ | ✅ |
-| "Run on Cloud" button | ✅ | ✅ |
+| Feature                            | OpenArt  | Our Plan                |
+| ---------------------------------- | -------- | ----------------------- |
+| Workflow title/description         | ✅       | ✅                      |
+| Multiple thumbnails                | ✅ (15+) | ✅ (2-3)                |
+| Node details (grouped by pack)     | ✅       | ✅ Milestone 2          |
+| Model details (checkpoints, LoRAs) | ✅       | ✅                      |
+| Author profile                     | ✅       | ❌ (official templates) |
+| Reviews/ratings                    | ✅       | P2                      |
+| Download counts                    | ✅       | ✅ (usage field)        |
+| Version history                    | ✅       | ❌                      |
+| Custom node links to GitHub        | ✅       | ✅                      |
+| "Run on Cloud" button              | ✅       | ✅                      |
 
 ### 12.2 SEO Elements to Adopt
 
@@ -1030,18 +1067,18 @@ Filter templates by `usage` field, sort descending, take top 50.
 
 ```typescript
 const top50 = allTemplates
-  .filter(t => t.usage !== undefined)
+  .filter((t) => t.usage !== undefined)
   .sort((a, b) => (b.usage || 0) - (a.usage || 0))
   .slice(0, 50);
 ```
 
 ### 13.2 Scaling Plan
 
-| Milestone | Template Count | Content |
-|-----------|---------------|---------|
-| M1 | 50 | Top by usage |
-| M2 | All (200+) | Full catalog |
-| M3 | All + i18n | Localized versions |
+| Milestone | Template Count | Content            |
+| --------- | -------------- | ------------------ |
+| M1        | 50             | Top by usage       |
+| M2        | All (200+)     | Full catalog       |
+| M3        | All + i18n     | Localized versions |
 
 ---
 
@@ -1089,4 +1126,4 @@ workflow_templates/
 
 ---
 
-*Document Version: 1.0*
+_Document Version: 1.0_

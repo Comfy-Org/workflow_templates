@@ -1,0 +1,184 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import TemplateCard from '../../components/TemplateCard.astro';
+import HreflangTags from '../../components/HreflangTags.astro';
+import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
+
+export async function getStaticPaths() {
+  // Define slugify inside getStaticPaths to ensure it's available during Astro's production build
+  function slugify(tag: string): string {
+    return tag
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  }
+
+  const templates = await getCollection('templates');
+
+  const tagMap = new Map<
+    string,
+    { slug: string; originalTag: string; templates: typeof templates }
+  >();
+
+  for (const template of templates) {
+    const tags = template.data.tags || [];
+    for (const tag of tags) {
+      // Skip empty tags
+      if (!tag || typeof tag !== 'string' || tag.trim() === '') continue;
+
+      const slug = slugify(tag);
+      // Skip tags that produce empty slugs (e.g., tags with only special characters)
+      if (!slug) continue;
+
+      if (!tagMap.has(slug)) {
+        tagMap.set(slug, { slug, originalTag: tag, templates: [] });
+      }
+      tagMap.get(slug)!.templates.push(template);
+    }
+  }
+
+  return Array.from(tagMap.values())
+    .filter(({ slug }) => slug && slug.length > 0)
+    .map(({ slug, originalTag, templates }) => ({
+      params: { tag: slug },
+      props: {
+        tagName: originalTag,
+        templates: templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0)),
+      },
+    }));
+}
+
+interface Props {
+  tagName: string;
+  templates: Awaited<ReturnType<typeof getCollection<'templates'>>>;
+}
+
+const { tagName, templates } = Astro.props;
+const { tag } = Astro.params;
+
+const locale = getLocaleFromPath(Astro.url.pathname);
+const basePath = `/tag/${tag}/`;
+const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
+const canonicalUrl = `${siteUrl}${localizeUrl(basePath, locale)}`;
+
+const title = `${tagName} ComfyUI Workflows - ${t('nav.templates', locale)}`;
+const description = `Browse ${templates.length} ComfyUI workflow templates tagged with "${tagName}". Free, ready-to-use AI generation workflows.`;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${tagName} ComfyUI Workflows`,
+  description,
+  url: canonicalUrl,
+};
+
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: t('nav.templates', locale),
+      item: `${siteUrl}${localizeUrl('/templates/', locale)}`,
+    },
+    { '@type': 'ListItem', position: 3, name: tagName },
+  ],
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalUrl={canonicalUrl}
+  ogImage="/og-default.svg"
+  structuredData={structuredData}
+>
+  <HreflangTags basePath={basePath} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} />
+
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-8">
+      <ol class="flex items-center gap-2 text-sm text-gray-500">
+        <li>
+          <a href={localizeUrl('/', locale)} class="hover:text-indigo-600 transition-colors">Home</a
+          >
+        </li>
+        <li><span class="mx-1">/</span></li>
+        <li>
+          <a
+            href={localizeUrl('/templates/', locale)}
+            class="hover:text-indigo-600 transition-colors">{t('nav.templates', locale)}</a
+          >
+        </li>
+        <li><span class="mx-1">/</span></li>
+        <li class="text-gray-900 font-medium">{tagName}</li>
+      </ol>
+    </nav>
+
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div
+        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mb-4"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+          ></path>
+        </svg>
+        Tag
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+        {tagName}
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        {templates.length} workflow{templates.length !== 1 ? 's' : ''} tagged with "{tagName}"
+      </p>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {
+        templates.map((template) => (
+          <TemplateCard
+            name={template.data.name}
+            title={template.data.title || template.data.name}
+            description={template.data.description}
+            mediaType={template.data.mediaType}
+            mediaSubtype={template.data.mediaSubtype}
+            thumbnailVariant={template.data.thumbnailVariant}
+            tags={template.data.tags}
+            models={template.data.models}
+            usage={template.data.usage}
+            thumbnails={template.data.thumbnails}
+            locale={locale}
+          />
+        ))
+      }
+    </div>
+
+    <!-- Back link -->
+    <div class="mt-12 text-center">
+      <a
+        href={localizeUrl('/templates/', locale)}
+        class="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+        </svg>
+        {t('nav.back', locale)}
+      </a>
+    </div>
+  </div>
+</BaseLayout>

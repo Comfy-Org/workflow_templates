@@ -1,0 +1,129 @@
+{
+  "id": "f0d08102-91a0-4ba1-b166-0dd01f7e5aa9",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 7,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "FL_ChatterboxTTS",
+      "pos": [-171.03789020164825, 242.7301743454707],
+      "size": [373.72181326919736, 315.709288700063],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio_prompt",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [6]
+        },
+        {
+          "name": "message",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FL_ChatterboxTTS"
+      },
+      "widgets_values": [
+        "This is Chatterbox—and it just recreated my voice from a nine-second recording.\n\nGive it a shot with your own voice and hear the results for yourself.",
+        0.5,
+        0.5,
+        0.8,
+        390519100,
+        "randomize",
+        false,
+        false
+      ]
+    },
+    {
+      "id": 7,
+      "type": "MarkdownNote",
+      "pos": [-990, 240],
+      "size": [466.8076918246961, 556.5519348788198],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "🎙️ Chatterbox Text-To-Speech",
+      "properties": {},
+      "widgets_values": [
+        "Clone a voice from a short audio clip and generate new speech using a simple text prompt.\n\n---\n\n## Quick Start\n\n**Input:** short voice clip  \n**Output:** generated speech in the same voice\n\n---\n\n## Steps\n\n### 1. Load a Voice\n- Add an audio file to the **Load Audio** node  \n- Even a **5–10 second** clip is enough  \n- This clip is used as the voice reference\n\n### 2. Enter Text\n- Type what you want spoken in the **FL Chatterbox TTS** node  \n- Write it as you’d naturally say it—pauses and punctuation matter\n\n### 3. (Optional) Tweak Controls\n- **Exaggeration** — increases expressiveness  \n- **CFG Weight** — how tightly the voice follows the prompt  \n- **Temperature** — adds variation and naturalness  \n_Default settings work well for first runs_\n\n### 4. Generate\n- Click **Run**  \n- The generated audio will appear in **Save Audio (MP3)**\n\n---\n\n## Notes\n- Clean, single-speaker recordings give the best results  \n- Background noise can affect voice accuracy  \n- Try small text changes to hear different inflections\n\n---\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 6,
+      "type": "LoadAudio",
+      "pos": [-482.7558535447159, 242.9637351611428],
+      "size": [282.798828125, 136],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [7]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": ["chatterbox_input_target_voice.mp3", null, null]
+    },
+    {
+      "id": 5,
+      "type": "SaveAudioMP3",
+      "pos": [230, 240],
+      "size": [270, 136],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveAudioMP3"
+      },
+      "widgets_values": ["audio/chatterbox_tts", "V0"]
+    }
+  ],
+  "links": [
+    [6, 4, 0, 5, 0, "AUDIO"],
+    [7, 6, 0, 4, 0, "AUDIO"]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "workflowRendererVersion": "LG",
+    "ds": {
+      "scale": 0.8787553252638384,
+      "offset": [1570.3282847463477, 243.39692304453456]
+    },
+    "frontendVersion": "1.37.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

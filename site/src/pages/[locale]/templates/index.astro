@@ -1,0 +1,91 @@
+---
+/**
+ * Localized templates index page
+ * Generates pages like /zh/templates/, /ja/templates/, etc.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import TemplateCard from '../../../components/TemplateCard.astro';
+import { LOCALES, DEFAULT_LOCALE, LANGUAGES, type Locale } from '../../../i18n/config';
+import { t } from '../../../i18n/ui';
+import { getTemplatesForLocale, sortByUsage } from '../../../lib/templates';
+
+export async function getStaticPaths() {
+  // Generate paths for all non-default locales
+  return LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => ({
+    params: { locale },
+    props: { locale },
+  }));
+}
+
+const { locale } = Astro.props as { locale: Locale };
+const langInfo = LANGUAGES[locale];
+
+// Get templates for this locale (with English fallback)
+const templates = await getTemplatesForLocale(locale);
+const sortedTemplates = sortByUsage(templates);
+
+const siteUrl = 'https://templates.comfy.org';
+const canonicalUrl = `${siteUrl}/${locale}/templates/`;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: t('meta.title', locale),
+  description: t('meta.description', locale),
+  url: canonicalUrl,
+  inLanguage: locale,
+};
+---
+
+<BaseLayout
+  title={`${t('meta.title', locale)} - ComfyUI`}
+  description={t('meta.description', locale)}
+  canonicalUrl={canonicalUrl}
+  ogImage="/og-default.svg"
+  structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath="/templates/"
+>
+  <div class="max-w-6xl mx-auto px-4 py-12" dir={langInfo.dir}>
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4">
+        {t('nav.templates', locale)}
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        {t('meta.description', locale)}
+      </p>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="flex justify-center gap-8 mb-12 text-sm text-gray-500">
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+        {sortedTemplates.length}
+        {t('template.count', locale)}
+      </span>
+      <span>{t('template.updated', locale)}</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {
+        sortedTemplates.map((template) => (
+          <TemplateCard
+            name={template.data.name}
+            title={template.data.title || template.data.name}
+            description={template.data.description}
+            mediaType={template.data.mediaType}
+            mediaSubtype={template.data.mediaSubtype}
+            thumbnailVariant={template.data.thumbnailVariant}
+            tags={template.data.tags}
+            models={template.data.models}
+            usage={template.data.usage}
+            thumbnails={template.data.thumbnails}
+            locale={locale}
+          />
+        ))
+      }
+    </div>
+  </div>
+</BaseLayout>

@@ -1,7 +1,7 @@
 ---
 /**
  * ThumbnailDisplay - Renders template thumbnails with proper variants
- * 
+ *
  * Supports:
  * - Video playback for webp animations (autoplay on hover)
  * - compareSlider: Before/after comparison slider (needs 2 thumbnails)
@@ -13,19 +13,23 @@
 interface Props {
   thumbnails: string[];
   title: string;
-  variant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover';
+  variant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
   mediaSubtype?: string;
   class?: string;
   loading?: 'lazy' | 'eager';
+  fetchpriority?: 'high' | 'low' | 'auto';
+  sizes?: string;
 }
 
-const { 
-  thumbnails, 
-  title, 
-  variant, 
+const {
+  thumbnails,
+  title,
+  variant,
   mediaSubtype,
   class: className = '',
-  loading = 'lazy'
+  loading = 'lazy',
+  fetchpriority,
+  sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 640px',
 } = Astro.props;
 
 const primaryThumb = thumbnails[0];
@@ -34,121 +38,134 @@ const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 ---
 
-{variant === 'compareSlider' && hasSecondImage ? (
-  <!-- Compare Slider: Before/After -->
-  <div class={`compare-slider relative overflow-hidden ${className}`} data-compare-slider>
-    <img 
-      src={`/thumbnails/${primaryThumb}`}
-      alt={`${title} - Before`}
-      {loading}
-      class="w-full h-full object-cover"
-    />
-    <div class="compare-overlay absolute inset-0 overflow-hidden" style="clip-path: inset(0 50% 0 0);">
-      <img 
-        src={`/thumbnails/${secondaryThumb}`}
-        alt={`${title} - After`}
-        {loading}
+{
+  variant === 'compareSlider' && hasSecondImage ? (
+    <div class={`compare-slider relative overflow-hidden ${className}`} data-compare-slider>
+      <img
+        src={`/thumbnails/${primaryThumb}`}
+        alt={`${title} - Before`}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        width="640"
+        height="360"
+        decoding="async"
+        sizes={sizes}
         class="w-full h-full object-cover"
       />
-    </div>
-    <div class="compare-handle absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize" style="left: 50%;">
-      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
-        <svg class="w-4 h-4 text-gray-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M8 12H16M8 12L11 9M8 12L11 15M16 12L13 9M16 12L13 15"/>
-        </svg>
+      <div
+        class="compare-overlay absolute inset-0 overflow-hidden"
+        style="clip-path: inset(0 50% 0 0);"
+      >
+        <img
+          src={`/thumbnails/${secondaryThumb}`}
+          alt={`${title} - After`}
+          loading={loading}
+          width="640"
+          height="360"
+          decoding="async"
+          sizes={sizes}
+          class="w-full h-full object-cover"
+        />
+      </div>
+      <div
+        class="compare-handle absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize"
+        style="left: 50%;"
+      >
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
+          <svg
+            class="w-4 h-4 text-gray-600"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            aria-hidden="true"
+          >
+            <path d="M8 12H16M8 12L11 9M8 12L11 15M16 12L13 9M16 12L13 15" />
+          </svg>
+        </div>
       </div>
     </div>
-  </div>
-) : variant === 'hoverDissolve' && hasSecondImage ? (
-  <!-- Hover Dissolve: Fades between two images -->
-  <div class={`hover-dissolve group relative overflow-hidden ${className}`}>
-    <img 
-      src={`/thumbnails/${primaryThumb}`}
-      alt={`${title} - State 1`}
-      {loading}
-      class="w-full h-full object-cover transition-opacity duration-500"
-    />
-    <img 
-      src={`/thumbnails/${secondaryThumb}`}
-      alt={`${title} - State 2`}
-      {loading}
-      class="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-    />
-  </div>
-) : isAnimated ? (
-  <!-- Animated WebP (video-like) -->
-  <div class={`animated-thumb group relative overflow-hidden ${className}`}>
-    <img 
-      src={`/thumbnails/${primaryThumb}`}
-      alt={title}
-      {loading}
-      class="w-full h-full object-cover"
-    />
-    <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-      <div class="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-        <svg class="w-5 h-5 text-gray-800 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
-          <polygon points="5 3 19 12 5 21 5 3"/>
-        </svg>
+  ) : variant === 'hoverDissolve' && hasSecondImage ? (
+    <div class={`hover-dissolve group relative overflow-hidden ${className}`}>
+      <img
+        src={`/thumbnails/${primaryThumb}`}
+        alt={`${title} - State 1`}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        width="640"
+        height="360"
+        decoding="async"
+        sizes={sizes}
+        class="w-full h-full object-cover transition-opacity duration-500"
+      />
+      <img
+        src={`/thumbnails/${secondaryThumb}`}
+        alt={`${title} - State 2`}
+        loading={loading}
+        width="640"
+        height="360"
+        decoding="async"
+        sizes={sizes}
+        class="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+      />
+    </div>
+  ) : isAnimated ? (
+    <div class={`animated-thumb group relative overflow-hidden ${className}`}>
+      <img
+        src={`/thumbnails/${primaryThumb}`}
+        alt={title}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        width="640"
+        height="360"
+        decoding="async"
+        sizes={sizes}
+        class="w-full h-full object-cover"
+      />
+      <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        <div class="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
+          <svg
+            class="w-5 h-5 text-gray-800 ml-0.5"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <polygon points="5 3 19 12 5 21 5 3" />
+          </svg>
+        </div>
       </div>
     </div>
-  </div>
-) : variant === 'zoomHover' ? (
-  <!-- Enhanced Zoom on Hover -->
-  <div class={`zoom-hover group relative overflow-hidden ${className}`}>
-    <img 
-      src={`/thumbnails/${primaryThumb}`}
-      alt={title}
-      {loading}
-      class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125"
-    />
-  </div>
-) : (
-  <!-- Default: Simple zoom -->
-  <div class={`default-thumb group relative overflow-hidden ${className}`}>
-    <img 
-      src={`/thumbnails/${primaryThumb}`}
-      alt={title}
-      {loading}
-      class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-    />
-  </div>
-)}
+  ) : variant === 'zoomHover' ? (
+    <div class={`zoom-hover group relative overflow-hidden ${className}`}>
+      <img
+        src={`/thumbnails/${primaryThumb}`}
+        alt={title}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        width="640"
+        height="360"
+        decoding="async"
+        sizes={sizes}
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125"
+      />
+    </div>
+  ) : (
+    <div class={`default-thumb group relative overflow-hidden ${className}`}>
+      <img
+        src={`/thumbnails/${primaryThumb}`}
+        alt={title}
+        loading={loading}
+        fetchpriority={fetchpriority}
+        width="640"
+        height="360"
+        decoding="async"
+        sizes={sizes}
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+      />
+    </div>
+  )
+}
 
 <script>
-  // Compare slider interactivity
-  document.querySelectorAll('[data-compare-slider]').forEach((slider) => {
-    const overlay = slider.querySelector('.compare-overlay') as HTMLElement;
-    const handle = slider.querySelector('.compare-handle') as HTMLElement;
-    
-    if (!overlay || !handle) return;
-    
-    let isDragging = false;
-    
-    const updatePosition = (clientX: number) => {
-      const rect = slider.getBoundingClientRect();
-      const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      const percent = (x / rect.width) * 100;
-      
-      overlay.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
-      handle.style.left = `${percent}%`;
-    };
-    
-    handle.addEventListener('mousedown', () => { isDragging = true; });
-    document.addEventListener('mouseup', () => { isDragging = false; });
-    document.addEventListener('mousemove', (e) => {
-      if (isDragging) updatePosition(e.clientX);
-    });
-    
-    // Touch support
-    handle.addEventListener('touchstart', () => { isDragging = true; });
-    document.addEventListener('touchend', () => { isDragging = false; });
-    document.addEventListener('touchmove', (e) => {
-      if (isDragging && e.touches[0]) updatePosition(e.touches[0].clientX);
-    });
-    
-    // Click to set position
-    slider.addEventListener('click', (e) => {
-      updatePosition((e as MouseEvent).clientX);
-    });
-  });
+  import '../scripts/compare-slider';
 </script>

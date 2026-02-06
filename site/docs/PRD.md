@@ -94,14 +94,14 @@ An override system lets us add custom content without regenerating from AI. Manu
 
 ## Success Metrics
 
-| Metric | Target | Measurement |
-|--------|--------|-------------|
-| **Indexed pages** | 50+ pages indexed within 30 days | Google Search Console |
-| **Organic traffic** | 5k monthly visits within 90 days | Vercel Analytics / Mixpanel |
-| **Cloud conversion** | 3%+ CTR on "Try on Cloud" buttons | Mixpanel click events |
-| **Template loads** | 500+ template loads/month from UTM source | Cloud analytics |
-| **Core Web Vitals** | All pages passing | PageSpeed Insights |
-| **SERP rankings** | Top 10 for `{model} comfyui workflow` keywords | Search Console / Ahrefs |
+| Metric               | Target                                         | Measurement                 |
+| -------------------- | ---------------------------------------------- | --------------------------- |
+| **Indexed pages**    | 50+ pages indexed within 30 days               | Google Search Console       |
+| **Organic traffic**  | 5k monthly visits within 90 days               | Vercel Analytics / Mixpanel |
+| **Cloud conversion** | 3%+ CTR on "Try on Cloud" buttons              | Mixpanel click events       |
+| **Template loads**   | 500+ template loads/month from UTM source      | Cloud analytics             |
+| **Core Web Vitals**  | All pages passing                              | PageSpeed Insights          |
+| **SERP rankings**    | Top 10 for `{model} comfyui workflow` keywords | Search Console / Ahrefs     |
 
 **Revenue Impact:**
 
@@ -144,12 +144,12 @@ An override system lets us add custom content without regenerating from AI. Manu
 
 ## Open Decisions
 
-| Decision | Owner | Options |
-|----------|-------|---------|
-| Domain | Product + Infra | `templates.comfy.org` vs `comfy.org/templates` |
-| Initial scope | Product | Top 50 vs all templates for M1 |
-| Content review | Product | Pre-deploy review vs post-deploy fixes |
+| Decision       | Owner           | Options                                        |
+| -------------- | --------------- | ---------------------------------------------- |
+| Domain         | Product + Infra | `templates.comfy.org` vs `comfy.org/templates` |
+| Initial scope  | Product         | Top 50 vs all templates for M1                 |
+| Content review | Product         | Pre-deploy review vs post-deploy fixes         |
 
 ---
 
-*Document Version: 1.0*
+_Document Version: 1.0_

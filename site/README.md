@@ -1,6 +1,11 @@
 # ComfyUI Template Site
 
-Static site for browsing and discovering ComfyUI workflow templates with AI-generated content.
+Static site for browsing and discovering ComfyUI workflow templates. Built with Astro and Tailwind CSS, featuring AI-generated content for each template.
+
+## Prerequisites
+
+- Node.js 18+
+- pnpm 9.15+
 
 ## Quick Start
 
@@ -15,30 +20,82 @@ cp .env.example .env
 pnpm run dev
 ```
 
-## Commands
+The site will be available at `http://localhost:4321`.
 
-| Command | Description |
-|---------|-------------|
-| `pnpm run dev` | Start Astro development server |
-| `pnpm run sync` | Sync templates from `../templates/` to content collection |
-| `pnpm run sync:tutorials` | Sync tutorials from docs repo |
-| `pnpm run generate:ai` | Generate AI descriptions and FAQs |
-| `pnpm run generate:ai:test` | Test with first template only |
-| `pnpm run generate:previews` | Generate workflow preview images |
-| `pnpm run build` | Full build (runs sync, generate:ai, generate:previews, then astro build) |
-| `pnpm run preview` | Preview production build locally |
+## Available Scripts
 
-## Skipping AI Generation
+| Command                         | Description                                               |
+| ------------------------------- | --------------------------------------------------------- |
+| `pnpm run dev`                  | Start Astro development server                            |
+| `pnpm run build`                | Full production build (runs all prebuild steps)           |
+| `pnpm run preview`              | Preview production build locally                          |
+| `pnpm run sync`                 | Sync templates from `../templates/` to content collection |
+| `pnpm run sync:tutorials`       | Sync tutorials from docs repo to knowledge base           |
+| `pnpm run generate:ai`          | Generate AI descriptions and FAQs for all templates       |
+| `pnpm run generate:ai:test`     | Test AI generation with first template only               |
+| `pnpm run generate:ai:template` | Generate AI content for a specific template               |
+| `pnpm run generate:previews`    | Generate workflow preview images                          |
 
-To skip AI content generation (useful for quick local builds):
+### Build Pipeline
+
+The `prebuild` script runs automatically before `build`:
+
+```
+sync → sync:tutorials → generate:ai → generate:previews → astro build
+```
+
+## Project Structure
+
+```
+site/
+├── src/
+│   ├── components/            # Astro/UI components
+│   ├── content/
+│   │   ├── config.ts          # Content collection schema
+│   │   └── templates/         # Generated template content (git-ignored)
+│   ├── layouts/               # Page layouts
+│   ├── pages/
+│   │   ├── index.astro        # Homepage
+│   │   └── templates/
+│   │       ├── index.astro    # Template listing
+│   │       └── [slug].astro   # Template detail page
+│   └── styles/                # Global styles
+├── scripts/
+│   ├── sync-templates.ts      # Sync from ../templates/
+│   ├── sync-tutorials.ts      # Sync tutorials from docs repo
+│   ├── generate-ai.ts         # AI content generation pipeline
+│   └── generate-previews.ts   # Workflow preview image generation
+├── knowledge/
+│   ├── prompts/               # AI content template prompts
+│   ├── models/                # Model-specific documentation
+│   ├── concepts/              # Domain concept documentation
+│   └── tutorials/             # Synced tutorials (git-ignored)
+├── overrides/
+│   └── templates/             # Human-edited content overrides (committed)
+├── public/
+│   ├── thumbnails/            # Synced from ../templates/
+│   └── previews/              # Generated workflow images
+└── .content-cache/            # AI generation cache (git-ignored)
+```
+
+## Environment Variables
+
+| Variable             | Required | Description                              |
+| -------------------- | -------- | ---------------------------------------- |
+| `OPENAI_API_KEY`     | Yes\*    | OpenAI API key for AI content generation |
+| `SKIP_AI_GENERATION` | No       | Set to `true` to skip AI generation      |
+
+\*Required for production builds; can skip for local development.
+
+### Skipping AI Generation
+
+For quick local builds without API calls:
 
 ```bash
 SKIP_AI_GENERATION=true pnpm run build
 ```
 
-Or set `SKIP_AI_GENERATION=true` in your `.env` file.
-
-When skipped, templates will use placeholder content for AI-generated fields.
+Or set `SKIP_AI_GENERATION=true` in your `.env` file. Templates will use placeholder content for AI-generated fields.
 
 ## AI Content Generation
 
@@ -46,12 +103,12 @@ When skipped, templates will use placeholder content for AI-generated fields.
 
 Four content template types for different user intents:
 
-| Template | Target User | SEO Focus |
-|----------|-------------|-----------|
-| **tutorial** | Beginners | "How to [task] in ComfyUI" |
-| **showcase** | Creators | "[Model] examples" |
-| **comparison** | Researchers | "best [task] workflow" |
-| **breakthrough** | Early adopters | "[Model] new features" |
+| Template         | Target User    | SEO Focus                  |
+| ---------------- | -------------- | -------------------------- |
+| **tutorial**     | Beginners      | "How to [task] in ComfyUI" |
+| **showcase**     | Creators       | "[Model] examples"         |
+| **comparison**   | Researchers    | "best [task] workflow"     |
+| **breakthrough** | Early adopters | "[Model] new features"     |
 
 ### Human Overrides
 
@@ -68,17 +125,6 @@ To manually edit AI-generated content for a specific template:
 3. The sync script will merge overrides with generated content
 4. Templates with `humanEdited: true` will not be regenerated by AI
 
-### Override Fields
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `extendedDescription` | string | Long-form template description |
-| `howToUse` | string[] | Step-by-step usage instructions |
-| `metaDescription` | string | SEO meta description (150-160 chars) |
-| `suggestedUseCases` | string[] | Example use cases |
-| `faqItems` | object[] | FAQ questions and answers |
-| `humanEdited` | boolean | Set to `true` to prevent AI regeneration |
-
 ### Adding Knowledge
 
 Improve AI output by adding documentation:
@@ -86,48 +132,6 @@ Improve AI output by adding documentation:
 - `knowledge/models/{model-name}.md` - Model capabilities
 - `knowledge/concepts/{concept-name}.md` - Domain concepts
 - `knowledge/prompts/{template-type}.md` - Content templates
-
-## Environment Variables
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `OPENAI_API_KEY` | Yes* | OpenAI API key for content generation |
-| `SKIP_AI_GENERATION` | No | Set to `true` to skip AI generation |
-
-*Required for production builds; can skip for local development.
-
-## Project Structure
-
-```
-site/
-├── src/
-│   ├── content/
-│   │   ├── config.ts           # Content collection schema
-│   │   └── templates/          # Generated (git-ignored)
-│   ├── pages/
-│   │   ├── index.astro         # Homepage
-│   │   └── templates/
-│   │       ├── index.astro     # Template listing
-│   │       └── [slug].astro    # Template detail page
-│   ├── layouts/
-│   └── components/
-├── scripts/
-│   ├── sync-templates.ts       # Sync from ../templates/
-│   ├── sync-tutorials.ts       # Sync tutorials from docs repo
-│   ├── generate-ai.ts          # AI content generation
-│   └── generate-previews.ts    # Workflow preview images
-├── knowledge/
-│   ├── prompts/                # Content template prompts
-│   ├── models/                 # Model documentation
-│   ├── concepts/               # Domain concepts
-│   └── tutorials/              # Synced tutorials (git-ignored)
-├── overrides/
-│   └── templates/              # Human edits (committed)
-├── public/
-│   ├── thumbnails/             # Synced from ../templates/
-│   └── previews/               # Generated workflow images
-└── .content-cache/             # AI generation cache (git-ignored)
-```
 
 ## Deployment
 
@@ -142,13 +146,9 @@ Configure these in GitHub repository settings:
 - `VERCEL_ORG_ID` - Vercel organization ID
 - `VERCEL_PROJECT_ID` - Vercel project ID
 
-### Manual Deployment
+## Documentation
 
-Trigger a deploy from the Actions tab using the "Deploy Template Site" workflow.
-
-## Related Documentation
-
-- [AI Content Generation Strategy](../docs/ai-content-generation-strategy.md)
-- [Implementation Roadmap](../docs/ROADMAP.md)
-- [Template Site PRD](../docs/template-site-prd.md)
-- [Template Site Design](../docs/template-site-design.md)
+- [Template Site PRD](docs/template-site-prd.md)
+- [Template Site Design](docs/template-site-design.md)
+- [AI Content Generation Strategy](docs/ai-content-generation-strategy.md)
+- [Implementation Roadmap](docs/ROADMAP.md)

@@ -1,4 +1,7 @@
 ---
+import HreflangTags from './HreflangTags.astro';
+import { LANGUAGES, DEFAULT_LOCALE } from '../i18n/config';
+
 interface Props {
   title: string;
   description: string;
@@ -6,20 +9,47 @@ interface Props {
   ogImage?: string;
   ogType?: 'website' | 'article';
   structuredData?: object;
+  /** Base path for hreflang tags (without locale prefix) */
+  hreflangBasePath?: string;
+  /** Locale is accepted for compatibility but computed from URL in HreflangTags */
+  locale?: string;
 }
 
 const {
   title,
   description,
   canonicalUrl,
-  ogImage = '/og-default.png',
+  ogImage = '/og-default.svg',
   ogType = 'website',
   structuredData,
+  hreflangBasePath,
 } = Astro.props;
 
-const siteUrl = 'https://templates.comfy.org';
-const fullCanonicalUrl = canonicalUrl || Astro.url.href;
+const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
+const pathname = Astro.url.pathname;
+
+const fullCanonicalUrl = canonicalUrl
+  ? canonicalUrl
+  : `${siteUrl}${pathname}${pathname.endsWith('/') ? '' : '/'}`;
 const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+
+// Compute hreflang base path if not provided
+// Strip locale prefix from pathname to get the base path
+let computedHreflangBasePath = hreflangBasePath;
+if (!computedHreflangBasePath) {
+  // Check if pathname starts with a locale prefix
+  const pathSegments = pathname.split('/').filter(Boolean);
+  if (pathSegments[0] && pathSegments[0] in LANGUAGES && pathSegments[0] !== DEFAULT_LOCALE) {
+    // Remove locale prefix
+    computedHreflangBasePath = '/' + pathSegments.slice(1).join('/');
+  } else {
+    computedHreflangBasePath = pathname;
+  }
+  // Ensure trailing slash
+  if (!computedHreflangBasePath.endsWith('/')) {
+    computedHreflangBasePath += '/';
+  }
+}
 ---
 
 <meta charset="UTF-8" />
@@ -27,6 +57,9 @@ const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}
 <title>{title}</title>
 <meta name="description" content={description} />
 <link rel="canonical" href={fullCanonicalUrl} />
+
+{/* Hreflang tags for international SEO */}
+<HreflangTags basePath={computedHreflangBasePath} />
 
 <!-- Open Graph -->
 <meta property="og:type" content={ogType} />
@@ -45,6 +78,8 @@ const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}
 <!-- Favicon -->
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-{structuredData && (
-  <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
-)}
+{
+  structuredData && (
+    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  )
+}

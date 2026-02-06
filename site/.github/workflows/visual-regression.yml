@@ -1,0 +1,128 @@
+name: Visual Regression Tests
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+defaults:
+  run:
+    working-directory: site
+
+jobs:
+  visual-regression:
+    name: Visual Regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+      - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install Playwright system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: pnpm exec playwright install-deps chromium
+
+      - name: Build site
+        run: pnpm run build
+        env:
+          SKIP_AI_GENERATION: true
+
+      - name: Run visual regression tests
+        run: pnpm run test:visual
+
+      - name: Upload screenshot diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-diffs
+          path: |
+            site/test-results/
+            site/playwright-report/
+          retention-days: 30
+
+      - name: Comment on PR with visual changes
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            const testResultsDir = 'site/test-results';
+            let diffFiles = [];
+
+            if (fs.existsSync(testResultsDir)) {
+              const walkDir = (dir) => {
+                const files = fs.readdirSync(dir);
+                for (const file of files) {
+                  const filePath = path.join(dir, file);
+                  const stat = fs.statSync(filePath);
+                  if (stat.isDirectory()) {
+                    walkDir(filePath);
+                  } else if (file.includes('diff') && file.endsWith('.png')) {
+                    diffFiles.push(filePath);
+                  }
+                }
+              };
+              walkDir(testResultsDir);
+            }
+
+            const body = `## 🎨 Visual Regression Test Failed
+
+            Visual differences were detected in this PR.
+
+            **Diffs found:** ${diffFiles.length}
+
+            ${diffFiles.length > 0 ? '### Files with differences:\n' + diffFiles.map(f => `- \`${f}\``).join('\n') : ''}
+
+            📦 Download the **visual-regression-diffs** artifact to review the changes.
+
+            If these changes are intentional, update the snapshots by running:
+            \`\`\`bash
+            pnpm run test:visual:update
+            \`\`\`
+            Then commit the updated snapshots.`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
