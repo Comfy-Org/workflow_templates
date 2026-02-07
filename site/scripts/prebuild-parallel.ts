@@ -63,16 +63,20 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  // Phase 2: Run AI generation, preview generation, and OG image generation in parallel
-  // generate:ai depends on sync but not sync:tutorials
-  // generate:previews depends on the templates directory (external) not sync
-  // generate:og depends on sync (needs template data)
+  const skipAI = process.env.SKIP_AI_GENERATION === 'true';
+
   console.log('\n📦 Phase 2: Generating content...');
-  const phase2Results = await Promise.all([
-    runTask('generate-ai', 'pnpm', ['run', 'generate:ai']),
-    runTask('generate-previews', 'pnpm', ['run', 'generate:previews']),
-    runTask('generate-og', 'pnpm', ['run', 'generate:og']),
-  ]);
+  if (skipAI) {
+    console.log('   (SKIP_AI_GENERATION=true — skipping AI, preview, and OG generation)');
+  }
+  const phase2Tasks = skipAI
+    ? []
+    : [
+        runTask('generate-ai', 'pnpm', ['run', 'generate:ai']),
+        runTask('generate-previews', 'pnpm', ['run', 'generate:previews']),
+        runTask('generate-og', 'pnpm', ['run', 'generate:og']),
+      ];
+  const phase2Results = await Promise.all(phase2Tasks);
 
   const phase2Failed = phase2Results.filter((r) => !r.success);
   if (phase2Failed.length > 0) {

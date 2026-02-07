@@ -1,9 +1,17 @@
-import { createCanvas } from 'canvas';
 import { readFile, writeFile, mkdir, readdir, stat } from 'fs/promises';
 import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import os from 'os';
+
+let createCanvas: typeof import('canvas').createCanvas;
+try {
+  const canvasModule = await import('canvas');
+  createCanvas = canvasModule.createCanvas;
+} catch {
+  console.warn('⚠ canvas module not available — skipping preview generation');
+  process.exit(0);
+}
 
 // Parallel processing configuration
 const CONCURRENCY = Math.max(1, os.cpus().length - 1);
