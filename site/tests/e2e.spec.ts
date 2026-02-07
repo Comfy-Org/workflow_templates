@@ -177,7 +177,7 @@ test.describe('UTM Parameter Tracking', () => {
     await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('article a[href*="cloud.comfy.org"]');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
@@ -208,7 +208,7 @@ test.describe('UTM Parameter Tracking', () => {
     const slug = currentUrl.split('/templates/')[1]?.replace(/\/$/, '');
     expect(slug).toBeTruthy();
 
-    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('article a[href*="cloud.comfy.org"]');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 

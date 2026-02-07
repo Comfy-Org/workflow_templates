@@ -264,8 +264,8 @@ function writeSummaryJson(reports: PageReport[]): void {
   for (const report of reports) {
     for (const issue of report.issues) {
       const key = issue.message
-            .replace(/\(\d+ chars.*?\)/, '(N chars...)')
-            .replace(/^\d+ image\(s\)/, 'N image(s)');
+        .replace(/\(\d+ chars.*?\)/, '(N chars...)')
+        .replace(/^\d+ image\(s\)/, 'N image(s)');
       issueCounts[key] = (issueCounts[key] || 0) + 1;
     }
   }
