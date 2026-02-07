@@ -1,0 +1,48 @@
+name: Upsert PR Comment
+description: Create or update a PR comment identified by a unique marker string
+
+inputs:
+  marker:
+    description: Unique HTML comment marker to identify the bot comment (e.g. "<!-- lint-results -->")
+    required: true
+  body:
+    description: Full comment body (should include the marker)
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Upsert comment
+      uses: actions/github-script@v7
+      env:
+        MARKER: ${{ inputs.marker }}
+        BODY: ${{ inputs.body }}
+      with:
+        script: |
+          const marker = process.env.MARKER;
+          const body = process.env.BODY;
+          const { owner, repo } = context.repo;
+          const issue_number = context.issue.number;
+
+          if (!issue_number) {
+            core.warning('No PR context — skipping comment upsert');
+            return;
+          }
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner, repo, issue_number, per_page: 100,
+          });
+
+          const existing = comments.find(c =>
+            (c.body || '').includes(marker)
+          );
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner, repo, comment_id: existing.id, body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner, repo, issue_number, body,
+            });
+          }

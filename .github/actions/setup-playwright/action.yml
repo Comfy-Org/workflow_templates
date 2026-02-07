@@ -1,0 +1,42 @@
+name: Setup Playwright
+description: Cache and install Playwright browsers with system dependencies
+
+inputs:
+  working-directory:
+    description: Working directory for the site package
+    default: site
+  browsers:
+    description: Browsers to install
+    default: chromium
+
+runs:
+  using: composite
+  steps:
+    - name: Get Playwright version
+      id: playwright-version
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+    - name: Cache Playwright browsers
+      uses: actions/cache@v4
+      id: playwright-cache
+      with:
+        path: ~/.cache/ms-playwright
+        key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+
+    - name: Install Playwright browsers
+      if: steps.playwright-cache.outputs.cache-hit != 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: pnpm exec playwright install --with-deps $BROWSERS
+
+    - name: Install Playwright system dependencies
+      if: steps.playwright-cache.outputs.cache-hit == 'true'
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        BROWSERS: ${{ inputs.browsers }}
+      run: pnpm exec playwright install-deps $BROWSERS
