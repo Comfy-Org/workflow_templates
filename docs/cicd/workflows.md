@@ -6,7 +6,7 @@
 **Triggers:** PR with template changes  
 **Purpose:** Auto-bump package versions, sync manifests
 ```yaml
-templates/** → ci_version_manager.py → bump versions → sync_bundles.py → commit
+templates/** → sync_bundles.py → ci_version_manager.py → bump versions → commit
 ```
 **Validates:** bundles.json completeness, template→package mapping  
 **Commits:** Version bumps + updated manifests to PR branch
@@ -31,6 +31,55 @@ version_check → determine_packages → build_packages → publish_pypi → git
 
 ### `build-test.yml`
 **Purpose:** Package installation test, import validation
+
+### `validate-blueprints.yml`
+**Purpose:** Blueprint schema + sync validation
+
+### `check_input_assets.yml`
+**Purpose:** Input asset validation
+
+### `lint.yml`
+**Purpose:** Python linting
+
+## Automation Workflows
+
+### `sync-custom-nodes.yml`
+**Purpose:** Auto-populates `requiresCustomNodes` in all `templates/index*.json` files by parsing workflow JSONs  
+**Commits:** Updated index files to PR branch
+
+### `generate-upload-json.yml`
+**Purpose:** Generates upload JSON
+
+### `model-analysis.yml`
+**Purpose:** Model analysis
+
+## Site Workflows
+
+### `lint-site.yml`
+**Triggers:** `site/**`  
+**Purpose:** ESLint, Prettier, Astro check, unit tests, template validation
+
+### `e2e-tests-site.yml`
+**Triggers:** `site/**`  
+**Purpose:** Playwright E2E tests
+
+### `visual-regression-site.yml`
+**Triggers:** `site/**`  
+**Purpose:** Visual regression tests
+
+### `seo-audit-site.yml`
+**Triggers:** `site/**`  
+**Purpose:** SEO audit on built site
+
+### `lighthouse.yml`
+**Triggers:** `site/**`  
+**Purpose:** Lighthouse CI performance/a11y checks
+
+### `deploy-site.yml`
+**Purpose:** Manual Vercel production deploy
+
+### `link-checker.yml`
+**Purpose:** Link checking
 
 ## Manual Operations
 
