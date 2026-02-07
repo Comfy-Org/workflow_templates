@@ -43,6 +43,15 @@ jobs:
         continue-on-error: true
         run: pnpm run format:check 2>&1 | tee format-output.txt
 
+      - name: Astro Check
+        run: pnpm run check
+
+      - name: Unit Tests
+        run: pnpm test
+
+      - name: Validate Templates
+        run: pnpm run validate:templates
+
       - name: Build comment body
         if: always() && github.event_name == 'pull_request'
         id: comment
