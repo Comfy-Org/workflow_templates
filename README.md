@@ -4,17 +4,29 @@ This repo hosts the official ComfyUI **workflow templates** and **subgraph bluep
 
 ## Overview
 
-| Content | Description | Package |
-|---------|-------------|---------|
-| **Workflow Templates** | Full standalone workflows for the template picker | `comfyui-workflow-templates` |
-| **Subgraph Blueprints** | Reusable node components that appear in the node palette | `comfyui-subgraph-blueprints` |
+| Content | Description | Location |
+|---------|-------------|----------|
+| **Workflow Templates** | Full standalone workflows for the template picker | `templates/`, `packages/` |
+| **Subgraph Blueprints** | Reusable node components that appear in the node palette | `blueprints/`, `packages/blueprints/` |
+| **Template Site** | Astro SSG that showcases templates at [templates.comfy.org](https://templates.comfy.org) | `site/` |
 
-The repository uses a **package-per-media** structure:
+The repository uses a **package-per-media** structure for Python distribution:
 
 - `packages/core` – manifest + loader helpers shipped as `comfyui-workflow-templates-core`
 - `packages/media_*` – workflow template JSON + preview assets for each media type
 - `packages/blueprints` – subgraph blueprint JSON + preview assets as `comfyui-subgraph-blueprints`
 - `packages/meta` and the root `pyproject.toml` – the `comfyui-workflow-templates` meta package
+
+### Template Site (`site/`)
+
+The `site/` directory contains an independent Astro static site that provides a browsable, searchable interface for all workflow templates. It includes AI-generated descriptions, i18n support (11 languages), SEO optimization, and automated content pipelines. See [site/AGENTS.md](site/AGENTS.md) for full documentation.
+
+```bash
+cd site
+pnpm install
+pnpm run dev       # Start dev server at localhost:4321
+pnpm run build     # Production build (runs prebuild pipeline automatically)
+```
 
 ## Quick Start
 
