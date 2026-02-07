@@ -66,19 +66,25 @@ jobs:
             echo "⚠️ SEO audit found issues" >> $GITHUB_STEP_SUMMARY
             echo "status=issues" >> $GITHUB_OUTPUT
           fi
-          echo '<details><summary>Full SEO Report</summary>' >> $GITHUB_STEP_SUMMARY
-          echo '' >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          sed 's/\x1b\[[0-9;]*m//g' seo-output.txt >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo '</details>' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -f seo-summary.json ]; then
+            echo '<details><summary>Full SEO Summary</summary>' >> $GITHUB_STEP_SUMMARY
+            echo '' >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat seo-summary.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo '</details>' >> $GITHUB_STEP_SUMMARY
+          else
+            echo '_No seo-summary.json found_' >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Check internal links
         id: links
         continue-on-error: true
         run: |
           echo "## Link Check" >> $GITHUB_STEP_SUMMARY
-          BROKEN_LINKS=""
+          BROKEN_FILE="broken-links.txt"
+          : > "$BROKEN_FILE"
           BROKEN_COUNT=0
           TOTAL_COUNT=0
 
@@ -91,13 +97,24 @@ jobs:
               if [ -z "$clean" ] || [ "$clean" = "/" ]; then
                 continue
               fi
-              target="dist${clean}"
-              if [ "${target: -1}" = "/" ]; then
-                target="${target}index.html"
+
+              found=false
+
+              # If it has a file extension, treat as an asset
+              if [[ "$clean" =~ \.[a-zA-Z0-9]+$ ]]; then
+                [ -f "dist${clean}" ] && found=true
+              else
+                # Route-like URL: try both Astro output formats
+                base="${clean%/}"
+                [ -f "dist${base}/index.html" ] && found=true
+                [ "$found" = false ] && [ -f "dist${base}.html" ] && found=true
+                [ "$found" = false ] && [ -f "dist${clean}" ] && found=true
+                [ "$found" = false ] && [ -d "dist${base}" ] && found=true
               fi
-              if [ ! -f "$target" ] && [ ! -f "${target}.html" ] && [ ! -d "dist${clean}" ]; then
-                BROKEN_LINKS="${BROKEN_LINKS}\n- \`${href}\` (in ${htmlfile#dist/})"
+
+              if [ "$found" = false ]; then
                 BROKEN_COUNT=$((BROKEN_COUNT + 1))
+                echo "- \`${href}\` (in ${htmlfile#dist/})" >> "$BROKEN_FILE"
               fi
             done
           done
@@ -109,11 +126,24 @@ jobs:
             echo "total_count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
           else
             echo "❌ Found $BROKEN_COUNT broken internal links out of $TOTAL_COUNT" >> $GITHUB_STEP_SUMMARY
-            echo -e "$BROKEN_LINKS" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "First 50 broken links:" >> $GITHUB_STEP_SUMMARY
+            head -n 50 "$BROKEN_FILE" >> $GITHUB_STEP_SUMMARY
             echo "status=failed" >> $GITHUB_OUTPUT
             echo "broken_count=$BROKEN_COUNT" >> $GITHUB_OUTPUT
             echo "total_count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
           fi
+
+      - name: Upload SEO reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-seo-reports
+          path: |
+            site/seo-output.txt
+            site/seo-summary.json
+            site/broken-links.txt
+          if-no-files-found: ignore
 
       - name: Build comment body
         if: always() && github.event_name == 'pull_request'

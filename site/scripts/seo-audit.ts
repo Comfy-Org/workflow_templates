@@ -56,6 +56,12 @@ function auditPage(filePath: string): PageReport {
   const root = parse(content);
   const issues: Issue[] = [];
 
+  // Skip redirect-only pages (e.g., index.html → /templates/)
+  const metaRefresh = root.querySelector('meta[http-equiv="refresh"]');
+  if (metaRefresh) {
+    return { file: relativePath, issues: [] };
+  }
+
   // Check <title> tag
   const titleEl = root.querySelector('title');
   const title = titleEl?.text?.trim() || '';
