@@ -17,6 +17,18 @@ This roadmap consolidates items from:
 
 ---
 
+## Launch Checklist (One-Time)
+
+| Task                                                | Status  | Notes                                      |
+| --------------------------------------------------- | ------- | ------------------------------------------ |
+| Verify `templates.comfy.org` in Google Search Console | 🔲 Todo | URL prefix method; see `docs/seo-setup-guide.md` |
+| Submit sitemap in GSC (`/sitemap-index.xml`)         | 🔲 Todo | One-time manual submission                 |
+| Register with Bing Webmaster Tools                   | 🔲 Todo | Optional; enables IndexNow for Bing/DuckDuckGo |
+| Set `OPENAI_API_KEY` secret on Vercel                | 🔲 Todo | Required for production AI content builds  |
+| First production deploy via `deploy-site.yml`        | 🔲 Todo | Manual dispatch after secrets are set      |
+
+---
+
 ## Phase 1: Foundation ✅ (In Progress)
 
 **Goal**: Basic AI content generation pipeline with knowledge base
