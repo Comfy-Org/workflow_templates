@@ -1,6 +1,7 @@
 import type { APIRoute, GetStaticPaths } from 'astro';
 import { getCollection } from 'astro:content';
 import { ImageResponse } from '@vercel/og';
+import { SITE_ORIGIN } from '../../config/site';
 
 const MEDIA_TYPE_CONFIG: Record<string, { label: string; color: string }> = {
   image: { label: 'Image Generation', color: '#818cf8' },
@@ -120,7 +121,7 @@ export const GET: APIRoute = async ({ props }) => {
                     fontSize: '18px',
                     marginTop: '8px',
                   },
-                  children: 'templates.comfy.org',
+                  children: SITE_ORIGIN.replace(/^https?:\/\//, ''),
                 },
               },
             ],

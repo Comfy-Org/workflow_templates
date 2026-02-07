@@ -6,6 +6,7 @@ import HreflangTags from '../../components/HreflangTags.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 import { slugify } from '../../lib/slugify';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 
 export async function getStaticPaths() {
   const templates = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
@@ -46,8 +47,7 @@ const basePath = `/model/${name}/`;
 const title = `${modelName} ComfyUI Workflows - Free Templates`;
 const description = `Browse ${templates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
-const canonicalUrl = `${siteUrl}${localizeUrl(basePath, locale)}`;
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -61,12 +61,12 @@ const breadcrumbStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
     {
       '@type': 'ListItem',
       position: 2,
       name: t('labels.models', locale),
-      item: `${siteUrl}${localizeUrl('/model/', locale)}`,
+      item: absoluteUrl(localizeUrl('/model/', locale)),
     },
     { '@type': 'ListItem', position: 3, name: modelName },
   ],

@@ -5,6 +5,7 @@ import TemplateCard from '../../components/TemplateCard.astro';
 import HreflangTags from '../../components/HreflangTags.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 
 type MediaType = 'image' | 'video' | 'audio' | '3d';
 
@@ -36,9 +37,8 @@ const templates = allTemplates
   .filter((tmpl) => tmpl.data.mediaType === type)
   .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
 const basePath = `/category/${type}/`;
-const canonicalUrl = `${siteUrl}${localizeUrl(basePath, locale)}`;
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -52,12 +52,12 @@ const breadcrumbStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
     {
       '@type': 'ListItem',
       position: 2,
       name: t('nav.templates', locale),
-      item: `${siteUrl}${localizeUrl('/templates/', locale)}`,
+      item: absoluteUrl(localizeUrl('/templates/', locale)),
     },
     { '@type': 'ListItem', position: 3, name: categoryName },
   ],

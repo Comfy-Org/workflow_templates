@@ -3,6 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { getTemplatesForLocale } from '../../lib/templates';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 
 export async function getStaticPaths() {
   // Only generate English (default locale) pages here
@@ -18,10 +19,9 @@ const { template } = Astro.props;
 const locale = DEFAULT_LOCALE;
 const { data } = template;
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
 const title = `${data.title || data.name} - ComfyUI Workflow`;
 const hreflangBasePath = `/templates/${data.name}/`;
-const canonicalUrl = `${siteUrl}${hreflangBasePath}`;
+const canonicalUrl = absoluteUrl(hreflangBasePath);
 
 const thumbnails = data.thumbnails || [];
 const primaryThumbnail = thumbnails[0] || null;
@@ -32,9 +32,7 @@ const structuredData = {
   '@type': 'TechArticle',
   headline: data.title || data.name,
   description: data.description,
-  image: primaryThumbnail
-    ? `https://templates.comfy.org/thumbnails/${primaryThumbnail}`
-    : undefined,
+  image: primaryThumbnail ? absoluteUrl('/thumbnails/' + primaryThumbnail) : undefined,
   datePublished: data.date,
   inLanguage: 'en',
 };
@@ -55,8 +53,8 @@ const breadcrumbStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: siteUrl },
-    { '@type': 'ListItem', position: 2, name: 'Templates', item: `${siteUrl}/templates/` },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+    { '@type': 'ListItem', position: 2, name: 'Templates', item: absoluteUrl('/templates/') },
     { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
   ],
 };

@@ -8,6 +8,7 @@ import TemplateCard from '../../../components/TemplateCard.astro';
 import { LOCALES, DEFAULT_LOCALE, LANGUAGES, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
 import { getTemplatesForLocale, sortByUsage } from '../../../lib/templates';
+import { absoluteUrl } from '../../../config/site';
 
 export async function getStaticPaths() {
   // Generate paths for all non-default locales
@@ -24,8 +25,7 @@ const langInfo = LANGUAGES[locale];
 const templates = await getTemplatesForLocale(locale);
 const sortedTemplates = sortByUsage(templates);
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
-const canonicalUrl = `${siteUrl}/${locale}/templates/`;
+const canonicalUrl = absoluteUrl('/' + locale + '/templates/');
 
 const structuredData = {
   '@context': 'https://schema.org',
