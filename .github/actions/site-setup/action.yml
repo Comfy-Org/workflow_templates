@@ -1,0 +1,33 @@
+name: Site Setup
+description: Checkout, set up Node.js and pnpm with caching, install dependencies for the site package
+
+inputs:
+  working-directory:
+    description: Working directory for the site package
+    default: site
+  node-version:
+    description: Node.js version
+    default: '20'
+  pnpm-version:
+    description: pnpm version
+    default: '9'
+
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: ${{ inputs.pnpm-version }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: pnpm
+        cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: pnpm install --frozen-lockfile

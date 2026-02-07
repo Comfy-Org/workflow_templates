@@ -239,6 +239,51 @@ function printReport(reports: PageReport[]): void {
   }
 }
 
+function writeSummaryJson(reports: PageReport[]): void {
+  const totalCritical = reports.reduce(
+    (sum, r) => sum + r.issues.filter((i) => i.severity === 'critical').length,
+    0
+  );
+  const totalWarning = reports.reduce(
+    (sum, r) => sum + r.issues.filter((i) => i.severity === 'warning').length,
+    0
+  );
+  const totalInfo = reports.reduce(
+    (sum, r) => sum + r.issues.filter((i) => i.severity === 'info').length,
+    0
+  );
+  const pagesWithIssues = reports.filter((r) => r.issues.length > 0).length;
+
+  const issueCounts: Record<string, number> = {};
+  for (const report of reports) {
+    for (const issue of report.issues) {
+      const key = issue.message
+            .replace(/\(\d+ chars.*?\)/, '(N chars...)')
+            .replace(/^\d+ image\(s\)/, 'N image(s)');
+      issueCounts[key] = (issueCounts[key] || 0) + 1;
+    }
+  }
+
+  const topIssues = Object.entries(issueCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([message, count]) => ({ message, count }));
+
+  const summary = {
+    pagesScanned: reports.length,
+    pagesWithIssues,
+    pagesClean: reports.length - pagesWithIssues,
+    critical: totalCritical,
+    warnings: totalWarning,
+    info: totalInfo,
+    topIssues,
+    hasCritical: totalCritical > 0,
+  };
+
+  const outputPath = path.resolve(process.cwd(), 'seo-summary.json');
+  fs.writeFileSync(outputPath, JSON.stringify(summary, null, 2));
+}
+
 function main(): void {
   console.log(`${colors.gray}Scanning ${DIST_DIR}...${colors.reset}`);
 
@@ -261,6 +306,7 @@ function main(): void {
   const reports: PageReport[] = htmlFiles.map(auditPage);
 
   printReport(reports);
+  writeSummaryJson(reports);
 
   const hasCritical = reports.some((r) => r.issues.some((i) => i.severity === 'critical'));
 

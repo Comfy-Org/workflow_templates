@@ -7,6 +7,7 @@
  */
 import { LANGUAGES, type Locale } from '../i18n/config';
 import { localizeUrl } from '../i18n/utils';
+import { absoluteUrl } from '../config/site';
 
 interface Props {
   /** Base path without locale prefix (e.g., "/templates/" or "/templates/flux_schnell/") */
@@ -14,12 +15,11 @@ interface Props {
 }
 
 const { basePath } = Astro.props;
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
 
 // Generate hreflang entries for all supported locales
 // Note: hreflang values should be lowercase (e.g., 'zh-tw' not 'zh-TW')
 const hreflangEntries = Object.keys(LANGUAGES).map((locale) => {
-  const href = `${siteUrl}${localizeUrl(basePath, locale as Locale)}`;
+  const href = absoluteUrl(localizeUrl(basePath, locale as Locale));
 
   return {
     hreflang: locale.toLowerCase(),
@@ -28,7 +28,7 @@ const hreflangEntries = Object.keys(LANGUAGES).map((locale) => {
 });
 
 // Add x-default pointing to the English version
-const xDefaultHref = `${siteUrl}${basePath}`;
+const xDefaultHref = absoluteUrl(basePath);
 ---
 
 {/* Language alternates */}

@@ -25,39 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
+      - name: Setup
+        uses: ./.github/actions/site-setup
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: site/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> $GITHUB_OUTPUT
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-
-      - name: Install Playwright system dependencies
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+      - name: Setup Playwright
+        uses: ./.github/actions/setup-playwright
 
       - name: Build site
         run: pnpm run build
@@ -75,11 +47,13 @@ jobs:
           fi
 
       - name: Run visual regression tests
+        id: visual-tests
         if: steps.snapshots.outputs.exists == 'true'
+        continue-on-error: true
         run: pnpm run test:visual
 
       - name: Upload screenshot diffs
-        if: failure()
+        if: steps.visual-tests.outcome == 'failure'
         uses: actions/upload-artifact@v4
         with:
           name: visual-regression-diffs
@@ -88,52 +62,85 @@ jobs:
             site/playwright-report/
           retention-days: 30
 
-      - name: Comment on PR with visual changes
-        if: failure()
+      - name: Build comment body
+        if: always() && github.event_name == 'pull_request'
+        id: comment
         uses: actions/github-script@v7
         with:
+          result-encoding: string
           script: |
             const fs = require('fs');
             const path = require('path');
+            const snapshotsExist = '${{ steps.snapshots.outputs.exists }}' === 'true';
+            const testOutcome = '${{ steps.visual-tests.outcome }}';
+            const passed = testOutcome === 'success';
+            const failed = testOutcome === 'failure';
 
-            const testResultsDir = 'site/test-results';
-            let diffFiles = [];
+            const lines = ['<!-- site-visual-regression-results -->', '## 🎨 Visual Regression Results', ''];
 
-            if (fs.existsSync(testResultsDir)) {
-              const walkDir = (dir) => {
-                const files = fs.readdirSync(dir);
-                for (const file of files) {
-                  const filePath = path.join(dir, file);
-                  const stat = fs.statSync(filePath);
-                  if (stat.isDirectory()) {
-                    walkDir(filePath);
-                  } else if (file.includes('diff') && file.endsWith('.png')) {
-                    diffFiles.push(filePath);
+            if (!snapshotsExist) {
+              lines.push(
+                '⚠️ **No baseline snapshots found.**',
+                '',
+                'Run locally and commit the snapshots:',
+                '```bash',
+                'cd site && pnpm run test:visual:update',
+                '```',
+              );
+            } else if (passed) {
+              lines.push('✅ No visual differences detected.');
+            } else if (failed) {
+              const testResultsDir = 'site/test-results';
+              let diffFiles = [];
+              if (fs.existsSync(testResultsDir)) {
+                const walkDir = (dir) => {
+                  const files = fs.readdirSync(dir);
+                  for (const file of files) {
+                    const filePath = path.join(dir, file);
+                    const stat = fs.statSync(filePath);
+                    if (stat.isDirectory()) {
+                      walkDir(filePath);
+                    } else if (file.includes('diff') && file.endsWith('.png')) {
+                      diffFiles.push(filePath);
+                    }
                   }
+                };
+                walkDir(testResultsDir);
+              }
+              lines.push(
+                '❌ Visual differences were detected in this PR.',
+                '',
+                `**Diffs found:** ${diffFiles.length}`,
+              );
+              if (diffFiles.length > 0) {
+                lines.push('', '**Files with differences:**');
+                for (const f of diffFiles) {
+                  lines.push(`- \`${f}\``);
                 }
-              };
-              walkDir(testResultsDir);
+              }
+              lines.push(
+                '',
+                '📦 Download the **visual-regression-diffs** artifact to review the changes.',
+                '',
+                'If these changes are intentional, update the snapshots:',
+                '```bash',
+                'cd site && pnpm run test:visual:update',
+                '```',
+              );
+            } else {
+              lines.push('⏭️ Visual regression tests were skipped.');
             }
 
-            const body = `## 🎨 Visual Regression Test Failed
+            lines.push('', '---', '*Generated by Visual Regression workflow*');
+            return lines.join('\n');
 
-            Visual differences were detected in this PR.
+      - name: Comment on PR
+        if: always() && github.event_name == 'pull_request' && steps.comment.outputs.result
+        uses: ./.github/actions/upsert-pr-comment
+        with:
+          marker: '<!-- site-visual-regression-results -->'
+          body: ${{ steps.comment.outputs.result }}
 
-            **Diffs found:** ${diffFiles.length}
-
-            ${diffFiles.length > 0 ? '### Files with differences:\n' + diffFiles.map(f => `- \`${f}\``).join('\n') : ''}
-
-            📦 Download the **visual-regression-diffs** artifact to review the changes.
-
-            If these changes are intentional, update the snapshots by running:
-            \`\`\`bash
-            pnpm run test:visual:update
-            \`\`\`
-            Then commit the updated snapshots.`;
-
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            });
+      - name: Fail if visual differences
+        if: steps.visual-tests.outcome == 'failure'
+        run: exit 1

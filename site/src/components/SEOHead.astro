@@ -1,6 +1,7 @@
 ---
 import HreflangTags from './HreflangTags.astro';
 import { LANGUAGES, DEFAULT_LOCALE } from '../i18n/config';
+import { absoluteUrl } from '../config/site';
 
 interface Props {
   title: string;
@@ -25,13 +26,12 @@ const {
   hreflangBasePath,
 } = Astro.props;
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
 const pathname = Astro.url.pathname;
 
 const fullCanonicalUrl = canonicalUrl
   ? canonicalUrl
-  : `${siteUrl}${pathname}${pathname.endsWith('/') ? '' : '/'}`;
-const fullOgImage = ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage}`;
+  : absoluteUrl(`${pathname}${pathname.endsWith('/') ? '' : '/'}`);
+const fullOgImage = ogImage.startsWith('http') ? ogImage : absoluteUrl(ogImage);
 
 // Compute hreflang base path if not provided
 // Strip locale prefix from pathname to get the base path

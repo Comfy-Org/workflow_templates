@@ -4,6 +4,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import TemplateCard from '../../components/TemplateCard.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
+import { absoluteUrl } from '../../config/site';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const templates = await getCollection('templates');
@@ -11,8 +12,7 @@ const sortedTemplates = templates
   .filter((tmpl) => !tmpl.id.includes('/'))
   .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
-const canonicalUrl = `${siteUrl}${localizeUrl('/templates/', locale)}`;
+const canonicalUrl = absoluteUrl(localizeUrl('/templates/', locale));
 
 const structuredData = {
   '@context': 'https://schema.org',

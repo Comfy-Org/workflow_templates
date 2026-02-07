@@ -30,20 +30,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-          cache-dependency-path: site/pnpm-lock.yaml
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup
+        uses: ./.github/actions/site-setup
 
       - name: Build site
         run: pnpm build
@@ -90,34 +78,57 @@ jobs:
         continue-on-error: true
         run: |
           echo "## Link Check" >> $GITHUB_STEP_SUMMARY
-          if npx linkinator ./dist --recurse --format json --skip "^(?!file://)" 2>/dev/null | tee links-output.json; then
-            BROKEN=$(jq '[.links[] | select(.state == "BROKEN")] | length' links-output.json)
-            TOTAL=$(jq '.links | length' links-output.json)
-            if [ "$BROKEN" -eq 0 ]; then
-              echo "✅ All $TOTAL internal links valid" >> $GITHUB_STEP_SUMMARY
-              echo "status=passed" >> $GITHUB_OUTPUT
-            else
-              echo "❌ Found $BROKEN broken links out of $TOTAL" >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              jq -r '.links[] | select(.state == "BROKEN") | "- \(.url) (from \(.parent))"' links-output.json >> $GITHUB_STEP_SUMMARY
-              echo '```' >> $GITHUB_STEP_SUMMARY
-              echo "status=failed" >> $GITHUB_OUTPUT
-            fi
+          BROKEN_LINKS=""
+          BROKEN_COUNT=0
+          TOTAL_COUNT=0
+
+          for htmlfile in $(find dist -name '*.html' | head -500); do
+            hrefs=$(grep -oP 'href="(/[^"]*)"' "$htmlfile" | sed 's/href="//;s/"$//' || true)
+            for href in $hrefs; do
+              TOTAL_COUNT=$((TOTAL_COUNT + 1))
+              clean="${href%%#*}"
+              clean="${clean%%\?*}"
+              if [ -z "$clean" ] || [ "$clean" = "/" ]; then
+                continue
+              fi
+              target="dist${clean}"
+              if [ "${target: -1}" = "/" ]; then
+                target="${target}index.html"
+              fi
+              if [ ! -f "$target" ] && [ ! -f "${target}.html" ] && [ ! -d "dist${clean}" ]; then
+                BROKEN_LINKS="${BROKEN_LINKS}\n- \`${href}\` (in ${htmlfile#dist/})"
+                BROKEN_COUNT=$((BROKEN_COUNT + 1))
+              fi
+            done
+          done
+
+          if [ "$BROKEN_COUNT" -eq 0 ]; then
+            echo "✅ All internal links valid ($TOTAL_COUNT checked)" >> $GITHUB_STEP_SUMMARY
+            echo "status=passed" >> $GITHUB_OUTPUT
+            echo "broken_count=0" >> $GITHUB_OUTPUT
+            echo "total_count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ Link check encountered errors" >> $GITHUB_STEP_SUMMARY
-            echo "status=error" >> $GITHUB_OUTPUT
+            echo "❌ Found $BROKEN_COUNT broken internal links out of $TOTAL_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo -e "$BROKEN_LINKS" >> $GITHUB_STEP_SUMMARY
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "broken_count=$BROKEN_COUNT" >> $GITHUB_OUTPUT
+            echo "total_count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
           fi
 
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
+      - name: Build comment body
+        if: always() && github.event_name == 'pull_request'
+        id: comment
         uses: actions/github-script@v7
         with:
+          result-encoding: string
           script: |
             const fs = require('fs');
 
             const sitemapStatus = '${{ steps.sitemap.outputs.status }}';
             const seoStatus = '${{ steps.seo.outputs.status }}';
             const linksStatus = '${{ steps.links.outputs.status }}';
+            const brokenCount = '${{ steps.links.outputs.broken_count }}';
+            const totalCount = '${{ steps.links.outputs.total_count }}';
 
             const icon = (status) => {
               if (status === 'passed') return '✅';
@@ -126,78 +137,77 @@ jobs:
               return '❓';
             };
 
-            let seoDetails = '';
+            let seoSummary = '';
             try {
-              const raw = fs.readFileSync('site/seo-output.txt', 'utf8');
-              seoDetails = raw.replace(/\x1b\[[0-9;]*m/g, '');
-            } catch (e) {
-              seoDetails = 'Could not read SEO output';
-            }
-
-            let linksDetails = '';
-            try {
-              const raw = fs.readFileSync('site/links-output.json', 'utf8');
+              const raw = fs.readFileSync('site/seo-summary.json', 'utf8');
               const data = JSON.parse(raw);
-              const broken = data.links.filter(l => l.state === 'BROKEN');
-              if (broken.length > 0) {
-                linksDetails = broken.map(l => `- ${l.url}`).join('\n');
-              } else {
-                linksDetails = `All ${data.links.length} links valid`;
+              const lines = [
+                `**${data.pagesScanned}** pages scanned, **${data.pagesClean}** clean, **${data.pagesWithIssues}** with issues`,
+                '',
+                `| Severity | Count |`,
+                `|----------|-------|`,
+                `| ✖ Critical | ${data.critical} |`,
+                `| ⚠ Warning | ${data.warnings} |`,
+                `| ℹ Info | ${data.info} |`,
+              ];
+              if (data.topIssues && data.topIssues.length > 0) {
+                lines.push('', '**Most common issues:**');
+                for (const issue of data.topIssues.slice(0, 5)) {
+                  lines.push(`- ${issue.message} (×${issue.count})`);
+                }
               }
+              seoSummary = lines.join('\n');
             } catch (e) {
-              linksDetails = 'Could not read links output';
+              try {
+                const raw = fs.readFileSync('site/seo-output.txt', 'utf8');
+                const clean = raw.replace(/\x1b\[[0-9;]*m/g, '');
+                const summaryMatch = clean.match(/SUMMARY[\s\S]*$/);
+                seoSummary = summaryMatch ? '```\n' + summaryMatch[0].slice(0, 1500) + '\n```' : 'Could not parse SEO output';
+              } catch (e2) {
+                seoSummary = 'Could not read SEO output';
+              }
             }
 
-            const body = `## 🔍 SEO Audit Results
+            const linksDetail = linksStatus === 'passed'
+              ? `All internal links valid (${totalCount} checked)`
+              : `${brokenCount} broken internal links out of ${totalCount} checked`;
 
-            | Check | Status |
-            |-------|--------|
-            | Sitemap Validation | ${icon(sitemapStatus)} ${sitemapStatus} |
-            | SEO Audit | ${icon(seoStatus)} ${seoStatus} |
-            | Internal Links | ${icon(linksStatus)} ${linksStatus} |
+            const lines = [
+              '<!-- site-seo-audit-results -->',
+              '## 🔍 SEO Audit Results',
+              '',
+              '| Check | Status |',
+              '|-------|--------|',
+              `| Sitemap Validation | ${icon(sitemapStatus)} ${sitemapStatus} |`,
+              `| SEO Audit | ${icon(seoStatus)} ${seoStatus} |`,
+              `| Internal Links | ${icon(linksStatus)} ${linksStatus} |`,
+              '',
+              '<details>',
+              '<summary>📊 SEO Audit Details</summary>',
+              '',
+              seoSummary,
+              '',
+              '</details>',
+              '',
+              '<details>',
+              '<summary>🔗 Link Check Details</summary>',
+              '',
+              linksDetail,
+              '',
+              '</details>',
+              '',
+              '---',
+              '*Generated by SEO Audit workflow*',
+            ];
 
-            <details>
-            <summary>📊 SEO Audit Details</summary>
+            return lines.join('\n');
 
-            \`\`\`
-            ${seoDetails.slice(0, 3000)}
-            \`\`\`
-            </details>
-
-            <details>
-            <summary>🔗 Link Check Details</summary>
-
-            ${linksDetails.slice(0, 1000)}
-            </details>
-
-            ---
-            *Generated by SEO Audit workflow*`;
-
-            const { data: comments } = await github.rest.issues.listComments({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-            });
-
-            const botComment = comments.find(c =>
-              c.user.type === 'Bot' && c.body.includes('SEO Audit Results')
-            );
-
-            if (botComment) {
-              await github.rest.issues.updateComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                comment_id: botComment.id,
-                body: body
-              });
-            } else {
-              await github.rest.issues.createComment({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                body: body
-              });
-            }
+      - name: Comment on PR
+        if: always() && github.event_name == 'pull_request' && steps.comment.outputs.result
+        uses: ./.github/actions/upsert-pr-comment
+        with:
+          marker: '<!-- site-seo-audit-results -->'
+          body: ${{ steps.comment.outputs.result }}
 
       - name: Fail if critical issues
         run: |

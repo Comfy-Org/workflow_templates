@@ -9,6 +9,7 @@ import TemplateDetailPage from '../../../components/template-detail/TemplateDeta
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
 import { getTemplatesForLocale } from '../../../lib/templates';
+import { absoluteUrl } from '../../../config/site';
 
 export async function getStaticPaths() {
   const paths: {
@@ -47,9 +48,8 @@ if (!template) {
 
 const { data } = template;
 
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
 const title = `${data.title || data.name} - ComfyUI`;
-const canonicalUrl = `${siteUrl}/${locale}/templates/${data.name}/`;
+const canonicalUrl = absoluteUrl('/' + locale + '/templates/' + data.name + '/');
 
 const thumbnails = data.thumbnails || [];
 const primaryThumbnail = thumbnails[0] || null;
@@ -60,7 +60,7 @@ const structuredData = {
   '@type': 'TechArticle',
   headline: data.title || data.name,
   description: data.description,
-  image: primaryThumbnail ? `${siteUrl}/thumbnails/${primaryThumbnail}` : undefined,
+  image: primaryThumbnail ? absoluteUrl('/thumbnails/' + primaryThumbnail) : undefined,
   datePublished: data.date,
   inLanguage: locale,
 };
@@ -81,12 +81,12 @@ const breadcrumbStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
   itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: `${siteUrl}/${locale}/` },
+    { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/' + locale + '/') },
     {
       '@type': 'ListItem',
       position: 2,
       name: t('nav.templates', locale),
-      item: `${siteUrl}/${locale}/templates/`,
+      item: absoluteUrl('/' + locale + '/templates/'),
     },
     { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
   ],
