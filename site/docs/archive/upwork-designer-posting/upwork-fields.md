@@ -11,6 +11,7 @@ Designer for AI Tool Landing Pages — Figma
 ```
 
 **Alternatives (all under 10 words):**
+
 - `Figma Designer for AI Product Showcase Pages`
 - `Landing Page Designer for AI Creative Tool`
 
@@ -40,7 +41,7 @@ ComfyUI (comfy.org) is an open-source AI art tool with 101k+ GitHub stars. We're
 Full details in attached PDF.
 ```
 
-*(~100 words)*
+_(~100 words)_
 
 ---
 
@@ -50,7 +51,7 @@ Full details in attached PDF.
 1 to 3 months
 ```
 
-*(Actual timeline is 2-3 weeks — Upwork requires selecting a range)*
+_(Actual timeline is 2-3 weeks — Upwork requires selecting a range)_
 
 ---
 
@@ -68,7 +69,7 @@ Less than 30 hrs/week
 Intermediate
 ```
 
-*(Or "Expert" if budget allows going higher)*
+_(Or "Expert" if budget allows going higher)_
 
 ---
 
@@ -91,6 +92,7 @@ Fixed Price: $800 - $1,500
 ## Skills to Add
 
 Select these skills in Upwork's interface:
+
 - UI Design
 - UX Design
 - Figma
@@ -105,11 +107,13 @@ Select these skills in Upwork's interface:
 Add 1-2 of these:
 
 **Question 1:**
+
 ```
 Please share a link to a portfolio piece that shows a landing page or product page you designed.
 ```
 
 **Question 2:**
+
 ```
 Have you designed for technical/developer audiences or creative tools before? If so, describe briefly.
 ```
@@ -119,5 +123,6 @@ Have you designed for technical/developer audiences or creative tools before? If
 ## Attachments
 
 Attach these files:
+
 1. `design-brief.pdf` — The full design brief
 2. (Optional) 1-2 key screenshots: templates gallery, n8n reference page

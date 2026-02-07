@@ -12,6 +12,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 **Dependency:** None (can use mock data)
 
 **Scope:**
+
 - Initialize Astro project in `site/`
 - Create Content Collections schema (`src/content/config.ts`)
 - Build page templates:
@@ -33,6 +34,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 **Dependency:** None
 
 **Scope:**
+
 - `scripts/sync-templates.ts`
 - Read `../templates/index.json`, flatten categories
 - Copy thumbnails to `public/thumbnails/`
@@ -40,6 +42,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 - Output individual JSON files to `src/content/templates/`
 
 **Key Decisions:**
+
 - Handle missing `usage` field (default to 0)
 - Validate template names match file naming conventions
 
@@ -53,6 +56,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 **Dependency:** Workstream 2 (needs template data)
 
 **Scope:**
+
 - `scripts/generate-ai.ts`
 - OpenAI GPT-4o integration
 - Knowledge base structure (`knowledge/models/`, `knowledge/prompts/`)
@@ -62,6 +66,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 - `SKIP_AI_GENERATION` env var for local dev
 
 **Key Files to Create:**
+
 - `knowledge/prompts/system.md`
 - `knowledge/prompts/generation.md`
 - `knowledge/models/flux.md`, `qwen.md` (starter docs)
@@ -76,6 +81,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 **Dependency:** None (reads workflow JSON directly)
 
 **Scope:**
+
 - `scripts/generate-previews.ts`
 - Port LiteGraph minimap renderer from ComfyUI_frontend
 - Use `node-canvas` for server-side rendering
@@ -83,6 +89,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 - Mtime-based caching (skip if preview newer than workflow)
 
 **Reference Code:**
+
 - `ComfyUI_frontend/src/renderer/core/thumbnail/graphThumbnailRenderer.ts`
 - `ComfyUI_frontend/src/renderer/extensions/minimap/minimapCanvasRenderer.ts`
 
@@ -96,6 +103,7 @@ The template site can be split into **5 independent vertical slices**. Each can 
 **Dependency:** All workstreams (integration)
 
 **Scope:**
+
 - `.github/workflows/deploy-site.yml`
 - Vercel project setup
 - Environment secrets (`OPENAI_API_KEY`, `VERCEL_TOKEN`, etc.)
@@ -129,6 +137,7 @@ Week 2: Workstream 5 integrates all scripts
 All workstreams must agree on these interfaces:
 
 ### Template Content Schema
+
 ```typescript
 // Output from sync + AI generation, input to Astro pages
 interface TemplateContent {
@@ -140,19 +149,20 @@ interface TemplateContent {
   tags?: string[];
   models?: string[];
   usage?: number;
-  
+
   // From AI generation
   extendedDescription: string;
   howToUse: string[];
   metaDescription: string;
   suggestedUseCases: string[];
-  
+
   // From preview generation
   workflowPreviewPath?: string;
 }
 ```
 
 ### File Locations
+
 ```
 site/
 ├── src/content/templates/*.json    ← Sync + AI output, Astro input
@@ -163,10 +173,11 @@ site/
 ```
 
 ### npm Scripts
+
 ```json
 {
   "sync": "tsx scripts/sync-templates.ts",
-  "generate:ai": "tsx scripts/generate-ai.ts", 
+  "generate:ai": "tsx scripts/generate-ai.ts",
   "generate:previews": "tsx scripts/generate-previews.ts",
   "prebuild": "npm run sync && npm run generate:ai && npm run generate:previews",
   "build": "astro build"

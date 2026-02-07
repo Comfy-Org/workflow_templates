@@ -292,15 +292,18 @@ When generating content, select appropriate template based on:
 
 ## CI/CD Workflows
 
-GitHub Actions workflows in `.github/workflows/`:
+GitHub Actions workflows live at the repo root (`.github/workflows/`):
 
-| Workflow                | Trigger              | Description                             |
-| ----------------------- | -------------------- | --------------------------------------- |
-| `ci-lint-format.yml`    | Push/PR to `site/**` | Runs lint and format checks             |
-| `e2e-tests.yml`         | Push/PR to `site/**` | Runs Playwright E2E tests               |
-| `visual-regression.yml` | Push/PR to `site/**` | Runs visual regression tests            |
-| `seo-audit.yml`         | Push/PR to `site/**` | Runs SEO audit on built site            |
-| `i18n-update.yml`       | Manual / Scheduled   | Updates i18n translations automatically |
+| Workflow                     | Trigger              | Description                  |
+| ---------------------------- | -------------------- | ---------------------------- |
+| `lint-site.yml`              | Push/PR to `site/**` | Runs lint and format checks  |
+| `e2e-tests-site.yml`         | Push/PR to `site/**` | Runs Playwright E2E tests    |
+| `visual-regression-site.yml` | Push/PR to `site/**` | Runs visual regression tests |
+| `seo-audit-site.yml`         | Push/PR to `site/**` | Runs SEO audit on built site |
+| `lighthouse.yml`             | Push/PR to `site/**` | Runs Lighthouse CI checks    |
+| `deploy-site.yml`            | Manual dispatch      | Deploys to Vercel production |
+
+Preview deployments are handled automatically by Vercel on every PR.
 
 ## Pre-commit Hooks
 
@@ -313,10 +316,12 @@ Run `pnpm install` to set up hooks (via `prepare` script).
 
 ## Related Documentation
 
-- `../docs/ai-content-generation-strategy.md` - Content strategy
-- `../docs/template-site-prd.md` - Product requirements
-- `../docs/template-site-design.md` - Technical design
+- `docs/ai-content-generation-strategy.md` - Content strategy
+- `docs/PRD.md` - Product requirements
+- `docs/TDD.md` - Technical design
+- `docs/ROADMAP.md` - AI content generation roadmap
 - `docs/design-integration-guide.md` - **REQUIRED READING** when implementing Figma designs
+- `docs/seo-setup-guide.md` - Search engine setup instructions
 
 ## ⚠️ Design Implementation Warning
 

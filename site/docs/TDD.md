@@ -1118,8 +1118,8 @@ workflow_templates/
 │   │   └── previews/             # Generated workflow images
 │   └── .content-cache/           # AI generation cache (git-ignored)
 ├── docs/
-│   ├── template-site-prd.md
-│   └── template-site-design.md
+│   ├── PRD.md
+│   └── TDD.md
 └── .github/workflows/
     └── deploy-site.yml
 ```
