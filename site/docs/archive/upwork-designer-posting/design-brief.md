@@ -90,10 +90,12 @@ None are particularly well-designed. **We want to be significantly better.**
 ## Page Sections to Design
 
 ### 1. Header/Navigation
+
 - Logo linking to [comfy.org](https://www.comfy.org)
 - Simple nav (e.g., "Templates", "Try ComfyUI")
 
 ### 2. Hero Section
+
 - Template name (e.g., "AI Image Upscaler", "Text to Video Generator")
 - Category badge: **Image** (blue) / **Video** (purple) / **Audio** (green) / **3D** (orange)
 - Short description (1-2 sentences)
@@ -105,13 +107,13 @@ The heart of the page — showing what the template creates. Outputs vary by tem
 
 Different templates need different visual treatments:
 
-| Template Type | Output Format | Visual Display |
-|---------------|---------------|----------------|
-| Image upscaler | Static image | Before/after comparison |
-| Text-to-image | Static image | Gallery of outputs |
-| Video generator | Animated webp | Video player or preview |
-| Audio generator | Audio file | Audio player with waveform |
-| Background remover | Static image | Before/after with transparency |
+| Template Type      | Output Format | Visual Display                 |
+| ------------------ | ------------- | ------------------------------ |
+| Image upscaler     | Static image  | Before/after comparison        |
+| Text-to-image      | Static image  | Gallery of outputs             |
+| Video generator    | Animated webp | Video player or preview        |
+| Audio generator    | Audio file    | Audio player with waveform     |
+| Background remover | Static image  | Before/after with transparency |
 
 **Example: Before/after from an image enhancement template:**
 
@@ -123,26 +125,32 @@ Different templates need different visual treatments:
 ![Frame from a video generation template output](screenshots/video-output.png){ width=60% }
 
 ### 4. About Section
+
 - 1-2 paragraphs explaining what it does and why it's useful
 - Similar to n8n's "What problem does this solve?"
 
-### 5. How to Use *(optional — some templates have this, some don't)*
+### 5. How to Use _(optional — some templates have this, some don't)_
+
 - Numbered step-by-step instructions (2-8 steps)
 - e.g., "1. Upload your image → 2. Adjust settings → 3. Click Generate"
 
-### 6. Use Cases *(optional)*
+### 6. Use Cases _(optional)_
+
 - Bullet list of applications
 - e.g., "Upscale old family photos", "Enhance product images for e-commerce"
 
 ### 7. Technical Details
+
 - AI models used
 - Tags/categories
 - File size, hardware requirements
 
-### 8. FAQ *(optional — 0-10 items)*
+### 8. FAQ _(optional — 0-10 items)_
+
 - Collapsible Q&A pairs
 
 ### 9. Footer CTA
+
 - Secondary call-to-action
 - Links to [docs.comfy.org](https://docs.comfy.org), [GitHub](https://github.com/comfyanonymous/ComfyUI)
 
@@ -152,13 +160,13 @@ Different templates need different visual treatments:
 
 **This design must work for ANY template.** Content varies significantly:
 
-| Element | Minimum | Maximum |
-|---------|---------|---------|
-| Example images | 1 | 5+ |
-| Before/after comparison | No | Yes |
-| How-to steps | 0 (none) | 8 |
-| FAQ items | 0 (none) | 10 |
-| Use cases | 0 (none) | 8 |
+| Element                 | Minimum  | Maximum |
+| ----------------------- | -------- | ------- |
+| Example images          | 1        | 5+      |
+| Before/after comparison | No       | Yes     |
+| How-to steps            | 0 (none) | 8       |
+| FAQ items               | 0 (none) | 10      |
+| Use cases               | 0 (none) | 8       |
 
 Your design should look polished whether the content is minimal or extensive.
 
@@ -167,13 +175,16 @@ Your design should look polished whether the content is minimal or extensive.
 ## What We'll Provide
 
 ### Brand Kit
+
 We'll share our complete brand kit after hiring:
+
 - Logos (various formats)
 - Color palette
 - Typography/fonts
 - Brand guidelines and voice
 
 ### Content Examples
+
 - Output images/videos for templates
 - Before/after pairs
 - Workflow screenshots
@@ -182,19 +193,20 @@ We'll share our complete brand kit after hiring:
 
 ## Our Sites (for reference)
 
-| Site | URL |
-|------|-----|
-| Main site | [comfy.org](https://www.comfy.org) |
-| Cloud app | [cloud.comfy.org](https://cloud.comfy.org) |
-| Documentation | [docs.comfy.org](https://docs.comfy.org) |
-| About page | [comfy.org/about](https://www.comfy.org/about) |
-| GitHub | [github.com/Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) |
+| Site          | URL                                                                  |
+| ------------- | -------------------------------------------------------------------- |
+| Main site     | [comfy.org](https://www.comfy.org)                                   |
+| Cloud app     | [cloud.comfy.org](https://cloud.comfy.org)                           |
+| Documentation | [docs.comfy.org](https://docs.comfy.org)                             |
+| About page    | [comfy.org/about](https://www.comfy.org/about)                       |
+| GitHub        | [github.com/Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) |
 
 ---
 
 ## Audience & Tone
 
 **Audience:**
+
 - Digital artists and designers
 - Game industry professionals
 - VFX, animation, TV, and film studios
@@ -202,6 +214,7 @@ We'll share our complete brand kit after hiring:
 - Developers building AI-powered tools
 
 **Tone:**
+
 - Technical but approachable
 - Creative and empowering
 - Open-source community ethos
@@ -223,6 +236,7 @@ We'll share our complete brand kit after hiring:
    - **Full**: 5 images, 8 steps, FAQ section, all optional sections visible
 
 ### Nice to Have (not required)
+
 - Dark mode variant
 - Micro-interaction/animation notes
 - Design rationale documentation
@@ -247,6 +261,7 @@ ComfyUI is open-source and shaped by a community of artists, developers, and dre
 We make tools for the artist of the future — a human equipped with AI who can be an order of magnitude more productive. We empower the individual who wasn't born with the gift of the brush to also be a painter.
 
 **What we maintain:**
+
 - [ComfyUI](https://github.com/Comfy-Org/ComfyUI) — the node-based AI engine (101k+ stars)
 - [ComfyUI Manager](https://github.com/ltdrdata/ComfyUI-Manager) — extension management
 - [Documentation](https://docs.comfy.org) — learning resources
@@ -262,6 +277,7 @@ Learn more: [comfy.org/about](https://www.comfy.org/about)
 ## Questions?
 
 Happy to provide:
+
 - Brand kit files
 - Sample content and images
 - Screen recordings of the current app
