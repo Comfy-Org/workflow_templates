@@ -15,7 +15,7 @@ export async function getTemplatesForLocale(locale: Locale): Promise<Template[]>
   const enTemplates = await getCollection('templates');
 
   if (locale === DEFAULT_LOCALE) {
-    return enTemplates;
+    return enTemplates.filter((t) => !t.id.includes('/'));
   }
 
   // Build a map of localized templates

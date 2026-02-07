@@ -36,10 +36,61 @@ const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
 const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
+const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm');
 ---
 
 {
-  variant === 'compareSlider' && hasSecondImage ? (
+  !primaryThumb ? (
+    <div
+      class={`placeholder-thumb flex items-center justify-center bg-white/5 border border-[var(--color-border-subtle)] rounded-[var(--radius-banner)] ${className}`}
+    >
+      <div class="flex flex-col items-center gap-3 text-white/30">
+        <svg
+          class="w-12 h-12"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+          />
+        </svg>
+        <span class="text-sm">{title}</span>
+      </div>
+    </div>
+  ) : isAudio ? (
+    <div
+      class={`audio-thumb flex flex-col items-center justify-center bg-white/5 border border-[var(--color-border-subtle)] rounded-[var(--radius-banner)] p-6 ${className}`}
+    >
+      <div class="flex flex-col items-center gap-4 w-full">
+        <svg
+          class="w-10 h-10 text-white/40"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+          />
+        </svg>
+        <span class="text-sm text-white/50">{title}</span>
+        <audio controls preload="none" class="w-full max-w-[300px]">
+          <source
+            src={`/thumbnails/${primaryThumb}`}
+            type={primaryThumb.endsWith('.mp3') ? 'audio/mpeg' : 'audio/webm'}
+          />
+        </audio>
+      </div>
+    </div>
+  ) : variant === 'compareSlider' && hasSecondImage ? (
     <div class={`compare-slider relative overflow-hidden ${className}`} data-compare-slider>
       <img
         src={`/thumbnails/${primaryThumb}`}
@@ -49,6 +100,7 @@ const hasSecondImage = thumbnails.length > 1;
         width="640"
         height="360"
         decoding="async"
+        draggable="false"
         sizes={sizes}
         class="w-full h-full object-cover"
       />
@@ -63,6 +115,7 @@ const hasSecondImage = thumbnails.length > 1;
           width="640"
           height="360"
           decoding="async"
+          draggable="false"
           sizes={sizes}
           class="w-full h-full object-cover"
         />
@@ -70,6 +123,12 @@ const hasSecondImage = thumbnails.length > 1;
       <div
         class="compare-handle absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize"
         style="left: 50%;"
+        role="slider"
+        tabindex="0"
+        aria-label="Comparison slider"
+        aria-valuemin="0"
+        aria-valuemax="100"
+        aria-valuenow="50"
       >
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
           <svg
@@ -95,6 +154,7 @@ const hasSecondImage = thumbnails.length > 1;
         width="640"
         height="360"
         decoding="async"
+        draggable="false"
         sizes={sizes}
         class="w-full h-full object-cover transition-opacity duration-500"
       />
@@ -105,6 +165,7 @@ const hasSecondImage = thumbnails.length > 1;
         width="640"
         height="360"
         decoding="async"
+        draggable="false"
         sizes={sizes}
         class="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500"
       />
@@ -119,21 +180,10 @@ const hasSecondImage = thumbnails.length > 1;
         width="640"
         height="360"
         decoding="async"
+        draggable="false"
         sizes={sizes}
         class="w-full h-full object-cover"
       />
-      <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-        <div class="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center">
-          <svg
-            class="w-5 h-5 text-gray-800 ml-0.5"
-            fill="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
-            <polygon points="5 3 19 12 5 21 5 3" />
-          </svg>
-        </div>
-      </div>
     </div>
   ) : variant === 'zoomHover' ? (
     <div class={`zoom-hover group relative overflow-hidden ${className}`}>
@@ -145,6 +195,7 @@ const hasSecondImage = thumbnails.length > 1;
         width="640"
         height="360"
         decoding="async"
+        draggable="false"
         sizes={sizes}
         class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125"
       />
@@ -159,6 +210,7 @@ const hasSecondImage = thumbnails.length > 1;
         width="640"
         height="360"
         decoding="async"
+        draggable="false"
         sizes={sizes}
         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
@@ -169,3 +221,11 @@ const hasSecondImage = thumbnails.length > 1;
 <script>
   import '../scripts/compare-slider';
 </script>
+
+<style>
+  img {
+    -webkit-user-drag: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+</style>

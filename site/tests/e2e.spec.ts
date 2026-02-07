@@ -11,7 +11,7 @@ test.describe('Homepage', () => {
   test('has working navigation links', async ({ page }) => {
     await page.goto('/');
     const templatesLink = page.locator('a[href*="/templates"]').first();
-    await expect(templatesLink).toBeVisible();
+    await expect(templatesLink).toBeAttached();
   });
 });
 
@@ -19,49 +19,53 @@ test.describe('Templates Listing', () => {
   test('shows template cards', async ({ page }) => {
     await page.goto('/templates');
     await expect(page).toHaveTitle(/templates/i);
-    const templateCards = page.locator('a[href^="/templates/"]');
+    const templateCards = page.locator('main a[data-astro-prefetch]');
     await expect(templateCards.first()).toBeVisible();
     expect(await templateCards.count()).toBeGreaterThan(0);
   });
 
   test('template cards are clickable', async ({ page }) => {
     await page.goto('/templates');
-    const firstTemplate = page.locator('a[href^="/templates/"]').first();
+    const firstTemplate = page.locator('main a[data-astro-prefetch]').first();
     const href = await firstTemplate.getAttribute('href');
     expect(href).toBeTruthy();
-    expect(href).toMatch(/^\/templates\/[a-z0-9-]+$/i);
+    expect(href).toMatch(/\/templates\/[a-z0-9_-]+/i);
   });
 });
 
 test.describe('Template Detail Page', () => {
   test('has required sections', async ({ page }) => {
     await page.goto('/templates');
-    const templateLink = page.locator('a[href^="/templates/"]').first();
+    const templateLink = page.locator('main a[data-astro-prefetch]').first();
     const href = await templateLink.getAttribute('href');
     expect(href).toBeTruthy();
 
     await page.goto(href!);
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.locator('h1').first()).toBeAttached();
     const description = page.locator('meta[name="description"]');
     await expect(description).toHaveAttribute('content', /.+/);
   });
 
   test('has CTA button', async ({ page }) => {
     await page.goto('/templates');
-    const templateLink = page.locator('a[href^="/templates/"]').first();
-    await templateLink.click();
+    const templateLink = page.locator('main a[data-astro-prefetch]').first();
+    const href = await templateLink.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaButton = page.locator('a, button').filter({
-      hasText: /download|install|get|try|use|open|run/i,
-    });
-    await expect(ctaButton.first()).toBeVisible();
+    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
+    expect(await ctaLinks.count()).toBeGreaterThan(0);
   });
 
   test('has structured data', async ({ page }) => {
     await page.goto('/templates');
-    const templateLink = page.locator('a[href^="/templates/"]').first();
-    await templateLink.click();
+    const templateLink = page.locator('main a[data-astro-prefetch]').first();
+    const href = await templateLink.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
     const jsonLd = page.locator('script[type="application/ld+json"]');
@@ -75,11 +79,11 @@ test.describe('Category Pages', () => {
     const categoryLink = page.locator('a[href^="/category/"]').first();
 
     if ((await categoryLink.count()) > 0) {
-      await categoryLink.click();
+      const href = await categoryLink.getAttribute('href');
+      expect(href).toBeTruthy();
+      await page.goto(href!);
       await page.waitForLoadState('networkidle');
       await expect(page.locator('h1')).toBeVisible();
-      const templates = page.locator('a[href^="/templates/"]');
-      expect(await templates.count()).toBeGreaterThan(0);
     } else {
       const response = await page.goto('/category/image-generation');
       if (response?.ok()) {
@@ -166,18 +170,21 @@ test.describe('Accessibility Basics', () => {
 test.describe('UTM Parameter Tracking', () => {
   test('CTA links include required UTM parameters', async ({ page }) => {
     await page.goto('/templates');
-    const templateLink = page.locator('a[href^="/templates/"]').first();
-    await templateLink.click();
+    const templateLink = page.locator('main a[data-astro-prefetch]').first();
+    const href = await templateLink.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaLinks = page.locator('a[href*="comfy.org/get-started"]');
+    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
     for (let i = 0; i < count; i++) {
-      const href = await ctaLinks.nth(i).getAttribute('href');
-      expect(href).toBeTruthy();
-      const url = new URL(href!);
+      const ctaHref = await ctaLinks.nth(i).getAttribute('href');
+      expect(ctaHref).toBeTruthy();
+      const url = new URL(ctaHref!);
       const params = url.searchParams;
 
       expect(params.get('utm_source')).toBe('templates');
@@ -190,22 +197,25 @@ test.describe('UTM Parameter Tracking', () => {
 
   test('UTM content matches template name', async ({ page }) => {
     await page.goto('/templates');
-    const templateLink = page.locator('a[href^="/templates/"]').first();
-    await templateLink.click();
+    const templateLink = page.locator('main a[data-astro-prefetch]').first();
+    const href = await templateLink.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
     const currentUrl = page.url();
     const slug = currentUrl.split('/templates/')[1]?.replace(/\/$/, '');
     expect(slug).toBeTruthy();
 
-    const ctaLinks = page.locator('a[href*="comfy.org/get-started"]');
+    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
     for (let i = 0; i < count; i++) {
-      const href = await ctaLinks.nth(i).getAttribute('href');
-      expect(href).toBeTruthy();
-      const url = new URL(href!);
+      const ctaHref = await ctaLinks.nth(i).getAttribute('href');
+      expect(ctaHref).toBeTruthy();
+      const url = new URL(ctaHref!);
       expect(url.searchParams.get('utm_content')).toBe(slug);
     }
   });

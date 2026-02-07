@@ -1,0 +1,211 @@
+name: SEO Audit (Site)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/seo-audit-site.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/seo-audit-site.yml'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  seo-audit:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+          cache-dependency-path: site/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm build
+        env:
+          SKIP_AI_GENERATION: 'true'
+
+      - name: Validate sitemap
+        id: sitemap
+        continue-on-error: true
+        run: |
+          echo "## Sitemap Validation" >> $GITHUB_STEP_SUMMARY
+          if pnpm validate:sitemap 2>&1 | tee sitemap-output.txt; then
+            echo "✅ Sitemap validation passed" >> $GITHUB_STEP_SUMMARY
+            echo "status=passed" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Sitemap validation failed" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            cat sitemap-output.txt >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run SEO audit
+        id: seo
+        continue-on-error: true
+        run: |
+          echo "## SEO Audit" >> $GITHUB_STEP_SUMMARY
+          if pnpm audit:seo 2>&1 | tee seo-output.txt; then
+            echo "✅ SEO audit passed" >> $GITHUB_STEP_SUMMARY
+            echo "status=passed" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️ SEO audit found issues" >> $GITHUB_STEP_SUMMARY
+            echo "status=issues" >> $GITHUB_OUTPUT
+          fi
+          echo '<details><summary>Full SEO Report</summary>' >> $GITHUB_STEP_SUMMARY
+          echo '' >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          sed 's/\x1b\[[0-9;]*m//g' seo-output.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo '</details>' >> $GITHUB_STEP_SUMMARY
+
+      - name: Check internal links
+        id: links
+        continue-on-error: true
+        run: |
+          echo "## Link Check" >> $GITHUB_STEP_SUMMARY
+          if npx linkinator ./dist --recurse --format json --skip "^(?!file://)" 2>/dev/null | tee links-output.json; then
+            BROKEN=$(jq '[.links[] | select(.state == "BROKEN")] | length' links-output.json)
+            TOTAL=$(jq '.links | length' links-output.json)
+            if [ "$BROKEN" -eq 0 ]; then
+              echo "✅ All $TOTAL internal links valid" >> $GITHUB_STEP_SUMMARY
+              echo "status=passed" >> $GITHUB_OUTPUT
+            else
+              echo "❌ Found $BROKEN broken links out of $TOTAL" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              jq -r '.links[] | select(.state == "BROKEN") | "- \(.url) (from \(.parent))"' links-output.json >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "status=failed" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "⚠️ Link check encountered errors" >> $GITHUB_STEP_SUMMARY
+            echo "status=error" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            const sitemapStatus = '${{ steps.sitemap.outputs.status }}';
+            const seoStatus = '${{ steps.seo.outputs.status }}';
+            const linksStatus = '${{ steps.links.outputs.status }}';
+
+            const icon = (status) => {
+              if (status === 'passed') return '✅';
+              if (status === 'failed') return '❌';
+              if (status === 'issues') return '⚠️';
+              return '❓';
+            };
+
+            let seoDetails = '';
+            try {
+              const raw = fs.readFileSync('site/seo-output.txt', 'utf8');
+              seoDetails = raw.replace(/\x1b\[[0-9;]*m/g, '');
+            } catch (e) {
+              seoDetails = 'Could not read SEO output';
+            }
+
+            let linksDetails = '';
+            try {
+              const raw = fs.readFileSync('site/links-output.json', 'utf8');
+              const data = JSON.parse(raw);
+              const broken = data.links.filter(l => l.state === 'BROKEN');
+              if (broken.length > 0) {
+                linksDetails = broken.map(l => `- ${l.url}`).join('\n');
+              } else {
+                linksDetails = `All ${data.links.length} links valid`;
+              }
+            } catch (e) {
+              linksDetails = 'Could not read links output';
+            }
+
+            const body = `## 🔍 SEO Audit Results
+
+            | Check | Status |
+            |-------|--------|
+            | Sitemap Validation | ${icon(sitemapStatus)} ${sitemapStatus} |
+            | SEO Audit | ${icon(seoStatus)} ${seoStatus} |
+            | Internal Links | ${icon(linksStatus)} ${linksStatus} |
+
+            <details>
+            <summary>📊 SEO Audit Details</summary>
+
+            \`\`\`
+            ${seoDetails.slice(0, 3000)}
+            \`\`\`
+            </details>
+
+            <details>
+            <summary>🔗 Link Check Details</summary>
+
+            ${linksDetails.slice(0, 1000)}
+            </details>
+
+            ---
+            *Generated by SEO Audit workflow*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' && c.body.includes('SEO Audit Results')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+      - name: Fail if critical issues
+        run: |
+          if [ "${{ steps.sitemap.outputs.status }}" = "failed" ]; then
+            echo "Sitemap validation failed"
+            exit 1
+          fi
+          if [ "${{ steps.links.outputs.status }}" = "failed" ]; then
+            echo "Broken internal links found"
+            exit 1
+          fi
