@@ -45,6 +45,7 @@ interface SyncedTemplate extends TemplateInfo {
   locale?: string;
   estimatedTime?: string;
   requiredNodes?: RequiredNodeInfo[];
+  authorNotes?: string;
 }
 
 interface WorkflowNode {
@@ -132,6 +133,45 @@ function findThumbnails(templateName: string): string[] {
     });
 }
 
+function extractAuthorNotes(templateName: string): string {
+  const workflowPath = path.join(TEMPLATES_DIR, `${templateName}.json`);
+  if (!fs.existsSync(workflowPath)) {
+    return '';
+  }
+
+  try {
+    const content = fs.readFileSync(workflowPath, 'utf-8');
+    const workflow: WorkflowJson = JSON.parse(content);
+    const noteTypes = new Set(['Note', 'MarkdownNote', 'CM_NoteNode']);
+    const texts: string[] = [];
+
+    for (const node of workflow.nodes || []) {
+      if (!noteTypes.has(node.type)) continue;
+
+      const widgetsValues = node.widgets_values;
+      if (Array.isArray(widgetsValues)) {
+        for (const val of widgetsValues) {
+          if (typeof val === 'string' && val.trim()) {
+            texts.push(val.trim());
+          }
+        }
+      } else if (widgetsValues && typeof widgetsValues === 'object') {
+        for (const val of Object.values(widgetsValues as Record<string, unknown>)) {
+          if (typeof val === 'string' && val.trim()) {
+            texts.push(val.trim());
+          }
+        }
+      }
+    }
+
+    const combined = texts.join('\n\n');
+    const stripped = combined.replace(/<[^>]*>/g, '');
+    return stripped.slice(0, 3000);
+  } catch {
+    return '';
+  }
+}
+
 function extractRequiredNodes(templateName: string): RequiredNodeInfo[] {
   const workflowPath = path.join(TEMPLATES_DIR, `${templateName}.json`);
   if (!fs.existsSync(workflowPath)) {
@@ -166,6 +206,7 @@ function createSyncedTemplate(template: TemplateInfo, locale: string): SyncedTem
   const thumbnails = findThumbnails(template.name);
   const estimatedTime = estimateGenerationTime(template.name, template.mediaType);
   const requiredNodes = extractRequiredNodes(template.name);
+  const authorNotes = extractAuthorNotes(template.name);
 
   return {
     ...template,
@@ -177,6 +218,7 @@ function createSyncedTemplate(template: TemplateInfo, locale: string): SyncedTem
     locale: locale === DEFAULT_LOCALE ? undefined : locale,
     estimatedTime,
     requiredNodes: requiredNodes.length > 0 ? requiredNodes : undefined,
+    authorNotes: authorNotes || undefined,
   };
 }
 

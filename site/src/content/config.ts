@@ -31,6 +31,7 @@ const templateSchema = z.object({
   thumbnails: z.array(z.string()).default([]),
   size: z.number().optional(),
   vram: z.number().optional(),
+  authorNotes: z.string().optional(),
 
   // AI-generated content
   extendedDescription: z.string(),
