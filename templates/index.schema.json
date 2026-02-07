@@ -155,6 +155,27 @@
         "items": {
           "$ref": "#/definitions/logoInfo"
         }
+      },
+      "io": {
+        "type": "object",
+        "description": "Input and output file information for the workflow",
+        "properties": {
+          "inputs": {
+            "type": "array",
+            "description": "Array of input nodes (LoadImage, LoadVideo, etc.)",
+            "items": {
+              "$ref": "#/definitions/ioInput"
+            }
+          },
+          "outputs": {
+            "type": "array",
+            "description": "Array of output nodes (SaveImage, SaveVideo, etc.)",
+            "items": {
+              "$ref": "#/definitions/ioOutput"
+            }
+          }
+        },
+        "additionalProperties": false
       }
       },
       "additionalProperties": false
@@ -196,6 +217,54 @@
           "minimum": 0,
           "maximum": 1,
           "description": "Opacity 0-1, default 0.85"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ioInput": {
+      "type": "object",
+      "required": ["nodeId", "nodeType", "file", "mediaType"],
+      "properties": {
+        "nodeId": {
+          "type": "number",
+          "description": "ComfyUI node ID from the workflow"
+        },
+        "nodeType": {
+          "type": "string",
+          "description": "Node type (e.g., LoadImage, LoadVideo, LoadAudio)"
+        },
+        "file": {
+          "type": "string",
+          "description": "Input filename in the /input folder"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video", "audio", "3d"],
+          "description": "Media type of the input"
+        }
+      },
+      "additionalProperties": false
+    },
+    "ioOutput": {
+      "type": "object",
+      "required": ["nodeId", "nodeType", "file", "mediaType"],
+      "properties": {
+        "nodeId": {
+          "type": "number",
+          "description": "ComfyUI node ID from the workflow"
+        },
+        "nodeType": {
+          "type": "string",
+          "description": "Node type (e.g., SaveImage, SaveVideo, SaveAudio)"
+        },
+        "file": {
+          "type": "string",
+          "description": "Output filename (can be empty placeholder for user to fill)"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": ["image", "video", "audio", "3d"],
+          "description": "Media type of the output"
         }
       },
       "additionalProperties": false
