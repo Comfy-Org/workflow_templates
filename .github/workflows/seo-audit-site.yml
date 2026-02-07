@@ -88,7 +88,12 @@ jobs:
           BROKEN_COUNT=0
           TOTAL_COUNT=0
 
-          for htmlfile in $(find dist -name '*.html' | head -500); do
+          # English pages only — localized category/tag pages don't exist yet
+          for htmlfile in $(find dist -name '*.html' \
+            -not -path 'dist/ar/*' -not -path 'dist/es/*' -not -path 'dist/fr/*' \
+            -not -path 'dist/ja/*' -not -path 'dist/ko/*' -not -path 'dist/pt-BR/*' \
+            -not -path 'dist/ru/*' -not -path 'dist/tr/*' -not -path 'dist/zh/*' \
+            -not -path 'dist/zh-TW/*' | head -500); do
             hrefs=$(grep -oP 'href="(/[^"]*)"' "$htmlfile" | sed 's/href="//;s/"$//' || true)
             for href in $hrefs; do
               TOTAL_COUNT=$((TOTAL_COUNT + 1))
