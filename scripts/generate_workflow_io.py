@@ -9,6 +9,7 @@ import json
 import os
 import sys
 import mimetypes
+import re
 from pathlib import Path
 from typing import List, Dict, Optional
 
@@ -29,9 +30,9 @@ OUTPUT_NODE_TYPES = [
     "SaveAudio",
     "VHS_SaveVideo",
     "Save3DModel",
-    "PreviewImage",
     "Preview3D",
     "PreviewAudio"
+    # Note: PreviewImage is excluded as it's for debugging only
 ]
 
 
@@ -155,7 +156,16 @@ def extract_input_nodes(workflow_file: Path, input_dir: Path) -> List[Dict]:
 
                 inputs.append(input_data)
 
-    return inputs
+    # Deduplicate inputs by file name - keep the first occurrence (lowest nodeId)
+    seen_files = {}
+    unique_inputs = []
+    for inp in sorted(inputs, key=lambda x: x["nodeId"]):
+        filename = inp["file"]
+        if filename not in seen_files:
+            seen_files[filename] = True
+            unique_inputs.append(inp)
+
+    return unique_inputs
 
 
 def extract_output_nodes(workflow_file: Path) -> List[Dict]:
@@ -227,18 +237,62 @@ def load_index_json(index_path: Path) -> List[Dict]:
         sys.exit(1)
 
 
+def compact_json_arrays(json_str: str) -> str:
+    """
+    Compact short arrays in JSON string to single lines.
+    Arrays with simple values (strings, numbers) are compressed to one line.
+
+    Args:
+        json_str: JSON string with expanded arrays
+
+    Returns:
+        JSON string with compacted arrays
+    """
+    # Match arrays that span multiple lines with simple string/number values
+    # Pattern: array opening, whitespace, quoted strings or numbers separated by commas, array closing
+    pattern = r'\[\s*\n\s*("(?:[^"\\]|\\.)*?"|\d+(?:\.\d+)?)\s*(?:,\s*\n\s*("(?:[^"\\]|\\.)*?"|\d+(?:\.\d+)?))*\s*\n\s*\]'
+
+    def replacer(match):
+        # Extract the matched array
+        array_content = match.group(0)
+
+        # Skip if array contains nested objects or arrays
+        if '{' in array_content or '[' in array_content[1:-1]:
+            return array_content
+
+        # Extract all values from the array
+        values = re.findall(r'"(?:[^"\\]|\\.)*?"|\d+(?:\.\d+)?', array_content)
+
+        # Only compact if array has 10 or fewer items
+        if len(values) > 10:
+            return array_content
+
+        # Return compacted array
+        return '[' + ', '.join(values) + ']'
+
+    return re.sub(pattern, replacer, json_str)
+
+
 def save_index_json(index_path: Path, data: List[Dict]) -> None:
     """
-    Save updated data to index.json.
+    Save updated data to index.json with compact array formatting.
 
     Args:
         index_path: Path to index.json
         data: Updated data to save
     """
     try:
+        # First, dump JSON with standard formatting
+        json_str = json.dumps(data, indent=2, ensure_ascii=False)
+
+        # Compact short arrays to single lines
+        json_str = compact_json_arrays(json_str)
+
+        # Write to file
         with open(index_path, 'w', encoding='utf-8') as f:
-            json.dump(data, f, indent=2, ensure_ascii=False)
+            f.write(json_str)
             f.write('\n')  # Add trailing newline
+
         print(f"✅ Successfully updated index.json")
     except IOError as e:
         print(f"❌ Error: Could not write to index.json: {e}")
