@@ -787,6 +787,15 @@ ${tutorialSection}${authorNotesSection}${promptsSection}${groupSection}
 `.trim();
 }
 
+function parseRetryAfter(error: unknown): number | undefined {
+  const headers = (error as { headers?: Record<string, string> }).headers;
+  const retryAfter = headers?.['retry-after'] || headers?.['retry-after-ms'];
+  if (!retryAfter) return undefined;
+  const ms = Number(retryAfter);
+  if (!isNaN(ms)) return ms < 100 ? ms * 1000 : ms;
+  return undefined;
+}
+
 async function generateContent(
   ctx: GenerationContext,
   systemPrompt: string,
@@ -814,24 +823,44 @@ async function generateContent(
     );
 
   const temperature = ctx.contentTemplate === 'showcase' ? 0.7 : 0.4;
+  const maxRetries = 5;
+  let lastError: unknown;
 
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      { role: 'system', content: fullSystemPrompt },
-      { role: 'user', content: userPrompt },
-    ],
-    response_format: { type: 'json_object' },
-    temperature,
-    max_tokens: 1500,
-  });
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        messages: [
+          { role: 'system', content: fullSystemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        response_format: { type: 'json_object' },
+        temperature,
+        max_tokens: 1500,
+      });
 
-  const rawContent = response.choices[0]?.message?.content;
-  if (!rawContent) {
-    throw new Error(`Empty response from OpenAI for template: ${ctx.template.name}`);
+      const rawContent = response.choices[0]?.message?.content;
+      if (!rawContent) {
+        throw new Error(`Empty response from OpenAI for template: ${ctx.template.name}`);
+      }
+      const content = JSON.parse(rawContent);
+      return validateContent(content, ctx.contentTemplate);
+    } catch (error) {
+      lastError = error;
+      const status = (error as { status?: number }).status;
+      if (status === 429 || status === 500 || status === 503) {
+        const retryAfterMs = parseRetryAfter(error) ?? 1000 * Math.pow(2, attempt);
+        const waitMs = retryAfterMs + Math.random() * 500;
+        console.log(
+          `   ⏳ Rate limited (attempt ${attempt + 1}/${maxRetries}), retrying in ${Math.round(waitMs)}ms...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitMs));
+        continue;
+      }
+      throw error;
+    }
   }
-  const content = JSON.parse(rawContent);
-  return validateContent(content, ctx.contentTemplate);
+  throw lastError;
 }
 
 interface QualityCheck {
