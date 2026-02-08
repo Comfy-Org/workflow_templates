@@ -18,9 +18,9 @@ describe('getCloudCtaUrl', () => {
     expect(url).toContain('cloud.comfy.org');
   });
 
-  it('includes mode=linear', () => {
+  it('does not include mode param', () => {
     const url = getCloudCtaUrl('test', 'nav');
     const parsed = new URL(url);
-    expect(parsed.searchParams.get('mode')).toBe('linear');
+    expect(parsed.searchParams.has('mode')).toBe(false);
   });
 });
