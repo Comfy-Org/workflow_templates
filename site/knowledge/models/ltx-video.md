@@ -47,3 +47,8 @@ LTX-Video is Lightricks' open-source video generation model optimized for fast, 
 - **cfg_scale**: Guidance strength (3-5 typical)
 - **width/height**: Output dimensions (768x512 native)
 - **seed**: For reproducible generation
+
+## Blog References
+
+- [LTX-Video 0.9.5 Day-1 Support](../blog/ltx-video-095-support.md) — Commercial license (OpenRail-M), multi-frame control, improved quality
+- [LTX-2: Open Source Audio-Video AI](../blog/ltx-2-open-source-audio-video.md) — Synchronized audio-video generation, NVFP4 for 3x speed / 60% less VRAM
