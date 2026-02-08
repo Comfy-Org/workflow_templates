@@ -395,7 +395,7 @@ Before creating your PR, sync your template to all language versions using the t
 
 1. Run the translation sync script:
    ```bash
-   python3 scripts/sync_i18n.py --templates-dir templates
+   python3 scripts/sync_data.py --templates-dir templates
    ```
 
 2. The script will:
