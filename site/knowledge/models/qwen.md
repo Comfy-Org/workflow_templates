@@ -36,3 +36,7 @@ Qwen-Image (also known as Qwen-VL) is a vision-language model series from Alibab
 - Image-to-image transformation
 - Content-aware modifications
 - Style transfer and artistic effects
+
+## Blog References
+
+- [Qwen Image Edit 2511 & Qwen Image Layered](../blog/qwen-image-edit-2511.md) — Better character consistency, RGBA layer decomposition, built-in LoRA support

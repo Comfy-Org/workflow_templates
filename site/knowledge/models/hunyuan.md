@@ -47,3 +47,9 @@ Hunyuan-DiT is Tencent's open-source text-to-image diffusion transformer with na
 - **sampler**: DDPM, UniPC samplers supported
 - **resolution**: 1024x1024, 768x1280, 1280x768
 - **negative_prompt**: Recommended for quality control
+
+## Blog References
+
+- [HunyuanVideo Native Support](../blog/hunyuanvideo-native-support.md) — 13B parameter video model, dual-stream transformer, MLLM text encoder
+- [HunyuanVideo 1.5 Native Support](../blog/hunyuanvideo-15-native-support.md) — Lightweight 8.3B model, 720p output, runs on 24GB consumer GPUs
+- [Hunyuan3D 2.0 and MultiView Native Support](../blog/hunyuan3d-20-native-support.md) — 3D model generation with PBR materials, 1.1B parameter multi-view model
