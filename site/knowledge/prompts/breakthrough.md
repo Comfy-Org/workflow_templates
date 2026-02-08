@@ -26,13 +26,15 @@ Highlight what's new and exciting about this workflow, capture early adopter int
 
 Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-**Paragraph 1 (What it does + output)**: Start with "[Model name] introduces/enables [new capability]" in the first sentence. Include release timeframe if known.
+Follow the **PAS framework** from the system prompt (adapted for breakthroughs):
+
+**Paragraph 1 — Problem**: Start with "[Model name] introduces/enables [new capability]" in the first sentence. Name what was previously impossible or impractical. Include release timeframe if known.
 
 - Example: "Wan 2.1 brings video generation to ComfyUI, released in early 2025. It creates 480p videos from a single input image."
 
-**Paragraph 2 (How/why it works)**: What specifically improved — be concrete about the advancement rather than using vague superlatives.
+**Paragraph 2 — Agitate**: What specifically was limited before — cloud-only, research-grade hardware, poor quality, missing features. Be concrete about the gap this model closes.
 
-**Paragraph 3 (Who should use it)**: Why this matters for specific users. Ground the value in practical benefits, not hype.
+**Paragraph 3 — Solution**: Why this matters for specific users now. Ground the value in practical benefits, not hype.
 
 **Temporal framing phrases**:
 

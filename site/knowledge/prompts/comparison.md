@@ -26,13 +26,15 @@ Help users understand why they should choose this workflow over alternatives, wh
 
 Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-**Paragraph 1 (What it does + output)**: Start with "[Model name] solves/addresses [problem]" in the first sentence. State the problem and what this workflow produces.
+Follow the **PAS framework** from the system prompt (adapted for comparison):
+
+**Paragraph 1 — Problem**: Start with "[Model name] solves/addresses [problem]" in the first sentence. Name the task and the decision the user faces between approaches.
 
 - Example: "Flux inpainting handles object removal and background replacement in ComfyUI. It works on any uploaded image with painted mask regions."
 
-**Paragraph 2 (How it compares)**: How it stacks up against alternatives. Be specific, balanced, and include at least one honest tradeoff.
+**Paragraph 2 — Agitate**: How existing alternatives fall short — speed, cost, quality, complexity. Be specific, balanced, and include at least one honest tradeoff for this workflow too.
 
-**Paragraph 3 (Who should use it)**: When this is the right choice and when it might not be. Help users self-select.
+**Paragraph 3 — Solution**: When this is the right choice and when it might not be. Help users self-select with concrete criteria.
 
 **Comparison phrases to use**:
 
