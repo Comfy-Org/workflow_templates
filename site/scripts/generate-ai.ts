@@ -111,6 +111,7 @@ interface CacheStats {
   regenerated: number;
   skipped: number;
   placeholder: number;
+  failed: number;
 }
 
 interface CLIOptions {
@@ -148,7 +149,7 @@ function parseArgs(): CLIOptions {
     testMode: false,
     templateFilter: null,
     skipAI: process.env.SKIP_AI_GENERATION === 'true',
-    force: false,
+    force: process.env.FORCE_AI_REGENERATE === 'true',
     dryRun: false,
   };
 
@@ -823,10 +824,21 @@ async function generateContent(
     );
 
   const temperature = ctx.contentTemplate === 'showcase' ? 0.7 : 0.4;
-  const maxRetries = 5;
+  const MAX_RETRIES = 8;
+  const BASE_DELAY = 2000;
+  const MAX_DELAY = 60000;
+  const RETRYABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
+  const RETRYABLE_NETWORK_CODES = new Set([
+    'ECONNRESET',
+    'ETIMEDOUT',
+    'ECONNREFUSED',
+    'EPIPE',
+    'EHOSTUNREACH',
+    'EAI_AGAIN',
+  ]);
   let lastError: unknown;
 
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
       const response = await openai.chat.completions.create({
         model: 'gpt-4o',
@@ -848,11 +860,18 @@ async function generateContent(
     } catch (error) {
       lastError = error;
       const status = (error as { status?: number }).status;
-      if (status === 429 || status === 500 || status === 503) {
-        const retryAfterMs = parseRetryAfter(error) ?? 1000 * Math.pow(2, attempt);
-        const waitMs = retryAfterMs + Math.random() * 500;
+      const code = (error as { code?: string }).code;
+      const isRetryable =
+        (status !== undefined && RETRYABLE_STATUSES.has(status)) ||
+        (code !== undefined && RETRYABLE_NETWORK_CODES.has(code));
+
+      if (isRetryable) {
+        const retryAfterMs =
+          parseRetryAfter(error) ?? Math.min(BASE_DELAY * Math.pow(2, attempt), MAX_DELAY);
+        const jitter = Math.random() * 1000;
+        const waitMs = retryAfterMs + jitter;
         console.log(
-          `   ⏳ Rate limited (attempt ${attempt + 1}/${maxRetries}), retrying in ${Math.round(waitMs)}ms...`
+          `   ⏳ ${ctx.template.name} attempt ${attempt + 1}/${MAX_RETRIES} (status=${status ?? code}), retrying in ${Math.round(waitMs)}ms...`
         );
         await new Promise((resolve) => setTimeout(resolve, waitMs));
         continue;
@@ -1107,15 +1126,22 @@ async function main() {
   let openai: OpenAI | null = null;
   if (!options.skipAI && !options.dryRun) {
     if (!process.env.OPENAI_API_KEY) {
-      console.error(
-        '❌ OPENAI_API_KEY not set. Use SKIP_AI_GENERATION=true or --skip-ai for placeholder mode.'
-      );
-      process.exit(1);
+      console.log('⚠️ OPENAI_API_KEY not set — falling back to placeholder mode');
+      options.skipAI = true;
+    } else {
+      openai = new OpenAI();
     }
-    openai = new OpenAI();
   }
 
-  const stats: CacheStats = { hits: 0, misses: 0, regenerated: 0, skipped: 0, placeholder: 0 };
+  const stats: CacheStats = {
+    hits: 0,
+    misses: 0,
+    regenerated: 0,
+    skipped: 0,
+    placeholder: 0,
+    failed: 0,
+  };
+  const failures: Array<{ name: string; error: string }> = [];
 
   for (const template of templatesToProcess) {
     const outPath = path.join(OUTPUT_DIR, `${template.name}.json`);
@@ -1214,6 +1240,14 @@ async function main() {
         quality.issues.slice(0, 3).forEach((issue) => console.log(`      - ${issue}`));
       }
 
+      if (process.env.CI === 'true') {
+        const metaPreview = content.metaDescription.slice(0, 120);
+        console.log(`   📝 Preview: meta="${metaPreview}..."`);
+        console.log(
+          `              howToUse: ${content.howToUse.length} steps | faq: ${content.faqItems?.length ?? 0} items | quality: ${quality.score}/100`
+        );
+      }
+
       // Save to cache with hash
       const cacheContent: CachedContent = {
         ...content,
@@ -1222,13 +1256,14 @@ async function main() {
       };
       await saveCache(template.name, cacheContent);
 
-      // Update manifest
+      // Update manifest and save immediately to preserve progress
       manifest.entries[template.name] = {
         templateHash: computeTemplateHash(template),
         promptsHash: currentPromptsHash,
         generatedAt: new Date().toISOString(),
         model: DEFAULT_MODEL,
       };
+      await saveCacheManifest(manifest);
 
       // Apply overrides and write
       const merged = applyOverrides(content, override);
@@ -1241,8 +1276,10 @@ async function main() {
       await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
       stats.regenerated++;
     } catch (error) {
-      console.error(`   ❌ Error generating content: ${error}`);
-      // Fall back to placeholder
+      const errMsg = String(error).slice(0, 100);
+      console.error(`   ❌ Error generating content: ${errMsg}`);
+      failures.push({ name: template.name, error: errMsg });
+      stats.failed++;
       const placeholder = getPlaceholderContent(template);
       await writeFile(outPath, JSON.stringify({ ...template, ...placeholder }, null, 2));
       stats.placeholder++;
@@ -1254,6 +1291,14 @@ async function main() {
   manifest.promptsHash = currentPromptsHash;
   await saveCacheManifest(manifest);
 
+  if (failures.length > 0) {
+    console.log('');
+    console.log(`❌ Failed templates (${failures.length}):`);
+    for (const f of failures) {
+      console.log(`   - ${f.name}: ${f.error}`);
+    }
+  }
+
   console.log('');
   console.log('✅ Done!');
   console.log('');
@@ -1263,6 +1308,12 @@ async function main() {
   console.log(`   Regenerated:   ${stats.regenerated}`);
   console.log(`   Skipped:       ${stats.skipped}`);
   console.log(`   Placeholders:  ${stats.placeholder}`);
+  console.log(`   Failed:        ${stats.failed}`);
+
+  if (failures.length > 0 && stats.regenerated === 0 && stats.hits === 0) {
+    console.error('💀 All templates failed — exiting with error');
+    process.exit(1);
+  }
 }
 
 main().catch((error) => {

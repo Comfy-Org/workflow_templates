@@ -2,6 +2,15 @@ name: Deploy Template Site
 
 on:
   workflow_dispatch:
+    inputs:
+      skip_ai:
+        description: 'Skip AI content generation'
+        type: boolean
+        default: false
+      force_regenerate:
+        description: 'Force regenerate all content (ignore cache)'
+        type: boolean
+        default: false
   workflow_run:
     workflows: ["Publish to PyPI"]
     types: [completed]
@@ -18,6 +27,10 @@ jobs:
   build-deploy:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SKIP_AI_GENERATION: ${{ inputs.skip_ai && 'true' || '' }}
+      FORCE_AI_REGENERATE: ${{ inputs.force_regenerate && 'true' || '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -25,19 +38,13 @@ jobs:
       - name: Setup
         uses: ./.github/actions/site-setup
 
-      - name: Sync templates
-        run: pnpm run sync
-        working-directory: site
-
-      - name: Generate AI content
-        run: pnpm run generate:ai
-        working-directory: site
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      - name: Generate workflow previews
-        run: pnpm run generate:previews
-        working-directory: site
+      - name: Restore content cache
+        uses: actions/cache@v4
+        with:
+          path: site/.content-cache
+          key: content-cache-${{ hashFiles('templates/**', 'site/src/**') }}
+          restore-keys: |
+            content-cache-
 
       - name: Build Astro site
         run: pnpm run build
