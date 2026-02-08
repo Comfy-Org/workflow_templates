@@ -87,7 +87,7 @@ const TEMPLATES_INDEX = path.join(TEMPLATES_ROOT, 'index.json');
 
 const KNOWLEDGE_INDEX_PATH = path.join(KNOWLEDGE_DIR, 'index.json');
 
-const CACHE_VERSION = '1'; // Increment to invalidate all caches
+const CACHE_VERSION = '2'; // Increment to invalidate all caches
 const DEFAULT_MODEL = 'gpt-4o';
 const TOKEN_BUDGET = 8000;
 
@@ -486,7 +486,8 @@ function assembleContext(
   template: TemplateInfo,
   workflow: WorkflowAnalysis,
   workflowText: ExtractedWorkflowText,
-  knowledge: KnowledgeBase
+  knowledge: KnowledgeBase,
+  contentTemplateMap?: Map<string, ContentTemplate>
 ): { ctx: GenerationContext; tokenBreakdown: TokenBreakdown } {
   const indexEntry = knowledge.knowledgeIndex[template.name];
 
@@ -505,7 +506,7 @@ function assembleContext(
   const tier1Tokens = estimateTokens(tier1Text);
 
   let tier2Tokens = 0;
-  const contentTemplate = selectContentTemplate(template, workflow);
+  const contentTemplate = selectContentTemplate(template, workflow, contentTemplateMap);
   const tutorialContext = findRelevantTutorial(
     template,
     knowledge.tutorials,
@@ -604,47 +605,51 @@ function assembleContext(
   };
 }
 
+const CONTENT_TEMPLATES: ContentTemplate[] = ['tutorial', 'showcase', 'comparison', 'breakthrough'];
+
+function buildContentTemplateAssignment(
+  allTemplates: TemplateInfo[]
+): Map<string, ContentTemplate> {
+  const assignment = new Map<string, ContentTemplate>();
+  if (allTemplates.length === 0) return assignment;
+
+  const sorted = [...allTemplates].sort((a, b) => (b.usage || 0) - (a.usage || 0));
+
+  const tierSize = Math.ceil(sorted.length / 4);
+  const tiers: TemplateInfo[][] = [];
+  for (let i = 0; i < sorted.length; i += tierSize) {
+    tiers.push(sorted.slice(i, i + tierSize));
+  }
+
+  for (const tier of tiers) {
+    const hashed = tier
+      .map((t) => ({
+        template: t,
+        hash: createHash('md5').update(t.name).digest('hex'),
+      }))
+      .sort((a, b) => a.hash.localeCompare(b.hash));
+
+    for (let i = 0; i < hashed.length; i++) {
+      assignment.set(hashed[i].template.name, CONTENT_TEMPLATES[i % CONTENT_TEMPLATES.length]);
+    }
+  }
+
+  return assignment;
+}
+
 function selectContentTemplate(
   template: TemplateInfo,
-  _workflow: WorkflowAnalysis
+  _workflow: WorkflowAnalysis,
+  assignmentMap?: Map<string, ContentTemplate>
 ): ContentTemplate {
-  const name = template.name.toLowerCase();
-  const title = (template.title || '').toLowerCase();
-  const description = template.description.toLowerCase();
-  const models = (template.models || []).map((m) => m.toLowerCase());
-  const date = template.date ? new Date(template.date) : null;
-
-  const threeMonthsAgo = new Date();
-  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
-  const isRecent = date && date > threeMonthsAgo;
-
-  const breakthroughKeywords = ['2.0', '2.1', '2.2', 'new', 'v2', 'pro', 'ultra', 'turbo'];
-  const hasBreakthroughSignals = breakthroughKeywords.some(
-    (kw) => name.includes(kw) || title.includes(kw) || models.some((m) => m.includes(kw))
-  );
-
-  if (isRecent && hasBreakthroughSignals) {
-    return 'breakthrough';
+  if (assignmentMap) {
+    const assigned = assignmentMap.get(template.name);
+    if (assigned) return assigned;
   }
 
-  const comparisonKeywords = ['vs', 'compare', 'alternative', 'better', 'best'];
-  const hasComparisonSignals = comparisonKeywords.some(
-    (kw) => name.includes(kw) || title.includes(kw) || description.includes(kw)
-  );
-
-  if (hasComparisonSignals) {
-    return 'comparison';
-  }
-
-  const showcaseKeywords = ['gallery', 'showcase', 'example', 'demo', 'style'];
-  const hasShowcaseSignals = showcaseKeywords.some((kw) => name.includes(kw) || title.includes(kw));
-  const isVisuallyOriented = template.mediaType === 'image' || template.mediaType === 'video';
-
-  if (hasShowcaseSignals || (isVisuallyOriented && (template.usage || 0) > 1000)) {
-    return 'showcase';
-  }
-
-  return 'tutorial';
+  const hash = createHash('md5').update(template.name).digest('hex');
+  const index = parseInt(hash.slice(0, 8), 16) % CONTENT_TEMPLATES.length;
+  return CONTENT_TEMPLATES[index];
 }
 
 function findRelevantTutorial(
@@ -1086,6 +1091,23 @@ async function main() {
   console.log(`📦 Processing ${templatesToProcess.length} templates...`);
   console.log('');
 
+  // Build stratified content template assignment for A/B testing
+  const contentTemplateMap = buildContentTemplateAssignment(allTemplates);
+  const distribution: Record<ContentTemplate, number> = {
+    tutorial: 0,
+    showcase: 0,
+    comparison: 0,
+    breakthrough: 0,
+  };
+  for (const ct of contentTemplateMap.values()) {
+    distribution[ct]++;
+  }
+  console.log(`🧪 Content template A/B distribution (across ${contentTemplateMap.size} templates):`);
+  for (const [type, count] of Object.entries(distribution)) {
+    console.log(`   - ${type}: ${count} (${((count / contentTemplateMap.size) * 100).toFixed(1)}%)`);
+  }
+  console.log('');
+
   // Ensure output directories
   await mkdir(OUTPUT_DIR, { recursive: true });
   await mkdir(CACHE_DIR, { recursive: true });
@@ -1190,7 +1212,7 @@ async function main() {
       const workflowPath = path.join(TEMPLATES_ROOT, `${template.name}.json`);
       const workflow = await analyzeWorkflow(workflowPath);
       const workflowText = await extractWorkflowText(workflowPath);
-      const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge);
+      const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge, contentTemplateMap);
       const tokenNote = `Context: ${tokenBreakdown.total.toLocaleString()} tokens (T1: ${tokenBreakdown.tier1.toLocaleString()}, T2: ${tokenBreakdown.tier2.toLocaleString()}, T3: ${tokenBreakdown.tier3.toLocaleString()})`;
       const budgetWarning = tokenBreakdown.total > TOKEN_BUDGET ? ' ⚠️ OVER BUDGET' : '';
       console.log(`🔄 [WOULD REGENERATE:${ctx.contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}`);
@@ -1216,7 +1238,7 @@ async function main() {
     const workflow = await analyzeWorkflow(workflowPath);
     const workflowText = await extractWorkflowText(workflowPath);
 
-    const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge);
+    const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge, contentTemplateMap);
 
     // Generate AI content
     const tutorialNote = ctx.tutorialContext ? ' (with tutorial context)' : '';
