@@ -1,4 +1,4 @@
-const DEFAULT_ORIGIN = 'https://templates.comfy.org';
+const DEFAULT_ORIGIN = 'https://comfy.org';
 
 function normalizeOrigin(raw?: string): string {
   const v = raw?.trim();

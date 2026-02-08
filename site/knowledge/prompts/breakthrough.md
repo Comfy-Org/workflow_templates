@@ -22,22 +22,23 @@ Highlight what's new and exciting about this workflow, capture early adopter int
 
 ## Required Output Structure
 
-### extendedDescription (2-3 paragraphs, 200-300 words)
+### extendedDescription (3 short paragraphs, 150-200 words)
 
-**Paragraph 1 (News + keyword)**: Start with "[Model name] introduces/enables [new capability]" in the first sentence. Include release timeframe if known.
+Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-- Example: "Wan 2.1 introduces high-quality video generation to ComfyUI, released in early 2025."
+**Paragraph 1 (What it does + output)**: Start with "[Model name] introduces/enables [new capability]" in the first sentence. Include release timeframe if known.
 
-**Paragraph 2 (Breakthrough)**: The breakthrough capabilities - what's now possible that wasn't before. Be specific about the advancement.
+- Example: "Wan 2.1 brings video generation to ComfyUI, released in early 2025. It creates 480p videos from a single input image."
 
-**Paragraph 3 (Impact)**: Why this matters for creators and what to expect. Ground the excitement in practical benefits.
+**Paragraph 2 (How/why it works)**: What specifically improved — be concrete about the advancement rather than using vague superlatives.
+
+**Paragraph 3 (Who should use it)**: Why this matters for specific users. Ground the value in practical benefits, not hype.
 
 **Temporal framing phrases**:
 
 - "Released in [date], [model] introduces..."
-- "For the first time, users can..."
-- "This represents a significant advancement in..."
-- "Previously, [task] required [old approach]. Now..."
+- "Previously, [task] required [old approach]. Now you can..."
+- "[Model] adds [capability] that was not available in [predecessor]"
 
 ### howToUse (5-7 steps)
 
@@ -110,6 +111,7 @@ Frame as newly possible:
 - Don't make claims about future updates
 - Don't compare unfairly to older models
 - Don't create hype without substance
+- Don't write dense, unscannable paragraphs — keep each paragraph to 2-3 sentences
 
 ## Example Output
 

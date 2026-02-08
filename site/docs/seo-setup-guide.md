@@ -7,6 +7,7 @@ Manual setup instructions for search engine optimization of `comfy.org/templates
 - [Google Search Console Setup](#google-search-console-setup)
 - [Bing Webmaster Tools](#bing-webmaster-tools)
 - [Sitemap Submission](#sitemap-submission)
+- [Framer Configuration](#framer-configuration)
 - [Weekly Monitoring Checklist](#weekly-monitoring-checklist)
 
 ---
@@ -23,6 +24,40 @@ The templates site is served at `https://comfy.org/templates/` via Framer Multi-
 The Vercel deployment URL (`workflow-templates.vercel.app`) returns `X-Robots-Tag: noindex` to prevent duplicate indexing.
 
 See `docs/framer-subpath-plan.md` for full architecture details.
+
+---
+
+## Framer Configuration
+
+### Multi-Site Rewrite Setup
+
+This is the key manual step that makes the subpath architecture work:
+
+1. Go to the [Framer](https://framer.com) dashboard and select the `comfy.org` domain
+2. Open the **Multi Site** tab
+3. Add a rewrite rule:
+   - **Path:** `/templates/*`
+   - **Type:** External
+   - **Destination:** `https://workflow-templates.vercel.app`
+4. **Publish** the Framer project to apply changes
+
+> The Vercel deployment URL can be updated in Framer at any time without code changes.
+
+### Internal Linking
+
+Internal links from the main site pass domain authority to the templates subpath. Sitemap discovery alone is insufficient for SEO — search engines weigh internal links heavily.
+
+- Add navigation links from Framer marketing pages to key `/templates/` pages
+- Add footer links to template categories (e.g., `/templates/?type=image`, `/templates/?type=video`)
+- Include "Browse Templates" or similar CTA links from relevant pages (e.g., model pages, feature pages)
+
+### Verification
+
+After publishing the Framer project:
+
+1. Visit `https://comfy.org/templates/` and confirm the page loads correctly
+2. Check that all assets (CSS, JS, images) load without errors
+3. Verify the URL bar shows `comfy.org/templates/...` (not a redirect to `workflow-templates.vercel.app`)
 
 ---
 

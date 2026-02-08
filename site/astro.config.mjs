@@ -30,7 +30,7 @@ const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 
 
 // https://astro.build/config
 export default defineConfig({
-  site: (process.env.PUBLIC_SITE_ORIGIN || 'https://templates.comfy.org').replace(/\/$/, ''),
+  site: (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, ''),
   prefetch: {
     prefetchAll: false,
     defaultStrategy: 'hover',

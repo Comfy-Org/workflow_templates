@@ -20,15 +20,17 @@ Help users understand exactly how to use this workflow, with clear instructions 
 
 ## Required Output Structure
 
-### extendedDescription (2-3 paragraphs, 150-250 words)
+### extendedDescription (3 short paragraphs, 150-200 words)
 
-**Paragraph 1 (Lead with keyword)**: Start with "[Model name] [task]" in the first sentence. Describe what this workflow does and the output it produces.
+Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-- Example: "Flux inpainting enables precise object removal and background replacement in ComfyUI."
+**Paragraph 1 (What it does + output)**: Start with "[Model name] [task]" in the first sentence. State what the workflow produces and for whom.
 
-**Paragraph 2 (Technical value)**: Explain the key model/technology and why it matters. Include hardware requirements if notable.
+- Example: "Flux inpainting enables precise object removal and background replacement in ComfyUI. Upload any image and paint over the area you want to change."
 
-**Paragraph 3 (User benefit)**: Who should use this and what they'll achieve. End with a clear call-to-action phrase.
+**Paragraph 2 (How/why it works)**: Explain the key technical approach briefly. Include hardware requirements if notable.
+
+**Paragraph 3 (Who should use it)**: Who benefits most and what they can achieve. Keep it concrete and specific.
 
 ### howToUse (5-8 numbered steps)
 
@@ -101,10 +103,11 @@ Specific, actionable use cases starting with action verbs:
 
 ## What NOT to Do
 
-- Don't use marketing language ("revolutionary", "cutting-edge")
+- Don't use marketing language — see banned phrases in the system prompt
 - Don't mention pricing or costs
 - Don't invent model capabilities not in the data
 - Don't make up specific node names not in the workflow
+- Don't write dense, unscannable paragraphs — keep each paragraph to 2-3 sentences
 
 ## Example Output
 
