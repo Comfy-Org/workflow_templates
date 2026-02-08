@@ -1,42 +1,79 @@
-# Wan 2.1
+# Wan
 
-Wan 2.1 is a video generation model from Alibaba capable of both image-to-video and text-to-video synthesis.
+Wan is a family of open-source video generation models from Alibaba's Tongyi Lab, spanning text-to-video, image-to-video, speech-to-video, motion control, and video editing. All models are released under the Apache 2.0 license.
 
 ## Model Variants
 
-### Wan 2.1 T2V (Text-to-Video)
+### Wan 2.1 T2V / I2V
 
-- Generate videos directly from text prompts
+- Text-to-video and image-to-video generation
 - Available in 1.3B and 14B parameter sizes
-- Supports variable aspect ratios and durations
+- Supports 480p and 720p output, variable aspect ratios
+- Chinese and English visual text generation
 
-### Wan 2.1 I2V (Image-to-Video)
+### Wan 2.1 Fun (Control / InPaint / Camera)
 
-- Animate static images into videos
-- Maintains subject consistency from source image
-- 480p and 720p output resolutions
+- Camera control with predefined or custom camera movements
+- Video inpainting for targeted frame-level editing
+- Depth, pose, and canny edge control for guided generation
+
+### Wan 2.1 VACE (Video Any-Condition Editing)
+
+- All-in-one model for video creation and editing (ICCV 2025)
+- Reference-to-video (R2V), video-to-video (V2V), and masked editing (MV2V)
+- Supports inpainting, outpainting, first-last-frame interpolation, and animate-anything
+- Available in 1.3B and 14B sizes, built on Wan 2.1 base models
+
+### Wan 2.2 T2V / I2V / TI2V
+
+- Mixture-of-Experts (MoE) architecture with high-noise and low-noise expert models
+- T2V-A14B and I2V-A14B (14B MoE), TI2V-5B (hybrid text+image-to-video)
+- Cinematic-level aesthetic control with lighting, composition, and color tone guidance
+- TI2V-5B uses a high-compression 16×16×4 VAE, runs on consumer GPUs like 4090
+
+### Wan 2.2 S2V (Speech-to-Video)
+
+- Audio-driven cinematic video generation from image + speech + text
+- Supports lip-sync, facial expressions, and pose-driven generation
+- Generates variable-length videos matching input audio duration
+
+### Wan 2.2 Animate
+
+- Character animation and subject replacement from video + reference image
+- Animate mode: transfers motion from reference video onto a still character
+- Replace mode: swaps subjects while preserving background, lighting, and camera motion
+- Includes relighting LoRA for scene-matched lighting adaptation
+
+### Wan Move
+
+- Point-level motion control for image-to-video generation (NeurIPS 2025)
+- Dense trajectory-based guidance for fine-grained object motion
+- Latent trajectory propagation without extra motion modules
+- 14B model generating 5-second 480p videos
 
 ## Key Features
 
-- High temporal consistency between frames
-- Natural motion and physics simulation
-- Multiple aspect ratios (16:9, 9:16, 1:1)
-- Video lengths up to 5 seconds at 24fps
-- Strong prompt adherence for motion
+- High temporal consistency and natural physics simulation
+- Multiple aspect ratios (16:9, 9:16, 1:1) at 24fps
+- MoE architecture in 2.2 for higher quality at same compute cost
+- Bilingual prompt support (Chinese and English)
+- ComfyUI and Diffusers integration across all variants
 
 ## Hardware Requirements
 
-- 1.3B model: 8GB VRAM minimum
-- 14B model: 24GB VRAM recommended
-- FP8 quantization available for lower VRAM
-- Significant system RAM needed for video processing
+- 1.3B models: 8GB VRAM minimum
+- 14B models: 24GB+ VRAM recommended (80GB for full precision)
+- TI2V-5B: runs on consumer 4090 GPUs at 720p
+- FP8 quantization available for lower VRAM configurations
+- Multi-GPU inference supported via FSDP + DeepSpeed Ulysses
 
 ## Common Use Cases
 
-- Social media video content
-- Product animation
-- Character animation from reference images
-- Motion graphics and visual effects
+- Social media and short-form video content
+- Character animation and motion transfer
+- Video inpainting and scene editing
+- Product animation and marketing videos
+- Speech-driven talking head generation
 - Storyboard-to-video conversion
 
 ## Key Parameters
@@ -44,7 +81,8 @@ Wan 2.1 is a video generation model from Alibaba capable of both image-to-video 
 - **frames**: Number of output frames (typically 81 for ~3.4s at 24fps)
 - **steps**: Inference steps (20-50 recommended)
 - **cfg_scale**: Guidance scale for prompt adherence (3-7 typical)
-- **motion_bucket_id**: Controls amount of motion in I2V
+- **size**: Output resolution (480p or 720p)
+- **model_name**: Selects variant (e.g., vace-14B, ti2v-5B, s2v-14B)
 
 ## Blog References
 
