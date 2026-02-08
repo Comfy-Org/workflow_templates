@@ -105,3 +105,42 @@ Specific, actionable use cases starting with action verbs:
 - Don't mention pricing or costs
 - Don't invent model capabilities not in the data
 - Don't make up specific node names not in the workflow
+
+## Example Output
+
+Below is an example of ideal tutorial content for a Wan 2.1 image-to-video workflow:
+
+```json
+{
+  "extendedDescription": "Wan 2.1 image-to-video generation transforms a single still image into a short animated video clip in ComfyUI. This workflow uses the 14B parameter model to produce 480p video with natural motion and temporal consistency from your uploaded reference image.\n\nThe Wan 2.1 model excels at preserving the visual style and composition of the input image while adding believable motion. It runs on GPUs with 12 GB or more VRAM using the fp16 checkpoint, and an fp8 variant is available for cards with less memory.\n\nContent creators, animators, and social media producers can use this workflow to bring static artwork to life without manual keyframing. Load your image, optionally add a motion description, and generate a video in under a minute.",
+  "howToUse": [
+    "Ensure the Load Diffusion Model node has loaded wan2.1_i2v_480p_14B_fp16.safetensors",
+    "Ensure the Load CLIP node has loaded umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+    "Upload your input image in the Load Image node",
+    "Enter a motion description in the CLIP Text Encoder node (optional)",
+    "Set the frame count in the EmptyHunyuanLatentVideo node (default 49 frames)",
+    "Click the Queue button or press Ctrl+Enter to run the workflow"
+  ],
+  "metaDescription": "Wan 2.1 image-to-video workflow for ComfyUI. Turn still images into 480p animated clips. One-click template with step-by-step guide.",
+  "suggestedUseCases": [
+    "Animate product photography for e-commerce listings",
+    "Create short motion clips from digital artwork",
+    "Generate social media video content from static images",
+    "Produce animated storyboard frames for pre-visualization"
+  ],
+  "faqItems": [
+    {
+      "question": "What VRAM is required for the Wan 2.1 video workflow?",
+      "answer": "Wan 2.1 at 14B parameters requires at least 12 GB VRAM with the fp16 checkpoint. An fp8 variant is available for GPUs with 8–10 GB VRAM, though generation will be slower. For best results at 480p, 16 GB or more is recommended."
+    },
+    {
+      "question": "How long does Wan 2.1 take to generate a video?",
+      "answer": "On an RTX 4090, a 49-frame clip at 480p takes roughly 30–45 seconds. Lower-end GPUs may need 2–3 minutes. Generation time scales linearly with the number of frames."
+    },
+    {
+      "question": "Can I control the motion direction in this workflow?",
+      "answer": "You can guide motion by entering a text description in the CLIP Text Encoder node, such as 'camera slowly pans left' or 'subject walks forward.' The model interprets these prompts as motion hints, though results vary by scene complexity."
+    }
+  ]
+}
+```
