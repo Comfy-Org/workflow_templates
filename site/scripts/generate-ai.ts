@@ -147,7 +147,7 @@ function parseArgs(): CLIOptions {
   const args = process.argv.slice(2);
   const options: CLIOptions = {
     testMode: false,
-    templateFilter: null,
+    templateFilter: process.env.AI_TEMPLATE_FILTER || null,
     skipAI: process.env.SKIP_AI_GENERATION === 'true',
     force: process.env.FORCE_AI_REGENERATE === 'true',
     dryRun: false,

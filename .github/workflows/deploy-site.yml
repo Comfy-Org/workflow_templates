@@ -11,6 +11,10 @@ on:
         description: 'Force regenerate all content (ignore cache)'
         type: boolean
         default: false
+      template_filter:
+        description: 'Regenerate specific template only (e.g. "flux_schnell")'
+        type: string
+        default: ''
   workflow_run:
     workflows: ["Publish to PyPI"]
     types: [completed]
@@ -31,6 +35,7 @@ jobs:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       SKIP_AI_GENERATION: ${{ inputs.skip_ai && 'true' || '' }}
       FORCE_AI_REGENERATE: ${{ inputs.force_regenerate && 'true' || '' }}
+      AI_TEMPLATE_FILTER: ${{ inputs.template_filter }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

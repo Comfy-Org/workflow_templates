@@ -207,7 +207,7 @@ async function generateOGImage(template: TemplateData): Promise<void> {
                     marginTop: 'auto',
                   },
                   children: (
-                    process.env.PUBLIC_SITE_ORIGIN || 'https://templates.comfy.org'
+                    process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org'
                   ).replace(/^https?:\/\//, ''),
                 },
               },

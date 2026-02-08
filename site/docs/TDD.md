@@ -158,7 +158,7 @@ export const collections = { templates };
 ### 3.1 Recommended URL Structure
 
 ```
-templates.comfy.org/
+comfy.org/
 ├── /                                    # Homepage: featured templates
 ├── /templates/                          # All templates listing
 ├── /templates/{slug}/                   # Template detail page
@@ -175,7 +175,7 @@ templates.comfy.org/
 | `templates.comfy.org` | Subdomain DNS + Cloudflare/Vercel | Builds separate authority, easy to measure |
 | `comfy.org/templates` | Reverse proxy from main site      | Inherits main domain authority             |
 
-**Recommendation:** Start with `templates.comfy.org` (simpler), can migrate later.
+**Decision:** Using `comfy.org/templates` via Framer Multi-Site rewrite. See `docs/framer-subpath-plan.md`.
 
 ---
 
@@ -843,7 +843,7 @@ Use the primary output thumbnail (`{name}-1.webp`) as the OG image.
 ```astro
 ---
 const { template } = Astro.props;
-const ogImage = `https://templates.comfy.org/thumbnails/${template.name}-1.webp`;
+const ogImage = `https://comfy.org/thumbnails/${template.name}-1.webp`;
 ---
 
 <!-- src/components/SEOHead.astro -->
@@ -917,7 +917,7 @@ interface TemplatePageEvents {
 **Setup (Day 1):**
 
 1. Add site to Google Search Console
-2. Submit sitemap: `https://templates.comfy.org/sitemap-index.xml`
+2. Submit sitemap: `https://comfy.org/sitemap-index.xml`
 3. Set up Ahrefs/Semrush project for keyword tracking
 
 **Weekly Check:**

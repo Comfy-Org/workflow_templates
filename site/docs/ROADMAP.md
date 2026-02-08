@@ -21,7 +21,7 @@ This roadmap consolidates items from:
 
 | Task                                                  | Status  | Notes                                            |
 | ----------------------------------------------------- | ------- | ------------------------------------------------ |
-| Verify `templates.comfy.org` in Google Search Console | 🔲 Todo | URL prefix method; see `docs/seo-setup-guide.md` |
+| Verify `comfy.org` in Google Search Console           | 🔲 Todo | URL prefix method; see `docs/seo-setup-guide.md` |
 | Submit sitemap in GSC (`/sitemap-index.xml`)          | 🔲 Todo | One-time manual submission                       |
 | Register with Bing Webmaster Tools                    | 🔲 Todo | Optional; enables IndexNow for Bing/DuckDuckGo   |
 | Set `OPENAI_API_KEY` secret on Vercel                 | 🔲 Todo | Required for production AI content builds        |
