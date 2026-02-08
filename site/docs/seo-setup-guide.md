@@ -1,6 +1,6 @@
 # SEO Setup Guide
 
-Manual setup instructions for search engine optimization of templates.comfy.org.
+Manual setup instructions for search engine optimization of `comfy.org/templates`.
 
 ## Table of Contents
 
@@ -11,14 +11,33 @@ Manual setup instructions for search engine optimization of templates.comfy.org.
 
 ---
 
+## Domain Architecture
+
+The templates site is served at `https://comfy.org/templates/` via Framer Multi-Site rewrite:
+
+- **Framer** owns `comfy.org` and serves all marketing pages
+- Framer rewrites `/templates/*` → the Astro site on Vercel
+- Visitors see `comfy.org/templates/...` in the browser (no redirect)
+- All SEO authority consolidates under `comfy.org`
+
+The Vercel deployment URL (`workflow-templates.vercel.app`) returns `X-Robots-Tag: noindex` to prevent duplicate indexing.
+
+See `docs/framer-subpath-plan.md` for full architecture details.
+
+---
+
 ## Google Search Console Setup
 
-### 1. Add Property
+Since the templates site lives under `comfy.org/templates/`, you use the existing `comfy.org` GSC property (or create one if it doesn't exist).
+
+### 1. Add Property (if needed)
 
 1. Go to [Google Search Console](https://search.google.com/search-console)
 2. Click **Add property**
-3. Choose **URL prefix** and enter: `https://templates.comfy.org`
+3. Choose **URL prefix** and enter: `https://comfy.org`
 4. Click **Continue**
+
+> If `comfy.org` is already verified (likely — it's the main marketing site), you can skip to step 3 (Submit Sitemap).
 
 ### 2. Verification Methods
 
@@ -34,16 +53,11 @@ Choose one of these verification methods:
 #### Option B: HTML File Upload
 
 1. Download the verification file from GSC (e.g., `google1234567890abcdef.html`)
-2. Place it in `public/` directory
-3. Deploy the site
-4. Verify the file is accessible at `https://templates.comfy.org/google1234567890abcdef.html`
-5. Click **Verify** in GSC
+2. Place it in `site/public/` directory
+3. Deploy the site — Framer should pass through the file at `comfy.org/templates/google1234567890abcdef.html`
+4. Click **Verify** in GSC
 
-You can use the helper script:
-
-```bash
-pnpm tsx scripts/generate-gsc-verification.ts google1234567890abcdef
-```
+> Note: Since the file is served under `/templates/`, this method only works if GSC accepts it at a subpath. DNS verification is more reliable for subpath setups.
 
 #### Option C: HTML Meta Tag
 
@@ -57,10 +71,8 @@ pnpm tsx scripts/generate-gsc-verification.ts google1234567890abcdef
 ### 3. Submit Sitemap
 
 1. In GSC, go to **Sitemaps** in the left sidebar
-2. Enter the sitemap URL: `sitemap-index.xml`
+2. Enter the sitemap URL: `https://comfy.org/templates/sitemap-index.xml`
 3. Click **Submit**
-
-**Full sitemap URL:** `https://templates.comfy.org/sitemap-index.xml`
 
 ### 4. Set Up Monitoring Alerts
 
@@ -94,19 +106,19 @@ pnpm tsx scripts/generate-gsc-verification.ts google1234567890abcdef
 
 1. Select **Import from GSC**
 2. Authenticate with your Google account
-3. Select `templates.comfy.org`
+3. Select `comfy.org`
 4. Click **Import**
 
 This automatically imports your sitemap and verification.
 
 ### 3. Manual Setup (Alternative)
 
-1. Enter `https://templates.comfy.org`
+1. Enter `https://comfy.org`
 2. Verify using one of:
    - XML file (add to `public/`)
    - Meta tag (add to layout)
    - CNAME record
-3. Submit sitemap: `https://templates.comfy.org/sitemap-index.xml`
+3. Submit sitemap: `https://comfy.org/templates/sitemap-index.xml`
 
 ---
 
@@ -114,8 +126,10 @@ This automatically imports your sitemap and verification.
 
 ### Sitemap Location
 
-- **Index:** `https://templates.comfy.org/sitemap-index.xml`
+- **Index:** `https://comfy.org/templates/sitemap-index.xml`
 - Generated automatically by `@astrojs/sitemap` during build
+- Uses `PUBLIC_SITE_ORIGIN` env var (`https://comfy.org`) for canonical URLs
+- Framer also auto-merges sitemaps from Multi-Site rewrite sources
 
 ### Direct Submission URLs
 
@@ -123,10 +137,10 @@ Use these URLs to ping search engines after sitemap updates:
 
 ```bash
 # Google
-curl "https://www.google.com/ping?sitemap=https://templates.comfy.org/sitemap-index.xml"
+curl "https://www.google.com/ping?sitemap=https://comfy.org/templates/sitemap-index.xml"
 
 # Bing
-curl "https://www.bing.com/ping?sitemap=https://templates.comfy.org/sitemap-index.xml"
+curl "https://www.bing.com/ping?sitemap=https://comfy.org/templates/sitemap-index.xml"
 ```
 
 ### Verify Indexing Status
@@ -149,7 +163,7 @@ curl "https://www.bing.com/ping?sitemap=https://templates.comfy.org/sitemap-inde
 Test specific pages:
 
 1. In GSC, use **URL Inspection** tool
-2. Enter a page URL
+2. Enter a page URL (e.g., `https://comfy.org/templates/flux_schnell/`)
 3. Check if it's indexed
 4. Request indexing if needed
 
@@ -188,13 +202,15 @@ Test specific pages:
 
 ### Common Issues and Fixes
 
-| Issue                        | Likely Cause                     | Fix                              |
-| ---------------------------- | -------------------------------- | -------------------------------- |
-| Sudden drop in indexed pages | Sitemap issue, robots.txt change | Check sitemap, verify robots.txt |
-| Low CTR                      | Poor meta descriptions           | Improve title/description        |
-| High impressions, low clicks | Ranking for wrong queries        | Review content targeting         |
-| "Crawled - not indexed"      | Low content quality              | Improve page content             |
-| Slow indexing                | New site, low authority          | Build backlinks, submit in GSC   |
+| Issue                        | Likely Cause                     | Fix                                  |
+| ---------------------------- | -------------------------------- | ------------------------------------ |
+| Sudden drop in indexed pages | Sitemap issue, robots.txt change | Check sitemap, verify robots.txt     |
+| Low CTR                      | Poor meta descriptions           | Improve title/description            |
+| High impressions, low clicks | Ranking for wrong queries        | Review content targeting             |
+| "Crawled - not indexed"      | Low content quality              | Improve page content                 |
+| Slow indexing                | New site, low authority          | Build backlinks, submit in GSC       |
+| Duplicate content warnings   | Vercel URL indexed               | Verify X-Robots-Tag: noindex header  |
+| Pages not found by crawler   | Framer rewrite misconfigured     | Check Multi-Site rules in Framer     |
 
 ### Performance Benchmarks
 
@@ -215,11 +231,14 @@ For a template/resource site like this:
 - [Google SEO Starter Guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide)
 - [Bing Webmaster Tools Help](https://www.bing.com/webmasters/help/)
 - [Sitemaps Protocol](https://www.sitemaps.org/protocol.html)
+- [Framer Multi-Site Docs](https://www.framer.com/help/articles/multi-site/)
 
 ---
 
 ## Related Files
 
-- `astro.config.mjs` - Sitemap generation config
-- `public/robots.txt` - Crawler directives
+- `astro.config.mjs` - Sitemap generation config (`site` uses `PUBLIC_SITE_ORIGIN`)
+- `src/config/site.ts` - Centralized URL helper (`SITE_ORIGIN`, `absoluteUrl()`)
+- `src/pages/robots.txt.ts` - Dynamic robots.txt with correct sitemap URL
 - `src/layouts/BaseLayout.astro` - Meta tag placement
+- `docs/framer-subpath-plan.md` - Full Framer subpath architecture
