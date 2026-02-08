@@ -641,6 +641,8 @@ async function generateContent(
         .join('\n\n') || 'No concept documentation available.'
     );
 
+  const temperature = ctx.contentTemplate === 'showcase' ? 0.7 : 0.4;
+
   const response = await openai.chat.completions.create({
     model: 'gpt-4o',
     messages: [
@@ -648,7 +650,7 @@ async function generateContent(
       { role: 'user', content: userPrompt },
     ],
     response_format: { type: 'json_object' },
-    temperature: 0.7,
+    temperature,
     max_tokens: 1500,
   });
 
@@ -708,6 +710,31 @@ function checkContentQuality(content: GeneratedContent, template: TemplateInfo):
   } else if (content.metaDescription.length < 80) {
     issues.push(`Meta description too short: ${content.metaDescription.length} chars (min 80)`);
     score -= 5;
+  }
+
+  const aiArtifactPatterns = [
+    /in today's fast-paced/i,
+    /in the ever-evolving/i,
+    /whether you're a beginner or/i,
+    /whether you're a seasoned/i,
+    /unlock the power of/i,
+    /dive into/i,
+    /\bseamless(ly)?\b/gi,
+    /\bcutting-edge\b/gi,
+    /\bgame-changing\b/gi,
+  ];
+
+  const fullText = `${content.extendedDescription} ${content.howToUse.join(' ')} ${content.metaDescription}`;
+  let artifactCount = 0;
+  for (const pattern of aiArtifactPatterns) {
+    const matches = fullText.match(pattern);
+    if (matches) {
+      artifactCount += matches.length;
+    }
+  }
+  if (artifactCount > 0) {
+    issues.push(`AI language artifacts detected: ${artifactCount} instance(s)`);
+    score -= 10 * artifactCount;
   }
 
   return {

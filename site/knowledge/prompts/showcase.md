@@ -110,3 +110,37 @@ Focus on professional and creative applications:
 - Don't make specific quality claims not supported by data
 - Don't ignore technical requirements entirely
 - Don't create FOMO through artificial urgency
+
+## Example Output
+
+Below is an example of ideal showcase content for a Flux upscaling workflow:
+
+```json
+{
+  "extendedDescription": "Flux upscaling produces crisp, detailed 4K images from low-resolution sources in ComfyUI. This workflow takes a 512×512 input and generates a clean 2048×2048 output while preserving fine textures and sharp edges.\n\nCompared to traditional bicubic scaling, Flux upscaling reconstructs missing detail rather than blurring it. A typical 4× upscale completes in under 20 seconds on an RTX 3080, making it practical for batch processing large image sets.\n\nPhotographers, game artists, and print designers can upscale legacy assets to modern resolutions without re-shooting or re-rendering. Upload an image, choose your scale factor, and download the enhanced result.",
+  "howToUse": [
+    "Upload your source image in the Load Image node",
+    "Select the desired scale factor in the Upscale Model Loader node",
+    "Adjust the denoise strength to control detail generation (0.3–0.5 recommended)",
+    "Click Queue or press Ctrl+Enter to run the workflow",
+    "Download the upscaled image from the Save Image node"
+  ],
+  "metaDescription": "Flux image upscaling in ComfyUI. Enhance low-resolution images to 4K with preserved detail. Fast batch processing for professionals.",
+  "suggestedUseCases": [
+    "Upscale product photos for high-resolution print catalogs",
+    "Enhance archival images for digital restoration projects",
+    "Prepare game textures at higher resolution for modern displays",
+    "Improve social media thumbnails for sharper appearance"
+  ],
+  "faqItems": [
+    {
+      "question": "What quality can I expect from Flux upscaling?",
+      "answer": "Flux upscaling reconstructs texture and edge detail at up to 4× the original resolution. Output is suitable for professional print at 300 DPI when starting from a reasonably clean source image. Heavily compressed or very small inputs may show artifacts."
+    },
+    {
+      "question": "How long does Flux upscaling take per image?",
+      "answer": "On an RTX 3080, a single 4× upscale from 512×512 to 2048×2048 takes approximately 15–20 seconds. Batch processing 50 images completes in roughly 15 minutes depending on input sizes and GPU load."
+    }
+  ]
+}
+```

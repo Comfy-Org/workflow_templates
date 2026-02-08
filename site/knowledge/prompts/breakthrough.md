@@ -110,3 +110,38 @@ Frame as newly possible:
 - Don't make claims about future updates
 - Don't compare unfairly to older models
 - Don't create hype without substance
+
+## Example Output
+
+Below is an example of ideal breakthrough content for a Wan 2.1 text-to-video workflow:
+
+```json
+{
+  "extendedDescription": "Wan 2.1 introduces locally-run text-to-video generation in ComfyUI, released in early 2025. This workflow converts a text prompt into a 480p video clip of up to 5 seconds, running entirely on consumer hardware without cloud API calls.\n\nPreviously, text-to-video required cloud services or research-grade GPUs. Wan 2.1's 14B parameter model brings comparable output quality to a single desktop GPU with 12 GB VRAM. The model produces temporally consistent motion with fewer flickering artifacts than earlier open-source video models.\n\nFor creators who need quick video drafts, motion tests, or animated concept pieces, this workflow eliminates the cost and latency of cloud generation. Results are best at 480p; higher resolutions may be possible in future model updates.",
+  "howToUse": [
+    "Ensure you have ComfyUI version 0.3.10 or later installed",
+    "Download wan2.1_t2v_14B_fp16.safetensors and place it in models/diffusion_models",
+    "Download umt5_xxl_fp8_e4m3fn_scaled.safetensors and place it in models/text_encoders",
+    "Enter your scene description in the CLIP Text Encoder node",
+    "Set frame count in the EmptyHunyuanLatentVideo node (default 49 frames for ~2 seconds)",
+    "Click Queue or press Ctrl+Enter to generate the video"
+  ],
+  "metaDescription": "Wan 2.1 text-to-video now in ComfyUI. Generate 480p video clips from text prompts on consumer GPUs. Local, private, no cloud required.",
+  "suggestedUseCases": [
+    "Generate motion tests for animation pre-production",
+    "Create short video loops for social media posts",
+    "Produce animated concept art without manual keyframing",
+    "Draft video ad storyboards from text descriptions"
+  ],
+  "faqItems": [
+    {
+      "question": "What's new in Wan 2.1 compared to previous video models?",
+      "answer": "Wan 2.1 offers improved temporal consistency and reduced flickering compared to earlier open-source video models. The 14B parameter architecture produces more natural motion, and the model runs on consumer GPUs with 12 GB VRAM rather than requiring data-center hardware."
+    },
+    {
+      "question": "Do I need to update ComfyUI for Wan 2.1?",
+      "answer": "Yes, Wan 2.1 requires ComfyUI version 0.3.10 or later. The model uses custom node types not present in earlier versions. Update your installation before downloading the model weights."
+    }
+  ]
+}
+```
