@@ -1,12 +1,11 @@
 name: Deploy Template Site
 
 on:
-  workflow_dispatch: # Manual trigger for initial development
-  # Uncomment after stable deployment is verified:
-  # workflow_run:
-  #   workflows: ["Publish to PyPI"]
-  #   types: [completed]
-  #   branches: [main]
+  workflow_dispatch:
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+    branches: [main]
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -18,8 +17,7 @@ permissions:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    # Uncomment when using workflow_run trigger:
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
