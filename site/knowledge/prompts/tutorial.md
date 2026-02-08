@@ -24,13 +24,15 @@ Help users understand exactly how to use this workflow, with clear instructions 
 
 Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-**Paragraph 1 (What it does + output)**: Start with "[Model name] [task]" in the first sentence. State what the workflow produces and for whom.
+Follow the **PAS framework** from the system prompt:
+
+**Paragraph 1 — Problem**: Start with "[Model name] [task]" in the first sentence. Name the task and what makes it worth solving.
 
 - Example: "Flux inpainting enables precise object removal and background replacement in ComfyUI. Upload any image and paint over the area you want to change."
 
-**Paragraph 2 (How/why it works)**: Explain the key technical approach briefly. Include hardware requirements if notable.
+**Paragraph 2 — Agitate**: Briefly note why this was hard before — cloud costs, manual work, quality issues, hardware limits. One honest sentence, then pivot to how this workflow addresses it.
 
-**Paragraph 3 (Who should use it)**: Who benefits most and what they can achieve. Keep it concrete and specific.
+**Paragraph 3 — Solution**: What the user gets concretely — outputs, speed, who benefits. Keep it specific and actionable.
 
 ### howToUse (5-8 numbered steps)
 

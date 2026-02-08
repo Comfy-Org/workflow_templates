@@ -26,13 +26,15 @@ Inspire users with what's possible, emphasize output quality, create desire to t
 
 Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-**Paragraph 1 (What it does + output)**: Start with "[Model name] creates/generates [output type]" in the first sentence. Be specific about the output format and quality.
+Follow the **PAS framework** from the system prompt:
+
+**Paragraph 1 — Problem**: Start with "[Model name] creates/generates [output type]" in the first sentence. Name the creative task and the gap it fills.
 
 - Example: "Flux upscaling produces 4K images from low-resolution sources in ComfyUI. You can upscale photos, illustrations, and AI-generated art with preserved detail."
 
-**Paragraph 2 (How/why it works)**: What makes it effective — speed, quality, consistency. Include specific metrics when available (e.g., "4x upscale in under 30 seconds").
+**Paragraph 2 — Agitate**: Acknowledge the previous limitations — slow manual upscaling, cloud costs, quality loss with traditional methods. One sentence, then pivot to this workflow's advantage (speed, quality, consistency).
 
-**Paragraph 3 (Who should use it)**: Which users and workflows benefit most. Be concrete about use cases.
+**Paragraph 3 — Solution**: Which users and workflows benefit most. Be concrete about outputs and professional applications.
 
 **Descriptive language to use**:
 
