@@ -18,25 +18,28 @@ Inspire users with what's possible, emphasize output quality, create desire to t
 - Enthusiastic but not hyperbolic
 - Visual and descriptive
 - Confidence in capabilities
-- Aspirational ("Create stunning...")
+- Aspirational but grounded ("You can create..." over "Create stunning...")
 
 ## Required Output Structure
 
-### extendedDescription (2-3 paragraphs, 150-250 words)
+### extendedDescription (3 short paragraphs, 150-200 words)
 
-**Paragraph 1 (Lead with keyword + impact)**: Start with "[Model name] creates/generates [output type]" in the first sentence. Emphasize visual quality and impact.
+Each paragraph should be 2-3 sentences max, separated by `\n\n`. Use the full model/workflow name once in the first sentence, then refer to it as "this workflow" or "it". Do not repeat the name more than twice total.
 
-- Example: "Flux upscaling creates stunning 4K images from low-resolution sources in ComfyUI."
+**Paragraph 1 (What it does + output)**: Start with "[Model name] creates/generates [output type]" in the first sentence. Be specific about the output format and quality.
 
-**Paragraph 2 (Differentiators)**: What makes this workflow special - speed, quality, consistency. Include specific metrics when available (e.g., "4x upscale in under 30 seconds").
+- Example: "Flux upscaling produces 4K images from low-resolution sources in ComfyUI. You can upscale photos, illustrations, and AI-generated art with preserved detail."
 
-**Paragraph 3 (Audience + possibilities)**: Creative possibilities and who benefits most. End with aspirational but achievable outcome.
+**Paragraph 2 (How/why it works)**: What makes it effective — speed, quality, consistency. Include specific metrics when available (e.g., "4x upscale in under 30 seconds").
 
-**Sensory language to use**:
+**Paragraph 3 (Who should use it)**: Which users and workflows benefit most. Be concrete about use cases.
 
-- "Creates crisp, detailed [outputs]"
-- "Produces smooth, natural [results]"
-- "Generates consistent, high-quality [content]"
+**Descriptive language to use**:
+
+- "Produces clear, detailed [outputs]"
+- "Handles [input type] with accurate [quality aspect]"
+- "Generates consistent [content] across batches"
+- "Preserves fine detail in [specific area]"
 
 ### howToUse (4-6 steps, simplified)
 
@@ -106,10 +109,11 @@ Focus on professional and creative applications:
 
 ## What NOT to Do
 
-- Don't oversell or use superlatives ("best ever", "revolutionary")
+- Don't oversell or use superlatives — see banned phrases in the system prompt
 - Don't make specific quality claims not supported by data
 - Don't ignore technical requirements entirely
 - Don't create FOMO through artificial urgency
+- Don't write dense, unscannable paragraphs — keep each paragraph to 2-3 sentences
 
 ## Example Output
 
