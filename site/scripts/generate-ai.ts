@@ -85,8 +85,11 @@ const OVERRIDES_DIR = path.join(SITE_ROOT, 'overrides/templates');
 const KNOWLEDGE_DIR = path.join(SITE_ROOT, 'knowledge');
 const TEMPLATES_INDEX = path.join(TEMPLATES_ROOT, 'index.json');
 
+const KNOWLEDGE_INDEX_PATH = path.join(KNOWLEDGE_DIR, 'index.json');
+
 const CACHE_VERSION = '1'; // Increment to invalidate all caches
 const DEFAULT_MODEL = 'gpt-4o';
+const TOKEN_BUDGET = 8000;
 
 interface CacheManifest {
   version: string;
@@ -116,6 +119,27 @@ interface CLIOptions {
   skipAI: boolean;
   force: boolean;
   dryRun: boolean;
+}
+
+interface KnowledgeIndexEntry {
+  models: string[];
+  concepts: string[];
+  tutorial: string | null;
+  nodes: string[];
+  customNodes: string[];
+}
+
+type KnowledgeIndex = Record<string, KnowledgeIndexEntry>;
+
+interface TokenBreakdown {
+  tier1: number;
+  tier2: number;
+  tier3: number;
+  total: number;
+}
+
+function estimateTokens(text: string): number {
+  return Math.ceil(text.length / 4);
 }
 
 function parseArgs(): CLIOptions {
@@ -222,27 +246,35 @@ function shouldRegenerateWithManifest(
   return { regenerate: false, reason: 'cache valid' };
 }
 
-async function loadKnowledgeBase(): Promise<{
+interface KnowledgeBase {
   models: Record<string, string>;
+  modelSummaries: Record<string, string>;
   concepts: Record<string, string>;
   systemPrompt: string;
   contentTemplatePrompts: Record<ContentTemplate, string>;
   tutorials: TutorialMeta[];
   tutorialContent: Record<string, string>;
-}> {
+  knowledgeIndex: KnowledgeIndex;
+}
+
+async function loadKnowledgeBase(): Promise<KnowledgeBase> {
   const modelsDir = path.join(KNOWLEDGE_DIR, 'models');
   const conceptsDir = path.join(KNOWLEDGE_DIR, 'concepts');
   const promptsDir = path.join(KNOWLEDGE_DIR, 'prompts');
   const tutorialsDir = path.join(KNOWLEDGE_DIR, 'tutorials');
 
   const models: Record<string, string> = {};
+  const modelSummaries: Record<string, string> = {};
   const concepts: Record<string, string> = {};
   const tutorialContent: Record<string, string> = {};
 
   if (existsSync(modelsDir)) {
     const files = await readdir(modelsDir);
     for (const file of files) {
-      if (file.endsWith('.md')) {
+      if (file.endsWith('.summary.md')) {
+        const name = path.basename(file, '.summary.md');
+        modelSummaries[name] = await readFile(path.join(modelsDir, file), 'utf-8');
+      } else if (file.endsWith('.md')) {
         const name = path.basename(file, '.md');
         models[name] = await readFile(path.join(modelsDir, file), 'utf-8');
       }
@@ -292,7 +324,25 @@ async function loadKnowledgeBase(): Promise<{
     }
   }
 
-  return { models, concepts, systemPrompt, contentTemplatePrompts, tutorials, tutorialContent };
+  let knowledgeIndex: KnowledgeIndex = {};
+  if (existsSync(KNOWLEDGE_INDEX_PATH)) {
+    try {
+      knowledgeIndex = JSON.parse(await readFile(KNOWLEDGE_INDEX_PATH, 'utf-8'));
+    } catch {
+      knowledgeIndex = {};
+    }
+  }
+
+  return {
+    models,
+    modelSummaries,
+    concepts,
+    systemPrompt,
+    contentTemplatePrompts,
+    tutorials,
+    tutorialContent,
+    knowledgeIndex,
+  };
 }
 
 async function loadOverride(templateName: string): Promise<Override | null> {
@@ -429,6 +479,128 @@ function pickRelevantDocs(keys: string[], docs: Record<string, string>): Record<
     }
   }
   return result;
+}
+
+function assembleContext(
+  template: TemplateInfo,
+  workflow: WorkflowAnalysis,
+  workflowText: ExtractedWorkflowText,
+  knowledge: KnowledgeBase
+): { ctx: GenerationContext; tokenBreakdown: TokenBreakdown } {
+  const indexEntry = knowledge.knowledgeIndex[template.name];
+
+  let tier1Text = '';
+  tier1Text += `Name: ${template.title || template.name}\n`;
+  tier1Text += `Description: ${template.description}\n`;
+  tier1Text += `Category: ${template.mediaType}\n`;
+  tier1Text += `Tags: ${template.tags?.join(', ') || 'None'}\n`;
+  tier1Text += `Models: ${template.models?.join(', ') || 'None'}\n`;
+  tier1Text += `Input: ${workflow.hasInputImage ? 'Image' : workflow.hasInputVideo ? 'Video' : 'Text/prompt only'}\n`;
+  tier1Text += `Output: ${workflow.outputType}\n`;
+  tier1Text += `Nodes: ${workflow.nodeTypes.slice(0, 10).join(', ')}\n`;
+  if (workflowText.authorNotes) {
+    tier1Text += workflowText.authorNotes.slice(0, 2000);
+  }
+  const tier1Tokens = estimateTokens(tier1Text);
+
+  let tier2Tokens = 0;
+  const contentTemplate = selectContentTemplate(template, workflow);
+  const tutorialContext = findRelevantTutorial(
+    template,
+    knowledge.tutorials,
+    knowledge.tutorialContent
+  );
+
+  const modelKeys = indexEntry?.models || [];
+  const budgetRemaining = TOKEN_BUDGET - tier1Tokens;
+  const useSummaries = budgetRemaining < 4000;
+
+  const modelDocs: Record<string, string> = {};
+  for (const modelKey of modelKeys) {
+    if (useSummaries && knowledge.modelSummaries[modelKey]) {
+      modelDocs[modelKey] = knowledge.modelSummaries[modelKey];
+    } else if (knowledge.models[modelKey]) {
+      modelDocs[modelKey] = knowledge.models[modelKey];
+    }
+  }
+  if (Object.keys(modelDocs).length === 0) {
+    const fallback = pickRelevantDocs(template.models || [], useSummaries ? knowledge.modelSummaries : knowledge.models);
+    Object.assign(modelDocs, fallback);
+    if (Object.keys(modelDocs).length === 0 && useSummaries) {
+      Object.assign(modelDocs, pickRelevantDocs(template.models || [], knowledge.models));
+    }
+  }
+
+  for (const doc of Object.values(modelDocs)) {
+    tier2Tokens += estimateTokens(doc);
+  }
+  if (tutorialContext) {
+    const truncated = tutorialContext.slice(0, 2000);
+    tier2Tokens += estimateTokens(truncated);
+  }
+
+  let tier3Tokens = 0;
+  const conceptDocs: Record<string, string> = {};
+  const totalUsed = tier1Tokens + tier2Tokens;
+
+  if (totalUsed < TOKEN_BUDGET * 0.7) {
+    const conceptKeys = indexEntry?.concepts || [];
+    for (const conceptKey of conceptKeys) {
+      if (knowledge.concepts[conceptKey]) {
+        const doc = knowledge.concepts[conceptKey];
+        const docTokens = estimateTokens(doc);
+        if (totalUsed + tier3Tokens + docTokens < TOKEN_BUDGET) {
+          conceptDocs[conceptKey] = doc;
+          tier3Tokens += docTokens;
+        }
+      }
+    }
+    if (Object.keys(conceptDocs).length === 0) {
+      const fallback = pickRelevantDocs(template.tags || [], knowledge.concepts);
+      for (const [key, doc] of Object.entries(fallback)) {
+        const docTokens = estimateTokens(doc);
+        if (totalUsed + tier3Tokens + docTokens < TOKEN_BUDGET) {
+          conceptDocs[key] = doc;
+          tier3Tokens += docTokens;
+        }
+      }
+    }
+  }
+
+  let examplePrompts: string[] | undefined;
+  if (workflowText.examplePrompts.length > 0) {
+    const promptTokens = estimateTokens(workflowText.examplePrompts.slice(0, 5).join('\n'));
+    if (totalUsed + tier3Tokens + promptTokens < TOKEN_BUDGET) {
+      examplePrompts = workflowText.examplePrompts;
+    }
+  }
+
+  let groupStructure: string[] | undefined;
+  if (workflowText.groupTitles.length > 0) {
+    groupStructure = workflowText.groupTitles;
+  }
+
+  const ctx: GenerationContext = {
+    template,
+    workflow,
+    modelDocs,
+    conceptDocs,
+    contentTemplate,
+    tutorialContext,
+    authorNotes: workflowText.authorNotes || undefined,
+    examplePrompts,
+    groupStructure,
+  };
+
+  return {
+    ctx,
+    tokenBreakdown: {
+      tier1: tier1Tokens,
+      tier2: tier2Tokens,
+      tier3: tier3Tokens,
+      total: tier1Tokens + tier2Tokens + tier3Tokens,
+    },
+  };
 }
 
 function selectContentTemplate(
@@ -861,8 +1033,10 @@ async function main() {
   const knowledge = await loadKnowledgeBase();
   console.log(`📚 Loaded knowledge base:`);
   console.log(`   - Models: ${Object.keys(knowledge.models).join(', ') || 'none'}`);
+  console.log(`   - Model summaries: ${Object.keys(knowledge.modelSummaries).join(', ') || 'none'}`);
   console.log(`   - Concepts: ${Object.keys(knowledge.concepts).join(', ') || 'none'}`);
   console.log(`   - Tutorials: ${knowledge.tutorials.length || 0}`);
+  console.log(`   - Knowledge index: ${Object.keys(knowledge.knowledgeIndex).length} entries`);
   console.log(
     `   - Content templates: ${
       Object.keys(knowledge.contentTemplatePrompts)
@@ -870,6 +1044,7 @@ async function main() {
         .join(', ') || 'none'
     }`
   );
+  console.log(`   - Token budget: ${TOKEN_BUDGET}`);
   console.log('');
 
   // Initialize OpenAI client (only if not skipping and not dry run)
@@ -928,9 +1103,16 @@ async function main() {
       }
     }
 
-    // Dry run: show what would be regenerated
+    // Dry run: show what would be regenerated with token breakdown
     if (options.dryRun) {
-      console.log(`🔄 [WOULD REGENERATE] ${template.name} - ${cacheCheck.reason}`);
+      const workflowPath = path.join(TEMPLATES_ROOT, `${template.name}.json`);
+      const workflow = await analyzeWorkflow(workflowPath);
+      const workflowText = await extractWorkflowText(workflowPath);
+      const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge);
+      const tokenNote = `Context: ${tokenBreakdown.total.toLocaleString()} tokens (T1: ${tokenBreakdown.tier1.toLocaleString()}, T2: ${tokenBreakdown.tier2.toLocaleString()}, T3: ${tokenBreakdown.tier3.toLocaleString()})`;
+      const budgetWarning = tokenBreakdown.total > TOKEN_BUDGET ? ' ⚠️ OVER BUDGET' : '';
+      console.log(`🔄 [WOULD REGENERATE:${ctx.contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}`);
+      console.log(`   📏 ${tokenNote}${budgetWarning}`);
       stats.misses++;
       continue;
     }
@@ -947,44 +1129,25 @@ async function main() {
       continue;
     }
 
-    // Analyze workflow
+    // Analyze workflow and assemble tiered context
     const workflowPath = path.join(TEMPLATES_ROOT, `${template.name}.json`);
     const workflow = await analyzeWorkflow(workflowPath);
     const workflowText = await extractWorkflowText(workflowPath);
 
-    // Select content template type
-    const contentTemplate = selectContentTemplate(template, workflow);
-
-    // Find relevant tutorial context
-    const tutorialContext = findRelevantTutorial(
-      template,
-      knowledge.tutorials,
-      knowledge.tutorialContent
-    );
-
-    // Build context
-    const ctx: GenerationContext = {
-      template,
-      workflow,
-      modelDocs: pickRelevantDocs(template.models || [], knowledge.models),
-      conceptDocs: pickRelevantDocs(template.tags || [], knowledge.concepts),
-      contentTemplate,
-      tutorialContext,
-      authorNotes: workflowText.authorNotes || undefined,
-      examplePrompts: workflowText.examplePrompts.length ? workflowText.examplePrompts : undefined,
-      groupStructure: workflowText.groupTitles.length ? workflowText.groupTitles : undefined,
-    };
+    const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge);
 
     // Generate AI content
-    const tutorialNote = tutorialContext ? ' (with tutorial context)' : '';
+    const tutorialNote = ctx.tutorialContext ? ' (with tutorial context)' : '';
+    const tokenNote = `Context: ${tokenBreakdown.total.toLocaleString()} tokens (T1: ${tokenBreakdown.tier1.toLocaleString()}, T2: ${tokenBreakdown.tier2.toLocaleString()}, T3: ${tokenBreakdown.tier3.toLocaleString()})`;
     console.log(
-      `🤖 [GENERATE:${contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}${tutorialNote}`
+      `🤖 [GENERATE:${ctx.contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}${tutorialNote}`
     );
+    console.log(`   📏 ${tokenNote}`);
     try {
       const content = await generateContent(
         ctx,
         knowledge.systemPrompt,
-        knowledge.contentTemplatePrompts[contentTemplate],
+        knowledge.contentTemplatePrompts[ctx.contentTemplate],
         openai!
       );
 
