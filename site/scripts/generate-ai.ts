@@ -3,6 +3,7 @@ import { readFile, writeFile, mkdir, readdir } from 'fs/promises';
 import { existsSync } from 'fs';
 import { createHash } from 'crypto';
 import path from 'path';
+import { extractAllWorkflowText, type ExtractedWorkflowText } from './lib/extract/index';
 
 interface TemplateInfo {
   name: string;
@@ -68,6 +69,8 @@ interface GenerationContext {
   contentTemplate: ContentTemplate;
   tutorialContext?: string;
   authorNotes?: string;
+  examplePrompts?: string[];
+  groupStructure?: string[];
 }
 
 // Use import.meta.url to get the script's directory for reliable path resolution
@@ -396,41 +399,21 @@ async function analyzeWorkflow(workflowPath: string): Promise<WorkflowAnalysis> 
   }
 }
 
-async function extractAuthorNotesFromWorkflow(workflowPath: string): Promise<string> {
-  if (!existsSync(workflowPath)) {
-    return '';
-  }
+async function extractWorkflowText(workflowPath: string): Promise<ExtractedWorkflowText> {
+  const empty: ExtractedWorkflowText = {
+    authorNotes: '',
+    examplePrompts: [],
+    groupTitles: [],
+    customNodeLabels: [],
+  };
+  if (!existsSync(workflowPath)) return empty;
 
   try {
     const content = await readFile(workflowPath, 'utf-8');
-    const workflow = JSON.parse(content) as { nodes?: WorkflowNode[] };
-    const noteTypes = new Set(['Note', 'MarkdownNote', 'CM_NoteNode']);
-    const texts: string[] = [];
-
-    for (const node of workflow.nodes || []) {
-      if (!node.type || !noteTypes.has(node.type)) continue;
-
-      const widgetsValues = (node as Record<string, unknown>).widgets_values;
-      if (Array.isArray(widgetsValues)) {
-        for (const val of widgetsValues) {
-          if (typeof val === 'string' && val.trim()) {
-            texts.push(val.trim());
-          }
-        }
-      } else if (widgetsValues && typeof widgetsValues === 'object') {
-        for (const val of Object.values(widgetsValues as Record<string, unknown>)) {
-          if (typeof val === 'string' && val.trim()) {
-            texts.push(val.trim());
-          }
-        }
-      }
-    }
-
-    const combined = texts.join('\n\n');
-    const stripped = combined.replace(/<[^>]*>/g, '');
-    return stripped.slice(0, 3000);
+    const workflow = JSON.parse(content);
+    return extractAllWorkflowText(workflow);
   } catch {
-    return '';
+    return empty;
   }
 }
 
@@ -556,6 +539,26 @@ ${ctx.authorNotes.slice(0, 3000)}
 `
     : '';
 
+  const promptsSection =
+    ctx.examplePrompts && ctx.examplePrompts.length > 0
+      ? `
+# Example Prompts from Workflow
+The following prompts are embedded in the workflow's CLIP text encode nodes. They illustrate how this template is intended to be used:
+${ctx.examplePrompts
+  .slice(0, 5)
+  .map((p) => `- "${p.slice(0, 300)}"`)
+  .join('\n')}
+`
+      : '';
+
+  const groupSection =
+    ctx.groupStructure && ctx.groupStructure.length > 0
+      ? `
+# Workflow Structure
+The workflow is organized into these sections: ${ctx.groupStructure.join(', ')}
+`
+      : '';
+
   return `
 # Task
 Generate SEO-optimized content for a ComfyUI workflow template page.
@@ -577,7 +580,7 @@ Key Nodes: ${ctx.workflow.nodeTypes.slice(0, 10).join(', ')}
 
 # Model Context
 ${ctx.template.models?.map((m) => ctx.modelDocs[m.toLowerCase()] || '').join('\n\n') || 'No specific model documentation available.'}
-${tutorialSection}${authorNotesSection}
+${tutorialSection}${authorNotesSection}${promptsSection}${groupSection}
 # Output Format (JSON)
 {
   "extendedDescription": "2-3 paragraphs (150-250 words). Explain what this template does, who it's for, and the key models/techniques. Include model names naturally.",
@@ -947,7 +950,7 @@ async function main() {
     // Analyze workflow
     const workflowPath = path.join(TEMPLATES_ROOT, `${template.name}.json`);
     const workflow = await analyzeWorkflow(workflowPath);
-    const authorNotes = await extractAuthorNotesFromWorkflow(workflowPath);
+    const workflowText = await extractWorkflowText(workflowPath);
 
     // Select content template type
     const contentTemplate = selectContentTemplate(template, workflow);
@@ -967,7 +970,9 @@ async function main() {
       conceptDocs: pickRelevantDocs(template.tags || [], knowledge.concepts),
       contentTemplate,
       tutorialContext,
-      authorNotes: authorNotes || undefined,
+      authorNotes: workflowText.authorNotes || undefined,
+      examplePrompts: workflowText.examplePrompts.length ? workflowText.examplePrompts : undefined,
+      groupStructure: workflowText.groupTitles.length ? workflowText.groupTitles : undefined,
     };
 
     // Generate AI content
