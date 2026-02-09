@@ -140,7 +140,7 @@ class TemplateSyncer:
         """Configure logging system"""
         log_format = '%(asctime)s - %(levelname)s - %(message)s'
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.WARNING,
             format=log_format,
             handlers=[
                 logging.StreamHandler(sys.stdout),

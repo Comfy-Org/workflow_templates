@@ -398,15 +398,15 @@ def main():
     input_dir = repo_root / "input"
     index_path = templates_dir / "index.json"
 
-    print("=" * 70)
-    print("Workflow I/O Extraction")
-    print("=" * 70)
-    print(f"Templates directory: {templates_dir}")
-    print(f"Input directory: {input_dir}")
-    print(f"Index file: {index_path}")
-    print(f"Input node types: {', '.join(INPUT_NODE_TYPES)}")
-    print(f"Output node types: {', '.join(OUTPUT_NODE_TYPES)}")
-    print()
+    # print("=" * 70)
+    # print("Workflow I/O Extraction")
+    # print("=" * 70)
+    # print(f"Templates directory: {templates_dir}")
+    # print(f"Input directory: {input_dir}")
+    # print(f"Index file: {index_path}")
+    # print(f"Input node types: {', '.join(INPUT_NODE_TYPES)}")
+    # print(f"Output node types: {', '.join(OUTPUT_NODE_TYPES)}")
+    # print()
 
     # Check if directories exist
     if not templates_dir.exists():
@@ -421,7 +421,7 @@ def main():
         sys.exit(1)
 
     # Load index.json
-    print("📖 Loading index.json...")
+    # print("📖 Loading index.json...")
     index_data = load_index_json(index_path)
 
     # Build a map of template name to workflow file
@@ -432,8 +432,8 @@ def main():
         template_name = workflow_file.stem
         workflow_map[template_name] = workflow_file
 
-    print(f"Found {len(workflow_files)} workflow files")
-    print()
+    # print(f"Found {len(workflow_files)} workflow files")
+    # print()
 
     # Track statistics
     total_templates = 0
@@ -471,7 +471,7 @@ def main():
                     print(f"⚠️  Template '{template_name}' not found in workflows")
                 continue
 
-            print(f"Processing: {template_name}")
+            # print(f"Processing: {template_name}")
 
             # Extract inputs and outputs
             inputs = extract_input_nodes(workflow_file, input_dir)
@@ -487,7 +487,7 @@ def main():
             total_outputs += len(outputs)
 
             if inputs or outputs:
-                print(f"  Found {len(inputs)} input(s) and {len(outputs)} output(s)")
+                # print(f"  Found {len(inputs)} input(s) and {len(outputs)} output(s)")
                 updated_templates += 1
 
                 # Show details if specific template requested
@@ -507,10 +507,10 @@ def main():
                 # Update template with io field (remove 'exists' field before saving)
                 inputs_clean = [{k: v for k, v in inp.items() if k != 'exists'} for inp in inputs]
                 update_template_io(template, inputs_clean, outputs)
-            else:
-                print(f"  No inputs or outputs found")
+            # else:
+            #     print(f"  No inputs or outputs found")
 
-            print()
+            # print()
 
     # Print summary
     print("=" * 70)
@@ -526,15 +526,15 @@ def main():
 
     # Save updated index.json
     if not args.dry_run:
-        print()
-        print("💾 Saving updated index.json...")
+        # print()
+        # print("💾 Saving updated index.json...")
         save_index_json(index_path, index_data)
-    else:
-        print()
-        print("🔍 Dry run mode - no changes made to index.json")
+    # else:
+    #     print()
+    #     print("🔍 Dry run mode - no changes made to index.json")
 
-    print()
-    print("✅ Done!")
+    # print()
+    # print("✅ Done!")
 
 
 if __name__ == "__main__":
