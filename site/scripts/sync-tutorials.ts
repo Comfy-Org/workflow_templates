@@ -9,12 +9,13 @@ import path from 'path';
 
 // Try to find docs repo at common paths
 const POSSIBLE_DOCS_PATHS = [
+  // Cloned to /tmp for workstream sync
+  '/tmp/comfy-docs/tutorials',
   // Worktree setup
   '/home/cbyrne/worktrees/docs/main/tutorials',
   // Adjacent repo setup
   '../../../docs/tutorials',
   '../../docs/tutorials',
-  // CI will typically not have docs repo
 ];
 
 function findDocsTutorialsDir(): string | null {
