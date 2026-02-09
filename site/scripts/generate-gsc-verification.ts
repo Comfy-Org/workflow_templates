@@ -55,7 +55,7 @@ async function main() {
   console.log('');
   console.log('Next steps:');
   console.log('1. Commit and deploy the site');
-  console.log(`2. Verify the file is accessible at: https://templates.comfy.org/${filename}`);
+  console.log(`2. Verify the file is accessible at: https://comfy.org/${filename}`);
   console.log('3. Click "Verify" in Google Search Console');
 }
 

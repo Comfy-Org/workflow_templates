@@ -152,18 +152,22 @@ export const CUSTOM_NODE_REGISTRY: Record<string, CustomNodeInfo> = {
   GetImageSize: {
     package: 'ComfyUI_essentials',
     url: 'https://github.com/cubiq/ComfyUI_essentials',
+    description: 'Essential utility nodes missing from ComfyUI core',
   },
   ResizeAndPadImage: {
     package: 'ComfyUI_essentials',
     url: 'https://github.com/cubiq/ComfyUI_essentials',
+    description: 'Essential utility nodes missing from ComfyUI core',
   },
   ImageBatchMulti: {
     package: 'ComfyUI_essentials',
     url: 'https://github.com/cubiq/ComfyUI_essentials',
+    description: 'Essential utility nodes missing from ComfyUI core',
   },
   BatchImagesNode: {
     package: 'ComfyUI_essentials',
     url: 'https://github.com/cubiq/ComfyUI_essentials',
+    description: 'Essential utility nodes missing from ComfyUI core',
   },
 
   // Qwen Image nodes
@@ -177,54 +181,79 @@ export const CUSTOM_NODE_REGISTRY: Record<string, CustomNodeInfo> = {
   ReferenceLatent: {
     package: 'ComfyUI-Reference-Latent',
     url: 'https://github.com/Clybius/ComfyUI-Reference-Latent',
+    description: 'Reference latent conditioning for style transfer',
   },
 
   // CFG utilities
   CFGNorm: {
     package: 'ComfyUI-CFGNorm',
     url: 'https://github.com/Clybius/ComfyUI-CFGNorm',
+    description: 'CFG normalization for improved generation quality',
   },
 
   // Regex utilities
   RegexReplace: {
     package: 'ComfyUI-Custom-Scripts',
     url: 'https://github.com/pythongosssss/ComfyUI-Custom-Scripts',
+    description: 'UI enhancements and utility scripts for ComfyUI',
   },
   RegexExtract: {
     package: 'ComfyUI-Custom-Scripts',
     url: 'https://github.com/pythongosssss/ComfyUI-Custom-Scripts',
+    description: 'UI enhancements and utility scripts for ComfyUI',
   },
 
   // Video helpers
   GetVideoComponents: {
     package: 'ComfyUI-VideoHelperSuite',
     url: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite',
+    description: 'Video loading, combining, and processing nodes',
   },
   VHS_BatchManager: {
     package: 'ComfyUI-VideoHelperSuite',
     url: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite',
+    description: 'Video loading, combining, and processing nodes',
   },
   VHS_VIDEOINFO: {
     package: 'ComfyUI-VideoHelperSuite',
     url: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite',
+    description: 'Video loading, combining, and processing nodes',
+  },
+  VHS_LoadVideo: {
+    package: 'ComfyUI-VideoHelperSuite',
+    url: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite',
+    description: 'Video loading, combining, and processing nodes',
+  },
+  VHS_VideoCombine: {
+    package: 'ComfyUI-VideoHelperSuite',
+    url: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite',
+    description: 'Video loading, combining, and processing nodes',
+  },
+  VHS_VideoInfo: {
+    package: 'ComfyUI-VideoHelperSuite',
+    url: 'https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite',
+    description: 'Video loading, combining, and processing nodes',
   },
 
   // Audio nodes
   SaveAudioMP3: {
     package: 'ComfyUI-AudioScheduler',
     url: 'https://github.com/a1lazydog/ComfyUI-AudioScheduler',
+    description: 'Audio processing and scheduling nodes for animation control',
   },
 
   // Manual sigmas
   ManualSigmas: {
     package: 'ComfyUI-sampler-scheduler-transforms',
     url: 'https://github.com/WASasquatch/ComfyUI-sampler-scheduler-transforms',
+    description: 'Custom sampler and scheduler transform utilities',
   },
 
   // Latent upscale
   LatentUpscaleModelLoader: {
     package: 'ComfyUI-LatentUpscaler',
     url: 'https://github.com/city96/ComfyUI-LatentUpscaler',
+    description: 'Neural network-based latent space upscaling',
   },
 
   // Ultimate SD Upscale
@@ -238,78 +267,135 @@ export const CUSTOM_NODE_REGISTRY: Record<string, CustomNodeInfo> = {
   SAMLoader: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
   SAMDetectorCombined: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
   FaceDetailer: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
   DetailerForEach: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
+    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
 
   // ControlNet Aux
   CannyEdgePreprocessor: {
     package: 'comfyui_controlnet_aux',
     url: 'https://github.com/Fannovel16/comfyui_controlnet_aux',
+    description: 'Plug-and-play preprocessors for generating ControlNet hint images',
   },
   DepthAnythingPreprocessor: {
     package: 'comfyui_controlnet_aux',
     url: 'https://github.com/Fannovel16/comfyui_controlnet_aux',
+    description: 'Plug-and-play preprocessors for generating ControlNet hint images',
   },
   OpenPosePreprocessor: {
     package: 'comfyui_controlnet_aux',
     url: 'https://github.com/Fannovel16/comfyui_controlnet_aux',
+    description: 'Plug-and-play preprocessors for generating ControlNet hint images',
   },
   LineArtPreprocessor: {
     package: 'comfyui_controlnet_aux',
     url: 'https://github.com/Fannovel16/comfyui_controlnet_aux',
+    description: 'Plug-and-play preprocessors for generating ControlNet hint images',
+  },
+  DWPreprocessor: {
+    package: 'comfyui_controlnet_aux',
+    url: 'https://github.com/Fannovel16/comfyui_controlnet_aux',
+    description: 'Plug-and-play preprocessors for generating ControlNet hint images',
+  },
+  PixelPerfectResolution: {
+    package: 'comfyui_controlnet_aux',
+    url: 'https://github.com/Fannovel16/comfyui_controlnet_aux',
+    description: 'Plug-and-play preprocessors for generating ControlNet hint images',
   },
 
   // IP-Adapter
   IPAdapterUnifiedLoader: {
     package: 'ComfyUI_IPAdapter_plus',
     url: 'https://github.com/cubiq/ComfyUI_IPAdapter_plus',
+    description: 'Image conditioning via IPAdapter models for style and composition transfer',
   },
   IPAdapterApply: {
     package: 'ComfyUI_IPAdapter_plus',
     url: 'https://github.com/cubiq/ComfyUI_IPAdapter_plus',
+    description: 'Image conditioning via IPAdapter models for style and composition transfer',
   },
 
   // AnimateDiff
   AnimateDiffLoader: {
     package: 'ComfyUI-AnimateDiff-Evolved',
     url: 'https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved',
+    description: 'AnimateDiff motion module integration for video generation',
   },
   AnimateDiffModuleLoader: {
     package: 'ComfyUI-AnimateDiff-Evolved',
     url: 'https://github.com/Kosinkadink/ComfyUI-AnimateDiff-Evolved',
+    description: 'AnimateDiff motion module integration for video generation',
   },
 
   // Florence2
   Florence2: {
     package: 'ComfyUI-Florence2',
     url: 'https://github.com/kijai/ComfyUI-Florence2',
+    description: 'Florence2 vision-language model for object detection, captioning, segmentation, and OCR',
   },
 
   // InstantID
   InstantIDFaceAnalysis: {
     package: 'ComfyUI_InstantID',
     url: 'https://github.com/cubiq/ComfyUI_InstantID',
+    description: 'Native InstantID face identity preservation for consistent character generation',
   },
   ApplyInstantID: {
     package: 'ComfyUI_InstantID',
     url: 'https://github.com/cubiq/ComfyUI_InstantID',
+    description: 'Native InstantID face identity preservation for consistent character generation',
   },
 
   // Segment Anything
   GroundingDinoSAMSegment: {
     package: 'comfyui_segment_anything',
     url: 'https://github.com/storyicon/comfyui_segment_anything',
+    description: 'Text-prompted image segmentation using GroundingDINO and SAM',
+  },
+
+  // Frame Interpolation
+  'FILM VFI': {
+    package: 'ComfyUI-Frame-Interpolation',
+    url: 'https://github.com/Fannovel16/ComfyUI-Frame-Interpolation',
+    description: 'Video frame interpolation for smooth slow-motion and frame rate conversion',
+  },
+
+  // Depth Anything V2
+  DepthAnything_V2: {
+    package: 'ComfyUI-DepthAnythingV2',
+    url: 'https://github.com/kijai/ComfyUI-DepthAnythingV2',
+    description: 'Depth Anything V2 monocular depth estimation',
+  },
+  DownloadAndLoadDepthAnythingV2Model: {
+    package: 'ComfyUI-DepthAnythingV2',
+    url: 'https://github.com/kijai/ComfyUI-DepthAnythingV2',
+    description: 'Depth Anything V2 monocular depth estimation',
+  },
+
+  // Segment Anything 2
+  Sam2Segmentation: {
+    package: 'ComfyUI-segment-anything-2',
+    url: 'https://github.com/kijai/ComfyUI-segment-anything-2',
+    description: 'SAM 2 segmentation for images and video with point and box prompts',
+  },
+  DownloadAndLoadSAM2Model: {
+    package: 'ComfyUI-segment-anything-2',
+    url: 'https://github.com/kijai/ComfyUI-segment-anything-2',
+    description: 'SAM 2 segmentation for images and video with point and box prompts',
   },
 };
 

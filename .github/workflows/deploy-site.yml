@@ -1,12 +1,24 @@
 name: Deploy Template Site
 
 on:
-  workflow_dispatch: # Manual trigger for initial development
-  # Uncomment after stable deployment is verified:
-  # workflow_run:
-  #   workflows: ["Publish to PyPI"]
-  #   types: [completed]
-  #   branches: [main]
+  workflow_dispatch:
+    inputs:
+      skip_ai:
+        description: 'Skip AI content generation'
+        type: boolean
+        default: false
+      force_regenerate:
+        description: 'Force regenerate all content (ignore cache)'
+        type: boolean
+        default: false
+      template_filter:
+        description: 'Regenerate specific template only (e.g. "flux_schnell")'
+        type: string
+        default: ''
+  workflow_run:
+    workflows: ["Publish to PyPI"]
+    types: [completed]
+    branches: [main]
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -18,8 +30,12 @@ permissions:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    # Uncomment when using workflow_run trigger:
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      SKIP_AI_GENERATION: ${{ inputs.skip_ai && 'true' || '' }}
+      FORCE_AI_REGENERATE: ${{ inputs.force_regenerate && 'true' || '' }}
+      AI_TEMPLATE_FILTER: ${{ inputs.template_filter }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,19 +43,13 @@ jobs:
       - name: Setup
         uses: ./.github/actions/site-setup
 
-      - name: Sync templates
-        run: pnpm run sync
-        working-directory: site
-
-      - name: Generate AI content
-        run: pnpm run generate:ai
-        working-directory: site
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-      - name: Generate workflow previews
-        run: pnpm run generate:previews
-        working-directory: site
+      - name: Restore content cache
+        uses: actions/cache@v4
+        with:
+          path: site/.content-cache
+          key: content-cache-${{ hashFiles('templates/**', 'site/src/**') }}
+          restore-keys: |
+            content-cache-
 
       - name: Build Astro site
         run: pnpm run build
@@ -52,4 +62,4 @@ jobs:
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: site
-          vercel-args: '--prod'
+          vercel-args: '--prebuilt --prod'

@@ -1,15 +1,18 @@
 # Publishing the Workflow Templates Packages
 
-This repository now produces six wheels:
+This repository now produces seven wheels:
 
 - `comfyui-workflow-templates-core`
 - `comfyui-workflow-templates-media-api`
 - `comfyui-workflow-templates-media-video`
 - `comfyui-workflow-templates-media-image`
 - `comfyui-workflow-templates-media-other`
-- `comfyui-workflow-templates` (meta package that depends on all bundles)
+- `comfyui-subgraph-blueprints`
+- `comfyui-workflow-templates` (meta package that depends on all bundles, built from the root `pyproject.toml`)
 
-Publishing a package on PyPI automatically creates the project if it does not already exist. Follow this playbook each time you cut a release.
+The meta package is built from the repository root `pyproject.toml`, not from a `packages/meta/` directory. It pins exact versions of each subpackage as dependencies.
+
+Publishing is largely automated via CI. When a PR with template changes merges to `main`, version bumps and publishing happen automatically. The manual workflow below is provided for reference or recovery scenarios.
 
 ## Prerequisites
 
@@ -24,20 +27,27 @@ Publishing a package on PyPI automatically creates the project if it does not al
    python -m pip install --upgrade build twine
    ```
 3. Have API tokens for **TestPyPI** and **PyPI** with the necessary permissions under the Comfy org (`project:comfyui-workflow-templates-*`). Save them somewhere secure—never commit them.
-4. Optional: if you want GitHub Actions to publish automatically, set up PyPI “Trusted Publishers” for each project, then skip the manual `twine upload` step.
 
 ## 1. Build Wheels Locally
 
+Most publishing is automated via CI (see below). If you need to build locally for testing or recovery:
+
 ```bash
-git checkout refactor/package-of-packages
+git checkout main
 git pull
 
-./scripts/bump_versions.py --dry-run   # inspect what will be bumped
-./scripts/bump_versions.py             # apply version bumps
 ./run_full_validation.sh
 ```
 
-This script regenerates the manifest, rebuilds all six wheels into `./dist/`, runs lint/tests, and performs `twine check`.
+This script regenerates the manifest, rebuilds all wheels into `./dist/`, runs lint/tests, and performs `twine check`.
+
+Version bumping is handled automatically by CI via `scripts/ci_version_manager.py`, which runs in the `version-check.yml` workflow on every PR that touches templates or `bundles.json`. If you need to manually inspect or trigger version bumps locally, you can run:
+
+```bash
+python scripts/ci_version_manager.py
+```
+
+This will detect which packages have changed since their last version bump and apply patch-level bumps to the affected subpackages.
 
 ## 2. Dry Run on TestPyPI
 
@@ -49,9 +59,13 @@ This script regenerates the manifest, rebuilds all six wheels into `./dist/`, ru
    ```
 2. Upload each wheel/sdist pair. A simple loop:
    ```bash
-    for pkg in core media_api media_video media_image media_other meta; do
+    for pkg in core media_api media_video media_image media_other blueprints; do
       twine upload dist/comfyui_workflow_templates_${pkg}-*.whl dist/comfyui_workflow_templates_${pkg}-*.tar.gz
     done
+   ```
+   The blueprints package uses a different naming convention:
+   ```bash
+    twine upload dist/comfyui_subgraph_blueprints-*.whl dist/comfyui_subgraph_blueprints-*.tar.gz
    ```
    The meta package uses `_` in the wheel file name. Adjust accordingly:
    ```bash
@@ -78,15 +92,22 @@ This script regenerates the manifest, rebuilds all six wheels into `./dist/`, ru
 3. Verify on https://pypi.org/project/comfyui-workflow-templates-core/ etc.
 4. Cut a GitHub Release tag (e.g., `v0.3.0`).
 
+## GitHub Actions Publishing
+
+Publishing to PyPI is automated via `.github/workflows/publish.yml`. This workflow:
+
+1. **Triggers** on pushes to `main` that change `pyproject.toml` (i.e., when a version-bump PR merges), or via manual `workflow_dispatch`.
+2. **Detects** which packages have new versions by comparing the commit diff.
+3. **Builds and publishes** subpackages first, then the meta package, using `twine` with the `PYPI_TOKEN` repository secret (classic API token auth).
+4. **Creates a GitHub Release** with auto-generated release notes.
+5. **Includes recovery mode**: on manual dispatch, it checks all packages against PyPI and publishes any that are out of sync.
+
+Version bumping on PRs is handled separately by `.github/workflows/version-check.yml`, which runs `scripts/ci_version_manager.py` to auto-bump affected packages and commit the changes back to the PR branch.
+
 ## Recovery & Troubleshooting
 
-- **Upload interrupted:** rerun `twine upload` for the failing wheel. Already-uploaded files will be rejected; that’s OK.
+- **Upload interrupted:** rerun `twine upload` for the failing wheel. Already-uploaded files will be rejected; that's OK.
 - **Wrong file uploaded:** delete the release from TestPyPI via UI. For PyPI, reach out to admins; PyPI does not allow overwriting releases.
 - **Missing token permissions:** ensure the token scope includes the new project names (`project:comfyui-workflow-templates-*`). PyPI tokens are project-specific.
 - **Build failure:** re-run `run_full_validation.sh` to regenerate assets and confirm tests pass before uploading again.
-
-## GitHub Actions Publishing (Optional)
-
-1. In PyPI, under each project, add a Trusted Publisher for your repo (`comfy-org/workflow_templates` → `Publishing` → `Settings`).
-2. Update `.github/workflows/publish.yml` to use the OIDC `pypi` publish action without storing secrets (check PyPI docs).
-3. Test by triggering the workflow via `workflow_dispatch`.
+- **Packages out of sync with PyPI:** trigger the publish workflow manually via `workflow_dispatch`; recovery mode will detect and publish any mismatched versions.

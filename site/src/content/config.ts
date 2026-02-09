@@ -31,6 +31,26 @@ const templateSchema = z.object({
   thumbnails: z.array(z.string()).default([]),
   size: z.number().optional(),
   vram: z.number().optional(),
+  authorNotes: z.string().optional(),
+
+  workflowModels: z
+    .array(
+      z.object({
+        kind: z.enum([
+          'checkpoint',
+          'unet',
+          'vae',
+          'clip',
+          'lora',
+          'controlnet',
+          'upscaler',
+          'other',
+        ]),
+        filename: z.string(),
+        nodeType: z.string(),
+      })
+    )
+    .optional(),
 
   // AI-generated content
   extendedDescription: z.string(),

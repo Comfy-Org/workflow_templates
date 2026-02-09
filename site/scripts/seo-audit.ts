@@ -56,6 +56,12 @@ function auditPage(filePath: string): PageReport {
   const root = parse(content);
   const issues: Issue[] = [];
 
+  // Skip redirect-only pages (e.g., index.html → /templates/)
+  const metaRefresh = root.querySelector('meta[http-equiv="refresh"]');
+  if (metaRefresh) {
+    return { file: relativePath, issues: [] };
+  }
+
   // Check <title> tag
   const titleEl = root.querySelector('title');
   const title = titleEl?.text?.trim() || '';
@@ -258,8 +264,8 @@ function writeSummaryJson(reports: PageReport[]): void {
   for (const report of reports) {
     for (const issue of report.issues) {
       const key = issue.message
-            .replace(/\(\d+ chars.*?\)/, '(N chars...)')
-            .replace(/^\d+ image\(s\)/, 'N image(s)');
+        .replace(/\(\d+ chars.*?\)/, '(N chars...)')
+        .replace(/^\d+ image\(s\)/, 'N image(s)');
       issueCounts[key] = (issueCounts[key] || 0) + 1;
     }
   }

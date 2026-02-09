@@ -1,4 +1,3 @@
-// Compare slider interactivity
 document.querySelectorAll('[data-compare-slider]').forEach((slider) => {
   const overlay = slider.querySelector('.compare-overlay') as HTMLElement;
   const handle = slider.querySelector('.compare-handle') as HTMLElement;
@@ -16,29 +15,35 @@ document.querySelectorAll('[data-compare-slider]').forEach((slider) => {
     handle.style.left = `${percent}%`;
   };
 
-  handle.addEventListener('mousedown', () => {
+  const startDrag = (e: Event) => {
+    e.preventDefault();
     isDragging = true;
+  };
+
+  slider.addEventListener('mousedown', (e) => {
+    startDrag(e);
+    updatePosition((e as MouseEvent).clientX);
   });
   document.addEventListener('mouseup', () => {
     isDragging = false;
   });
   document.addEventListener('mousemove', (e) => {
-    if (isDragging) updatePosition(e.clientX);
+    if (isDragging) {
+      e.preventDefault();
+      updatePosition(e.clientX);
+    }
   });
 
-  // Touch support
-  handle.addEventListener('touchstart', () => {
-    isDragging = true;
+  slider.addEventListener('touchstart', (e) => {
+    startDrag(e);
+    if ((e as TouchEvent).touches[0]) updatePosition((e as TouchEvent).touches[0].clientX);
   });
   document.addEventListener('touchend', () => {
     isDragging = false;
   });
   document.addEventListener('touchmove', (e) => {
-    if (isDragging && e.touches[0]) updatePosition(e.touches[0].clientX);
-  });
-
-  // Click to set position
-  slider.addEventListener('click', (e) => {
-    updatePosition((e as MouseEvent).clientX);
+    if (isDragging && (e as TouchEvent).touches[0]) {
+      updatePosition((e as TouchEvent).touches[0].clientX);
+    }
   });
 });
