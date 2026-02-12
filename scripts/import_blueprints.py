@@ -3,13 +3,16 @@
 Import blueprints from external sources and normalize them.
 
 This script:
+0. (Optional) Copy blueprint JSONs from another directory via --source
 1. Renames blueprint files to use underscores instead of spaces/special chars
 2. Extracts metadata from blueprint JSON to generate index.json
 3. Updates blueprints_bundles.json with all blueprint IDs
 """
 
+import argparse
 import json
 import re
+import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -123,11 +126,36 @@ def extract_metadata(blueprint_data: dict) -> dict:
     }
 
 
+def copy_from_source(source_dir: Path) -> int:
+    """
+    Copy blueprint JSON files from source_dir into BLUEPRINTS_DIR (skip index*).
+    Existing files with the same name are overwritten (replace in place).
+    Returns count copied.
+    """
+    source_dir = source_dir.resolve()
+    if not source_dir.is_dir():
+        raise SystemExit(f"Source directory not found: {source_dir}")
+    BLUEPRINTS_DIR.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for path in sorted(source_dir.glob("*.json")):
+        if path.name.startswith("index"):
+            continue
+        dest = BLUEPRINTS_DIR / path.name
+        existed = dest.exists()
+        shutil.copy2(path, dest)
+        print(f"{'Replaced' if existed else 'Copied'}: {path.name}")
+        count += 1
+    return count
+
+
 def rename_blueprints():
-    """Rename blueprint files to use normalized names."""
+    """
+    Rename blueprint files to normalized names (lowercase, underscores).
+    If the normalized target already exists, replace it (so imported content wins).
+    """
     renames = {}
     
-    for path in BLUEPRINTS_DIR.glob("*.json"):
+    for path in sorted(BLUEPRINTS_DIR.glob("*.json")):
         if path.name.startswith("index"):
             continue
         
@@ -137,9 +165,10 @@ def rename_blueprints():
         if old_name != new_name:
             new_path = path.parent / f"{new_name}.json"
             if new_path.exists() and new_path != path:
-                print(f"Warning: {new_path} already exists, skipping rename of {path}")
-                continue
-            print(f"Renaming: {path.name} -> {new_name}.json")
+                new_path.unlink()  # replace existing with the file we're renaming
+                print(f"Replaced: {path.name} -> {new_name}.json")
+            else:
+                print(f"Renaming: {path.name} -> {new_name}.json")
             path.rename(new_path)
             renames[old_name] = new_name
     
@@ -230,13 +259,31 @@ def generate_bundles():
 
 
 def main():
+    parser = argparse.ArgumentParser(
+        description="Import blueprints: optionally copy from another dir, then normalize and generate index/bundles."
+    )
+    parser.add_argument(
+        "--source",
+        "-s",
+        type=Path,
+        default=None,
+        metavar="DIR",
+        help="Copy blueprint JSONs from this directory into blueprints/ before renaming and generating index",
+    )
+    args = parser.parse_args()
+
     print("=== Importing Blueprints ===\n")
-    
+
+    if args.source is not None:
+        print("Step 0: Copying from source directory...")
+        n = copy_from_source(args.source)
+        print(f"Copied {n} file(s)\n")
+
     # Step 1: Rename files
     print("Step 1: Renaming blueprint files...")
     renames = rename_blueprints()
     print(f"Renamed {len(renames)} files\n")
-    
+
     # Step 2: Generate index.json
     print("Step 2: Generating index.json...")
     index = generate_index()
