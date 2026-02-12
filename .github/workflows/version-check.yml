@@ -72,33 +72,40 @@ jobs:
           # Stage all potential changes from version bumps and manifest sync
           git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json
 
-          # Check if there are changes to commit
-          if ! git diff --cached --quiet; then
-            echo "📝 Changes detected - committing to PR branch"
-
-            # Commit with retry logic in case of conflicts
-            if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
-              echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-              if ! git pull origin "${{ github.head_ref }}" --rebase; then
-                echo "❌ Rebase failed due to conflicts. Manual intervention required."
-                git status
-                exit 1
-              fi
-              git commit -m "Auto-bump package versions and sync manifests for template changes"
-            fi
-
-            # Push with retry logic
-            if ! git push origin HEAD; then
-              echo "⚠️ Push failed, retrying after pull..."
-              if ! git pull origin "${{ github.head_ref }}" --rebase; then
-                echo "❌ Rebase failed due to conflicts. Manual intervention required."
-                git status
-                exit 1
-              fi
-              git push origin HEAD
-            fi
-
-            echo "✅ Package version bumps and manifest updates committed to PR"
-          else
+          # Only commit when root pyproject.toml version was changed (i.e. auto-bump ran).
+          # When version unchanged, ci_version_manager.py skips bump and we skip committing
+          # (including manifest.json) to avoid churn on every template-only PR.
+          if git diff --cached --quiet; then
             echo "✅ No package version or manifest changes needed"
+            exit 0
           fi
+          if ! git diff --cached --name-only | grep -q 'pyproject\.toml'; then
+            echo "✅ Root version unchanged; skipping commit (no version bump performed)"
+            git reset HEAD
+            exit 0
+          fi
+          echo "📝 Version bump and/or manifest changes - committing to PR branch"
+
+          # Commit with retry logic in case of conflicts
+          if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
+            echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
+            if ! git pull origin "${{ github.head_ref }}" --rebase; then
+              echo "❌ Rebase failed due to conflicts. Manual intervention required."
+              git status
+              exit 1
+            fi
+            git commit -m "Auto-bump package versions and sync manifests for template changes"
+          fi
+
+          # Push with retry logic
+          if ! git push origin HEAD; then
+            echo "⚠️ Push failed, retrying after pull..."
+            if ! git pull origin "${{ github.head_ref }}" --rebase; then
+              echo "❌ Rebase failed due to conflicts. Manual intervention required."
+              git status
+              exit 1
+            fi
+            git push origin HEAD
+          fi
+
+          echo "✅ Package version bumps and manifest updates committed to PR"
