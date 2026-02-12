@@ -80,15 +80,17 @@ async function main(): Promise<void> {
 
   const phase2Failed = phase2Results.filter((r) => !r.success);
   if (phase2Failed.length > 0) {
-    console.error('\n❌ Phase 2 failed.');
-    process.exit(1);
+    console.warn('\n⚠️  Phase 2: some tasks failed (non-fatal):');
+    for (const f of phase2Failed) {
+      console.warn(`   - ${f.name}: ${f.error}`);
+    }
   }
 
   // Summary
   const totalDuration = Date.now() - totalStart;
   const allResults = [...phase1Results, ...phase2Results];
 
-  console.log('\n✅ Prebuild complete!');
+  console.log(`\n${phase2Failed.length > 0 ? '⚠️' : '✅'} Prebuild complete!`);
   console.log(`\n📊 Timing breakdown:`);
   for (const result of allResults) {
     const status = result.success ? '✓' : '✗';

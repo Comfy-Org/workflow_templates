@@ -35,14 +35,14 @@ const {
 // Build the localized URL for this template
 const templateUrl = localizeUrl(`/templates/${name}/`, locale);
 
-const mediaTypeConfig: Record<string, { label: string; color: string }> = {
-  image: { label: 'Image', color: 'bg-blue-500' },
-  video: { label: 'Video', color: 'bg-purple-500' },
-  audio: { label: 'Audio', color: 'bg-green-500' },
-  '3d': { label: '3D', color: 'bg-orange-500' },
+const mediaTypeLabels: Record<string, string> = {
+  image: 'Image',
+  video: 'Video',
+  audio: 'Audio',
+  '3d': '3D',
 };
 
-const config = mediaTypeConfig[mediaType] || { label: mediaType, color: 'bg-gray-500' };
+const mediaLabel = mediaTypeLabels[mediaType] || mediaType;
 
 const getPopularity = (count: number, dateStr?: string): { label: string; icon: boolean } => {
   const ageDays = dateStr
@@ -97,9 +97,9 @@ const popularity = usage !== undefined ? getPopularity(usage, date) : null;
 
     <!-- Media type badge -->
     <span
-      class={`absolute top-3 left-3 px-2 py-1 text-xs font-medium text-white rounded ${config.color} z-10`}
+      class="absolute top-3 left-3 px-2 py-1 text-xs font-medium text-[var(--color-bg-page)] rounded bg-[var(--color-accent)] z-10"
     >
-      {config.label}
+      {mediaLabel}
     </span>
   </div>
 

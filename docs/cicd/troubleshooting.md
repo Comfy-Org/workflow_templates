@@ -47,6 +47,11 @@ gh workflow run "Publish to PyPI"
 **Cause:** Auto-commits trigger new workflow runs  
 **Fix:** Validation workflows now use `synchronize` trigger
 
+### ❌ Unexpected changes to `templates/index*.json`
+**Cause:** `sync-custom-nodes.yml` auto-commits `requiresCustomNodes` updates  
+**Symptoms:** Unexpected file changes in PR after push  
+**Fix:** This is normal automation. Pull latest changes from the PR branch.
+
 ## Recovery Commands
 
 ### Check PyPI Status

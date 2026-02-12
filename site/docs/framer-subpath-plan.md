@@ -42,7 +42,7 @@ Add to `.env.example` and document:
 
 | Variable | Purpose | Production Value | Default (dev) |
 |---|---|---|---|
-| `PUBLIC_SITE_ORIGIN` | Canonical origin (scheme+host, no path) | `https://comfy.org` | `https://templates.comfy.org` |
+| `PUBLIC_SITE_ORIGIN` | Canonical origin (scheme+host, no path) | `https://comfy.org` | `https://comfy.org` |
 
 The `PUBLIC_` prefix makes these available in Astro components via `import.meta.env`.
 
@@ -71,7 +71,7 @@ function normalizeOrigin(origin?: string): string {
 }
 
 export const SITE_ORIGIN = normalizeOrigin(
-  import.meta.env.PUBLIC_SITE_ORIGIN || 'https://templates.comfy.org'
+  import.meta.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org'
 );
 export const BASE_PATH = normalizeBase(import.meta.env.PUBLIC_BASE_PATH);
 
@@ -98,11 +98,11 @@ export function absoluteUrl(pathname: string): string {
 **File**: `site/astro.config.mjs`
 
 Changes:
-- Replace hardcoded `site: 'https://templates.comfy.org'` with env-driven value
+- Replace hardcoded `site: 'https://comfy.org'` with env-driven value
 - Add `base` config from `PUBLIC_BASE_PATH`
 
 ```js
-const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://templates.comfy.org').replace(/\/$/, '');
+const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
 const rawBase = (process.env.PUBLIC_BASE_PATH || '').trim().replace(/\/$/, '');
 const base = rawBase && rawBase !== '/' ? (rawBase.startsWith('/') ? rawBase : `/${rawBase}`) : undefined;
 
@@ -125,7 +125,7 @@ export default defineConfig({
 
 Current logic (line 28–34):
 ```astro
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
+const siteUrl = Astro.site?.origin || 'https://comfy.org';
 const pathname = Astro.url.pathname;
 const fullCanonicalUrl = canonicalUrl
   ? canonicalUrl
@@ -158,7 +158,7 @@ const fullOgImage = ogImage.startsWith('http') ? ogImage : `${SITE_ORIGIN}${with
 
 Current logic (line 17–31):
 ```astro
-const siteUrl = Astro.site?.origin || 'https://templates.comfy.org';
+const siteUrl = Astro.site?.origin || 'https://comfy.org';
 const href = `${siteUrl}${localizeUrl(basePath, locale as Locale)}`;
 const xDefaultHref = `${siteUrl}${basePath}`;
 ```
@@ -317,7 +317,7 @@ Add the new env vars with documentation:
 ```bash
 # === Domain Configuration ===
 # Canonical origin for SEO (scheme+host, no trailing slash, no path)
-# Default: https://templates.comfy.org
+# Default: https://comfy.org
 # Production: https://comfy.org
 # PUBLIC_SITE_ORIGIN=https://comfy.org
 
@@ -380,7 +380,7 @@ To pass authority from Framer → Astro pages:
 | Framer rewrite doesn't forward all headers/cookies correctly | Test with preview deploy first; Framer docs confirm cookies are forwarded |
 | Assets on Vercel fail to load through Framer proxy | Framer docs say "non-HTML content" is passed through without rewriting; test CSS/JS/images |
 | Sitemap URL mismatch (vercel.app vs comfy.org) | Changing `site` config to `https://comfy.org` fixes this; verify after build |
-| Backward compatibility regression | Default env values match current behavior (templates.comfy.org) |
+| Backward compatibility regression | Default env values use `comfy.org` (production domain) |
 | Framer locale expansion conflicts with Astro i18n | Test localized pages (`/zh/templates/...`) through the rewrite; may need per-locale rewrite rules |
 
 ---

@@ -65,6 +65,11 @@ try:
 except ImportError:
     validate_templates = None
 
+try:
+    import generate_workflow_io
+except ImportError:
+    generate_workflow_io = None
+
 
 class TemplateSyncer:
     """Main class for template synchronization operations"""
@@ -91,7 +96,8 @@ class TemplateSyncer:
             "usage",
             "searchRank",
             "includeOnDistributions",
-            "logos"
+            "logos",
+            "io"
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
@@ -134,7 +140,7 @@ class TemplateSyncer:
         """Configure logging system"""
         log_format = '%(asctime)s - %(levelname)s - %(message)s'
         logging.basicConfig(
-            level=logging.INFO,
+            level=logging.WARNING,
             format=log_format,
             handlers=[
                 logging.StreamHandler(sys.stdout),
@@ -1200,7 +1206,31 @@ class TemplateSyncManager:
             
         except Exception as e:
             raise Exception(f"Input assets validation failed: {e}")
-    
+
+    def generate_workflow_io(self) -> None:
+        """
+        Update master index.json with workflow input/output nodes using generate_workflow_io module.
+        Runs after fix_master_vram_data so that io fields are present before syncing to language files.
+        """
+        if generate_workflow_io is None:
+            raise ImportError("generate_workflow_io module is not available")
+
+        self.syncer.logger.info("  Running workflow I/O extraction...")
+        old_argv = sys.argv
+        try:
+            sys.argv = [
+                "generate_workflow_io.py",
+                "--dry-run" if self.syncer.dry_run else ""
+            ]
+            sys.argv = [a for a in sys.argv if a]
+            generate_workflow_io.main()
+        except SystemExit as e:
+            if e.code != 0:
+                raise Exception(f"generate_workflow_io exited with code {e.code}") from e
+        finally:
+            sys.argv = old_argv
+        self.syncer.logger.info("  ✅ Workflow I/O extraction completed")
+
     def fix_master_vram_data(self):
         """
         Fix vram data in the master index.json file before synchronization
@@ -1266,6 +1296,7 @@ class TemplateSyncManager:
         """
         Run complete synchronization process:
         0. Fix vram data in master index.json file
+        0b. Generate workflow I/O (inputs/outputs) in master index.json
         1. Collect translations for NEW templates only from language files
         2. Sync i18n.json translations to all language files
         3. Collect ALL translations from language files back to i18n.json
@@ -1281,10 +1312,23 @@ class TemplateSyncManager:
         if not self.syncer.master_file.exists():
             self.syncer.logger.error(f"Master file not found: {self.syncer.master_file}")
             return False
-        
+
+        success = True
+
         # Step 0: Fix vram data in master file first
         self.fix_master_vram_data()
-        
+
+        # Step 0b: Generate workflow I/O in master index.json
+        if generate_workflow_io is not None:
+            self.syncer.logger.info("\n📎 Step 0b: Generating workflow I/O in master index.json...")
+            try:
+                self.generate_workflow_io()
+            except Exception as e:
+                self.record_error(f"Workflow I/O generation failed: {e}")
+                success = False
+        else:
+            self.syncer.logger.warning("\n⚠️  generate_workflow_io module not available, skipping workflow I/O generation")
+
         # Step 1: Sync English fields to i18n.json from master file
         self.syncer.logger.info("\n📥 Step 1: Syncing English fields to i18n.json...")
         en_fields_updated = self.sync_i18n_from_master()
@@ -1295,7 +1339,6 @@ class TemplateSyncManager:
         
         # Step 2: Sync i18n.json translations to all language files
         self.syncer.logger.info("\n🔄 Step 2: Syncing i18n.json to language files...")
-        success = True
         for lang, lang_file in self.syncer.language_files.items():
             try:
                 if not self.sync_language_file(lang, lang_file):

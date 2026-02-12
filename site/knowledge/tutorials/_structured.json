@@ -1,0 +1,2577 @@
+[
+  {
+    "file": "3d-hunyuan3D-2.md",
+    "title": "ComfyUI Hunyuan3D-2 Examples",
+    "description": "This guide will demonstrate how to use Hunyuan3D-2 in ComfyUI to generate 3D assets.",
+    "model": "3d",
+    "category": "3d",
+    "steps": [
+      "**Geometry Generation Model (Hunyuan3D-DiT)**: Based on a flow diffusion Transformer architecture, it generates untextured geometric models that precisely match input conditions.",
+      "**Texture Generation Model (Hunyuan3D-Paint)**: Combines geometric conditions and multi-view diffusion techniques to add high-resolution textures to models, supporting PBR materials.",
+      "Ensure that the Image Only Checkpoint Loader(img2vid model) has loaded our downloaded and renamed `hunyuan3d-dit-v2-mv.safetensors` model",
+      "Load the corresponding view images in each of the `Load Image` nodes",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure that the `Image Only Checkpoint Loader(img2vid model)` node has loaded our renamed `hunyuan3d-dit-v2-mv-turbo.safetensors` model",
+      "Load the corresponding view images in each of the `Load Image` nodes",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure that the `Image Only Checkpoint Loader(img2vid model)` node has loaded our renamed `hunyuan3d-dit-v2.safetensors` model",
+      "Load the image in the `Load Image` node",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux",
+      "hunyuan3d",
+      "hunyuan",
+      "hunyuan3dmultiviewtomodel",
+      "hunyuan3d2mvelf",
+      "hunyuan3d2mv",
+      "hunyuan3dv2conditioningmultiview",
+      "hunyuan3dmultiviewtomodelturbo",
+      "hunyuan3d2mvturbo",
+      "hunyuan3dv2conditioning",
+      "hunyuan3dimagetomodel",
+      "hunyuan3dv2nonmultiviewtrain",
+      "hunyuan3d2",
+      "hunyuan3d2nonmultiview",
+      "hunyuan3dwrapper"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "audio-ace-step-v1-5.md",
+    "title": "ComfyUI ACE-Step 1.5 Music Generation Guide",
+    "description": "Learn how to use ACE-Step 1.5 for AI music generation in ComfyUI. Complete guide with workflows, model downloads, and setup instructions for ComfyUI.",
+    "model": "audio",
+    "category": "audio",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen0",
+      "qwen1"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "audio-ace-step-v1.md",
+    "title": "ComfyUI ACE-Step Native Example",
+    "description": "This guide will help you create dynamic music using the ACE-Step model in ComfyUI",
+    "model": "audio",
+    "category": "audio",
+    "steps": [
+      "Ensure the `Load Checkpoints` node has loaded the `ace_step_v1_3.5b.safetensors` model",
+      "(Optional) In the `EmptyAceStepLatentAudio` node, you can set the duration of the music to be generated",
+      "(Optional) In the `LatentOperationTonemapReinhard` node, you can adjust the `multiplier` to control the volume of the vocals (higher numbers result in more prominent vocals)",
+      "(Optional) Input corresponding music styles etc. in the `tags` field of `TextEncodeAceStepAudio`",
+      "(Optional) Input corresponding lyrics in the `lyrics` field of `TextEncodeAceStepAudio`",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the audio generation",
+      "After the workflow completes,, you can preview the generated audio in the `Save Audio` node. You can click to play and listen to it, and the audio will also be saved to `ComfyUI/output/audio` (subdirectory determined by the `Save Audio` node).",
+      "Ensure the `Load Checkpoints` node has loaded the `ace_step_v1_3.5b.safetensors` model",
+      "Upload the provided audio file in the `LoadAudio` node",
+      "(Optional) Input corresponding music styles and lyrics in the `tags` and `lyrics` fields of `TextEncodeAceStepAudio`. Providing lyrics is very important for audio editing",
+      "(Optional) Modify the `denoise` parameter in the `Ksampler` node to adjust the noise added during sampling to control similarity with the original audio (smaller values result in more similarity to the original audio; setting it to `1.00` is approximately equivalent to having no audio input)",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the audio generation",
+      "After the workflow completes, you can preview the generated audio in the `Save Audio` node. You can click to play and listen to it, and the audio will also be saved to `ComfyUI/output/audio` (subdirectory determined by the `Save Audio` node).",
+      "In the example workflow, you can change the `tags` in `TextEncodeAceStepAudio` from `male voice` to `female voice` to generate female vocals.",
+      "You can also modify the `lyrics` in `TextEncodeAceStepAudio` to change the lyrics and thus the generated audio. Refer to the examples on the ACE-Step project page for more details."
+    ],
+    "tips": [
+      "Note: The language tags above have not been fully tested at the time of writing this documentation. If any language tag is incorrect, please [submit an issue to our documentation repository](https://github.com/Comfy-Org/docs/issues) and we will make timely corrections."
+    ],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "EmptyAceStepLatentAudio",
+      "Ksampler",
+      "LatentOperationTonemapReinhard",
+      "Load Checkpoint",
+      "Load Checkpoints",
+      "LoadAudio",
+      "Save Audio",
+      "TextEncodeAceStepAudio"
+    ]
+  },
+  {
+    "file": "basic-image-to-image.md",
+    "title": "ComfyUI Image to Image Workflow",
+    "description": "This guide will help you understand and complete an image to image workflow",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "Ensure `Load Checkpoint` loads  **v1-5-pruned-emaonly-fp16.safetensors**",
+      "Upload the input image to the `Load Image` node",
+      "Click `Queue` or press `Ctrl/Cmd + Enter` to generate",
+      "Try modifying the `denoise` parameter in the **KSampler** node, gradually changing it from 1 to 0, and observe the changes in the generated images",
+      "Replace with your own prompts and reference images to generate your own image effects"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "KSampler",
+      "Load Checkpoint",
+      "Load Image",
+      "Queue",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "basic-inpaint.md",
+    "title": "ComfyUI Inpainting Workflow",
+    "description": "This guide will introduce you to the inpainting workflow in ComfyUI, walk you through an inpainting example, and cover topics like using the mask editor",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "Ensure `Load Checkpoint` loads `512-inpainting-ema.safetensors`",
+      "Upload the input image to the `Load Image` node",
+      "Click `Queue` or use `Ctrl + Enter` to generate",
+      "Modify positive and negative prompts with more specific descriptions",
+      "Try multiple runs using different seeds in the `KSampler` for different generation results",
+      "After learning about the mask editor in this tutorial, you can re-inpaint the generated results to achieve satisfactory outcomes.",
+      "Adjust brush parameters on the right panel",
+      "Use eraser to correct mistakes",
+      "Click `Save` when finished"
+    ],
+    "tips": [
+      "Note: This image already contains an alpha channel (transparency mask), so you don't need to manually draw a mask. This tutorial will also cover how to use the mask editor to draw masks."
+    ],
+    "models_mentioned": [
+      "want",
+      "wanted"
+    ],
+    "nodes_mentioned": [
+      "KSampler",
+      "Load Checkpoint",
+      "Load Image",
+      "Queue",
+      "Save",
+      "Save Image",
+      "VAE Encode",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "basic-lora.md",
+    "title": "ComfyUI LoRA Example",
+    "description": "This guide will help you understand and use a single LoRA model",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "Installing a LoRA model",
+      "Generating images using a LoRA model",
+      "A simple introduction to the `Load LoRA` node",
+      "Ensure `Load Checkpoint` loads `dreamshaper_8.safetensors`",
+      "Ensure `Load LoRA` loads `blindbox_V1Mix.safetensors`",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "Try modifying the prompt or adjusting different parameters of the `Load LoRA` node, such as `strength_model`, to observe changes in the generated images and become familiar with the `Load LoRA` node.",
+      "Visit [CivitAI](https://civitai.com/models) to download other kinds of LoRA models and try using them."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "stablediffusion"
+    ],
+    "nodes_mentioned": [
+      "Load Checkpoint",
+      "Load LoRA",
+      "Queue",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "basic-multiple-loras.md",
+    "title": "ComfyUI Multiple LoRAs Example",
+    "description": "This guide demonstrates how to apply multiple LoRA models simultaneously in ComfyUI",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "Ensure `Load Checkpoint` loads  **dreamshaper_8.safetensors**",
+      "Ensure first `Load LoRA` loads **blindbox_V1Mix.safetensors**",
+      "Ensure second `Load LoRA` loads **MoXinV1.safetensors**",
+      "Click `Queue` or press `Ctrl/Cmd + Enter` to generate",
+      "Adjust `strength_model` values in both `Load LoRA` nodes to control each LoRA's influence",
+      "Explore [CivitAI](https://civitai.com/models) for additional LoRAs and create custom combinations"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Load Checkpoint",
+      "Load LoRA",
+      "Queue",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "basic-outpaint.md",
+    "title": "ComfyUI Outpainting Workflow Example",
+    "description": "This guide will introduce you to the outpainting workflow in ComfyUI and walk you through an outpainting example",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "Load the locally installed model file in the `Load Checkpoint` node",
+      "Click the `Upload` button in the `Load Image` node to upload your image",
+      "Click the `Queue` button or use the shortcut `Ctrl + Enter` to execute the image generation"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Image",
+      "Load Checkpoint",
+      "Load Image",
+      "Mask",
+      "Queue",
+      "Upload",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "basic-text-to-image.md",
+    "title": "ComfyUI Text to Image Workflow",
+    "description": "This guide will help you understand the concept of text-to-image in AI art generation and complete a text-to-image workflow in ComfyUI",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "In the **Load Checkpoint** node, use the arrows or click the text area to ensure **v1-5-pruned-emaonly-fp16.safetensors** is selected, and the left/right arrows don't show **null** text",
+      "Click the `Queue` button or use the shortcut `Ctrl + Enter` to execute image generation",
+      "**Latent Space:** Latent Space is an abstract data representation method in diffusion models. Converting images from pixel space to latent space reduces storage space and makes it easier to train diffusion models and reduce denoising complexity. It's like architects using blueprints (latent space) for design rather than designing directly on the building (pixel space), maintaining structural features while significantly reducing modification costs",
+      "**Pixel Space:** Pixel Space is the storage space for images, which is the final image we see, used to store pixel values."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want",
+      "wanted",
+      "sdxl",
+      "stablediffusion15",
+      "stablediffusion"
+    ],
+    "nodes_mentioned": [
+      "CLIP Text Encoder",
+      "Empty Latent Image",
+      "KSampler",
+      "Load Checkpoint",
+      "Negative",
+      "Positive",
+      "Queue",
+      "Save Image",
+      "VAE Decode",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "basic-upscale.md",
+    "title": "ComfyUI Image Upscale Workflow",
+    "description": "This guide explains the concept of image upscaling in AI drawing and demonstrates how to implement an image upscaling workflow in ComfyUI",
+    "model": "basic",
+    "category": "basic",
+    "steps": [
+      "Downloading and installing upscaling models",
+      "Performing basic image upscaling",
+      "Combining text-to-image workflows with upscaling",
+      "Filter models by image type using the category selector",
+      "The model's magnification factor is indicated in the top-right corner (e.g., 2x in the screenshot)",
+      "Ensure `Load Upscale Model` loads `4x-ESRGAN.pth`",
+      "Upload the input image to the `Load Image` node",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "**Chained Upscaling**: Combine multiple upscale nodes (e.g., 2x → 4x) for ultra-high magnification",
+      "**Hybrid Workflow**: Connect upscale nodes after generation for \"generate+enhance\" pipelines",
+      "**Comparative Testing**: Different models perform better on specific image types - test multiple options"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Download",
+      "Load Image",
+      "Load Upscale Model",
+      "Queue",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "controlnet-controlnet.md",
+    "title": "ComfyUI ControlNet Usage Example",
+    "description": "This guide will introduce you to the basic concepts of ControlNet and demonstrate how to generate corresponding images in ComfyUI",
+    "model": "controlnet",
+    "category": "controlnet",
+    "steps": [
+      "Ensure that `Load Checkpoint` can load **dreamCreationVirtual3DECommerce_v10.safetensors**",
+      "Ensure that `Load VAE` can load **vae-ft-mse-840000-ema-pruned.safetensors**",
+      "Click `Upload` in the `Load Image` node to upload the input image provided earlier",
+      "Ensure that `Load ControlNet` can load **control_v11p_sd15_scribble_fp16.safetensors**",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation",
+      "Try creating similar sketches, or even draw your own, and use ControlNet models to generate images to experience the benefits of ControlNet.",
+      "Adjust the `Control Strength` parameter in the Apply ControlNet node to control the influence of the ControlNet model on the generated image.",
+      "Visit the [ControlNet-v1-1_fp16_safetensors](https://huggingface.co/comfyanonymous/ControlNet-v1-1_fp16_safetensors/tree/main) repository to download other types of ControlNet models and try using them to generate images."
+    ],
+    "tips": [
+      "Image source: [ComfyUI ControlNet aux](https://github.com/Fannovel16/comfyui_controlnet_aux)",
+      "Note: If your network cannot successfully complete the automatic download of the corresponding models, please try manually downloading the models below and placing them in the specified directories:",
+      "Note: In this example, you could also use the VAE model embedded in dreamCreationVirtual3DECommerce_v10.safetensors, but we're following the model author's recommendation to use a separate VAE model.",
+      "Note: You might see the `Apply ControlNet(Old)` node in some early workflows, which is an early version of the ControlNet node. It is currently deprecated and not visible by default in search and node lists."
+    ],
+    "models_mentioned": [
+      "stablediffusion"
+    ],
+    "nodes_mentioned": [
+      "Apply ControlNet",
+      "Load Checkpoint",
+      "Load Image",
+      "Load VAE",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "controlnet-depth-controlnet.md",
+    "title": "ComfyUI Depth ControlNet Usage Example",
+    "description": "This guide will introduce you to the basic concepts of Depth ControlNet and demonstrate how to generate corresponding images in ComfyUI",
+    "model": "controlnet",
+    "category": "controlnet",
+    "steps": [
+      "**Portrait Scenes**: Control the spatial relationship between subjects and backgrounds, avoiding distortion in critical areas such as faces",
+      "**Landscape Scenes**: Control the hierarchical relationships between foreground, middle ground, and background",
+      "**Architectural Scenes**: Control the spatial structure and perspective relationships of buildings",
+      "**Product Showcase**: Control the separation and spatial positioning of products against their backgrounds",
+      "Ensure that `Load Checkpoint` can load **architecturerealmix_v11.safetensors**",
+      "Ensure that `Load ControlNet` can load **control_v11f1p_sd15_depth_fp16.safetensors**",
+      "Click `Upload` in the `Load Image` node to upload the depth image provided earlier",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation",
+      "**Depth + Lineart**: Maintain spatial relationships while reinforcing outlines, suitable for architecture, products, and character design",
+      "**Depth + Pose**: Control character posture while maintaining correct spatial relationships, suitable for character scenes"
+    ],
+    "tips": [
+      "Note: If your network cannot successfully complete the automatic download of the corresponding models, please try manually downloading the models below and placing them in the specified directories:"
+    ],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Load Checkpoint",
+      "Load Image",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "controlnet-depth-t2i-adapter.md",
+    "title": "ComfyUI Depth T2I Adapter Usage Example",
+    "description": "This guide will introduce you to the basic concepts of Depth T2I Adapter and demonstrate how to generate corresponding images in ComfyUI",
+    "model": "controlnet",
+    "category": "controlnet",
+    "steps": [
+      "**Lightweight Design**: T2I Adapter has fewer parameters and a smaller memory footprint",
+      "**Inference Speed**: T2I Adapter is typically about 3 times faster than ControlNet",
+      "**Control Precision**: ControlNet offers more precise control in certain scenarios, while T2I Adapter is more suitable for lightweight control",
+      "**Multi-condition Combination**: T2I Adapter shows more significant resource advantages when combining multiple conditions",
+      "**Spatial Layout Control**: Accurately describes three-dimensional spatial structures, suitable for interior design and architectural visualization",
+      "**Object Positioning**: Controls the relative position and size of objects in a scene, suitable for product showcases and scene construction",
+      "**Perspective Relationships**: Maintains reasonable perspective and proportions, suitable for landscape and urban scene generation",
+      "**Light and Shadow Layout**: Natural light and shadow distribution based on depth information, enhancing realism",
+      "Ensure that `Load Checkpoint` can load **interiordesignsuperm_v2.safetensors**",
+      "Ensure that `Load ControlNet` can load **t2iadapter_depth_sd15v2.pth**",
+      "Click `Upload` in the `Load Image` node to upload the input image provided earlier",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation",
+      "**Moderate Contrast**: Control images (such as depth maps, line art) should have clear contrast, but not excessively extreme",
+      "**Clear Boundaries**: Ensure that major structures and element boundaries are clearly distinguishable in the control image",
+      "**Noise Control**: Try to avoid excessive noise in control images, especially for depth maps and line art",
+      "**Reasonable Layout**: Control images should have a reasonable spatial layout and element distribution",
+      "**Depth + Edge**: Control spatial layout while maintaining clear structural edges, suitable for architecture and interior design",
+      "**Line Art + Color**: Control shapes while specifying color schemes, suitable for character design and illustrations",
+      "**Pose + Segmentation**: Control character actions while defining scene areas, suitable for complex narrative scenes"
+    ],
+    "tips": [
+      "Note: If your network cannot successfully complete the automatic download of the corresponding models, please try manually downloading the models below and placing them in the specified directories:"
+    ],
+    "models_mentioned": [
+      "stablediffusion"
+    ],
+    "nodes_mentioned": [
+      "Apply ControlNet",
+      "Load Checkpoint",
+      "Load Image",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "controlnet-mixing-controlnets.md",
+    "title": "ComfyUI Mixing ControlNet Examples",
+    "description": "In this example, we will demonstrate how to mix multiple ControlNets and learn to use multiple ControlNet models to control image generation",
+    "model": "controlnet",
+    "category": "controlnet",
+    "steps": [
+      "**Scene Complexity**: Complex scenes require multiple control conditions working together",
+      "**Fine-grained Control**: By adjusting the strength parameter of each ControlNet, you can precisely control the degree of influence for each part",
+      "**Complementary Effects**: Different types of ControlNets can complement each other, compensating for the limitations of single controls",
+      "**Creative Expression**: Combining different controls can produce unique creative effects",
+      "Ensure that `Load Checkpoint` can load **awpainting_v14.safetensors**",
+      "Ensure that `Load VAE` can load **vae-ft-mse-840000-ema-pruned.safetensors**",
+      "Ensure that `Load ControlNet Model` loads **control_v11p_sd15_openpose_fp16.safetensors**",
+      "Click `Upload` in the `Load Image` node to upload the pose image provided earlier",
+      "Ensure that `Load ControlNet Model` loads **control_v11p_sd15_scribble_fp16.safetensors**",
+      "Click `Upload` in the `Load Image` node to upload the scribble image provided earlier",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation"
+    ],
+    "tips": [
+      "Note: If your network cannot successfully complete the automatic download of the corresponding models, please try manually downloading the models below and placing them in the specified directories:"
+    ],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Apply ControlNet",
+      "Load Checkpoint",
+      "Load Image",
+      "Load VAE",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "controlnet-pose-controlnet-2-pass.md",
+    "title": "ComfyUI Pose ControlNet Usage Example",
+    "description": "This guide will introduce you to the basic concepts of Pose ControlNet, and demonstrate how to generate large-sized images in ComfyUI using a two-pass generation approach",
+    "model": "controlnet",
+    "category": "controlnet",
+    "steps": [
+      "Ensure that `Load Checkpoint` can load **majicmixRealistic_v7.safetensors**",
+      "Ensure that `Load VAE` can load **vae-ft-mse-840000-ema-pruned.safetensors**",
+      "Ensure that `Load ControlNet Model` can load **control_v11p_sd15_openpose_fp16.safetensors**",
+      "Click the select button in the `Load Image` node to upload the pose input image provided earlier, or use your own OpenPose skeleton map",
+      "Ensure that `Load Checkpoint` can load **japaneseStyleRealistic_v20.safetensors**",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation",
+      "First, load the majicmixRealistic_v7 model via the `Load Checkpoint` node",
+      "Load the pose control model through the `Load ControlNet Model` node",
+      "The input pose image is fed into the `Apply ControlNet` node and combined with positive and negative prompt conditions",
+      "The first `KSampler` node (typically using 20-30 steps) generates a basic character pose image",
+      "The pixel-space image for the first phase is obtained through `VAE Decode`",
+      "The image generated in the first phase creates a larger resolution latent space through the `Upscale latent` node",
+      "The second `Load Checkpoint` loads the japaneseStyleRealistic_v20 model, which focuses on details and style",
+      "The second `KSampler` node uses a lower `denoise` strength (typically 0.4-0.6) for refinement, preserving the basic structure from the first phase",
+      "Finally, a higher quality, larger resolution image is output through the second `VAE Decode` and `Save Image` nodes",
+      "**Higher Resolution**: Two-pass processing can generate high-resolution images beyond the capabilities of single-pass generation",
+      "**Style Blending**: Can combine advantages of different models, such as using a realistic model in the first phase and a stylized model in the second phase",
+      "**Better Details**: The second phase can focus on optimizing details without having to worry about overall structure",
+      "**Precise Control**: Once pose control is completed in the first phase, the second phase can focus on refining style and details",
+      "**Reduced GPU Load**: Generating in two passes allows for high-quality large images with limited GPU resources"
+    ],
+    "tips": [
+      "Note: If your network cannot successfully complete the automatic download of the corresponding models, please try manually downloading the models below and placing them in the specified directories:"
+    ],
+    "models_mentioned": [
+      "stablediffusion15"
+    ],
+    "nodes_mentioned": [
+      "Apply ControlNet",
+      "KSampler",
+      "Load Checkpoint",
+      "Load Image",
+      "Load VAE",
+      "Save Image",
+      "VAE Decode",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "flux-flux-1-controlnet.md",
+    "title": "ComfyUI Flux.1 ControlNet Examples",
+    "description": "This guide will demonstrate workflow examples using Flux.1 ControlNet.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [
+      "Make sure `ae.safetensors` is loaded in the `Load VAE` node",
+      "Make sure `flux1-canny-dev.safetensors` is loaded in the `Load Diffusion Model` node",
+      "Make sure the following models are loaded in the `DualCLIPLoader` node:",
+      "Upload the provided input image in the `Load Image` node",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Make sure `flux1-dev.safetensors` is loaded in the `Load Diffusion Model` node",
+      "Make sure `flux1-depth-dev-lora.safetensors` is loaded in the `LoraLoaderModelOnly` node",
+      "Make sure the following models are loaded in the `DualCLIPLoader` node:",
+      "Upload the provided input image in the `Load Image` node",
+      "Make sure `ae.safetensors` is loaded in the `Load VAE` node",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [
+      "Note: If you have previously used the [complete version of Flux related workflows](/tutorials/flux/flux-1-text-to-image), then you only need to download the **flux1-canny-dev.safetensors** model file."
+    ],
+    "models_mentioned": [
+      "flux1",
+      "flux",
+      "flux1canny",
+      "flux1depth",
+      "flux1tools",
+      "fluxcannymodelexample",
+      "flux1text",
+      "flux1cannydevagreement",
+      "fluxtextencoders",
+      "flux1schnell",
+      "flux1cannydev",
+      "fluxdepthloraexample",
+      "flux1dev",
+      "flux1depthdevlora",
+      "fluxcontrolnet",
+      "fluxcontrolnetexample"
+    ],
+    "nodes_mentioned": [
+      "DualCLIPLoader",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "LoraLoader",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "flux-flux-1-fill-dev.md",
+    "title": "ComfyUI Flux.1 fill dev Example",
+    "description": "This guide demonstrates how to use Flux.1 fill dev to create Inpainting and Outpainting workflows.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [
+      "Ensure the `Load Diffusion Model` node has `flux1-fill-dev.safetensors` loaded.",
+      "Ensure the `DualCLIPLoader` node has the following models loaded:",
+      "Ensure the `Load VAE` node has `ae.safetensors` loaded.",
+      "Upload the input image provided in the document to the `Load Image` node; if you're using the version without a mask, remember to complete the mask drawing using the mask editor",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure the `Load Diffusion Model` node has `flux1-fill-dev.safetensors` loaded.",
+      "Ensure the `DualCLIPLoader` node has the following models loaded:",
+      "Ensure the `Load VAE` node has `ae.safetensors` loaded.",
+      "Upload the input image provided in the document to the `Load Image` node",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [
+      "Note: The corresponding image already contains an alpha channel, so you don't need to draw a mask separately."
+    ],
+    "models_mentioned": [
+      "flux1",
+      "flux",
+      "fluxfill",
+      "flux1tools",
+      "flux1dev",
+      "flux1text",
+      "flux1fill",
+      "flux1filldevagreement",
+      "fluxtextencoders",
+      "flux1schnell",
+      "fluxfillinpaint",
+      "fluxfillinpaintexample",
+      "fluxfillinpaintinput",
+      "fluxfillinpaintinputoriginal",
+      "fluxfilldevoutpaint",
+      "fluxfilldevoutpaintinput",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "DualCLIPLoader",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "flux-flux-1-kontext-dev.md",
+    "title": "ComfyUI Flux Kontext Dev Native Workflow Example",
+    "description": "ComfyUI Flux Kontext Dev Native Workflow Example.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [
+      "In the `Load Diffusion Model` node, load the `flux1-dev-kontext_fp8_scaled.safetensors` model",
+      "In the `DualCLIP Load` node, ensure that `clip_l.safetensors` and `t5xxl_fp16.safetensors` or `t5xxl_fp8_e4m3fn_scaled.safetensors` are loaded",
+      "In the `Load VAE` node, ensure that `ae.safetensors` model is loaded",
+      "In the `Load Image(from output)` node, load the provided input image",
+      "In the `CLIP Text Encode` node, modify the prompts, only English is supported",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux",
+      "flux1",
+      "flux1kontext",
+      "flux1dev",
+      "fluxtextencoders",
+      "fluxkontextdevbasic",
+      "flux1kontextdevbasic",
+      "flux1kontextdevbasicstepguide",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "flux-flux-1-text-to-image.md",
+    "title": "ComfyUI Flux.1 Text-to-Image Workflow Example",
+    "description": "This guide provides a brief introduction to the Flux.1 model and guides you through using the Flux.1 model for text-to-image generation with examples including the full version and the FP8 Checkpoint version.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [
+      "Ensure the `DualCLIPLoader` node has the following models loaded:",
+      "Ensure the `Load Diffusion Model` node has `flux1-dev.safetensors` loaded",
+      "Make sure the `Load VAE` node has `ae.safetensors` loaded",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure the `DualCLIPLoader` node has the following models loaded:",
+      "Ensure the `Load Diffusion Model` node has `flux1-schnell.safetensors` loaded",
+      "Ensure the `Load VAE` node has `ae.safetensors` loaded",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [
+      "Note: If you can't download models from [black-forest-labs/FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev), make sure you've logged into Huggingface and agreed to the corresponding repository's license agreement.",
+      "Note: - The `flux1-dev.safetensors` file requires agreeing to the [black-forest-labs/FLUX.1-dev](https://huggingface.co/black-forest-labs/FLUX.1-dev) agreement before downloading via browser.",
+      "Note: In this workflow, only two model files are different from the Flux1 Dev version workflow. For t5xxl, you can still use the fp16 version for better results."
+    ],
+    "models_mentioned": [
+      "flux1",
+      "flux",
+      "fluxexample",
+      "flux1dev",
+      "flux1schnell",
+      "fluxagreement",
+      "fluxdevt5fp16",
+      "fluxdevcheckpointexample",
+      "fluxtextencoders",
+      "fluxschnellt5fp8",
+      "fluxschnell",
+      "fluxdevfp8",
+      "fluxdevfulltexttoimage",
+      "fluxschnellfp8",
+      "stablediffusion"
+    ],
+    "nodes_mentioned": [
+      "DualCLIPLoader",
+      "Load Checkpoint",
+      "Load Diffusion Model",
+      "Load VAE",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "flux-flux-1-uso.md",
+    "title": "ByteDance USO ComfyUI Native Workflow example",
+    "description": "Unified Style and Subject-Driven Generation with ByteDance's USO model",
+    "model": "flux",
+    "category": "flux",
+    "steps": [
+      "Load models:",
+      "Content Reference:",
+      "In the example, we only use the `content reference` image input. If you want to use the `style reference` image input, you can use `Ctrl-B` to bypass the marked node group.",
+      "Write your prompt or keep default",
+      "Set the image size if you need",
+      "The EasyCache node is for inference acceleration, but it will also sacrifice some quality and details. You can bypass it (Ctrl+B) if you don't need to use it.",
+      "Click the `Run` button, or use the shortcut `Ctrl(Cmd) + Enter` to run the workflow",
+      "Style reference only:",
+      "You can also bypass whole `Style Reference` group and use the workflow as a text to image workflow, which means this workflow has 4 variations"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux1dev",
+      "flux",
+      "flux1devusoreferenceimagegen",
+      "flux1dit",
+      "flux1projector",
+      "flux1usoreferenceimagegen",
+      "flux1usoreferenceimagegenstylereferenceonly",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Empty Latent Image",
+      "ImageScale",
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Checkpoint",
+      "LoraLoader"
+    ]
+  },
+  {
+    "file": "flux-flux-2-dev.md",
+    "title": "ComfyUI Flux.2 Dev Example",
+    "description": "This guide provides a brief introduction to the Flux.2 model and guides you through using the Flux.2 Dev model for text-to-image generation in ComfyUI.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [],
+    "tips": [
+      "Note: We are using quantized weights in this workflow. The original FLUX.2 repository is available [here](https://huggingface.co/black-forest-labs/FLUX.2-dev/)."
+    ],
+    "models_mentioned": [
+      "flux2",
+      "flux2bf16",
+      "flux2devfp8mixed"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "flux-flux-2-klein.md",
+    "title": "ComfyUI Flux.2 Klein 4B Guide",
+    "description": "A quick introduction to FLUX.2 [klein] 4B and how to run text-to-image and image editing workflows in ComfyUI.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [],
+    "tips": [
+      "Note: For diffusion models, please visit BFL's repo, accept the agreement, and then download the models."
+    ],
+    "models_mentioned": [
+      "flux2",
+      "flux",
+      "flux2kleintexttoimage",
+      "flux2kleinimageedit4bbase",
+      "flux2kleinimageedit4bdistilled",
+      "flux2texttoimage9b",
+      "flux2kleinimageedit9bbase",
+      "flux2kleinimageedit9bdistilled",
+      "qwen34b",
+      "qwen38bfp8mixed"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "flux-flux1-krea-dev.md",
+    "title": "Flux.1 Krea Dev ComfyUI Workflow Tutorial",
+    "description": "Best open-source FLUX model developed by Black Forest Labs in collaboration with Krea, focusing on unique aesthetic style and natural details, avoiding AI look, providing exceptional realism and image quality.",
+    "model": "flux",
+    "category": "flux",
+    "steps": [
+      "Ensure that `flux1-krea-dev_fp8_scaled.safetensors` or `flux1-krea-dev.safetensors` is loaded in the `Load Diffusion Model` node",
+      "Ensure the following models are loaded in the `DualCLIPLoader` node:",
+      "Ensure that `ae.safetensors` is loaded in the `Load VAE` node",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [
+      "Note: The `flux1-dev.safetensors` file requires agreeing to the [black-forest-labs/FLUX.1-Krea-dev](https://huggingface.co/black-forest-labs/FLUX.1-Krea-dev/) agreement before downloading via browser."
+    ],
+    "models_mentioned": [
+      "flux1",
+      "flux",
+      "flux1kreadevposter",
+      "flux1krea",
+      "flux1dev",
+      "flux1kreadev",
+      "fluxtextencoders",
+      "flux1schnell",
+      "flux1kreadevguide",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "DualCLIPLoader",
+      "Load Diffusion Model",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "image-cosmos-predict2-t2i.md",
+    "title": "Cosmos Predict2 Text-to-Image ComfyUI Official Example",
+    "description": "This guide demonstrates how to complete Cosmos-Predict2 text-to-image workflow in ComfyUI",
+    "model": "image",
+    "category": "image",
+    "steps": [
+      "Ensure the `Load Diffusion Model` node has loaded `cosmos_predict2_2B_t2i.safetensors`",
+      "Ensure the `Load CLIP` node has loaded `oldt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Set the image size in `EmptySD3LatentImage`",
+      "Modify the prompts in the `ClipTextEncode` node",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Once generation is complete, the image will automatically save to the `ComfyUI/output/` directory. You can also preview it in the `save image` node. */}"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan2",
+      "cosmos",
+      "cosmospredict22bt2i",
+      "cosmospredict2repackaged",
+      "cosmos1",
+      "cosmospredict22bt2istepguide"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "image-hidream-e1.md",
+    "title": "ComfyUI Native HiDream-E1, E1.1 Workflow Example",
+    "description": "This guide will help you understand and complete the ComfyUI native HiDream-I1 text-to-image workflow example",
+    "model": "image",
+    "category": "image",
+    "steps": [
+      "A100 40GB (VRAM usage 95%): First generation: 211s, second generation: 73s",
+      "4090D 24GB (VRAM usage 98%)",
+      "Make sure the `Load Diffusion Model` node loads the `hidream_e1_1_bf16.safetensors` model.",
+      "Make sure the four corresponding text encoders in `QuadrupleCLIPLoader` are loaded correctly:",
+      "Make sure the `Load VAE` node uses the `ae.safetensors` file.",
+      "In the `Load Image` node, load the provided input or your desired image.",
+      "In the `Empty Text Encoder(Positive)` node, enter **the modifications you want to make to the image**.",
+      "In the `Empty Text Encoder(Negative)` node, enter **the content you do not want to appear in the image**.",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute image generation.",
+      "Make sure the `Load Diffusion Model` node has loaded the `hidream_e1_full_bf16.safetensors` model",
+      "Ensure that the four corresponding text encoders are correctly loaded in the `QuadrupleCLIPLoader`",
+      "Make sure the `Load VAE` node is using the `ae.safetensors` file",
+      "Load the input image we downloaded earlier in the `Load Image` node",
+      "(Important) Enter **the prompt for how you want to modify the image** in the `Empty Text Encoder(Positive)` node",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to generate the image"
+    ],
+    "tips": [
+      "This is the VAE model for Flux. If you have used the Flux workflow before, you may have already downloaded this file."
+    ],
+    "models_mentioned": [
+      "flux",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "image-hidream-i1.md",
+    "title": "ComfyUI Native HiDream-I1 Text-to-Image Workflow Example",
+    "description": "This guide will walk you through completing a ComfyUI native HiDream-I1 text-to-image workflow example",
+    "model": "image",
+    "category": "image",
+    "steps": [
+      "Make sure the `Load Diffusion Model` node is using the `hidream_i1_full_fp8.safetensors` file",
+      "Make sure the four corresponding text encoders in `QuadrupleCLIPLoader` are loaded correctly",
+      "Make sure the `Load VAE` node is using the `ae.safetensors` file",
+      "For the **full** version, you need to set the `shift` parameter in `ModelSamplingSD3` to `3.0`",
+      "For the `Ksampler` node, you need to make the following settings",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation",
+      "Make sure the `Load Diffusion Model` node is using the `hidream_i1_dev_fp8.safetensors` file",
+      "Make sure the four corresponding text encoders in `QuadrupleCLIPLoader` are loaded correctly",
+      "Make sure the `Load VAE` node is using the `ae.safetensors` file",
+      "For the **dev** version, you need to set the `shift` parameter in `ModelSamplingSD3` to `6.0`",
+      "For the `Ksampler` node, you need to make the following settings",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation",
+      "Make sure the `Load Diffusion Model` node is using the `hidream_i1_fast_fp8.safetensors` file",
+      "Make sure the four corresponding text encoders in `QuadrupleCLIPLoader` are loaded correctly",
+      "Make sure the `Load VAE` node is using the `ae.safetensors` file",
+      "For the **fast** version, you need to set the `shift` parameter in `ModelSamplingSD3` to `3.0`",
+      "For the `Ksampler` node, you need to make the following settings",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux"
+    ],
+    "nodes_mentioned": [
+      "Load Diffusion Model",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "image-newbie-image-exp-0-1.md",
+    "title": "ComfyUI NewBie-image-Exp0.1 Workflow Example",
+    "description": "NewBie-image-Exp0.1 is a 3.5B parameter anime-style text-to-image generation model based on Next-DiT architecture, optimized for high-quality anime image generation with XML structured prompts.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "flux",
+      "flux1dev"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "image-omnigen2.md",
+    "title": "ComfyUI OmniGen2 Native Workflow Examples",
+    "description": "ComfyUI OmniGen2 Native Workflow Examples - Unified text-to-image, image editing, and multi-image composition model.",
+    "model": "image",
+    "category": "image",
+    "steps": [
+      "**Load Main Model**: Ensure the `Load Diffusion Model` node loads `omnigen2_fp16.safetensors`",
+      "**Load Text Encoder**: Ensure the `Load CLIP` node loads `qwen_2.5_vl_fp16.safetensors`",
+      "**Load VAE**: Ensure the `Load VAE` node loads `ae.safetensors`",
+      "**Set Image Dimensions**: Set the generated image dimensions in the `EmptySD3LatentImage` node (recommended 1024x1024)",
+      "**Input Prompts**:",
+      "**Start Generation**: Click the `Queue Prompt` button, or use the shortcut `Ctrl(cmd) + Enter` to execute text-to-image generation",
+      "**View Results**: After generation is complete, the corresponding images will be automatically saved to the `ComfyUI/output/` directory, and you can also preview them in the `SaveImage` node",
+      "**Load Main Model**: Ensure the `Load Diffusion Model` node loads `omnigen2_fp16.safetensors`",
+      "**Load Text Encoder**: Ensure the `Load CLIP` node loads `qwen_2.5_vl_fp16.safetensors`",
+      "**Load VAE**: Ensure the `Load VAE` node loads `ae.safetensors`",
+      "**Upload Image**: Upload the provided image in the `Load Image` node",
+      "**Input Prompts**:",
+      "**Start Generation**: Click the `Queue Prompt` button, or use the shortcut `Ctrl(cmd) + Enter` to execute text-to-image generation",
+      "**View Results**: After generation is complete, the corresponding images will be automatically saved to the `ComfyUI/output/` directory, and you can also preview them in the `SaveImage` node"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want",
+      "qwen",
+      "qwen2"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "image-ovis-image.md",
+    "title": "Ovis-Image ComfyUI Workflow Example",
+    "description": "Ovis-Image is a 7B text-to-image model specifically optimized for high-quality text rendering, designed to operate efficiently under stringent computational constraints.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "image-qwen-image-2512.md",
+    "title": "Qwen-Image-2512 ComfyUI Native Workflow Example",
+    "description": "Qwen-Image-2512 is the December update of Qwen-Image's text-to-image foundational model, featuring enhanced human realism, finer natural detail, and improved text rendering.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "want",
+      "qwen",
+      "qwenlm",
+      "qwenimage",
+      "qwenimage2512",
+      "qwen2",
+      "qwenimage2512fp8e4m3fn",
+      "qwenimage2512bf16",
+      "qwenimagevae"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "image-qwen-image-edit-2511.md",
+    "title": "Qwen-Image-Edit-2511 ComfyUI Native Workflow Example",
+    "description": "Qwen-Image-Edit-2511 is an enhanced version of Qwen-Image-Edit, featuring improved character consistency, multi-person editing, integrated LoRA capabilities, and enhanced geometric reasoning.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen",
+      "qwenlm",
+      "qwenimage",
+      "qwenimageedit2511",
+      "qwen2",
+      "qwenimageedit2511bf16",
+      "qwenimagevae",
+      "hunyuanvideo1"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "image-qwen-image-edit.md",
+    "title": "Qwen-Image-Edit ComfyUI Native Workflow Example",
+    "description": "Qwen-Image-Edit is the image editing version of Qwen-Image, further trained based on the 20B model, supporting precise text editing and dual semantic/appearance editing capabilities.",
+    "model": "image",
+    "category": "image",
+    "steps": [
+      "Model Loading",
+      "Image Loading",
+      "Prompt Setting",
+      "The Scale Image to Total Pixels node will scale your input image to a total of one million pixels,",
+      "If you want to use the 4-step Lighting LoRA to speed up image generation, you can select the `LoraLoaderModelOnly` node and press `Ctrl+B` to enable it",
+      "For the `steps` and `cfg` settings of the Ksampler node, we've added a note below the node where you can test the optimal parameter settings",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want",
+      "qwen",
+      "qwen2",
+      "qwenlm",
+      "qwenimageedit",
+      "qwenimageeditfp8e4m3fn",
+      "qwenimagevae"
+    ],
+    "nodes_mentioned": [
+      "CLIP Text Encoder",
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "LoraLoader",
+      "VAE Encode"
+    ]
+  },
+  {
+    "file": "image-qwen-image-layered.md",
+    "title": "Qwen-Image-Layered ComfyUI Workflow Example",
+    "description": "Qwen-Image-Layered is a model capable of decomposing an image into multiple RGBA layers, enabling inherent editability through layer decomposition.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen",
+      "qwenlm",
+      "qwenimagelayered",
+      "qwen2",
+      "qwenimagelayeredbf16",
+      "qwenimagelayeredvae",
+      "qwenimagelayeredfp8mixed",
+      "hunyuanvideo1"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "image-qwen-image.md",
+    "title": "Qwen-Image ComfyUI Native Workflow Example",
+    "description": "Qwen-Image is a 20B parameter MMDiT (Multimodal Diffusion Transformer) model open-sourced under the Apache 2.0 license.",
+    "model": "image",
+    "category": "image",
+    "steps": [
+      "Qwen-Image original model fp8_e4m3fn",
+      "8-step accelerated version: Qwen-Image original model fp8_e4m3fn with lightx2v 8-step LoRA",
+      "Distilled version: Qwen-Image distilled model fp8_e4m3fn",
+      "Make sure the `Load Diffusion Model` node has loaded `qwen_image_fp8_e4m3fn.safetensors`",
+      "Make sure the `Load CLIP` node has loaded `qwen_2.5_vl_7b_fp8_scaled.safetensors`",
+      "Make sure the `Load VAE` node has loaded `qwen_image_vae.safetensors`",
+      "Make sure the `EmptySD3LatentImage` node is set with the correct image dimensions",
+      "Set your prompt in the `CLIP Text Encoder` node; currently, it supports at least English, Chinese, Korean, Japanese, Italian, etc.",
+      "If you want to enable the 8-step acceleration LoRA by lightx2v, select the node and use `Ctrl + B` to enable it, and modify the Ksampler settings as described in step 8",
+      "Click the `Queue` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "For different model versions and workflows, adjust the KSampler parameters accordingly",
+      "InstantX Controlnet",
+      "**Lotus Depth model**",
+      "Ensure that the `Load ControlNet Model` node correctly loads the `Qwen-Image-InstantX-ControlNet-Union.safetensors` model",
+      "Upload input image",
+      "This subgraph uses the Lotus Depth model. You can find it in the templates or edit the subgraph to learn more, make sure all the models are loaded correctly",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure that `qwen_image_canny_diffsynth_controlnet.safetensors` is loaded",
+      "Upload input image for subsequent processing",
+      "The Canny node is a native preprocessing node that will preprocess the input image according to your set parameters to control generation",
+      "If needed, you can modify the `strength` in the `QwenImageDiffsynthControlnet` node to control the intensity of line art control",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure that `ModelPatchLoader` loads the `qwen_image_inpaint_diffsynth_controlnet.safetensors` model",
+      "Upload image and use the [Mask Editor](/interface/maskeditor) to draw a mask. You need to connect the `mask` output of the corresponding `Load Image` node to the `mask` input of `QwenImageDiffsynthControlnet` to ensure the corresponding mask is loaded",
+      "Use the `Ctrl-B` shortcut to set the original Canny in the workflow to bypass mode, making the corresponding Canny node processing ineffective",
+      "In `CLIP Text Encoder`, input what you want to change the masked area to",
+      "If needed, you can modify the `strength` in the `QwenImageDiffsynthControlnet` node to control the corresponding control intensity",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure that `LoraLoaderModelOnly` correctly loads the `qwen_image_union_diffsynth_lora.safetensors` model",
+      "Upload input image",
+      "If needed, you can adjust the `Canny` node parameters. Since different input images require different parameter settings to get better image preprocessing results, you can try adjusting the corresponding parameter values to get more/fewer details",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [
+      "Note: - The original author of the distilled version recommends using 15 steps with cfg 1.0.",
+      "Note: The distilled model and the 8-step acceleration LoRA by lightx2v do not seem to be compatible for simultaneous use. You can experiment with different combinations to verify if they can be used together.",
+      "You can also use custom nodes like [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) to generate depth map.",
+      "For using qwen_image_depth_diffsynth_controlnet.safetensors, you need to preprocess the image into a depth map and replace the `image processing` part. For this usage, please refer to the InstantX processing method in this document. Other parts are similar to using the Canny model.",
+      "For other types of control, you also need to replace the image processing part."
+    ],
+    "models_mentioned": [
+      "want",
+      "qwen",
+      "qwenlm",
+      "qwenimageuniondiffsynthlora",
+      "qwenimage",
+      "qwenimagedistill",
+      "qwenimagefp8e4m3fn",
+      "qwenimagedistillfullfp8e4m3fn",
+      "qwenimagedistillfullbf16",
+      "qwen2",
+      "qwenimagevae",
+      "qwenimageinstantxcontrolnet",
+      "qwenimagecontrolnetpatch",
+      "qwenimagecannydiffsynthcontrolnet",
+      "qwenimagedepthdiffsynthcontrolnet",
+      "qwenimageinpaintdiffsynthcontrolnet",
+      "qwenimagediffsynthcontrolnet",
+      "qwenimageunioncontrollora"
+    ],
+    "nodes_mentioned": [
+      "CLIP Text Encoder",
+      "KSampler",
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "LoraLoader"
+    ]
+  },
+  {
+    "file": "image-z-image-turbo.md",
+    "title": "Z-Image-Turbo ComfyUI Workflow Example",
+    "description": "Z-Image-Turbo is a distilled 6B parameter efficient image generation model with sub-second inference latency.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen34b"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "image-z-image.md",
+    "title": "Z-Image ComfyUI Workflow Example",
+    "description": "Z-Image is a 6B parameter efficient image generation foundation model with single-stream diffusion transformer for community-driven fine-tuning and custom development.",
+    "model": "image",
+    "category": "image",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen34b"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-chat.md",
+    "title": "OpenAI Chat API Node ComfyUI Official Example",
+    "description": "This article will introduce how to use OpenAI Chat Partner nodes in ComfyUI to complete conversational functions",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "In the `Load Image` node, load the image you need AI to interpret",
+      "(Optional) If needed, you can modify the settings in `OpenAI Chat Advanced Options` to have AI execute specific tasks",
+      "In the `OpenAI Chat` node, you can modify `Prompt` to set the conversation prompt, or modify `model` to select different models",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the conversation.",
+      "After waiting for the API to return results, you can view the corresponding AI returned content in the `Preview Any` node."
+    ],
+    "tips": [
+      "Note: In the corresponding template, we have built a role setting for analyzing prompt generation."
+    ],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Always",
+      "Batch Images",
+      "Load Image",
+      "OpenAI Chat",
+      "OpenAI Chat Advanced Options",
+      "OpenAI Chat Input Files",
+      "Preview Any",
+      "Prompt"
+    ]
+  },
+  {
+    "file": "partner-nodes-dall-e-2.md",
+    "title": "OpenAI DALL·E 2 Node",
+    "description": "Learn how to use the OpenAI DALL·E 2 Partner node to generate images in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Use the `Load Image` node to load the image",
+      "Right-click on the load image node and select `MaskEditor`",
+      "In the mask editor, use the brush to draw the area you want to redraw",
+      "Connect the loaded image to the `image` input of the **OpenAI DALL·E 2** node",
+      "Connect the mask to the `mask` input of the **OpenAI DALL·E 2** node",
+      "Edit the prompt in the `prompt` node",
+      "Run the workflow"
+    ],
+    "tips": [
+      "Note: Image to Image workflow is not supported"
+    ],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "MaskEditor",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-dall-e-3.md",
+    "title": "OpenAI DALL·E 3 Node",
+    "description": "Learn how to use the OpenAI DALL·E 3 Partner node to generate images in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Add the **OpenAI DALL·E 3** node in ComfyUI",
+      "Enter the description of the image you want to generate in the prompt text box",
+      "Adjust optional parameters as needed (quality, style, size, etc.)",
+      "Run the workflow to generate the image"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-faq.md",
+    "title": "FAQs about Partner Nodes",
+    "description": "Some FAQs you may encounter when using Partner Nodes.",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-fibo.md",
+    "title": "Bria FIBO Edit API Node ComfyUI Official Example",
+    "description": "Learn how to use the Bria FIBO Edit Partner node for precision image editing in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "wanted"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-flux-1-1-pro-ultra-image.md",
+    "title": "Flux 1.1 Pro Ultra Image API Node ComfyUI Official Workflow Examples",
+    "description": "This guide covers how to use the Flux 1.1 Pro Ultra Image Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "(Optional) Modify the prompt in the `Flux 1.1 [pro] Ultra Image` node",
+      "(Optional) Set `raw` parameter to `false` for more realistic output",
+      "Click `Run` or use shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "After the API returns results, view the generated image in the `Save Image` node. Images are saved to the `ComfyUI/output/` directory",
+      "Click **Upload** on the `Load Image` node to upload your input image",
+      "(Optional) Adjust `image_prompt_strength` in `Flux 1.1 [pro] Ultra Image` to change the blend ratio",
+      "Click `Run` or use shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "After the API returns results, view the generated image in the `Save Image` node. Images are saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux",
+      "flux11",
+      "flux11prot2i",
+      "flux11prot2istepguide",
+      "flux11proi2i",
+      "flux11proi2istepguide",
+      "flux11proimagepromptstrength"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-flux-1-kontext.md",
+    "title": "ComfyUI Flux.1 Kontext Pro Image API Node Official Example",
+    "description": "This guide will show you how to use the Flux.1 Kontext Pro Image Partner node in ComfyUI to perform image editing",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Upload the provided images in the `Load image` node",
+      "Modify the necessary parameters in `Flux.1 Kontext Pro Image`:",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image editing",
+      "After waiting for the API to return results, you can view the edited image in the `Save Image` node, and the corresponding image will also be saved to the `ComfyUI/output/` directory",
+      "Load the image you want to edit in the `Load Image` node",
+      "(Optional) Modify the necessary parameters in `Flux.1 Kontext Pro Image`",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image editing",
+      "After waiting for the API to return results, you can view the edited image in the `Save Image` node, and the corresponding image will also be saved to the `ComfyUI/output/` directory",
+      "Load the image you want to edit in the `Load Image` node",
+      "(Optional) Modify the necessary parameters in `Flux.1 Kontext Max Image`",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image editing",
+      "After waiting for the API to return results, you can view the edited image in the `Save Image` node, and the corresponding image will also be saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux1",
+      "flux",
+      "flux1kontextmultipleimageinputguide",
+      "flux1kontextproimage",
+      "flux1kontextproimageinput",
+      "flux1kontextproimagestepguide",
+      "flux1kontextmaximage",
+      "flux1kontextmaximageinput",
+      "flux1kontextmaximagestepguide",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Image Stitch",
+      "Load Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-gemini.md",
+    "title": "Google Gemini API Node ComfyUI Official Example",
+    "description": "This article will introduce how to use Google Gemini Partner nodes in ComfyUI to complete conversational functions",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "In the `Load Image` node, load the image you need AI to interpret",
+      "(Optional) If needed, you can modify the prompt in `Google Gemini` to have AI execute specific tasks",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute the conversation.",
+      "After waiting for the API to return results, you can view the corresponding AI returned content in the `Preview Any` node."
+    ],
+    "tips": [
+      "Note: In the corresponding template, we have built a prompt for analyzing and generating role prompts, used to interpret your images into corresponding drawing prompts"
+    ],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Always",
+      "Batch Images",
+      "Gemini Input Files",
+      "Google Gemini",
+      "Load Image",
+      "Preview Any"
+    ]
+  },
+  {
+    "file": "partner-nodes-gpt-image-1.md",
+    "title": "OpenAI GPT-Image-1 Node",
+    "description": "Learn how to use the OpenAI GPT-Image-1 Partner node to generate images in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Batch Images",
+      "Load Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-ideogram-v3.md",
+    "title": "ComfyUI Ideogram 3.0 API Node Official Examples",
+    "description": "This guide covers how to use the Ideogram 3.0 Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Enter your image description in the `prompt` field of the `Ideogram V3` node",
+      "Click `Run` or use shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "After the API returns results, view the generated image in the `Save Image` node. Images are saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-image-generation.md",
+    "title": "Runway API Node Image Generation ComfyUI Official Example",
+    "description": "This article will introduce how to use Runway nodes in ComfyUI for text-to-image and reference-to-image generation",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "In the `Runway Text to Image` node, input your prompt in the `prompt` field",
+      "(Optional) Adjust the `ratio` setting to set different output aspect ratios",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute image generation.",
+      "After waiting for the API to return results, you can view the generated image in the `Save Image` node (right-click to save). The corresponding image will also be saved to the `ComfyUI/output/` directory.",
+      "In the `Load Image` node, load the provided input image",
+      "In the `Runway Text to Image` node, input your prompt in the `prompt` field and adjust dimensions",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute image generation.",
+      "After waiting for the API to return results, you can view the generated image in the `Save Image` node (right-click to save). The corresponding image will also be saved to the `ComfyUI/output/` directory."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-kling-motion-control.md",
+    "title": "Kling 2.6 Motion Control API Node ComfyUI Official Example",
+    "description": "Learn how to use the Kling 2.6 Motion Control Partner node in ComfyUI for precise motion transfer from reference videos to character images",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-luma-image-to-image.md",
+    "title": "Luma Image to Image API Node ComfyUI Official Example",
+    "description": "This guide covers how to use the Luma Image to Image Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Click **Upload** on the `Load Image` node to upload your input image",
+      "(Optional) Modify the workflow prompts",
+      "(Optional) Adjust `image_weight` to change input image influence (lower values stay closer to original)",
+      "Click `Run` or use shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "After API returns results, view the generated image in the `Save Image` node. Images are saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-luma-image-to-video.md",
+    "title": "Luma Image to Video API Node ComfyUI Official Example",
+    "description": "Learn how to use the Luma Image to Video Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Upload your input image in the `first_image` node",
+      "(Optional) Write prompts in the Luma Image to Video node to describe how you want the image animated",
+      "(Optional) Modify the `Luma Concepts` node to control camera movement for professional cinematography",
+      "Click `Run` or use `Ctrl(cmd) + Enter` to generate the video",
+      "Once the API returns results, view the generated video in the `Save Video` node. The video will also be saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Luma Concepts",
+      "Save Video"
+    ]
+  },
+  {
+    "file": "partner-nodes-luma-text-to-image.md",
+    "title": "Luma Text to Image API Node ComfyUI Official Example",
+    "description": "This guide explains how to use the Luma Text to Image Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Upload the reference image in the `Load image` node",
+      "Upload the style reference image in the `Load image (renamed to styleref)` node",
+      "(Optional) Modify the prompts in the `Luma Text to Image` node",
+      "(Optional) Adjust the `style_image_weight` to control the style reference image's influence",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "After the API returns results, view the generated image in the `Save Image` node. Images are saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-luma-text-to-video.md",
+    "title": "Luma Text to Video API Node ComfyUI Official Guide",
+    "description": "Learn how to use the Luma Text to Video Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Write your prompt in the `Luma Text to Video` node to describe the video content you want",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to generate the video",
+      "After the API returns results, you can view the generated video in the `Save Video` node. The video will also be saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [
+      "(Optional) Modify the `Luma Concepts` node to control camera movements and add professional cinematography"
+    ],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Luma Concepts",
+      "Save Video"
+    ]
+  },
+  {
+    "file": "partner-nodes-meshy-6.md",
+    "title": "Meshy 6 API Node Model Generation ComfyUI Official Example",
+    "description": "This article will introduce how to use Meshy 6 node's API in ComfyUI for 3D model generation",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-model-generation.md",
+    "title": "Tripo API Node Model Generation ComfyUI Official Example",
+    "description": "This article will introduce how to use Tripo node's API in ComfyUI for model generation",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "In the `Tripo: Text to Model` node, input your prompt in the `prompt` field",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute model generation. After the workflow completes, the corresponding model will be automatically saved to the `ComfyUI/output/` directory",
+      "In the `Preview 3D` node, click to expand the menu",
+      "Select `Export` to directly export the corresponding model",
+      "In the `Load Image` node, load the provided input image",
+      "In the `Tripo: Image to Model` node, modify the corresponding parameter settings",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute model generation. After the workflow completes, the corresponding model will be automatically saved to the `ComfyUI/output/` directory",
+      "For model download, please refer to the instructions in the text-to-model section",
+      "In the `Load Image` nodes, load the provided input images respectively",
+      "In the `Tripo: Image to Model` node, modify the corresponding parameter settings",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute model generation. After the workflow completes, the corresponding model will be automatically saved to the `ComfyUI/output/` directory",
+      "For other view inputs, you can refer to the step diagram and set the corresponding node mode to `Always` to enable it",
+      "For model download, please refer to the instructions in the text-to-model section"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Always",
+      "Export",
+      "Load Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-moonvalley-video-generation.md",
+    "title": "Moonvalley API Node Official ComfyUI Example",
+    "description": "This article introduces how to use Moonvalley Partner nodes for text-to-video, image-to-video, and video-to-video capabilities in ComfyUI.",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Enter the positive prompt (content you want to appear in the video)",
+      "Enter the negative prompt (content you do not want to appear in the video)",
+      "Modify the video output resolution",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to start video generation",
+      "After the API returns the result, you can view the generated video in the `Save Video` node. The video will also be saved in the `ComfyUI/output/` directory",
+      "Load the input image in the `Load Image` node",
+      "Enter the positive prompt (content you want to appear in the video)",
+      "Enter the negative prompt (content you do not want to appear in the video)",
+      "Modify the video output resolution",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to start video generation",
+      "After the API returns the result, you can view the generated video in the `Save Video` node. The video will also be saved in the `ComfyUI/output/` directory",
+      "Load the reference video (or your own material) in the `Load Video` node",
+      "Enter the positive prompt (content you want to appear in the video)",
+      "Enter the negative prompt (content you do not want to appear in the video)",
+      "Set the `control_type` parameter to choose the reference type for video re-drawing",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to start video generation",
+      "After the API returns the result, you can view the generated video in the `Save Video` node. The video will also be saved in the `ComfyUI/output/` directory"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Load Video",
+      "Motion Transfer",
+      "Pose Transfer",
+      "Save Video"
+    ]
+  },
+  {
+    "file": "partner-nodes-nano-banana-pro.md",
+    "title": "Nano Banana Pro and ComfyUI Official Example",
+    "description": "This article will introduce how to use Google's Nano Banana Pro (Gemini 3 Pro Image) in ComfyUI for high-fidelity image generation and editing",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-overview.md",
+    "title": "Partner Nodes",
+    "description": "In this article, we will introduce ComfyUI's Partner Nodes and related information.",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [
+      "Note: **Important:** The API key discussed here is your **ComfyUI Account API Key** (used for accessing paid Partner nodes in workflows). This is **NOT** the same as the **Registry Publishing API Key** used by developers to publish custom nodes to the registry. If you're looking to publish custom nodes, see [Publishing Nodes](/registry/publishing)."
+    ],
+    "models_mentioned": [
+      "want",
+      "wan"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-pricing.md",
+    "title": "Pricing",
+    "description": "This article lists the pricing of the current Partner Nodes.",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [],
+    "tips": [
+      "Please refer to the prices shown in the ComfyUI interface for the actual pricing."
+    ],
+    "models_mentioned": [
+      "fluxdev",
+      "fluxkontext",
+      "fluxpro",
+      "wan",
+      "wan25",
+      "wan26",
+      "hunyuan",
+      "ltx"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "partner-nodes-recraft-text-to-image.md",
+    "title": "Recraft Text to Image API Node ComfyUI Official Example",
+    "description": "Learn how to use the Recraft Text to Image Partner node in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "(Optional) Change the `Recraft Color RGB` in the `Color` node to your desired color",
+      "(Optional) Modify the `Recraft Style` node to control the visual style, such as digital art, realistic photo, or logo design. This group includes other style nodes you can enable as needed",
+      "(Optional) Edit the `prompt` parameter in the `Recraft Text to Image` node. You can also change the `size` parameter",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to generate the image",
+      "After the API returns the result, you can view the generated image in the `Save Image` node. The image will also be saved to the `ComfyUI/output/` directory"
+    ],
+    "tips": [
+      "(Optional) We've included a **Convert to SVG** group in the workflow. Since the `Recraft Vectorize Image` node in this group consumes additional credits, enable it only when you need to convert the generated image to SVG format"
+    ],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Color",
+      "Recraft Color RGB",
+      "Recraft Style",
+      "Recraft Vectorize Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-stable-audio.md",
+    "title": "Stability AI Stable Audio 2.5 API Node ComfyUI Official workflow example",
+    "description": "This article will introduce how to use Stability AI Stable Audio 2.5 Partner node's text-to-audio, audio-to-audio and audio-inpainting capabilities in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "Modify the text prompt. You should use keywords to describe the music you want to generate.",
+      "(Optional) Modify the `duration` parameter. It's `190` by default.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the audio generation. The audio will be saved to the `ComfyUI/output/audio` directory.",
+      "In this workflow, we have provided two nodes for you to input the audio（at least 6 seconds） you want to edit:",
+      "Modify the text prompt. You should use keywords to describe the music you want to generate.",
+      "The `strength` parameter is used to control the difference from the original audio. The lower the value, the more similar the generated audio will be to the original audio.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the audio generation. The audio will be saved to the `ComfyUI/output/audio` directory.",
+      "Upload audio to the `LoadAudio` node.",
+      "Modify the text prompt. You should use keywords to describe the music you want to generate.",
+      "(Optional) Modify the `duration` parameter. It's `190` by default.",
+      "(Important) Modify the `mask_start` and `mask_end` parameters. You need to set where you want to start and end the inpainting.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the audio generation. The audio will be saved to the `ComfyUI/output/audio` directory."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "LoadAudio",
+      "Record Audio"
+    ]
+  },
+  {
+    "file": "partner-nodes-stable-diffusion-3-5-image.md",
+    "title": "Stability AI Stable Diffusion 3.5 API Node ComfyUI Official Example",
+    "description": "This article will introduce how to use Stability AI Stable Diffusion 3.5 Partner node's text-to-image and image-to-image capabilities in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "(Optional) Modify the `prompt` parameter in the `Stability AI Stable Diffusion 3.5 Image` node to input your desired image description. More detailed prompts often result in better image quality.",
+      "(Optional) Select the `model` parameter to choose which SD 3.5 model version to use.",
+      "(Optional) Select the `style_preset` parameter to control the visual style of the image. Different presets produce images with different stylistic characteristics, such as \"cinematic\" or \"anime\". Select \"None\" to not apply any specific style.",
+      "(Optional) Edit the `String(Multiline)` to modify negative prompts, specifying elements you don't want to appear in the generated image.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation.",
+      "After the API returns results, you can view the generated image in the `Save Image` node. The image will also be saved to the `ComfyUI/output/` directory.",
+      "Load a reference image through the `Load Image` node, which will serve as the basis for generation.",
+      "(Optional) Modify the `prompt` parameter in the `Stability AI Stable Diffusion 3.5 Image` node to describe elements you want to change or enhance in the reference image.",
+      "(Optional) Select the `style_preset` parameter to control the visual style of the image. Different presets produce images with different stylistic characteristics.",
+      "(Optional|Important) Adjust the `image_denoise` parameter (range 0.0-1.0) to control how much the original image is modified:",
+      "(Optional) Edit the `String(Multiline)` to modify negative prompts, specifying elements you don't want to appear in the generated image.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation.",
+      "After the API returns results, you can view the generated image in the `Save Image` node. The image will also be saved to the `ComfyUI/output/` directory."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want",
+      "stablediffusion35"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Save Image"
+    ]
+  },
+  {
+    "file": "partner-nodes-stable-image-ultra.md",
+    "title": "Stability AI Stable Image Ultra API Node ComfyUI Official Example",
+    "description": "This article will introduce how to use the Stability AI Stable Image Ultra Partner node's text-to-image and image-to-image capabilities in ComfyUI",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "(Optional) Modify the `prompt` parameter in the `Stability AI Stable Image Ultra` node to input your desired image description. More detailed prompts often lead to better image quality. You can use the `(word:weight)` format to control specific word weights, for example: `The sky was crisp (blue:0.3) and (green:0.8)` indicates the sky is blue and green, but green is more prominent.",
+      "(Optional) Select the `style_preset` parameter to control the visual style of the image. Different preset styles will produce images with different stylistic characteristics, such as \"cinematic\", \"anime\", etc. Selecting \"None\" will not apply any specific style.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation.",
+      "After the API returns the result, you can view the generated image in the `Save Image` node, and the image will also be saved to the `ComfyUI/output/` directory.",
+      "Load a reference image through the `Load Image` node, which will serve as the basis for generation.",
+      "(Optional) Modify the `prompt` parameter in the `Stability Stable Image Ultra` node to describe elements you want to change or enhance in the reference image.",
+      "(Optional) Adjust the `image_denoise` parameter (range 0.0-1.0) to control the degree of modification to the original image:",
+      "(Optional) You can also set `style_preset` and other parameters to further control the generation effect.",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the image generation.",
+      "After the API returns the result, you can view the generated image in the `Save Image` node, and the image will also be saved to the `ComfyUI/output/` directory."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Save Image",
+      "Stability AI Stable Image Ultra",
+      "Stability Stable Image Ultra"
+    ]
+  },
+  {
+    "file": "partner-nodes-video-generation.md",
+    "title": "Runway API Node Video Generation ComfyUI Official Example",
+    "description": "This article will introduce how to use Runway nodes in ComfyUI for video generation workflows",
+    "model": "partner-nodes",
+    "category": "partner-nodes",
+    "steps": [
+      "In the `Load Image` node, load the provided input image",
+      "In the `Runway Gen3a turbo` node, set the `prompt` to describe video content, modify the `duration` parameter to set video length, modify the `ratio` parameter to set video aspect ratio",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation.",
+      "After waiting for the API to return results, you can view the generated video in the `Save Video` node (right-click to save). The corresponding video will also be saved to the `ComfyUI/output/` directory.",
+      "In the `Load Image` node, load the provided input image",
+      "In the `Runway Gen4 turbo` node, set the `prompt` to describe video content, modify the `duration` parameter to set video length, modify the `ratio` parameter to set video aspect ratio",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation.",
+      "After waiting for the API to return results, you can view the generated video in the `Save Video` node (right-click to save). The corresponding video will also be saved to the `ComfyUI/output/` directory.",
+      "In the `Load Image` node, load the starting frame",
+      "In the `Load Image` node, load the ending frame",
+      "In the `Runway First-Last-Frame to Video` node, set the `prompt` to describe video content, modify the `duration` parameter to set video length, modify the `ratio` parameter to set video aspect ratio",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation.",
+      "After waiting for the API to return results, you can view the generated video in the `Save Video` node (right-click to save). The corresponding video will also be saved to the `ComfyUI/output/` directory."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "None detected"
+    ],
+    "nodes_mentioned": [
+      "Load Image",
+      "Save Video"
+    ]
+  },
+  {
+    "file": "video-cosmos-predict2-video2world.md",
+    "title": "Cosmos Predict2 Video2World  ComfyUI Official Example",
+    "description": "This guide demonstrates how to complete Cosmos-Predict2 Video2World workflows in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Ensure the `Load Diffusion Model` node has loaded `cosmos_predict2_2B_video2world_480p_16fps.safetensors`",
+      "Ensure the `Load CLIP` node has loaded `oldt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Upload the provided input image in the `Load Image` node",
+      "(Optional) If you need first and last frame control, use the shortcut `Ctrl(cmd) + B` to enable last frame input",
+      "(Optional) You can modify the prompts in the `ClipTextEncode` node",
+      "(Optional) Modify the size and frame count in the `CosmosPredict2ImageToVideoLatent` node",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Once generation is complete, the video will automatically save to the `ComfyUI/output/` directory, you can also preview it in the `save video` node */}"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan2",
+      "cosmos",
+      "cosmospredict22bvideo2world480p16fps",
+      "cosmospredict2repackaged",
+      "cosmos1",
+      "cosmospredict22bvideo2world480p16fpsstepguide",
+      "cosmospredict2imagetovideolatent"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-fun-camera.md",
+    "title": "ComfyUI Wan2.1 Fun Camera Official Examples",
+    "description": "This guide demonstrates how to use Wan2.1 Fun Camera in ComfyUI for video generation",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Ensure the correct version of model file is loaded:",
+      "Ensure the `Load CLIP` node has loaded `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Ensure the `Load CLIP Vision` node has loaded `clip_vision_h.safetensors`",
+      "Upload the starting frame to the `Load Image` node",
+      "Modify the Prompt if you're using your own input image",
+      "Set camera motion in the `WanCameraEmbedding` node",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute generation"
+    ],
+    "tips": [
+      "Note: If you want to use the 14B version, simply replace the model file with the 14B version, but please be aware of the VRAM requirements."
+    ],
+    "models_mentioned": [
+      "wan21",
+      "wan2",
+      "wan21funcamerav1",
+      "wan",
+      "wan21funcamera1",
+      "want",
+      "wancameraembedding",
+      "wan21funcamera14b",
+      "wan21funcamera14binput"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-fun-control.md",
+    "title": "ComfyUI Wan2.1 Fun Control Video Examples",
+    "description": "This guide demonstrates how to use Wan2.1 Fun Control in ComfyUI to generate videos with control videos",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "A workflow using only native Comfy Core nodes",
+      "A workflow using custom nodes",
+      "Ensure the `Load Diffusion Model` node has loaded `wan2.1_fun_control_1.3B_bf16.safetensors`",
+      "Ensure the `Load CLIP` node has loaded `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Ensure the `Load CLIP Vision` node has loaded `clip_vision_h.safetensors`",
+      "Upload the starting frame to the `Load Image` node (renamed to `Start_image`)",
+      "Upload the control video to the second `Load Image` node. Note: This node currently doesn't support mp4, only WebP videos",
+      "(Optional) Modify the prompt (both English and Chinese are supported)",
+      "(Optional) Adjust the video size in `WanFunControlToVideo`, avoiding overly large dimensions",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation",
+      "Ensure the `Load Diffusion Model` node has loaded `wan2.1_fun_control_1.3B_bf16.safetensors`",
+      "Ensure the `Load CLIP` node has loaded `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Ensure the `Load CLIP Vision` node has loaded `clip_vision_h.safetensors`",
+      "Upload the starting frame to the `Load Image` node",
+      "Upload an mp4 format video to the `Load Video(Upload)` custom node. Note that the workflow has adjusted the default `frame_load_cap`",
+      "For the current image, the `DWPose Estimator` only uses the `detect_face` option",
+      "(Optional) Modify the prompt (both English and Chinese are supported)",
+      "(Optional) Adjust the video size in `WanFunControlToVideo`, avoiding overly large dimensions",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [
+      "Note: Due to the large size of video files, you can also click [here](https://raw.githubusercontent.com/Comfy-Org/example_workflows/main/wan2.1_fun_control/wan2.1_fun_control_use_custom_nodes.json) to download the workflow file in JSON format.",
+      "The model part is essentially the same. If you've already experienced the native-only workflow, you can directly upload the corresponding images and run it."
+    ],
+    "models_mentioned": [
+      "wan21",
+      "wan2",
+      "wanrelated",
+      "wan21funcontrol1",
+      "want",
+      "wan21funcontrol",
+      "wan21funcontrolnative",
+      "wan",
+      "wanfuncontroltovideo",
+      "wan21funcontrolusecustomnodes",
+      "wanvideowrapper"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-fun-inp.md",
+    "title": "ComfyUI Wan2.1 Fun InP Video Examples",
+    "description": "This guide demonstrates how to use Wan2.1 Fun InP in ComfyUI to generate videos with first and last frame control",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Ensure the `Load Diffusion Model` node has loaded `wan2.1_fun_inp_1.3B_bf16.safetensors`",
+      "Ensure the `Load CLIP` node has loaded `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Ensure the `Load CLIP Vision` node has loaded `clip_vision_h.safetensors`",
+      "Upload the starting frame to the `Load Image` node (renamed to `Start_image`)",
+      "Upload the ending frame to the second `Load Image` node",
+      "(Optional) Modify the prompt (both English and Chinese are supported)",
+      "(Optional) Adjust the video size in `WanFunInpaintToVideo`, avoiding overly large dimensions",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan21",
+      "wanfun",
+      "wan21funinp",
+      "wan2",
+      "wan21funinp1",
+      "wan",
+      "wanfuninpainttovideo",
+      "wan21funcontrol1",
+      "wanvideowrapper"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-hunyuan-video-1-5.md",
+    "title": "HunyuanVideo 1.5",
+    "description": "Learn how to use HunyuanVideo 1.5, a lightweight 8.3B parameter model for high-quality video generation on consumer GPUs",
+    "model": "video",
+    "category": "video",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "qwen2",
+      "hunyuanvideo",
+      "hunyuan",
+      "hunyuanvideo1",
+      "hunyuanvideo15vaefp16"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "video-hunyuan-video.md",
+    "title": "ComfyUI Hunyuan Video Examples",
+    "description": "This guide shows how to use Hunyuan Text-to-Video and Image-to-Video workflows in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Ensure the `DualCLIPLoader` node has loaded these models:",
+      "Ensure the `Load Diffusion Model` node has loaded `hunyuan_video_t2v_720p_bf16.safetensors`",
+      "Ensure the `Load VAE` node has loaded `hunyuan_video_vae_bf16.safetensors`",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure that `DualCLIPLoader` has loaded these models:",
+      "Ensure that `Load CLIP Vision` has loaded `llava_llama3_vision.safetensors`",
+      "Ensure that `Load Image Model` has loaded `hunyuan_video_image_to_video_720p_bf16.safetensors`",
+      "Ensure that `Load VAE` has loaded `vae_name: hunyuan_video_vae_bf16.safetensors`",
+      "Ensure that `Load Diffusion Model` has loaded `hunyuan_video_image_to_video_720p_bf16.safetensors`",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to run the workflow",
+      "Ensure the `DualCLIPLoader` node has loaded these models:",
+      "Ensure the `Load CLIP Vision` node has loaded `llava_llama3_vision.safetensors`",
+      "Ensure the `Load Image Model` node has loaded `hunyuan_video_image_to_video_720p_bf16.safetensors`",
+      "Ensure the `Load VAE` node has loaded `hunyuan_video_vae_bf16.safetensors`",
+      "Ensure the `Load Diffusion Model` node has loaded `hunyuan_video_v2_replace_image_to_video_720p_bf16.safetensors`",
+      "Click the `Queue` button or use the shortcut `Ctrl(cmd) + Enter` to run the workflow"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "flux",
+      "fluxdevexample",
+      "hunyuan",
+      "hunyuanvideo",
+      "hunyuanvideorepackaged",
+      "hunyuanvideovaebf16",
+      "hunyuanvideot2v720pbf16",
+      "hunyuanlatentvideo",
+      "hunyuanvideoimagetovideo",
+      "hunyuanvideoimagetovideov2",
+      "hunyuanvideoimagetovideo720pbf16",
+      "hunyuanvideov2replaceimagetovideo720pbf16"
+    ],
+    "nodes_mentioned": [
+      "DualCLIPLoader",
+      "EmptyHunyuanLatentVideo",
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "Workflows"
+    ]
+  },
+  {
+    "file": "video-kandinsky-5.md",
+    "title": "Kandinsky 5.0",
+    "description": "This guide shows how to use Kandinsky 5.0 video generation workflows in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "fluxtextencoders",
+      "qwen2",
+      "hunyuanvideo",
+      "hunyuanvideo1",
+      "hunyuanvideovaebf16",
+      "hunyuanvideocomfy",
+      "kandinsky",
+      "kandinskylab",
+      "kandinsky5t2v",
+      "kandinsky5litet2vsft5s",
+      "kandinsky5i2v",
+      "kandinsky5litei2v5s"
+    ],
+    "nodes_mentioned": [
+      "Browse Templates",
+      "Video",
+      "Workflow"
+    ]
+  },
+  {
+    "file": "video-ltx-2.md",
+    "title": "LTX-2",
+    "description": "A DiT-based audio-video foundation model for synchronized video and audio generation",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Update ComfyUI to the latest version",
+      "Go to **Template Library** > **Video** > choose any LTX-2 workflow",
+      "Follow the pop-up to download models and run the workflow"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "ltx",
+      "ltx2t2v",
+      "ltx2",
+      "ltx2t2vdistilled",
+      "ltx2i2v",
+      "ltx2i2vdistilled",
+      "ltx2depthtovideo",
+      "ltx2cannytovideo",
+      "ltx2posetovideo",
+      "ltxvideo"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "video-ltxv.md",
+    "title": "LTX-Video",
+    "description": "",
+    "model": "video",
+    "category": "video",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "ltx",
+      "ltxv",
+      "ltxvimagetovideo"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "video-vace.md",
+    "title": "ComfyUI Wan2.1 VACE Video Examples",
+    "description": "This article introduces how to complete Wan VACE video generation examples in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Make sure the `Load Diffusion Model` node has loaded `wan2.1_vace_14B_fp16.safetensors`",
+      "Make sure the `Load CLIP` node has loaded `umt5_xxl_fp8_e4m3fn_scaled.safetensors` or `umt5_xxl_fp16.safetensors`",
+      "Make sure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Enter positive prompts in the `CLIP Text Encode (Positive Prompt)` node",
+      "Enter negative prompts in the `CLIP Text Encode (Negative Prompt)` node",
+      "Set the image dimensions (640x640 resolution recommended for first run) and frame count (video duration) in `WanVaceToVideo`",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation",
+      "Once generated, the video will automatically save to `ComfyUI/output/video` directory (subfolder location depends on `save video` node settings)",
+      "Input the corresponding image in the `Load image` node",
+      "You can modify and edit prompts like in the text-to-video workflow",
+      "Set the image dimensions (640x640 resolution recommended for first run) and frame count (video duration) in `WanVaceToVideo`",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation",
+      "Once generated, the video will automatically save to `ComfyUI/output/video` directory (subfolder location depends on `save video` node settings)",
+      "Input image for reference",
+      "The video below has been preprocessed and will be used to control video generation",
+      "The video below is the original video. You can download these materials and use preprocessing nodes like [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) to preprocess the images",
+      "Input the reference image in the `Load Image` node under `Load reference image`",
+      "Input the control video in the `Load Video` node under `Load control video`. Since the provided video is preprocessed, no additional processing is needed",
+      "If you need to preprocess the original video yourself, you can modify the `Image preprocessing` group or use `comfyui_controlnet_aux` nodes to complete the preprocessing",
+      "Modify prompts",
+      "Set the image dimensions (640x640 resolution recommended for first run) and frame count (video duration) in `WanVaceToVideo`",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation",
+      "Once generated, the video will automatically save to `ComfyUI/output/video` directory (subfolder location depends on `save video` node settings)"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan21",
+      "wan",
+      "wanxiang",
+      "wanai",
+      "wan21vace14bfp16",
+      "wan2",
+      "wan21vace1",
+      "wanvace",
+      "wanvacetovideo",
+      "want"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-wan-alpha.md",
+    "title": "Wan-Alpha Tutorial",
+    "description": "Learn how to generate videos with alpha channel transparency using Wan-Alpha in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "wanalpha",
+      "wan21",
+      "wanalphacomfyui"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "video-wan-ati.md",
+    "title": "Wan ATI ComfyUI Native Workflow Tutorial",
+    "description": "Using trajectory control for video generation.",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Ensure the `Load Diffusion Model` node has loaded the `Wan2_1-I2V-ATI-14B_fp8_e4m3fn.safetensors` model",
+      "Ensure the `Load CLIP` node has loaded the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model",
+      "Ensure the `Load VAE` node has loaded the `wan_2.1_vae.safetensors` model",
+      "Ensure the `Load CLIP Vision` node has loaded the `clip_vision_h.safetensors` model",
+      "Upload the provided input image in the `Load Image` node",
+      "Trajectory editing: Currently there is no corresponding trajectory editor in ComfyUI yet, you can use the following link to complete trajectory editing",
+      "If you need to modify the prompts (positive and negative), please make changes in the `CLIP Text Encoder` node numbered `5`",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan",
+      "wan2l1",
+      "wan21",
+      "wanati",
+      "wanvideocomfy",
+      "wan2",
+      "wanatiguide"
+    ],
+    "nodes_mentioned": [
+      "CLIP Text Encoder",
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-wan-flf.md",
+    "title": "ComfyUI Wan2.1 FLF2V Native Example",
+    "description": "This guide explains how to complete Wan2.1 FLF2V video generation examples in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "**Precise First-Last Frame Control**: The matching rate of first and last frames reaches 98%, defining video boundaries through starting and ending scenes, intelligently filling intermediate dynamic changes to achieve scene transitions and object morphing effects.",
+      "**Stable and Smooth Video Generation**: Using CLIP semantic features and cross-attention mechanisms, the video jitter rate is reduced by 37% compared to similar models, ensuring natural and smooth transitions.",
+      "**Multi-functional Creative Capabilities**: Supports dynamic embedding of Chinese and English subtitles, generation of anime/realistic/fantasy and other styles, adapting to different creative needs.",
+      "**720p HD Output**: Directly generates 1280×720 resolution videos without post-processing, suitable for social media and commercial applications.",
+      "**Open-source Ecosystem Support**: Model weights, code, and training framework are fully open-sourced, supporting deployment on mainstream AI platforms.",
+      "**DiT Architecture**: Based on diffusion models and Diffusion Transformer architecture, combined with Full Attention mechanism to optimize spatiotemporal dependency modeling, ensuring video coherence.",
+      "**3D Causal Variational Encoder**: Wan-VAE technology compresses HD frames to 1/128 size while retaining subtle dynamic details, significantly reducing memory requirements.",
+      "**Three-stage Training Strategy**: Starting from 480P resolution pre-training, gradually upgrading to 720P, balancing generation quality and computational efficiency through phased optimization.",
+      "Ensure the `Load Diffusion Model` node has loaded `wan2.1_flf2v_720p_14B_fp16.safetensors` or `wan2.1_flf2v_720p_14B_fp8_e4m3fn.safetensors`",
+      "Ensure the `Load CLIP` node has loaded `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node has loaded `wan_2.1_vae.safetensors`",
+      "Ensure the `Load CLIP Vision` node has loaded `clip_vision_h.safetensors`",
+      "Upload the starting frame to the `Start_image` node",
+      "Upload the ending frame to the `End_image` node",
+      "(Optional) Modify the positive and negative prompts, both Chinese and English are supported",
+      "(**Important**) In `WanFirstLastFrameToVideo` we use 720*1280 as default size.because it's a 720P model, so using a small size will not yield good output. Please use size around 720*1280 for good generation.",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan21",
+      "wan",
+      "wanxiang",
+      "wanvideo",
+      "wanvae",
+      "wanai",
+      "wan21flf2v",
+      "wan21flf2v720f16",
+      "wan2",
+      "wan21flf2v720p14bfp16",
+      "wan21flf2v720p14bfp8e4m3fn",
+      "wan21flf2v14b720pstepguide",
+      "wanfirstlastframetovideo"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Diffusion Model",
+      "Load VAE"
+    ]
+  },
+  {
+    "file": "video-wan-move.md",
+    "title": "ComfyUI Wan-Move Workflow Example",
+    "description": "Wan-Move is a motion-controllable video generation model via latent trajectory guidance, enabling fine-grained point-level motion control for image-to-video generation.",
+    "model": "video",
+    "category": "video",
+    "steps": [],
+    "tips": [],
+    "models_mentioned": [
+      "wanmove",
+      "wani2v",
+      "wanmove480p",
+      "wan2",
+      "wanvideocomfy",
+      "wan21",
+      "wanmovefp8scalede4m3fnkj",
+      "wanvideocomfyfp8scaled"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "video-wan-video.md",
+    "title": "ComfyUI Wan2.1 Video Examples",
+    "description": "This guide demonstrates how to generate videos with first and last frames using Wan2.1 Video in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Make sure the `Load Diffusion Model` node has loaded the `wan2.1_t2v_1.3B_fp16.safetensors` model",
+      "Make sure the `Load CLIP` node has loaded the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model",
+      "Make sure the `Load VAE` node has loaded the `wan_2.1_vae.safetensors` model",
+      "(Optional) You can modify the video dimensions in the `EmptyHunyuanLatentVideo` node if needed",
+      "(Optional) If you need to modify the prompts (positive and negative), make changes in the `CLIP Text Encoder` node at number `5`",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the video generation",
+      "Make sure the `Load Diffusion Model` node has loaded the `wan2.1_i2v_480p_14B_fp16.safetensors` model",
+      "Make sure the `Load CLIP` node has loaded the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model",
+      "Make sure the `Load VAE` node has loaded the `wan_2.1_vae.safetensors` model",
+      "Make sure the `Load CLIP Vision` node has loaded the `clip_vision_h.safetensors` model",
+      "Upload the provided input image in the `Load Image` node",
+      "(Optional) Enter the video description content you want to generate in the `CLIP Text Encoder` node",
+      "(Optional) You can modify the video dimensions in the `WanImageToVideo` node if needed",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the video generation",
+      "Make sure the `Load Diffusion Model` node has loaded the `wan2.1_i2v_720p_14B_fp16.safetensors` model",
+      "Make sure the `Load CLIP` node has loaded the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model",
+      "Make sure the `Load VAE` node has loaded the `wan_2.1_vae.safetensors` model",
+      "Make sure the `Load CLIP Vision` node has loaded the `clip_vision_h.safetensors` model",
+      "Upload the provided input image in the `Load Image` node",
+      "(Optional) Enter the video description content you want to generate in the `CLIP Text Encoder` node",
+      "(Optional) You can modify the video dimensions in the `WanImageToVideo` node if needed",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute the video generation"
+    ],
+    "tips": [
+      "Note: For diffusion models, we'll use the fp16 precision models in this guide because we've found that they perform better than the bf16 versions. If you need other precision versions, please visit [here](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/tree/main/split_files/diffusion_models) to download them.",
+      "If you need other t2v precision versions, please visit [here](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/tree/main/split_files/diffusion_models) to download them."
+    ],
+    "models_mentioned": [
+      "fluxdevexample",
+      "wan21",
+      "wanvideo",
+      "wanai",
+      "wan",
+      "wan2",
+      "wan21t2v1",
+      "wan21i2v14b480p",
+      "wan21i2v480p14bfp16",
+      "wan21i2v14b480pflowdiagram",
+      "want",
+      "wanimagetovideo",
+      "wan21i2v14b720p",
+      "wan21i2v720p14bfp16",
+      "wan21i2v14b720pflowdiagram",
+      "hunyuanlatentvideo"
+    ],
+    "nodes_mentioned": [
+      "CLIP Text Encoder",
+      "EmptyHunyuanLatentVideo",
+      "Load CLIP",
+      "Load CLIP Vision",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "WanImageToVideo"
+    ]
+  },
+  {
+    "file": "video-wan2-2-animate.md",
+    "title": "Wan2.2 Animate ComfyUI native workflow",
+    "description": "Unified character animation and replacement framework with precise motion and expression replication.",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Workflow that only uses core nodes (It is incomplete; you need to preprocess the image by yourself first)",
+      "Workflow that includes some custom nodes (It is complete; you can use it directly, but some new user might not know how to install the custom nodes)",
+      "If you are running this workflow for the first time, please use a small size for video generation, in case you don't have enough VRAM to run the workflow, and due to the `WanAnimateToVideo` limited, the video width or height should be multiples of 16.",
+      "Make sure all the models are loaded correctly",
+      "Update the prompt if you want",
+      "Upload the reference image, the character is this image will be the target character",
+      "You can use the videos we provided as input videos for the first time， the **DWPose Estimator** node  in [comfyui_controlnet_aux](https://github.com/Fannovel16/comfyui_controlnet_aux) will preprocess the input video to pose and face control videos",
+      "The `Points Editor` is from [KJNodes](https://github.com/kijai/ComfyUI-KJNodes/), by default this node will not load the first frame from the input video, you need to run the workflow once or manually upload the first frame",
+      "For the \"Video Extend\" group, it's in order to extend to the output video length",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan22",
+      "wananimate",
+      "wan",
+      "wan2214banimate",
+      "wan22animate",
+      "wanvideocomfyfp8scaled",
+      "wan22animate14bbf16",
+      "wan2",
+      "wanvideocomfy",
+      "wananimatetovideo",
+      "want",
+      "wan22animatesubgraph"
+    ],
+    "nodes_mentioned": []
+  },
+  {
+    "file": "video-wan2-2-fun-camera.md",
+    "title": "ComfyUI Wan2.2 Fun Camera Control: Video Generation Workflow Example",
+    "description": "This article demonstrates how to use camera control for video generation with Wan2.2 Fun Camera Control in ComfyUI.",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Using the [Wan2.2-Lightning](https://huggingface.co/lightx2v/Wan2.2-Lightning) 4-step LoRA via lightx2v: This may result in reduced video dynamics but offers faster generation.",
+      "The fp8_scaled version without the acceleration LoRA.",
+      "**High noise** model and **LoRA** loading",
+      "**Low noise** model and **LoRA** loading",
+      "Ensure the `Load CLIP` node loads `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "Ensure the `Load VAE` node loads `wan_2.1_vae.safetensors`",
+      "Upload the starting frame in the `Load Image` node",
+      "Modify the Prompt (both Chinese and English are acceptable)",
+      "Set camera control parameters in the `WanCameraEmbedding` node:",
+      "Click the `Run` button or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [
+      "Note: This workflow uses LoRA. Ensure the Diffusion model and LoRA are consistent; high noise and low noise models and LoRA must be paired accordingly."
+    ],
+    "models_mentioned": [
+      "wan22",
+      "wan",
+      "wan22funcamera",
+      "wan2214bfuncamera",
+      "wan2",
+      "wan22funcamerahighnoise14bfp8scaled",
+      "wan22funcameralownoise14bfp8scaled",
+      "wan22i2vlightx2v4stepslorav1highnoise",
+      "wan22i2vlightx2v4stepslorav1lownoise",
+      "wancameraembedding"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "LoraLoader"
+    ]
+  },
+  {
+    "file": "video-wan2-2-fun-control.md",
+    "title": "ComfyUI Wan2.2 Fun Control Video Generation Example",
+    "description": "This article introduces how to use ComfyUI to complete the Wan2.2 Fun Control video generation using control videos",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "A version using [Wan2.2-Lightning](https://huggingface.co/lightx2v/Wan2.2-Lightning) 4-step LoRA from lightx2v: may cause some loss in video dynamics but offers faster speed",
+      "A fp8_scaled version without acceleration LoRA",
+      "**High noise** model and **LoRA** loading",
+      "**Low noise** model and **LoRA** loading",
+      "Ensure the `Load CLIP` node loads the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model",
+      "Ensure the `Load VAE` node loads the `wan_2.1_vae.safetensors` model",
+      "Upload the start frame in the `Load Image` node",
+      "In the second `Load video` node, load the pose control video. The provided video has been preprocessed and can be used directly",
+      "Since we provide a preprocessed pose video, the corresponding video image preprocessing node needs to be disabled. You can select it and use `Ctrl + B` to disable it",
+      "Modify the Prompt - you can use both Chinese and English",
+      "In `Wan22FunControlToVideo`, modify the video dimensions. The default is set to 640×640 resolution to avoid excessive processing time for users with low VRAM",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [
+      "We use a preprocessed video here.",
+      "Note: This workflow uses LoRA. Please ensure the corresponding Diffusion model and LoRA are matched - high noise and low noise models and LoRAs need to be used correspondingly."
+    ],
+    "models_mentioned": [
+      "wan22",
+      "want",
+      "wan",
+      "wan22funcontrol",
+      "wan2214bfuninp",
+      "wan2214bfuncontrol",
+      "wan2",
+      "wan22funcontrolhighnoise14bfp8scaled",
+      "wan22funcontrollownoise14bfp8scaled",
+      "wan22i2vlightx2v4stepslorav1highnoise",
+      "wan22i2vlightx2v4stepslorav1lownoise",
+      "wan22funcontroltovideo"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "LoraLoader"
+    ]
+  },
+  {
+    "file": "video-wan2-2-fun-inp.md",
+    "title": "ComfyUI Wan2.2 Fun Inp Start-End Frame Video Generation Example",
+    "description": "This article introduces how to use ComfyUI to complete the Wan2.2 Fun Inp start-end frame video generation example",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "A version using [Wan2.2-Lightning](https://huggingface.co/lightx2v/Wan2.2-Lightning) 4-step LoRA from lightx2v for accelerated video generation",
+      "A fp8_scaled version without acceleration LoRA",
+      "**High noise** model and **LoRA** loading",
+      "**Low noise** model and **LoRA** loading",
+      "Ensure the `Load CLIP` node loads the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model",
+      "Ensure the `Load VAE` node loads the `wan_2.1_vae.safetensors` model",
+      "Upload the start and end frame images as materials",
+      "Enter your prompt in the Prompt group",
+      "Adjust the size and video length in the `WanFunInpaintToVideo` node",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation"
+    ],
+    "tips": [
+      "Note: This workflow uses LoRA. Please make sure the corresponding Diffusion model and LoRA are matched."
+    ],
+    "models_mentioned": [
+      "wan22",
+      "want",
+      "wan2214banimate",
+      "wan2214bfuninpaint",
+      "wan",
+      "wan22funinp",
+      "wan22funinpainthighnoise14bfp8scaled",
+      "wan2",
+      "wan22funinpaintlownoise14bfp8scaled",
+      "wan22i2vlightx2v4stepslorav1highnoise",
+      "wan22i2vlightx2v4stepslorav1lownoise",
+      "wanfuninpainttovideo"
+    ],
+    "nodes_mentioned": [
+      "Browse Templates",
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load VAE",
+      "LoraLoader",
+      "Video",
+      "Workflow"
+    ]
+  },
+  {
+    "file": "video-wan2-2-s2v.md",
+    "title": "Wan2.2-S2V Audio-Driven Video Generation ComfyUI Native Workflow Example",
+    "description": "This is a native workflow example for Wan2.2-S2V audio-driven video generation in ComfyUI.",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "**Load Diffusion Model**: Load `wan2.2_s2v_14B_fp8_scaled.safetensors` or `wan2.2_s2v_14B_bf16.safetensors`",
+      "**Load CLIP**: Load `umt5_xxl_fp8_e4m3fn_scaled.safetensors`",
+      "**Load VAE**: Load `wan_2.1_vae.safetensors`",
+      "**AudioEncoderLoader**: Load `wav2vec2_large_english_fp16.safetensors`",
+      "**LoraLoaderModelOnly**: Load `wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors` (Lightning LoRA)",
+      "**LoadAudio**: Upload our provided audio file or your own audio",
+      "**Load Image**: Upload reference image",
+      "**Batch sizes**: Set according to the number of Video S2V Extend subgraph nodes you add",
+      "**Sampler Settings**: Choose different settings based on whether you use Lightning LoRA",
+      "**Size Settings**: Set the output video dimensions",
+      "**Video S2V Extend**: Video extension subgraph nodes. Since our default frames per sampling is 77, and this is a 16fps model, each extension will generate 77 / 16 = 4.8125 seconds of video",
+      "Use Ctrl-Enter or click the Run button to execute the workflow"
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan22",
+      "wanai",
+      "wan",
+      "wan22s2v",
+      "wan2214bs2v",
+      "wan2",
+      "wan22s2v14bfp8scaled",
+      "wan22s2v14bbf16",
+      "wan22t2vlightx2v4stepslorav1"
+    ],
+    "nodes_mentioned": [
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "LoraLoader"
+    ]
+  },
+  {
+    "file": "video-wan2_2.md",
+    "title": "Wan2.2 Video Generation ComfyUI Official Native Workflow Example",
+    "description": "Official usage guide for Alibaba Cloud Tongyi Wanxiang 2.2 video generation model in ComfyUI",
+    "model": "video",
+    "category": "video",
+    "steps": [
+      "Ensure the `Load Diffusion Model` node loads the `wan2.2_ti2v_5B_fp16.safetensors` model.",
+      "Ensure the `Load CLIP` node loads the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model.",
+      "Ensure the `Load VAE` node loads the `wan2.2_vae.safetensors` model.",
+      "(Optional) If you need to perform image-to-video generation, you can use the shortcut Ctrl+B to enable the `Load image` node to upload an image.",
+      "(Optional) In the `Wan22ImageToVideoLatent` node, you can adjust the size settings and the total number of video frames (`length`).",
+      "(Optional) If you need to modify the prompts (positive and negative), please do so in the `CLIP Text Encoder` node at step 5.",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation.",
+      "Ensure the first `Load Diffusion Model` node loads the `wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors` model.",
+      "Ensure the second `Load Diffusion Model` node loads the `wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors` model.",
+      "Ensure the `Load CLIP` node loads the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model.",
+      "Ensure the `Load VAE` node loads the `wan_2.1_vae.safetensors` model.",
+      "(Optional) In the `EmptyHunyuanLatentVideo` node, you can adjust the size settings and the total number of video frames (`length`).",
+      "(Optional) If you need to modify the prompts (positive and negative), please do so in the `CLIP Text Encoder` node at step 5.",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation.",
+      "Make sure the first `Load Diffusion Model` node loads the `wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors` model.",
+      "Make sure the second `Load Diffusion Model` node loads the `wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors` model.",
+      "Make sure the `Load CLIP` node loads the `umt5_xxl_fp8_e4m3fn_scaled.safetensors` model.",
+      "Make sure the `Load VAE` node loads the `wan_2.1_vae.safetensors` model.",
+      "In the `Load Image` node, upload the image to be used as the initial frame.",
+      "If you need to modify the prompts (positive and negative), do so in the `CLIP Text Encoder` node at step 6.",
+      "(Optional) In `EmptyHunyuanLatentVideo`, you can adjust the size settings and the total number of video frames (`length`).",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation.",
+      "Upload the image to be used as the starting frame in the first `Load Image` node.",
+      "Upload the image to be used as the ending frame in the second `Load Image` node.",
+      "Adjust the size settings in the `WanFirstLastFrameToVideo` node.",
+      "Write appropriate prompts according to your first and last frames.",
+      "Click the `Run` button, or use the shortcut `Ctrl(cmd) + Enter` to execute video generation."
+    ],
+    "tips": [],
+    "models_mentioned": [
+      "wan22",
+      "wanxiang",
+      "wan",
+      "wanai",
+      "wan2",
+      "wan225bt2v",
+      "wan225bti2v",
+      "wan22ti2v5bfp16",
+      "wan22vae",
+      "wan22imagetovideolatent",
+      "wan2214bt2v",
+      "wan22t2vhighnoise14bfp8scaled",
+      "wan22t2vlownoise14bfp8scaled",
+      "wan2214bi2v",
+      "wan22i2vhighnoise14bfp16",
+      "wan22i2vlownoise14bfp16",
+      "wan2214bflf2v",
+      "wan2214bflf2vstartimage",
+      "wan2214bflf2vendimage",
+      "wanfirstlastframetovideo",
+      "wanvideowrapper",
+      "wanvideocomfyfp8scaled",
+      "wan21",
+      "wanvideocomfy",
+      "hunyuanlatentvideo"
+    ],
+    "nodes_mentioned": [
+      "Browse Templates",
+      "CLIP Text Encoder",
+      "EmptyHunyuanLatentVideo",
+      "Load CLIP",
+      "Load Diffusion Model",
+      "Load Image",
+      "Load VAE",
+      "Video",
+      "Workflow"
+    ]
+  }
+]

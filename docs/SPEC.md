@@ -31,6 +31,9 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `moduleName` | string | ✅ | Module identifier (e.g., "default") |
 | `title` | string | ✅ | Display name for the category |
 | `type` | string | ❌ | Optional type hint: "image", "video", "audio", "3d" |
+| `category` | string | ❌ | Category label (e.g., "GENERATION TYPE") |
+| `icon` | string | ❌ | Icon class (e.g., "icon-[lucide--star]") |
+| `isEssential` | boolean | ❌ | Whether this is a Getting Started category |
 | `templates` | array | ✅ | Array of template objects |
 
 ### Template Object
@@ -44,12 +47,32 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `mediaSubtype` | string | ✅ | Thumbnail format: "webp", "mp3", "mp4", etc. |
 | `thumbnailVariant` | string | ❌ | Hover effect: "compareSlider", "hoverDissolve", "hoverZoom", "zoomHover" |
 | `tutorialUrl` | string | ❌ | Link to documentation |
-| `searchRanking` | number | ❌ | Search priority (0-1000, higher = better ranking) |
+| `tags` | array of strings | ❌ | Categorization tags for filtering |
+| `models` | array of strings | ❌ | Model names used by the workflow |
+| `date` | string | ❌ | Creation/update date (YYYY-MM-DD format) |
+| `size` | number | ❌ | Size of the template in bytes |
+| `vram` | number | ❌ | VRAM requirement in bytes |
+| `openSource` | boolean | ❌ | Whether the template is open source |
+| `status` | string | ❌ | Lifecycle status: "active", "archived", "deprecated" |
+| `requiresCustomNodes` | array of strings | ❌ | Custom node package IDs from the Custom Node Registry |
+| `usage` | number | ❌ | Usage count |
+| `searchRank` | number | ❌ | Search ranking score (0-1000, higher = better ranking) |
+| `includeOnDistributions` | array of strings | ❌ | Distribution targets: "cloud", "local", "desktop", "mac", "windows" |
+| `logos` | array of logo objects | ❌ | Logo overlays to display on the template thumbnail |
+
+### Logo Object
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `provider` | string or array | ✅ | Provider name(s) matching `index_logo.json`. String for single, array for stacked logos. |
+| `label` | string | ❌ | Custom label text. Defaults to provider names joined with " & " |
+| `gap` | number | ❌ | Gap between stacked logos in pixels. Negative for overlap. Default: -6 |
+| `position` | string | ❌ | Tailwind positioning classes (e.g., "top-2 left-2", "bottom-2 right-2") |
+| `opacity` | number | ❌ | Opacity 0-1, default 0.85 |
 
 ## Naming Conventions
 
-- **Workflow files**: Use lowercase with underscores (e.g., `flux_dev_example.json`)
-- **No spaces, dots, or special characters** in filenames
+- **Workflow files**: Must match pattern `^[a-zA-Z0-9._-]+$` (letters, digits, dots, hyphens, underscores)
 - **Thumbnails**: Must follow pattern `{name}-{number}.{extension}`
   - Number starts at 1
   - Extension matches `mediaSubtype`
@@ -59,6 +82,7 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 ### Required Thumbnails
 - Every template MUST have at least one thumbnail: `{name}-1.{mediaSubtype}`
 - Additional thumbnails are optional: `{name}-2.{mediaSubtype}`, etc.
+- The `compareSlider` and `hoverDissolve` variants REQUIRE both `-1` and `-2` thumbnails
 
 ### Thumbnail Variants
 - `compareSlider`: Shows before/after comparison
@@ -105,7 +129,7 @@ python scripts/validate_templates.py
 ```
 
 This validates:
-- ✅ **All index*.json files** - Main + 9 locale variants 
+- ✅ **All index*.json files** - Main + 10 locale variants (11 total: `index.json`, `index.ar.json`, `index.es.json`, `index.fr.json`, `index.ja.json`, `index.ko.json`, `index.pt-BR.json`, `index.ru.json`, `index.tr.json`, `index.zh.json`, `index.zh-TW.json`)
 - ✅ JSON schema compliance for all fields
 - ✅ File consistency (all referenced files exist)
 - ✅ No duplicate template names
@@ -116,21 +140,11 @@ This validates:
 
 1. Create workflow and thumbnails following naming conventions
 2. Add entry to `index.json` in appropriate category
-3. Run validation script
-4. Bump version in `pyproject.toml`
-5. Submit PR
+3. Add template ID to `bundles.json` (required — CI enforces this)
+4. Run validation script
+5. Bump version in `pyproject.toml`
+6. Submit PR
 
 ## Categories
 
-Current categories:
-- **Basics**: Core image generation workflows
-- **Flux**: Flux model workflows
-- **Image**: Advanced image generation
-- **Video**: Video generation workflows
-- **Image API**: External API integrations for images
-- **Video API**: External API integrations for video
-- **Upscaling**: Image enhancement workflows
-- **ControlNet**: Guided generation workflows
-- **Area Composition**: Spatial control workflows
-- **3D**: 3D generation workflows
-- **Audio**: Audio generation workflows
+Categories are defined in `templates/index.json`. Each category has a `moduleName`, `title`, and optional `category`, `icon`, and `isEssential` fields. See the Category Object table above for the full schema.
