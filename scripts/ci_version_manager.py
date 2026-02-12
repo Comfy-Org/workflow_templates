@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+"""
+Auto-bump sub-package versions only when the root pyproject.toml version has been
+changed (e.g. by the PR author). Otherwise skip bumping to avoid unnecessary
+version churn on every template-only PR.
+"""
 import json
 import re
 import subprocess
@@ -9,6 +14,28 @@ ROOT = Path.cwd()
 
 def run_git(args: List[str]) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT).decode().strip()
+
+
+def root_version_changed() -> bool:
+    """
+    Return True if the root pyproject.toml version was changed compared to the
+    merge-base with the default branch (origin/main). Only then do we run auto-bump.
+    """
+    try:
+        base = run_git(["merge-base", "HEAD", "origin/main"])
+    except subprocess.CalledProcessError:
+        try:
+            base = run_git(["merge-base", "HEAD", "main"])
+        except subprocess.CalledProcessError:
+            return True  # fallback: allow bump when merge-base unavailable
+    try:
+        current = get_current_version("meta")
+        base_content = run_git(["show", f"{base}:pyproject.toml"])
+        match = re.search(r'^version\s*=\s*"([^"]+)"', base_content, re.MULTILINE)
+        base_version = match.group(1) if match else ""
+        return current != base_version
+    except Exception:
+        return True  # fallback: allow bump on parse/git errors
 
 def get_current_version(pkg: str) -> str:
     """Get current version of a package from its pyproject.toml"""
@@ -256,6 +283,11 @@ def update_dependencies() -> None:
         Path(meta_path).write_text(text)
 
 if __name__ == "__main__":
+    if not root_version_changed():
+        print("Root pyproject.toml version unchanged; skipping auto-bump.")
+        print("")
+        exit(0)
+
     packages = get_changed_packages()
     print(f"Detected changed packages: {sorted(packages)}")
     
@@ -266,7 +298,7 @@ if __name__ == "__main__":
         update_dependencies()
         print(f"Auto-bumped packages and updated dependencies: {sorted(non_meta_packages)}")
         
-    # Output all packages that need building (including meta if changed)  
+    # Output all packages that need building (including meta if changed)
     if packages:
         print(" ".join(sorted(packages)))
     else:
