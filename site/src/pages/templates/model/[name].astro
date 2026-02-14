@@ -1,0 +1,164 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import TemplateCard from '../../../components/TemplateCard.astro';
+import HreflangTags from '../../../components/HreflangTags.astro';
+import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
+import { slugify } from '../../../lib/slugify';
+import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { modelPath } from '../../../lib/routes';
+
+export async function getStaticPaths() {
+  const templates = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
+
+  const modelMap = new Map<string, typeof templates>();
+
+  for (const template of templates) {
+    const models = template.data.models || [];
+    for (const model of models) {
+      const normalized = slugify(model);
+      if (!modelMap.has(normalized)) {
+        modelMap.set(normalized, []);
+      }
+      modelMap.get(normalized)!.push(template);
+    }
+  }
+
+  return Array.from(modelMap.entries()).map(([name, modelTemplates]) => {
+    const originalName =
+      modelTemplates[0]?.data.models?.find((m: string) => slugify(m) === name) || name;
+
+    return {
+      params: { name },
+      props: {
+        templates: modelTemplates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0)),
+        modelName: originalName,
+      },
+    };
+  });
+}
+
+const { name } = Astro.params;
+const { templates, modelName } = Astro.props;
+
+const locale = getLocaleFromPath(Astro.url.pathname);
+const basePath = modelPath(name!);
+
+const title = `${modelName} ComfyUI Workflows - Free Templates`;
+const description = `Browse ${templates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
+
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: `${modelName} ComfyUI Workflows`,
+  description,
+  url: canonicalUrl,
+};
+
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: t('labels.models', locale),
+      item: absoluteUrl(localizeUrl('/templates/model/', locale)),
+    },
+    { '@type': 'ListItem', position: 3, name: modelName },
+  ],
+};
+---
+
+<BaseLayout
+  title={title}
+  description={description}
+  canonicalUrl={canonicalUrl}
+  ogImage="/og-default.svg"
+  structuredData={structuredData}
+  theme="dark"
+>
+  <HreflangTags slot="head" basePath={basePath} />
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Breadcrumb -->
+    <nav class="mb-8">
+      <a
+        href={localizeUrl('/templates/', locale)}
+        data-astro-prefetch
+        class="inline-flex items-center gap-2 text-white/40 hover:text-white font-medium transition-colors"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"
+          ></path>
+        </svg>
+        {t('nav.back', locale)}
+      </a>
+    </nav>
+
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div
+        class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full text-sm font-medium mb-4"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+          ></path>
+        </svg>
+        Model
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
+        {modelName} Workflows
+      </h1>
+      <p class="text-xl text-white/70 max-w-2xl mx-auto">
+        {templates.length} ready-to-use ComfyUI workflow{templates.length !== 1 ? 's' : ''} featuring
+        the {modelName} model. Click any template to learn more and run it instantly.
+      </p>
+    </div>
+
+    <!-- Stats bar -->
+    <div class="flex justify-center gap-8 mb-12 text-sm text-white/50">
+      <span class="flex items-center gap-2">
+        <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+        {templates.length}
+        {t('template.count', locale)}
+      </span>
+      <span>{t('template.updated', locale)}</span>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {
+        templates.map((template) => (
+          <TemplateCard
+            name={template.data.name}
+            title={template.data.title || template.data.name}
+            description={template.data.description}
+            mediaType={template.data.mediaType}
+            mediaSubtype={template.data.mediaSubtype}
+            thumbnailVariant={template.data.thumbnailVariant}
+            tags={template.data.tags}
+            models={template.data.models}
+            usage={template.data.usage}
+            date={template.data.date}
+            thumbnails={template.data.thumbnails}
+            locale={locale}
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbStructuredData)}
+  />
+</BaseLayout>
