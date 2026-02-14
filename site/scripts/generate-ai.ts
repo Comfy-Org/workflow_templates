@@ -1185,9 +1185,10 @@ async function main() {
         console.log(`⏭️  [SKIP] ${template.name} - human edited`);
       } else {
         console.log(`⏭️  [SKIP] ${template.name} - human edited`);
+        const existing = await loadExistingSynced(outPath);
         await writeFile(
           outPath,
-          JSON.stringify({ ...template, ...override, humanEdited: true }, null, 2)
+          JSON.stringify({ ...existing, ...template, ...override, humanEdited: true }, null, 2)
         );
       }
       stats.skipped++;
