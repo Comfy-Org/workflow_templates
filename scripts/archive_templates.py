@@ -28,8 +28,8 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-# Base paths
-BASE_DIR = Path(__file__).parent.parent.parent
+# Base paths (script is at scripts/archive_templates.py, so parent.parent = repo root)
+BASE_DIR = Path(__file__).parent.parent
 TEMPLATES_DIR = BASE_DIR / "templates"
 ARCHIVED_DIR = BASE_DIR / "archived"
 SCRIPTS_DIR = BASE_DIR / "scripts"
