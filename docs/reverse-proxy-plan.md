@@ -105,20 +105,22 @@ The Worker needs to handle:
 
 ```
 Routes to Vercel (Astro site):
-  /templates/*
+  /templates/*                  (listing, detail, category, model, tag, og, thumbnails)
   /templates                    (no trailing slash)
   /{locale}/templates/*         (11 locales)
-  /category/*
-  /{locale}/category/*
-  /model/*
-  /{locale}/model/*
-  /tag/*
-  /{locale}/tag/*
-  /thumbnails/*                 (static assets)
   /_astro/*                     (Astro build assets)
-  /og/*                         (OG images)
   /sitemap*.xml                 (sitemap - needs merging strategy)
   /robots.txt                   (from Astro site, or merged)
+
+301 Redirects (old paths → new paths under /templates/):
+  /category/*                   → /templates/category/*
+  /model/*                      → /templates/model/*
+  /tag/*                        → /templates/tag/*
+  /og/*                         → /templates/og/*
+  /thumbnails/*                 → /templates/thumbnails/*
+  /{locale}/category/*          → /{locale}/templates/category/*
+  /{locale}/model/*             → /{locale}/templates/model/*
+  /{locale}/tag/*               → /{locale}/templates/tag/*
 
 Routes to Framer (everything else):
   /
@@ -363,10 +365,13 @@ The `site/vercel.json` CSP header should remain — it only applies to responses
 
 ## Changes Required in This Repository
 
-### Minimal Changes (Phase 3)
-1. **No Astro config changes needed** — `site` already defaults to `https://comfy.org`
-2. **No vercel.json changes needed** — headers stay scoped to Vercel responses
-3. **No deploy workflow changes needed** — continues to deploy to Vercel as-is
+### Site Changes (Phase 3)
+1. **Route restructuring** — Moved `/category/`, `/model/`, `/tag/`, `/og/` pages under `/templates/` prefix to avoid conflicting with Framer routes and future services
+2. **Thumbnail path migration** — Moved `/thumbnails/` to `/templates/thumbnails/` for clean Worker routing
+3. **Sitemap config updated** — Regex patterns in `astro.config.mjs` updated for new paths
+4. **No vercel.json changes needed** — headers stay scoped to Vercel responses
+5. **No deploy workflow changes needed** — continues to deploy to Vercel as-is
+6. **301 redirects in Worker** — Old paths redirect to new paths for SEO continuity
 
 ### Separate Repository: `comfy-router`
 

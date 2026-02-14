@@ -80,24 +80,24 @@ export default defineConfig({
           return item;
         }
 
-        // Category pages: /category/{type}/ or /{locale}/category/{type}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/category\//)) {
+        // Category pages: /templates/category/{type}/ or /{locale}/templates/category/{type}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/category\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.7;
           return item;
         }
 
-        // Model pages: /model/{model}/ or /{locale}/model/{model}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/model\//)) {
+        // Model pages: /templates/model/{model}/ or /{locale}/templates/model/{model}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/model\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.6;
           return item;
         }
 
-        // Tag pages: /tag/{tag}/ or /{locale}/tag/{tag}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/tag\//)) {
+        // Tag pages: /templates/tag/{tag}/ or /{locale}/templates/tag/{tag}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/tag\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.6;
@@ -111,7 +111,7 @@ export default defineConfig({
         return item;
       },
       // Exclude OG image routes from sitemap
-      filter: (page) => !page.includes('/og/'),
+      filter: (page) => !page.includes('/templates/og/'),
     }),
   ],
   output: 'static',
