@@ -29,6 +29,14 @@ test.describe('Visual Regression Tests', () => {
     }
   });
 
+  test('template card thumbnails', async ({ page }) => {
+    await page.goto('/templates');
+    await page.waitForLoadState('networkidle');
+    const firstCard = page.locator('main a[data-astro-prefetch]').first();
+    await expect(firstCard).toBeVisible();
+    await expect(firstCard).toHaveScreenshot('template-card-thumbnail.png');
+  });
+
   test('category page', async ({ page }) => {
     // Try common category paths
     const categoryPaths = ['/category/image-generation', '/category/video', '/category/upscaling'];

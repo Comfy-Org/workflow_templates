@@ -167,6 +167,65 @@ test.describe('Accessibility Basics', () => {
   });
 });
 
+test.describe('Thumbnail Loading', () => {
+  test('template cards have thumbnail images', async ({ page }) => {
+    await page.goto('/templates');
+    await page.waitForLoadState('networkidle');
+    const thumbnailImages = page.locator('main a[data-astro-prefetch] img[src^="/thumbnails/"]');
+    const count = await thumbnailImages.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('thumbnail images load successfully (no broken images)', async ({ page }) => {
+    await page.goto('/templates');
+    await page.waitForLoadState('networkidle');
+    const images = page.locator('main img[src^="/thumbnails/"]');
+    const count = await images.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < Math.min(count, 10); i++) {
+      const img = images.nth(i);
+      const naturalWidth = await img.evaluate((el: HTMLImageElement) => el.naturalWidth);
+      expect(naturalWidth, `Image ${i} should have loaded`).toBeGreaterThan(0);
+    }
+  });
+
+  test('template detail page hero thumbnail loads', async ({ page }) => {
+    await page.goto('/templates');
+    const templateLink = page.locator('main a[data-astro-prefetch]').first();
+    const href = await templateLink.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
+    await page.waitForLoadState('networkidle');
+
+    const heroImages = page.locator('article img[src^="/thumbnails/"]');
+    const count = await heroImages.count();
+    if (count > 0) {
+      const naturalWidth = await heroImages
+        .first()
+        .evaluate((el: HTMLImageElement) => el.naturalWidth);
+      expect(naturalWidth, 'Hero thumbnail should have loaded').toBeGreaterThan(0);
+    }
+  });
+
+  test('thumbnail URLs return 200 status', async ({ page, request }) => {
+    await page.goto('/templates');
+    await page.waitForLoadState('networkidle');
+
+    const images = page.locator('main img[src^="/thumbnails/"]');
+    const count = await images.count();
+    expect(count).toBeGreaterThan(0);
+
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      const src = await images.nth(i).getAttribute('src');
+      expect(src).toBeTruthy();
+      const response = await request.get(src!);
+      expect(response.status(), `${src} should return 200`).toBe(200);
+    }
+  });
+});
+
 test.describe('UTM Parameter Tracking', () => {
   test('CTA links include required UTM parameters', async ({ page }) => {
     await page.goto('/templates');
