@@ -1017,6 +1017,16 @@ function validateContent(content: unknown, contentTemplate: ContentTemplate): Ge
   };
 }
 
+async function loadExistingSynced(outPath: string): Promise<Record<string, unknown>> {
+  if (!existsSync(outPath)) return {};
+  try {
+    const raw = await readFile(outPath, 'utf-8');
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
 function getPlaceholderContent(template: TemplateInfo): GeneratedContent {
   return {
     extendedDescription: template.description,
@@ -1175,9 +1185,10 @@ async function main() {
         console.log(`⏭️  [SKIP] ${template.name} - human edited`);
       } else {
         console.log(`⏭️  [SKIP] ${template.name} - human edited`);
+        const existing = await loadExistingSynced(outPath);
         await writeFile(
           outPath,
-          JSON.stringify({ ...template, ...override, humanEdited: true }, null, 2)
+          JSON.stringify({ ...existing, ...template, ...override, humanEdited: true }, null, 2)
         );
       }
       stats.skipped++;
@@ -1200,7 +1211,8 @@ async function main() {
         } else {
           console.log(`💾 [CACHE HIT] ${template.name}`);
           const merged = applyOverrides(cached, override);
-          await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
+          const existing = await loadExistingSynced(outPath);
+          await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...merged }, null, 2));
         }
         stats.hits++;
         continue;
@@ -1228,7 +1240,8 @@ async function main() {
         console.log('\n📄 Generated placeholder content:');
         console.log(JSON.stringify({ ...template, ...placeholder }, null, 2));
       }
-      await writeFile(outPath, JSON.stringify({ ...template, ...placeholder }, null, 2));
+      const existing = await loadExistingSynced(outPath);
+      await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...placeholder }, null, 2));
       stats.placeholder++;
       continue;
     }
@@ -1295,7 +1308,8 @@ async function main() {
         console.log(JSON.stringify({ ...template, ...merged }, null, 2));
       }
 
-      await writeFile(outPath, JSON.stringify({ ...template, ...merged }, null, 2));
+      const existing = await loadExistingSynced(outPath);
+      await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...merged }, null, 2));
       stats.regenerated++;
     } catch (error) {
       const errMsg = String(error).slice(0, 100);
@@ -1303,7 +1317,8 @@ async function main() {
       failures.push({ name: template.name, error: errMsg });
       stats.failed++;
       const placeholder = getPlaceholderContent(template);
-      await writeFile(outPath, JSON.stringify({ ...template, ...placeholder }, null, 2));
+      const existing = await loadExistingSynced(outPath);
+      await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...placeholder }, null, 2));
       stats.placeholder++;
     }
   }
