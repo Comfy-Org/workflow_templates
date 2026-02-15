@@ -9,7 +9,9 @@
 
 - [x] Astro site restructured: all routes under `/templates/` prefix
 - [x] Route helpers, sitemap, OG images, structured data updated
-- [x] `comfy-router` Worker written, tested (57 tests passing), deployed to workers.dev preview
+- [x] `comfy-router` Worker written, tested (59 tests passing), deployed to workers.dev preview
+- [x] Health check endpoint (`/__health`) added
+- [x] Sitemap index stitching configured (`filenameBase: 'sitemap-templates'` + `customSitemaps` for Framer)
 - [x] Workers.dev preview verified: templates → Vercel ✓, marketing → Framer ✓
 - [x] CI/CD pipeline in `comfy-router` repo (GitHub Actions: test → staging → production)
 - [x] DNS records documented (`docs/comfy-org-dns-records.bind`)
@@ -22,11 +24,11 @@
 
 ### Code
 
-- [ ] Merge `feat/reverse-proxy-setup` branch into `main` in `workflow_templates` repo
+- [x] Merge `feat/reverse-proxy-setup` branch into `main` in `workflow_templates` repo ([PR #595](https://github.com/Comfy-Org/workflow_templates/pull/595))
   - This deploys the `/templates/`-prefixed routes to Vercel production
   - Verify `workflow-templates.vercel.app/templates/` works after merge
-- [ ] Push latest `comfy-router` changes to `Comfy-Org/comfy-router` main
-- [ ] Add `CLOUDFLARE_API_TOKEN` as GitHub Actions secret in `comfy-router` repo
+- [x] Push latest `comfy-router` changes to `Comfy-Org/comfy-router` main ([PR #1](https://github.com/Comfy-Org/comfy-router/pull/1))
+- [x] Add `CLOUDFLARE_API_TOKEN` as GitHub Actions secret in `comfy-router` repo
 
 ### Comms
 
@@ -64,7 +66,7 @@
   ```javascript
   const FRAMER_ORIGIN = 'https://framer-origin.comfy.org';
   ```
-- [ ] Run tests: `npm test` (all 57 pass)
+- [ ] Run tests: `npm test` (all 59 pass)
 - [ ] Push to `comfy-router` main
 
 ### 2d. Switch Nameservers
@@ -139,7 +141,8 @@ curl -sI https://www.comfy.org/ | grep -E 'HTTP|X-Served-By'
 #### SEO
 - [ ] View source on `/templates/` — `<link rel="canonical">` points to `https://comfy.org/templates/`
 - [ ] View source on `/` — Framer canonical is `https://comfy.org`
-- [ ] `comfy.org/sitemap-templates.xml` returns valid XML
+- [ ] `comfy.org/sitemap-templates-index.xml` returns valid XML (unified index referencing templates + Framer)
+- [ ] `comfy.org/sitemap-templates-0.xml` returns valid XML (template URLs)
 - [ ] `comfy.org/sitemap.xml` (Framer) returns valid XML
 
 #### 301 Redirects (old URLs)
@@ -168,8 +171,8 @@ curl -sI https://www.comfy.org/ | grep -E 'HTTP|X-Served-By'
 ### SEO
 - [ ] Add/verify `comfy.org` in Google Search Console
 - [ ] Submit sitemaps:
-  - `https://comfy.org/sitemap-templates.xml`
-  - `https://comfy.org/sitemap.xml`
+  - `https://comfy.org/sitemap-templates-index.xml` (unified index)
+  - `https://comfy.org/sitemap.xml` (Framer)
 - [ ] Request indexing: `/templates/`, top 5 template detail pages
 - [ ] Monitor GSC Coverage report over next 2-6 weeks
 
