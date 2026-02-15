@@ -90,9 +90,83 @@ The Worker lives in a separate repo (`Comfy-Org/comfy-router`) because it's the 
 | Framer forms/animations break through proxy | Worker does NOT modify response bodies; tested on workers.dev preview |
 | Circular dependency after DNS cutover | Grey-cloud CNAME `framer-origin.comfy.org` → `sites.framer.app` bypasses Worker |
 
+## Implementation Details
+
+### Repos
+
+| Repo | Purpose |
+|------|---------|
+| [`Comfy-Org/comfy-router`](https://github.com/Comfy-Org/comfy-router) | Cloudflare Worker — routing logic, tests, CI/CD |
+| [`Comfy-Org/workflow_templates`](https://github.com/Comfy-Org/workflow_templates) | Astro site — routes nested under `/templates/` prefix |
+
+### Key Worker Behaviors
+
+- **Never modifies response bodies** — both Framer and Astro manage their own HTML
+- **Strips trailing slashes for Framer** — Framer's client-side routing breaks with them
+- **Buffers POST bodies** — uses `arrayBuffer()` not streaming (fixes Framer form submissions)
+- **`redirect: 'manual'`** — passes origin redirects through to the browser
+- **301 redirects** old paths (`/category/*`, `/model/*`, `/tag/*`, `/og/*`, `/thumbnails/*`) to `/templates/` equivalents
+- **Health endpoint** at `/__health` returns JSON with origin config
+
+### Sitemap Strategy
+
+Astro generates `sitemap-templates-index.xml` and `sitemap-templates-0.xml` using `filenameBase: 'sitemap-templates'`. The index references both the templates sitemap and Framer's `/sitemap.xml` via `customSitemaps`. No sitemap stitching at the edge — both are submitted to GSC independently.
+
+### Framer Origin Gotchas
+
+- `.framer.app` staging subdomain is **auth-protected** (303 redirect to login)
+- `.framer.website` free subdomain **cannot be added** while a custom domain is connected
+- `sites.framer.app` with Host header override returns "Site Not Found" (Framer checks SNI)
+- **Solution for workers.dev preview:** use `www.comfy.org` directly (no circular dependency)
+- **Solution for production:** grey-cloud CNAME `framer-origin.comfy.org` → `sites.framer.app`
+
+### Cloudflare Dashboard Settings (Required)
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| SSL/TLS Mode | Full (strict) | "Flexible" causes redirect loops |
+| Rocket Loader | OFF | Breaks Framer's JavaScript |
+| Always Online | OFF | Propagates 526 errors across all Worker routes |
+| AAAA records | None | Framer doesn't support IPv6, causes TLS issues |
+
+---
+
+## Cutover Procedure
+
+### DNS Records
+
+| Type | Name | Content | Proxy |
+|------|------|---------|-------|
+| A | @ | 192.0.2.1 | ✅ Proxied |
+| CNAME | www | comfy.org | ✅ Proxied |
+| CNAME | framer-origin | sites.framer.app | ❌ DNS-only |
+
+Preserve existing MX (Google Workspace) and TXT (SPF, Firebase, Stripe) records. See `docs/comfy-org-dns-records.bind` for the full backup.
+
+### Steps
+
+1. Lower TTL to 60s on current DNS records (48 hours before cutover)
+2. Add DNS records in Cloudflare (table above)
+3. Configure dashboard settings (table above)
+4. Update `FRAMER_ORIGIN` in Worker to `https://framer-origin.comfy.org`
+5. Switch nameservers to Cloudflare at registrar
+6. Wait for DNS propagation (~5–30 min)
+7. Deploy Worker: `npx wrangler deploy --env production`
+8. Run smoke tests, monitor for 48 hours
+
+### Rollback (< 5 min)
+
+| Option | Action | Speed |
+|--------|--------|-------|
+| A | Remove Worker routes in CF dashboard + point DNS to Framer | ~2 min |
+| B | Revert nameservers at registrar | ~5 min + TTL |
+| C | Deploy hotfix to Worker | Seconds |
+
+---
+
 ## References
 
 - [Framer Reverse Proxy Docs](https://www.framer.com/help/articles/how-to-self-host-using-reverse-proxy/)
 - [Framer Cloudflare Guide](https://www.framer.com/help/articles/how-to-proxy-with-cloudflare/)
 - [Cloudflare Workers Best Practices](https://developers.cloudflare.com/workers/best-practices/)
-- Internal: [docs/reverse-proxy-plan.md](reverse-proxy-plan.md), [docs/reverse-proxy-deployment-runbook.md](reverse-proxy-deployment-runbook.md)
+- PRs: [workflow_templates#595](https://github.com/Comfy-Org/workflow_templates/pull/595), [comfy-router#1](https://github.com/Comfy-Org/comfy-router/pull/1)
