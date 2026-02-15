@@ -23,9 +23,7 @@ The templates site needs to be served at `comfy.org/templates/` to:
 
 ## Decision
 
-Use a **Cloudflare Worker** as the front door for all comfy.org traffic, routing requests to the appropriate origin based on URL path.
-
-Architecture:
+Use a **Cloudflare Worker** ([`Comfy-Org/comfy-router`](https://github.com/Comfy-Org/comfy-router)) as the front door for all comfy.org traffic, routing requests to the appropriate origin based on URL path.
 
 ```
 User → Cloudflare Edge (Worker)
@@ -35,33 +33,26 @@ User → Cloudflare Edge (Worker)
   └─ /* (everything else)   → Framer (marketing site)
 ```
 
-The Worker lives in a separate repo (`Comfy-Org/comfy-router`) because it's the routing layer for ALL of comfy.org, not specific to templates.
+The Worker lives in a separate repo because it's the routing layer for ALL of comfy.org, not specific to templates. Operational docs (deployment, runbooks, DNS) live in that repo.
 
 ## Alternatives Considered
 
-### Alternative 1: Vercel Edge Middleware / Rewrites
+### Vercel Edge Middleware / Rewrites
 
-- **Pros:** Single platform (Vercel already hosts Astro), no new provider
-- **Cons:**
-  - Header contamination: Vercel's CSP/security headers apply to proxied Framer responses, breaking Framer scripts
-  - Astro static rewrite limitation: Vercel warns rewrites don't work cleanly with Astro static output
-  - Bandwidth trap: all Framer marketing traffic counted as Vercel bandwidth
-  - Domain conflict: adding comfy.org to Vercel while Framer claims it creates verification issues
-  - Couples routing to Vercel — hard to add non-Vercel origins later
+- Header contamination: Vercel's CSP/security headers break proxied Framer responses
+- Astro static rewrite limitation: Vercel warns rewrites don't work cleanly with Astro static output
+- Bandwidth trap: all Framer marketing traffic counted as Vercel bandwidth
+- Couples routing to Vercel — hard to add non-Vercel origins later
 
-### Alternative 2: Framer Advanced Hosting (Multi Site)
+### Framer Advanced Hosting (Multi Site)
 
-- **Pros:** No external infrastructure, Framer handles everything, automatic sitemap merging
-- **Cons:**
-  - Enterprise-only feature (beta for Scale plans as of Jan 2026)
-  - Framer becomes the front door — reverses the architecture (Framer owns the domain, Vercel is the external origin)
-  - Less control over caching, headers, routing logic
-  - Vendor lock-in to Framer for routing decisions
+- Enterprise-only feature (beta for Scale plans as of Jan 2026)
+- Framer becomes the front door — vendor lock-in for routing decisions
+- Less control over caching, headers, routing logic
 
-### Alternative 3: Subdomain approach (templates.comfy.org)
+### Subdomain (templates.comfy.org)
 
-- **Pros:** Simplest — just point a subdomain to Vercel, no proxy needed
-- **Cons:** Subdomains don't inherit parent domain SEO authority. Google treats subdomains as separate sites.
+- Subdomains don't inherit parent domain SEO authority — Google treats them as separate sites
 
 ## Consequences
 
@@ -72,27 +63,14 @@ The Worker lives in a separate repo (`Comfy-Org/comfy-router`) because it's the 
 - Fast rollback: remove Worker route or revert nameservers in < 5 min
 - Low cost: Cloudflare Workers free tier (100K req/day) is sufficient
 - Framer site unchanged — no modifications to marketing content
-- SEO benefit: templates pages on comfy.org domain
 
 ### Negative
 
-- New provider (Cloudflare) to manage — account, billing, dashboard settings
-- Extra network hop (user → CF edge → origin) adds ~5-20ms latency
-- Framer origin complexity: `.framer.app` is auth-protected, `.framer.website` unavailable, required using `www.comfy.org` as origin (with grey-cloud CNAME for production)
-- DNS migration risk: nameserver cutover is a single point of failure (mitigated by TTL lowering and instant rollback)
-
-### Risks & Mitigations
-
-| Risk | Mitigation |
-|------|------------|
-| Worker outage takes down all of comfy.org | Remove Worker route in Cloudflare dashboard (< 2 min) |
-| DNS propagation issues during cutover | Lower TTL to 60s 48 hours before cutover |
-| Framer forms/animations break through proxy | Worker does NOT modify response bodies; tested on workers.dev preview |
-| Circular dependency after DNS cutover | Grey-cloud CNAME `framer-origin.comfy.org` → `sites.framer.app` bypasses Worker |
+- New provider (Cloudflare) to manage
+- Extra network hop adds ~5-20ms latency
+- DNS migration is a one-time risk (mitigated by TTL lowering and instant rollback)
 
 ## References
 
-- [Framer Reverse Proxy Docs](https://www.framer.com/help/articles/how-to-self-host-using-reverse-proxy/)
-- [Framer Cloudflare Guide](https://www.framer.com/help/articles/how-to-proxy-with-cloudflare/)
-- [Cloudflare Workers Best Practices](https://developers.cloudflare.com/workers/best-practices/)
-- Internal: [docs/reverse-proxy-plan.md](reverse-proxy-plan.md), [docs/reverse-proxy-deployment-runbook.md](reverse-proxy-deployment-runbook.md)
+- [`Comfy-Org/comfy-router`](https://github.com/Comfy-Org/comfy-router) — Worker code, operational docs, deployment runbooks
+- PRs: [workflow_templates#595](https://github.com/Comfy-Org/workflow_templates/pull/595), [comfy-router#1](https://github.com/Comfy-Org/comfy-router/pull/1)
