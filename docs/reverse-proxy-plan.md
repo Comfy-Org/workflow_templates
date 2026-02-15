@@ -82,20 +82,25 @@ After thorough analysis, Cloudflare Worker is the stronger choice for this use c
 
 #### 1.1 Framer Configuration (Manual — Framer Dashboard)
 - [x] ~~Verify Framer Scale plan supports reverse proxy hosting~~ — Custom Proxy add-on purchased
-- [ ] Set canonical URL in Framer Site Settings → Domains → Advanced to `https://comfy.org`
-- [ ] Ensure Framer site is accessible via `comfy.framer.website` (free subdomain)
+- [x] Canonical URL defaults to `https://comfy.org` (no change needed)
+- [x] Framer base URL: `https://significant-deck-845835.framer.app/` (auth-protected staging only)
+- [x] Framer production origin: **RESOLVED** — Using `https://www.comfy.org` directly (CNAME → `sites.framer.app`).
+  - `.framer.app` is auth-protected (staging preview with password)
+  - `.framer.website` cannot be added while `www.comfy.org` is connected (Framer allows only one custom domain per project)
+  - `sites.framer.app` with Host header override fails (Framer checks SNI, not just Host)
+  - **For production:** Before DNS cutover, add grey-cloud CNAME `framer-origin.comfy.org` → `sites.framer.app` to avoid circular loop
 - [ ] Document current Framer DNS settings for rollback
 
 #### 1.2 Cloudflare Account Setup (Manual — Cloudflare Dashboard)
-- [ ] Create Cloudflare account (or use existing)
-- [ ] Add `comfy.org` zone to Cloudflare
-- [ ] Do NOT change nameservers yet — just set up the zone
-- [ ] Create a Worker named `comfy-router` or similar
+- [x] Cloudflare account access obtained
+- [x] `comfy.org` zone added to Cloudflare (pending nameserver switch)
+- [x] DNS records imported (A, CNAME, MX, TXT)
+- [x] Generated API token (Edit Cloudflare Workers template, scoped to comfy.org zone)
+- [x] Deployed Worker to workers.dev preview via CLI (`npx wrangler deploy`)
 
 #### 1.3 Vercel Project Configuration
-- [ ] Ensure the Astro site Vercel project has a stable deployment URL (e.g., `comfyui-templates.vercel.app`)
-- [ ] Optionally add a custom domain like `templates-origin.comfy.org` pointing to Vercel (useful for origin identification)
-- [ ] Verify the current deployment is accessible and thumbnails work
+- [x] Vercel deployment URL confirmed: `https://workflow-templates.vercel.app`
+- [x] Current deployment accessible and thumbnails work
 
 ### Phase 2: Worker Development
 
@@ -145,8 +150,10 @@ Key requirements for the Worker:
 // comfy-router worker
 // Routes requests to Vercel (templates) or Framer (marketing)
 
-const VERCEL_ORIGIN = 'https://comfyui-templates.vercel.app';
-const FRAMER_ORIGIN = 'https://comfy.framer.website';
+const VERCEL_ORIGIN = 'https://workflow-templates.vercel.app';
+// For workers.dev preview: use www.comfy.org directly (no circular dependency)
+// For production: use grey-cloud CNAME framer-origin.comfy.org → sites.framer.app
+const FRAMER_ORIGIN = 'https://www.comfy.org';
 
 // Supported locales (must match Astro i18n config)
 const LOCALES = ['zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
@@ -399,9 +406,9 @@ comfy-router/
 ```
 
 ### Optional Enhancements
-1. Add health check endpoint in Worker (`/__health` → 200 with routing table info)
-2. Add sitemap index generation/stitching
-3. Add Cloudflare Worker analytics dashboard
+1. ~~Add health check endpoint in Worker (`/__health` → 200 with routing table info)~~ ✅ Done
+2. ~~Add sitemap index generation/stitching~~ ✅ Done — Astro `filenameBase: 'sitemap-templates'` + `customSitemaps` for Framer
+3. Add Cloudflare Worker analytics dashboard (Cloudflare dashboard config — post-cutover)
 
 ---
 
@@ -561,7 +568,7 @@ From [Framer's reverse proxy docs](https://www.framer.com/help/articles/how-to-s
 3. **Trailing slashes break Framer** — Framer's client-side routing expects no trailing slashes. `/pricing/` can break navigation. Our Worker must NOT add trailing slashes to Framer requests.
 4. **CSP must allowlist `worker-src 'self' blob:`** — Framer's anti-bot system uses web workers for form submissions. If we ever add a custom CSP to the Worker, this is mandatory.
 5. **Set canonical URL in Framer** — In Site Settings → Domains → Advanced, set the canonical to `comfy.org` (or `www.comfy.org`). This makes Framer generate correct `<link rel="canonical">` and sitemap URLs.
-6. **Use `*.framer.website` as origin** — Never point DNS directly at Framer when proxying. Use the free subdomain (e.g., `comfy.framer.website`) as the fetch origin.
+6. **Use the free subdomain as origin** — Never point DNS directly at Framer when proxying. Use the free subdomain (`significant-deck-845835.framer.app`) as the fetch origin.
 7. **No AAAA records** — Framer doesn't support IPv6. Remove any `AAAA` records when setting up Cloudflare DNS to avoid TLS certificate issues.
 
 ### Critical: Cloudflare-Specific Gotchas

@@ -44,6 +44,10 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
+      // Use custom filename to avoid collision with Framer's /sitemap.xml
+      filenameBase: 'sitemap-templates',
+      // Include Framer's marketing sitemap in the index
+      customSitemaps: ['https://comfy.org/sitemap.xml'],
       serialize(item) {
         const url = new URL(item.url);
         const pathname = url.pathname;
