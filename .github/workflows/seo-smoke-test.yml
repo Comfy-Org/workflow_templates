@@ -1,0 +1,72 @@
+name: SEO Smoke Test
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Weekly Monday 9am UTC
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['site/**', 'vercel.json']
+
+jobs:
+  seo-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check canonical URLs point to comfy.org
+        run: |
+          echo "Checking canonical URLs..."
+          BODY=$(curl -s --max-time 15 "https://comfy.org/templates/flux_schnell")
+          if echo "$BODY" | grep -q 'rel="canonical" href="https://comfy.org/'; then
+            echo "✅ Canonical URL points to comfy.org"
+          else
+            echo "❌ Canonical URL does NOT point to comfy.org"
+            exit 1
+          fi
+
+      - name: Check comfy.org templates return 200
+        run: |
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" --max-time 15 "https://comfy.org/templates/")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ /templates/ returns 200"
+          else
+            echo "❌ /templates/ returns $STATUS"
+            exit 1
+          fi
+
+      - name: Check sitemap is accessible
+        run: |
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" --max-time 15 "https://comfy.org/sitemap-templates-index.xml")
+          if [ "$STATUS" = "200" ]; then
+            echo "✅ Sitemap accessible"
+          else
+            echo "❌ Sitemap returns $STATUS"
+            exit 1
+          fi
+
+      - name: Check Vercel URL has correct canonical (not self-referencing)
+        run: |
+          BODY=$(curl -s --max-time 15 "https://workflow-templates.vercel.app/templates/flux_schnell")
+          if echo "$BODY" | grep -q 'rel="canonical" href="https://comfy.org/'; then
+            echo "✅ Vercel deployment canonical points to comfy.org (not self)"
+          else
+            echo "❌ Vercel deployment canonical does NOT point to comfy.org"
+            exit 1
+          fi
+
+      - name: Check X-Served-By headers
+        run: |
+          HEADER=$(curl -sI --max-time 15 "https://comfy.org/templates/" | grep -i "x-served-by")
+          if echo "$HEADER" | grep -qi "vercel"; then
+            echo "✅ Templates served by Vercel: $HEADER"
+          else
+            echo "❌ Templates NOT served by Vercel: $HEADER"
+            exit 1
+          fi
+
+          HEADER=$(curl -sI --max-time 15 "https://comfy.org/" | grep -i "x-served-by")
+          if echo "$HEADER" | grep -qi "framer"; then
+            echo "✅ Homepage served by Framer: $HEADER"
+          else
+            echo "❌ Homepage NOT served by Framer: $HEADER"
+            exit 1
+          fi
