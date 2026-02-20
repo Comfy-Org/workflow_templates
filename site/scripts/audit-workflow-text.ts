@@ -1,9 +1,10 @@
 import { readFile, writeFile, mkdir } from 'fs/promises';
 import { readdirSync } from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'node:url';
 import { extractAllWorkflowText } from './lib/extract/index';
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = path.resolve(__dirname, '..');
 const TEMPLATES_ROOT = path.resolve(SITE_ROOT, '..', 'templates');
 const OUTPUT_PATH = path.join(SITE_ROOT, 'knowledge/workflow-text/_audit.json');

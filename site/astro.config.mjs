@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
+import vue from '@astrojs/vue';
+
 // Build template date lookup at config time
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const templateDates = new Map();
@@ -42,82 +44,80 @@ export default defineConfig({
       prefixDefaultLocale: false, // English at root, others prefixed (/zh/, /ja/, etc.)
     },
   },
-  integrations: [
-    sitemap({
-      // Use custom filename to avoid collision with Framer's /sitemap.xml
-      filenameBase: 'sitemap-templates',
-      // Include Framer's marketing sitemap in the index
-      customSitemaps: ['https://comfy.org/sitemap.xml'],
-      serialize(item) {
-        const url = new URL(item.url);
-        const pathname = url.pathname;
+  integrations: [sitemap({
+    // Use custom filename to avoid collision with Framer's /sitemap.xml
+    filenameBase: 'sitemap-templates',
+    // Include Framer's marketing sitemap in the index
+    customSitemaps: ['https://comfy.org/sitemap.xml'],
+    serialize(item) {
+      const url = new URL(item.url);
+      const pathname = url.pathname;
 
-        // Template detail pages: /templates/{slug}/ or /{locale}/templates/{slug}/
-        const templateMatch = pathname.match(
-          /^(?:\/([a-z]{2}(?:-[A-Z]{2})?))?\/templates\/([^/]+)\/?$/
-        );
-        if (templateMatch) {
-          const slug = templateMatch[2];
-          const date = templateDates.get(slug);
-          if (date) {
-            item.lastmod = new Date(date).toISOString();
-          }
-          // @ts-expect-error - sitemap types are stricter than actual API
-          item.changefreq = 'monthly';
-          item.priority = 0.8;
-          return item;
+      // Template detail pages: /templates/{slug}/ or /{locale}/templates/{slug}/
+      const templateMatch = pathname.match(
+        /^(?:\/([a-z]{2}(?:-[A-Z]{2})?))?\/templates\/([^/]+)\/?$/
+      );
+      if (templateMatch) {
+        const slug = templateMatch[2];
+        const date = templateDates.get(slug);
+        if (date) {
+          item.lastmod = new Date(date).toISOString();
         }
+        // @ts-expect-error - sitemap types are stricter than actual API
+        item.changefreq = 'monthly';
+        item.priority = 0.8;
+        return item;
+      }
 
-        // Homepage
-        if (pathname === '/' || pathname === '') {
-          // @ts-expect-error - sitemap types are stricter than actual API
-          item.changefreq = 'daily';
-          item.priority = 1.0;
-          return item;
-        }
+      // Homepage
+      if (pathname === '/' || pathname === '') {
+        // @ts-expect-error - sitemap types are stricter than actual API
+        item.changefreq = 'daily';
+        item.priority = 1.0;
+        return item;
+      }
 
-        // Templates index (including localized versions)
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/?$/)) {
-          // @ts-expect-error - sitemap types are stricter than actual API
-          item.changefreq = 'daily';
-          item.priority = 0.9;
-          return item;
-        }
+      // Templates index (including localized versions)
+      if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/?$/)) {
+        // @ts-expect-error - sitemap types are stricter than actual API
+        item.changefreq = 'daily';
+        item.priority = 0.9;
+        return item;
+      }
 
-        // Category pages: /templates/category/{type}/ or /{locale}/templates/category/{type}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/category\//)) {
-          // @ts-expect-error - sitemap types are stricter than actual API
-          item.changefreq = 'weekly';
-          item.priority = 0.7;
-          return item;
-        }
-
-        // Model pages: /templates/model/{model}/ or /{locale}/templates/model/{model}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/model\//)) {
-          // @ts-expect-error - sitemap types are stricter than actual API
-          item.changefreq = 'weekly';
-          item.priority = 0.6;
-          return item;
-        }
-
-        // Tag pages: /templates/tag/{tag}/ or /{locale}/templates/tag/{tag}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/tag\//)) {
-          // @ts-expect-error - sitemap types are stricter than actual API
-          item.changefreq = 'weekly';
-          item.priority = 0.6;
-          return item;
-        }
-
-        // Default for other pages
+      // Category pages: /templates/category/{type}/ or /{locale}/templates/category/{type}/
+      if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/category\//)) {
         // @ts-expect-error - sitemap types are stricter than actual API
         item.changefreq = 'weekly';
-        item.priority = 0.5;
+        item.priority = 0.7;
         return item;
-      },
-      // Exclude OG image routes from sitemap
-      filter: (page) => !page.includes('/templates/og/'),
-    }),
-  ],
+      }
+
+      // Model pages: /templates/model/{model}/ or /{locale}/templates/model/{model}/
+      if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/model\//)) {
+        // @ts-expect-error - sitemap types are stricter than actual API
+        item.changefreq = 'weekly';
+        item.priority = 0.6;
+        return item;
+      }
+
+      // Tag pages: /templates/tag/{tag}/ or /{locale}/templates/tag/{tag}/
+      if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/tag\//)) {
+        // @ts-expect-error - sitemap types are stricter than actual API
+        item.changefreq = 'weekly';
+        item.priority = 0.6;
+        return item;
+      }
+
+      // Default for other pages
+      // @ts-expect-error - sitemap types are stricter than actual API
+      item.changefreq = 'weekly';
+      item.priority = 0.5;
+      return item;
+    },
+    // Exclude OG image routes from sitemap
+    filter: (page) => !page.includes('/templates/og/'),
+  }), vue()],
   output: 'static',
   adapter: vercel({
     webAnalytics: { enabled: true },

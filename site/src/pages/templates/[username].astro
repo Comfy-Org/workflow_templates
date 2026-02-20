@@ -1,0 +1,189 @@
+---
+/**
+ * Profile page - /templates/:username
+ * Displays a creator's profile with cover banner, bio sidebar, and workflow grid.
+ * Reads profile data from creators.json and filters templates by username field.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteFooter from '../../components/hub/SiteFooter.astro';
+import ProfileCover from '../../components/hub/ProfileCover.astro';
+import ProfileSidebar from '../../components/hub/ProfileSidebar.astro';
+import ProfileWorkflowCard from '../../components/hub/ProfileWorkflowCard.astro';
+import { getLocaleFromPath } from '../../i18n/utils';
+import { absoluteUrl } from '../../config/site';
+import creatorsData from '../../../../templates/creators.json';
+
+interface CreatorProfile {
+  displayName: string;
+  handle: string;
+  summary: string;
+  social?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+}
+
+const creators = creatorsData as Record<string, CreatorProfile>;
+
+// Generate a static page for every creator in creators.json
+export function getStaticPaths() {
+  const data = creatorsData as Record<string, CreatorProfile>;
+  return Object.keys(data).map((key) => ({ params: { username: key } }));
+}
+
+const { username } = Astro.params;
+const locale = getLocaleFromPath(Astro.url.pathname);
+const creator = creators[username!];
+
+// Get templates for the workflow grid — filtered by username
+const templates = await getCollection('templates');
+const profileTemplates = templates
+  .filter((tmpl) => !tmpl.id.includes('/') && tmpl.data.username === username)
+  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+
+// Derive stats from actual template data
+const totalUsage = profileTemplates.reduce((sum, t) => sum + (t.data.usage || 0), 0);
+const estimateLikes = (usage: number) => Math.round(usage * 0.065);
+const totalLikes = estimateLikes(totalUsage);
+
+const canonicalUrl = absoluteUrl(`/templates/${username}/`);
+
+// Sort tab options
+const sortOptions = ['Popular', 'Newest', 'Most Runs', 'Most Favorites'];
+const activeSort = 'Popular';
+---
+
+<BaseLayout
+  title={`${creator.displayName} (@${creator.handle}) - ComfyUI Workflow Templates`}
+  description={creator.summary}
+  canonicalUrl={canonicalUrl}
+  theme="dark"
+  hideDefaultFooter
+>
+  <div class="max-w-[1200px] mx-auto px-4 sm:px-6">
+    <!-- Cover Banner -->
+    <ProfileCover imageUrl={creator.coverUrl} />
+
+    <!-- Profile Layout: Sidebar + Workflows -->
+    <div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-10 mt-[-40px]">
+      <!-- Sidebar -->
+      <ProfileSidebar
+        displayName={creator.displayName}
+        handle={creator.handle}
+        verified={true}
+        bio={creator.summary}
+        avatarUrl={creator.avatarUrl}
+        link={creator.social}
+        views={totalUsage}
+        likes={totalLikes}
+        runs={totalUsage}
+      />
+
+      <!-- Workflows Section -->
+      <div class="pt-16">
+        <!-- Section Header -->
+        <div class="flex items-center gap-2 mb-6">
+          <svg
+            class="size-5 text-white/70"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+            ></path>
+          </svg>
+          <h2 class="text-white font-semibold text-lg">Workflows</h2>
+          <span class="text-white/40 text-sm">{profileTemplates.length}</span>
+        </div>
+
+        <!-- Sort Tabs + Category Filter -->
+        <div class="flex items-center justify-between mb-4">
+          <!-- Sort tabs -->
+          <div class="flex items-center gap-6">
+            {
+              sortOptions.map((option) => {
+                const isActive = option === activeSort;
+                return (
+                  <button
+                    class:list={[
+                      'relative pb-2 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'text-brand'
+                        : 'text-white/50 hover:text-white/70',
+                    ]}
+                    disabled
+                  >
+                    {option}
+                    {isActive && (
+                      <span class="absolute bottom-0 left-0 right-0 h-0.5 bg-brand rounded-full" />
+                    )}
+                  </button>
+                );
+              })
+            }
+          </div>
+
+          <!-- All Categories dropdown -->
+          <button
+            class="inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-sm text-white/70 hover:border-white/20 transition-colors"
+            disabled
+          >
+            All Categories
+            <svg
+              class="size-3.5 text-white/40"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Workflow count -->
+        <p class="text-white/40 text-sm mb-6">
+          {profileTemplates.length} workflows
+        </p>
+
+        <!-- Workflow Grid (4 columns on desktop) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-5 gap-y-8">
+          {
+            profileTemplates.map((template) => (
+              <ProfileWorkflowCard
+                name={template.data.name}
+                title={template.data.title || template.data.name}
+                mediaType={template.data.mediaType}
+                mediaSubtype={template.data.mediaSubtype}
+                thumbnailVariant={template.data.thumbnailVariant}
+                thumbnails={template.data.thumbnails}
+                tags={template.data.tags}
+                logos={template.data.logos}
+                authorName={creator.displayName}
+                usage={template.data.usage || 0}
+                likes={estimateLikes(template.data.usage || 0)}
+                locale={locale}
+              />
+            ))
+          }
+        </div>
+      </div>
+    </div>
+    <!-- Bottom spacer -->
+    <div class="h-20"></div>
+  </div>
+
+  <!-- Custom Footer -->
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

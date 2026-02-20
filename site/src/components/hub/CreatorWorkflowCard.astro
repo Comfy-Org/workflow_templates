@@ -1,0 +1,148 @@
+---
+/**
+ * CreatorWorkflowCard - Workflow card in the creators section
+ * Has: thumbnail, category badge, title, author, and stats (views + likes)
+ * Matches Figma creator spotlight cards
+ */
+import ThumbnailDisplay from '../ThumbnailDisplay.astro';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { localizeUrl } from '../../i18n/utils';
+
+interface Props {
+  name: string;
+  title: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  thumbnails?: string[];
+  authorName: string;
+  authorAvatar?: string;
+  usage?: number;
+  likes?: number;
+  locale?: Locale;
+}
+
+const {
+  name,
+  title,
+  mediaType,
+  mediaSubtype,
+  thumbnailVariant,
+  thumbnails = [],
+  authorName,
+  authorAvatar,
+  usage = 0,
+  likes = 0,
+  locale = DEFAULT_LOCALE,
+} = Astro.props;
+
+const templateUrl = localizeUrl(`/templates/${name}/`, locale);
+
+const mediaTypeLabels: Record<string, string> = {
+  image: 'Image Generation',
+  video: 'Video Generation',
+  audio: 'Audio',
+  '3d': '3D',
+};
+
+const categoryLabel = mediaTypeLabels[mediaType] || mediaType;
+
+// Format large numbers (e.g., 64000 → 64k)
+const formatCount = (n: number): string => {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+  return String(n);
+};
+---
+
+<a
+  href={templateUrl}
+  class="group block overflow-hidden"
+  data-astro-prefetch
+>
+  <!-- Thumbnail -->
+  <div class="aspect-[4/3] bg-white/5 rounded-xl overflow-hidden relative">
+    {
+      thumbnails.length > 0 ? (
+        <ThumbnailDisplay
+          thumbnails={thumbnails}
+          title={title}
+          variant={thumbnailVariant}
+          mediaSubtype={mediaSubtype}
+          class="w-full h-full"
+        />
+      ) : (
+        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+          <svg
+            class="w-8 h-8 text-white/20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+            />
+          </svg>
+        </div>
+      )
+    }
+
+    {/* Category badge overlay */}
+    <span
+      class="absolute top-3 left-3 inline-flex items-center rounded-md bg-black/50 backdrop-blur-sm border border-white/10 px-2 py-0.5 text-[11px] text-white/80 font-medium z-10"
+    >
+      {categoryLabel}
+    </span>
+  </div>
+
+  <!-- Content -->
+  <div class="pt-2.5">
+    <h4
+      class="font-semibold text-white text-[14px] leading-tight line-clamp-1 group-hover:text-brand transition-colors"
+    >
+      {title}
+    </h4>
+
+    <!-- Author -->
+    <div class="flex items-center gap-2 mt-1.5">
+      {
+        authorAvatar ? (
+          <img src={authorAvatar} alt="" class="size-5 rounded-full object-cover" />
+        ) : (
+          <div class="size-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+            <svg class="size-3 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+            </svg>
+          </div>
+        )
+      }
+      <span class="text-white/50 text-sm truncate">{authorName}</span>
+    </div>
+
+    <!-- Stats -->
+    <div class="flex items-center gap-4 mt-2 text-white/40 text-xs">
+      <!-- Views/runs -->
+      <span class="inline-flex items-center gap-1">
+        <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        {formatCount(usage)}
+      </span>
+      <!-- Likes -->
+      <span class="inline-flex items-center gap-1">
+        <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </svg>
+        {formatCount(likes)}
+      </span>
+    </div>
+  </div>
+</a>

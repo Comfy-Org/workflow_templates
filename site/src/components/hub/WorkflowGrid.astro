@@ -1,0 +1,37 @@
+---
+/**
+ * WorkflowGrid - 3-column responsive grid of workflow cards
+ */
+import type { Template } from '../../lib/templates';
+import type { Locale } from '../../i18n/config';
+import WorkflowCard from './WorkflowCard.astro';
+
+interface Props {
+  templates: Template[];
+  locale: Locale;
+}
+
+const { templates, locale } = Astro.props;
+---
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-8">
+  {
+    templates.map((template) => (
+      <WorkflowCard
+        name={template.data.name}
+        title={template.data.title || template.data.name}
+        description={template.data.description}
+        mediaType={template.data.mediaType}
+        mediaSubtype={template.data.mediaSubtype}
+        thumbnailVariant={template.data.thumbnailVariant}
+        tags={template.data.tags}
+        models={template.data.models}
+        logos={template.data.logos}
+        usage={template.data.usage}
+        date={template.data.date}
+        thumbnails={template.data.thumbnails}
+        locale={locale}
+      />
+    ))
+  }
+</div>

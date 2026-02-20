@@ -1,0 +1,141 @@
+---
+/**
+ * WorkflowCard - Template card for the hub grid
+ * Matches Figma: square thumbnail, title, author with avatar, tag pills
+ * Replaces old TemplateCard design for the hub page
+ */
+import ThumbnailDisplay from '../ThumbnailDisplay.astro';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { localizeUrl } from '../../i18n/utils';
+import { getModelLogoPath } from '../../lib/model-logos';
+
+interface Props {
+  name: string;
+  title: string;
+  description: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  tags?: string[];
+  models?: string[];
+  logos?: { provider: string | string[] }[];
+  usage?: number;
+  date?: string;
+  thumbnails?: string[];
+  locale?: Locale;
+}
+
+const {
+  name,
+  title,
+  mediaSubtype,
+  thumbnailVariant,
+  tags = [],
+  logos = [],
+  thumbnails = [],
+  locale = DEFAULT_LOCALE,
+} = Astro.props;
+
+const templateUrl = localizeUrl(`/templates/${name}/`, locale);
+
+// Get logo for overlay display
+const logoProvider = logos?.[0]?.provider;
+const providerName = Array.isArray(logoProvider) ? logoProvider[0] : logoProvider;
+const logoPath = providerName ? getModelLogoPath(providerName, providerName) : null;
+
+// Get author display name - use first logo provider or "ComfyUI"
+const authorName = providerName || 'ComfyUI';
+const authorAvatarBg = providerName ? 'bg-white/20' : 'bg-blue-500';
+---
+
+<a
+  href={templateUrl}
+  class="group block overflow-hidden transition-all duration-200"
+  data-astro-prefetch
+>
+  <!-- Thumbnail -->
+  <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative">
+    {
+      thumbnails.length > 0 ? (
+        <ThumbnailDisplay
+          thumbnails={thumbnails}
+          title={title}
+          variant={thumbnailVariant}
+          mediaSubtype={mediaSubtype}
+          class="w-full h-full"
+        />
+      ) : (
+        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+          <svg
+            class="w-10 h-10 text-white/20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+            />
+          </svg>
+        </div>
+      )
+    }
+
+    {/* Logo overlay in top-left corner */}
+    {
+      logoPath && (
+        <div class="absolute top-3 left-3 flex items-center gap-2 z-10">
+          <img
+            src={logoPath}
+            alt={providerName || ''}
+            class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
+          />
+          <span class="text-white text-sm font-semibold drop-shadow-lg">
+            {providerName}
+          </span>
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="pt-3 pb-1">
+    <h3
+      class="font-semibold text-white text-[15px] leading-tight line-clamp-1 group-hover:text-brand transition-colors"
+    >
+      {title}
+    </h3>
+
+    <!-- Author line -->
+    <div class="flex items-center gap-2 mt-1.5">
+      <div class:list={['size-5 rounded-full shrink-0 flex items-center justify-center', authorAvatarBg]}>
+        {
+          logoPath ? (
+            <img src={logoPath} alt="" class="size-5 rounded-full object-contain" />
+          ) : (
+            <svg class="size-3 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" />
+            </svg>
+          )
+        }
+      </div>
+      <span class="text-white/50 text-sm truncate">{authorName}</span>
+    </div>
+
+    <!-- Tag pills -->
+    {
+      tags.length > 0 && (
+        <div class="flex items-center gap-1.5 mt-2 overflow-hidden">
+          {tags.slice(0, 3).map((tag) => (
+            <span class="inline-flex items-center rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/50 whitespace-nowrap">
+              {tag.toLowerCase().replace(/\s+/g, '-')}
+            </span>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</a>

@@ -1,0 +1,89 @@
+---
+/**
+ * CreatorSpotlight - Individual creator row with bio and 3 workflow cards
+ * Left: avatar, name, handle, bio, "View profile →"
+ * Right: 3 CreatorWorkflowCards
+ */
+import type { Template } from '../../lib/templates';
+import type { Locale } from '../../i18n/config';
+import CreatorWorkflowCard from './CreatorWorkflowCard.astro';
+
+interface Props {
+  displayName: string;
+  handle: string;
+  bio: string;
+  avatarUrl?: string;
+  profileUrl?: string;
+  templates: Template[];
+  locale: Locale;
+}
+
+const {
+  displayName,
+  handle,
+  bio,
+  avatarUrl,
+  profileUrl = '#',
+  templates,
+  locale,
+} = Astro.props;
+
+// Show at most 3 templates per creator
+const displayTemplates = templates.slice(0, 3);
+
+// Estimate likes as ~6% of usage for display purposes
+const estimateLikes = (usage: number) => Math.round(usage * 0.065);
+---
+
+<div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 py-10 border-t border-white/5 first:border-t-0">
+  <!-- Creator info (left) -->
+  <div class="flex flex-col gap-2">
+    {
+      avatarUrl ? (
+        <img
+          src={avatarUrl}
+          alt={displayName}
+          class="size-14 rounded-full object-cover"
+        />
+      ) : (
+        <div class="size-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
+          <span class="text-white text-xl font-bold">
+            {displayName.charAt(0).toUpperCase()}
+          </span>
+        </div>
+      )
+    }
+    <h3 class="text-white font-semibold text-lg mt-1">{displayName}</h3>
+    <p class="text-white/40 text-sm">@{handle}</p>
+    <p class="text-white/60 text-sm leading-relaxed line-clamp-3 mt-1">{bio}</p>
+    <a
+      href={profileUrl}
+      class="inline-flex items-center gap-1 text-brand text-sm font-medium mt-2 hover:underline"
+    >
+      View profile
+      <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+    </a>
+  </div>
+
+  <!-- Creator's workflows (right) -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+    {
+      displayTemplates.map((template) => (
+        <CreatorWorkflowCard
+          name={template.data.name}
+          title={template.data.title || template.data.name}
+          mediaType={template.data.mediaType}
+          mediaSubtype={template.data.mediaSubtype}
+          thumbnailVariant={template.data.thumbnailVariant}
+          thumbnails={template.data.thumbnails}
+          authorName={displayName}
+          usage={template.data.usage || 0}
+          likes={estimateLikes(template.data.usage || 0)}
+          locale={locale}
+        />
+      ))
+    }
+  </div>
+</div>

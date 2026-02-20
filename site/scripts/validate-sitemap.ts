@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 interface ValidationResult {
   url: string;
@@ -7,7 +8,7 @@ interface ValidationResult {
   error?: string;
 }
 
-const SITE_DIR = path.dirname(path.dirname(new URL(import.meta.url).pathname));
+const SITE_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const DIST_DIR = path.join(SITE_DIR, 'dist');
 
 function findSitemaps(): string[] {

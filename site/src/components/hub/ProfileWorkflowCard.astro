@@ -1,0 +1,198 @@
+---
+/**
+ * ProfileWorkflowCard - Workflow card for the profile grid
+ * 4/3 thumbnail with provider logo, category label, title, author with badge, stats
+ */
+import ThumbnailDisplay from '../ThumbnailDisplay.astro';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { localizeUrl } from '../../i18n/utils';
+import { getModelLogoPath } from '../../lib/model-logos';
+
+interface Props {
+  name: string;
+  title: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  thumbnails?: string[];
+  tags?: string[];
+  logos?: { provider: string | string[] }[];
+  authorName: string;
+  authorAvatar?: string;
+  usage?: number;
+  likes?: number;
+  locale?: Locale;
+}
+
+const {
+  name,
+  title,
+  mediaType,
+  mediaSubtype,
+  thumbnailVariant,
+  thumbnails = [],
+  tags = [],
+  logos = [],
+  authorName,
+  authorAvatar,
+  usage = 0,
+  likes = 0,
+  locale = DEFAULT_LOCALE,
+} = Astro.props;
+
+const templateUrl = localizeUrl(`/templates/${name}/`, locale);
+
+// Provider logo
+const logoProvider = logos?.[0]?.provider;
+const providerName = Array.isArray(logoProvider) ? logoProvider[0] : logoProvider;
+const logoPath = providerName ? getModelLogoPath(providerName, providerName) : null;
+
+// Category label — use specific tag if available, otherwise mediaType
+const mediaTypeLabels: Record<string, string> = {
+  image: 'Image Generation',
+  video: 'Video Generation',
+  audio: 'Audio',
+  '3d': '3D',
+};
+
+const getCategoryLabel = (): string => {
+  const specificTags = [
+    'Upscaling & Enhancement',
+    'Inpainting & Editing',
+    'LoRA Training',
+    'Batch Processing',
+    'Utility / Helper',
+  ];
+  for (const tag of specificTags) {
+    if (tags.includes(tag)) return tag;
+  }
+  return mediaTypeLabels[mediaType] || mediaType;
+};
+
+const categoryLabel = getCategoryLabel();
+
+// Format count
+const formatCount = (n: number): string => {
+  if (n >= 1000) return `${(n / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+  return String(n);
+};
+---
+
+<a
+  href={templateUrl}
+  class="group block overflow-hidden"
+  data-astro-prefetch
+>
+  <!-- Thumbnail -->
+  <div class="aspect-[4/3] bg-white/5 rounded-xl overflow-hidden relative">
+    {
+      thumbnails.length > 0 ? (
+        <ThumbnailDisplay
+          thumbnails={thumbnails}
+          title={title}
+          variant={thumbnailVariant}
+          mediaSubtype={mediaSubtype}
+          class="w-full h-full"
+        />
+      ) : (
+        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+          <svg
+            class="w-8 h-8 text-white/20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+            />
+          </svg>
+        </div>
+      )
+    }
+
+    {/* Provider logo overlay in top-left */}
+    {
+      logoPath && (
+        <div class="absolute top-3 left-3 flex items-center gap-2 z-10">
+          <img
+            src={logoPath}
+            alt={providerName || ''}
+            class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
+          />
+          <span class="text-white text-sm font-semibold drop-shadow-lg">
+            {providerName}
+          </span>
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="pt-2.5">
+    <!-- Category -->
+    <span class="text-white/40 text-[11px] font-medium">{categoryLabel}</span>
+
+    <!-- Title -->
+    <h4
+      class="font-semibold text-white text-[14px] leading-tight line-clamp-2 mt-0.5 group-hover:text-brand transition-colors"
+    >
+      {title}
+    </h4>
+
+    <!-- Author -->
+    <div class="flex items-center gap-2 mt-1.5">
+      {
+        authorAvatar ? (
+          <img
+            src={authorAvatar}
+            alt=""
+            class="size-5 rounded-full object-cover shrink-0"
+          />
+        ) : (
+          <div class="size-5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center shrink-0">
+            <span class="text-white text-[9px] font-bold">
+              {authorName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+        )
+      }
+      <span class="text-white/50 text-xs truncate">{authorName}</span>
+      <span class="inline-flex items-center rounded-md bg-white/5 border border-white/10 px-1.5 py-0.5 text-[10px] text-white/40 shrink-0">
+        comfy
+      </span>
+    </div>
+
+    <!-- Stats -->
+    <div class="flex items-center gap-4 mt-2 text-white/40 text-xs">
+      <!-- Runs -->
+      <span class="inline-flex items-center gap-1">
+        <svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+        {formatCount(usage)}
+      </span>
+      <!-- Likes -->
+      <span class="inline-flex items-center gap-1">
+        <svg
+          class="size-3.5"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+          />
+        </svg>
+        {formatCount(likes)}
+      </span>
+    </div>
+  </div>
+</a>

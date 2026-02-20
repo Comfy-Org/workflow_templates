@@ -3,8 +3,8 @@ import Analytics from '@vercel/analytics/astro';
 import SEOHead from '../components/SEOHead.astro';
 import '../styles/global.css';
 import { LANGUAGES, type Locale } from '../i18n/config';
-import { getLocaleFromPath, localizeUrl } from '../i18n/utils';
-import { t } from '../i18n/ui';
+import { getLocaleFromPath } from '../i18n/utils';
+
 
 interface Props {
   title: string;
@@ -16,6 +16,7 @@ interface Props {
   locale?: Locale;
   hreflangBasePath?: string;
   theme?: 'light' | 'dark';
+  hideDefaultFooter?: boolean;
 }
 
 const {
@@ -28,37 +29,21 @@ const {
   locale: propLocale,
   hreflangBasePath,
   theme = 'light',
+  hideDefaultFooter = false,
 } = Astro.props;
+
+const hasCustomFooter = Astro.slots.has('footer');
 
 // Detect locale from URL if not provided
 const locale = propLocale || getLocaleFromPath(Astro.url.pathname);
 const langInfo = LANGUAGES[locale];
 const htmlDir = langInfo?.dir || 'ltr';
 
-// Build localized navigation URLs
-const homeUrl = localizeUrl('/', locale);
-const templatesUrl = localizeUrl('/templates/', locale);
-
 // Theme-aware classes
 const isDark = theme === 'dark';
 const bodyClasses = isDark
-  ? 'min-h-screen flex flex-col bg-[var(--color-bg-page)] text-[var(--color-text-primary)] antialiased'
-  : 'min-h-screen flex flex-col bg-white text-gray-900 antialiased';
-const headerClasses = isDark
-  ? 'sticky top-0 z-50 bg-[var(--color-bg-nav)] border-b border-[var(--color-border-subtle)]'
-  : 'sticky top-0 z-50 bg-white border-b border-gray-200';
-const navLinkClasses = isDark
-  ? 'text-[var(--color-text-primary)] font-semibold hover:text-white/80 transition-colors'
-  : 'text-gray-700 font-medium hover:text-gray-900 transition-colors';
-const footerClasses = isDark
-  ? 'bg-[var(--color-bg-nav)] border-t border-[var(--color-border-subtle)]'
-  : 'bg-gray-50 border-t border-gray-200';
-const footerTextClasses = isDark
-  ? 'text-[var(--color-text-muted)] text-sm'
-  : 'text-gray-500 text-sm';
-const footerLinkClasses = isDark
-  ? 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] text-sm transition-colors'
-  : 'text-gray-500 hover:text-gray-700 text-sm transition-colors';
+  ? 'min-h-screen flex flex-col bg-page text-content antialiased'
+  : 'min-h-screen flex flex-col bg-white text-gray-900 antialiased'
 ---
 
 <!doctype html>
@@ -77,229 +62,20 @@ const footerLinkClasses = isDark
     <slot name="head" />
   </head>
   <body class={bodyClasses}>
-    <header class={headerClasses}>
-      <nav
-        aria-label="Main navigation"
-        class="max-w-[var(--layout-page-width)] mx-auto px-4 sm:px-[40px] h-[90px] flex items-center justify-between"
-      >
-        <a href={homeUrl} class="flex items-center">
-          <img src="/brand/comfy-wordmark-yellow.svg" alt="Comfy" class="h-[36px] w-auto" />
-        </a>
-        <div class="hidden lg:flex items-center gap-[32px]">
-          <a href={templatesUrl} class={`${navLinkClasses} text-[16px]`}>
-            {t('nav.templates', locale)}
-          </a>
-          <div class="relative group">
-            <button
-              aria-haspopup="true"
-              aria-expanded="false"
-              class={`${navLinkClasses} text-[16px] inline-flex items-center gap-1`}
-            >
-              Products
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 6l4 4 4-4"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <div
-              class="absolute top-full left-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150"
-            >
-              <div
-                class={`rounded-lg shadow-lg py-2 min-w-[180px] ${isDark ? 'bg-[var(--color-bg-card)] border border-[var(--color-border-subtle)]' : 'bg-white border border-gray-200'}`}
-              >
-                <a
-                  href="https://www.comfy.org/cloud?utm_source=templates&utm_medium=web&utm_campaign=nav"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`block px-4 py-2 text-[14px] ${isDark ? 'text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
-                  >Cloud</a
-                >
-                <a
-                  href="https://www.comfy.org/download?utm_source=templates&utm_medium=web&utm_campaign=nav"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`block px-4 py-2 text-[14px] ${isDark ? 'text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
-                  >Local</a
-                >
-              </div>
-            </div>
-          </div>
-          <a
-            href="https://www.comfy.org/cloud/enterprise?utm_source=templates&utm_medium=web&utm_campaign=nav"
-            target="_blank"
-            rel="noopener noreferrer"
-            class={`${navLinkClasses} text-[16px]`}
-          >
-            Enterprise
-          </a>
-          <a
-            href="https://www.comfy.org/gallery?utm_source=templates&utm_medium=web&utm_campaign=nav"
-            target="_blank"
-            rel="noopener noreferrer"
-            class={`${navLinkClasses} text-[16px]`}
-          >
-            Gallery
-          </a>
-          <a
-            href="https://www.comfy.org/about?utm_source=templates&utm_medium=web&utm_campaign=nav"
-            target="_blank"
-            rel="noopener noreferrer"
-            class={`${navLinkClasses} text-[16px]`}
-          >
-            About
-          </a>
-          <a
-            href="https://www.comfy.org/careers?utm_source=templates&utm_medium=web&utm_campaign=nav"
-            target="_blank"
-            rel="noopener noreferrer"
-            class={`${navLinkClasses} text-[16px]`}
-          >
-            Careers
-          </a>
-          <a
-            href="https://blog.comfy.org/?utm_source=templates&utm_medium=web&utm_campaign=nav"
-            target="_blank"
-            rel="noopener noreferrer"
-            class={`${navLinkClasses} text-[16px]`}
-          >
-            Blog
-          </a>
-          <div class="relative group">
-            <button
-              aria-haspopup="true"
-              aria-expanded="false"
-              class={`${navLinkClasses} text-[16px] inline-flex items-center gap-1`}
-            >
-              Resources
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 16 16"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M4 6l4 4 4-4"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-            </button>
-            <div
-              class="absolute top-full right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150"
-            >
-              <div
-                class={`rounded-lg shadow-lg py-2 min-w-[180px] ${isDark ? 'bg-[var(--color-bg-card)] border border-[var(--color-border-subtle)]' : 'bg-white border border-gray-200'}`}
-              >
-                <a
-                  href="https://github.com/Comfy-Org/ComfyUI?utm_source=templates&utm_medium=web&utm_campaign=nav"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`block px-4 py-2 text-[14px] ${isDark ? 'text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
-                  >GitHub</a
-                >
-                <a
-                  href="https://discord.com/invite/comfyorg?utm_source=templates&utm_medium=web&utm_campaign=nav"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`block px-4 py-2 text-[14px] ${isDark ? 'text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
-                  >Discord</a
-                >
-                <a
-                  href="https://docs.comfy.org/?utm_source=templates&utm_medium=web&utm_campaign=nav"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`block px-4 py-2 text-[14px] ${isDark ? 'text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
-                  >Docs</a
-                >
-                <a
-                  href="https://www.youtube.com/@comfyorg?utm_source=templates&utm_medium=web&utm_campaign=nav"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class={`block px-4 py-2 text-[14px] ${isDark ? 'text-[var(--color-text-secondary)] hover:text-white hover:bg-white/5' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'}`}
-                  >YouTube</a
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-        <a
-          href="https://cloud.comfy.org/?utm_source=templates&utm_medium=web&utm_campaign=nav"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="hidden sm:inline-flex items-center h-[44px] px-6 bg-[var(--color-accent)] text-[var(--color-bg-nav)] text-[16px] font-bold italic rounded-full hover:opacity-90 transition-opacity"
-        >
-          Launch Comfy Cloud
-        </a>
-      </nav>
-    </header>
-
+    
     <main class="flex-1">
       <slot />
     </main>
 
-    <footer class={footerClasses}>
-      <div class="max-w-[var(--layout-page-width)] mx-auto px-4 sm:px-[40px] py-8">
-        <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p class={footerTextClasses}>
-            &copy; 2026 Comfy Org. Open source workflows for everyone.
-          </p>
-          <div class="flex items-center gap-6">
-            <a
-              href="https://www.comfy.org?utm_source=templates&utm_medium=web&utm_campaign=footer"
-              target="_blank"
-              rel="noopener noreferrer"
-              class={footerLinkClasses}
-            >
-              Comfy.org
-            </a>
-            <a
-              href="https://docs.comfy.org?utm_source=templates&utm_medium=web&utm_campaign=footer"
-              target="_blank"
-              rel="noopener noreferrer"
-              class={footerLinkClasses}
-            >
-              Docs
-            </a>
-            <a
-              href="https://github.com/comfyanonymous/ComfyUI?utm_source=templates&utm_medium=web&utm_campaign=footer"
-              target="_blank"
-              rel="noopener noreferrer"
-              class={footerLinkClasses}
-            >
-              GitHub
-            </a>
-            <a
-              href="https://discord.gg/comfyorg?utm_source=templates&utm_medium=web&utm_campaign=footer"
-              target="_blank"
-              rel="noopener noreferrer"
-              class={footerLinkClasses}
-            >
-              Discord
-            </a>
-            <a
-              href="https://twitter.com/comaborgs?utm_source=templates&utm_medium=web&utm_campaign=footer"
-              target="_blank"
-              rel="noopener noreferrer"
-              class={footerLinkClasses}
-            >
-              Twitter/X
-            </a>
-          </div>
-        </div>
-      </div>
-    </footer>
+    {
+      hasCustomFooter || hideDefaultFooter ? (
+        <slot name="footer" />
+      ) : (
+        <footer >
+          {/* footer here */}
+        </footer>
+      )
+    }
     <Analytics />
     <script>
       import('../scripts/vitals');

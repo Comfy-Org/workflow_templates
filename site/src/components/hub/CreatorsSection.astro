@@ -1,0 +1,85 @@
+---
+/**
+ * CreatorsSection - "Discover the world's best creators" section
+ * Shows creator spotlights with their top workflows
+ * Data is derived from template data by grouping by author/logo provider
+ */
+import type { Template } from '../../lib/templates';
+import type { Locale } from '../../i18n/config';
+import CreatorSpotlight from './CreatorSpotlight.astro';
+
+interface Props {
+  templates: Template[];
+  locale: Locale;
+}
+
+const { templates, locale } = Astro.props;
+
+// Group templates by their primary logo provider to identify "creators"
+// Use the first logo provider as the creator identity
+interface Creator {
+  displayName: string;
+  handle: string;
+  bio: string;
+  templates: Template[];
+}
+
+const creatorMap = new Map<string, Creator>();
+
+for (const template of templates) {
+  const logos = template.data.logos;
+  if (!logos || logos.length === 0) continue;
+
+  const provider = logos[0].provider;
+  const name = Array.isArray(provider) ? provider[0] : provider;
+  if (!name) continue;
+
+  if (!creatorMap.has(name)) {
+    creatorMap.set(name, {
+      displayName: name,
+      handle: name.toLowerCase().replace(/[\s.]+/g, '_'),
+      bio: `Creating workflows and sharing AI art with the ComfyUI community.`,
+      templates: [],
+    });
+  }
+
+  creatorMap.get(name)!.templates.push(template);
+}
+
+// Sort creators by total usage across their templates, take top 3
+const topCreators = Array.from(creatorMap.values())
+  .filter((c) => c.templates.length >= 3)
+  .map((c) => ({
+    ...c,
+    totalUsage: c.templates.reduce((sum, t) => sum + (t.data.usage || 0), 0),
+  }))
+  .sort((a, b) => b.totalUsage - a.totalUsage)
+  .slice(0, 3);
+
+// Sort each creator's templates by usage
+for (const creator of topCreators) {
+  creator.templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+}
+---
+
+{
+  topCreators.length > 0 && (
+    <section class="mt-20 mb-16">
+      <h2 class="text-3xl font-medium text-white text-center mb-12">
+        Discover the world's best creators
+      </h2>
+
+      <div class="space-y-2">
+        {topCreators.map((creator) => (
+          <CreatorSpotlight
+            displayName={creator.displayName}
+            handle={creator.handle}
+            bio={creator.bio}
+            templates={creator.templates}
+            locale={locale}
+          />
+        ))}
+      </div>
+    </section>
+  )
+}

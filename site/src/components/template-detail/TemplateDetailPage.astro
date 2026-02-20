@@ -4,8 +4,19 @@ import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl } from '../../lib/urls';
-import { getModelLogoPath } from '../../lib/model-logos';
 import { slugify } from '../../lib/slugify';
+import creatorsData from '../../../../templates/creators.json';
+
+interface CreatorProfile {
+  displayName: string;
+  handle: string;
+  summary: string;
+  social?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+}
+
+const creators = creatorsData as Record<string, CreatorProfile>;
 
 interface Props {
   template: {
@@ -14,28 +25,14 @@ interface Props {
       title?: string;
       description: string;
       extendedDescription?: string;
-      metaDescription?: string;
       mediaType: 'image' | 'video' | 'audio' | '3d';
       mediaSubtype?: string;
       thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
       thumbnails?: string[];
       tags?: string[];
       models?: string[];
-      usage?: number;
+      username?: string;
       date?: string;
-      openSource?: boolean;
-      size?: number;
-      estimatedTime?: string;
-      requiredNodes?: Array<{
-        nodeType: string;
-        package: string;
-        url: string;
-        description?: string;
-      }>;
-      howToUse?: string[];
-      suggestedUseCases?: string[];
-      faqItems?: Array<{ question: string; answer: string }>;
-      logos?: Array<{ provider: string | string[] }>;
     };
   };
   locale: Locale;
@@ -44,12 +41,10 @@ interface Props {
 const { template, locale } = Astro.props;
 const { data } = template;
 
+const creator = data.username ? creators[data.username] : null;
+const authorName = creator ? creator.displayName : 'ComfyUI';
+const authorProfileUrl = creator ? localizeUrl(`/templates/${data.username}/`, locale) : null;
 const thumbnails = data.thumbnails || [];
-
-const firstModel = data.models?.[0];
-const rawProvider = data.logos?.[0]?.provider;
-const firstProvider = Array.isArray(rawProvider) ? rawProvider[0] : rawProvider;
-const modelLogoSrc = firstModel ? getModelLogoPath(firstModel, firstProvider) : null;
 
 const mediaTypeLabels: Record<string, string> = {
   image: t('category.image', locale),
@@ -74,817 +69,154 @@ function formatRelativeDate(dateStr: string): string {
   if (diffYears === 1) return '1 year ago';
   return `${diffYears} years ago`;
 }
-
-function formatBytes(bytes: number): string {
-  const gb = bytes / (1024 * 1024 * 1024);
-  return gb >= 1 ? `${gb.toFixed(1)} GB` : `${(bytes / (1024 * 1024)).toFixed(0)} MB`;
-}
 ---
 
-<article class="bg-[var(--color-bg-page)] min-h-screen text-[var(--color-text-primary)]">
-  {/* ===== DESKTOP: two-column layout. MOBILE: single column ===== */}
-  <div
-    class="mx-auto px-[var(--mobile-px)] py-[var(--mobile-py)] lg:px-0 lg:py-[var(--desktop-py)] lg:max-w-[var(--layout-content-max)]"
-  >
-    {/* --- MOBILE LAYOUT (single column, exact Figma order) --- */}
-    <div class="flex flex-col gap-[var(--mobile-gap)] lg:hidden">
-      {/* Back */}
+<article class="bg-page min-h-screen text-content scroll-smooth">
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-6 lg:py-10">
+    <div class="flex flex-col gap-6 lg:grid lg:grid-cols-[auto_1fr_24rem] lg:gap-x-16 lg:gap-y-0 lg:mt-6">
+
+      {/* Back button */}
       <a
         href={localizeUrl('/templates/', locale)}
         data-astro-prefetch
-        class="inline-flex items-center gap-[5px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
+        class="self-start inline-flex items-center gap-1 h-10 px-4 py-2 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2"
       >
-        <svg
-          class="w-[var(--icon-size)] h-[var(--icon-size)]"
-          viewBox="0 0 16 16"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M10 12L6 8l4-4"
-            stroke="currentColor"
-            stroke-width="1.3"
-            stroke-linecap="round"
-            stroke-linejoin="round"></path>
+        <svg class="size-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path d="M12 8H4M4 8l3-3M4 8l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
-        <span
-          class="text-[var(--text-label-size)] font-[var(--text-label-weight)] leading-[var(--text-label-lh)]"
-          >{t('nav.backShort', locale)}</span
-        >
+        {t('nav.backShort', locale)}
       </a>
 
-      {/* Badge */}
-      {
-        data.models && data.models.length > 0 && (
-          <div class="inline-flex items-center h-[var(--badge-height)] bg-black rounded-[var(--badge-radius)] overflow-hidden self-start">
-            <div class="w-[var(--badge-icon-size)] h-[var(--badge-icon-size)] flex items-center justify-center rounded-full flex-shrink-0 overflow-hidden">
-              {modelLogoSrc ? (
-                <img
-                  src={modelLogoSrc}
-                  alt={data.models[0]}
-                  class="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <span class="text-[12px] font-medium text-white bg-white/10 w-full h-full flex items-center justify-center">
-                  {data.models[0].charAt(0).toUpperCase()}
-                </span>
-              )}
-            </div>
-            <span class="px-[11px] text-[var(--text-label-size)] font-[var(--text-label-weight)] leading-[var(--text-label-lh)] text-white whitespace-nowrap">
-              {data.models[0]}
-            </span>
-          </div>
-        )
-      }
-
-      {/* Title */}
-      <h1
-        class="text-[length:var(--text-title-size)] font-[var(--text-title-weight)] leading-[var(--text-title-lh)] text-[color:var(--color-text-primary)]"
-      >
-        {data.title || data.name}
-      </h1>
-
-      {/* CTA */}
-      <a
-        href={getCloudCtaUrl(data.name, 'hero')}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="inline-flex items-center gap-[4px] h-[var(--btn-height)] px-[16px] py-[8px] bg-[var(--color-accent)] text-[color:var(--color-bg-page)] text-[length:var(--text-body-size)] font-[var(--text-body-weight)] leading-[var(--text-body-lh)] rounded-[var(--btn-radius)] border-0 hover:opacity-90 transition-opacity self-start"
-      >
-        {t('cta.tryCloud', locale)}
-        <svg
-          class="w-[var(--icon-size)] h-[var(--icon-size)]"
-          viewBox="0 0 16 16"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M4.667 11.333L11.333 4.667M11.333 4.667H5.333M11.333 4.667v6"
-            stroke="currentColor"
-            stroke-width="1.3"
-            stroke-linecap="round"
-            stroke-linejoin="round"></path>
-        </svg>
-      </a>
-
-      {/* Hero image */}
-      {
-        thumbnails.length > 0 && (
-          <div class="rounded-[var(--radius-banner)] overflow-hidden">
-            <ThumbnailDisplay
-              thumbnails={thumbnails}
-              title={data.title || data.name}
-              variant={data.thumbnailVariant}
-              mediaSubtype={data.mediaSubtype}
-              class="w-full aspect-square"
-              loading="eager"
-              fetchpriority="high"
-              sizes="100vw"
-            />
-          </div>
-        )
-      }
-
-      {/* Created By */}
-      <div class="flex flex-col gap-[var(--gap-meta-label)]">
-        <span
-          class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase"
-        >
-          {t('labels.createdBy', locale)}
-        </span>
-        <div class="flex items-center gap-[var(--avatar-gap)]">
-          <div class="w-[var(--avatar-size)] h-[var(--avatar-size)] flex-shrink-0">
-            <img
-              src="/brand/comfy-logo-mono.svg"
-              alt="ComfyUI"
-              class="w-full h-full object-contain rounded"
-            />
-          </div>
-          <span
-            class="text-[length:var(--text-body-size)] font-[var(--text-body-weight)] leading-normal text-[color:var(--color-text-primary)]"
-            >ComfyUI</span
-          >
+      {/* Thumbnail */}
+      {thumbnails.length > 0 && (
+        <div class="rounded-lg overflow-hidden lg:col-start-2 lg:row-start-1">
+          <ThumbnailDisplay
+            thumbnails={thumbnails}
+            title={data.title || data.name}
+            variant={data.thumbnailVariant}
+            mediaSubtype={data.mediaSubtype}
+            class="w-full aspect-square"
+            loading="eager"
+            fetchpriority="high"
+            sizes="(min-width: 1024px) 60vw, 100vw"
+          />
         </div>
-      </div>
+      )}
 
-      {/* Last Update */}
-      {
-        data.date && (
-          <div class="flex flex-col gap-[var(--gap-meta-label)]">
-            <span class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase">
-              {t('labels.lastUpdate', locale)}
-            </span>
-            <span class="text-[length:var(--text-body-size)] font-[var(--text-body-weight)] leading-normal text-[color:var(--color-text-primary)]">
-              {formatRelativeDate(data.date)}
-            </span>
-          </div>
-        )
-      }
-
-      {/* Categories */}
-      {
-        data.tags && data.tags.length > 0 && (
-          <div class="flex flex-col gap-[var(--gap-meta-label)]">
-            <span class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase">
-              {t('labels.categories', locale)}
-            </span>
-            <div class="flex flex-wrap gap-[var(--pill-gap)]">
-              <a
-                href={localizeUrl(`/templates/category/${data.mediaType}/`, locale)}
-                class="inline-flex items-center justify-center h-[var(--pill-height)] border-[0.5px] border-white/30 rounded-[var(--pill-radius)] px-[10px] py-[6px] text-[color:var(--color-text-primary)] text-[length:var(--text-pill-size)] font-[var(--text-pill-weight)] leading-[var(--text-pill-lh)] text-center hover:border-white/60 transition-colors"
-                data-astro-prefetch
-              >
-                {mediaTypeLabels[data.mediaType]}
-              </a>
-              {data.tags.map((tag: string) => (
-                <a
-                  href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)}
-                  class="inline-flex items-center justify-center h-[var(--pill-height)] border-[0.5px] border-white/30 rounded-[var(--pill-radius)] px-[10px] py-[6px] text-[color:var(--color-text-primary)] text-[length:var(--text-pill-size)] font-[var(--text-pill-weight)] leading-[var(--text-pill-lh)] text-center hover:border-white/60 transition-colors"
-                  data-astro-prefetch
-                >
-                  {tag}
-                </a>
-              ))}
-            </div>
-          </div>
-        )
-      }
-
-      {/* Download Workflow button */}
-      <a
-        href={`/workflows/${data.name}.json`}
-        download
-        class="download-json-btn inline-flex justify-center items-center h-[var(--download-height)] gap-[var(--download-gap)] border-[0.5px] border-white/30 rounded-[var(--download-radius)] px-[10px] text-[color:var(--color-text-primary)] text-[length:var(--text-pill-size)] font-[var(--text-pill-weight)] leading-[var(--text-pill-lh)] hover:border-white/60 transition-colors w-fit"
-        data-template={data.name}
-      >
-        <svg
-          class="w-[var(--icon-size)] h-[var(--icon-size)] flex-shrink-0"
-          viewBox="0 0 16 16"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M8 2v8m0 0l-3-3m3 3l3-3M3 12v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V12"
-            stroke="currentColor"
-            stroke-width="1.3"
-            stroke-linecap="round"
-            stroke-linejoin="round"></path>
-        </svg>
-        <span>{t('cta.downloadJson', locale)}</span>
-      </a>
-
-      {/* Divider */}
-      <hr class="border-0 border-t border-[var(--color-border)]" />
-
-      {/* Text content */}
-      <div class="flex flex-col gap-[var(--gap-text-sections)]">
-        {
-          data.description && (
-            <p class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-              {data.description}
-            </p>
-          )
-        }
-        {
-          data.extendedDescription && (
-            <div class="flex flex-col gap-4">
-              {data.extendedDescription.split('\n\n').filter(Boolean).map((paragraph: string) => (
-                <p class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                  {paragraph.trim()}
-                </p>
-              ))}
-            </div>
-          )
-        }
-      </div>
-
-      {/* === SEO sections (below Figma core) === */}
-      <div class="flex flex-col gap-[var(--gap-text-sections)]">
-        {
-          data.howToUse && data.howToUse.length > 0 && (
-            <section>
-              <h2 class="text-[length:var(--text-heading-size)] font-[var(--text-heading-weight)] leading-[var(--text-heading-lh)] text-[color:var(--color-text-primary)] mb-6">
-                {t('template.howToUse', locale)}
-              </h2>
-              <ol class="flex flex-col gap-3 list-decimal list-inside">
-                {data.howToUse.map((step: string) => (
-                  <li class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </section>
-          )
-        }
-
-        {/* Workflow Preview — disabled for now, will add in future version */}
-
-        {
-          data.suggestedUseCases && data.suggestedUseCases.length > 0 && (
-            <section>
-              <h2 class="text-[length:var(--text-heading-size)] font-[var(--text-heading-weight)] leading-[var(--text-heading-lh)] text-[color:var(--color-text-primary)] mb-6">
-                {t('template.useCases', locale)}
-              </h2>
-              <ul class="flex flex-col gap-3">
-                {data.suggestedUseCases.map((useCase: string) => (
-                  <li class="flex items-start gap-3 text-[var(--color-text-secondary)]">
-                    <svg
-                      class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                    <span class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)]">
-                      {useCase}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )
-        }
-
-        {
-          data.faqItems && data.faqItems.length > 0 && (
-            <section>
-              <h2 class="text-[length:var(--text-heading-size)] font-[var(--text-heading-weight)] leading-[var(--text-heading-lh)] text-[color:var(--color-text-primary)] mb-6">
-                {t('template.faq', locale)}
-              </h2>
-              <div class="flex flex-col gap-3">
-                {data.faqItems.map((item: { question: string; answer: string }) => (
-                  <details class="group border border-[var(--color-border-subtle)] rounded-[var(--radius-banner)] overflow-hidden">
-                    <summary class="flex items-center justify-between p-4 cursor-pointer bg-white/5 hover:bg-white/10 transition-colors">
-                      <span class="text-[var(--text-label-size)] font-[var(--text-label-weight)] text-[var(--color-text-primary)]">
-                        {item.question}
-                      </span>
-                      <svg
-                        class="w-5 h-5 text-[var(--color-text-muted)] group-open:rotate-180 transition-transform flex-shrink-0 ml-2"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M19 9l-7 7-7-7"
-                        />
-                      </svg>
-                    </summary>
-                    <div class="px-4 pb-4 text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                      {item.answer}
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </section>
-          )
-        }
-
-        <footer
-          class="p-8 bg-white/5 rounded-[var(--radius-banner)] border border-[var(--color-border-subtle)]"
-        >
-          <h2 class="text-xl font-medium text-[var(--color-text-primary)] mb-2">
-            {t('template.ready', locale)}
-          </h2>
-          <p class="text-[var(--color-text-muted)] mb-6">
-            {t('template.startNow', locale)}
-          </p>
-          <a
-            href={getCloudCtaUrl(data.name, 'footer')}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-2 px-8 py-4 bg-[var(--color-accent)] text-[var(--color-bg-page)] font-bold rounded-[var(--btn-radius)] border-0 hover:opacity-90 transition-opacity"
-          >
-            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-              <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-            {t('template.run', locale)}
-          </a>
-        </footer>
-      </div>
-    </div>
-
-    {/* --- DESKTOP LAYOUT (two columns, Figma-exact) --- */}
-    <div class="hidden lg:flex lg:flex-row lg:gap-[var(--layout-column-gap)] lg:justify-center">
-      {/* ===== SIDEBAR ===== */}
-      <aside
-        class="w-[var(--layout-sidebar-width)] flex-shrink-0 flex flex-col gap-[var(--gap-header-meta)]"
-      >
-        {/* HEADER GROUP — gap: 40px between items */}
-        <div class="flex flex-col gap-[var(--gap-header-items)]">
-          {/* Back */}
-          <a
-            href={localizeUrl('/templates/', locale)}
-            data-astro-prefetch
-            class="inline-flex items-center gap-[5px] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors"
-          >
-            <svg
-              class="w-[var(--icon-size)] h-[var(--icon-size)]"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M10 12L6 8l4-4"
-                stroke="currentColor"
-                stroke-width="1.3"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-            <span
-              class="text-[var(--text-label-size)] font-[var(--text-label-weight)] leading-[var(--text-label-lh)]"
-              >{t('nav.backShort', locale)}</span
-            >
-          </a>
-
-          {/* Title */}
-          <h1
-            class="text-[length:var(--text-title-size)] font-[var(--text-title-weight)] leading-[var(--text-title-lh)] text-[color:var(--color-text-primary)]"
-          >
-            {data.title || data.name}
-          </h1>
-
-          {/* CTA */}
-          <a
-            href={getCloudCtaUrl(data.name, 'hero')}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center gap-[4px] h-[var(--btn-height)] px-[16px] py-[8px] bg-[var(--color-accent)] text-[color:var(--color-bg-page)] text-[length:var(--text-body-size)] font-[var(--text-body-weight)] leading-[var(--text-body-lh)] rounded-[var(--btn-radius)] border-0 hover:opacity-90 transition-opacity self-start"
-          >
-            {t('cta.tryCloud', locale)}
-            <svg
-              class="w-[var(--icon-size)] h-[var(--icon-size)]"
-              viewBox="0 0 16 16"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M4.667 11.333L11.333 4.667M11.333 4.667H5.333M11.333 4.667v6"
-                stroke="currentColor"
-                stroke-width="1.3"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-          </a>
-        </div>
-
-        {/* META GROUP — gap: 50px between items */}
-        <div class="flex flex-col gap-[var(--gap-meta-items)]">
-          {/* Created By */}
-          <div class="flex flex-col gap-[var(--gap-meta-label)]">
-            <span
-              class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase"
-            >
+      {/* Sidebar */}
+      <aside class="flex flex-col lg:col-start-3 lg:row-start-1 lg:row-span-2">
+        <div class="flex flex-col gap-6 lg:sticky lg:top-24">
+          {/* Creator */}
+          <div class="flex flex-col gap-2">
+            <span class="px-2 text-xs font-semibold text-content-secondary uppercase tracking-wider">
               {t('labels.createdBy', locale)}
             </span>
-            <div class="flex items-center gap-[var(--avatar-gap)]">
-              <div class="w-[var(--avatar-size)] h-[var(--avatar-size)] flex-shrink-0">
-                <img
-                  src="/brand/comfy-logo-mono.svg"
-                  alt="ComfyUI"
-                  class="w-full h-full object-contain rounded"
-                />
+            <div class="border border-white/15 rounded-2xl flex items-center justify-between px-4 py-4">
+              <div class="flex items-center gap-3">
+                <div class="size-8 shrink-0 rounded-full overflow-hidden">
+                  {creator?.avatarUrl ? (
+                    <img src={creator.avatarUrl} alt={authorName} class="w-full h-full object-cover" loading="lazy" />
+                  ) : (
+                    <div class="w-full h-full rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-white">
+                      {authorName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div class="flex flex-col">
+                  {authorProfileUrl ? (
+                    <a href={authorProfileUrl} class="font-semibold text-base text-content hover:opacity-80 transition-opacity" data-astro-prefetch>{authorName}</a>
+                  ) : (
+                    <span class="font-semibold text-base text-content">{authorName}</span>
+                  )}
+                  {data.date && <span class="text-base text-content-secondary">{formatRelativeDate(data.date)}</span>}
+                </div>
               </div>
-              <span
-                class="text-[length:var(--text-body-size)] font-[var(--text-body-weight)] leading-normal text-[color:var(--color-text-primary)]"
-                >ComfyUI</span
-              >
+              <button class="h-8 px-4 py-2 bg-hub-surface rounded-full text-xs text-content flex items-center gap-1 shrink-0">
+                Follow
+                <svg class="size-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 3.333v9.334M3.333 8h9.334" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Description summary */}
+          <div class="flex flex-col gap-2">
+            <span class="px-2 text-xs font-semibold text-content-secondary uppercase tracking-wider">Description</span>
+            <div class="border border-white/15 rounded-2xl flex flex-col gap-4 px-4 py-4">
+              <h1 class="text-2xl font-semibold text-content">{data.title || data.name}</h1>
+              {data.description && <p class="text-base text-hub-muted line-clamp-4">{data.description}</p>}
+              <a href="#description" class="flex items-center justify-between px-4 h-8 rounded-full text-xs text-content hover:bg-white/5 transition-colors">
+                See more
+                <svg class="size-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
             </div>
           </div>
 
           {/* Categories */}
-          {
-            data.tags && data.tags.length > 0 && (
-              <div class="flex flex-col gap-[var(--gap-meta-label)]">
-                <span class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase">
-                  {t('labels.categories', locale)}
-                </span>
-                <div class="flex flex-wrap gap-[var(--pill-gap)]">
-                  <a
-                    href={localizeUrl(`/templates/category/${data.mediaType}/`, locale)}
-                    class="inline-flex items-center justify-center h-[var(--pill-height)] border-[0.5px] border-white/30 rounded-[var(--pill-radius)] px-[10px] py-[6px] text-[color:var(--color-text-primary)] text-[length:var(--text-pill-size)] font-[var(--text-pill-weight)] leading-[var(--text-pill-lh)] text-center hover:border-white/60 transition-colors"
-                    data-astro-prefetch
-                  >
-                    {mediaTypeLabels[data.mediaType]}
-                  </a>
+          {data.tags && data.tags.length > 0 && (
+            <div class="flex flex-col gap-2">
+              <span class="px-2 text-xs font-semibold text-content-secondary uppercase tracking-wider">{t('labels.categories', locale)}</span>
+              <div class="border border-white/15 rounded-2xl flex flex-col gap-4 px-4 py-4">
+                <div class="flex flex-wrap gap-2">
+                  <a href={localizeUrl(`/templates/category/${data.mediaType}/`, locale)} class="h-6 px-4 py-1 bg-hub-surface rounded-full text-xs text-content inline-flex items-center justify-center hover:opacity-80 transition-opacity" data-astro-prefetch>{mediaTypeLabels[data.mediaType]}</a>
                   {data.tags.map((tag: string) => (
-                    <a
-                      href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)}
-                      class="inline-flex items-center justify-center h-[var(--pill-height)] border-[0.5px] border-white/30 rounded-[var(--pill-radius)] px-[10px] py-[6px] text-[color:var(--color-text-primary)] text-[length:var(--text-pill-size)] font-[var(--text-pill-weight)] leading-[var(--text-pill-lh)] text-center hover:border-white/60 transition-colors"
-                      data-astro-prefetch
-                    >
-                      {tag}
-                    </a>
+                    <a href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)} class="h-6 px-4 py-1 bg-hub-surface rounded-full text-xs text-content inline-flex items-center justify-center hover:opacity-80 transition-opacity" data-astro-prefetch>{tag}</a>
                   ))}
                 </div>
+                <a href={localizeUrl(`/templates/category/${data.mediaType}/`, locale)} class="flex items-center justify-between px-4 h-8 rounded-full text-xs text-content hover:bg-white/5 transition-colors" data-astro-prefetch>
+                  See all
+                  <svg class="size-4" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </a>
               </div>
-            )
-          }
+            </div>
+          )}
 
           {/* Models */}
-          {
-            data.models && data.models.length > 0 && (
-              <div class="flex flex-col gap-[var(--gap-meta-label)]">
-                <span class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase">
-                  {t('labels.models', locale)}
-                </span>
-                <div class="inline-flex items-center h-[var(--badge-height)] bg-black rounded-[var(--badge-radius)] overflow-hidden self-start">
-                  <div class="w-[var(--badge-icon-size)] h-[var(--badge-icon-size)] flex items-center justify-center rounded-full flex-shrink-0 overflow-hidden">
-                    {modelLogoSrc ? (
-                      <img
-                        src={modelLogoSrc}
-                        alt={data.models[0]}
-                        class="w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <span class="text-[12px] font-medium text-white bg-white/10 w-full h-full flex items-center justify-center">
-                        {data.models[0].charAt(0).toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <span class="px-[11px] text-[var(--text-label-size)] font-[var(--text-label-weight)] leading-[var(--text-label-lh)] text-white whitespace-nowrap">
-                    {data.models[0]}
-                  </span>
+          {data.models && data.models.length > 0 && (
+            <div class="flex flex-col gap-2">
+              <span class="px-2 text-xs font-semibold text-content-secondary uppercase tracking-wider">{t('labels.models', locale)}</span>
+              <div class="border border-white/15 rounded-2xl flex flex-col gap-4 px-4 py-4">
+                <div class="flex flex-wrap gap-2">
+                  {data.models.map((model: string) => (
+                    <span class="h-6 px-4 py-1 bg-hub-surface rounded-full text-xs text-content inline-flex items-center justify-center">{model}</span>
+                  ))}
                 </div>
+                <span class="flex items-center justify-between px-4 h-8 rounded-full text-xs text-content">
+                  See all
+                  <svg class="size-4" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                </span>
               </div>
-            )
-          }
+            </div>
+          )}
 
-          {/* Last Update */}
-          {
-            data.date && (
-              <div class="flex flex-col gap-[var(--gap-meta-label)]">
-                <span class="text-[length:var(--text-meta-size)] font-[var(--text-meta-weight)] leading-[var(--text-meta-lh)] tracking-[var(--text-meta-ls)] text-[color:var(--color-text-primary)] uppercase">
-                  {t('labels.lastUpdate', locale)}
-                </span>
-                <span class="text-[length:var(--text-body-size)] font-[var(--text-body-weight)] leading-normal text-[color:var(--color-text-primary)]">
-                  {formatRelativeDate(data.date)}
-                </span>
-              </div>
-            )
-          }
+          {/* Action buttons */}
+          <div class="flex flex-col gap-2 lg:pt-10">
+            <a href={`/workflows/${data.name}.json`} download class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors" data-template={data.name}>
+              {t('cta.downloadJson', locale)}
+            </a>
+            <a href={getCloudCtaUrl(data.name, 'hero')} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 bg-brand rounded-full text-sm font-bold text-page hover:opacity-90 transition-opacity">
+              {t('cta.tryCloud', locale)}
+            </a>
+          </div>
         </div>
-
-        {/* DOWNLOAD WORKFLOW — separate from meta, gets 120px gap from sidebar parent */}
-        <a
-          href={`/workflows/${data.name}.json`}
-          download
-          class="download-json-btn inline-flex justify-center items-center h-[var(--download-height)] gap-[var(--download-gap)] border-[0.5px] border-white/30 rounded-[var(--download-radius)] px-[10px] text-[color:var(--color-text-primary)] text-[length:var(--text-pill-size)] font-[var(--text-pill-weight)] leading-[var(--text-pill-lh)] hover:border-white/60 transition-colors w-fit"
-          data-template={data.name}
-        >
-          <svg
-            class="w-[var(--icon-size)] h-[var(--icon-size)] flex-shrink-0"
-            viewBox="0 0 16 16"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M8 2v8m0 0l-3-3m3 3l3-3M3 12v1.5a.5.5 0 00.5.5h9a.5.5 0 00.5-.5V12"
-              stroke="currentColor"
-              stroke-width="1.3"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path>
-          </svg>
-          <span>{t('cta.downloadJson', locale)}</span>
-        </a>
       </aside>
 
-      {/* ===== MAIN CONTENT (Right Column) ===== */}
-      <div class="w-[var(--layout-main-width)] flex-none min-w-0">
-        {/* Banner — 600×600, border-radius 8px, top of right column */}
-        {
-          thumbnails.length > 0 && (
-            <div class="rounded-[var(--radius-banner)] overflow-hidden">
-              <ThumbnailDisplay
-                thumbnails={thumbnails}
-                title={data.title || data.name}
-                variant={data.thumbnailVariant}
-                mediaSubtype={data.mediaSubtype}
-                class="w-full aspect-square"
-                loading="eager"
-                fetchpriority="high"
-                sizes="600px"
-              />
-            </div>
-          )
-        }
-
-        {/* Text Content — starts 650px from top (600px banner + 50px gap) */}
-        <div class="flex flex-col gap-[var(--gap-text-sections)] mt-[var(--gap-banner-text)]">
-          {/* Description / Intro */}
-          {
-            data.description && (
-              <p class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                {data.description}
-              </p>
-            )
-          }
-          {
-            data.extendedDescription && (
-              <div class="flex flex-col gap-4">
-                {data.extendedDescription.split('\n\n').filter(Boolean).map((paragraph: string) => (
-                  <p class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                    {paragraph.trim()}
-                  </p>
-                ))}
-              </div>
-            )
-          }
-
-          {/* How to Use */}
-          {
-            data.howToUse && data.howToUse.length > 0 && (
-              <section>
-                <h2 class="text-[length:var(--text-heading-size)] font-[var(--text-heading-weight)] leading-[var(--text-heading-lh)] text-[color:var(--color-text-primary)] mb-6">
-                  {t('template.howToUse', locale)}
-                </h2>
-                <ol class="flex flex-col gap-3 list-decimal list-inside">
-                  {data.howToUse.map((step: string) => (
-                    <li class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                      {step}
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )
-          }
-
-          {/* Workflow Preview — disabled for now, will add in future version */}
-
-          {/* Gallery / More Examples — disabled until we have input assets */}
-
-          {/* Use Cases */}
-          {
-            data.suggestedUseCases && data.suggestedUseCases.length > 0 && (
-              <section>
-                <h2 class="text-[length:var(--text-heading-size)] font-[var(--text-heading-weight)] leading-[var(--text-heading-lh)] text-[color:var(--color-text-primary)] mb-6">
-                  {t('template.useCases', locale)}
-                </h2>
-                <ul class="flex flex-col gap-3">
-                  {data.suggestedUseCases.map((useCase: string) => (
-                    <li class="flex items-start gap-3 text-[var(--color-text-secondary)]">
-                      <svg
-                        class="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          stroke-width="2"
-                          d="M5 13l4 4L19 7"
-                        />
-                      </svg>
-                      <span class="text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)]">
-                        {useCase}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )
-          }
-
-          {/* Technical Details */}
-          {
-            (data.size || data.estimatedTime) && (
-              <section class="p-6 bg-white/5 rounded-[var(--radius-banner)] border border-[var(--color-border-subtle)]">
-                <h2 class="text-xl font-medium text-[var(--color-text-primary)] mb-4">
-                  {t('template.techDetails', locale)}
-                </h2>
-                <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {data.size && (
-                    <div>
-                      <dt class="text-[var(--text-reading-size)] text-[var(--color-text-muted)] mb-1">
-                        {t('labels.size', locale)}
-                      </dt>
-                      <dd class="text-[var(--color-text-primary)] font-medium">
-                        {formatBytes(data.size)}
-                      </dd>
-                    </div>
-                  )}
-                  {data.estimatedTime && (
-                    <div>
-                      <dt class="text-[var(--text-reading-size)] text-[var(--color-text-muted)] mb-1">
-                        {t('labels.estimatedTime', locale)}
-                      </dt>
-                      <dd class="text-[var(--color-text-primary)] font-medium">
-                        {data.estimatedTime}
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </section>
-            )
-          }
-
-          {/* Required Custom Nodes */}
-          {
-            data.requiredNodes && data.requiredNodes.length > 0 && (
-              <section class="p-6 bg-white/5 rounded-[var(--radius-banner)] border border-[var(--color-border-subtle)]">
-                <h2 class="text-xl font-medium text-[var(--color-text-primary)] mb-3">
-                  {t('labels.requiredNodes', locale)}
-                </h2>
-                <p class="text-[var(--text-reading-size)] text-[var(--color-text-muted)] mb-4">
-                  {t('labels.managerTip', locale)}
-                </p>
-                <ul class="flex flex-col gap-2">
-                  {data.requiredNodes.map(
-                    (node: {
-                      nodeType: string;
-                      package: string;
-                      url: string;
-                      description?: string;
-                    }) => (
-                      <li class="flex items-start gap-3 p-3 bg-white/5 rounded-[var(--radius-banner)] border border-[var(--color-border-subtle)]">
-                        <svg
-                          class="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                          />
-                        </svg>
-                        <div class="flex-1 min-w-0">
-                          <div class="flex items-center gap-2 flex-wrap">
-                            <span class="font-medium text-[var(--color-text-primary)]">
-                              {node.package}
-                            </span>
-                            <a
-                              href={node.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              class="inline-flex items-center gap-1 text-xs px-2 py-1 bg-white/10 text-[var(--color-text-secondary)] rounded hover:bg-white/20 transition-colors"
-                            >
-                              <svg
-                                class="w-3 h-3"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  stroke-linecap="round"
-                                  stroke-linejoin="round"
-                                  stroke-width="2"
-                                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                                />
-                              </svg>
-                              GitHub
-                            </a>
-                          </div>
-                          {node.description && (
-                            <p class="text-[var(--text-reading-size)] text-[var(--color-text-muted)] mt-1">
-                              {node.description}
-                            </p>
-                          )}
-                          <p class="text-xs text-[var(--color-text-muted)] mt-1">
-                            {t('labels.nodeUses', locale)}:{' '}
-                            <code class="px-1 py-0.5 bg-white/10 rounded">{node.nodeType}</code>
-                          </p>
-                        </div>
-                      </li>
-                    )
-                  )}
-                </ul>
-                <div class="mt-4 pt-4 border-t border-[var(--color-border-subtle)]">
-                  <a
-                    href="https://github.com/ltdrdata/ComfyUI-Manager"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-2 text-[var(--text-reading-size)] text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] font-medium transition-colors"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    {t('labels.installWithManager', locale)}
-                  </a>
-                </div>
-              </section>
-            )
-          }
-
-          {/* FAQ */}
-          {
-            data.faqItems && data.faqItems.length > 0 && (
-              <section>
-                <h2 class="text-[length:var(--text-heading-size)] font-[var(--text-heading-weight)] leading-[var(--text-heading-lh)] text-[color:var(--color-text-primary)] mb-6">
-                  {t('template.faq', locale)}
-                </h2>
-                <div class="flex flex-col gap-3">
-                  {data.faqItems.map((item: { question: string; answer: string }) => (
-                    <details class="group border border-[var(--color-border-subtle)] rounded-[var(--radius-banner)] overflow-hidden">
-                      <summary class="flex items-center justify-between p-4 cursor-pointer bg-white/5 hover:bg-white/10 transition-colors">
-                        <span class="text-[var(--text-label-size)] font-[var(--text-label-weight)] text-[var(--color-text-primary)]">
-                          {item.question}
-                        </span>
-                        <svg
-                          class="w-5 h-5 text-[var(--color-text-muted)] group-open:rotate-180 transition-transform flex-shrink-0 ml-2"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            stroke-width="2"
-                            d="M19 9l-7 7-7-7"
-                          />
-                        </svg>
-                      </summary>
-                      <div class="px-4 pb-4 text-[var(--text-reading-size)] font-[var(--text-reading-weight)] leading-[var(--text-reading-lh)] text-[var(--color-text-secondary)]">
-                        {item.answer}
-                      </div>
-                    </details>
-                  ))}
-                </div>
-              </section>
-            )
-          }
-
-          {/* Footer CTA */}
-          <footer
-            class="p-8 bg-white/5 rounded-[var(--radius-banner)] border border-[var(--color-border-subtle)]"
-          >
-            <h2 class="text-xl font-medium text-[var(--color-text-primary)] mb-2">
-              {t('template.ready', locale)}
-            </h2>
-            <p class="text-[var(--color-text-muted)] mb-6">
-              {t('template.startNow', locale)}
-            </p>
-            <a
-              href={getCloudCtaUrl(data.name, 'footer')}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 px-8 py-4 bg-[var(--color-accent)] text-[var(--color-bg-page)] font-bold rounded-[var(--btn-radius)] border-0 hover:opacity-90 transition-opacity"
-            >
-              <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-              </svg>
-              {t('template.run', locale)}
-            </a>
-          </footer>
-        </div>
+      {/* Full description */}
+      <div class="flex flex-col gap-6 lg:col-start-2 lg:row-start-2 lg:mt-12 scroll-mt-8" id="description">
+        <hr class="border-0 border-t border-divider lg:hidden" />
+        {data.description && (
+          <p class="text-base leading-relaxed text-content-secondary">{data.description}</p>
+        )}
+        {data.extendedDescription && (
+          <div class="flex flex-col gap-4">
+            {data.extendedDescription.split('\n\n').filter(Boolean).map((paragraph: string) => (
+              <p class="text-base leading-relaxed text-content-secondary">{paragraph.trim()}</p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   </div>
@@ -893,9 +225,8 @@ function formatBytes(bytes: number): string {
 <script is:inline define:vars={{ templateName: data.name }}>
   document.querySelectorAll('a[href*="cloud.comfy.org"]').forEach((link) => {
     link.addEventListener('click', () => {
-      const location = link.closest('footer') ? 'footer' : 'hero';
       if (window.va) {
-        window.va('event', { name: 'cta_click', template: templateName, location });
+        window.va('event', { name: 'cta_click', template: templateName, location: 'hero' });
       }
     });
   });

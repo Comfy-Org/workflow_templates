@@ -5,6 +5,8 @@
  */
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import TemplateDetailPage from '../../../components/template-detail/TemplateDetailPage.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
@@ -117,7 +119,9 @@ const softwareAppStructuredData = {
   locale={locale}
   hreflangBasePath={`/templates/${data.name}/`}
   theme="dark"
+  hideDefaultFooter
 >
+  <HubNavbar />
   <TemplateDetailPage template={{ data }} locale={locale} />
 
   {
@@ -135,4 +139,8 @@ const softwareAppStructuredData = {
     type="application/ld+json"
     set:html={JSON.stringify(breadcrumbStructuredData)}
   />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
 </BaseLayout>

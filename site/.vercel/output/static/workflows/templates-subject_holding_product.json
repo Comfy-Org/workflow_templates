@@ -1,0 +1,596 @@
+{
+  "id": "1532265d-5a1f-40c4-ad49-82de6d7ff2ac",
+  "revision": 0,
+  "last_node_id": 18,
+  "last_link_id": 21,
+  "nodes": [
+    {
+      "id": 15,
+      "type": "SaveImage",
+      "pos": [
+        1540,
+        290
+      ],
+      "size": [
+        470,
+        740
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "GeminiImage2Node",
+      "pos": [
+        1050,
+        290
+      ],
+      "size": [
+        420,
+        740
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "name": "files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            16
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiImage2Node",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76"
+      },
+      "widgets_values": [
+        "The subject from image 1 is holding the product from image 2, the product logo is visible.",
+        "gemini-3-pro-image-preview",
+        12345,
+        "randomize",
+        "auto",
+        "2K",
+        "IMAGE+TEXT",
+        "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        285.28771548632835,
+        290
+      ],
+      "size": [
+        430,
+        610
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Load Subject Image",
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76"
+      },
+      "widgets_values": [
+        "subject-elderly-lady-portrait.png",
+        "image"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 11,
+      "type": "LoadImage",
+      "pos": [
+        285.28771548632835,
+        952.6179266898437
+      ],
+      "size": [
+        430,
+        610
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Load Product Image",
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76"
+      },
+      "widgets_values": [
+        "product-toothbrush.png",
+        "image"
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 18,
+      "type": "e20a7fb5-3d72-41c9-a78c-fdf287ec46ec",
+      "pos": [
+        820,
+        290
+      ],
+      "size": [
+        160,
+        46
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "image_1",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 19
+        },
+        {
+          "label": "image_2",
+          "name": "image_1",
+          "type": "IMAGE",
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [],
+        "cnr_id": "comfy-core",
+        "ver": "0.4.0"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      16,
+      17,
+      0,
+      15,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      10,
+      0,
+      18,
+      0,
+      "IMAGE"
+    ],
+    [
+      20,
+      11,
+      0,
+      18,
+      1,
+      "IMAGE"
+    ],
+    [
+      21,
+      18,
+      0,
+      17,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "e20a7fb5-3d72-41c9-a78c-fdf287ec46ec",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 18,
+          "lastLinkId": 21,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Batch Images",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            680,
+            300,
+            120,
+            80
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1480,
+            300,
+            120,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "bc8c15e3-969a-4321-9518-84a5cdf64836",
+            "name": "image",
+            "type": "IMAGE",
+            "linkIds": [
+              10,
+              19
+            ],
+            "localized_name": "image",
+            "pos": [
+              780,
+              320
+            ]
+          },
+          {
+            "id": "6288f9fa-a2ef-4285-a1b3-a35c52d4087f",
+            "name": "image_1",
+            "type": "IMAGE",
+            "linkIds": [
+              11
+            ],
+            "localized_name": "image_1",
+            "pos": [
+              780,
+              340
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "7f588e1c-0a55-4023-930f-ec99d2f311df",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              21
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              1500,
+              320
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 13,
+            "type": "ResizeAndPadImage",
+            "pos": [
+              1110,
+              500
+            ],
+            "size": [
+              210,
+              130
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 11
+              },
+              {
+                "localized_name": "target_width",
+                "name": "target_width",
+                "type": "INT",
+                "widget": {
+                  "name": "target_width"
+                },
+                "link": 12
+              },
+              {
+                "localized_name": "target_height",
+                "name": "target_height",
+                "type": "INT",
+                "widget": {
+                  "name": "target_height"
+                },
+                "link": 13
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  20
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ResizeAndPadImage",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.76"
+            },
+            "widgets_values": [
+              512,
+              512,
+              "white",
+              "area"
+            ]
+          },
+          {
+            "id": 12,
+            "type": "GetImageSize",
+            "pos": [
+              920,
+              530
+            ],
+            "size": [
+              160,
+              66
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 10
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "links": [
+                  12
+                ]
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "links": [
+                  13
+                ]
+              },
+              {
+                "localized_name": "batch_size",
+                "name": "batch_size",
+                "type": "INT",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GetImageSize",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.76"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 18,
+            "type": "BatchImagesNode",
+            "pos": [
+              1150,
+              320
+            ],
+            "size": [
+              169.23046875,
+              66
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "image0",
+                "localized_name": "images.image0",
+                "name": "images.image0",
+                "type": "IMAGE",
+                "link": 19
+              },
+              {
+                "label": "image1",
+                "localized_name": "images.image1",
+                "name": "images.image1",
+                "type": "IMAGE",
+                "link": 20
+              },
+              {
+                "label": "image2",
+                "localized_name": "images.image2",
+                "name": "images.image2",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  21
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "BatchImagesNode"
+            }
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 12,
+            "origin_id": 12,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 13,
+            "origin_id": 12,
+            "origin_slot": 1,
+            "target_id": 13,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 10,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 12,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 11,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 19,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 18,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 20,
+            "origin_id": 13,
+            "origin_slot": 0,
+            "target_id": 18,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 21,
+            "origin_id": 18,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          }
+        ],
+        "extra": {
+          "workflowRendererVersion": "LG"
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5553383001903571,
+      "offset": [
+        426.891796843773,
+        115.75684081944223
+      ]
+    },
+    "frontendVersion": "1.37.6",
+    "workflowRendererVersion": "LG",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

@@ -26,6 +26,7 @@ const templateSchema = z.object({
     )
     .optional(),
   usage: z.number().optional(),
+  username: z.string().optional(),
 
   // Synced assets
   thumbnails: z.array(z.string()).default([]),

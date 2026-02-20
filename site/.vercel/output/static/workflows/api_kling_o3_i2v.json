@@ -1,0 +1,305 @@
+{
+  "id": "e6c83632-4154-43a4-9962-8a7fb318a3f9",
+  "revision": 0,
+  "last_node_id": 25,
+  "last_link_id": 26,
+  "nodes": [
+    {
+      "id": 21,
+      "type": "KlingOmniProImageToVideoNode",
+      "pos": [
+        2074.798828125,
+        10140
+      ],
+      "size": [
+        400,
+        278
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "reference_images",
+          "type": "IMAGE",
+          "link": 26
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "KlingOmniProImageToVideoNode"
+      },
+      "widgets_values": [
+        "kling-v3-omni",
+        "Wide shot of a free‑spirited young woman running toward the camera through a sun‑drenched field, white birds exploding upward all around her like symbols of freedom. Her hair and dress are caught by the wind, captured with crisp focus on her face and light motion blur in the foreground flowers and wings. Vivid colors, bright clear sky, optimistic, uplifting cinematic tone.\n",
+        "16:9",
+        5,
+        "720p",
+        "disabled",
+        true,
+        "Status: Succeed\nTime elapsed: 267s"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 20,
+      "type": "SaveVideo",
+      "pos": [
+        2516.798828125,
+        10140
+      ],
+      "size": [
+        670,
+        532.875
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 21
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3"
+      },
+      "widgets_values": [
+        "video/kling_o3_i2v",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "LoadImage",
+      "pos": [
+        1450,
+        10140
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            23,
+            26
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "chasing_the_light.png",
+        "image"
+      ]
+    },
+    {
+      "id": 24,
+      "type": "LoadImage",
+      "pos": [
+        1450,
+        10510
+      ],
+      "size": [
+        282.798828125,
+        314
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            25
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "chasing_the_light.png",
+        "image"
+      ]
+    },
+    {
+      "id": 23,
+      "type": "BatchImagesNode",
+      "pos": [
+        1830,
+        10270
+      ],
+      "size": [
+        169.23046875,
+        66
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [
+        {
+          "label": "image0",
+          "name": "images.image0",
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "label": "image1",
+          "name": "images.image1",
+          "type": "IMAGE",
+          "link": 25
+        },
+        {
+          "label": "image2",
+          "name": "images.image2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "BatchImagesNode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 25,
+      "type": "Note",
+      "pos": [
+        1790,
+        10410
+      ],
+      "size": [
+        250,
+        120
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Select the Batch Images node, then press Ctrl+B to enable it. Then link the IMAGE output to the reference_images input to enable multiple reference images input.\n\nYou can use up to 7 images."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      21,
+      21,
+      0,
+      20,
+      0,
+      "VIDEO"
+    ],
+    [
+      23,
+      17,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      25,
+      24,
+      0,
+      23,
+      1,
+      "IMAGE"
+    ],
+    [
+      26,
+      17,
+      0,
+      21,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Up to 7 images",
+      "bounding": [
+        1820,
+        10200,
+        189.23046875,
+        149.6
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6277920154222429,
+      "offset": [
+        -1084.514631847113,
+        -9599.212901872832
+      ]
+    },
+    "frontendVersion": "1.38.13",
+    "workflowRendererVersion": "LG",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

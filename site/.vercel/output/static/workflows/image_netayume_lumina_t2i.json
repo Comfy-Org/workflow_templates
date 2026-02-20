@@ -1,0 +1,1245 @@
+{
+  "id": "9ae6082b-c7f4-433c-9971-7a8f65a3ea65",
+  "revision": 0,
+  "last_node_id": 26,
+  "last_link_id": 25,
+  "nodes": [
+    {
+      "id": 13,
+      "type": "EmptySD3LatentImage",
+      "pos": [
+        70,
+        390
+      ],
+      "size": [
+        315,
+        106
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "EmptySD3LatentImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ]
+    },
+    {
+      "id": 17,
+      "type": "MarkdownNote",
+      "pos": [
+        60,
+        560
+      ],
+      "size": [
+        340,
+        100
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Image size",
+      "properties": {},
+      "widgets_values": [
+        "This model is best at 1024x1024, but you can try higher like 1024x1536"
+      ],
+      "color": "#432",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 11,
+      "type": "ModelSamplingAuraFlow",
+      "pos": [
+        890,
+        170
+      ],
+      "size": [
+        310,
+        60
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelSamplingAuraFlow",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": [
+        4
+      ]
+    },
+    {
+      "id": 3,
+      "type": "KSampler",
+      "pos": [
+        890,
+        270
+      ],
+      "size": [
+        315,
+        262
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 13
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 25
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 23
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "slot_index": 0,
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSampler",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": [
+        942500763821827,
+        "randomize",
+        30,
+        4,
+        "res_multistep",
+        "simple",
+        1
+      ]
+    },
+    {
+      "id": 8,
+      "type": "VAEDecode",
+      "pos": [
+        890,
+        580
+      ],
+      "size": [
+        210,
+        46
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 14
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            16
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 9,
+      "type": "SaveImage",
+      "pos": [
+        1230,
+        170
+      ],
+      "size": [
+        820,
+        850
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64"
+      },
+      "widgets_values": [
+        "NetaYume_Lumina_3.5"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "81f7b28d-8e1a-40b5-89e1-8c863f2beecb",
+      "pos": [
+        430,
+        430
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            23
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "value"
+          ]
+        ]
+      },
+      "widgets_values": [
+        "blurry, worst quality, low quality, jpeg artifacts, signature, watermark, username, error, deformed hands, bad anatomy, extra limbs, poorly drawn hands, poorly drawn face, mutation, deformed, extra eyes, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, cross-eyed, bad proportions, missing arms, missing legs, extra digit, fewer digits, cropped"
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 4,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        70,
+        200
+      ],
+      "size": [
+        315,
+        98
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "slot_index": 0,
+          "links": [
+            12
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 1,
+          "links": [
+            22,
+            24
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "slot_index": 2,
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "models": [
+          {
+            "name": "NetaYumev35_pretrained_all_in_one.safetensors",
+            "url": "https://huggingface.co/duongve/NetaYume-Lumina-Image-2.0/resolve/main/NetaYumev35_pretrained_all_in_one.safetensors",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": [
+        "NetaYumev35_pretrained_all_in_one.safetensors"
+      ]
+    },
+    {
+      "id": 26,
+      "type": "f38699c9-c6d1-41bf-94c9-cce9ccf676b1",
+      "pos": [
+        430,
+        220
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "-1",
+            "value"
+          ]
+        ]
+      },
+      "widgets_values": [
+        "@comfyanonymous, \"Warm and cheerful digital illustration of a girl standing in the middle of an orange grove, surrounded by lush green leaves and ripe, vibrant oranges hanging from the trees. She has chestnut-brown hair tied in a single loose braid draped over her shoulder, with soft bangs framing her bright, smiling face.\n Her expression is full of joy and sunshine—eyes squinting slightly, mouth open in a wide, carefree smile, radiating pure happiness. She wears a crisp white blouse underneath a black jacket, slightly unbuttoned for a relaxed look. The sunlight filters through the leaves above, casting dappled golden light on her hair and shoulders, creating a warm, inviting atmosphere.\n  A few oranges hang close to her head, and one or two lie on the ground around her feet. The background features soft-focus trees stretching into the distance, with sunlight breaking through the foliage. The art style is painterly and soft, emphasizing the natural setting and the girl's radiant, wholesome charm.\""
+      ],
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 19,
+      "type": "MarkdownNote",
+      "pos": [
+        1230,
+        40
+      ],
+      "size": [
+        450,
+        88
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Output files",
+      "properties": {},
+      "widgets_values": [
+        "The output image will be saved in the `ComfyUI/outputs` folder."
+      ],
+      "color": "#432",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 18,
+      "type": "MarkdownNote",
+      "pos": [
+        410,
+        0
+      ],
+      "size": [
+        440,
+        120
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Prompt",
+      "properties": {},
+      "widgets_values": [
+        "Check the prompt book [here](https://www.neta.art/blog/neta_lumina_prompt_book/)\n\nYou should keep the prefix part fixed until the **Prompt Start** tag\n\n@whatever in the prompt is for artist tags, such as @comfyanonymous\n\nYou can find more artist tags [here](https://gumgum10.github.io/gumgum.github.io/)\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 16,
+      "type": "MarkdownNote",
+      "pos": [
+        -380,
+        160
+      ],
+      "size": [
+        420,
+        400
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: About NetaYume Lumina",
+      "properties": {},
+      "widgets_values": [
+        "## About NetaYume Lumina\n\n[NetaYume Lumina](https://civitai.com/models/1790792) is a **text-to-image** model fine-tuned from [Neta Lumina](https://huggingface.co/neta-art/Neta-Lumina), a high-quality anime-style image generation model developed by [**Neta.art Lab**](https://huggingface.co/neta-art). It builds upon [**Lumina-Image-2.0**,](https://huggingface.co/Alpha-VLLM/Lumina-Image-2.0) an open-source base model released by the [**Alpha-VLLM team**](https://huggingface.co/Alpha-VLLM) at Shanghai AI Laboratory.\n\n- [Prompt book](https://www.neta.art/blog/neta_lumina_prompt_book/)\n\n\n**Key Features:**\n\n- **High-Quality Anime Generation:** Generates detailed anime-style images with sharp outlines, vibrant colors, and smooth shading.\n- **Improved Character Understanding:** Better captures characters, especially those from the Danbooru dataset, resulting in more coherent and accurate character representations.\n- **Enhanced Fine Details:** Accurately generates accessories, clothing textures, hairstyles, and background elements with greater clarity.\n\n\n## Model link\n\n\nDownload this file: [NetaYumev35_pretrained_all_in_one.safetensors](https://huggingface.co/duongve/NetaYume-Lumina-Image-2.0/resolve/main/NetaYumev35_pretrained_all_in_one.safetensors) \n\nThen place it in the **ComfyUI/models/checkpoints** folder."
+      ],
+      "color": "#432",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      8,
+      4,
+      2,
+      8,
+      1,
+      "VAE"
+    ],
+    [
+      12,
+      4,
+      0,
+      11,
+      0,
+      "MODEL"
+    ],
+    [
+      13,
+      11,
+      0,
+      3,
+      0,
+      "MODEL"
+    ],
+    [
+      14,
+      3,
+      0,
+      8,
+      0,
+      "LATENT"
+    ],
+    [
+      16,
+      8,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      17,
+      13,
+      0,
+      3,
+      3,
+      "LATENT"
+    ],
+    [
+      22,
+      4,
+      1,
+      25,
+      0,
+      "CLIP"
+    ],
+    [
+      23,
+      25,
+      0,
+      3,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      24,
+      4,
+      1,
+      26,
+      0,
+      "CLIP"
+    ],
+    [
+      25,
+      26,
+      0,
+      3,
+      1,
+      "CONDITIONING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step1 - Load model",
+      "bounding": [
+        60,
+        130,
+        340,
+        180
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step2 - Image size",
+      "bounding": [
+        60,
+        320,
+        340,
+        190
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Step3 - Prompt",
+      "bounding": [
+        410,
+        130,
+        445.27801513671875,
+        474.2060852050781
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "81f7b28d-8e1a-40b5-89e1-8c863f2beecb",
+        "version": 1,
+        "state": {
+          "lastGroupId": 3,
+          "lastNodeId": 24,
+          "lastLinkId": 22,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "CLIP Text Encode (Negative Prompt)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -150,
+            675,
+            120,
+            80
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            905.2780151367188,
+            675,
+            128.6640625,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "47264a97-6fc9-454d-920f-b8a43fee0489",
+            "name": "clip",
+            "type": "CLIP",
+            "linkIds": [
+              5
+            ],
+            "localized_name": "clip",
+            "pos": [
+              -50,
+              695
+            ]
+          },
+          {
+            "id": "7cdb7919-1dad-4bd2-928d-c543c3fd712e",
+            "name": "value",
+            "type": "STRING",
+            "linkIds": [
+              22
+            ],
+            "pos": [
+              -50,
+              715
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "c3f17ad9-6954-4333-bf8e-e1cf886c351b",
+            "name": "CONDITIONING",
+            "type": "CONDITIONING",
+            "linkIds": [
+              6
+            ],
+            "localized_name": "CONDITIONING",
+            "pos": [
+              925.2780151367188,
+              695
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 22,
+            "type": "StringConcatenate",
+            "pos": [
+              420,
+              720
+            ],
+            "size": [
+              400,
+              200
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_a",
+                "name": "string_a",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_a"
+                },
+                "link": 19
+              },
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 20
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  21
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.70"
+            },
+            "widgets_values": [
+              "",
+              "",
+              ""
+            ]
+          },
+          {
+            "id": 23,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              30,
+              720
+            ],
+            "size": [
+              370,
+              130
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  19
+                ]
+              }
+            ],
+            "title": "System prompt",
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.70"
+            },
+            "widgets_values": [
+              "You are an assistant designed to generate low-quality images based on textual prompts <Prompt Start> "
+            ]
+          },
+          {
+            "id": 24,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              30,
+              900
+            ],
+            "size": [
+              370,
+              130
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "STRING",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 22
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  20
+                ]
+              }
+            ],
+            "title": "System prompt",
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.70"
+            },
+            "widgets_values": [
+              "blurry, worst quality, low quality, jpeg artifacts, signature, watermark, username, error, deformed hands, bad anatomy, extra limbs, poorly drawn hands, poorly drawn face, mutation, deformed, extra eyes, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, cross-eyed, bad proportions, missing arms, missing legs, extra digit, fewer digits, cropped"
+            ]
+          },
+          {
+            "id": 7,
+            "type": "CLIPTextEncode",
+            "pos": [
+              420,
+              410
+            ],
+            "size": [
+              425.27801513671875,
+              180.6060791015625
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 5
+              },
+              {
+                "localized_name": "text",
+                "name": "text",
+                "type": "STRING",
+                "widget": {
+                  "name": "text"
+                },
+                "link": 21
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "slot_index": 0,
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "title": "CLIP Text Encode (Negative Prompt)",
+            "properties": {
+              "Node name for S&R": "CLIPTextEncode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              "You are an assistant designed to generate low-quality images based on textual prompts <Prompt Start> blurry, worst quality, low quality, jpeg artifacts, signature, watermark, username, error, deformed hands, bad anatomy, extra limbs, poorly drawn hands, poorly drawn face, mutation, deformed, extra eyes, extra arms, extra legs, malformed limbs, fused fingers, too many fingers, long neck, cross-eyed, bad proportions, missing arms, missing legs, extra digit, fewer digits, cropped"
+            ],
+            "color": "#223",
+            "bgcolor": "#335"
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 19,
+            "origin_id": 23,
+            "origin_slot": 0,
+            "target_id": 22,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 20,
+            "origin_id": 24,
+            "origin_slot": 0,
+            "target_id": 22,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 21,
+            "origin_id": 22,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 5,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 6,
+            "origin_id": 7,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 22,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 24,
+            "target_slot": 0,
+            "type": "STRING"
+          }
+        ],
+        "extra": {
+          "workflowRendererVersion": "LG"
+        }
+      },
+      {
+        "id": "f38699c9-c6d1-41bf-94c9-cce9ccf676b1",
+        "version": 1,
+        "state": {
+          "lastGroupId": 3,
+          "lastNodeId": 24,
+          "lastLinkId": 25,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "CLIP Text Encode (Positive Prompt)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -150,
+            675,
+            120,
+            80
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            905.2780151367188,
+            675,
+            128.6640625,
+            60
+          ]
+        },
+        "inputs": [
+          {
+            "id": "47264a97-6fc9-454d-920f-b8a43fee0489",
+            "name": "clip",
+            "type": "CLIP",
+            "linkIds": [
+              5,
+              25
+            ],
+            "localized_name": "clip",
+            "pos": [
+              -50,
+              695
+            ]
+          },
+          {
+            "id": "7cdb7919-1dad-4bd2-928d-c543c3fd712e",
+            "name": "value",
+            "type": "STRING",
+            "linkIds": [
+              22,
+              23
+            ],
+            "pos": [
+              -50,
+              715
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "c3f17ad9-6954-4333-bf8e-e1cf886c351b",
+            "name": "CONDITIONING",
+            "type": "CONDITIONING",
+            "linkIds": [
+              6
+            ],
+            "localized_name": "CONDITIONING",
+            "pos": [
+              925.2780151367188,
+              695
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 23,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              30,
+              720
+            ],
+            "size": [
+              370,
+              130
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  19
+                ]
+              }
+            ],
+            "title": "System prompt",
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.70"
+            },
+            "widgets_values": [
+              "You are an assistant designed to generate high quality anime images based on textual prompts. <Prompt Start> "
+            ]
+          },
+          {
+            "id": 24,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              30,
+              900
+            ],
+            "size": [
+              370,
+              130
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "STRING",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 23
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  20
+                ]
+              }
+            ],
+            "title": "Prompt",
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.70"
+            },
+            "widgets_values": [
+              "@comfyanonymous, \"Warm and cheerful digital illustration of a girl standing in the middle of an orange grove, surrounded by lush green leaves and ripe, vibrant oranges hanging from the trees. She has chestnut-brown hair tied in a single loose braid draped over her shoulder, with soft bangs framing her bright, smiling face.\n Her expression is full of joy and sunshine—eyes squinting slightly, mouth open in a wide, carefree smile, radiating pure happiness. She wears a crisp white blouse underneath a black jacket, slightly unbuttoned for a relaxed look. The sunlight filters through the leaves above, casting dappled golden light on her hair and shoulders, creating a warm, inviting atmosphere.\n  A few oranges hang close to her head, and one or two lie on the ground around her feet. The background features soft-focus trees stretching into the distance, with sunlight breaking through the foliage. The art style is painterly and soft, emphasizing the natural setting and the girl's radiant, wholesome charm.\""
+            ]
+          },
+          {
+            "id": 22,
+            "type": "StringConcatenate",
+            "pos": [
+              420,
+              720
+            ],
+            "size": [
+              400,
+              200
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_a",
+                "name": "string_a",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_a"
+                },
+                "link": 19
+              },
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 20
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  24
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.70"
+            },
+            "widgets_values": [
+              "",
+              "",
+              ""
+            ]
+          },
+          {
+            "id": 7,
+            "type": "CLIPTextEncode",
+            "pos": [
+              420,
+              410
+            ],
+            "size": [
+              425.27801513671875,
+              180.6060791015625
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 25
+              },
+              {
+                "localized_name": "text",
+                "name": "text",
+                "type": "STRING",
+                "widget": {
+                  "name": "text"
+                },
+                "link": 24
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "slot_index": 0,
+                "links": [
+                  6
+                ]
+              }
+            ],
+            "title": "CLIP Text Encode (Positive Prompt)",
+            "properties": {
+              "Node name for S&R": "CLIPTextEncode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64"
+            },
+            "widgets_values": [
+              ""
+            ],
+            "color": "#223",
+            "bgcolor": "#335"
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 19,
+            "origin_id": 23,
+            "origin_slot": 0,
+            "target_id": 22,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 20,
+            "origin_id": 24,
+            "origin_slot": 0,
+            "target_id": 22,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 6,
+            "origin_id": 7,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 23,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 24,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 24,
+            "origin_id": 22,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 25,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 0,
+            "type": "CLIP"
+          }
+        ],
+        "extra": {
+          "workflowRendererVersion": "LG"
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.2982103343424198,
+      "offset": [
+        2217.766284427104,
+        1268.5632944835781
+      ]
+    },
+    "frontendVersion": "1.35.1",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true,
+    "workflowRendererVersion": "LG"
+  },
+  "version": 0.4
+}

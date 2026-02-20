@@ -74,7 +74,8 @@ interface GenerationContext {
 }
 
 // Use import.meta.url to get the script's directory for reliable path resolution
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SITE_ROOT = path.resolve(__dirname, '..');
 const TEMPLATES_ROOT = path.resolve(SITE_ROOT, '..', 'templates');
 

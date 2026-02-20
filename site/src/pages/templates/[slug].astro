@@ -1,5 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import HubNavbar from '../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../components/hub/SiteFooter.astro';
 import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { getTemplatesForLocale } from '../../lib/templates';
@@ -83,7 +85,9 @@ const softwareAppStructuredData = {
   structuredData={structuredData}
   hreflangBasePath={hreflangBasePath}
   theme="dark"
+  hideDefaultFooter
 >
+  <HubNavbar />
   <TemplateDetailPage template={{ data }} locale={locale} />
 
   {
@@ -101,4 +105,8 @@ const softwareAppStructuredData = {
     type="application/ld+json"
     set:html={JSON.stringify(breadcrumbStructuredData)}
   />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
 </BaseLayout>
