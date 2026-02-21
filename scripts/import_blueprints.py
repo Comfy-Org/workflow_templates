@@ -4,6 +4,8 @@ Import blueprints from external sources and normalize them.
 
 This script:
 0. (Optional) Copy blueprint JSONs from another directory via --source
+0.5. Sanitize subgraph names: strip local- / local_ from definitions.subgraphs[0].name
+     (filenames keep local_ prefix; only the JSON content is updated)
 1. Renames blueprint files to use underscores instead of spaces/special chars
 2. Extracts metadata from blueprint JSON to generate index.json
 3. Updates blueprints_bundles.json with all blueprint IDs
@@ -36,6 +38,16 @@ def normalize_filename(name: str) -> str:
     return normalized
 
 
+def strip_local_prefix(name: str) -> str:
+    """Remove local- or local_ prefix from subgraph/display names."""
+    if not name:
+        return name
+    for prefix in ("local-", "local_"):
+        if name.startswith(prefix):
+            return name[len(prefix) :].strip()
+    return name
+
+
 def extract_metadata(blueprint_data: dict) -> dict:
     """Extract metadata from a blueprint JSON."""
     subgraphs = blueprint_data.get("definitions", {}).get("subgraphs", [])
@@ -43,7 +55,8 @@ def extract_metadata(blueprint_data: dict) -> dict:
         return {}
     
     subgraph = subgraphs[0]
-    name = subgraph.get("name", "Unknown")
+    raw_name = subgraph.get("name", "Unknown")
+    name = strip_local_prefix(raw_name)
     
     # Extract inputs
     inputs = []
@@ -124,6 +137,38 @@ def extract_metadata(blueprint_data: dict) -> dict:
         "outputs": outputs,
         "models": models[:5],  # Limit to first 5 models
     }
+
+
+def sanitize_subgraph_names():
+    """
+    Rewrite blueprint JSONs: remove local- / local_ prefix from
+    definitions.subgraphs[0].name so the subgraph displays the same name
+    as the cloud version (files keep their local_ filename).
+    Returns count of files modified.
+    """
+    count = 0
+    for path in sorted(BLUEPRINTS_DIR.glob("*.json")):
+        if path.name.startswith("index"):
+            continue
+        try:
+            with path.open("r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError as e:
+            print(f"Warning: Could not parse {path}: {e}")
+            continue
+        subgraphs = data.get("definitions", {}).get("subgraphs", [])
+        if not subgraphs:
+            continue
+        subgraph = subgraphs[0]
+        raw_name = subgraph.get("name", "")
+        new_name = strip_local_prefix(raw_name)
+        if new_name != raw_name:
+            subgraph["name"] = new_name
+            with path.open("w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            print(f"Sanitized subgraph name in: {path.name}")
+            count += 1
+    return count
 
 
 def copy_from_source(source_dir: Path) -> int:
@@ -278,6 +323,11 @@ def main():
         print("Step 0: Copying from source directory...")
         n = copy_from_source(args.source)
         print(f"Copied {n} file(s)\n")
+
+    # Step 0.5: Sanitize subgraph names (strip local- prefix from JSON content)
+    print("Step 0.5: Sanitizing subgraph names in JSON...")
+    sanitized = sanitize_subgraph_names()
+    print(f"Sanitized {sanitized} file(s)\n")
 
     # Step 1: Rename files
     print("Step 1: Renaming blueprint files...")
