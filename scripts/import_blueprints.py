@@ -3,7 +3,7 @@
 Import blueprints from external sources and normalize them.
 
 This script:
-0. (Optional) Copy blueprint JSONs from another directory via --source
+0. (Optional) Copy blueprint JSONs from --source (root + cloud/ + local/ in one run)
 0.5. Sanitize subgraph names: strip local- / local_ from definitions.subgraphs[0].name
      (filenames keep local_ prefix; only the JSON content is updated)
 1. Renames blueprint files to use underscores instead of spaces/special chars
@@ -16,10 +16,12 @@ import json
 import re
 import shutil
 from pathlib import Path
+from typing import Optional
 
 ROOT = Path(__file__).resolve().parents[1]
 BLUEPRINTS_DIR = ROOT / "blueprints"
 BUNDLES_CONFIG = ROOT / "blueprints_bundles.json"
+DISTRIBUTIONS_FILE = BLUEPRINTS_DIR / ".distributions.json"
 
 
 def normalize_filename(name: str) -> str:
@@ -171,26 +173,67 @@ def sanitize_subgraph_names():
     return count
 
 
-def copy_from_source(source_dir: Path) -> int:
+def copy_from_source(source_dir: Path) -> tuple[int, dict[str, Optional[list[str]]]]:
     """
-    Copy blueprint JSON files from source_dir into BLUEPRINTS_DIR (skip index*).
-    Existing files with the same name are overwritten (replace in place).
-    Returns count copied.
+    Copy blueprint JSONs from source_dir. If source has cloud/ and local/ subdirs,
+    copies from root, cloud/, and local/ in one go.
+    Returns (count, distribution_map): distribution_map maps blueprint stem (after
+    rename) -> ["cloud"] | ["localhost"] | None. None = omit includeOnDistributions.
     """
     source_dir = source_dir.resolve()
     if not source_dir.is_dir():
         raise SystemExit(f"Source directory not found: {source_dir}")
     BLUEPRINTS_DIR.mkdir(parents=True, exist_ok=True)
+    distribution_map: dict[str, Optional[list[str]]] = {}
     count = 0
-    for path in sorted(source_dir.glob("*.json")):
-        if path.name.startswith("index"):
-            continue
-        dest = BLUEPRINTS_DIR / path.name
-        existed = dest.exists()
-        shutil.copy2(path, dest)
-        print(f"{'Replaced' if existed else 'Copied'}: {path.name}")
-        count += 1
-    return count
+
+    def copy_dir(src: Path, dist: Optional[list[str]]) -> None:
+        nonlocal count
+        for path in sorted(src.glob("*.json")):
+            if path.name.startswith("index"):
+                continue
+            dest = BLUEPRINTS_DIR / path.name
+            existed = dest.exists()
+            shutil.copy2(path, dest)
+            stem_after_rename = normalize_filename(path.stem)
+            distribution_map[stem_after_rename] = dist
+            print(f"{'Replaced' if existed else 'Copied'}: {path.relative_to(source_dir.parent)}")
+            count += 1
+
+    # Root level: no includeOnDistributions
+    copy_dir(source_dir, None)
+
+    # cloud/ subdir: includeOnDistributions ["cloud"]
+    cloud_dir = source_dir / "cloud"
+    if cloud_dir.is_dir():
+        copy_dir(cloud_dir, ["cloud"])
+
+    # local/ subdir: includeOnDistributions ["localhost"]
+    local_dir = source_dir / "local"
+    if local_dir.is_dir():
+        copy_dir(local_dir, ["localhost"])
+
+    return count, distribution_map
+
+
+def load_distribution_map() -> dict[str, Optional[list[str]]]:
+    """Load persisted distribution map from .distributions.json."""
+    if not DISTRIBUTIONS_FILE.exists():
+        return {}
+    try:
+        with DISTRIBUTIONS_FILE.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def save_distribution_map(m: dict[str, Optional[list[str]]]) -> None:
+    """Merge and persist distribution map (None values stored as null)."""
+    BLUEPRINTS_DIR.mkdir(parents=True, exist_ok=True)
+    existing = load_distribution_map()
+    existing.update(m)
+    with DISTRIBUTIONS_FILE.open("w", encoding="utf-8") as f:
+        json.dump(existing, f, indent=2)
 
 
 def rename_blueprints():
@@ -220,8 +263,13 @@ def rename_blueprints():
     return renames
 
 
-def generate_index():
-    """Generate index.json from blueprint files."""
+def generate_index(distribution_map: Optional[dict[str, Optional[list[str]]]] = None):
+    """
+    Generate index.json from blueprint files.
+    distribution_map: stem -> ["cloud"]|["localhost"]|None. If None, load from .distributions.json.
+    """
+    if distribution_map is None:
+        distribution_map = load_distribution_map()
     blueprints_by_category = {}
     
     for path in sorted(BLUEPRINTS_DIR.glob("*.json")):
@@ -242,11 +290,13 @@ def generate_index():
         
         blueprint_id = path.stem
         category = metadata.pop("category", "Other")
-        
-        entry = {
-            "name": blueprint_id,
-            **metadata,
-        }
+
+        # includeOnDistributions: from distribution_map (path-based: cloud/local); omit if neither
+        entry = {"name": blueprint_id, **metadata}
+        if blueprint_id in distribution_map:
+            dist = distribution_map[blueprint_id]
+            if dist is not None:
+                entry["includeOnDistributions"] = dist
         
         if category not in blueprints_by_category:
             blueprints_by_category[category] = []
@@ -319,9 +369,11 @@ def main():
 
     print("=== Importing Blueprints ===\n")
 
+    distribution_map: Optional[dict[str, Optional[list[str]]]] = None
     if args.source is not None:
-        print("Step 0: Copying from source directory...")
-        n = copy_from_source(args.source)
+        print("Step 0: Copying from source directory (root + cloud/ + local/)...")
+        n, distribution_map = copy_from_source(args.source)
+        save_distribution_map(distribution_map)
         print(f"Copied {n} file(s)\n")
 
     # Step 0.5: Sanitize subgraph names (strip local- prefix from JSON content)
@@ -336,7 +388,7 @@ def main():
 
     # Step 2: Generate index.json
     print("Step 2: Generating index.json...")
-    index = generate_index()
+    index = generate_index(distribution_map)
     index_path = BLUEPRINTS_DIR / "index.json"
     with index_path.open("w", encoding="utf-8") as f:
         json.dump(index, f, indent=2)

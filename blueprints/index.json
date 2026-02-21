@@ -4,6 +4,53 @@
     "title": "Text to Image",
     "blueprints": [
       {
+        "name": "local_text_to_image_z_image_turbo",
+        "title": "Text to Image (Z-Image-Turbo)",
+        "description": "Text to Image (Z-Image-Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_3_4b.safetensors",
+          "ae.safetensors",
+          "z_image_turbo_bf16.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
         "name": "text_to_image",
         "title": "Text to Image",
         "description": "Text to Image blueprint",
@@ -97,6 +144,9 @@
           "qwen_3_4b.safetensors",
           "ae.safetensors",
           "z_image_turbo_bf16.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
         ]
       }
     ]
@@ -196,6 +246,9 @@
           "flux-2-klein-base-4b-fp8.safetensors",
           "qwen_3_4b.safetensors",
           "flux2-vae.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
         ]
       },
       {
@@ -232,6 +285,423 @@
           "qwen_image_vae.safetensors",
           "qwen_image_edit_2511_bf16.safetensors",
           "qwen_2.5_vl_7b_fp8_scaled.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_image_edit_flux_2_klein_4b",
+        "title": "Image Edit (Flux.2 Klein 4B)",
+        "description": "Image Edit (Flux.2 Klein 4B) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "flux-2-klein-base-4b-fp8.safetensors",
+          "qwen_3_4b.safetensors",
+          "flux2-vae.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_image_edit_qwen_2511",
+        "title": "Image Edit (Qwen 2511)",
+        "description": "Image Edit (Qwen 2511) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image1",
+            "type": "IMAGE"
+          },
+          {
+            "name": "image2",
+            "type": "IMAGE"
+          },
+          {
+            "name": "image3",
+            "type": "IMAGE"
+          },
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_image_vae.safetensors",
+          "qwen_image_edit_2511_bf16.safetensors",
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
+    "title": "Inpainting",
+    "blueprints": [
+      {
+        "name": "image_inpainting_qwen_image",
+        "title": "Image Inpainting (Qwen-image)",
+        "description": "Image Inpainting (Qwen-image) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "mask",
+            "type": "MASK"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_fp8_e4m3fn.safetensors",
+          "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors",
+          "qwen_image_vae.safetensors",
+          "Qwen-Image-Lightning-4steps-V1.0.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_image_inpainting_qwen_image",
+        "title": "Image Inpainting (Qwen-image)",
+        "description": "Image Inpainting (Qwen-image) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "mask",
+            "type": "MASK"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "control_net_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_fp8_e4m3fn.safetensors",
+          "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors",
+          "qwen_image_vae.safetensors",
+          "Qwen-Image-Lightning-4steps-V1.0.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_video_inpaint_wan2_1_vace",
+        "title": "Video Inpaint(Wan2.1 VACE)",
+        "description": "Video Inpaint(Wan2.1 VACE) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "mask",
+            "type": "MASK"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "reference_image_1",
+            "type": "IMAGE"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "wan2.1_vace_14B_fp16.safetensors",
+          "Wan21_CausVid_14B_T2V_lora_rank32.safetensors",
+          "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "wan_2.1_vae.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "video_inpaint_wan2_1_vace",
+        "title": "Video Inpaint (Wan2.1 VACE)",
+        "description": "Video Inpaint (Wan2.1 VACE) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "mask",
+            "type": "MASK"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "reference_image_1",
+            "type": "IMAGE"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "wan2.1_vace_14B_fp16.safetensors",
+          "Wan21_CausVid_14B_T2V_lora_rank32.safetensors",
+          "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "wan_2.1_vae.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
+    "title": "Outpainting",
+    "blueprints": [
+      {
+        "name": "image_outpainting_qwen_image",
+        "title": "Image Outpainting (Qwen-Image InstantX)",
+        "description": "Image Outpainting (Qwen-Image InstantX) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "left",
+            "type": "INT"
+          },
+          {
+            "name": "top",
+            "type": "INT"
+          },
+          {
+            "name": "right",
+            "type": "INT"
+          },
+          {
+            "name": "bottom",
+            "type": "INT"
+          },
+          {
+            "name": "feathering",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_fp8_e4m3fn.safetensors",
+          "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors",
+          "Qwen-Image-Lightning-4steps-V1.0.safetensors",
+          "qwen_image_vae.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_image_outpainting_qwen_image",
+        "title": "Image Outpainting (Qwen-Image)",
+        "description": "Image Outpainting (Qwen-Image) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "left",
+            "type": "INT"
+          },
+          {
+            "name": "top",
+            "type": "INT"
+          },
+          {
+            "name": "right",
+            "type": "INT"
+          },
+          {
+            "name": "bottom",
+            "type": "INT"
+          },
+          {
+            "name": "feathering",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "control_net_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_fp8_e4m3fn.safetensors",
+          "Qwen-Image-InstantX-ControlNet-Inpainting.safetensors",
+          "Qwen-Image-Lightning-4steps-V1.0.safetensors",
+          "qwen_image_vae.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
         ]
       }
     ]
@@ -273,6 +743,98 @@
   },
   {
     "moduleName": "default",
+    "title": "Layers",
+    "blueprints": [
+      {
+        "name": "image_to_layers_qwen_image_layered",
+        "title": "Image to Layers (Qwen-Image-Layered)",
+        "description": "Image to Layers (Qwen-Image-Layered) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "steps",
+            "type": "INT"
+          },
+          {
+            "name": "cfg",
+            "type": "FLOAT"
+          },
+          {
+            "name": "layers",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_layered_vae.safetensors",
+          "qwen_image_layered_bf16.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_image_to_layers_qwen_image_layered",
+        "title": "Image to Layers (Qwen-Image-Layered)",
+        "description": "Image to Layers (Qwen-Image-Layered) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "steps",
+            "type": "INT"
+          },
+          {
+            "name": "cfg",
+            "type": "FLOAT"
+          },
+          {
+            "name": "layers",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_layered_vae.safetensors",
+          "qwen_image_layered_bf16.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
     "title": "Depth",
     "blueprints": [
       {
@@ -302,6 +864,133 @@
           "z_image_turbo_bf16.safetensors",
           "ae.safetensors",
           "Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "image_to_depth_map_lotus",
+        "title": "Image to Depth Map (Lotus)",
+        "description": "Image to Depth Map (Lotus) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "pixels",
+            "type": "IMAGE"
+          },
+          {
+            "name": "sigma",
+            "type": "FLOAT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "lotus-depth-d-v1-1.safetensors",
+          "vae-ft-mse-840000-ema-pruned.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_depth_to_image_z_image_turbo",
+        "title": "Depth to Image (Z-Image-Turbo)",
+        "description": "Depth to Image (Z-Image-Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "name",
+            "type": "COMBO"
+          },
+          {
+            "name": "unet_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name_1",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_3_4b.safetensors",
+          "z_image_turbo_bf16.safetensors",
+          "ae.safetensors",
+          "Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_image_to_depth_map_lotus",
+        "title": "Image to Depth Map (Lotus)",
+        "description": "Image to Depth Map (Lotus) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "pixels",
+            "type": "IMAGE"
+          },
+          {
+            "name": "sigma",
+            "type": "FLOAT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "lotus-depth-d-v1-1.safetensors",
+          "vae-ft-mse-840000-ema-pruned.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
         ]
       }
     ]
@@ -310,6 +999,47 @@
     "moduleName": "default",
     "title": "Text to Video",
     "blueprints": [
+      {
+        "name": "local_text_to_video_wan_2_2",
+        "title": "Text to Video (Wan 2.2)",
+        "description": "Text to Video (Wan 2.2) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "length",
+            "type": "INT"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "wan_2.1_vae.safetensors",
+          "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+          "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
+          "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
       {
         "name": "text_to_video",
         "title": "Text to Video",
@@ -384,6 +1114,9 @@
           "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
           "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
           "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
         ]
       }
     ]
@@ -436,6 +1169,18 @@
           {
             "name": "text",
             "type": "STRING"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "length",
+            "type": "INT"
           }
         ],
         "outputs": [
@@ -450,6 +1195,78 @@
           "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
           "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
           "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_image_to_video_wan_2_2",
+        "title": "Image to Video (Wan 2.2)",
+        "description": "Image to Video (Wan 2.2) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "start_image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "length",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "unet_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "wan_2.1_vae.safetensors",
+          "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
+          "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
+          "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
         ]
       }
     ]
@@ -509,6 +1326,63 @@
         ]
       },
       {
+        "name": "depth_to_video_ltx_2_0",
+        "title": "Depth to Video (LTX 2.0)",
+        "description": "Depth to Video (LTX 2.0) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "strength",
+            "type": "FLOAT"
+          },
+          {
+            "name": "bypass",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "image_2",
+            "type": "IMAGE"
+          },
+          {
+            "name": "resize_type.width",
+            "type": "INT"
+          },
+          {
+            "name": "resize_type.height",
+            "type": "INT"
+          },
+          {
+            "name": "length",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "ltx-2-19b-ic-lora-depth-control.safetensors",
+          "ltx-2-19b-dev-fp8.safetensors",
+          "gemma_3_12B_it_fp4_mixed.safetensors",
+          "ltx-2-19b-distilled-lora-384.safetensors",
+          "ltx-2-spatial-upscaler-x2-1.0.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
         "name": "first_last_frame_to_video",
         "title": "First-Last-Frame to Video",
         "description": "First-Last-Frame to Video blueprint",
@@ -540,6 +1414,229 @@
           "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
           "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
           "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors"
+        ]
+      },
+      {
+        "name": "local_canny_to_video_ltx_2_0",
+        "title": "Canny to Video (LTX 2.0)",
+        "description": "Canny to Video (LTX 2.0) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "strength",
+            "type": "FLOAT"
+          },
+          {
+            "name": "bypass",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "image_1",
+            "type": "IMAGE"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "text_encoder",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "ltx-2-19b-ic-lora-canny-control.safetensors",
+          "ltx-2-19b-dev-fp8.safetensors",
+          "gemma_3_12B_it_fp4_mixed.safetensors",
+          "ltx-2-19b-distilled-lora-384.safetensors",
+          "ltx-2-spatial-upscaler-x2-1.0.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_depth_to_video_ltx_2_0",
+        "title": "Depth to Video (LTX 2.0)",
+        "description": "Depth to Video (LTX 2.0) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "strength",
+            "type": "FLOAT"
+          },
+          {
+            "name": "bypass",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "image_2",
+            "type": "IMAGE"
+          },
+          {
+            "name": "resize_type.width",
+            "type": "INT"
+          },
+          {
+            "name": "resize_type.height",
+            "type": "INT"
+          },
+          {
+            "name": "length",
+            "type": "INT"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "text_encoder",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "ltx-2-19b-ic-lora-depth-control.safetensors",
+          "ltx-2-19b-dev-fp8.safetensors",
+          "ltx-2-19b-distilled-lora-384.safetensors",
+          "ltx-2-spatial-upscaler-x2-1.0.safetensors",
+          "gemma_3_12B_it_fp4_mixed.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_pose_to_video_ltx_2_0",
+        "title": "Pose to Video (LTX 2.0)",
+        "description": "Pose to Video (LTX 2.0) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "strength",
+            "type": "FLOAT"
+          },
+          {
+            "name": "bypass",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "input",
+            "type": "IMAGE,MASK"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "lora_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "resize_type.width",
+            "type": "INT"
+          },
+          {
+            "name": "resize_type.height",
+            "type": "INT"
+          },
+          {
+            "name": "length",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "ltx-2-spatial-upscaler-x2-1.0.safetensors",
+          "ltx-2-19b-distilled-lora-384.safetensors",
+          "ltx-2-19b-ic-lora-pose-control.safetensors",
+          "ltx-2-19b-dev-fp8.safetensors",
+          "gemma_3_12B_it_fp4_mixed.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
         ]
       },
       {
@@ -582,6 +1679,401 @@
           "ltx-2-19b-ic-lora-pose-control.safetensors",
           "ltx-2-19b-dev-fp8.safetensors",
           "gemma_3_12B_it_fp4_mixed.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "video_canny",
+        "title": "Video to Canny",
+        "description": "Video to Canny blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "low_threshold",
+            "type": "INT"
+          },
+          {
+            "name": "high_threshold",
+            "type": "INT"
+          },
+          {
+            "name": "resolution",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "audio",
+            "type": "AUDIO"
+          },
+          {
+            "name": "fps",
+            "type": "FLOAT"
+          }
+        ],
+        "models": [],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "video_captioning_gemini",
+        "title": "Video Captioning(Gemini)",
+        "description": "Video Captioning(Gemini) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "model",
+            "type": "COMBO"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "STRING",
+            "type": "STRING"
+          }
+        ],
+        "models": []
+      },
+      {
+        "name": "video_depth",
+        "title": "Video to Depth",
+        "description": "Video to Depth blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "resolution",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "audio",
+            "type": "AUDIO"
+          },
+          {
+            "name": "fps",
+            "type": "FLOAT"
+          }
+        ],
+        "models": [],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "video_normal_map",
+        "title": "Video to Normal Map",
+        "description": "Video to Normal Map blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "resolution",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "audio",
+            "type": "AUDIO"
+          },
+          {
+            "name": "fps",
+            "type": "FLOAT"
+          }
+        ],
+        "models": [],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "video_pose",
+        "title": "Video to Pose",
+        "description": "Video to Pose blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "detect_hand",
+            "type": "COMBO"
+          },
+          {
+            "name": "detect_body",
+            "type": "COMBO"
+          },
+          {
+            "name": "detect_face",
+            "type": "COMBO"
+          },
+          {
+            "name": "resolution",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "audio",
+            "type": "AUDIO"
+          },
+          {
+            "name": "fps",
+            "type": "FLOAT"
+          }
+        ],
+        "models": [],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "video_stitch",
+        "title": "Video Stitch",
+        "description": "Video Stitch blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "video_1",
+            "type": "VIDEO"
+          },
+          {
+            "name": "direction",
+            "type": "COMBO"
+          },
+          {
+            "name": "match_image_size",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "spacing_width",
+            "type": "INT"
+          },
+          {
+            "name": "spacing_color",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": []
+      },
+      {
+        "name": "video_upscale_gan_x4",
+        "title": "Video Upscale(GAN x4)",
+        "description": "Video Upscale(GAN x4) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "RealESRGAN_x4plus.safetensors"
+        ]
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
+    "title": "Audio",
+    "blueprints": [
+      {
+        "name": "local_text_to_audio_ace_step_1_5",
+        "title": "Text to Audio (ACE-Step 1.5)",
+        "description": "Text to Audio (ACE-Step 1.5) blueprint",
+        "mediaType": "audio",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "tags",
+            "type": "STRING"
+          },
+          {
+            "name": "lyrics",
+            "type": "STRING"
+          },
+          {
+            "name": "timesignature",
+            "type": "COMBO"
+          },
+          {
+            "name": "language",
+            "type": "COMBO"
+          },
+          {
+            "name": "keyscale",
+            "type": "COMBO"
+          },
+          {
+            "name": "generate_audio_codes",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "cfg_scale",
+            "type": "FLOAT"
+          },
+          {
+            "name": "value",
+            "type": "FLOAT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name1",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name2",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "AUDIO",
+            "type": "AUDIO"
+          }
+        ],
+        "models": [
+          "qwen_0.6b_ace15.safetensors",
+          "qwen_4b_ace15.safetensors",
+          "ace_1.5_vae.safetensors",
+          "acestep_v1.5_turbo.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "text_to_audio_ace_step_1_5",
+        "title": "Text to Audio (ACE-Step 1.5)",
+        "description": "Text to Audio (ACE-Step 1.5) blueprint",
+        "mediaType": "audio",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "tags",
+            "type": "STRING"
+          },
+          {
+            "name": "lyrics",
+            "type": "STRING"
+          },
+          {
+            "name": "timesignature",
+            "type": "COMBO"
+          },
+          {
+            "name": "language",
+            "type": "COMBO"
+          },
+          {
+            "name": "keyscale",
+            "type": "COMBO"
+          },
+          {
+            "name": "generate_audio_codes",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "cfg_scale",
+            "type": "FLOAT"
+          },
+          {
+            "name": "value",
+            "type": "FLOAT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "AUDIO",
+            "type": "AUDIO"
+          }
+        ],
+        "models": [
+          "qwen_0.6b_ace15.safetensors",
+          "qwen_4b_ace15.safetensors",
+          "ace_1.5_vae.safetensors",
+          "acestep_v1.5_turbo.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
         ]
       }
     ]
@@ -625,6 +2117,306 @@
           "z_image_turbo_bf16.safetensors",
           "ae.safetensors",
           "Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "image_captioning_gemini",
+        "title": "Image Captioning(Gemini)",
+        "description": "Image Captioning(Gemini) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "images",
+            "type": "IMAGE"
+          },
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "model",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "STRING",
+            "type": "STRING"
+          }
+        ],
+        "models": []
+      },
+      {
+        "name": "image_to_model_hunyuan3d_2_1",
+        "title": "Image to Model (Hunyuan3d 2.1)",
+        "description": "Image to Model (Hunyuan3d 2.1) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "MESH",
+            "type": "MESH"
+          }
+        ],
+        "models": [
+          "hunyuan_3d_v2.1.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "image_upscale_z_image_turbo",
+        "title": "Image Upscale(Z-image-Turbo)",
+        "description": "Image Upscale(Z-image-Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "denoise",
+            "type": "FLOAT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE_1",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "z_image_turbo_bf16.safetensors",
+          "qwen_3_4b.safetensors",
+          "ae.safetensors",
+          "RealESRGAN_x4plus.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "local_canny_to_image_z_image_turbo",
+        "title": "Canny to Image (Z-Image-Turbo)",
+        "description": "Canny to Image (Z-Image-Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "low_threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "high_threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_3_4b.safetensors",
+          "z_image_turbo_bf16.safetensors",
+          "ae.safetensors",
+          "Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_image_to_model_hunyuan3d_2_1",
+        "title": "Image to Model (Hunyuan3d 2.1)",
+        "description": "Image to Model (Hunyuan3d 2.1) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "MESH",
+            "type": "MESH"
+          }
+        ],
+        "models": [
+          "hunyuan_3d_v2.1.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_image_upscale_z_image_turbo",
+        "title": "Image Upscale(Z-image-Turbo)",
+        "description": "Image Upscale(Z-image-Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "denoise",
+            "type": "FLOAT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE_1",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "z_image_turbo_bf16.safetensors",
+          "qwen_3_4b.safetensors",
+          "ae.safetensors",
+          "RealESRGAN_x4plus.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_pose_to_image_z_image_turbo",
+        "title": "Pose to Image (Z-Image-Turbo)",
+        "description": "Pose to Image (Z-Image-Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_3_4b.safetensors",
+          "z_image_turbo_bf16.safetensors",
+          "ae.safetensors",
+          "Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+        ],
+        "includeOnDistributions": [
+          "localhost"
+        ]
+      },
+      {
+        "name": "local_remove_image_background",
+        "title": "Remove Image Background",
+        "description": "Remove Image Background blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "MASK",
+            "type": "MASK"
+          }
+        ],
+        "models": [],
+        "includeOnDistributions": [
+          "localhost"
         ]
       },
       {
@@ -687,6 +2479,60 @@
           "z_image_turbo_bf16.safetensors",
           "ae.safetensors",
           "Z-Image-Turbo-Fun-Controlnet-Union.safetensors"
+        ],
+        "includeOnDistributions": [
+          "cloud"
+        ]
+      },
+      {
+        "name": "prompt_enhance",
+        "title": "Prompt Enhance",
+        "description": "Prompt Enhance blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "images",
+            "type": "IMAGE"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "STRING",
+            "type": "STRING"
+          }
+        ],
+        "models": []
+      },
+      {
+        "name": "remove_image_background",
+        "title": "Remove Image Background",
+        "description": "Remove Image Background blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "MASK",
+            "type": "MASK"
+          }
+        ],
+        "models": [],
+        "includeOnDistributions": [
+          "cloud"
         ]
       }
     ]
