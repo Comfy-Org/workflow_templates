@@ -76,34 +76,39 @@ def extract_metadata(blueprint_data: dict) -> dict:
     else:
         media_type = "image"
     
-    # Determine category from name
-    name_lower = name.lower()
-    if "text to image" in name_lower:
-        category = "Text to Image"
-    elif "image edit" in name_lower:
-        category = "Image Editing"
-    elif "text to video" in name_lower:
-        category = "Text to Video"
-    elif "image to video" in name_lower or "i2v" in name_lower:
-        category = "Image to Video"
-    elif "controlnet" in name_lower or "control" in name_lower:
-        category = "ControlNet"
-    elif "inpaint" in name_lower:
-        category = "Inpainting"
-    elif "outpaint" in name_lower:
-        category = "Outpainting"
-    elif "video" in name_lower:
-        category = "Video"
-    elif "audio" in name_lower:
-        category = "Audio"
-    elif "layer" in name_lower:
-        category = "Layers"
-    elif "depth" in name_lower:
-        category = "Depth"
-    elif "reference" in name_lower:
-        category = "Reference"
+    # Determine category: prefer embedded category from subgraph, fall back to name heuristics
+    embedded_category = subgraph.get("category", "")
+    if embedded_category:
+        # Use top-level category (before '/') from embedded category path
+        category = embedded_category.split("/")[0].strip()
     else:
-        category = "Other"
+        name_lower = name.lower()
+        if "text to image" in name_lower:
+            category = "Text to Image"
+        elif "image edit" in name_lower:
+            category = "Image Editing"
+        elif "text to video" in name_lower:
+            category = "Text to Video"
+        elif "image to video" in name_lower or "i2v" in name_lower:
+            category = "Image to Video"
+        elif "controlnet" in name_lower or "control" in name_lower:
+            category = "ControlNet"
+        elif "inpaint" in name_lower:
+            category = "Inpainting"
+        elif "outpaint" in name_lower:
+            category = "Outpainting"
+        elif "video" in name_lower:
+            category = "Video"
+        elif "audio" in name_lower:
+            category = "Audio"
+        elif "layer" in name_lower:
+            category = "Layers"
+        elif "depth" in name_lower:
+            category = "Depth"
+        elif "reference" in name_lower:
+            category = "Reference"
+        else:
+            category = "Other"
     
     # Extract model info from nodes
     models = []
@@ -222,6 +227,7 @@ def generate_index():
         "Image to Video",
         "Video",
         "Audio",
+        "Image Tools",
         "Other",
     ]
     
