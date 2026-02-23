@@ -2,7 +2,7 @@
   "id": "9ae6082b-c7f4-433c-9971-7a8f65a3ea65",
   "revision": 0,
   "last_node_id": 58,
-  "last_link_id": 53,
+  "last_link_id": 63,
   "nodes": [
     {
       "id": 9,
@@ -90,6 +90,7 @@
           ]
         }
       ],
+      "title": "Text to Image (Ovis)",
       "properties": {
         "proxyWidgets": [
           [
@@ -105,6 +106,26 @@
             "height"
           ],
           [
+            "-1",
+            "steps"
+          ],
+          [
+            "-1",
+            "cfg"
+          ],
+          [
+            "-1",
+            "unet_name"
+          ],
+          [
+            "-1",
+            "clip_name"
+          ],
+          [
+            "-1",
+            "vae_name"
+          ],
+          [
             "44",
             "seed"
           ],
@@ -117,7 +138,12 @@
       "widgets_values": [
         "Child lying on bed with balloons, streamers, and plush toys, surreal dreamlike scene. Close-up, centered on the child and surrounding objects. Soft, diffused lighting.",
         1024,
-        1024
+        1024,
+        20,
+        5,
+        "ovis_image_bf16.safetensors",
+        "ovis_2.5.safetensors",
+        "ae.safetensors"
       ]
     }
   ],
@@ -139,20 +165,20 @@
         "version": 1,
         "state": {
           "lastGroupId": 4,
-          "lastNodeId": 53,
-          "lastLinkId": 55,
+          "lastNodeId": 58,
+          "lastLinkId": 63,
           "lastRerouteId": 0
         },
         "revision": 0,
         "config": {},
-        "name": "Ovis Text to Image",
+        "name": "Text to Image (Ovis)",
         "inputNode": {
           "id": -10,
           "bounding": [
             -60,
             485,
             120,
-            100
+            200
           ]
         },
         "outputNode": {
@@ -200,6 +226,66 @@
               40,
               545
             ]
+          },
+          {
+            "id": "6f203291-3a04-440a-b314-f8eb5a32488d",
+            "name": "steps",
+            "type": "INT",
+            "linkIds": [
+              59
+            ],
+            "pos": [
+              40,
+              565
+            ]
+          },
+          {
+            "id": "ca07fa24-57c4-4b1a-bebe-e60fe8a1d1e7",
+            "name": "cfg",
+            "type": "FLOAT",
+            "linkIds": [
+              60
+            ],
+            "pos": [
+              40,
+              585
+            ]
+          },
+          {
+            "id": "5bef21a5-f9a5-401b-8b5b-16c6c380504b",
+            "name": "unet_name",
+            "type": "COMBO",
+            "linkIds": [
+              61
+            ],
+            "pos": [
+              40,
+              605
+            ]
+          },
+          {
+            "id": "86821a16-d73f-4eaa-95f4-9c9bed59af4a",
+            "name": "clip_name",
+            "type": "COMBO",
+            "linkIds": [
+              62
+            ],
+            "pos": [
+              40,
+              625
+            ]
+          },
+          {
+            "id": "9beac9d1-4935-4432-9d33-047fef04d049",
+            "name": "vae_name",
+            "type": "COMBO",
+            "linkIds": [
+              63
+            ],
+            "pos": [
+              40,
+              645
+            ]
           }
         ],
         "outputs": [
@@ -233,7 +319,17 @@
             "flags": {},
             "order": 0,
             "mode": 0,
-            "inputs": [],
+            "inputs": [
+              {
+                "localized_name": "vae_name",
+                "name": "vae_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "vae_name"
+                },
+                "link": 63
+              }
+            ],
             "outputs": [
               {
                 "localized_name": "VAE",
@@ -334,7 +430,17 @@
             "flags": {},
             "order": 1,
             "mode": 0,
-            "inputs": [],
+            "inputs": [
+              {
+                "localized_name": "unet_name",
+                "name": "unet_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "unet_name"
+                },
+                "link": 61
+              }
+            ],
             "outputs": [
               {
                 "localized_name": "MODEL",
@@ -383,7 +489,17 @@
             "flags": {},
             "order": 2,
             "mode": 0,
-            "inputs": [],
+            "inputs": [
+              {
+                "localized_name": "clip_name",
+                "name": "clip_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "clip_name"
+                },
+                "link": 62
+              }
+            ],
             "outputs": [
               {
                 "localized_name": "CLIP",
@@ -458,6 +574,24 @@
                 "name": "latent_image",
                 "type": "LATENT",
                 "link": 43
+              },
+              {
+                "localized_name": "steps",
+                "name": "steps",
+                "type": "INT",
+                "widget": {
+                  "name": "steps"
+                },
+                "link": 59
+              },
+              {
+                "localized_name": "cfg",
+                "name": "cfg",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "cfg"
+                },
+                "link": 60
               }
             ],
             "outputs": [
@@ -860,6 +994,46 @@
             "target_id": 41,
             "target_slot": 1,
             "type": "INT"
+          },
+          {
+            "id": 59,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 44,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 60,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 44,
+            "target_slot": 5,
+            "type": "FLOAT"
+          },
+          {
+            "id": 61,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 46,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 62,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 39,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 63,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 40,
+            "target_slot": 0,
+            "type": "COMBO"
           }
         ],
         "extra": {
@@ -871,13 +1045,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7672169925297081,
+      "scale": 1,
       "offset": [
-        189.4325029882818,
-        -161.96834161966373
+        51.53551793981478,
+        -111.66722125771611
       ]
     },
-    "frontendVersion": "1.38.6",
+    "frontendVersion": "1.41.3",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
