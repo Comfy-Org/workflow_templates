@@ -1,8 +1,8 @@
 {
   "id": "188a3615-701f-49aa-8765-85687e960e23",
   "revision": 0,
-  "last_node_id": 17,
-  "last_link_id": 16,
+  "last_node_id": 18,
+  "last_link_id": 25,
   "nodes": [
     {
       "id": 15,
@@ -51,16 +51,16 @@
       ],
       "outputs": [],
       "properties": {
+        "Node name for S&R": "SaveImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.12.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.12.1",
-        "Node name for S&R": "SaveImage"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         "Kandinsky5"
@@ -105,10 +105,6 @@
             "height"
           ],
           [
-            "12",
-            "batch_size"
-          ],
-          [
             "8",
             "seed"
           ],
@@ -117,36 +113,42 @@
             "control_after_generate"
           ],
           [
-            "4",
+            "-1",
             "unet_name"
           ],
           [
-            "6",
+            "-1",
             "vae_name"
           ],
           [
-            "1",
+            "-1",
             "clip_name1"
           ],
           [
-            "1",
+            "-1",
             "clip_name2"
           ]
         ],
+        "cnr_id": "comfy-core",
+        "ver": "0.12.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.12.1"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         "A three-quarter side profile shot captured from a slightly low, stationary camera angle, this image frames a joyful hiker against the jagged, dramatic peaks of the Dolomites, where the elevated perspective emphasizes both the grandeur of the alpine landscape and the upward, hopeful tilt of his gaze. He wears a snug, mustard-yellow knit beanie that matches his chunky, textured sweater, paired with round, wire-rimmed glasses that add a thoughtful, approachable charm, while a rugged, oversized hiking backpack in weathered taupe is secured across his shoulders with gray, adjustable straps, complemented by a utility waist belt with a small, functional pouch. The scene is enhanced by a warm, vintage-inspired filter that bathes the frame in rich golden-amber tones, boosting contrast between the hiker’s vibrant knitwear and the tawny mountain slopes, and a subtle film grain that lends a nostalgic, cinematic quality; soft, directional sunlight casts gentle shadows along his beard and sweater to add depth, with the crisp, saturated blue sky providing a striking counterpoint to the earthy foreground, creating an immersive portrait of adventure and warmth.\n",
         1024,
-        1024
+        1024,
+        null,
+        null,
+        "kandinsky5lite_t2i.safetensors",
+        "ae.safetensors",
+        "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "clip_l.safetensors"
       ]
     }
   ],
@@ -168,8 +170,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 3,
-          "lastNodeId": 12,
-          "lastLinkId": 21,
+          "lastNodeId": 18,
+          "lastLinkId": 25,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -181,7 +183,7 @@
             50,
             870,
             120,
-            100
+            180
           ]
         },
         "outputNode": {
@@ -229,6 +231,54 @@
               150,
               930
             ]
+          },
+          {
+            "id": "fb83fae3-ced4-49a7-9b49-3b8dbb9df971",
+            "name": "unet_name",
+            "type": "COMBO",
+            "linkIds": [
+              22
+            ],
+            "pos": [
+              150,
+              950
+            ]
+          },
+          {
+            "id": "34d1abb8-b902-400c-a32b-8d4eb00d0349",
+            "name": "vae_name",
+            "type": "COMBO",
+            "linkIds": [
+              23
+            ],
+            "pos": [
+              150,
+              970
+            ]
+          },
+          {
+            "id": "28d48815-6a43-41f7-a693-75656fc9db59",
+            "name": "clip_name1",
+            "type": "COMBO",
+            "linkIds": [
+              24
+            ],
+            "pos": [
+              150,
+              990
+            ]
+          },
+          {
+            "id": "b60ee141-09a0-4baf-bc31-f86b90e51ecf",
+            "name": "clip_name2",
+            "type": "COMBO",
+            "linkIds": [
+              25
+            ],
+            "pos": [
+              150,
+              1010
+            ]
           }
         ],
         "outputs": [
@@ -259,7 +309,7 @@
               210.91145833333334
             ],
             "flags": {},
-            "order": 3,
+            "order": 1,
             "mode": 0,
             "inputs": [
               {
@@ -281,16 +331,16 @@
             ],
             "title": "CLIP Text Encode (Negative Prompt)",
             "properties": {
+              "Node name for S&R": "CLIPTextEncode",
+              "cnr_id": "comfy-core",
+              "ver": "0.12.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.12.1",
-              "Node name for S&R": "CLIPTextEncode"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               ""
@@ -312,7 +362,26 @@
             "flags": {},
             "order": 0,
             "mode": 0,
-            "inputs": [],
+            "inputs": [
+              {
+                "localized_name": "clip_name1",
+                "name": "clip_name1",
+                "type": "COMBO",
+                "widget": {
+                  "name": "clip_name1"
+                },
+                "link": 24
+              },
+              {
+                "localized_name": "clip_name2",
+                "name": "clip_name2",
+                "type": "COMBO",
+                "widget": {
+                  "name": "clip_name2"
+                },
+                "link": 25
+              }
+            ],
             "outputs": [
               {
                 "localized_name": "CLIP",
@@ -325,16 +394,9 @@
               }
             ],
             "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
+              "Node name for S&R": "DualCLIPLoader",
               "cnr_id": "comfy-core",
               "ver": "0.12.1",
-              "Node name for S&R": "DualCLIPLoader",
               "models": [
                 {
                   "name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
@@ -346,7 +408,14 @@
                   "url": "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors?download=true",
                   "directory": "text_encoders"
                 }
-              ]
+              ],
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "qwen_2.5_vl_7b_fp8_scaled.safetensors",
@@ -367,9 +436,19 @@
               90
             ],
             "flags": {},
-            "order": 1,
+            "order": 3,
             "mode": 0,
-            "inputs": [],
+            "inputs": [
+              {
+                "localized_name": "unet_name",
+                "name": "unet_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "unet_name"
+                },
+                "link": 22
+              }
+            ],
             "outputs": [
               {
                 "localized_name": "MODEL",
@@ -382,23 +461,23 @@
               }
             ],
             "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
+              "Node name for S&R": "UNETLoader",
               "cnr_id": "comfy-core",
               "ver": "0.3.68",
-              "Node name for S&R": "UNETLoader",
               "models": [
                 {
                   "name": "kandinsky5lite_t2i.safetensors",
                   "url": "https://huggingface.co/kandinskylab/Kandinsky-5.0-T2I-Lite/resolve/main/model/kandinsky5lite_t2i.safetensors",
                   "directory": "diffusion_models"
                 }
-              ]
+              ],
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "kandinsky5lite_t2i.safetensors",
@@ -448,16 +527,16 @@
             ],
             "title": "CLIP Text Encode (Positive Prompt)",
             "properties": {
+              "Node name for S&R": "CLIPTextEncode",
+              "cnr_id": "comfy-core",
+              "ver": "0.12.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.12.1",
-              "Node name for S&R": "CLIPTextEncode"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "A three-quarter side profile shot captured from a slightly low, stationary camera angle, this image frames a joyful hiker against the jagged, dramatic peaks of the Dolomites, where the elevated perspective emphasizes both the grandeur of the alpine landscape and the upward, hopeful tilt of his gaze. He wears a snug, mustard-yellow knit beanie that matches his chunky, textured sweater, paired with round, wire-rimmed glasses that add a thoughtful, approachable charm, while a rugged, oversized hiking backpack in weathered taupe is secured across his shoulders with gray, adjustable straps, complemented by a utility waist belt with a small, functional pouch. The scene is enhanced by a warm, vintage-inspired filter that bathes the frame in rich golden-amber tones, boosting contrast between the hiker’s vibrant knitwear and the tawny mountain slopes, and a subtle film grain that lends a nostalgic, cinematic quality; soft, directional sunlight casts gentle shadows along his beard and sweater to add depth, with the crisp, saturated blue sky providing a striking counterpoint to the earthy foreground, creating an immersive portrait of adventure and warmth.\n"
@@ -477,9 +556,19 @@
               58
             ],
             "flags": {},
-            "order": 2,
+            "order": 4,
             "mode": 0,
-            "inputs": [],
+            "inputs": [
+              {
+                "localized_name": "vae_name",
+                "name": "vae_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "vae_name"
+                },
+                "link": 23
+              }
+            ],
             "outputs": [
               {
                 "localized_name": "VAE",
@@ -491,23 +580,23 @@
               }
             ],
             "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
+              "Node name for S&R": "VAELoader",
               "cnr_id": "comfy-core",
               "ver": "0.12.1",
-              "Node name for S&R": "VAELoader",
               "models": [
                 {
                   "name": "ae.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors",
                   "directory": "vae"
                 }
-              ]
+              ],
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "ae.safetensors"
@@ -564,16 +653,16 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "KSampler",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.71",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.3.71",
-              "Node name for S&R": "KSampler"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               297935044336751,
@@ -597,7 +686,7 @@
               58
             ],
             "flags": {},
-            "order": 4,
+            "order": 2,
             "mode": 0,
             "inputs": [
               {
@@ -619,16 +708,16 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ModelSamplingSD3",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.68",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.3.68",
-              "Node name for S&R": "ModelSamplingSD3"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               3
@@ -673,21 +762,21 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "VAEDecode",
+              "cnr_id": "comfy-core",
+              "ver": "0.12.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.12.1",
-              "Node name for S&R": "VAEDecode"
+              "secondTabWidth": 65
             },
             "widgets_values": []
           },
           {
-            "id": 12,
+            "id": 18,
             "type": "EmptyLatentImage",
             "pos": [
               450,
@@ -731,16 +820,16 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "EmptyLatentImage",
+              "cnr_id": "comfy-core",
+              "ver": "0.12.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.12.1",
-              "Node name for S&R": "EmptyLatentImage"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               1024,
@@ -857,7 +946,7 @@
           },
           {
             "id": 17,
-            "origin_id": 12,
+            "origin_id": 18,
             "origin_slot": 0,
             "target_id": 8,
             "target_slot": 3,
@@ -883,7 +972,7 @@
             "id": 20,
             "origin_id": -10,
             "origin_slot": 1,
-            "target_id": 12,
+            "target_id": 18,
             "target_slot": 0,
             "type": "INT"
           },
@@ -891,9 +980,41 @@
             "id": 21,
             "origin_id": -10,
             "origin_slot": 2,
-            "target_id": 12,
+            "target_id": 18,
             "target_slot": 1,
             "type": "INT"
+          },
+          {
+            "id": 22,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 4,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 23,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 6,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 24,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 25,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 1,
+            "target_slot": 1,
+            "type": "COMBO"
           }
         ],
         "extra": {
@@ -905,13 +1026,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5289953398778636,
+      "scale": 0.8640000000000003,
       "offset": [
-        846.9969729208271,
-        -162.8537580070822
+        -530.1858892710687,
+        -367.01373255516233
       ]
     },
-    "frontendVersion": "1.38.13",
+    "frontendVersion": "1.41.3",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
