@@ -67,14 +67,13 @@ async function main(): Promise<void> {
 
   console.log('\n📦 Phase 2: Generating content...');
   if (skipAI) {
-    console.log('   (SKIP_AI_GENERATION=true — skipping AI, preview, and OG generation)');
+    console.log('   (SKIP_AI_GENERATION=true — skipping AI and preview generation)');
   }
   const phase2Tasks = skipAI
     ? []
     : [
         runTask('generate-ai', 'pnpm', ['run', 'generate:ai']),
         runTask('generate-previews', 'pnpm', ['run', 'generate:previews']),
-        runTask('generate-og', 'pnpm', ['run', 'generate:og']),
       ];
   const phase2Results = await Promise.all(phase2Tasks);
 
