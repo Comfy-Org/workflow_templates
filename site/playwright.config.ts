@@ -11,7 +11,8 @@ export default defineConfig({
 
   expect: {
     toHaveScreenshot: {
-      maxDiffPixels: 100,
+      // Use ratio-based tolerance to handle font rendering differences across environments
+      maxDiffPixelRatio: 0.015,
       threshold: 0.2,
     },
   },
