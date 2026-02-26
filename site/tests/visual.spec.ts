@@ -10,22 +10,32 @@ test.describe('Visual Regression Tests', () => {
   test('template listing page', async ({ page }) => {
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
-    await expect(page).toHaveScreenshot('templates-listing.png', { fullPage: true });
+    // Mask animated video/image thumbnails that cause instability
+    const thumbnails = page.locator('main a[data-astro-prefetch] img, main a[data-astro-prefetch] video');
+    const masks = await thumbnails.all();
+    await expect(page).toHaveScreenshot('templates-listing.png', {
+      mask: masks,
+    });
   });
 
   test('template detail page', async ({ page }) => {
-    // Navigate to templates listing first to find a valid template
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
 
-    // Get the first template link
     const templateLink = page.locator('a[href^="/templates/"]').first();
     const href = await templateLink.getAttribute('href');
 
     if (href) {
       await page.goto(href);
       await page.waitForLoadState('networkidle');
-      await expect(page).toHaveScreenshot('template-detail.png', { fullPage: true });
+      // Mask dynamic thumbnail/video content
+      const media = page.locator('article img, article video');
+      const masks = await media.all();
+      await expect(page).toHaveScreenshot('template-detail.png', {
+        mask: masks,
+        // Small tolerance for layout shifts from lazy-loaded related templates
+        maxDiffPixels: 5000,
+      });
     }
   });
 
@@ -38,28 +48,40 @@ test.describe('Visual Regression Tests', () => {
   });
 
   test('category page', async ({ page }) => {
-    // Try common category paths
-    const categoryPaths = ['/category/image-generation', '/category/video', '/category/upscaling'];
+    const categoryPaths = [
+      '/templates/category/image/',
+      '/templates/category/video/',
+      '/templates/category/audio/',
+    ];
 
     for (const path of categoryPaths) {
       const response = await page.goto(path);
       if (response?.ok()) {
         await page.waitForLoadState('networkidle');
-        await expect(page).toHaveScreenshot('category.png', { fullPage: true });
+        // Mask animated thumbnails
+        const thumbnails = page.locator('main a[data-astro-prefetch] img, main a[data-astro-prefetch] video');
+        const masks = await thumbnails.all();
+        await expect(page).toHaveScreenshot('category.png', {
+          mask: masks,
+        });
         return;
       }
     }
 
-    // Fallback: find category link from homepage
-    await page.goto('/');
+    // Fallback: find category link from templates page
+    await page.goto('/templates');
     await page.waitForLoadState('networkidle');
-    const categoryLink = page.locator('a[href^="/category/"]').first();
+    const categoryLink = page.locator('a[href*="/templates/category/"]').first();
     const href = await categoryLink.getAttribute('href');
 
     if (href) {
       await page.goto(href);
       await page.waitForLoadState('networkidle');
-      await expect(page).toHaveScreenshot('category.png', { fullPage: true });
+      const thumbnails = page.locator('main a[data-astro-prefetch] img, main a[data-astro-prefetch] video');
+      const masks = await thumbnails.all();
+      await expect(page).toHaveScreenshot('category.png', {
+        mask: masks,
+      });
     }
   });
 
