@@ -1,8 +1,8 @@
 {
   "id": "7f5e0c56-93b4-4937-b7f2-efd0f1853e33",
   "revision": 0,
-  "last_node_id": 680,
-  "last_link_id": 1722,
+  "last_node_id": 681,
+  "last_link_id": 1731,
   "nodes": [
     {
       "id": 676,
@@ -28,24 +28,111 @@
       "bgcolor": "#000"
     },
     {
-      "id": 680,
-      "type": "SaveVideo",
+      "id": 679,
+      "type": "LoadVideo",
       "pos": [
-        -2051.335502993307,
-        3400.44855054015
+        -2810.9494601033257,
+        3402.3941625983302
       ],
       "size": [
-        374,
-        346.03433009303853
+        282.798828125,
+        233.0743408203125
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1721
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.15.1",
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "man_in_the_rain.mp4",
+        "image"
+      ]
+    },
+    {
+      "id": 681,
+      "type": "CreateVideo",
+      "pos": [
+        -2080,
+        3400
+      ],
+      "size": [
+        270,
+        78
       ],
       "flags": {},
       "order": 3,
       "mode": 0,
       "inputs": [
         {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1724
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 1729
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "widget": {
+            "name": "fps"
+          },
+          "link": 1731
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1725
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.15.1",
+        "Node name for S&R": "CreateVideo"
+      },
+      "widgets_values": [
+        30
+      ]
+    },
+    {
+      "id": 680,
+      "type": "SaveVideo",
+      "pos": [
+        -1760,
+        3400
+      ],
+      "size": [
+        374,
+        346.03433009303853
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
           "name": "video",
           "type": "VIDEO",
-          "link": 1722
+          "link": 1725
         }
       ],
       "outputs": [],
@@ -96,10 +183,24 @@
       ],
       "outputs": [
         {
-          "name": "VIDEO",
-          "type": "VIDEO",
+          "name": "IMAGE",
+          "type": "IMAGE",
           "links": [
-            1722
+            1724
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            1729
+          ]
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": [
+            1731
           ]
         }
       ],
@@ -161,40 +262,6 @@
         0.5,
         "sdpose_wholebody_fp16.safetensors"
       ]
-    },
-    {
-      "id": 679,
-      "type": "LoadVideo",
-      "pos": [
-        -2810.9494601033257,
-        3402.3941625983302
-      ],
-      "size": [
-        282.798828125,
-        233.0743408203125
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            1721
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.15.1",
-        "Node name for S&R": "LoadVideo"
-      },
-      "widgets_values": [
-        "man_in_the_rain.mp4",
-        "image"
-      ]
     }
   ],
   "links": [
@@ -207,12 +274,36 @@
       "VIDEO"
     ],
     [
-      1722,
+      1724,
       675,
+      0,
+      681,
+      0,
+      "IMAGE"
+    ],
+    [
+      1725,
+      681,
       0,
       680,
       0,
       "VIDEO"
+    ],
+    [
+      1729,
+      675,
+      1,
+      681,
+      1,
+      "AUDIO"
+    ],
+    [
+      1731,
+      675,
+      2,
+      681,
+      2,
+      "FLOAT"
     ]
   ],
   "groups": [],
@@ -223,8 +314,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 680,
-          "lastLinkId": 1722,
+          "lastNodeId": 681,
+          "lastLinkId": 1731,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -245,7 +336,7 @@
             -1967.682878367521,
             3600.768055194359,
             120,
-            60
+            100
           ]
         },
         "inputs": [
@@ -397,15 +488,39 @@
         ],
         "outputs": [
           {
-            "id": "04b9271e-7cde-441a-99c4-b2aeaf9135c5",
-            "name": "VIDEO",
-            "type": "VIDEO",
+            "id": "faa19fab-adc8-448f-b392-b503549bda7f",
+            "name": "IMAGE",
+            "type": "IMAGE",
             "linkIds": [
-              1719
+              1723
             ],
             "pos": [
               -1947.682878367521,
               3620.768055194359
+            ]
+          },
+          {
+            "id": "0bb82245-6106-419e-864c-a34077255d87",
+            "name": "audio",
+            "type": "AUDIO",
+            "linkIds": [
+              1728
+            ],
+            "pos": [
+              -1947.682878367521,
+              3640.768055194359
+            ]
+          },
+          {
+            "id": "492338f2-bd50-4b38-b29d-b71b25907306",
+            "name": "fps",
+            "type": "FLOAT",
+            "linkIds": [
+              1730
+            ],
+            "pos": [
+              -1947.682878367521,
+              3660.768055194359
             ]
           }
         ],
@@ -688,7 +803,7 @@
                 "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
-                  1718
+                  1723
                 ]
               }
             ],
@@ -742,14 +857,16 @@
                 "localized_name": "audio",
                 "name": "audio",
                 "type": "AUDIO",
-                "links": null
+                "links": [
+                  1728
+                ]
               },
               {
                 "localized_name": "fps",
                 "name": "fps",
                 "type": "FLOAT",
                 "links": [
-                  1720
+                  1730
                 ]
               }
             ],
@@ -759,63 +876,6 @@
               "Node name for S&R": "GetVideoComponents"
             },
             "widgets_values": []
-          },
-          {
-            "id": 678,
-            "type": "CreateVideo",
-            "pos": [
-              -2306.8385068697,
-              3740.6580318865367
-            ],
-            "size": [
-              270,
-              78
-            ],
-            "flags": {},
-            "order": 5,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "images",
-                "name": "images",
-                "type": "IMAGE",
-                "link": 1718
-              },
-              {
-                "localized_name": "audio",
-                "name": "audio",
-                "shape": 7,
-                "type": "AUDIO",
-                "link": null
-              },
-              {
-                "localized_name": "fps",
-                "name": "fps",
-                "type": "FLOAT",
-                "widget": {
-                  "name": "fps"
-                },
-                "link": 1720
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "VIDEO",
-                "name": "VIDEO",
-                "type": "VIDEO",
-                "links": [
-                  1719
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.15.1",
-              "Node name for S&R": "CreateVideo"
-            },
-            "widgets_values": [
-              30
-            ]
           }
         ],
         "groups": [],
@@ -957,26 +1017,26 @@
             "type": "BOUNDING_BOX"
           },
           {
-            "id": 1718,
+            "id": 1723,
             "origin_id": 672,
             "origin_slot": 0,
-            "target_id": 678,
+            "target_id": -20,
             "target_slot": 0,
             "type": "IMAGE"
           },
           {
-            "id": 1719,
-            "origin_id": 678,
-            "origin_slot": 0,
+            "id": 1728,
+            "origin_id": 677,
+            "origin_slot": 1,
             "target_id": -20,
-            "target_slot": 0,
-            "type": "VIDEO"
+            "target_slot": 1,
+            "type": "AUDIO"
           },
           {
-            "id": 1720,
+            "id": 1730,
             "origin_id": 677,
             "origin_slot": 2,
-            "target_id": 678,
+            "target_id": -20,
             "target_slot": 2,
             "type": "FLOAT"
           }
@@ -989,6 +1049,13 @@
   },
   "config": {},
   "extra": {
+    "ds": {
+      "scale": 0.6126955099539433,
+      "offset": [
+        3417.5919987336483,
+        -2899.422591037856
+      ]
+    },
     "frontendVersion": "1.39.19",
     "workflowRendererVersion": "LG",
     "prompt": {
@@ -1386,14 +1453,7 @@
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true,
-    "ds": {
-      "scale": 0.8000031884873848,
-      "offset": [
-        3579.239374670654,
-        -3096.2624308706295
-      ]
-    }
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }
