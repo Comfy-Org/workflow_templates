@@ -6,7 +6,6 @@
  */
 import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
-import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import HubWorkflowCard from './HubWorkflowCard.vue';
 
 export interface WorkflowTemplate {
@@ -26,36 +25,29 @@ const props = withDefaults(
     locale: string;
     /** Additional grid classes to override default column layout */
     gridClass?: string;
-    /** Make the toolbar sticky (used on hub page inside scroll context) */
-    stickyToolbar?: boolean;
+    /** Sort mode — controlled by parent (e.g. sidebar) */
+    sortBy?: 'popular' | 'newest';
   }>(),
   {
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
-    stickyToolbar: false,
+    sortBy: 'popular',
   },
 );
 
-const activeTab = ref<'all' | 'nodeGraphs' | 'comfyApps'>('all');
-const sortBy = ref<'popular' | 'newest'>('popular');
 const displayCount = ref(30);
 
-// Reset pagination when input templates change (e.g. sidebar filters updated)
+// Reset pagination when input templates or sort change
 watch(
-  () => props.templates,
+  () => [props.templates, props.sortBy],
   () => {
     displayCount.value = 30;
   },
 );
 
-function toggleSort() {
-  sortBy.value = sortBy.value === 'popular' ? 'newest' : 'popular';
-  displayCount.value = 30;
-}
-
 const sortedTemplates = computed(() => {
   const result = [...props.templates];
 
-  if (sortBy.value === 'popular') {
+  if (props.sortBy === 'popular') {
     result.sort((a, b) => b.usage - a.usage);
   } else {
     result.sort((a, b) => {
@@ -79,58 +71,6 @@ function loadMore() {
 
 <template>
   <div class="flex-1 w-full min-w-0">
-    <!-- Tabs + Sort bar -->
-    <div
-      class="flex items-center justify-between pb-8"
-      :class="stickyToolbar ? 'sticky top-16 bg-page z-50 pt-8' : ''"
-    >
-      <!-- Tab pills -->
-      <div class="flex items-center gap-2">
-        <Button
-          :variant="activeTab === 'all' ? 'pill-active' : 'pill'"
-          size="pill"
-          @click="activeTab = 'all'"
-        >
-          All
-        </Button>
-        <Button
-          :variant="activeTab === 'nodeGraphs' ? 'pill-active' : 'pill'"
-          size="pill-icon"
-          @click="activeTab = 'nodeGraphs'"
-        >
-          <IconWorkflow />
-          Node Graphs
-        </Button>
-        <Button
-          :variant="activeTab === 'comfyApps' ? 'pill-active' : 'pill'"
-          size="pill-icon"
-          @click="activeTab = 'comfyApps'"
-        >
-          <IconApps />
-          Comfy Apps
-        </Button>
-      </div>
-
-      <!-- Sort button -->
-      <Button variant="pill" size="pill-icon" @click="toggleSort">
-        <svg
-          class="size-4"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
-          />
-        </svg>
-        {{ sortBy === 'popular' ? 'Most Popular' : 'Newest' }}
-      </Button>
-    </div>
-
     <!-- Card grid -->
     <div class="grid gap-5 relative z-10" :class="gridClass">
       <HubWorkflowCard

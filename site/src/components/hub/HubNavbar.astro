@@ -1,61 +1,78 @@
 ---
-/**
- * HubNavbar - Top navigation bar for the hub page
- * Matches Figma: logo left, rounded search center, submit+avatar right
- */
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
-import { t } from '../../i18n/ui';
+import SearchPopover from './SearchPopover.vue';
 
+interface Props {
+  templates?: Array<{
+    name: string;
+    title: string;
+    description: string;
+    mediaType: 'image' | 'video' | 'audio' | '3d';
+    tags: string[];
+    models: string[];
+    logos: { provider: string | string[] }[];
+    usage: number;
+    date: string;
+    thumbnails: string[];
+    creatorDisplayName: string;
+  }>;
+}
+
+const { templates = [] } = Astro.props as Props;
 const locale = getLocaleFromPath(Astro.url.pathname);
 ---
 
-<nav class="w-full bg-[#171718] sticky top-0 z-50">
-  <div class="max-w-[1600px] mx-auto h-20 px-16 flex items-center gap-16">
+<nav class="w-full bg-[var(--color-bg-page)] sticky top-0 z-50">
+  <div class="max-w-400 mx-auto h-16 lg:h-20 px-4 sm:px-6 lg:px-16 flex items-center gap-3 lg:gap-16">
     <!-- Left: Logo -->
     <a href={localizeUrl('/', locale)} class="shrink-0">
       <img
         src="/brand/comfy-hub-logo.svg"
         alt="Comfy"
-        class="h-8 w-auto"
+        class="h-6 lg:h-8 w-auto"
       />
     </a>
 
-    <!-- Center: Search (cosmetic) -->
-    <div
-      class="flex-1 flex items-center gap-2 h-10 min-h-8 px-4 py-2 rounded-full bg-hub-surface text-hub-muted text-sm font-normal"
-    >
-      <svg class="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-      <span>{t('hub.search', locale)}</span>
-    </div>
+    <!-- Center: Search Popover (Vue island) -->
+    {templates.length > 0 ? (
+      <SearchPopover
+        client:load
+        templates={templates}
+        locale={locale}
+      />
+    ) : (
+      <div
+        class="flex-1 flex items-center gap-2 h-10 px-4 py-2 rounded-full bg-hub-surface text-hub-muted text-sm font-normal"
+      >
+        <svg class="size-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <span>Search workflows, models, creators, and more...</span>
+      </div>
+    )}
 
-    <!-- Right: Actions -->
-    <div class="flex items-center gap-4 shrink-0">
-      <!-- Submit Creation button -->
+    <!-- Right: Actions (desktop) -->
+    <div class="hidden lg:flex items-center gap-4 shrink-0">
       <a
-        href="https://www.comfy.org"
+        href="https://www.comfy.org/credits"
         target="_blank"
         rel="noopener noreferrer"
-        class="inline-flex items-center justify-center gap-1 h-10 px-4 py-2 rounded-full bg-hub-surface text-white text-xs font-bold hover:brightness-125 transition-all"
+        class="inline-flex items-center justify-center h-10 px-5 rounded-full bg-brand text-page text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
       >
-        <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
-        </svg>
-        {t('hub.submitCreation', locale)}
+        Get free credits
       </a>
-
-      <!-- User avatar placeholder -->
-      <div class="flex items-center gap-1">
-        <div class="size-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
-          <svg class="size-5 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-          </svg>
-        </div>
-        <svg class="size-4 text-white/40" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-        </svg>
-      </div>
     </div>
+
+    <!-- Right: Hamburger (mobile) -->
+    <button
+      id="mobile-filter-toggle"
+      type="button"
+      class="lg:hidden shrink-0 flex items-center justify-center size-10 rounded-full text-white/70 hover:text-white hover:bg-white/5 active:bg-white/10 transition-colors"
+      aria-label="Open filters"
+    >
+      <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+      </svg>
+    </button>
   </div>
 </nav>

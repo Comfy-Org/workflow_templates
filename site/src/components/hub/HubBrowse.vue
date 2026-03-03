@@ -3,10 +3,12 @@
  * HubBrowse - Main interactive Vue island for the hub page.
  * Owns sidebar filters (media type, tags, models) and delegates
  * tab/sort/grid rendering to WorkflowGrid.
+ * Includes a mobile filter drawer overlay.
  */
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import WorkflowGrid from './WorkflowGrid.vue';
+import { useHubStore } from '@/composables/useHubStore';
 
 export interface SerializedTemplate {
   name: string;
@@ -28,11 +30,14 @@ const props = defineProps<{
   mediaTypes: string[];
 }>();
 
-// Sidebar filter state
+const store = useHubStore();
+const { mobileDrawerOpen } = store;
+
+// Sidebar state
+const sortBy = ref<'popular' | 'newest'>('popular');
 const activeMediaFilters = ref<string[]>([]);
 const activeTagFilters = ref<string[]>([]);
 const activeModelFilters = ref<string[]>([]);
-const showAllModels = ref(false);
 
 // Curated sidebar tags (from Figma)
 const CURATED_TAGS = ['Inpainting', 'Upscaling', 'Utility'];
@@ -47,12 +52,9 @@ const topModels = computed(() => {
   }
   return Array.from(counts.entries())
     .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
     .map(([name]) => name);
 });
-
-const visibleModels = computed(() =>
-  showAllModels.value ? topModels.value : topModels.value.slice(0, 3)
-);
 
 // Toggle helpers
 function toggleMediaFilter(type: string) {
@@ -72,6 +74,55 @@ function toggleModelFilter(model: string) {
   if (idx >= 0) activeModelFilters.value.splice(idx, 1);
   else activeModelFilters.value.push(model);
 }
+
+function clearAllFilters() {
+  activeMediaFilters.value = [];
+  activeTagFilters.value = [];
+  activeModelFilters.value = [];
+  sortBy.value = 'popular';
+}
+
+function closeMobileDrawer() {
+  store.closeMobileDrawer();
+}
+
+function openSearch() {
+  store.requestSearchFocus();
+}
+
+function openSearchFromDrawer() {
+  store.closeMobileDrawer();
+  // Allow drawer close transition to finish before focusing search
+  setTimeout(() => {
+    store.requestSearchFocus();
+  }, 200);
+}
+
+// Lock body scroll when drawer is open
+function lockBodyScroll(lock: boolean) {
+  if (lock) {
+    document.body.style.overflow = 'hidden';
+  } else {
+    document.body.style.overflow = '';
+  }
+}
+
+// Watch drawer state for body scroll lock
+watch(mobileDrawerOpen, (open) => {
+  lockBodyScroll(open);
+});
+
+// Bridge: hamburger lives in Astro's HubNavbar, so we attach directly
+const hamburgerEl = () => document.getElementById('mobile-filter-toggle');
+
+onMounted(() => {
+  hamburgerEl()?.addEventListener('click', store.toggleMobileDrawer);
+});
+
+onUnmounted(() => {
+  hamburgerEl()?.removeEventListener('click', store.toggleMobileDrawer);
+  lockBodyScroll(false);
+});
 
 // Filtered templates (sorting handled by WorkflowGrid)
 const filteredTemplates = computed(() => {
@@ -94,6 +145,14 @@ const filteredTemplates = computed(() => {
   return result;
 });
 
+const activeFilterCount = computed(() => {
+  return (
+    activeMediaFilters.value.length +
+    activeTagFilters.value.length +
+    activeModelFilters.value.length
+  );
+});
+
 const mediaTypeLabels: Record<string, string> = {
   image: 'Image',
   video: 'Video',
@@ -105,14 +164,14 @@ const mediaTypeLabels: Record<string, string> = {
 <template>
   <div>
     <!-- Sidebar + Grid -->
-    <div class="flex items-start justify-between gap-16">
-      <!-- Sidebar -->
+    <div class="flex items-start justify-between gap-16 ">
+      <!-- Desktop Sidebar -->
       <aside
-        class="hidden lg:flex flex-col gap-12 shrink-0 sticky top-16 bg-page pt-24"
+        class="hidden lg:flex flex-col gap-8 shrink-0 sticky top-24 bg-page max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-hidden scrollbar-thin"
         style="width: var(--hub-sidebar-width)"
       >
         <!-- Top Creators link -->
-        <div class="">
+        <div>
           <a href="/templates/creators/">
             <Button variant="pill-outline" size="pill" class="w-full justify-center">
               Top Creators
@@ -134,10 +193,33 @@ const mediaTypeLabels: Record<string, string> = {
           </a>
         </div>
 
+        <!-- SORT section -->
+        <div class="flex flex-col gap-3">
+          <p class="text-hub-muted text-xs font-semibold uppercase">SORT</p>
+          <div class="flex flex-col gap-3">
+            <Button
+              :variant="sortBy === 'popular' ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="sortBy = 'popular'"
+            >
+              Most Popular
+            </Button>
+            <Button
+              :variant="sortBy === 'newest' ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="sortBy = 'newest'"
+            >
+              Newest
+            </Button>
+          </div>
+        </div>
+
         <!-- FILTERS section -->
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-3">
           <p class="text-hub-muted text-xs font-semibold uppercase">FILTERS</p>
-          <div class="flex flex-col gap-4">
+          <div class="flex flex-col gap-3">
             <Button
               v-for="type in mediaTypes"
               :key="type"
@@ -161,12 +243,12 @@ const mediaTypeLabels: Record<string, string> = {
           </div>
         </div>
 
-        <!-- MODELS section -->
-        <div class="flex flex-col gap-4">
-          <p class="text-hub-muted text-xs font-semibold uppercase">MODELS</p>
-          <div class="flex flex-col gap-4">
+        <!-- POPULAR MODELS section -->
+        <div class="flex flex-col gap-3">
+          <p class="text-hub-muted text-xs font-semibold uppercase">POPULAR MODELS</p>
+          <div class="flex flex-col gap-3">
             <Button
-              v-for="model in visibleModels"
+              v-for="model in topModels"
               :key="model"
               :variant="activeModelFilters.includes(model) ? 'pill-active' : 'pill'"
               size="pill"
@@ -175,13 +257,12 @@ const mediaTypeLabels: Record<string, string> = {
             >
               {{ model }}
             </Button>
-            <button
-              v-if="!showAllModels && topModels.length > 3"
-              class="text-hub-muted text-sm font-normal text-left hover:text-white/60 transition-colors"
-              @click="showAllModels = true"
-            >
-              Show more...
-            </button>
+          </div>
+          <!-- Divider + Discover more -->
+          <div class="pt-4 border-t border-white/10">
+            <Button variant="pill" size="pill" class="w-fit" @click="openSearch">
+              Discover more
+            </Button>
           </div>
         </div>
       </aside>
@@ -190,9 +271,156 @@ const mediaTypeLabels: Record<string, string> = {
       <WorkflowGrid
         :templates="filteredTemplates"
         :locale="locale"
-        grid-class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        :sticky-toolbar="true"
+        grid-class="grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        :sort-by="sortBy"
       />
     </div>
+
+    <!-- Mobile Filter Drawer Overlay -->
+    <div
+      class="fixed inset-0 z-50 bg-black/60 lg:hidden transition-opacity duration-300"
+      :class="mobileDrawerOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'"
+      @click.self="closeMobileDrawer"
+    />
+
+    <aside
+      class="fixed inset-y-0 right-0 z-50 w-full max-w-sm bg-page flex flex-col lg:hidden transition-transform duration-300"
+      :class="mobileDrawerOpen ? 'translate-x-0' : 'translate-x-full'"
+    >
+      <!-- Drawer Header -->
+      <div class="flex items-center justify-between px-5 py-4">
+        <span class="text-lg font-semibold text-white">Filters</span>
+        <button
+          type="button"
+          class="flex items-center justify-center size-8 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+          aria-label="Close filters"
+          @click="closeMobileDrawer"
+        >
+          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="border-t border-white/10" />
+
+      <!-- Drawer Content (scrollable) — mirrors desktop sidebar -->
+      <div class="flex-1 overflow-y-auto px-5 py-6 space-y-8">
+        <!-- Top Creators link -->
+        <div>
+          <a href="/templates/creators/">
+            <Button variant="pill-outline" size="pill" class="w-full justify-center">
+              Top Creators
+              <svg
+                class="size-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </Button>
+          </a>
+        </div>
+
+        <!-- SORT section -->
+        <div class="flex flex-col gap-3">
+          <p class="text-hub-muted text-xs font-semibold uppercase">SORT</p>
+          <div class="flex flex-wrap gap-2.5">
+            <Button
+              :variant="sortBy === 'popular' ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="sortBy = 'popular'"
+            >
+              Most Popular
+            </Button>
+            <Button
+              :variant="sortBy === 'newest' ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="sortBy = 'newest'"
+            >
+              Newest
+            </Button>
+          </div>
+        </div>
+
+        <!-- FILTERS section -->
+        <div class="flex flex-col gap-3">
+          <p class="text-hub-muted text-xs font-semibold uppercase">FILTERS</p>
+          <div class="flex flex-wrap gap-2.5">
+            <Button
+              v-for="type in mediaTypes"
+              :key="type"
+              :variant="activeMediaFilters.includes(type) ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="toggleMediaFilter(type)"
+            >
+              {{ mediaTypeLabels[type] || type }}
+            </Button>
+            <Button
+              v-for="tag in CURATED_TAGS"
+              :key="tag"
+              :variant="activeTagFilters.includes(tag) ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="toggleTagFilter(tag)"
+            >
+              {{ tag }}
+            </Button>
+          </div>
+        </div>
+
+        <!-- POPULAR MODELS section -->
+        <div class="flex flex-col gap-3">
+          <p class="text-hub-muted text-xs font-semibold uppercase">POPULAR MODELS</p>
+          <div class="flex flex-wrap gap-2.5">
+            <Button
+              v-for="model in topModels"
+              :key="model"
+              :variant="activeModelFilters.includes(model) ? 'pill-active' : 'pill'"
+              size="pill"
+              class="w-fit"
+              @click="toggleModelFilter(model)"
+            >
+              {{ model }}
+            </Button>
+          </div>
+          <!-- Divider + Discover more -->
+          <div class="pt-4 border-t border-white/10">
+            <Button variant="pill" size="pill" class="w-fit" @click="openSearchFromDrawer">
+              Discover more
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer (sticky) -->
+      <div class="border-t border-white/10 px-5 py-4 grid grid-cols-2 gap-3">
+        <Button
+          variant="pill-outline"
+          size="lg"
+          class="rounded-full"
+          @click="clearAllFilters"
+        >
+          Clear All
+        </Button>
+        <button
+          type="button"
+          class="h-10 rounded-full bg-brand text-page text-sm font-bold cursor-pointer hover:brightness-75 active:brightness-50 transition-all"
+          @click="closeMobileDrawer"
+        >
+          Show Results
+        </button>
+      </div>
+    </aside>
   </div>
 </template>

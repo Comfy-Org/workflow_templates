@@ -21,3 +21,9 @@ For site-specific instructions, see `site/AGENTS.md`.
 - **Templates**: JSON workflow files with embedded model metadata. Thumbnails named `{template}-1.webp`
 - **Naming**: snake_case for Python/templates
 - Bump version in root `pyproject.toml` when adding/modifying templates
+
+### Vue 3 & Astro Standards (site/)
+- All Vue components use `<script setup lang="ts">` with Composition API only — no Options API, no mixins
+- Cross-component communication via shared composables (`site/src/composables/`) with module-level reactive refs — NEVER use `document.dispatchEvent(new CustomEvent(...))` or event bus patterns between Vue components
+- Astro-to-Vue bridge: attach listeners to specific DOM elements by ID in `onMounted()`, not via inline `<script>` tags with `dispatchEvent`
+- Props via `defineProps<T>()`, emits via `defineEmits<T>()`, reactivity via `ref()`, `computed()`, `watch()`

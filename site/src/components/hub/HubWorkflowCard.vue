@@ -143,7 +143,7 @@ const displayTags = computed(() => props.tags.slice(0, 3))
         <Badge
           v-for="tag in displayTags"
           :key="tag"
-          variant="hub-tag"
+          variant="hub-pill"
         >
           {{ tag.toLowerCase().replace(/\s+/g, '-') }}
         </Badge>

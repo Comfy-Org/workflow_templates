@@ -175,6 +175,31 @@ en (default), zh, zh-TW, ja, ko, es, fr, ru, tr, ar, pt-BR
 - **Templates**: snake_case naming, JSON format
 - **Commits**: Bump version in `pyproject.toml` when modifying templates
 
+### Vue 3 & Astro Coding Standards
+All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro patterns. Write senior-level, production-quality code.
+
+**Vue 3 — Required Patterns:**
+- `<script setup lang="ts">` for all components — no Options API
+- Standard reactivity: `ref()`, `computed()`, `watch()`, `watchEffect()`
+- Props via `defineProps<T>()`, emits via `defineEmits<T>()`
+- Cross-component state via shared composables in `site/src/composables/` using module-level reactive refs
+- Template refs via `useTemplateRef()` or `ref<HTMLElement | null>(null)`
+- Lifecycle: `onMounted()`, `onUnmounted()` — never raw `addEventListener` on `window`/`document` without cleanup
+
+**Vue 3 — Forbidden Patterns:**
+- `document.dispatchEvent(new CustomEvent(...))` for component communication — use composables
+- `document.addEventListener(...)` to listen for custom events from other Vue components
+- Event bus libraries or mitt — use shared composables with reactive state instead
+- Options API (`data()`, `methods`, `computed:`, `watch:` as object)
+- `this.$emit`, `this.$refs`, or any `this`-based API
+- Mixins — use composables
+
+**Astro — Required Patterns:**
+- Astro components (`.astro`) for static/SSR content, Vue islands (`client:load`/`client:visible`) for interactivity
+- Pass data from Astro to Vue via props only — serialize to plain objects
+- For Astro-to-Vue runtime communication (e.g. a button in `.astro` triggering Vue state), attach event listeners to specific DOM elements by ID inside the Vue component's `onMounted()` — do NOT use inline `<script>` tags with `dispatchEvent`
+- Cross-island state sharing via shared composables (module-level refs are singletons in the browser bundle)
+
 ## Claude Skills Available
 - `/adding-templates` — Add new workflow templates (full workflow)
 - `/managing-bundles` — Move templates between bundles, reorder
