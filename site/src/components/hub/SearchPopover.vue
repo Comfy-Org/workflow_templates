@@ -18,6 +18,7 @@ export interface SearchTemplate {
   usage: number
   date: string
   thumbnails: string[]
+  username: string
   creatorDisplayName: string
 }
 

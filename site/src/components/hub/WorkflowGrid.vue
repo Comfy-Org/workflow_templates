@@ -16,6 +16,7 @@ export interface WorkflowTemplate {
   usage: number;
   date: string;
   thumbnails: string[];
+  username?: string;
   creatorDisplayName?: string;
 }
 
@@ -82,6 +83,7 @@ function loadMore() {
         :logos="tmpl.logos"
         :thumbnails="tmpl.thumbnails"
         :locale="locale"
+        :username="tmpl.username"
         :creator-display-name="tmpl.creatorDisplayName"
       />
     </div>

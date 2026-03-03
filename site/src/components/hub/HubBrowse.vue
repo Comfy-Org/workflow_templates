@@ -21,6 +21,7 @@ export interface SerializedTemplate {
   usage: number;
   date: string;
   thumbnails: string[];
+  username: string;
   creatorDisplayName: string;
 }
 

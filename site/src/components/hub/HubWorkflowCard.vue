@@ -46,6 +46,7 @@ interface Props {
   logos?: { provider: string | string[] }[]
   thumbnails?: string[]
   locale?: string
+  username?: string
   creatorDisplayName?: string
 }
 
@@ -54,6 +55,7 @@ const props = withDefaults(defineProps<Props>(), {
   logos: () => [],
   thumbnails: () => [],
   locale: 'en',
+  username: '',
   creatorDisplayName: 'ComfyUI',
 })
 
@@ -88,12 +90,21 @@ const primaryThumb = computed(() =>
 )
 
 const displayTags = computed(() => props.tags.slice(0, 3))
+
+const creatorUrl = computed(() => {
+  if (!props.username) return null
+  const base = `/templates/${props.username}/`
+  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base
+})
 </script>
 
 <template>
-  <a :href="templateUrl" class="group block overflow-hidden transition-all duration-200">
+  <div class="group relative overflow-hidden transition-all duration-200">
+    <!-- Stretched link covering entire card -->
+    <a :href="templateUrl" class="absolute inset-0 z-0" aria-hidden="true"></a>
+
     <!-- Thumbnail -->
-    <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative">
+    <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative pointer-events-none">
       <img
         v-if="primaryThumb"
         :src="primaryThumb"
@@ -125,8 +136,8 @@ const displayTags = computed(() => props.tags.slice(0, 3))
     </div>
 
     <!-- Content -->
-    <div class="pt-3 pb-1">
-      <h3 class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand transition-colors">
+    <div class="pt-3 pb-1 pointer-events-none">
+      <h3 class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white transition-colors">
         {{ title }}
       </h3>
 
@@ -135,7 +146,12 @@ const displayTags = computed(() => props.tags.slice(0, 3))
         <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
           <span class="text-black text-[10px] font-bold leading-none">{{ authorName.charAt(0).toUpperCase() }}</span>
         </div>
-        <span class="text-white/50 text-sm truncate">{{ authorName }}</span>
+        <a
+          v-if="creatorUrl"
+          :href="creatorUrl"
+          class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
+        >{{ authorName }}</a>
+        <span v-else class="text-white/50 text-sm truncate">{{ authorName }}</span>
       </div>
 
       <!-- Tag pills -->
@@ -149,5 +165,5 @@ const displayTags = computed(() => props.tags.slice(0, 3))
         </Badge>
       </div>
     </div>
-  </a>
+  </div>
 </template>

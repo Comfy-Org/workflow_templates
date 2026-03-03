@@ -4,6 +4,8 @@
  * Generates pages like /zh/templates/, /ja/templates/, etc.
  */
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import TemplateCard from '../../../components/TemplateCard.astro';
 import { LOCALES, DEFAULT_LOCALE, LANGUAGES, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
@@ -46,7 +48,9 @@ const structuredData = {
   locale={locale}
   hreflangBasePath="/templates/"
   theme="dark"
+  hideDefaultFooter
 >
+  <HubNavbar />
   <div class="max-w-6xl mx-auto px-4 py-12" dir={langInfo.dir}>
     <!-- Header -->
     <div class="text-center mb-12">
@@ -90,4 +94,8 @@ const structuredData = {
       }
     </div>
   </div>
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
 </BaseLayout>

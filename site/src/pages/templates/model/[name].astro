@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import TemplateCard from '../../../components/TemplateCard.astro';
 import HreflangTags from '../../../components/HreflangTags.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
@@ -81,8 +83,10 @@ const breadcrumbStructuredData = {
   ogImage="/og-default.png"
   structuredData={structuredData}
   theme="dark"
+  hideDefaultFooter
 >
   <HreflangTags slot="head" basePath={basePath} />
+  <HubNavbar />
   <div class="max-w-6xl mx-auto px-4 py-12">
     <!-- Breadcrumb -->
     <nav class="mb-8">
@@ -161,4 +165,8 @@ const breadcrumbStructuredData = {
     type="application/ld+json"
     set:html={JSON.stringify(breadcrumbStructuredData)}
   />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
 </BaseLayout>

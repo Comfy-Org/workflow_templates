@@ -53,15 +53,17 @@ const logoPath = providerName ? getModelLogoPath(providerName, providerName) : n
 
 // Get author display name from creators.json via username
 const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
+const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : null;
 ---
 
-<a
-  href={templateUrl}
-  class="group block overflow-hidden transition-all duration-200"
-  data-astro-prefetch
+<div
+  class="group relative block overflow-hidden transition-all duration-200"
 >
+  <!-- Stretched link covering entire card -->
+  <a href={templateUrl} class="absolute inset-0 z-0" aria-hidden="true" data-astro-prefetch></a>
+
   <!-- Thumbnail -->
-  <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative">
+  <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative pointer-events-none">
     {
       thumbnails.length > 0 ? (
         <ThumbnailDisplay
@@ -109,9 +111,9 @@ const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
   </div>
 
   <!-- Content -->
-  <div class="pt-3 pb-1">
+  <div class="pt-3 pb-1 pointer-events-none">
     <h3
-      class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand transition-colors"
+      class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white transition-colors"
     >
       {title}
     </h3>
@@ -122,7 +124,15 @@ const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
         <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
           <span class="text-black text-[10px] font-bold leading-none">{authorName.charAt(0).toUpperCase()}</span>
         </div>
-        <span class="text-white/50 text-sm truncate">{authorName}</span>
+        {creatorUrl ? (
+          <a
+            href={creatorUrl}
+            class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
+            data-astro-prefetch
+          >{authorName}</a>
+        ) : (
+          <span class="text-white/50 text-sm truncate">{authorName}</span>
+        )}
       </div>
     )}
 
@@ -139,4 +149,4 @@ const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
       )
     }
   </div>
-</a>
+</div>
