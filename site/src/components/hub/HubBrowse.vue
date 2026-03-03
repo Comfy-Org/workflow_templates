@@ -40,8 +40,19 @@ const activeMediaFilters = ref<string[]>([]);
 const activeTagFilters = ref<string[]>([]);
 const activeModelFilters = ref<string[]>([]);
 
-// Curated sidebar tags (from Figma)
-const CURATED_TAGS = ['Inpainting', 'Upscaling', 'Utility'];
+// Data-driven top tags (by template count)
+const topTags = computed(() => {
+  const counts = new Map<string, number>();
+  for (const t of props.templates) {
+    for (const tag of t.tags) {
+      counts.set(tag, (counts.get(tag) || 0) + 1);
+    }
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name]) => name);
+});
 
 // Derive top models from template data
 const topModels = computed(() => {
@@ -217,22 +228,12 @@ const mediaTypeLabels: Record<string, string> = {
           </div>
         </div>
 
-        <!-- FILTERS section -->
+        <!-- CATEGORIES section -->
         <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">FILTERS</p>
+          <p class="text-hub-muted text-xs font-semibold uppercase">CATEGORIES</p>
           <div class="flex flex-col gap-3">
             <Button
-              v-for="type in mediaTypes"
-              :key="type"
-              :variant="activeMediaFilters.includes(type) ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="toggleMediaFilter(type)"
-            >
-              {{ mediaTypeLabels[type] || type }}
-            </Button>
-            <Button
-              v-for="tag in CURATED_TAGS"
+              v-for="tag in topTags"
               :key="tag"
               :variant="activeTagFilters.includes(tag) ? 'pill-active' : 'pill'"
               size="pill"
@@ -290,7 +291,7 @@ const mediaTypeLabels: Record<string, string> = {
     >
       <!-- Drawer Header -->
       <div class="flex items-center justify-between px-5 py-4">
-        <span class="text-lg font-semibold text-white">Filters</span>
+        <span class="text-lg font-semibold text-white">Categories</span>
         <button
           type="button"
           class="flex items-center justify-center size-8 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-colors"
@@ -353,22 +354,12 @@ const mediaTypeLabels: Record<string, string> = {
           </div>
         </div>
 
-        <!-- FILTERS section -->
+        <!-- CATEGORIES section -->
         <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">FILTERS</p>
+          <p class="text-hub-muted text-xs font-semibold uppercase">CATEGORIES</p>
           <div class="flex flex-wrap gap-2.5">
             <Button
-              v-for="type in mediaTypes"
-              :key="type"
-              :variant="activeMediaFilters.includes(type) ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="toggleMediaFilter(type)"
-            >
-              {{ mediaTypeLabels[type] || type }}
-            </Button>
-            <Button
-              v-for="tag in CURATED_TAGS"
+              v-for="tag in topTags"
               :key="tag"
               :variant="activeTagFilters.includes(tag) ? 'pill-active' : 'pill'"
               size="pill"

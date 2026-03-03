@@ -48,6 +48,7 @@ interface Props {
   locale?: string
   username?: string
   creatorDisplayName?: string
+  hideAuthor?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -57,6 +58,7 @@ const props = withDefaults(defineProps<Props>(), {
   locale: 'en',
   username: '',
   creatorDisplayName: 'ComfyUI',
+  hideAuthor: false,
 })
 
 function getLogoPath(name: string): string | null {
@@ -142,7 +144,7 @@ const creatorUrl = computed(() => {
       </h3>
 
       <!-- Author line -->
-      <div class="flex items-center gap-2 pt-4">
+      <div v-if="!hideAuthor" class="flex items-center gap-2 pt-4">
         <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
           <span class="text-black text-[10px] font-bold leading-none">{{ authorName.charAt(0).toUpperCase() }}</span>
         </div>

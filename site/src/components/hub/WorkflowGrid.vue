@@ -28,10 +28,13 @@ const props = withDefaults(
     gridClass?: string;
     /** Sort mode — controlled by parent (e.g. sidebar) */
     sortBy?: 'popular' | 'newest';
+    /** Hide author line on cards (useful on creator profile pages) */
+    hideAuthor?: boolean;
   }>(),
   {
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
     sortBy: 'popular',
+    hideAuthor: false,
   },
 );
 
@@ -85,6 +88,7 @@ function loadMore() {
         :locale="locale"
         :username="tmpl.username"
         :creator-display-name="tmpl.creatorDisplayName"
+        :hide-author="hideAuthor"
       />
     </div>
 
