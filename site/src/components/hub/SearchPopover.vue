@@ -323,9 +323,9 @@ onUnmounted(() => {
     >
       <div
         v-if="isOpen && !hasQuery"
-        class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl overflow-y-auto"
+        class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
       >
-        <div class="p-6 space-y-6">
+        <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
             <!-- Popular Workflows -->
             <section>
               <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-4">
@@ -439,13 +439,13 @@ onUnmounted(() => {
             </section>
           </div>
 
-          <!-- Footer -->
-          <div class="border-t border-white/10 px-6 py-3">
-            <p class="text-xs text-white/30 text-center">
-              Search across all filters, workflows, creators, and models
-            </p>
-          </div>
+        <!-- Footer -->
+        <div class="shrink-0 border-t border-white/10 px-6 py-3">
+          <p class="text-xs text-white/30 text-center">
+            Search across all filters, workflows, creators, and models
+          </p>
         </div>
+      </div>
     </Transition>
 
     <!-- Search Results Panel (has query) -->
@@ -459,7 +459,7 @@ onUnmounted(() => {
     >
       <div
         v-if="isOpen && hasQuery"
-        class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl overflow-y-auto max-h-[70vh]"
+        class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
       >
         <!-- Loading state -->
         <div v-if="isSearching && !searchResults" class="p-6">
@@ -473,7 +473,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Results -->
-        <div v-else-if="searchResults" class="p-6 space-y-6">
+        <div v-else-if="searchResults" class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
           <!-- No results -->
           <div v-if="searchResults.workflows.length === 0" class="text-center py-4">
             <p class="text-sm text-white/50">
@@ -571,7 +571,7 @@ onUnmounted(() => {
         </div>
 
         <!-- Footer -->
-        <div class="border-t border-white/10 px-6 py-3">
+        <div class="shrink-0 border-t border-white/10 px-6 py-3">
           <p class="text-xs text-white/30 text-center">
             <template v-if="searchResults && filteredWorkflows.length > 8">
               Showing 8 of {{ filteredWorkflows.length }} results
