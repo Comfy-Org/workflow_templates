@@ -13,8 +13,15 @@
 - `scripts/` — Python validation/sync scripts for CI and local dev
 
 ## Template Site
-The `site/` directory is an independent Astro project with its own tooling and commands.
-For site-specific instructions, see `site/AGENTS.md`.
+The `site/` directory is an independent Astro 5 project with Vue 3 interactive islands.
+For full site-specific instructions, see `site/AGENTS.md`.
+
+**Island architecture summary:**
+- `.astro` for static/SSR content and data fetching — `.vue` with `client:load` for interactive UI
+- Serialize content collections to plain JSON objects before passing as props to Vue islands
+- Each `client:load` Vue component is a separate Vue app — `provide`/`inject`/`$emit` don't cross islands
+- Cross-island state: shared composables in `site/src/composables/` with module-level `ref()` singletons
+- Astro→Vue bridge: Vue island attaches `addEventListener` to Astro DOM elements by ID in `onMounted()` — no `<script>` tags with `dispatchEvent` in `.astro` files
 
 ## Code Style
 - **Python**: Ruff linter, line-length 100, target py312. Select rules: E, F
