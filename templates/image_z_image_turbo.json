@@ -182,8 +182,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 4,
-          "lastNodeId": 61,
-          "lastLinkId": 70,
+          "lastNodeId": 63,
+          "lastLinkId": 73,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -342,7 +342,8 @@
                 "name": "CLIP",
                 "type": "CLIP",
                 "links": [
-                  28
+                  28,
+                  71
                 ]
               }
             ],
@@ -782,7 +783,7 @@
                 "localized_name": "positive",
                 "name": "positive",
                 "type": "CONDITIONING",
-                "link": 30
+                "link": 73
               },
               {
                 "localized_name": "negative",
@@ -838,6 +839,118 @@
               "simple",
               1
             ]
+          },
+          {
+            "id": 62,
+            "type": "CLIPTextEncode",
+            "pos": [
+              430,
+              620
+            ],
+            "size": [
+              320,
+              120
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 71
+              },
+              {
+                "localized_name": "text",
+                "name": "text",
+                "type": "STRING",
+                "widget": {
+                  "name": "text"
+                }
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "links": [
+                  72
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CLIPTextEncode",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            },
+            "widgets_values": [
+              "safe for work, fully clothed, appropriate attire, decent, professional, family friendly"
+            ]
+          },
+          {
+            "id": 63,
+            "type": "ConditioningCombine",
+            "pos": [
+              880,
+              620
+            ],
+            "size": [
+              230,
+              46
+            ],
+            "flags": {
+              "collapsed": true
+            },
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "conditioning_1",
+                "name": "conditioning_1",
+                "type": "CONDITIONING",
+                "link": 30
+              },
+              {
+                "localized_name": "conditioning_2",
+                "name": "conditioning_2",
+                "type": "CONDITIONING",
+                "link": 72
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "links": [
+                  73
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ConditioningCombine",
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            },
+            "widgets_values": []
           }
         ],
         "groups": [
@@ -926,8 +1039,8 @@
             "id": 30,
             "origin_id": 27,
             "origin_slot": 0,
-            "target_id": 3,
-            "target_slot": 1,
+            "target_id": 63,
+            "target_slot": 0,
             "type": "CONDITIONING"
           },
           {
@@ -1017,6 +1130,30 @@
             "target_id": 3,
             "target_slot": 4,
             "type": "INT"
+          },
+          {
+            "id": 71,
+            "origin_id": 30,
+            "origin_slot": 0,
+            "target_id": 62,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 72,
+            "origin_id": 62,
+            "origin_slot": 0,
+            "target_id": 63,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 73,
+            "origin_id": 63,
+            "origin_slot": 0,
+            "target_id": 3,
+            "target_slot": 1,
+            "type": "CONDITIONING"
           }
         ],
         "extra": {
