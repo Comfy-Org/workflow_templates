@@ -20,6 +20,8 @@ export const badgeVariants = cva(
           "rounded-md border-white/10 bg-white/5 text-white/50",
         "hub-pill":
           "border-transparent bg-hub-surface text-content font-normal h-6 px-4 py-1 [a&]:hover:opacity-80 transition-opacity",
+        "hub-filter":
+          "rounded-full border-white/10 bg-white/10 text-white font-normal cursor-pointer hover:bg-white/15 transition-colors",
       },
     },
     defaultVariants: {

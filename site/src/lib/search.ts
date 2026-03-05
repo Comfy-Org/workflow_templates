@@ -103,19 +103,27 @@ function deriveCreators(workflows: WorkflowHit[], query: string): CreatorHit[] {
     .sort((a, b) => b.workflowCount - a.workflowCount);
 }
 
-export async function search(query: string): Promise<SearchResults> {
+export async function search(
+  query: string,
+  options?: { allowedIds?: Set<string> },
+): Promise<SearchResults> {
   const trimmed = query.trim();
   if (!trimmed) {
     return { workflows: [], creators: [] };
   }
 
   const index = await ensureIndex();
-  const results = index.search(trimmed, {
+  let results = index.search(trimmed, {
     prefix: true,
     fuzzy: 0.2,
   });
 
-  const workflows = results.slice(0, 20).map(mapResult);
+  // Scope results to allowed IDs when badge filters are active
+  if (options?.allowedIds) {
+    results = results.filter((r) => options.allowedIds!.has(r.id as string));
+  }
+
+  const workflows = results.map(mapResult);
   const creators = deriveCreators(workflows, trimmed);
 
   return { workflows, creators };

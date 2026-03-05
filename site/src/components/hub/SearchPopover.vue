@@ -1,13 +1,21 @@
 <script setup lang="ts">
 /**
- * SearchPopover — Full-width search bar with discovery popover.
- * Shows popular workflows, top creators, filter-by-type tags, and popular models
- * when the search input is focused (initial state, before typing).
+ * SearchPopover — Full-width search bar with inline filter badges and discovery popover.
+ *
+ * Three states:
+ * 1. Discovery (open, no badges, no text) — shows popular workflows, creators, categories, models
+ * 2. Active results (has badges and/or text) — shows filter suggestions + filtered workflows
+ * 3. Closed — nothing visible
+ *
+ * Badges scope results: clicking a category/model adds a badge that filters templates.
+ * Text search uses MiniSearch within the badge-scoped set.
+ * Badge-only (no text) shows ALL matching templates sorted by usage.
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useHubStore } from '@/composables/useHubStore'
 import { search as searchIndex, type SearchResults } from '@/lib/search'
+import { Badge } from '@/components/ui/badge'
 
 export interface SearchTemplate {
   name: string
@@ -42,11 +50,114 @@ const isSearching = ref(false)
 const hasSearched = ref(false)
 
 const hasQuery = computed(() => searchQuery.value.trim().length > 0)
+const hasBadges = computed(() => store.filterBadges.value.length > 0)
+const hasActiveFilters = computed(() => hasQuery.value || hasBadges.value)
+
+const MAX_BADGES_DESKTOP = 4
+const MAX_BADGES_MOBILE = 2
+const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MAX_BADGES_DESKTOP))
+const overflowCountDesktop = computed(() => Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP))
+const visibleBadgesMobile = computed(() => store.filterBadges.value.slice(0, MAX_BADGES_MOBILE))
+const overflowCountMobile = computed(() => Math.max(0, store.filterBadges.value.length - MAX_BADGES_MOBILE))
+
+// ── All tags and models with counts (for filter suggestions) ──
+
+const allTags = computed(() => {
+  const counts = new Map<string, number>()
+  for (const tmpl of props.templates) {
+    for (const tag of tmpl.tags) {
+      counts.set(tag, (counts.get(tag) || 0) + 1)
+    }
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }))
+})
+
+const allModels = computed(() => {
+  const counts = new Map<string, number>()
+  for (const tmpl of props.templates) {
+    for (const m of tmpl.models) {
+      counts.set(m, (counts.get(m) || 0) + 1)
+    }
+  }
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, count]) => ({ name, count }))
+})
+
+// ── Filter suggestions (shown while typing) ──
+
+const filterSuggestions = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return { tags: [], models: [] }
+
+  // Already-active badge values to exclude from suggestions
+  const activeTags = new Set(
+    store.filterBadges.value.filter((b) => b.type === 'tag').map((b) => b.value),
+  )
+  const activeModels = new Set(
+    store.filterBadges.value.filter((b) => b.type === 'model').map((b) => b.value),
+  )
+
+  const matchingTags = allTags.value
+    .filter((t) => !activeTags.has(t.name) && t.name.toLowerCase().includes(q))
+    .slice(0, 5)
+
+  const matchingModels = allModels.value
+    .filter((m) => !activeModels.has(m.name) && m.name.toLowerCase().includes(q))
+    .slice(0, 5)
+
+  return { tags: matchingTags, models: matchingModels }
+})
+
+const hasFilterSuggestions = computed(() => {
+  return filterSuggestions.value.tags.length > 0 || filterSuggestions.value.models.length > 0
+})
+
+// ── Badge-filtered templates ──
+
+const badgeFilteredTemplates = computed(() => {
+  if (!hasBadges.value) return props.templates
+
+  const tagBadges = store.filterBadges.value
+    .filter((b) => b.type === 'tag')
+    .map((b) => b.value)
+  const modelBadges = store.filterBadges.value
+    .filter((b) => b.type === 'model')
+    .map((b) => b.value)
+
+  let result = [...props.templates]
+
+  if (tagBadges.length > 0) {
+    result = result.filter((t) => tagBadges.some((tag) => t.tags.includes(tag)))
+  }
+
+  if (modelBadges.length > 0) {
+    result = result.filter((t) => modelBadges.some((model) => t.models.includes(model)))
+  }
+
+  return result
+})
+
+// Set of allowed IDs for scoping MiniSearch when badges are active
+const badgeFilteredIds = computed(() => {
+  if (!hasBadges.value) return null
+  return new Set(badgeFilteredTemplates.value.map((t) => t.name))
+})
+
+// Badge-only results (no text query): all matching templates sorted by usage
+const badgeOnlyResults = computed(() => {
+  if (!hasBadges.value) return []
+  return [...badgeFilteredTemplates.value].sort((a, b) => b.usage - a.usage)
+})
+
+// ── Search with debounce ──
 
 watchDebounced(
-  searchQuery,
-  async (query) => {
-    const trimmed = query.trim()
+  [searchQuery, () => store.filterBadges.value],
+  async ([query]) => {
+    const trimmed = (query as string).trim()
     if (!trimmed) {
       searchResults.value = null
       hasSearched.value = false
@@ -54,7 +165,9 @@ watchDebounced(
     }
     isSearching.value = true
     try {
-      searchResults.value = await searchIndex(trimmed)
+      searchResults.value = await searchIndex(trimmed, {
+        allowedIds: badgeFilteredIds.value ?? undefined,
+      })
     } finally {
       isSearching.value = false
       hasSearched.value = true
@@ -62,6 +175,40 @@ watchDebounced(
   },
   { debounce: 200 },
 )
+
+// ── Displayed results (combines badge-only and text search) ──
+
+const displayedWorkflows = computed(() => {
+  // Text query active → show search results
+  if (hasQuery.value && searchResults.value) {
+    return searchResults.value.workflows
+  }
+  // Badge-only → show all filtered templates as workflow-like items
+  if (hasBadges.value) {
+    return badgeOnlyResults.value.map((t) => ({
+      id: t.name,
+      title: t.title,
+      mediaType: t.mediaType,
+      mediaTypeLabel: MEDIA_TYPE_LABELS[t.mediaType] || t.mediaType,
+      thumbnail: t.thumbnails[0] || '',
+      username: t.username,
+      creatorName: t.creatorDisplayName,
+      usage: t.usage,
+      tags: t.tags,
+      score: 0,
+    }))
+  }
+  return []
+})
+
+const MEDIA_TYPE_LABELS: Record<string, string> = {
+  image: 'Image',
+  video: 'Video',
+  audio: 'Audio',
+  '3d': '3D',
+}
+
+// ── Helpers ──
 
 function getTemplateUrl(name: string): string {
   return props.locale && props.locale !== 'en'
@@ -79,7 +226,7 @@ watch(() => store.searchFocusTrigger.value, () => {
 const popularWorkflows = computed(() =>
   [...props.templates]
     .sort((a, b) => b.usage - a.usage)
-    .slice(0, 4)
+    .slice(0, 4),
 )
 
 // Top creators — unique creators sorted by total usage, top 3
@@ -109,114 +256,46 @@ const uniqueCreatorCount = computed(() => {
   return creators.size
 })
 
-// Popular models — top 5 by template count (aligned with sidebar)
-const popularModels = computed(() => {
-  const counts = new Map<string, number>()
-  for (const tmpl of props.templates) {
-    for (const m of tmpl.models) {
-      counts.set(m, (counts.get(m) || 0) + 1)
-    }
-  }
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => name)
-})
+// Discovery preview — top 5 of each (matching sidebar) with remaining counts
+const DISCOVERY_PREVIEW_COUNT = 5
 
-// Unique model count for the discovery panel header
-const uniqueModelCount = computed(() => {
-  const models = new Set<string>()
-  for (const tmpl of props.templates) {
-    for (const m of tmpl.models) {
-      models.add(m)
-    }
-  }
-  return models.size
-})
+const previewTags = computed(() => allTags.value.slice(0, DISCOVERY_PREVIEW_COUNT))
+const remainingTagCount = computed(() => Math.max(0, allTags.value.length - DISCOVERY_PREVIEW_COUNT))
 
-// Filter types — media types first, then popular tags derived from data
-const MEDIA_TYPE_LABELS: Record<string, string> = {
-  image: 'Image',
-  video: 'Video',
-  audio: 'Audio',
-  '3d': '3D',
-}
+const previewModels = computed(() => allModels.value.slice(0, DISCOVERY_PREVIEW_COUNT))
+const remainingModelCount = computed(() => Math.max(0, allModels.value.length - DISCOVERY_PREVIEW_COUNT))
 
-const filterTypes = computed(() => {
-  // Get media types that actually exist
-  const mediaTypes = new Set<string>()
-  const tagCounts = new Map<string, number>()
-  for (const tmpl of props.templates) {
-    mediaTypes.add(tmpl.mediaType)
-    for (const tag of tmpl.tags) {
-      // Skip tags that duplicate media type labels (e.g. "Image", "Video")
-      const isMediaLabel = Object.values(MEDIA_TYPE_LABELS).includes(tag)
-      if (!isMediaLabel) {
-        tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1)
-      }
-    }
-  }
-  const mediaTypeFilters = ['image', 'video', 'audio', '3d']
-    .filter((mt) => mediaTypes.has(mt))
-    .map((mt) => MEDIA_TYPE_LABELS[mt])
-  const topTags = Array.from(tagCounts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => name)
-  return [...mediaTypeFilters, ...topTags]
-})
+// ── Badge actions ──
 
-// Total unique tags+mediaTypes count for the header
-const uniqueFilterCount = computed(() => {
-  const all = new Set<string>()
-  for (const tmpl of props.templates) {
-    all.add(MEDIA_TYPE_LABELS[tmpl.mediaType] || tmpl.mediaType)
-    for (const tag of tmpl.tags) {
-      all.add(tag)
-    }
-  }
-  return all.size
-})
-
-// Active media type filter within search results (null = show all)
-const activeResultFilter = ref<string | null>(null)
-
-// Unique media types present in current search results
-const resultMediaTypes = computed(() => {
-  if (!searchResults.value) return []
-  const types = new Map<string, string>()
-  for (const wf of searchResults.value.workflows) {
-    if (!types.has(wf.mediaType)) {
-      types.set(wf.mediaType, wf.mediaTypeLabel)
-    }
-  }
-  return Array.from(types.entries()).map(([value, label]) => ({ value, label }))
-})
-
-// Filtered search results based on active media type chip
-const filteredWorkflows = computed(() => {
-  if (!searchResults.value) return []
-  if (!activeResultFilter.value) return searchResults.value.workflows
-  return searchResults.value.workflows.filter((wf) => wf.mediaType === activeResultFilter.value)
-})
-
-function toggleResultFilter(type: string) {
-  activeResultFilter.value = activeResultFilter.value === type ? null : type
-}
-
-// Reset the result filter when query changes
-watch(searchQuery, () => {
-  activeResultFilter.value = null
-})
-
-// Fill search query when user clicks a discovery item
-function searchFor(term: string) {
-  searchQuery.value = term
+function addFilterBadge(type: 'tag' | 'model', value: string) {
+  store.addBadge({ type, value })
+  searchQuery.value = ''
   inputRef.value?.focus()
+}
+
+function removeLastBadge() {
+  if (store.filterBadges.value.length > 0) {
+    const last = store.filterBadges.value[store.filterBadges.value.length - 1]
+    store.removeBadge(last)
+  }
+}
+
+function handleKeydown(e: KeyboardEvent) {
+  // Backspace on empty input removes last badge
+  if (e.key === 'Backspace' && searchQuery.value === '' && hasBadges.value) {
+    e.preventDefault()
+    removeLastBadge()
+  }
 }
 
 function clearSearch() {
   searchQuery.value = ''
+  inputRef.value?.focus()
+}
+
+function clearAll() {
+  searchQuery.value = ''
+  store.clearBadges()
   inputRef.value?.focus()
 }
 
@@ -268,14 +347,15 @@ onUnmounted(() => {
 
 <template>
   <div ref="containerRef" class="flex-1">
-    <!-- Search Input -->
+    <!-- Search Input with Badges -->
     <div
-      class="flex items-center gap-2 h-10 px-4 rounded-full mx-auto max-w-[700px] transition-colors"
+      class="flex items-center gap-1.5 min-h-10 px-3 rounded-full mx-auto max-w-[700px] transition-colors"
       :class="[
         isOpen
           ? 'bg-hub-surface ring-1 ring-brand'
           : 'bg-hub-surface'
       ]"
+      @click="inputRef?.focus()"
     >
       <svg
         class="size-4 shrink-0 text-hub-muted"
@@ -291,20 +371,68 @@ onUnmounted(() => {
           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
         />
       </svg>
+
+      <!-- Inline filter badges — mobile (max 2) -->
+      <template v-if="hasBadges">
+        <div class="contents lg:hidden">
+          <Badge
+            v-for="badge in visibleBadgesMobile"
+            :key="`m:${badge.type}:${badge.value}`"
+            variant="hub-filter"
+            as="button"
+            type="button"
+            class="h-6 px-2.5 text-xs gap-1"
+            @click.stop="store.removeBadge(badge)"
+          >
+            {{ badge.value }}
+            <svg class="size-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Badge>
+          <Badge v-if="overflowCountMobile > 0" variant="hub-filter" class="h-6 px-2.5 text-xs">
+            +{{ overflowCountMobile }} more
+          </Badge>
+        </div>
+
+        <!-- Inline filter badges — desktop (max 4) -->
+        <div class="hidden lg:contents">
+          <Badge
+            v-for="badge in visibleBadgesDesktop"
+            :key="`d:${badge.type}:${badge.value}`"
+            variant="hub-filter"
+            as="button"
+            type="button"
+            class="h-6 px-2.5 text-xs gap-1"
+            @click.stop="store.removeBadge(badge)"
+          >
+            {{ badge.value }}
+            <svg class="size-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Badge>
+          <Badge v-if="overflowCountDesktop > 0" variant="hub-filter" class="h-6 px-2.5 text-xs">
+            +{{ overflowCountDesktop }} more
+          </Badge>
+        </div>
+      </template>
+
       <input
         ref="inputRef"
         v-model="searchQuery"
         type="text"
-        placeholder="Search workflows, models, creators..."
-        class="flex-1 bg-transparent text-white text-sm font-normal placeholder:text-hub-muted outline-none"
+        :placeholder="hasBadges ? 'Search within filters...' : 'Search workflows, models, creators...'"
+        class="flex-1 min-w-[120px] bg-transparent text-white text-sm font-normal placeholder:text-hub-muted outline-none py-2"
         @focus="handleFocus"
+        @keydown="handleKeydown"
       />
+
+      <!-- Clear button -->
       <button
-        v-if="hasQuery"
+        v-if="hasQuery || hasBadges"
         type="button"
         class="shrink-0 size-5 flex items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-        aria-label="Clear search"
-        @click="clearSearch"
+        aria-label="Clear all"
+        @click.stop="clearAll"
       >
         <svg class="size-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -312,7 +440,7 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- Discovery Panel (empty query) -->
+    <!-- Discovery Panel (no badges, no text query) -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
       enter-from-class="opacity-0 translate-y-1"
@@ -322,133 +450,120 @@ onUnmounted(() => {
       leave-to-class="opacity-0 translate-y-1"
     >
       <div
-        v-if="isOpen && !hasQuery"
+        v-if="isOpen && !hasActiveFilters"
         class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
       >
         <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
-            <!-- Popular Workflows -->
-            <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-4">
-                Popular Workflows
-                <span class="text-white/30 font-normal ml-1">({{ formatUsage(templates.length) }}+)</span>
-              </h3>
-              <div class="space-y-1">
-                <a
-                  v-for="wf in popularWorkflows"
-                  :key="wf.name"
-                  :href="getTemplateUrl(wf.name)"
-                  class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
-                >
-                  <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
-                    <img
-                      v-if="getPrimaryThumb(wf.thumbnails)"
-                      :src="getPrimaryThumb(wf.thumbnails)!"
-                      :alt="wf.title"
-                      loading="lazy"
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-white truncate group-hover:text-brand transition-colors">
-                      {{ wf.title }}
-                    </p>
-                    <p class="text-xs text-white/40 truncate">
-                      {{ wf.creatorDisplayName }} · {{ formatUsage(wf.usage) }} runs
-                    </p>
-                  </div>
-                </a>
-              </div>
-            </section>
+          <!-- Popular Workflows -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              Popular Workflows
+              <span class="text-white/30 font-normal ml-1">({{ formatUsage(templates.length) }}+)</span>
+            </h3>
+            <div class="space-y-1">
+              <a
+                v-for="wf in popularWorkflows"
+                :key="wf.name"
+                :href="getTemplateUrl(wf.name)"
+                class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
+              >
+                <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
+                  <img
+                    v-if="getPrimaryThumb(wf.thumbnails)"
+                    :src="getPrimaryThumb(wf.thumbnails)!"
+                    :alt="wf.title"
+                    loading="lazy"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-white truncate group-hover:text-brand transition-colors">
+                    {{ wf.title }}
+                  </p>
+                  <p class="text-xs text-white/40 truncate">
+                    {{ wf.creatorDisplayName }} · {{ formatUsage(wf.usage) }} runs
+                  </p>
+                </div>
+              </a>
+            </div>
+          </section>
 
-            <!-- Top Creators -->
-            <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
-                Top Creators
-                <span class="text-white/30 font-normal ml-1">({{ uniqueCreatorCount }})</span>
-              </h3>
-              <div class="flex flex-wrap gap-2">
-                <a
-                  v-for="(creator, i) in topCreators"
-                  :key="creator.username"
-                  :href="locale && locale !== 'en' ? `/${locale}/templates/${creator.username}/` : `/templates/${creator.username}/`"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+          <!-- Top Creators -->
+          <section>
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              Top Creators
+              <span class="text-white/30 font-normal ml-1">({{ uniqueCreatorCount }})</span>
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <a
+                v-for="(creator, i) in topCreators"
+                :key="creator.username"
+                :href="locale && locale !== 'en' ? `/${locale}/templates/${creator.username}/` : `/templates/${creator.username}/`"
+                class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+              >
+                <span
+                  class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
+                  :style="{ backgroundColor: getCreatorColor(i) }"
                 >
-                  <span
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
-                    :style="{ backgroundColor: getCreatorColor(i) }"
-                  >
-                    {{ creator.displayName.charAt(0).toUpperCase() }}
-                  </span>
-                  {{ creator.displayName }}
-                </a>
-              </div>
-            </section>
+                  {{ creator.displayName.charAt(0).toUpperCase() }}
+                </span>
+                {{ creator.displayName }}
+              </a>
+            </div>
+          </section>
 
-            <!-- Categories -->
-            <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
-                Categories
-                <span class="text-white/30 font-normal ml-1">({{ uniqueFilterCount }})</span>
-              </h3>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="filterType in filterTypes"
-                  :key="filterType"
-                  class="inline-flex items-center justify-center h-8 px-4 rounded-full bg-hub-surface text-white/60 text-xs font-normal hover:brightness-125 transition-all cursor-pointer"
-                  @click="searchFor(filterType)"
-                >
-                  {{ filterType }}
-                </button>
-                <button
-                  class="inline-flex items-center gap-1.5 h-8 px-4 rounded-full border border-dashed border-white/15 text-white/40 text-xs font-normal hover:text-white/60 hover:border-white/25 transition-all cursor-pointer"
-                  @click="inputRef?.focus()"
-                >
-                  <svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Search all
-                </button>
-              </div>
-            </section>
-
-            <!-- Popular Models -->
-            <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
-                Popular Models
-                <span class="text-white/30 font-normal ml-1">({{ uniqueModelCount }})</span>
-              </h3>
-              <div class="flex flex-wrap gap-2">
-                <button
-                  v-for="model in popularModels"
-                  :key="model"
-                  class="inline-flex items-center justify-center h-8 px-4 rounded-full bg-hub-surface text-white/60 text-xs font-normal hover:brightness-125 transition-all cursor-pointer"
-                  @click="searchFor(model)"
-                >
-                  {{ model }}
-                </button>
-                <button
-                  class="inline-flex items-center gap-1.5 h-8 px-4 rounded-full border border-dashed border-white/15 text-white/40 text-xs font-normal hover:text-white/60 hover:border-white/25 transition-all cursor-pointer"
-                  @click="inputRef?.focus()"
-                >
-                  <svg class="size-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  Search all
-                </button>
-              </div>
-            </section>
-          </div>
-
-        <!-- Footer -->
-        <div class="shrink-0 border-t border-white/10 px-6 py-3">
-          <p class="text-xs text-white/30 text-center">
-            Search across all filters, workflows, creators, and models
-          </p>
+          <!-- Filter by — two labeled rows with "+ N more" -->
+          <section class="space-y-3">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50">
+              Filter by
+            </h3>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0">Categories</span>
+              <Badge
+                v-for="tag in previewTags"
+                :key="`tag:${tag.name}`"
+                variant="hub-filter"
+                as="button"
+                class="h-6 px-2.5"
+                @click="addFilterBadge('tag', tag.name)"
+              >
+                {{ tag.name }}
+              </Badge>
+              <button
+                v-if="remainingTagCount > 0"
+                class="text-xs text-white/30 hover:text-white/50 transition-colors cursor-pointer"
+                @click="inputRef?.focus()"
+              >
+                + {{ remainingTagCount }} more
+              </button>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0">Models</span>
+              <Badge
+                v-for="model in previewModels"
+                :key="`model:${model.name}`"
+                variant="hub-filter"
+                as="button"
+                class="h-6 px-2.5"
+                @click="addFilterBadge('model', model.name)"
+              >
+                {{ model.name }}
+              </Badge>
+              <button
+                v-if="remainingModelCount > 0"
+                class="text-xs text-white/30 hover:text-white/50 transition-colors cursor-pointer"
+                @click="inputRef?.focus()"
+              >
+                + {{ remainingModelCount }} more
+              </button>
+            </div>
+          </section>
         </div>
+
       </div>
     </Transition>
 
-    <!-- Search Results Panel (has query) -->
+    <!-- Active Results Panel (has badges and/or text query) -->
     <Transition
       enter-active-class="transition duration-150 ease-out"
       enter-from-class="opacity-0 translate-y-1"
@@ -458,11 +573,11 @@ onUnmounted(() => {
       leave-to-class="opacity-0 translate-y-1"
     >
       <div
-        v-if="isOpen && hasQuery"
+        v-if="isOpen && hasActiveFilters"
         class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
       >
         <!-- Loading state -->
-        <div v-if="isSearching && !searchResults" class="p-6">
+        <div v-if="isSearching && !searchResults && hasQuery" class="p-6">
           <div class="flex items-center gap-3 text-white/50">
             <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -473,111 +588,133 @@ onUnmounted(() => {
         </div>
 
         <!-- Results -->
-        <div v-else-if="searchResults" class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
+        <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
+          <!-- Filter suggestions (shown while typing) -->
+          <section v-if="hasQuery && hasFilterSuggestions">
+            <h3 class="text-[11px] font-semibold uppercase tracking-wide text-white/40 mb-2.5">
+              Narrow by
+            </h3>
+            <div class="flex flex-wrap gap-1.5">
+              <Badge
+                v-for="tag in filterSuggestions.tags"
+                :key="`tag:${tag.name}`"
+                variant="hub-filter"
+                as="button"
+                class="h-6 px-2.5"
+                @click="addFilterBadge('tag', tag.name)"
+              >
+                {{ tag.name }}
+                <span class="text-white/30 text-[10px]">{{ tag.count }}</span>
+              </Badge>
+              <Badge
+                v-for="model in filterSuggestions.models"
+                :key="`model:${model.name}`"
+                variant="hub-filter"
+                as="button"
+                class="h-6 px-2.5"
+                @click="addFilterBadge('model', model.name)"
+              >
+                {{ model.name }}
+                <span class="text-white/30 text-[10px]">{{ model.count }}</span>
+              </Badge>
+            </div>
+          </section>
+
+          <!-- Divider between suggestions and results -->
+          <div v-if="hasQuery && hasFilterSuggestions && displayedWorkflows.length > 0" class="border-t border-white/5" />
+
           <!-- No results -->
-          <div v-if="searchResults.workflows.length === 0" class="text-center py-4">
+          <div
+            v-if="hasQuery && hasSearched && searchResults && searchResults.workflows.length === 0"
+            class="text-center py-4"
+          >
             <p class="text-sm text-white/50">
               No results for "<span class="text-white/70">{{ searchQuery.trim() }}</span>"
+              <template v-if="hasBadges"> within active filters</template>
             </p>
-            <p class="text-xs text-white/30 mt-1">Try a different search term</p>
+            <p class="text-xs text-white/30 mt-1">Try a different search term or remove a filter</p>
           </div>
 
-          <template v-else>
-            <!-- Media type filter chips (only when multiple types in results) -->
-            <div v-if="resultMediaTypes.length > 1" class="flex flex-wrap gap-1.5">
-              <button
-                class="h-6 px-2.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer"
-                :class="activeResultFilter === null
-                  ? 'bg-white/15 text-white'
-                  : 'bg-white/5 text-white/40 hover:text-white/60'"
-                @click="activeResultFilter = null"
+          <!-- No badge results -->
+          <div
+            v-else-if="!hasQuery && hasBadges && badgeOnlyResults.length === 0"
+            class="text-center py-4"
+          >
+            <p class="text-sm text-white/50">No workflows match the selected filters</p>
+            <p class="text-xs text-white/30 mt-1">Try removing a filter</p>
+          </div>
+
+          <!-- Workflow results -->
+          <section v-else-if="displayedWorkflows.length > 0">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              Workflows
+              <span class="text-white/30 font-normal ml-1">({{ displayedWorkflows.length }})</span>
+            </h3>
+            <div class="space-y-1">
+              <a
+                v-for="hit in displayedWorkflows"
+                :key="hit.id"
+                :href="getTemplateUrl(hit.id)"
+                class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
               >
-                All ({{ searchResults.workflows.length }})
-              </button>
-              <button
-                v-for="mt in resultMediaTypes"
-                :key="mt.value"
-                class="h-6 px-2.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer"
-                :class="activeResultFilter === mt.value
-                  ? 'bg-white/15 text-white'
-                  : 'bg-white/5 text-white/40 hover:text-white/60'"
-                @click="toggleResultFilter(mt.value)"
-              >
-                {{ mt.label }}
-              </button>
+                <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
+                  <img
+                    v-if="hit.thumbnail"
+                    :src="`/templates/thumbnails/${hit.thumbnail}`"
+                    :alt="hit.title"
+                    loading="lazy"
+                    class="w-full h-full object-cover"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="text-sm font-medium text-white truncate group-hover:text-brand transition-colors">
+                    {{ hit.title }}
+                  </p>
+                  <p class="text-xs text-white/40 truncate">
+                    {{ hit.creatorName }} · {{ formatUsage(hit.usage) }} runs
+                  </p>
+                </div>
+                <span class="text-[10px] uppercase tracking-wide text-white/30 shrink-0">
+                  {{ hit.mediaTypeLabel }}
+                </span>
+              </a>
             </div>
+          </section>
 
-            <!-- Workflow results -->
-            <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-4">
-                Workflows
-                <span class="text-white/30 font-normal ml-1">({{ filteredWorkflows.length }})</span>
-              </h3>
-              <div class="space-y-1">
-                <a
-                  v-for="hit in filteredWorkflows.slice(0, 8)"
-                  :key="hit.id"
-                  :href="getTemplateUrl(hit.id)"
-                  class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
+          <!-- Creator results (only when text searching) -->
+          <section v-if="hasQuery && searchResults && searchResults.creators.length > 0">
+            <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              Creators
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              <a
+                v-for="(creator, i) in searchResults.creators.slice(0, 5)"
+                :key="creator.username"
+                :href="getTemplateUrl(creator.username)"
+                class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+              >
+                <span
+                  class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
+                  :style="{ backgroundColor: getCreatorColor(i) }"
                 >
-                  <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
-                    <img
-                      v-if="hit.thumbnail"
-                      :src="`/templates/thumbnails/${hit.thumbnail}`"
-                      :alt="hit.title"
-                      loading="lazy"
-                      class="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium text-white truncate group-hover:text-brand transition-colors">
-                      {{ hit.title }}
-                    </p>
-                    <p class="text-xs text-white/40 truncate">
-                      {{ hit.creatorName }} · {{ formatUsage(hit.usage) }} runs
-                    </p>
-                  </div>
-                  <span class="text-[10px] uppercase tracking-wide text-white/30 shrink-0">
-                    {{ hit.mediaTypeLabel }}
-                  </span>
-                </a>
-              </div>
-            </section>
-
-            <!-- Creator results -->
-            <section v-if="searchResults.creators.length > 0">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
-                Creators
-              </h3>
-              <div class="flex flex-wrap gap-2">
-                <a
-                  v-for="(creator, i) in searchResults.creators.slice(0, 5)"
-                  :key="creator.username"
-                  :href="getTemplateUrl(creator.username)"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
-                >
-                  <span
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
-                    :style="{ backgroundColor: getCreatorColor(i) }"
-                  >
-                    {{ creator.displayName.charAt(0).toUpperCase() }}
-                  </span>
-                  {{ creator.displayName }}
-                  <span class="text-white/30 text-xs">{{ creator.workflowCount }}</span>
-                </a>
-              </div>
-            </section>
-          </template>
+                  {{ creator.displayName.charAt(0).toUpperCase() }}
+                </span>
+                {{ creator.displayName }}
+                <span class="text-white/30 text-xs">{{ creator.workflowCount }}</span>
+              </a>
+            </div>
+          </section>
         </div>
 
         <!-- Footer -->
         <div class="shrink-0 border-t border-white/10 px-6 py-3">
           <p class="text-xs text-white/30 text-center">
-            <template v-if="searchResults && filteredWorkflows.length > 8">
-              Showing 8 of {{ filteredWorkflows.length }} results
+            <template v-if="hasBadges && !hasQuery">
+              {{ displayedWorkflows.length }} workflow{{ displayedWorkflows.length !== 1 ? 's' : '' }} matching {{ store.filterBadges.value.length }} filter{{ store.filterBadges.value.length !== 1 ? 's' : '' }}
+              · <button class="text-white/40 hover:text-white/60 underline cursor-pointer" @click="clearAll">Clear all</button>
             </template>
             <template v-else>
-              Press Enter to search or Escape to close
+              Press Escape to close · Backspace to remove filters
             </template>
           </p>
         </div>

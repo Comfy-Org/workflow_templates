@@ -1,14 +1,14 @@
 ---
 import ThumbnailDisplay from '../ThumbnailDisplay.astro';
+import BackButton from '../BackButton.astro';
 import SidebarSection from './SidebarSection.astro';
+import CollapsibleBadgeList from './CollapsibleBadgeList.vue';
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
-import { buttonVariants } from '../ui/button';
-import { badgeVariants } from '../ui/badge';
-import { cn } from '../../lib/utils';
+
 import creatorsData from '../../../../templates/creators.json';
 
 interface CreatorProfile {
@@ -76,20 +76,11 @@ function formatRelativeDate(dateStr: string): string {
 ---
 
 <article class="bg-page min-h-screen text-content scroll-smooth">
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-16">
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-16 pb-32">
     <div class="flex flex-col lg:flex-row gap-16 justify-between w-full">
 
       {/* Back button */}
-      <a
-        href={localizeUrl('/templates/', locale)}
-        data-astro-prefetch
-        class="self-start inline-flex items-center gap-1 h-10 px-4 py-2 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2"
-      >
-        <svg class="size-4" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-          <path d="M12 8H4M4 8l3-3M4 8l3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" />
-        </svg>
-        {t('nav.backShort', locale)}
-      </a>
+      <BackButton locale={locale} class="self-start lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2" />
 
       <div class="flex-1 min-w-0">
       {/* Thumbnail */}
@@ -160,24 +151,30 @@ function formatRelativeDate(dateStr: string): string {
 
           {/* Categories */}
           {data.tags && data.tags.length > 0 && (
-            <SidebarSection title={t('labels.categories', locale)} footerLabel="See all" footerHref={localizeUrl('/templates/', locale)}>
-              <div class="flex flex-wrap gap-2">
-                <a href={localizeUrl(`/templates/category/${data.mediaType}/`, locale)} class={badgeVariants({ variant: 'hub-pill' })} data-astro-prefetch>{mediaTypeLabels[data.mediaType]}</a>
-                {data.tags.map((tag: string) => (
-                  <a href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)} class={badgeVariants({ variant: 'hub-pill' })} data-astro-prefetch>{tag}</a>
-                ))}
-              </div>
+            <SidebarSection title={t('labels.categories', locale)}>
+              <CollapsibleBadgeList
+                client:load
+                items={[
+                  { label: mediaTypeLabels[data.mediaType], href: localizeUrl(`/templates/category/${data.mediaType}/`, locale) },
+                  ...data.tags.map((tag: string) => ({
+                    label: tag,
+                    href: localizeUrl(`/templates/tag/${slugify(tag)}/`, locale),
+                  })),
+                ]}
+              />
             </SidebarSection>
           )}
 
           {/* Models */}
           {data.models && data.models.length > 0 && (
-            <SidebarSection title={t('labels.models', locale)} footerLabel="See all" footerHref={localizeUrl('/templates/', locale)}>
-              <div class="flex flex-wrap gap-2">
-                {data.models.map((model: string) => (
-                  <a href={localizeUrl(`/templates/model/${slugify(model)}/`, locale)} class={badgeVariants({ variant: 'hub-pill' })} data-astro-prefetch>{model}</a>
-                ))}
-              </div>
+            <SidebarSection title={t('labels.models', locale)}>
+              <CollapsibleBadgeList
+                client:load
+                items={data.models.map((model: string) => ({
+                  label: model,
+                  href: localizeUrl(`/templates/model/${slugify(model)}/`, locale),
+                }))}
+              />
             </SidebarSection>
           )}
 

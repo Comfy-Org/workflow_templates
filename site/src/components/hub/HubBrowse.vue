@@ -4,6 +4,9 @@
  * Owns sidebar filters (media type, tags, models) and delegates
  * tab/sort/grid rendering to WorkflowGrid.
  * Includes a mobile filter drawer overlay.
+ *
+ * Filter state is shared via useHubStore (filterBadges) so that
+ * SearchPopover and HubBrowse sidebar stay in sync.
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Button } from '@/components/ui/button';
@@ -36,9 +39,6 @@ const { mobileDrawerOpen } = store;
 
 // Sidebar state
 const sortBy = ref<'popular' | 'newest'>('popular');
-const activeMediaFilters = ref<string[]>([]);
-const activeTagFilters = ref<string[]>([]);
-const activeModelFilters = ref<string[]>([]);
 
 // Data-driven top tags (by template count)
 const topTags = computed(() => {
@@ -68,46 +68,30 @@ const topModels = computed(() => {
     .map(([name]) => name);
 });
 
-// Toggle helpers
-function toggleMediaFilter(type: string) {
-  const idx = activeMediaFilters.value.indexOf(type);
-  if (idx >= 0) activeMediaFilters.value.splice(idx, 1);
-  else activeMediaFilters.value.push(type);
-}
-
+// Toggle helpers using shared store badges
 function toggleTagFilter(tag: string) {
-  const idx = activeTagFilters.value.indexOf(tag);
-  if (idx >= 0) activeTagFilters.value.splice(idx, 1);
-  else activeTagFilters.value.push(tag);
+  store.toggleBadge({ type: 'tag', value: tag });
 }
 
 function toggleModelFilter(model: string) {
-  const idx = activeModelFilters.value.indexOf(model);
-  if (idx >= 0) activeModelFilters.value.splice(idx, 1);
-  else activeModelFilters.value.push(model);
+  store.toggleBadge({ type: 'model', value: model });
+}
+
+function isTagActive(tag: string): boolean {
+  return store.filterBadges.value.some((b) => b.type === 'tag' && b.value === tag);
+}
+
+function isModelActive(model: string): boolean {
+  return store.filterBadges.value.some((b) => b.type === 'model' && b.value === model);
 }
 
 function clearAllFilters() {
-  activeMediaFilters.value = [];
-  activeTagFilters.value = [];
-  activeModelFilters.value = [];
+  store.clearBadges();
   sortBy.value = 'popular';
 }
 
 function closeMobileDrawer() {
   store.closeMobileDrawer();
-}
-
-function openSearch() {
-  store.requestSearchFocus();
-}
-
-function openSearchFromDrawer() {
-  store.closeMobileDrawer();
-  // Allow drawer close transition to finish before focusing search
-  setTimeout(() => {
-    store.requestSearchFocus();
-  }, 200);
 }
 
 // Lock body scroll when drawer is open
@@ -136,41 +120,28 @@ onUnmounted(() => {
   lockBodyScroll(false);
 });
 
-// Filtered templates (sorting handled by WorkflowGrid)
+// Filtered templates using shared store badges (sorting handled by WorkflowGrid)
 const filteredTemplates = computed(() => {
+  const badges = store.filterBadges.value;
+  if (badges.length === 0) return props.templates;
+
+  const tagBadges = badges.filter((b) => b.type === 'tag').map((b) => b.value);
+  const modelBadges = badges.filter((b) => b.type === 'model').map((b) => b.value);
+
   let result = [...props.templates];
 
-  if (activeMediaFilters.value.length > 0) {
-    result = result.filter((t) => activeMediaFilters.value.includes(t.mediaType));
+  if (tagBadges.length > 0) {
+    result = result.filter((t) => tagBadges.some((tag) => t.tags.includes(tag)));
   }
 
-  if (activeTagFilters.value.length > 0) {
-    result = result.filter((t) => activeTagFilters.value.some((tag) => t.tags.includes(tag)));
-  }
-
-  if (activeModelFilters.value.length > 0) {
-    result = result.filter((t) =>
-      activeModelFilters.value.some((model) => t.models.includes(model))
-    );
+  if (modelBadges.length > 0) {
+    result = result.filter((t) => modelBadges.some((model) => t.models.includes(model)));
   }
 
   return result;
 });
 
-const activeFilterCount = computed(() => {
-  return (
-    activeMediaFilters.value.length +
-    activeTagFilters.value.length +
-    activeModelFilters.value.length
-  );
-});
-
-const mediaTypeLabels: Record<string, string> = {
-  image: 'Image',
-  video: 'Video',
-  audio: 'Audio',
-  '3d': '3D',
-};
+const activeFilterCount = computed(() => store.filterBadges.value.length);
 </script>
 
 <template>
@@ -230,12 +201,12 @@ const mediaTypeLabels: Record<string, string> = {
 
         <!-- CATEGORIES section -->
         <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">CATEGORIES</p>
+          <p class="text-hub-muted text-xs font-semibold uppercase">POPULAR CATEGORIES</p>
           <div class="flex flex-col gap-3">
             <Button
               v-for="tag in topTags"
               :key="tag"
-              :variant="activeTagFilters.includes(tag) ? 'pill-active' : 'pill'"
+              :variant="isTagActive(tag) ? 'pill-active' : 'pill'"
               size="pill"
               class="w-fit"
               @click="toggleTagFilter(tag)"
@@ -252,18 +223,12 @@ const mediaTypeLabels: Record<string, string> = {
             <Button
               v-for="model in topModels"
               :key="model"
-              :variant="activeModelFilters.includes(model) ? 'pill-active' : 'pill'"
+              :variant="isModelActive(model) ? 'pill-active' : 'pill'"
               size="pill"
               class="w-fit"
               @click="toggleModelFilter(model)"
             >
               {{ model }}
-            </Button>
-          </div>
-          <!-- Divider + Discover more -->
-          <div class="pt-4 border-t border-white/10">
-            <Button variant="pill" size="pill" class="w-fit" @click="openSearch">
-              Discover more
             </Button>
           </div>
         </div>
@@ -291,7 +256,7 @@ const mediaTypeLabels: Record<string, string> = {
     >
       <!-- Drawer Header -->
       <div class="flex items-center justify-between px-5 py-4">
-        <span class="text-lg font-semibold text-white">Categories</span>
+        <span class="text-lg font-semibold text-white">Filter</span>
         <button
           type="button"
           class="flex items-center justify-center size-8 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-colors"
@@ -356,12 +321,12 @@ const mediaTypeLabels: Record<string, string> = {
 
         <!-- CATEGORIES section -->
         <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">CATEGORIES</p>
+          <p class="text-hub-muted text-xs font-semibold uppercase">POPULAR CATEGORIES</p>
           <div class="flex flex-wrap gap-2.5">
             <Button
               v-for="tag in topTags"
               :key="tag"
-              :variant="activeTagFilters.includes(tag) ? 'pill-active' : 'pill'"
+              :variant="isTagActive(tag) ? 'pill-active' : 'pill'"
               size="pill"
               class="w-fit"
               @click="toggleTagFilter(tag)"
@@ -378,18 +343,12 @@ const mediaTypeLabels: Record<string, string> = {
             <Button
               v-for="model in topModels"
               :key="model"
-              :variant="activeModelFilters.includes(model) ? 'pill-active' : 'pill'"
+              :variant="isModelActive(model) ? 'pill-active' : 'pill'"
               size="pill"
               class="w-fit"
               @click="toggleModelFilter(model)"
             >
               {{ model }}
-            </Button>
-          </div>
-          <!-- Divider + Discover more -->
-          <div class="pt-4 border-t border-white/10">
-            <Button variant="pill" size="pill" class="w-fit" @click="openSearchFromDrawer">
-              Discover more
             </Button>
           </div>
         </div>
