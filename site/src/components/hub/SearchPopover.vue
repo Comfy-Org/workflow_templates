@@ -430,6 +430,15 @@ function handleEscape(e: KeyboardEvent) {
   }
 }
 
+function handleGlobalSlash(e: KeyboardEvent) {
+  if (e.key !== '/') return
+  const tag = (e.target as HTMLElement)?.tagName
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return
+  e.preventDefault()
+  isOpen.value = true
+  inputRef.value?.focus()
+}
+
 // Reset active index when context changes
 watch([searchQuery, () => store.filterBadges.value.length, isOpen, searchResults], () => {
   activeIndex.value = -1
@@ -447,11 +456,13 @@ watch(activeIndex, (idx) => {
 onMounted(() => {
   document.addEventListener('mousedown', handleClickOutside)
   document.addEventListener('keydown', handleEscape)
+  document.addEventListener('keydown', handleGlobalSlash)
 })
 
 onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
   document.removeEventListener('keydown', handleEscape)
+  document.removeEventListener('keydown', handleGlobalSlash)
 })
 </script>
 
@@ -459,7 +470,7 @@ onUnmounted(() => {
   <div ref="containerRef" class="flex-1">
     <!-- Search Input with Badges -->
     <div
-      class="flex items-center gap-1.5 min-h-10 px-3 rounded-full mx-auto max-w-[700px] transition-colors"
+      class="flex items-center gap-1.5 min-h-10 px-3 rounded-full mx-auto  transition-colors"
       :class="[
         isOpen
           ? 'bg-hub-surface ring-1 ring-brand'
@@ -548,6 +559,13 @@ onUnmounted(() => {
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
+
+      <!-- Slash shortcut hint -->
+      <kbd
+        v-if="!isOpen && !hasQuery && !hasBadges"
+        class="hidden sm:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-white/5 text-white/30 text-xs font-mono leading-none"
+        aria-hidden="true"
+      >/</kbd>
     </div>
 
     <!-- Discovery Panel (no badges, no text query) -->
