@@ -9,6 +9,7 @@ import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
 import { getModelLogoPath } from '../../lib/model-logos';
 import { badgeVariants } from '../ui/badge';
+import { slugify } from '../../lib/slugify';
 import creatorsData from '../../../../templates/creators.json';
 
 const creatorsMap = creatorsData as Record<string, { displayName: string }>;
@@ -113,7 +114,7 @@ const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : n
   <!-- Content -->
   <div class="pt-3 pb-1 pointer-events-none">
     <h3
-      class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white transition-colors"
+      class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors"
     >
       {title}
     </h3>
@@ -139,11 +140,15 @@ const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : n
     <!-- Tag pills -->
     {
       tags.length > 0 && (
-        <div class="flex items-center gap-1.5 pt-4 overflow-hidden">
+        <div class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
           {tags.slice(0, 3).map((tag) => (
-            <span class={badgeVariants({ variant: 'hub-pill' })}>
+            <a
+              href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)}
+              class:list={[badgeVariants({ variant: 'hub-pill' }), 'tag-link relative z-10 hover:bg-white/15 transition-colors']}
+              data-astro-prefetch
+            >
               {tag.toLowerCase().replace(/\s+/g, '-')}
-            </span>
+            </a>
           ))}
         </div>
       )

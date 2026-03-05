@@ -6,6 +6,7 @@
  */
 import { Badge } from '@/components/ui/badge'
 import { computed } from 'vue'
+import { slugify } from '@/lib/slugify'
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -93,6 +94,11 @@ const primaryThumb = computed(() =>
 
 const displayTags = computed(() => props.tags.slice(0, 3))
 
+function getTagUrl(tag: string): string {
+  const base = `/templates/tag/${slugify(tag)}/`
+  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base
+}
+
 const creatorUrl = computed(() => {
   if (!props.username) return null
   const base = `/templates/${props.username}/`
@@ -101,7 +107,7 @@ const creatorUrl = computed(() => {
 </script>
 
 <template>
-  <div class="group relative overflow-hidden transition-all duration-200">
+  <div class="group relative overflow-hidden transition-all duration-200 content-auto">
     <!-- Stretched link covering entire card -->
     <a :href="templateUrl" class="absolute inset-0 z-0" aria-hidden="true"></a>
 
@@ -139,7 +145,7 @@ const creatorUrl = computed(() => {
 
     <!-- Content -->
     <div class="pt-3 pb-1 pointer-events-none">
-      <h3 class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white transition-colors">
+      <h3 class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors">
         {{ title }}
       </h3>
 
@@ -157,14 +163,20 @@ const creatorUrl = computed(() => {
       </div>
 
       <!-- Tag pills -->
-      <div v-if="displayTags.length > 0" class="flex items-center gap-1.5 pt-4 overflow-hidden">
-        <Badge
+      <div v-if="displayTags.length > 0" class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
+        <a
           v-for="tag in displayTags"
           :key="tag"
-          variant="hub-pill"
+          :href="getTagUrl(tag)"
+          class="tag-link relative z-10"
         >
-          {{ tag.toLowerCase().replace(/\s+/g, '-') }}
-        </Badge>
+          <Badge
+            variant="hub-pill"
+            class="hover:bg-white/15 transition-colors"
+          >
+            {{ tag.toLowerCase().replace(/\s+/g, '-') }}
+          </Badge>
+        </a>
       </div>
     </div>
   </div>

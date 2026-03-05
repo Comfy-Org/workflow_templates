@@ -116,23 +116,20 @@ function formatRelativeDate(dateStr: string): string {
       <aside class="flex flex-col min-w-93.75 max-w-93.75">
         <div class="flex flex-col gap-6 lg:sticky lg:top-24">
           {/* Workflow */}
-          <SidebarSection title="Workflow" footerLabel="See more" footerHref="#description">
-            <div class="flex items-start justify-between gap-2">
-              <div class="min-w-0">
-                <h1 class="text-xl font-semibold text-content">{data.title || data.name}</h1>
-                {data.description && <p class="text-base text-hub-muted line-clamp-4 mt-2">{data.description}</p>}
-              </div>
-              <button
-                type="button"
-                id="copy-link-btn"
-                class="shrink-0 size-8 flex items-center justify-center rounded-full text-content-secondary hover:text-content hover:bg-white/5 transition-colors"
-                aria-label="Copy link to workflow"
-                title="Copy link"
-              >
-                <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                </svg>
-              </button>
+          <SidebarSection title="Workflow">
+            <div class="min-w-0">
+              <h1 class="text-base font-semibold text-content">{data.title || data.name}</h1>
+              {data.description && (
+                <div class="workflow-description-wrap mt-2">
+                  <p class="text-sm text-hub-muted line-clamp-3 workflow-description-text">{data.description}</p>
+                  <button
+                    type="button"
+                    class="workflow-show-more hidden text-xs text-content-secondary hover:text-content transition-colors mt-1"
+                  >
+                    Show more
+                  </button>
+                </div>
+              )}
             </div>
           </SidebarSection>
 
@@ -160,13 +157,20 @@ function formatRelativeDate(dateStr: string): string {
           </SidebarSection>
 
           {/* Action buttons */}
-          <div class="flex flex-col gap-4">
-            <a href={`/workflows/${data.name}.json`} download class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors" data-template={data.name}>
-              {t('cta.downloadJson', locale)}
-            </a>
+          <div class="flex flex-col gap-3">
             <a href={getCloudCtaUrl(data.name, 'hero')} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 bg-brand rounded-full text-sm font-bold text-page hover:opacity-90 transition-opacity">
               {t('cta.tryCloud', locale)}
             </a>
+            <a href={`/workflows/${data.name}.json`} download class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors" data-template={data.name}>
+              {t('cta.downloadJson', locale)}
+            </a>
+            <button
+              type="button"
+              id="share-workflow-btn"
+              class="flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors"
+            >
+              Share Workflow
+            </button>
           </div>
 
           {/* Categories */}
@@ -221,18 +225,38 @@ function formatRelativeDate(dateStr: string): string {
     });
   });
 
-  const copyBtn = document.getElementById('copy-link-btn');
-  if (copyBtn) {
-    copyBtn.addEventListener('click', () => {
+  const shareBtn = document.getElementById('share-workflow-btn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(window.location.href).then(() => {
-        const svg = copyBtn.querySelector('svg');
-        if (svg) {
-          svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />';
-          setTimeout(() => {
-            svg.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />';
-          }, 2000);
+        const textNode = shareBtn.lastChild;
+        if (textNode) {
+          const original = textNode.textContent;
+          textNode.textContent = ' Link copied!';
+          setTimeout(() => { textNode.textContent = original; }, 2000);
         }
       });
+    });
+  }
+
+  // Accordion for workflow description
+  const descText = document.querySelector('.workflow-description-text');
+  const showMoreBtn = document.querySelector('.workflow-show-more');
+  if (descText && showMoreBtn) {
+    // Check if text is clamped (overflowing)
+    if (descText.scrollHeight > descText.clientHeight) {
+      showMoreBtn.classList.remove('hidden');
+    }
+    let expanded = false;
+    showMoreBtn.addEventListener('click', () => {
+      expanded = !expanded;
+      if (expanded) {
+        descText.classList.remove('line-clamp-3');
+        showMoreBtn.textContent = 'Show less';
+      } else {
+        descText.classList.add('line-clamp-3');
+        showMoreBtn.textContent = 'Show more';
+      }
     });
   }
 </script>

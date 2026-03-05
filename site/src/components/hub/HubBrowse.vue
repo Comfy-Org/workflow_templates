@@ -141,10 +141,11 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
 </script>
 
 <template>
-  <div>
+  <div class="pb-32">
     <!-- Sidebar + Grid -->
-    <div class="flex items-start justify-between gap-16 ">
+    <div class="flex items-start justify-between">
       <!-- Desktop Sidebar -->
+
       <aside
         class="hidden lg:flex flex-col pt-24 top-0 gap-8 shrink-0 sticky bg-page max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-hidden scrollbar-thin"
         style="width: var(--hub-sidebar-width)"
@@ -152,7 +153,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
         <!-- Top Creators link -->
         <div>
           <a href="/templates/creators/">
-            <Button variant="pill-outline" size="pill" class="w-full justify-center">
+            <Button variant="pill-outline" size="pill" class="justify-center">
               Top Creators
               <svg
                 class="size-4"
@@ -236,8 +237,19 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
           aria-label="Close filters"
           @click="closeMobileDrawer"
         >
-          <svg class="size-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M6 18L18 6M6 6l12 12" />
+          <svg
+            class="size-5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M6 18L18 6M6 6l12 12"
+            />
           </svg>
         </button>
       </div>
@@ -306,12 +318,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
 
       <!-- Drawer Footer (sticky) -->
       <div class="border-t border-white/10 px-5 py-4 grid grid-cols-2 gap-3">
-        <Button
-          variant="pill-outline"
-          size="lg"
-          class="rounded-full"
-          @click="clearAllFilters"
-        >
+        <Button variant="pill-outline" size="lg" class="rounded-full" @click="clearAllFilters">
           Clear All
         </Button>
         <button
