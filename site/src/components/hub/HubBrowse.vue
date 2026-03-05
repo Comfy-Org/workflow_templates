@@ -8,7 +8,7 @@
  * Filter state is shared via useHubStore (filterBadges) so that
  * SearchPopover and HubBrowse sidebar stay in sync.
  */
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import WorkflowGrid from './WorkflowGrid.vue';
 import { useHubStore } from '@/composables/useHubStore';
@@ -36,9 +36,6 @@ const props = defineProps<{
 
 const store = useHubStore();
 const { mobileDrawerOpen } = store;
-
-// Sidebar state
-const sortBy = ref<'popular' | 'newest'>('popular');
 
 // Data-driven top tags (by template count)
 const topTags = computed(() => {
@@ -87,7 +84,6 @@ function isModelActive(model: string): boolean {
 
 function clearAllFilters() {
   store.clearBadges();
-  sortBy.value = 'popular';
 }
 
 function closeMobileDrawer() {
@@ -150,7 +146,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
     <div class="flex items-start justify-between gap-16 ">
       <!-- Desktop Sidebar -->
       <aside
-        class="hidden lg:flex flex-col gap-8 shrink-0 sticky top-24 bg-page max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-hidden scrollbar-thin"
+        class="hidden lg:flex flex-col pt-24 top-0 gap-8 shrink-0 sticky bg-page max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-hidden scrollbar-thin"
         style="width: var(--hub-sidebar-width)"
       >
         <!-- Top Creators link -->
@@ -174,29 +170,6 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
               </svg>
             </Button>
           </a>
-        </div>
-
-        <!-- SORT section -->
-        <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">SORT</p>
-          <div class="flex flex-col gap-3">
-            <Button
-              :variant="sortBy === 'popular' ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="sortBy = 'popular'"
-            >
-              Most Popular
-            </Button>
-            <Button
-              :variant="sortBy === 'newest' ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="sortBy = 'newest'"
-            >
-              Newest
-            </Button>
-          </div>
         </div>
 
         <!-- CATEGORIES section -->
@@ -239,7 +212,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
         :templates="filteredTemplates"
         :locale="locale"
         grid-class="grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        :sort-by="sortBy"
+        :sticky-toolbar="true"
       />
     </div>
 
@@ -294,29 +267,6 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
               </svg>
             </Button>
           </a>
-        </div>
-
-        <!-- SORT section -->
-        <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">SORT</p>
-          <div class="flex flex-wrap gap-2.5">
-            <Button
-              :variant="sortBy === 'popular' ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="sortBy = 'popular'"
-            >
-              Most Popular
-            </Button>
-            <Button
-              :variant="sortBy === 'newest' ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="sortBy = 'newest'"
-            >
-              Newest
-            </Button>
-          </div>
         </div>
 
         <!-- CATEGORIES section -->

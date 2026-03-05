@@ -11,7 +11,7 @@
  * Text search uses MiniSearch within the badge-scoped set.
  * Badge-only (no text) shows ALL matching templates sorted by usage.
  */
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { watchDebounced } from '@vueuse/core'
 import { useHubStore } from '@/composables/useHubStore'
 import { search as searchIndex, type SearchResults } from '@/lib/search'
@@ -48,6 +48,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const searchResults = ref<SearchResults | null>(null)
 const isSearching = ref(false)
 const hasSearched = ref(false)
+const activeIndex = ref(-1)
 
 const hasQuery = computed(() => searchQuery.value.trim().length > 0)
 const hasBadges = computed(() => store.filterBadges.value.length > 0)
@@ -280,11 +281,106 @@ function removeLastBadge() {
   }
 }
 
+// ── Keyboard navigation ──
+
+// Discovery panel offsets
+const discCreatorOffset = computed(() => popularWorkflows.value.length)
+const discTagOffset = computed(() => discCreatorOffset.value + topCreators.value.length)
+const discModelOffset = computed(() => discTagOffset.value + previewTags.value.length)
+
+// Active results panel offsets
+const activeSugModelOffset = computed(() => filterSuggestions.value.tags.length)
+const activeWorkflowOffset = computed(() => {
+  if (!(hasQuery.value && hasFilterSuggestions.value)) return 0
+  return filterSuggestions.value.tags.length + filterSuggestions.value.models.length
+})
+const activeCreatorOffset = computed(() => activeWorkflowOffset.value + displayedWorkflows.value.length)
+
+const totalNavigable = computed(() => {
+  if (!isOpen.value) return 0
+  if (hasActiveFilters.value) {
+    let total = displayedWorkflows.value.length
+    if (hasQuery.value && hasFilterSuggestions.value) {
+      total += filterSuggestions.value.tags.length + filterSuggestions.value.models.length
+    }
+    if (hasQuery.value && searchResults.value) {
+      total += Math.min(searchResults.value.creators.length, 5)
+    }
+    return total
+  }
+  return popularWorkflows.value.length + topCreators.value.length +
+    previewTags.value.length + previewModels.value.length
+})
+
+function activateItem(index: number) {
+  if (hasActiveFilters.value) {
+    const sugTagCount = hasQuery.value && hasFilterSuggestions.value ? filterSuggestions.value.tags.length : 0
+    const sugModelCount = hasQuery.value && hasFilterSuggestions.value ? filterSuggestions.value.models.length : 0
+    const sugTotal = sugTagCount + sugModelCount
+
+    if (index < sugTagCount) {
+      addFilterBadge('tag', filterSuggestions.value.tags[index].name)
+    } else if (index < sugTotal) {
+      addFilterBadge('model', filterSuggestions.value.models[index - sugTagCount].name)
+    } else if (index < sugTotal + displayedWorkflows.value.length) {
+      const wf = displayedWorkflows.value[index - sugTotal]
+      if (wf) window.location.href = getTemplateUrl(wf.id)
+    } else {
+      const creators = searchResults.value?.creators.slice(0, 5) || []
+      const creator = creators[index - sugTotal - displayedWorkflows.value.length]
+      if (creator) window.location.href = getTemplateUrl(creator.username)
+    }
+  } else {
+    const popCount = popularWorkflows.value.length
+    const creatorCount = topCreators.value.length
+    const tagCount = previewTags.value.length
+
+    if (index < popCount) {
+      const wf = popularWorkflows.value[index]
+      if (wf) window.location.href = getTemplateUrl(wf.name)
+    } else if (index < popCount + creatorCount) {
+      const creator = topCreators.value[index - popCount]
+      if (creator) {
+        const url = props.locale && props.locale !== 'en'
+          ? `/${props.locale}/templates/${creator.username}/`
+          : `/templates/${creator.username}/`
+        window.location.href = url
+      }
+    } else if (index < popCount + creatorCount + tagCount) {
+      const tag = previewTags.value[index - popCount - creatorCount]
+      if (tag) addFilterBadge('tag', tag.name)
+    } else {
+      const model = previewModels.value[index - popCount - creatorCount - tagCount]
+      if (model) addFilterBadge('model', model.name)
+    }
+  }
+}
+
 function handleKeydown(e: KeyboardEvent) {
   // Backspace on empty input removes last badge
   if (e.key === 'Backspace' && searchQuery.value === '' && hasBadges.value) {
     e.preventDefault()
     removeLastBadge()
+    return
+  }
+
+  if (!isOpen.value) return
+
+  if (e.key === 'ArrowDown') {
+    e.preventDefault()
+    if (activeIndex.value < totalNavigable.value - 1) {
+      activeIndex.value++
+    }
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault()
+    if (activeIndex.value > 0) {
+      activeIndex.value--
+    } else {
+      activeIndex.value = -1
+    }
+  } else if (e.key === 'Enter' && activeIndex.value >= 0) {
+    e.preventDefault()
+    activateItem(activeIndex.value)
   }
 }
 
@@ -333,6 +429,20 @@ function handleEscape(e: KeyboardEvent) {
     inputRef.value?.blur()
   }
 }
+
+// Reset active index when context changes
+watch([searchQuery, () => store.filterBadges.value.length, isOpen, searchResults], () => {
+  activeIndex.value = -1
+})
+
+// Scroll active item into view
+watch(activeIndex, (idx) => {
+  if (idx < 0) return
+  nextTick(() => {
+    const el = containerRef.value?.querySelector(`[data-nav-index="${idx}"]`) as HTMLElement | null
+    el?.scrollIntoView({ block: 'nearest' })
+  })
+})
 
 onMounted(() => {
   document.addEventListener('mousedown', handleClickOutside)
@@ -451,7 +561,7 @@ onUnmounted(() => {
     >
       <div
         v-if="isOpen && !hasActiveFilters"
-        class="fixed left-0 lg:-left-4 right-0 top-16 z-50 mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
+        class="fixed left-0 lg:-left-4 right-0 z-50 top-16  mx-4 lg:mx-auto lg:max-w-[700px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
       >
         <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
           <!-- Popular Workflows -->
@@ -462,10 +572,12 @@ onUnmounted(() => {
             </h3>
             <div class="space-y-1">
               <a
-                v-for="wf in popularWorkflows"
+                v-for="(wf, i) in popularWorkflows"
                 :key="wf.name"
                 :href="getTemplateUrl(wf.name)"
+                :data-nav-index="i"
                 class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
+                :class="{ 'bg-white/10': activeIndex === i }"
               >
                 <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
                   <img
@@ -499,7 +611,9 @@ onUnmounted(() => {
                 v-for="(creator, i) in topCreators"
                 :key="creator.username"
                 :href="locale && locale !== 'en' ? `/${locale}/templates/${creator.username}/` : `/templates/${creator.username}/`"
+                :data-nav-index="discCreatorOffset + i"
                 class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+                :class="{ 'ring-1 ring-brand': activeIndex === discCreatorOffset + i }"
               >
                 <span
                   class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
@@ -520,11 +634,13 @@ onUnmounted(() => {
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0">Categories</span>
               <Badge
-                v-for="tag in previewTags"
+                v-for="(tag, i) in previewTags"
                 :key="`tag:${tag.name}`"
                 variant="hub-filter"
                 as="button"
                 class="h-6 px-2.5"
+                :class="{ 'ring-1 ring-brand': activeIndex === discTagOffset + i }"
+                :data-nav-index="discTagOffset + i"
                 @click="addFilterBadge('tag', tag.name)"
               >
                 {{ tag.name }}
@@ -540,11 +656,13 @@ onUnmounted(() => {
             <div class="flex items-center gap-2 flex-wrap">
               <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0">Models</span>
               <Badge
-                v-for="model in previewModels"
+                v-for="(model, i) in previewModels"
                 :key="`model:${model.name}`"
                 variant="hub-filter"
                 as="button"
                 class="h-6 px-2.5"
+                :class="{ 'ring-1 ring-brand': activeIndex === discModelOffset + i }"
+                :data-nav-index="discModelOffset + i"
                 @click="addFilterBadge('model', model.name)"
               >
                 {{ model.name }}
@@ -596,22 +714,26 @@ onUnmounted(() => {
             </h3>
             <div class="flex flex-wrap gap-1.5">
               <Badge
-                v-for="tag in filterSuggestions.tags"
+                v-for="(tag, i) in filterSuggestions.tags"
                 :key="`tag:${tag.name}`"
                 variant="hub-filter"
                 as="button"
                 class="h-6 px-2.5"
+                :class="{ 'ring-1 ring-brand': activeIndex === i }"
+                :data-nav-index="i"
                 @click="addFilterBadge('tag', tag.name)"
               >
                 {{ tag.name }}
                 <span class="text-white/30 text-[10px]">{{ tag.count }}</span>
               </Badge>
               <Badge
-                v-for="model in filterSuggestions.models"
+                v-for="(model, i) in filterSuggestions.models"
                 :key="`model:${model.name}`"
                 variant="hub-filter"
                 as="button"
                 class="h-6 px-2.5"
+                :class="{ 'ring-1 ring-brand': activeIndex === activeSugModelOffset + i }"
+                :data-nav-index="activeSugModelOffset + i"
                 @click="addFilterBadge('model', model.name)"
               >
                 {{ model.name }}
@@ -652,10 +774,12 @@ onUnmounted(() => {
             </h3>
             <div class="space-y-1">
               <a
-                v-for="hit in displayedWorkflows"
+                v-for="(hit, i) in displayedWorkflows"
                 :key="hit.id"
                 :href="getTemplateUrl(hit.id)"
+                :data-nav-index="activeWorkflowOffset + i"
                 class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
+                :class="{ 'bg-white/10': activeIndex === activeWorkflowOffset + i }"
               >
                 <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
                   <img
@@ -691,7 +815,9 @@ onUnmounted(() => {
                 v-for="(creator, i) in searchResults.creators.slice(0, 5)"
                 :key="creator.username"
                 :href="getTemplateUrl(creator.username)"
+                :data-nav-index="activeCreatorOffset + i"
                 class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+                :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
               >
                 <span
                   class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
@@ -714,7 +840,8 @@ onUnmounted(() => {
               · <button class="text-white/40 hover:text-white/60 underline cursor-pointer" @click="clearAll">Clear all</button>
             </template>
             <template v-else>
-              Press Escape to close · Backspace to remove filters
+              <span class="hidden sm:inline">↑↓ to navigate · Enter to select · Esc to close</span>
+              <span class="sm:hidden">Esc to close</span>
             </template>
           </p>
         </div>
