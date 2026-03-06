@@ -4,7 +4,7 @@
  * Accepts pre-filtered templates and handles tabs, sorting, and display internally.
  * Used by both HubBrowse (hub page) and [username].astro (profile page).
  */
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import HubWorkflowCard from './HubWorkflowCard.vue';
@@ -36,7 +36,7 @@ const props = withDefaults(
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
     stickyToolbar: false,
     hideAuthor: false,
-  },
+  }
 );
 
 const activeTab = ref<'all' | 'nodeGraphs' | 'comfyApps'>('all');
@@ -48,7 +48,7 @@ watch(
   () => props.templates,
   () => {
     displayCount.value = 30;
-  },
+  }
 );
 
 function toggleSort() {
@@ -84,13 +84,207 @@ const hasMore = computed(() => displayCount.value < sortedTemplates.value.length
 function loadMore() {
   displayCount.value += 30;
 }
+
+// Mobile popover state
+const typePopoverOpen = ref(false);
+const sortPopoverOpen = ref(false);
+
+function closeAllPopovers() {
+  typePopoverOpen.value = false;
+  sortPopoverOpen.value = false;
+}
+
+function toggleTypePopover() {
+  sortPopoverOpen.value = false;
+  typePopoverOpen.value = !typePopoverOpen.value;
+}
+
+function toggleSortPopover() {
+  typePopoverOpen.value = false;
+  sortPopoverOpen.value = !sortPopoverOpen.value;
+}
+
+function selectTab(tab: 'all' | 'nodeGraphs' | 'comfyApps') {
+  activeTab.value = tab;
+  typePopoverOpen.value = false;
+}
+
+function selectSort(sort: 'popular' | 'newest') {
+  sortBy.value = sort;
+  displayCount.value = 30;
+  sortPopoverOpen.value = false;
+}
+
+const activeTabLabel = computed(() => {
+  if (activeTab.value === 'nodeGraphs') return 'Node Graphs';
+  if (activeTab.value === 'comfyApps') return 'Comfy Apps';
+  return 'All';
+});
+
+const activeSortLabel = computed(() => {
+  return sortBy.value === 'popular' ? 'Most Popular' : 'Newest';
+});
+
+// Close popovers on outside click
+function handleOutsideClick(e: MouseEvent) {
+  const target = e.target as HTMLElement;
+  if (!target.closest('[data-mobile-popover]')) {
+    closeAllPopovers();
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick);
+});
 </script>
 
 <template>
   <div class="flex-1 w-full min-w-0">
-    <!-- Tabs + Sort bar -->
+    <!-- Mobile Tabs + Sort bar (popover pills) -->
     <div
-      class="flex items-center justify-between py-8"
+      class="flex lg:hidden items-center gap-2 py-8"
+      :class="stickyToolbar ? 'sticky top-16 bg-page z-40' : ''"
+    >
+      <!-- Type popover -->
+      <div class="relative" data-mobile-popover>
+        <Button
+          :variant="activeTab !== 'all' ? 'pill-active' : 'pill'"
+          size="pill-icon"
+          @click="toggleTypePopover"
+        >
+          <svg
+            class="size-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 4h18M3 8h18M3 12h18"
+            />
+          </svg>
+          {{ activeTabLabel }}
+          <svg
+            class="size-3 transition-transform"
+            :class="typePopoverOpen ? 'rotate-180' : ''"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </Button>
+
+        <!-- Dropdown -->
+        <div
+          v-if="typePopoverOpen"
+          class="absolute top-full left-0 mt-2 w-44 rounded-xl bg-hub-surface border border-white/10 shadow-xl z-50 overflow-hidden"
+        >
+          <button
+            type="button"
+            class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
+            :class="activeTab === 'all' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            @click="selectTab('all')"
+          >
+            All
+          </button>
+          <button
+            type="button"
+            class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
+            :class="activeTab === 'nodeGraphs' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            @click="selectTab('nodeGraphs')"
+          >
+            <IconWorkflow class="size-4" />
+            Node Graphs
+          </button>
+          <button
+            type="button"
+            class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
+            :class="activeTab === 'comfyApps' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            @click="selectTab('comfyApps')"
+          >
+            <IconApps class="size-4" />
+            Comfy Apps
+          </button>
+        </div>
+      </div>
+
+      <!-- Sort popover -->
+      <div class="relative" data-mobile-popover>
+        <Button variant="pill" size="pill-icon" @click="toggleSortPopover">
+          <svg
+            class="size-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+            />
+          </svg>
+          {{ activeSortLabel }}
+          <svg
+            class="size-3 transition-transform"
+            :class="sortPopoverOpen ? 'rotate-180' : ''"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </Button>
+
+        <!-- Dropdown -->
+        <div
+          v-if="sortPopoverOpen"
+          class="absolute top-full left-0 mt-2 w-40 rounded-xl bg-hub-surface border border-white/10 shadow-xl z-50 overflow-hidden"
+        >
+          <button
+            type="button"
+            class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
+            :class="sortBy === 'popular' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            @click="selectSort('popular')"
+          >
+            Most Popular
+          </button>
+          <button
+            type="button"
+            class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
+            :class="sortBy === 'newest' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            @click="selectSort('newest')"
+          >
+            Newest
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop Tabs + Sort bar -->
+    <div
+      class="hidden lg:flex items-center justify-between py-8"
       :class="stickyToolbar ? 'sticky top-16 bg-page z-40' : ''"
     >
       <!-- Tab pills -->
@@ -159,7 +353,11 @@ function loadMore() {
 
     <!-- Empty state -->
     <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-white/40">
-      <p class="text-lg">{{ activeTab === 'comfyApps' ? 'Comfy Apps coming soon' : 'No templates match your filters' }}</p>
+      <p class="text-lg">
+        {{
+          activeTab === 'comfyApps' ? 'Comfy Apps coming soon' : 'No templates match your filters'
+        }}
+      </p>
       <p v-if="activeTab !== 'comfyApps'" class="text-sm mt-2">Try removing some filters</p>
     </div>
 
