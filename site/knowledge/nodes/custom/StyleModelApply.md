@@ -8,15 +8,15 @@ This node applies a style model to a given conditioning, enhancing or altering i
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| strength | FLOAT | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| strength  | FLOAT | 1.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| CONDITIONING | CONDITIONING |  |
+| Output       | Type         | Description |
+| ------------ | ------------ | ----------- |
+| CONDITIONING | CONDITIONING |             |
 
 **Source**: `nodes.py`
 

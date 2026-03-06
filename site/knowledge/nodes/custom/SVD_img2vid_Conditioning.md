@@ -10,22 +10,22 @@ The SVD_img2vid_Conditioning node prepares conditioning data for video generatio
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | INT | 1024 |  |
-| height | INT | 576 |  |
-| video_frames | INT | 14 |  |
-| motion_bucket_id | INT | 127 |  |
-| fps | INT | 6 |  |
-| augmentation_level | FLOAT | 0.0 |  |
+| Parameter          | Type  | Default | Description |
+| ------------------ | ----- | ------- | ----------- |
+| width              | INT   | 1024    |             |
+| height             | INT   | 576     |             |
+| video_frames       | INT   | 14      |             |
+| motion_bucket_id   | INT   | 127     |             |
+| fps                | INT   | 6       |             |
+| augmentation_level | FLOAT | 0.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| positive | CONDITIONING |  |
-| negative | CONDITIONING |  |
-| latent | LATENT |  |
+| Output   | Type         | Description |
+| -------- | ------------ | ----------- |
+| positive | CONDITIONING |             |
+| negative | CONDITIONING |             |
+| latent   | LATENT       |             |
 
 **Source**: `comfy_extras/nodes_video_model.py`
 

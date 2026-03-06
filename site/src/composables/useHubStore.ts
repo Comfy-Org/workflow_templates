@@ -35,7 +35,7 @@ export function useHubStore() {
 
     addBadge(badge: FilterBadge) {
       const exists = filterBadges.value.some(
-        (b) => b.type === badge.type && b.value === badge.value,
+        (b) => b.type === badge.type && b.value === badge.value
       );
       if (!exists) {
         filterBadges.value.push(badge);
@@ -44,17 +44,17 @@ export function useHubStore() {
 
     removeBadge(badge: FilterBadge) {
       filterBadges.value = filterBadges.value.filter(
-        (b) => !(b.type === badge.type && b.value === badge.value),
+        (b) => !(b.type === badge.type && b.value === badge.value)
       );
     },
 
     toggleBadge(badge: FilterBadge) {
       const exists = filterBadges.value.some(
-        (b) => b.type === badge.type && b.value === badge.value,
+        (b) => b.type === badge.type && b.value === badge.value
       );
       if (exists) {
         filterBadges.value = filterBadges.value.filter(
-          (b) => !(b.type === badge.type && b.value === badge.value),
+          (b) => !(b.type === badge.type && b.value === badge.value)
         );
       } else {
         filterBadges.value.push(badge);

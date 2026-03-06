@@ -12,17 +12,17 @@ Upscale image synchronously. Enhances a given raster image using 'crisp upscale'
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | The input image to be upscaled |
-| `auth_token` | STRING | No | - | Authentication token for Recraft API |
-| `comfy_api_key` | STRING | No | - | API key for Comfy.org services |
+| Parameter       | Data Type | Required | Range | Description                          |
+| --------------- | --------- | -------- | ----- | ------------------------------------ |
+| `image`         | IMAGE     | Yes      | -     | The input image to be upscaled       |
+| `auth_token`    | STRING    | No       | -     | Authentication token for Recraft API |
+| `comfy_api_key` | STRING    | No       | -     | API key for Comfy.org services       |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `image` | IMAGE | The upscaled image with enhanced resolution and clarity |
+| Output Name | Data Type | Description                                             |
+| ----------- | --------- | ------------------------------------------------------- |
+| `image`     | IMAGE     | The upscaled image with enhanced resolution and clarity |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

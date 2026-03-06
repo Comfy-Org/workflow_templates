@@ -12,15 +12,15 @@ This node creates a realistic image style configuration for use with Recraft's A
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `substyle` | STRING | Yes | Multiple options available | The specific substyle to apply to the realistic_image style. If set to "None", no substyle will be applied. |
+| Parameter  | Data Type | Required | Range                      | Description                                                                                                 |
+| ---------- | --------- | -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `substyle` | STRING    | Yes      | Multiple options available | The specific substyle to apply to the realistic_image style. If set to "None", no substyle will be applied. |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `recraft_style` | STYLEV3 | Returns a Recraft style configuration object containing the realistic_image style and selected substyle settings. |
+| Output Name     | Data Type | Description                                                                                                       |
+| --------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
+| `recraft_style` | STYLEV3   | Returns a Recraft style configuration object containing the realistic_image style and selected substyle settings. |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

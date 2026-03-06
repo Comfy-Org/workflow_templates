@@ -1,6 +1,6 @@
 # T5TokenizerOptions
 
-**Category**: _for_testing/conditioning
+**Category**: \_for_testing/conditioning
 
 ## Description
 
@@ -10,19 +10,20 @@ The T5TokenizerOptions node allows you to configure tokenizer settings for vario
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| clip | Clip | — |  |
-| min_padding | Int | 0 |  |
-| min_length | Int | 0 |  |
+| Parameter   | Type | Default | Description |
+| ----------- | ---- | ------- | ----------- |
+| clip        | Clip | —       |             |
+| min_padding | Int  | 0       |             |
+| min_length  | Int  | 0       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-            is_experimental=True,
-        )
+is_experimental=True,
+)
 
     @classmethod
     def execute(cls, clip, min_padding, min_length) -> io.NodeOutput:

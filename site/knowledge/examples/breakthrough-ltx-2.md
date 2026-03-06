@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | ltx_2_t2v |
-| Title | LTX-2 Text to Video |
+| Field       | Value                                                                   |
+| ----------- | ----------------------------------------------------------------------- |
+| Name        | ltx_2_t2v                                                               |
+| Title       | LTX-2 Text to Video                                                     |
 | Description | 19B DiT model generating synchronized video and audio in a single pass. |
-| Media Type | video |
-| Tags | Text to Video, Video, Audio |
-| Models | LTX-2, Lightricks |
+| Media Type  | video                                                                   |
+| Tags        | Text to Video, Video, Audio                                             |
+| Models      | LTX-2, Lightricks                                                       |
 
 ## OUTPUT: Generated Content
 

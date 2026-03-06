@@ -12,17 +12,18 @@ This node is designed for compositing operations, specifically to join an image 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| image | Image | — |  |
-| alpha | Mask | — |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| image     | Image | —       |             |
+| alpha     | Mask  | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, image: torch.Tensor, alpha: torch.Tensor) -> io.NodeOutput:

@@ -12,17 +12,17 @@ Generates videos synchronously based on a prompt, and optional parameters using 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `prompt_text` | STRING | Yes | - | Text prompt to guide the video generation |
-| `model` | COMBO | No | "T2V-01"<br>"T2V-01-Director" | Model to use for video generation (default: "T2V-01") |
-| `seed` | INT | No | 0 to 18446744073709551615 | The random seed used for creating the noise (default: 0) |
+| Parameter     | Data Type | Required | Range                         | Description                                              |
+| ------------- | --------- | -------- | ----------------------------- | -------------------------------------------------------- |
+| `prompt_text` | STRING    | Yes      | -                             | Text prompt to guide the video generation                |
+| `model`       | COMBO     | No       | "T2V-01"<br>"T2V-01-Director" | Model to use for video generation (default: "T2V-01")    |
+| `seed`        | INT       | No       | 0 to 18446744073709551615     | The random seed used for creating the noise (default: 0) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | VIDEO | The generated video based on the input prompt |
+| Output Name | Data Type | Description                                   |
+| ----------- | --------- | --------------------------------------------- |
+| `output`    | VIDEO     | The generated video based on the input prompt |
 
 **Source**: `comfy_api_nodes/nodes_minimax.py`
 

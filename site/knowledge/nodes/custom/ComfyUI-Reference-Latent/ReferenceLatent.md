@@ -10,18 +10,19 @@ This node sets the guiding latent for an edit model. It takes conditioning data 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| conditioning | Conditioning | — |  |
-| latent | Latent | — |  |
+| Parameter    | Type         | Default | Description |
+| ------------ | ------------ | ------- | ----------- |
+| conditioning | Conditioning | —       |             |
+| latent       | Latent       | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ]
-        )
+]
+)
 
     @classmethod
     def execute(cls, conditioning, latent=None | Conditioning |

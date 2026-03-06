@@ -10,29 +10,30 @@ The TextEncodeAceStepAudio1.5 node prepares text and audio-related metadata for 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| clip | Clip | — |  |
-| tags | String | — |  |
-| lyrics | String | — |  |
-| seed | Int | 0 |  |
-| bpm | Int | 120 |  |
-| duration | Float | 120.0 |  |
-| timesignature | Combo | — |  |
-| language | Combo | — |  |
-| keyscale | Combo | — |  |
-| generate_audio_codes | Boolean | True | Enable the LLM that generates audio codes. This can be slow but will increase the quality of the generated audio. Turn this off if you are giving the model an audio reference. |
-| cfg_scale | Float | 2.0 |  |
-| temperature | Float | 0.85 |  |
-| top_p | Float | 0.9 |  |
-| top_k | Int | 0 |  |
+| Parameter            | Type    | Default | Description                                                                                                                                                                     |
+| -------------------- | ------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| clip                 | Clip    | —       |                                                                                                                                                                                 |
+| tags                 | String  | —       |                                                                                                                                                                                 |
+| lyrics               | String  | —       |                                                                                                                                                                                 |
+| seed                 | Int     | 0       |                                                                                                                                                                                 |
+| bpm                  | Int     | 120     |                                                                                                                                                                                 |
+| duration             | Float   | 120.0   |                                                                                                                                                                                 |
+| timesignature        | Combo   | —       |                                                                                                                                                                                 |
+| language             | Combo   | —       |                                                                                                                                                                                 |
+| keyscale             | Combo   | —       |                                                                                                                                                                                 |
+| generate_audio_codes | Boolean | True    | Enable the LLM that generates audio codes. This can be slow but will increase the quality of the generated audio. Turn this off if you are giving the model an audio reference. |
+| cfg_scale            | Float   | 2.0     |                                                                                                                                                                                 |
+| temperature          | Float   | 0.85    |                                                                                                                                                                                 |
+| top_p                | Float   | 0.9     |                                                                                                                                                                                 |
+| top_k                | Int     | 0       |                                                                                                                                                                                 |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, clip, tags, lyrics, seed, bpm, duration, timesignature, language, keyscale, generate_audio_codes, cfg_scale, temperature, top_p, top_k) -> io.NodeOutput:

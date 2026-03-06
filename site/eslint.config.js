@@ -8,7 +8,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   ...eslintPluginAstro.configs.recommended,
   {
-    ignores: ['dist/', 'node_modules/', '.astro/', '.i18nrc.cjs'],
+    ignores: ['dist/', 'node_modules/', '.astro/', '.vercel/', '.i18nrc.cjs'],
   },
   {
     files: ['*.config.mjs', '*.config.js'],

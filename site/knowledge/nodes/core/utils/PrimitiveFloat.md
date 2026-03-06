@@ -12,16 +12,17 @@ The PrimitiveFloat node creates a floating-point number value that can be used i
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| value | Float | — |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| value     | Float | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, value: float) -> io.NodeOutput:

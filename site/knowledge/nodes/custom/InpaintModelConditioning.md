@@ -8,17 +8,17 @@ The InpaintModelConditioning node is designed to facilitate the conditioning pro
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| noise_mask | BOOLEAN | True | Add a noise mask to the latent so sampling will only happen within the mask. Might improve results or completely break things depending on the model. |
+| Parameter  | Type    | Default | Description                                                                                                                                           |
+| ---------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| noise_mask | BOOLEAN | True    | Add a noise mask to the latent so sampling will only happen within the mask. Might improve results or completely break things depending on the model. |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| positive | CONDITIONING |  |
-| negative | CONDITIONING |  |
-| latent | LATENT |  |
+| Output   | Type         | Description |
+| -------- | ------------ | ----------- |
+| positive | CONDITIONING |             |
+| negative | CONDITIONING |             |
+| latent   | LATENT       |             |
 
 **Source**: `nodes.py`
 

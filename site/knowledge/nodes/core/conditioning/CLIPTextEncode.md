@@ -10,15 +10,15 @@ Think of it as communicating with an artist who speaks a different language. The
 
 ## Inputs
 
-| Parameter | Data Type | Input Method | Default | Range | Description |
-|-----------|-----------|--------------|---------|--------|-------------|
-| text | STRING | Text Input | Empty | Any text | Enter the description (prompt) for the image you want to create. Supports multi-line input for detailed descriptions. |
-| clip | CLIP | Model Selection | None | Loaded CLIP models | Select the CLIP model to use when translating your description into instructions for the AI model. |
+| Parameter | Data Type | Input Method    | Default | Range              | Description                                                                                                           |
+| --------- | --------- | --------------- | ------- | ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| text      | STRING    | Text Input      | Empty   | Any text           | Enter the description (prompt) for the image you want to create. Supports multi-line input for detailed descriptions. |
+| clip      | CLIP      | Model Selection | None    | Loaded CLIP models | Select the CLIP model to use when translating your description into instructions for the AI model.                    |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
+| Output Name  | Data Type    | Description                                                                                        |
+| ------------ | ------------ | -------------------------------------------------------------------------------------------------- |
 | CONDITIONING | CONDITIONING | The processed "instructions" of your description that guide the AI model when generating an image. |
 
 **Source**: `nodes.py`

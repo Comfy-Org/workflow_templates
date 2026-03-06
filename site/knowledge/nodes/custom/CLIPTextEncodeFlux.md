@@ -14,20 +14,21 @@ This node is based on a dual-encoder collaboration mechanism:
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| clip | Clip | — |  |
-| clip_l | String | — |  |
-| t5xxl | String | — |  |
-| guidance | Float | 3.5 |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| clip      | Clip   | —       |             |
+| clip_l    | String | —       |             |
+| t5xxl     | String | —       |             |
+| guidance  | Float  | 3.5     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, clip, clip_l, t5xxl, guidance) -> io.NodeOutput:

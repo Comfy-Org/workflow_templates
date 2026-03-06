@@ -14,17 +14,18 @@ The Load Video node loads video files from the input directory and makes them av
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| file | Combo | — |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| file      | Combo | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, file) -> io.NodeOutput:

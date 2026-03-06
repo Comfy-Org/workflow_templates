@@ -14,18 +14,18 @@ The GetImageSize node extracts the dimensions and batch information from an inpu
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | The input image from which to extract size information |
-| `unique_id` | UNIQUE_ID | No | - | Internal identifier used for displaying progress information |
+| Parameter   | Data Type | Required | Range | Description                                                  |
+| ----------- | --------- | -------- | ----- | ------------------------------------------------------------ |
+| `image`     | IMAGE     | Yes      | -     | The input image from which to extract size information       |
+| `unique_id` | UNIQUE_ID | No       | -     | Internal identifier used for displaying progress information |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `width` | INT | The width of the input image in pixels |
-| `height` | INT | The height of the input image in pixels |
-| `batch_size` | INT | The number of images in the batch |
+| Output Name  | Data Type | Description                             |
+| ------------ | --------- | --------------------------------------- |
+| `width`      | INT       | The width of the input image in pixels  |
+| `height`     | INT       | The height of the input image in pixels |
+| `batch_size` | INT       | The number of images in the batch       |
 
 **Source**: `comfy_extras/nodes_images.py`
 

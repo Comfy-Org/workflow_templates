@@ -10,20 +10,21 @@ The `EmptyHunyuanLatentVideo` node is similar to the `EmptyLatentImage` node. Yo
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | Int | 848 |  |
-| height | Int | 480 |  |
-| length | Int | 25 |  |
-| batch_size | Int | 1 |  |
+| Parameter  | Type | Default | Description |
+| ---------- | ---- | ------- | ----------- |
+| width      | Int  | 848     |             |
+| height     | Int  | 480     |             |
+| length     | Int  | 25      |             |
+| batch_size | Int  | 1       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, width, height, length, batch_size=1) -> io.NodeOutput:

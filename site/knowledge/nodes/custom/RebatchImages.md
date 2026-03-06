@@ -10,18 +10,19 @@ The RebatchImages node is designed to reorganize a batch of images into a new ba
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| images | Image | — |  |
-| batch_size | Int | 1 |  |
+| Parameter  | Type  | Default | Description |
+| ---------- | ----- | ------- | ----------- |
+| images     | Image | —       |             |
+| batch_size | Int   | 1       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | is_output_list=True),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, images, batch_size):

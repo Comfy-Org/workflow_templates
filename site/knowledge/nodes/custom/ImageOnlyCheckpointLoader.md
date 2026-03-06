@@ -10,17 +10,17 @@ This node specializes in loading checkpoints specifically for image-based models
 
 ## Inputs
 
-| Field      | Data Type | Description                                                                       |
-|------------|-------------|-----------------------------------------------------------------------------------|
-| `ckpt_name`| COMBO[STRING] | Specifies the name of the checkpoint to load, crucial for identifying and retrieving the correct checkpoint file from a predefined list. |
+| Field       | Data Type     | Description                                                                                                                              |
+| ----------- | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `ckpt_name` | COMBO[STRING] | Specifies the name of the checkpoint to load, crucial for identifying and retrieving the correct checkpoint file from a predefined list. |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL |  |
-| CLIP_VISION | CLIP_VISION |  |
-| VAE | VAE |  |
+| Output      | Type        | Description |
+| ----------- | ----------- | ----------- |
+| MODEL       | MODEL       |             |
+| CLIP_VISION | CLIP_VISION |             |
+| VAE         | VAE         |             |
 
 **Source**: `comfy_extras/nodes_video_model.py`
 

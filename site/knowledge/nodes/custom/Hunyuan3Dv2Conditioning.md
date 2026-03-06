@@ -12,16 +12,16 @@ The Hunyuan3Dv2Conditioning node processes CLIP vision output to generate condit
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `clip_vision_output` | CLIP_VISION_OUTPUT | Yes | - | The output from a CLIP vision model containing visual embeddings |
+| Parameter            | Data Type          | Required | Range | Description                                                      |
+| -------------------- | ------------------ | -------- | ----- | ---------------------------------------------------------------- |
+| `clip_vision_output` | CLIP_VISION_OUTPUT | Yes      | -     | The output from a CLIP vision model containing visual embeddings |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Positive conditioning data containing the CLIP vision embeddings |
-| `negative` | CONDITIONING | Negative conditioning data containing zero-valued embeddings matching the positive embeddings shape |
+| Output Name | Data Type    | Description                                                                                         |
+| ----------- | ------------ | --------------------------------------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Positive conditioning data containing the CLIP vision embeddings                                    |
+| `negative`  | CONDITIONING | Negative conditioning data containing zero-valued embeddings matching the positive embeddings shape |
 
 **Source**: `comfy_extras/nodes_hunyuan3d.py`
 

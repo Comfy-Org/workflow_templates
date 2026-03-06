@@ -4,9 +4,9 @@
  * Needed because Astro components can't render inside Vue islands.
  * Same visual structure: square thumbnail, logo overlay, title, author, tag pills.
  */
-import { Badge } from '@/components/ui/badge'
-import { computed } from 'vue'
-import { slugify } from '@/lib/slugify'
+import { Badge } from '@/components/ui/badge';
+import { computed } from 'vue';
+import { slugify } from '@/lib/slugify';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -38,18 +38,18 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Tripo: 'tripo',
   PixVerse: 'pixverse',
   Bria: 'bria',
-}
+};
 
 interface Props {
-  name: string
-  title: string
-  tags?: string[]
-  logos?: { provider: string | string[] }[]
-  thumbnails?: string[]
-  locale?: string
-  username?: string
-  creatorDisplayName?: string
-  hideAuthor?: boolean
+  name: string;
+  title: string;
+  tags?: string[];
+  logos?: { provider: string | string[] }[];
+  thumbnails?: string[];
+  locale?: string;
+  username?: string;
+  creatorDisplayName?: string;
+  hideAuthor?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -60,50 +60,48 @@ const props = withDefaults(defineProps<Props>(), {
   username: '',
   creatorDisplayName: 'ComfyUI',
   hideAuthor: false,
-})
+});
 
 function getLogoPath(name: string): string | null {
-  const slug = MODEL_TO_LOGO[name]
-  if (slug) return `/logos/${slug}.png`
-  const lower = name.toLowerCase()
+  const slug = MODEL_TO_LOGO[name];
+  if (slug) return `/logos/${slug}.png`;
+  const lower = name.toLowerCase();
   for (const [key, val] of Object.entries(MODEL_TO_LOGO)) {
-    if (lower.includes(key.toLowerCase())) return `/logos/${val}.png`
+    if (lower.includes(key.toLowerCase())) return `/logos/${val}.png`;
   }
-  return null
+  return null;
 }
 
 const providerName = computed(() => {
-  const p = props.logos?.[0]?.provider
-  return Array.isArray(p) ? p[0] : p || null
-})
+  const p = props.logos?.[0]?.provider;
+  return Array.isArray(p) ? p[0] : p || null;
+});
 
-const logoPath = computed(() =>
-  providerName.value ? getLogoPath(providerName.value) : null,
-)
+const logoPath = computed(() => (providerName.value ? getLogoPath(providerName.value) : null));
 
-const authorName = computed(() => props.creatorDisplayName || 'ComfyUI')
+const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
 const templateUrl = computed(() => {
-  const base = `/templates/${props.name}/`
-  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base
-})
+  const base = `/templates/${props.name}/`;
+  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
+});
 
 const primaryThumb = computed(() =>
-  props.thumbnails.length > 0 ? `/templates/thumbnails/${props.thumbnails[0]}` : null,
-)
+  props.thumbnails.length > 0 ? `/templates/thumbnails/${props.thumbnails[0]}` : null
+);
 
-const displayTags = computed(() => props.tags.slice(0, 3))
+const displayTags = computed(() => props.tags.slice(0, 3));
 
 function getTagUrl(tag: string): string {
-  const base = `/templates/tag/${slugify(tag)}/`
-  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base
+  const base = `/templates/tag/${slugify(tag)}/`;
+  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 }
 
 const creatorUrl = computed(() => {
-  if (!props.username) return null
-  const base = `/templates/${props.username}/`
-  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base
-})
+  if (!props.username) return null;
+  const base = `/templates/${props.username}/`;
+  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
+});
 </script>
 
 <template>
@@ -125,8 +123,19 @@ const creatorUrl = computed(() => {
         v-else
         class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
       >
-        <svg class="w-10 h-10 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
+        <svg
+          class="w-10 h-10 text-white/20"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+          />
         </svg>
       </div>
 
@@ -145,35 +154,42 @@ const creatorUrl = computed(() => {
 
     <!-- Content -->
     <div class="pt-3 pb-1 pointer-events-none">
-      <h3 class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors">
+      <h3
+        class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors"
+      >
         {{ title }}
       </h3>
 
       <!-- Author line -->
       <div v-if="!hideAuthor" class="flex items-center gap-2 pt-4">
-        <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
-          <span class="text-black text-[10px] font-bold leading-none">{{ authorName.charAt(0).toUpperCase() }}</span>
+        <div
+          class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+        >
+          <span class="text-black text-[10px] font-bold leading-none">{{
+            authorName.charAt(0).toUpperCase()
+          }}</span>
         </div>
         <a
           v-if="creatorUrl"
           :href="creatorUrl"
           class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
-        >{{ authorName }}</a>
+          >{{ authorName }}</a
+        >
         <span v-else class="text-white/50 text-sm truncate">{{ authorName }}</span>
       </div>
 
       <!-- Tag pills -->
-      <div v-if="displayTags.length > 0" class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
+      <div
+        v-if="displayTags.length > 0"
+        class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto"
+      >
         <a
           v-for="tag in displayTags"
           :key="tag"
           :href="getTagUrl(tag)"
           class="tag-link relative z-10"
         >
-          <Badge
-            variant="hub-pill"
-            class="hover:bg-white/15 transition-colors"
-          >
+          <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors">
             {{ tag.toLowerCase().replace(/\s+/g, '-') }}
           </Badge>
         </a>

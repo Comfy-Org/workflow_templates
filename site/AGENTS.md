@@ -328,6 +328,7 @@ Run `pnpm install` to set up hooks (via `prepare` script).
 All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro patterns. Write senior-level, production-quality code.
 
 ### Vue 3 — Required Patterns
+
 - `<script setup lang="ts">` for all components — no Options API
 - Standard reactivity: `ref()`, `computed()`, `watch()`, `watchEffect()`
 - Props via `defineProps<T>()`, emits via `defineEmits<T>()`
@@ -336,6 +337,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - Lifecycle: `onMounted()`, `onUnmounted()` — always clean up listeners
 
 ### Vue 3 — Forbidden Patterns
+
 - `document.dispatchEvent(new CustomEvent(...))` for component communication — use composables
 - `document.addEventListener(...)` to listen for custom events from other Vue components
 - Event bus libraries or mitt — use shared composables with reactive state instead
@@ -344,6 +346,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - Mixins — use composables
 
 ### Astro — Required Patterns
+
 - Astro components (`.astro`) for static/SSR content, Vue islands (`client:load`/`client:visible`) for interactivity
 - Pass data from Astro to Vue via props only — serialize to plain objects
 - For Astro-to-Vue runtime communication (e.g. a button in `.astro` triggering Vue state), attach event listeners to specific DOM elements by ID inside the Vue component's `onMounted()` — do NOT use inline `<script>` tags with `dispatchEvent`
@@ -355,12 +358,12 @@ Astro renders pages as static HTML at build time. Interactive sections use Vue 3
 
 ### When to use `.astro` vs `.vue`
 
-| Use case | Component type | Notes |
-|---|---|---|
-| Static content, layouts, SEO | `.astro` | No client JS shipped |
-| Interactive UI needed on page load | `.vue` + `client:load` | Filters, search, drawers |
-| Interactive UI below the fold | `.vue` + `client:visible` | Hydrates when scrolled into view |
-| SSR-only Vue (no interactivity) | `.vue` without `client:*` | Renders at build, zero client JS |
+| Use case                           | Component type            | Notes                            |
+| ---------------------------------- | ------------------------- | -------------------------------- |
+| Static content, layouts, SEO       | `.astro`                  | No client JS shipped             |
+| Interactive UI needed on page load | `.vue` + `client:load`    | Filters, search, drawers         |
+| Interactive UI below the fold      | `.vue` + `client:visible` | Hydrates when scrolled into view |
+| SSR-only Vue (no interactivity)    | `.vue` without `client:*` | Renders at build, zero client JS |
 
 ### Data flow: Astro → Vue island
 
@@ -375,6 +378,7 @@ const serialized = templates.map((t) => ({
   // ... only plain values: string, number, boolean, arrays, plain objects
 }));
 ---
+
 <MyVueIsland client:load templates={serialized} locale={locale} />
 ```
 
@@ -388,15 +392,19 @@ Vue islands receive data via `defineProps<T>()`. Never pass `Date`, `Map`, `Set`
 // src/composables/useHubStore.ts
 import { ref } from 'vue';
 
-const mobileDrawerOpen = ref(false);       // module-level singleton
+const mobileDrawerOpen = ref(false); // module-level singleton
 const searchFocusTrigger = ref(0);
 
 export function useHubStore() {
   return {
     mobileDrawerOpen,
     searchFocusTrigger,
-    toggleMobileDrawer() { mobileDrawerOpen.value = !mobileDrawerOpen.value; },
-    requestSearchFocus() { searchFocusTrigger.value++; },
+    toggleMobileDrawer() {
+      mobileDrawerOpen.value = !mobileDrawerOpen.value;
+    },
+    requestSearchFocus() {
+      searchFocusTrigger.value++;
+    },
   };
 }
 ```
@@ -406,13 +414,16 @@ Both islands import the same composable → share the same refs → fully reacti
 ```ts
 // Island A (HubBrowse.vue)
 const store = useHubStore();
-store.requestSearchFocus();     // triggers watcher in Island B
+store.requestSearchFocus(); // triggers watcher in Island B
 
 // Island B (SearchPopover.vue)
 const store = useHubStore();
-watch(() => store.searchFocusTrigger.value, () => {
-  inputRef.value?.focus();
-});
+watch(
+  () => store.searchFocusTrigger.value,
+  () => {
+    inputRef.value?.focus();
+  }
+);
 ```
 
 ### Astro → Vue runtime bridge
@@ -424,13 +435,11 @@ When a DOM element in `.astro` markup (e.g. a hamburger button rendered server-s
 const store = useHubStore();
 
 onMounted(() => {
-  document.getElementById('astro-button-id')
-    ?.addEventListener('click', store.someAction);
+  document.getElementById('astro-button-id')?.addEventListener('click', store.someAction);
 });
 
 onUnmounted(() => {
-  document.getElementById('astro-button-id')
-    ?.removeEventListener('click', store.someAction);
+  document.getElementById('astro-button-id')?.removeEventListener('click', store.someAction);
 });
 ```
 
@@ -439,6 +448,7 @@ onUnmounted(() => {
 ### Within a single island: standard Vue
 
 Components within the same island (parent → child Vue components) use normal Vue patterns:
+
 - **Props down**: `defineProps<T>()`
 - **Events up**: `defineEmits<T>()` + `@event` in parent template
 - **Provide/inject**: works within the same island's component tree

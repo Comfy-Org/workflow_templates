@@ -57,9 +57,7 @@ const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
 const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : null;
 ---
 
-<div
-  class="group relative block overflow-hidden transition-all duration-200"
->
+<div class="group relative block overflow-hidden transition-all duration-200">
   <!-- Stretched link covering entire card -->
   <a href={templateUrl} class="absolute inset-0 z-0" aria-hidden="true" data-astro-prefetch></a>
 
@@ -103,9 +101,7 @@ const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : n
             alt={providerName || ''}
             class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
           />
-          <span class="text-white text-sm font-semibold drop-shadow-lg">
-            {providerName}
-          </span>
+          <span class="text-white text-sm font-semibold drop-shadow-lg">{providerName}</span>
         </div>
       )
     }
@@ -120,22 +116,28 @@ const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : n
     </h3>
 
     <!-- Author line -->
-    {!hideAuthor && (
-      <div class="flex items-center gap-2 pt-4">
-        <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
-          <span class="text-black text-[10px] font-bold leading-none">{authorName.charAt(0).toUpperCase()}</span>
+    {
+      !hideAuthor && (
+        <div class="flex items-center gap-2 pt-4">
+          <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
+            <span class="text-black text-[10px] font-bold leading-none">
+              {authorName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          {creatorUrl ? (
+            <a
+              href={creatorUrl}
+              class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
+              data-astro-prefetch
+            >
+              {authorName}
+            </a>
+          ) : (
+            <span class="text-white/50 text-sm truncate">{authorName}</span>
+          )}
         </div>
-        {creatorUrl ? (
-          <a
-            href={creatorUrl}
-            class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
-            data-astro-prefetch
-          >{authorName}</a>
-        ) : (
-          <span class="text-white/50 text-sm truncate">{authorName}</span>
-        )}
-      </div>
-    )}
+      )
+    }
 
     <!-- Tag pills -->
     {
@@ -144,7 +146,10 @@ const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : n
           {tags.slice(0, 3).map((tag) => (
             <a
               href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)}
-              class:list={[badgeVariants({ variant: 'hub-pill' }), 'tag-link relative z-10 hover:bg-white/15 transition-colors']}
+              class:list={[
+                badgeVariants({ variant: 'hub-pill' }),
+                'tag-link relative z-10 hover:bg-white/15 transition-colors',
+              ]}
               data-astro-prefetch
             >
               {tag.toLowerCase().replace(/\s+/g, '-')}

@@ -12,10 +12,10 @@ Loads and formats input files for OpenAI API. This node prepares text and PDF fi
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `file` | COMBO | Yes | Multiple options available | Input files to include as context for the model. Only accepts text (.txt) and PDF (.pdf) files for now. Files must be smaller than 32MB. |
-| `OPENAI_INPUT_FILES` | OPENAI_INPUT_FILES | No | N/A | An optional additional file(s) to batch together with the file loaded from this node. Allows chaining of input files so that a single message can include multiple input files. |
+| Parameter            | Data Type          | Required | Range                      | Description                                                                                                                                                                     |
+| -------------------- | ------------------ | -------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `file`               | COMBO              | Yes      | Multiple options available | Input files to include as context for the model. Only accepts text (.txt) and PDF (.pdf) files for now. Files must be smaller than 32MB.                                        |
+| `OPENAI_INPUT_FILES` | OPENAI_INPUT_FILES | No       | N/A                        | An optional additional file(s) to batch together with the file loaded from this node. Allows chaining of input files so that a single message can include multiple input files. |
 
 **File Constraints:**
 
@@ -25,8 +25,8 @@ Loads and formats input files for OpenAI API. This node prepares text and PDF fi
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
+| Output Name          | Data Type          | Description                                                             |
+| -------------------- | ------------------ | ----------------------------------------------------------------------- |
 | `OPENAI_INPUT_FILES` | OPENAI_INPUT_FILES | Formatted input files ready to be used as context for OpenAI API calls. |
 
 **Source**: `comfy_api_nodes/nodes_openai.py`

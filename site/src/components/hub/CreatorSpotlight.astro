@@ -18,15 +18,7 @@ interface Props {
   locale: Locale;
 }
 
-const {
-  displayName,
-  handle,
-  bio,
-  avatarUrl,
-  profileUrl = '#',
-  templates,
-  locale,
-} = Astro.props;
+const { displayName, handle, bio, avatarUrl, profileUrl = '#', templates, locale } = Astro.props;
 
 // Show at most 3 templates per creator
 const displayTemplates = templates.slice(0, 3);
@@ -35,21 +27,17 @@ const displayTemplates = templates.slice(0, 3);
 const estimateLikes = (usage: number) => Math.round(usage * 0.065);
 ---
 
-<div class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 py-10 border-t border-white/5 first:border-t-0">
+<div
+  class="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 py-10 border-t border-white/5 first:border-t-0"
+>
   <!-- Creator info (left) -->
   <div class="flex flex-col gap-2">
     {
       avatarUrl ? (
-        <img
-          src={avatarUrl}
-          alt={displayName}
-          class="size-14 rounded-full object-cover"
-        />
+        <img src={avatarUrl} alt={displayName} class="size-14 rounded-full object-cover" />
       ) : (
         <div class="size-14 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">
-          <span class="text-white text-xl font-bold">
-            {displayName.charAt(0).toUpperCase()}
-          </span>
+          <span class="text-white text-xl font-bold">{displayName.charAt(0).toUpperCase()}</span>
         </div>
       )
     }
@@ -62,7 +50,8 @@ const estimateLikes = (usage: number) => Math.round(usage * 0.065);
     >
       View profile
       <svg class="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"
+        ></path>
       </svg>
     </a>
   </div>

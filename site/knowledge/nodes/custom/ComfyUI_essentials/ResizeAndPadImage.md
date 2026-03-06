@@ -12,19 +12,19 @@ The ResizeAndPadImage node resizes an image to fit within specified dimensions w
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | The input image to be resized and padded |
-| `target_width` | INT | Yes | 1 to MAX_RESOLUTION | The desired width of the output image (default: 512) |
-| `target_height` | INT | Yes | 1 to MAX_RESOLUTION | The desired height of the output image (default: 512) |
-| `padding_color` | COMBO | Yes | "white"<br>"black" | The color to use for padding areas around the resized image |
-| `interpolation` | COMBO | Yes | "area"<br>"bicubic"<br>"nearest-exact"<br>"bilinear"<br>"lanczos" | The interpolation method used for resizing the image |
+| Parameter       | Data Type | Required | Range                                                             | Description                                                 |
+| --------------- | --------- | -------- | ----------------------------------------------------------------- | ----------------------------------------------------------- |
+| `image`         | IMAGE     | Yes      | -                                                                 | The input image to be resized and padded                    |
+| `target_width`  | INT       | Yes      | 1 to MAX_RESOLUTION                                               | The desired width of the output image (default: 512)        |
+| `target_height` | INT       | Yes      | 1 to MAX_RESOLUTION                                               | The desired height of the output image (default: 512)       |
+| `padding_color` | COMBO     | Yes      | "white"<br>"black"                                                | The color to use for padding areas around the resized image |
+| `interpolation` | COMBO     | Yes      | "area"<br>"bicubic"<br>"nearest-exact"<br>"bilinear"<br>"lanczos" | The interpolation method used for resizing the image        |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `image` | IMAGE | The resized and padded output image |
+| Output Name | Data Type | Description                         |
+| ----------- | --------- | ----------------------------------- |
+| `image`     | IMAGE     | The resized and padded output image |
 
 **Source**: `comfy_extras/nodes_images.py`
 

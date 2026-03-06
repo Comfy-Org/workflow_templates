@@ -10,20 +10,21 @@ The LTXVScheduler node generates sigma values for custom sampling processes. It 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| steps | Int | 20 |  |
-| max_shift | Float | 2.05 |  |
-| base_shift | Float | 0.95 |  |
-| latent | Latent | — |  |
+| Parameter  | Type   | Default | Description |
+| ---------- | ------ | ------- | ----------- |
+| steps      | Int    | 20      |             |
+| max_shift  | Float  | 2.05    |             |
+| base_shift | Float  | 0.95    |             |
+| latent     | Latent | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, steps, max_shift, base_shift, stretch, terminal, latent=None | Sigmas |

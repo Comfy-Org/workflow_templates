@@ -19,10 +19,10 @@ Some related preferences for 3D nodes can be configured in ComfyUI's settings me
 
 ## Inputs
 
-| Parameter Name | Type           | Description                                  |
-| -------------- | -------------- | -------------------------------------------- |
-| camera_info    | LOAD3D_CAMERA  | Camera information                           |
-| model_file     | LOAD3D_CAMERA  | Model file path under `ComfyUI/output/`      |
+| Parameter Name | Type          | Description                             |
+| -------------- | ------------- | --------------------------------------- |
+| camera_info    | LOAD3D_CAMERA | Camera information                      |
+| model_file     | LOAD3D_CAMERA | Model file path under `ComfyUI/output/` |
 
 **Source**: `comfy_extras/nodes_load_3d.py`
 

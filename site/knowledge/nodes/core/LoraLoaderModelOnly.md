@@ -8,15 +8,15 @@ This node specializes in loading a LoRA model without requiring a CLIP model, fo
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| strength_model | FLOAT | 1.0 |  |
+| Parameter      | Type  | Default | Description |
+| -------------- | ----- | ------- | ----------- |
+| strength_model | FLOAT | 1.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| MODEL  | MODEL |             |
 
 **Source**: `nodes.py`
 

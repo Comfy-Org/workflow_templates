@@ -155,14 +155,9 @@ onUnmounted(() => {
           :variant="activeTab !== 'all' ? 'pill-active' : 'pill'"
           size="pill-icon"
           @click="toggleTypePopover"
+          class="flex items-center"
         >
-          <svg
-            class="size-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            aria-hidden="true"
-          >
+          <svg class="size-4" fill="none" stroke="currentColor" aria-hidden="true">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -196,7 +191,11 @@ onUnmounted(() => {
           <button
             type="button"
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
-            :class="activeTab === 'all' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            :class="
+              activeTab === 'all'
+                ? 'text-white font-bold bg-white/10'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            "
             @click="selectTab('all')"
           >
             All
@@ -204,7 +203,11 @@ onUnmounted(() => {
           <button
             type="button"
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
-            :class="activeTab === 'nodeGraphs' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            :class="
+              activeTab === 'nodeGraphs'
+                ? 'text-white font-bold bg-white/10'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            "
             @click="selectTab('nodeGraphs')"
           >
             <IconWorkflow class="size-4" />
@@ -213,7 +216,11 @@ onUnmounted(() => {
           <button
             type="button"
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
-            :class="activeTab === 'comfyApps' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            :class="
+              activeTab === 'comfyApps'
+                ? 'text-white font-bold bg-white/10'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            "
             @click="selectTab('comfyApps')"
           >
             <IconApps class="size-4" />
@@ -265,7 +272,11 @@ onUnmounted(() => {
           <button
             type="button"
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
-            :class="sortBy === 'popular' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            :class="
+              sortBy === 'popular'
+                ? 'text-white font-bold bg-white/10'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            "
             @click="selectSort('popular')"
           >
             Most Popular
@@ -273,7 +284,11 @@ onUnmounted(() => {
           <button
             type="button"
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
-            :class="sortBy === 'newest' ? 'text-white font-bold bg-white/10' : 'text-white/70 hover:text-white hover:bg-white/5'"
+            :class="
+              sortBy === 'newest'
+                ? 'text-white font-bold bg-white/10'
+                : 'text-white/70 hover:text-white hover:bg-white/5'
+            "
             @click="selectSort('newest')"
           >
             Newest

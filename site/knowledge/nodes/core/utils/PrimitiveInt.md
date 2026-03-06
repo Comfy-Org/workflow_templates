@@ -13,15 +13,16 @@ The PrimitiveInt node provides a simple way to work with integer values in your 
 ## Inputs
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| value | Int | — |  |
+| --------- | ---- | ------- | ----------- |
+| value     | Int  | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, value: int) -> io.NodeOutput:

@@ -10,16 +10,16 @@ The SaveImage node saves the images it receives to your `ComfyUI/output` directo
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| images | IMAGE | — | The images to save. |
+| Parameter       | Type   | Default | Description                                                                                                                                                    |
+| --------------- | ------ | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| images          | IMAGE  | —       | The images to save.                                                                                                                                            |
 | filename_prefix | STRING | ComfyUI | The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes. |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `ui` | UI_RESULT | This node outputs a UI result containing a list of the saved images with their filenames and subfolders. It does not output data for connecting to other nodes. |
+| Output Name | Data Type | Description                                                                                                                                                     |
+| ----------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ui`        | UI_RESULT | This node outputs a UI result containing a list of the saved images with their filenames and subfolders. It does not output data for connecting to other nodes. |
 
 **Source**: `nodes.py`
 

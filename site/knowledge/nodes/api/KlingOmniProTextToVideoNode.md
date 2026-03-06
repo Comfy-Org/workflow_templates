@@ -12,19 +12,19 @@ This node uses the Kling AI model to generate a video from a text description. I
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `model_name` | COMBO | Yes | `"kling-video-o1"` | The specific Kling model to use for video generation. |
-| `prompt` | STRING | Yes | 1 to 2500 characters | A text prompt describing the video content. This can include both positive and negative descriptions. |
-| `aspect_ratio` | COMBO | Yes | `"16:9"`<br>`"9:16"`<br>`"1:1"` | The shape or dimensions of the video to generate. |
-| `duration` | COMBO | Yes | `5`<br>`10` | The length of the video in seconds. |
-| `resolution` | COMBO | No | `"1080p"`<br>`"720p"` | The quality or pixel resolution of the video (default: `"1080p"`). |
+| Parameter      | Data Type | Required | Range                           | Description                                                                                           |
+| -------------- | --------- | -------- | ------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `model_name`   | COMBO     | Yes      | `"kling-video-o1"`              | The specific Kling model to use for video generation.                                                 |
+| `prompt`       | STRING    | Yes      | 1 to 2500 characters            | A text prompt describing the video content. This can include both positive and negative descriptions. |
+| `aspect_ratio` | COMBO     | Yes      | `"16:9"`<br>`"9:16"`<br>`"1:1"` | The shape or dimensions of the video to generate.                                                     |
+| `duration`     | COMBO     | Yes      | `5`<br>`10`                     | The length of the video in seconds.                                                                   |
+| `resolution`   | COMBO     | No       | `"1080p"`<br>`"720p"`           | The quality or pixel resolution of the video (default: `"1080p"`).                                    |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | VIDEO | The video generated based on the provided text prompt. |
+| Output Name | Data Type | Description                                            |
+| ----------- | --------- | ------------------------------------------------------ |
+| `output`    | VIDEO     | The video generated based on the provided text prompt. |
 
 **Source**: `comfy_api_nodes/nodes_kling.py`
 

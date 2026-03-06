@@ -76,60 +76,75 @@ function formatRelativeDate(dateStr: string): string {
 ---
 
 <article class="bg-page min-h-screen text-content scroll-smooth">
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-16 pb-32">
-    <div class="flex flex-col lg:flex-row gap-16 justify-between w-full">
-
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-16 pb-32">
+    <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 justify-between w-full">
       {/* Back button */}
-      <BackButton locale={locale} class="self-start lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2" />
+      <BackButton
+        locale={locale}
+        class="self-start lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2"
+      />
 
       <div class="flex-1 min-w-0">
-      {/* Thumbnail */}
-      {thumbnails.length > 0 && (
-        <div class="rounded-lg overflow-hidden">
-          <ThumbnailDisplay
-            thumbnails={thumbnails}
-            title={data.title || data.name}
-            variant={data.thumbnailVariant}
-            mediaSubtype={data.mediaSubtype}
-            class="w-full aspect-square"
-            loading="eager"
-            fetchpriority="high"
-            sizes="(min-width: 1024px) 60vw, 100vw"
-          />
-        </div>
-      )}
+        {/* Thumbnail */}
+        {
+          thumbnails.length > 0 && (
+            <div class="rounded-lg overflow-hidden">
+              <ThumbnailDisplay
+                thumbnails={thumbnails}
+                title={data.title || data.name}
+                variant={data.thumbnailVariant}
+                mediaSubtype={data.mediaSubtype}
+                class="w-full aspect-square"
+                loading="eager"
+                fetchpriority="high"
+                sizes="(min-width: 1024px) 60vw, 100vw"
+              />
+            </div>
+          )
+        }
 
         {/* Full description */}
-      <div class="flex flex-col gap-6  lg:mt-12 scroll-mt-8" id="description">
-        <hr class="border-0 border-t border-divider lg:hidden" />
-        {data.extendedDescription && (
-          <div class="flex flex-col gap-4">
-            {data.extendedDescription.split('\n\n').filter(Boolean).map((paragraph: string) => (
-              <p class="text-base leading-relaxed text-content-secondary">{paragraph.trim()}</p>
-            ))}
-          </div>
-        )}
-      </div>
+        <div class="flex flex-col gap-6 lg:mt-12 scroll-mt-8" id="description">
+          <hr class="border-0 border-t border-divider lg:hidden" />
+          {
+            data.extendedDescription && (
+              <div class="flex flex-col gap-4">
+                {data.extendedDescription
+                  .split('\n\n')
+                  .filter(Boolean)
+                  .map((paragraph: string) => (
+                    <p class="text-base leading-relaxed text-content-secondary">
+                      {paragraph.trim()}
+                    </p>
+                  ))}
+              </div>
+            )
+          }
+        </div>
       </div>
 
       {/* Sidebar */}
-      <aside class="flex flex-col min-w-93.75 max-w-93.75">
+      <aside class="flex flex-col lg:min-w-93.75 lg:max-w-93.75">
         <div class="flex flex-col gap-6 lg:sticky lg:top-24">
           {/* Workflow */}
           <SidebarSection title="Workflow">
             <div class="min-w-0">
               <h1 class="text-base font-semibold text-content">{data.title || data.name}</h1>
-              {data.description && (
-                <div class="workflow-description-wrap mt-2">
-                  <p class="text-sm text-hub-muted line-clamp-3 workflow-description-text">{data.description}</p>
-                  <button
-                    type="button"
-                    class="workflow-show-more hidden text-xs text-content-secondary hover:text-content transition-colors mt-1"
-                  >
-                    Show more
-                  </button>
-                </div>
-              )}
+              {
+                data.description && (
+                  <div class="workflow-description-wrap mt-2">
+                    <p class="text-sm text-hub-muted line-clamp-3 workflow-description-text">
+                      {data.description}
+                    </p>
+                    <button
+                      type="button"
+                      class="workflow-show-more hidden text-xs text-content-secondary hover:text-content transition-colors mt-1"
+                    >
+                      Show more
+                    </button>
+                  </div>
+                )
+              }
             </div>
           </SidebarSection>
 
@@ -137,31 +152,62 @@ function formatRelativeDate(dateStr: string): string {
           <SidebarSection title={t('labels.createdBy', locale)}>
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">
-                {creator?.avatarUrl ? (
-                  <img src={creator.avatarUrl} alt={authorName} class="w-full h-full object-cover" loading="lazy" />
-                ) : (
-                  <div class="w-full h-full rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-white">
-                    {authorName.charAt(0).toUpperCase()}
-                  </div>
-                )}
+                {
+                  creator?.avatarUrl ? (
+                    <img
+                      src={creator.avatarUrl}
+                      alt={authorName}
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="w-full h-full rounded-full bg-white/10 flex items-center justify-center text-xs font-medium text-white">
+                      {authorName.charAt(0).toUpperCase()}
+                    </div>
+                  )
+                }
               </div>
               <div class="flex flex-col">
-                {authorProfileUrl ? (
-                  <a href={authorProfileUrl} class="font-semibold text-base text-content hover:opacity-80 transition-opacity" data-astro-prefetch>{authorName}</a>
-                ) : (
-                  <span class="font-semibold text-base text-content">{authorName}</span>
-                )}
-                {data.date && <span class="text-base text-content-secondary">{formatRelativeDate(data.date)}</span>}
+                {
+                  authorProfileUrl ? (
+                    <a
+                      href={authorProfileUrl}
+                      class="font-semibold text-base text-content hover:opacity-80 transition-opacity"
+                      data-astro-prefetch
+                    >
+                      {authorName}
+                    </a>
+                  ) : (
+                    <span class="font-semibold text-base text-content">{authorName}</span>
+                  )
+                }
+                {
+                  data.date && (
+                    <span class="text-base text-content-secondary">
+                      {formatRelativeDate(data.date)}
+                    </span>
+                  )
+                }
               </div>
             </div>
           </SidebarSection>
 
           {/* Action buttons */}
           <div class="flex flex-col gap-3">
-            <a href={getCloudCtaUrl(data.name, 'hero')} target="_blank" rel="noopener noreferrer" class="flex items-center justify-center h-10 bg-brand rounded-full text-sm font-bold text-page hover:opacity-90 transition-opacity">
+            <a
+              href={getCloudCtaUrl(data.name, 'hero')}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-center h-10 bg-brand rounded-full text-sm font-bold text-page hover:opacity-90 transition-opacity"
+            >
               {t('cta.tryCloud', locale)}
             </a>
-            <a href={`/workflows/${data.name}.json`} download class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors" data-template={data.name}>
+            <a
+              href={`/workflows/${data.name}.json`}
+              download
+              class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors"
+              data-template={data.name}
+            >
               {t('cta.downloadJson', locale)}
             </a>
             <button
@@ -174,37 +220,42 @@ function formatRelativeDate(dateStr: string): string {
           </div>
 
           {/* Categories */}
-          {data.tags && data.tags.length > 0 && (
-            <SidebarSection title={t('labels.categories', locale)}>
-              <CollapsibleBadgeList
-                client:load
-                items={[
-                  { label: mediaTypeLabels[data.mediaType], href: localizeUrl(`/templates/category/${data.mediaType}/`, locale) },
-                  ...data.tags.map((tag: string) => ({
-                    label: tag,
-                    href: localizeUrl(`/templates/tag/${slugify(tag)}/`, locale),
-                  })),
-                ]}
-              />
-            </SidebarSection>
-          )}
+          {
+            data.tags && data.tags.length > 0 && (
+              <SidebarSection title={t('labels.categories', locale)}>
+                <CollapsibleBadgeList
+                  client:load
+                  items={[
+                    {
+                      label: mediaTypeLabels[data.mediaType],
+                      href: localizeUrl(`/templates/category/${data.mediaType}/`, locale),
+                    },
+                    ...data.tags.map((tag: string) => ({
+                      label: tag,
+                      href: localizeUrl(`/templates/tag/${slugify(tag)}/`, locale),
+                    })),
+                  ]}
+                />
+              </SidebarSection>
+            )
+          }
 
           {/* Models */}
-          {data.models && data.models.length > 0 && (
-            <SidebarSection title={t('labels.models', locale)}>
-              <CollapsibleBadgeList
-                client:load
-                items={data.models.map((model: string) => ({
-                  label: model,
-                  href: localizeUrl(`/templates/model/${slugify(model)}/`, locale),
-                }))}
-              />
-            </SidebarSection>
-          )}
+          {
+            data.models && data.models.length > 0 && (
+              <SidebarSection title={t('labels.models', locale)}>
+                <CollapsibleBadgeList
+                  client:load
+                  items={data.models.map((model: string) => ({
+                    label: model,
+                    href: localizeUrl(`/templates/model/${slugify(model)}/`, locale),
+                  }))}
+                />
+              </SidebarSection>
+            )
+          }
         </div>
       </aside>
-
-      
     </div>
   </div>
 </article>
@@ -233,7 +284,9 @@ function formatRelativeDate(dateStr: string): string {
         if (textNode) {
           const original = textNode.textContent;
           textNode.textContent = ' Link copied!';
-          setTimeout(() => { textNode.textContent = original; }, 2000);
+          setTimeout(() => {
+            textNode.textContent = original;
+          }, 2000);
         }
       });
     });

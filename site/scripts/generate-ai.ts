@@ -527,7 +527,10 @@ function assembleContext(
     }
   }
   if (Object.keys(modelDocs).length === 0) {
-    const fallback = pickRelevantDocs(template.models || [], useSummaries ? knowledge.modelSummaries : knowledge.models);
+    const fallback = pickRelevantDocs(
+      template.models || [],
+      useSummaries ? knowledge.modelSummaries : knowledge.models
+    );
     Object.assign(modelDocs, fallback);
     if (Object.keys(modelDocs).length === 0 && useSummaries) {
       Object.assign(modelDocs, pickRelevantDocs(template.models || [], knowledge.models));
@@ -1113,9 +1116,13 @@ async function main() {
   for (const ct of contentTemplateMap.values()) {
     distribution[ct]++;
   }
-  console.log(`🧪 Content template A/B distribution (across ${contentTemplateMap.size} templates):`);
+  console.log(
+    `🧪 Content template A/B distribution (across ${contentTemplateMap.size} templates):`
+  );
   for (const [type, count] of Object.entries(distribution)) {
-    console.log(`   - ${type}: ${count} (${((count / contentTemplateMap.size) * 100).toFixed(1)}%)`);
+    console.log(
+      `   - ${type}: ${count} (${((count / contentTemplateMap.size) * 100).toFixed(1)}%)`
+    );
   }
   console.log('');
 
@@ -1141,7 +1148,9 @@ async function main() {
   const knowledge = await loadKnowledgeBase();
   console.log(`📚 Loaded knowledge base:`);
   console.log(`   - Models: ${Object.keys(knowledge.models).join(', ') || 'none'}`);
-  console.log(`   - Model summaries: ${Object.keys(knowledge.modelSummaries).join(', ') || 'none'}`);
+  console.log(
+    `   - Model summaries: ${Object.keys(knowledge.modelSummaries).join(', ') || 'none'}`
+  );
   console.log(`   - Concepts: ${Object.keys(knowledge.concepts).join(', ') || 'none'}`);
   console.log(`   - Tutorials: ${knowledge.tutorials.length || 0}`);
   console.log(`   - Knowledge index: ${Object.keys(knowledge.knowledgeIndex).length} entries`);
@@ -1213,7 +1222,10 @@ async function main() {
           console.log(`💾 [CACHE HIT] ${template.name}`);
           const merged = applyOverrides(cached, override);
           const existing = await loadExistingSynced(outPath);
-          await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...merged }, null, 2));
+          await writeFile(
+            outPath,
+            JSON.stringify({ ...existing, ...template, ...merged }, null, 2)
+          );
         }
         stats.hits++;
         continue;
@@ -1225,10 +1237,18 @@ async function main() {
       const workflowPath = path.join(TEMPLATES_ROOT, `${template.name}.json`);
       const workflow = await analyzeWorkflow(workflowPath);
       const workflowText = await extractWorkflowText(workflowPath);
-      const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge, contentTemplateMap);
+      const { ctx, tokenBreakdown } = assembleContext(
+        template,
+        workflow,
+        workflowText,
+        knowledge,
+        contentTemplateMap
+      );
       const tokenNote = `Context: ${tokenBreakdown.total.toLocaleString()} tokens (T1: ${tokenBreakdown.tier1.toLocaleString()}, T2: ${tokenBreakdown.tier2.toLocaleString()}, T3: ${tokenBreakdown.tier3.toLocaleString()})`;
       const budgetWarning = tokenBreakdown.total > TOKEN_BUDGET ? ' ⚠️ OVER BUDGET' : '';
-      console.log(`🔄 [WOULD REGENERATE:${ctx.contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}`);
+      console.log(
+        `🔄 [WOULD REGENERATE:${ctx.contentTemplate.toUpperCase()}] ${template.name} - ${cacheCheck.reason}`
+      );
       console.log(`   📏 ${tokenNote}${budgetWarning}`);
       stats.misses++;
       continue;
@@ -1242,7 +1262,10 @@ async function main() {
         console.log(JSON.stringify({ ...template, ...placeholder }, null, 2));
       }
       const existing = await loadExistingSynced(outPath);
-      await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...placeholder }, null, 2));
+      await writeFile(
+        outPath,
+        JSON.stringify({ ...existing, ...template, ...placeholder }, null, 2)
+      );
       stats.placeholder++;
       continue;
     }
@@ -1252,7 +1275,13 @@ async function main() {
     const workflow = await analyzeWorkflow(workflowPath);
     const workflowText = await extractWorkflowText(workflowPath);
 
-    const { ctx, tokenBreakdown } = assembleContext(template, workflow, workflowText, knowledge, contentTemplateMap);
+    const { ctx, tokenBreakdown } = assembleContext(
+      template,
+      workflow,
+      workflowText,
+      knowledge,
+      contentTemplateMap
+    );
 
     // Generate AI content
     const tutorialNote = ctx.tutorialContext ? ' (with tutorial context)' : '';
@@ -1319,7 +1348,10 @@ async function main() {
       stats.failed++;
       const placeholder = getPlaceholderContent(template);
       const existing = await loadExistingSynced(outPath);
-      await writeFile(outPath, JSON.stringify({ ...existing, ...template, ...placeholder }, null, 2));
+      await writeFile(
+        outPath,
+        JSON.stringify({ ...existing, ...template, ...placeholder }, null, 2)
+      );
       stats.placeholder++;
     }
   }

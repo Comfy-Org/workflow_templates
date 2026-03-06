@@ -10,15 +10,15 @@ The QwenImageDiffsynthControlnet node applies a diffusion synthesis control netw
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| strength | FLOAT | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| strength  | FLOAT | 1.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| MODEL  | MODEL |             |
 
 **Source**: `comfy_extras/nodes_model_patch.py`
 

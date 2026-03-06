@@ -10,15 +10,15 @@ The InvertMask node is designed to invert the values of a given mask, effectivel
 
 ## Inputs
 
-| Parameter | Data Type | Description |
-|-----------|--------------|-------------|
-| `mask`    | MASK         | The 'mask' parameter represents the input mask to be inverted. It is crucial for determining the areas to be flipped in the inversion process. |
+| Parameter | Data Type | Description                                                                                                                                    |
+| --------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mask`    | MASK      | The 'mask' parameter represents the input mask to be inverted. It is crucial for determining the areas to be flipped in the inversion process. |
 
 ## Outputs
 
-| Parameter | Data Type | Description |
-|-----------|--------------|-------------|
-| `mask`    | MASK         | The output is an inverted version of the input mask, with previously masked areas becoming unmasked and vice versa. |
+| Parameter | Data Type | Description                                                                                                         |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------- |
+| `mask`    | MASK      | The output is an inverted version of the input mask, with previously masked areas becoming unmasked and vice versa. |
 
 **Source**: `comfy_extras/nodes_mask.py`
 

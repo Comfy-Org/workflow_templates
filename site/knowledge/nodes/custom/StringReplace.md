@@ -14,19 +14,20 @@ The StringReplace node performs text replacement operations on input strings. It
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| string | String | — |  |
-| find | String | — |  |
-| replace | String | — |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| string    | String | —       |             |
+| find      | String | —       |             |
+| replace   | String | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ]
-        )
+]
+)
 
     @classmethod
     def execute(cls, string, find, replace):

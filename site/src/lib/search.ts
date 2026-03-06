@@ -87,25 +87,27 @@ function deriveCreators(workflows: WorkflowHit[], query: string): CreatorHit[] {
 
   const queryLower = query.toLowerCase();
 
-  return Array.from(byCreator.entries())
-    .map(([username, { displayName, count }]) => ({
-      username,
-      displayName,
-      workflowCount: count,
-    }))
-    // Only show creators whose name matches the query, or who have 2+ matching workflows
-    .filter(
-      (c) =>
-        c.displayName.toLowerCase().includes(queryLower) ||
-        c.username.toLowerCase().includes(queryLower) ||
-        c.workflowCount >= 2,
-    )
-    .sort((a, b) => b.workflowCount - a.workflowCount);
+  return (
+    Array.from(byCreator.entries())
+      .map(([username, { displayName, count }]) => ({
+        username,
+        displayName,
+        workflowCount: count,
+      }))
+      // Only show creators whose name matches the query, or who have 2+ matching workflows
+      .filter(
+        (c) =>
+          c.displayName.toLowerCase().includes(queryLower) ||
+          c.username.toLowerCase().includes(queryLower) ||
+          c.workflowCount >= 2
+      )
+      .sort((a, b) => b.workflowCount - a.workflowCount)
+  );
 }
 
 export async function search(
   query: string,
-  options?: { allowedIds?: Set<string> },
+  options?: { allowedIds?: Set<string> }
 ): Promise<SearchResults> {
   const trimmed = query.trim();
   if (!trimmed) {

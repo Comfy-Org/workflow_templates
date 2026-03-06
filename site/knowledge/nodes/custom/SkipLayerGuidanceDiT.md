@@ -10,22 +10,23 @@ Enhances guidance towards detailed structure by using another set of CFG negativ
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| double_layers | String | 7 |  |
-| single_layers | String | 7 |  |
-| scale | Float | 3.0 |  |
-| start_percent | Float | 0.01 |  |
-| end_percent | Float | 0.15 |  |
-| rescaling_scale | Float | 0.0 |  |
+| Parameter       | Type   | Default | Description |
+| --------------- | ------ | ------- | ----------- |
+| model           | Model  | —       |             |
+| double_layers   | String | 7       |             |
+| single_layers   | String | 7       |             |
+| scale           | Float  | 3.0     |             |
+| start_percent   | Float  | 0.01    |             |
+| end_percent     | Float  | 0.15    |             |
+| rescaling_scale | Float  | 0.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ], | Model |
+], | Model |
 
 **Source**: `comfy_extras/nodes_slg.py`
 

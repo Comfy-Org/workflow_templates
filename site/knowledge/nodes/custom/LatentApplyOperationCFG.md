@@ -10,18 +10,19 @@ The LatentApplyOperationCFG node applies a latent operation to modify the condit
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| operation | LatentOperation | — |  |
+| Parameter | Type            | Default | Description |
+| --------- | --------------- | ------- | ----------- |
+| model     | Model           | —       |             |
+| operation | LatentOperation | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, model, operation) -> io.NodeOutput:

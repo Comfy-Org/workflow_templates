@@ -483,8 +483,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full pl-[var(--hub-sidebar-width)]">
-    <div class="relative max-w-[600px] mx-auto">
+  <div ref="containerRef" class="w-full pr-8">
+    <div class="relative">
       <!-- Search Input with Badges -->
       <div
         class="flex items-center gap-1.5 min-h-10 px-3 rounded-full transition-colors"
@@ -628,7 +628,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && !hasActiveFilters"
-          class="absolute left-0 right-0 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 z-50 top-full mx-4 lg:mx-0 lg:w-[600px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
+          class="absolute left-0 right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px]"
         >
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
             <!-- Popular Workflows -->
@@ -768,7 +768,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && hasActiveFilters"
-          class="absolute left-0 right-0 lg:left-1/2 lg:right-auto lg:-translate-x-1/2 z-50 top-full mx-4 lg:mx-0 lg:w-[600px] mt-2 rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[700px]"
+          class="absolute left-0 right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px]"
         >
           <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">

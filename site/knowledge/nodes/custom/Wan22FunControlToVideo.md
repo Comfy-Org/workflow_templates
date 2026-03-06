@@ -12,25 +12,25 @@ The Wan22FunControlToVideo node prepares conditioning and latent representations
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 81 |  |
-| batch_size | Int | 1 |  |
-| ref_image | Image | — |  |
-| control_video | Image | — |  |
+| Parameter     | Type         | Default | Description |
+| ------------- | ------------ | ------- | ----------- |
+| positive      | Conditioning | —       |             |
+| negative      | Conditioning | —       |             |
+| vae           | Vae          | —       |             |
+| width         | Int          | 832     |             |
+| height        | Int          | 480     |             |
+| length        | Int          | 81      |             |
+| batch_size    | Int          | 1       |             |
+| ref_image     | Image        | —       |             |
+| control_video | Image        | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Modified positive conditioning with video-specific latent data |
-| `negative` | CONDITIONING | Modified negative conditioning with video-specific latent data |
-| `latent` | LATENT | Empty latent tensor with appropriate dimensions for video generation |
+| Output Name | Data Type    | Description                                                          |
+| ----------- | ------------ | -------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Modified positive conditioning with video-specific latent data       |
+| `negative`  | CONDITIONING | Modified negative conditioning with video-specific latent data       |
+| `latent`    | LATENT       | Empty latent tensor with appropriate dimensions for video generation |
 
 **Source**: `comfy_extras/nodes_wan.py`
 

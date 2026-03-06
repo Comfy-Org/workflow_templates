@@ -8,15 +8,15 @@ This node automatically detects models located in the `ComfyUI/models/clip_visio
 
 ## Inputs
 
-| Field       | Data Type      | Description |
-|-------------|---------------|-------------|
-| `clip_name` | COMBO[STRING]  | Lists all supported model files in the `ComfyUI/models/clip_vision` folder. |
+| Field       | Data Type     | Description                                                                 |
+| ----------- | ------------- | --------------------------------------------------------------------------- |
+| `clip_name` | COMBO[STRING] | Lists all supported model files in the `ComfyUI/models/clip_vision` folder. |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| CLIP_VISION | CLIP_VISION |  |
+| Output      | Type        | Description |
+| ----------- | ----------- | ----------- |
+| CLIP_VISION | CLIP_VISION |             |
 
 **Source**: `nodes.py`
 

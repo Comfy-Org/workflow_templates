@@ -14,17 +14,17 @@ The `CLIP Vision Encode` node is an image encoding node in ComfyUI, used to conv
 
 ## Inputs
 
-| Parameter Name | Data Type    | Description                                                      |
-| -------------- | -----------  | --------------------------------------------------------------- |
-| `clip_vision`  | CLIP_VISION  | CLIP vision model, usually loaded via the CLIPVisionLoader node |
-| `image`        | IMAGE        | The input image to be encoded                                   |
-| `crop`         | Dropdown     | Image cropping method, options: center (center crop), none (no crop) |
+| Parameter Name | Data Type   | Description                                                          |
+| -------------- | ----------- | -------------------------------------------------------------------- |
+| `clip_vision`  | CLIP_VISION | CLIP vision model, usually loaded via the CLIPVisionLoader node      |
+| `image`        | IMAGE       | The input image to be encoded                                        |
+| `crop`         | Dropdown    | Image cropping method, options: center (center crop), none (no crop) |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| CLIP_VISION_OUTPUT | CLIP_VISION_OUTPUT |  |
+| Output             | Type               | Description |
+| ------------------ | ------------------ | ----------- |
+| CLIP_VISION_OUTPUT | CLIP_VISION_OUTPUT |             |
 
 **Source**: `nodes.py`
 

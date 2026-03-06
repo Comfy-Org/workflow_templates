@@ -8,15 +8,15 @@ This node zeroes out specific elements within the conditioning data structure, e
 
 ## Inputs
 
-| Parameter | Comfy dtype                | Description |
-|-----------|----------------------------|-------------|
+| Parameter      | Comfy dtype  | Description                                                                                                                                   |
+| -------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
 | `CONDITIONING` | CONDITIONING | The conditioning data structure to be modified. This node zeroes out the 'pooled_output' elements within each conditioning entry, if present. |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| CONDITIONING | CONDITIONING |  |
+| Output       | Type         | Description |
+| ------------ | ------------ | ----------- |
+| CONDITIONING | CONDITIONING |             |
 
 **Source**: `nodes.py`
 

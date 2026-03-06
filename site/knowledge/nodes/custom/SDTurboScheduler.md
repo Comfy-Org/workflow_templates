@@ -8,18 +8,19 @@ SDTurboScheduler is designed to generate a sequence of sigma values for image sa
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| steps | Int | 1 |  |
-| denoise | Float | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| model     | Model | —       |             |
+| steps     | Int   | 1       |             |
+| denoise   | Float | 1.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, model, steps, denoise) -> io.NodeOutput:

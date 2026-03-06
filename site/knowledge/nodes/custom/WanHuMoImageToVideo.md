@@ -12,25 +12,25 @@ The WanHuMoImageToVideo node converts images to video sequences by generating la
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 97 |  |
-| batch_size | Int | 1 |  |
-| audio_encoder_output | AudioEncoderOutput | — |  |
-| ref_image | Image | — |  |
+| Parameter            | Type               | Default | Description |
+| -------------------- | ------------------ | ------- | ----------- |
+| positive             | Conditioning       | —       |             |
+| negative             | Conditioning       | —       |             |
+| vae                  | Vae                | —       |             |
+| width                | Int                | 832     |             |
+| height               | Int                | 480     |             |
+| length               | Int                | 97      |             |
+| batch_size           | Int                | 1       |             |
+| audio_encoder_output | AudioEncoderOutput | —       |             |
+| ref_image            | Image              | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Modified positive conditioning with reference image and/or audio embeddings incorporated |
-| `negative` | CONDITIONING | Modified negative conditioning with reference image and/or audio embeddings incorporated |
-| `latent` | LATENT | Generated latent representation containing the video sequence data |
+| Output Name | Data Type    | Description                                                                              |
+| ----------- | ------------ | ---------------------------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Modified positive conditioning with reference image and/or audio embeddings incorporated |
+| `negative`  | CONDITIONING | Modified negative conditioning with reference image and/or audio embeddings incorporated |
+| `latent`    | LATENT       | Generated latent representation containing the video sequence data                       |
 
 **Source**: `comfy_extras/nodes_wan.py`
 

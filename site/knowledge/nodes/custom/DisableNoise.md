@@ -12,16 +12,17 @@ The DisableNoise node provides an empty noise configuration that can be used to 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| *No input parameters* | - | - | - | This node does not require any input parameters. |
+| Parameter             | Data Type | Required | Range | Description                                      |
+| --------------------- | --------- | -------- | ----- | ------------------------------------------------ |
+| _No input parameters_ | -         | -        | -     | This node does not require any input parameters. |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls) -> io.NodeOutput:

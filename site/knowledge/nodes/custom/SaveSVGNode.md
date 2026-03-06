@@ -12,16 +12,16 @@ Save SVG files on disk. This node takes SVG data as input and saves it to your o
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `svg` | SVG | Yes | - | The SVG data to be saved to disk |
-| `filename_prefix` | STRING | Yes | - | The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes. (default: "svg/ComfyUI") |
+| Parameter         | Data Type | Required | Range | Description                                                                                                                                                                             |
+| ----------------- | --------- | -------- | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `svg`             | SVG       | Yes      | -     | The SVG data to be saved to disk                                                                                                                                                        |
+| `filename_prefix` | STRING    | Yes      | -     | The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes. (default: "svg/ComfyUI") |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `ui` | DICT | Returns file information including filename, subfolder, and type for display in the ComfyUI interface |
+| Output Name | Data Type | Description                                                                                           |
+| ----------- | --------- | ----------------------------------------------------------------------------------------------------- |
+| `ui`        | DICT      | Returns file information including filename, subfolder, and type for display in the ComfyUI interface |
 
 **Note:** This node automatically embeds workflow metadata (prompt and extra PNG information) into the SVG file when available. The metadata is inserted as a CDATA section within the SVG's metadata element.
 
