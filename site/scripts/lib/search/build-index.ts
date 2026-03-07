@@ -44,7 +44,7 @@ export async function buildSearchIndex(): Promise<void> {
   const startTime = Date.now();
 
   // Load creators mapping
-  const creatorsPath = path.join(TEMPLATES_DIR, 'creators.json');
+  const creatorsPath = path.join(SITE_DIR, 'creators.json');
   let creators: CreatorsJson = {};
   if (fs.existsSync(creatorsPath)) {
     creators = JSON.parse(fs.readFileSync(creatorsPath, 'utf-8'));
