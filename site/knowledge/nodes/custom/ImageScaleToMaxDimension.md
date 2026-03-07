@@ -10,17 +10,17 @@ The ImageScaleToMaxDimension node resizes images to fit within a specified maxim
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | The input image to be scaled |
-| `upscale_method` | STRING | Yes | "area"<br>"lanczos"<br>"bilinear"<br>"nearest-exact"<br>"bicubic" | The interpolation method used for scaling the image |
-| `largest_size` | INT | Yes | 0 to 16384 | The maximum dimension for the scaled image (default: 512) |
+| Parameter        | Data Type | Required | Range                                                             | Description                                               |
+| ---------------- | --------- | -------- | ----------------------------------------------------------------- | --------------------------------------------------------- |
+| `image`          | IMAGE     | Yes      | -                                                                 | The input image to be scaled                              |
+| `upscale_method` | STRING    | Yes      | "area"<br>"lanczos"<br>"bilinear"<br>"nearest-exact"<br>"bicubic" | The interpolation method used for scaling the image       |
+| `largest_size`   | INT       | Yes      | 0 to 16384                                                        | The maximum dimension for the scaled image (default: 512) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `image` | IMAGE | The scaled image with the largest dimension matching the specified size |
+| Output Name | Data Type | Description                                                             |
+| ----------- | --------- | ----------------------------------------------------------------------- |
+| `image`     | IMAGE     | The scaled image with the largest dimension matching the specified size |
 
 **Source**: `comfy_extras/nodes_images.py`
 

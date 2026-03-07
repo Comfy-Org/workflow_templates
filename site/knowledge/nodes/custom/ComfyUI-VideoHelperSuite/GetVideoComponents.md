@@ -14,17 +14,17 @@ The Get Video Components node extracts all the main elements from a video file. 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| video | Video | — | The video to extract components from. |
+| Parameter | Type  | Default | Description                           |
+| --------- | ----- | ------- | ------------------------------------- |
+| video     | Video | —       | The video to extract components from. |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `images` | IMAGE | The individual frames extracted from the video as separate images. |
-| `audio` | AUDIO | The audio track extracted from the video. |
-| `fps` | FLOAT | The framerate of the video in frames per second. |
+| Output Name | Data Type | Description                                                        |
+| ----------- | --------- | ------------------------------------------------------------------ |
+| `images`    | IMAGE     | The individual frames extracted from the video as separate images. |
+| `audio`     | AUDIO     | The audio track extracted from the video.                          |
+| `fps`       | FLOAT     | The framerate of the video in frames per second.                   |
 
 **Source**: `comfy_extras/nodes_video.py`
 

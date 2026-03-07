@@ -27,17 +27,17 @@ For more details on the latest model file loading, please refer to [folder_paths
 
 ## Inputs
 
-| Parameter     | Data Type     | Description |
-|---------------|---------------|-------------|
-| `clip_name`   | COMBO[STRING] | Specifies the name of the CLIP model to be loaded. This name is used to locate the model file within a predefined directory structure. |
-| `type`        | COMBO[STRING] | Determines the type of CLIP model to load. As ComfyUI supports more models, new types will be added here. Please check the `CLIPLoader` class definition in [node.py](https://github.com/comfyanonymous/ComfyUI/blob/master/nodes.py) for details. |
-| `device`      | COMBO[STRING] | Choose the device for loading the CLIP model. `default` will run the model on GPU, while selecting `CPU` will force loading on CPU. |
+| Parameter   | Data Type     | Description                                                                                                                                                                                                                                        |
+| ----------- | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `clip_name` | COMBO[STRING] | Specifies the name of the CLIP model to be loaded. This name is used to locate the model file within a predefined directory structure.                                                                                                             |
+| `type`      | COMBO[STRING] | Determines the type of CLIP model to load. As ComfyUI supports more models, new types will be added here. Please check the `CLIPLoader` class definition in [node.py](https://github.com/comfyanonymous/ComfyUI/blob/master/nodes.py) for details. |
+| `device`    | COMBO[STRING] | Choose the device for loading the CLIP model. `default` will run the model on GPU, while selecting `CPU` will force loading on CPU.                                                                                                                |
 
 ## Outputs
 
 | Output | Type | Description |
-|--------|------|-------------|
-| CLIP | CLIP |  |
+| ------ | ---- | ----------- |
+| CLIP   | CLIP |             |
 
 **Source**: `nodes.py`
 

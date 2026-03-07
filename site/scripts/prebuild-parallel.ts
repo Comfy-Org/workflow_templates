@@ -69,12 +69,16 @@ async function main(): Promise<void> {
   if (skipAI) {
     console.log('   (SKIP_AI_GENERATION=true — skipping AI and preview generation)');
   }
-  const phase2Tasks = skipAI
-    ? []
-    : [
-        runTask('generate-ai', 'pnpm', ['run', 'generate:ai']),
-        runTask('generate-previews', 'pnpm', ['run', 'generate:previews']),
-      ];
+  const phase2Tasks = [
+    // Search index always runs — it only reads synced data, no AI needed
+    runTask('build-search-index', 'pnpm', ['run', 'build:search-index']),
+    ...(skipAI
+      ? []
+      : [
+          runTask('generate-ai', 'pnpm', ['run', 'generate:ai']),
+          runTask('generate-previews', 'pnpm', ['run', 'generate:previews']),
+        ]),
+  ];
   const phase2Results = await Promise.all(phase2Tasks);
 
   const phase2Failed = phase2Results.filter((r) => !r.success);

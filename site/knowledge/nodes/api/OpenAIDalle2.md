@@ -17,20 +17,20 @@ This node connects to OpenAI's DALL·E 2 API to create images based on text desc
 
 ## Inputs
 
-| Parameter | Data Type | Input Type | Default | Range | Description |
-|-----------|-----------|------------|---------|-------|-------------|
-| `prompt` | STRING | required | "" | - | Text prompt for DALL·E |
-| `seed` | INT | optional | 0 | 0 to 2147483647 | not implemented yet in backend |
-| `size` | COMBO | optional | "1024x1024" | "256x256", "512x512", "1024x1024" | Image size |
-| `n` | INT | optional | 1 | 1 to 8 | How many images to generate |
-| `image` | IMAGE | optional | None | - | Optional reference image for image editing. |
-| `mask` | MASK | optional | None | - | Optional mask for inpainting (white areas will be replaced) |
+| Parameter | Data Type | Input Type | Default     | Range                             | Description                                                 |
+| --------- | --------- | ---------- | ----------- | --------------------------------- | ----------------------------------------------------------- |
+| `prompt`  | STRING    | required   | ""          | -                                 | Text prompt for DALL·E                                      |
+| `seed`    | INT       | optional   | 0           | 0 to 2147483647                   | not implemented yet in backend                              |
+| `size`    | COMBO     | optional   | "1024x1024" | "256x256", "512x512", "1024x1024" | Image size                                                  |
+| `n`       | INT       | optional   | 1           | 1 to 8                            | How many images to generate                                 |
+| `image`   | IMAGE     | optional   | None        | -                                 | Optional reference image for image editing.                 |
+| `mask`    | MASK      | optional   | None        | -                                 | Optional mask for inpainting (white areas will be replaced) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `IMAGE` | IMAGE | The generated or edited image(s) from DALL·E 2 |
+| Output Name | Data Type | Description                                    |
+| ----------- | --------- | ---------------------------------------------- |
+| `IMAGE`     | IMAGE     | The generated or edited image(s) from DALL·E 2 |
 ```
 
 **Source**: `comfy_api_nodes/nodes_openai.py`

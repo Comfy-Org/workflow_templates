@@ -12,22 +12,22 @@ The TripoTextureNode generates textured 3D models using the Tripo API. It takes 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `model_task_id` | MODEL_TASK_ID | Yes | - | The task ID of the model to apply textures to |
-| `texture` | BOOLEAN | No | - | Whether to generate textures (default: True) |
-| `pbr` | BOOLEAN | No | - | Whether to generate PBR (Physically Based Rendering) materials (default: True) |
-| `texture_seed` | INT | No | - | Random seed for texture generation (default: 42) |
-| `texture_quality` | COMBO | No | "standard"<br>"detailed" | Quality level for texture generation (default: "standard") |
-| `texture_alignment` | COMBO | No | "original_image"<br>"geometry" | Method for aligning textures (default: "original_image") |
+| Parameter           | Data Type     | Required | Range                          | Description                                                                    |
+| ------------------- | ------------- | -------- | ------------------------------ | ------------------------------------------------------------------------------ |
+| `model_task_id`     | MODEL_TASK_ID | Yes      | -                              | The task ID of the model to apply textures to                                  |
+| `texture`           | BOOLEAN       | No       | -                              | Whether to generate textures (default: True)                                   |
+| `pbr`               | BOOLEAN       | No       | -                              | Whether to generate PBR (Physically Based Rendering) materials (default: True) |
+| `texture_seed`      | INT           | No       | -                              | Random seed for texture generation (default: 42)                               |
+| `texture_quality`   | COMBO         | No       | "standard"<br>"detailed"       | Quality level for texture generation (default: "standard")                     |
+| `texture_alignment` | COMBO         | No       | "original_image"<br>"geometry" | Method for aligning textures (default: "original_image")                       |
 
-*Note: This node requires authentication tokens and API keys which are automatically handled by the system.*
+_Note: This node requires authentication tokens and API keys which are automatically handled by the system._
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `model_file` | STRING | The generated model file with applied textures |
+| Output Name     | Data Type     | Description                                             |
+| --------------- | ------------- | ------------------------------------------------------- |
+| `model_file`    | STRING        | The generated model file with applied textures          |
 | `model task_id` | MODEL_TASK_ID | The task ID for tracking the texture generation process |
 
 **Source**: `comfy_api_nodes/nodes_tripo.py`

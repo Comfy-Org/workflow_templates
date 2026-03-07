@@ -267,22 +267,26 @@ export const CUSTOM_NODE_REGISTRY: Record<string, CustomNodeInfo> = {
   SAMLoader: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
+    description:
+      'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
   SAMDetectorCombined: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
+    description:
+      'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
   FaceDetailer: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
+    description:
+      'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
   DetailerForEach: {
     package: 'ComfyUI-Impact-Pack',
     url: 'https://github.com/ltdrdata/ComfyUI-Impact-Pack',
-    description: 'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
+    description:
+      'Detector and detailer nodes for automatic facial enhancement and iterative upscaling',
   },
 
   // ControlNet Aux
@@ -345,7 +349,8 @@ export const CUSTOM_NODE_REGISTRY: Record<string, CustomNodeInfo> = {
   Florence2: {
     package: 'ComfyUI-Florence2',
     url: 'https://github.com/kijai/ComfyUI-Florence2',
-    description: 'Florence2 vision-language model for object detection, captioning, segmentation, and OCR',
+    description:
+      'Florence2 vision-language model for object detection, captioning, segmentation, and OCR',
   },
 
   // InstantID

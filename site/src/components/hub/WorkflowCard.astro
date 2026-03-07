@@ -1,0 +1,162 @@
+---
+/**
+ * WorkflowCard - Template card for the hub grid
+ * Matches Figma: square thumbnail, title, author with avatar, tag pills
+ * Replaces old TemplateCard design for the hub page
+ */
+import ThumbnailDisplay from '../ThumbnailDisplay.astro';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { localizeUrl } from '../../i18n/utils';
+import { getModelLogoPath } from '../../lib/model-logos';
+import { badgeVariants } from '../ui/badge';
+import { slugify } from '../../lib/slugify';
+import creatorsData from '../../../creators.json';
+
+const creatorsMap = creatorsData as Record<string, { displayName: string }>;
+
+interface Props {
+  name: string;
+  title: string;
+  description: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  tags?: string[];
+  models?: string[];
+  logos?: { provider: string | string[] }[];
+  usage?: number;
+  date?: string;
+  thumbnails?: string[];
+  username?: string;
+  locale?: Locale;
+  hideAuthor?: boolean;
+}
+
+const {
+  name,
+  title,
+  mediaSubtype,
+  thumbnailVariant,
+  tags = [],
+  logos = [],
+  thumbnails = [],
+  username,
+  locale = DEFAULT_LOCALE,
+  hideAuthor = false,
+} = Astro.props;
+
+const templateUrl = localizeUrl(`/templates/${name}/`, locale);
+
+// Get logo for overlay display (model branding)
+const logoProvider = logos?.[0]?.provider;
+const providerName = Array.isArray(logoProvider) ? logoProvider[0] : logoProvider;
+const logoPath = providerName ? getModelLogoPath(providerName, providerName) : null;
+
+// Get author display name from creators.json via username
+const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
+const creatorUrl = username ? localizeUrl(`/templates/${username}/`, locale) : null;
+---
+
+<div class="group relative block overflow-hidden transition-all duration-200">
+  <!-- Stretched link covering entire card -->
+  <a href={templateUrl} class="absolute inset-0 z-0" aria-hidden="true" data-astro-prefetch></a>
+
+  <!-- Thumbnail -->
+  <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative pointer-events-none">
+    {
+      thumbnails.length > 0 ? (
+        <ThumbnailDisplay
+          thumbnails={thumbnails}
+          title={title}
+          variant={thumbnailVariant}
+          mediaSubtype={mediaSubtype}
+          class="w-full h-full"
+        />
+      ) : (
+        <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10">
+          <svg
+            class="w-10 h-10 text-white/20"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+            />
+          </svg>
+        </div>
+      )
+    }
+
+    {/* Logo overlay in top-left corner */}
+    {
+      logoPath && (
+        <div class="absolute top-3 left-3 flex items-center gap-2 z-10">
+          <img
+            src={logoPath}
+            alt={providerName || ''}
+            class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
+          />
+          <span class="text-white text-sm font-semibold drop-shadow-lg">{providerName}</span>
+        </div>
+      )
+    }
+  </div>
+
+  <!-- Content -->
+  <div class="pt-3 pb-1 pointer-events-none">
+    <h3
+      class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors"
+    >
+      {title}
+    </h3>
+
+    <!-- Author line -->
+    {
+      !hideAuthor && (
+        <div class="flex items-center gap-2 pt-4">
+          <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
+            <span class="text-black text-[10px] font-bold leading-none">
+              {authorName.charAt(0).toUpperCase()}
+            </span>
+          </div>
+          {creatorUrl ? (
+            <a
+              href={creatorUrl}
+              class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
+              data-astro-prefetch
+            >
+              {authorName}
+            </a>
+          ) : (
+            <span class="text-white/50 text-sm truncate">{authorName}</span>
+          )}
+        </div>
+      )
+    }
+
+    <!-- Tag pills -->
+    {
+      tags.length > 0 && (
+        <div class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
+          {tags.slice(0, 3).map((tag) => (
+            <a
+              href={localizeUrl(`/templates/tag/${slugify(tag)}/`, locale)}
+              class:list={[
+                badgeVariants({ variant: 'hub-pill' }),
+                'tag-link relative z-10 hover:bg-white/15 transition-colors',
+              ]}
+              data-astro-prefetch
+            >
+              {tag.toLowerCase().replace(/\s+/g, '-')}
+            </a>
+          ))}
+        </div>
+      )
+    }
+  </div>
+</div>

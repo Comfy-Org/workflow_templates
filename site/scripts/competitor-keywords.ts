@@ -23,7 +23,9 @@ const DEFAULT_URLS = [
   'https://www.runcomfy.com/comfyui-workflows',
 ];
 
-const SITE_DIR = path.dirname(path.dirname(new URL(import.meta.url).pathname));
+import { fileURLToPath } from 'node:url';
+
+const SITE_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const DOCS_DIR = path.join(SITE_DIR, 'docs');
 
 const STOP_WORDS = new Set([

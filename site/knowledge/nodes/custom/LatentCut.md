@@ -12,20 +12,21 @@ The LatentCut node extracts a specific section from latent samples along a chose
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| samples | Latent | — |  |
-| dim | Combo | — |  |
-| index | Int | 0 |  |
-| amount | Int | 1 |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| samples   | Latent | —       |             |
+| dim       | Combo  | —       |             |
+| index     | Int    | 0       |             |
+| amount    | Int    | 1       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, samples, dim, index, amount) -> io.NodeOutput:

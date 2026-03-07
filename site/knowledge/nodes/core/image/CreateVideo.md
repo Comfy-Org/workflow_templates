@@ -14,19 +14,20 @@ The Create Video node generates a video file from a sequence of images. You can 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| images | Image | — | The images to create a video from. |
-| fps | Float | 30.0 |  |
-| audio | Audio | — | The audio to add to the video. |
+| Parameter | Type  | Default | Description                        |
+| --------- | ----- | ------- | ---------------------------------- |
+| images    | Image | —       | The images to create a video from. |
+| fps       | Float | 30.0    |                                    |
+| audio     | Audio | —       | The audio to add to the video.     |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, images: Input.Image, fps: float, audio: Optional[Input.Audio] = None) -> io.NodeOutput:

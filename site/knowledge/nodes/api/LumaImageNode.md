@@ -12,16 +12,16 @@ Generates images synchronously based on prompt and aspect ratio. This node creat
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `prompt` | STRING | Yes | - | Prompt for the image generation (default: empty string) |
-| `model` | COMBO | Yes | Multiple options available | Model selection for image generation |
-| `aspect_ratio` | COMBO | Yes | Multiple options available | Aspect ratio for the generated image (default: 16:9 ratio) |
-| `seed` | INT | Yes | 0 to 18446744073709551615 | Seed to determine if node should re-run; actual results are nondeterministic regardless of seed (default: 0) |
-| `style_image_weight` | FLOAT | No | 0.0 to 1.0 | Weight of style image. Ignored if no style_image provided (default: 1.0) |
-| `image_luma_ref` | LUMA_REF | No | - | Luma Reference node connection to influence generation with input images; up to 4 images can be considered |
-| `style_image` | IMAGE | No | - | Style reference image; only 1 image will be used |
-| `character_image` | IMAGE | No | - | Character reference images; can be a batch of multiple, up to 4 images can be considered |
+| Parameter            | Data Type | Required | Range                      | Description                                                                                                  |
+| -------------------- | --------- | -------- | -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `prompt`             | STRING    | Yes      | -                          | Prompt for the image generation (default: empty string)                                                      |
+| `model`              | COMBO     | Yes      | Multiple options available | Model selection for image generation                                                                         |
+| `aspect_ratio`       | COMBO     | Yes      | Multiple options available | Aspect ratio for the generated image (default: 16:9 ratio)                                                   |
+| `seed`               | INT       | Yes      | 0 to 18446744073709551615  | Seed to determine if node should re-run; actual results are nondeterministic regardless of seed (default: 0) |
+| `style_image_weight` | FLOAT     | No       | 0.0 to 1.0                 | Weight of style image. Ignored if no style_image provided (default: 1.0)                                     |
+| `image_luma_ref`     | LUMA_REF  | No       | -                          | Luma Reference node connection to influence generation with input images; up to 4 images can be considered   |
+| `style_image`        | IMAGE     | No       | -                          | Style reference image; only 1 image will be used                                                             |
+| `character_image`    | IMAGE     | No       | -                          | Character reference images; can be a batch of multiple, up to 4 images can be considered                     |
 
 **Parameter Constraints:**
 
@@ -32,9 +32,9 @@ Generates images synchronously based on prompt and aspect ratio. This node creat
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | IMAGE | The generated image based on the input parameters |
+| Output Name | Data Type | Description                                       |
+| ----------- | --------- | ------------------------------------------------- |
+| `output`    | IMAGE     | The generated image based on the input parameters |
 
 **Source**: `comfy_api_nodes/nodes_luma.py`
 

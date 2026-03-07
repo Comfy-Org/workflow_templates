@@ -12,19 +12,19 @@ Generates high-quality music and sound effects from text descriptions. This node
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `model` | COMBO | Yes | `"stable-audio-2.5"` | The audio generation model to use (default: "stable-audio-2.5") |
-| `prompt` | STRING | Yes | - | The text description used to generate audio content (default: empty string) |
-| `duration` | INT | No | 1-190 | Controls the duration in seconds of the generated audio (default: 190) |
-| `seed` | INT | No | 0-4294967294 | The random seed used for generation (default: 0) |
-| `steps` | INT | No | 4-8 | Controls the number of sampling steps (default: 8) |
+| Parameter  | Data Type | Required | Range                | Description                                                                 |
+| ---------- | --------- | -------- | -------------------- | --------------------------------------------------------------------------- |
+| `model`    | COMBO     | Yes      | `"stable-audio-2.5"` | The audio generation model to use (default: "stable-audio-2.5")             |
+| `prompt`   | STRING    | Yes      | -                    | The text description used to generate audio content (default: empty string) |
+| `duration` | INT       | No       | 1-190                | Controls the duration in seconds of the generated audio (default: 190)      |
+| `seed`     | INT       | No       | 0-4294967294         | The random seed used for generation (default: 0)                            |
+| `steps`    | INT       | No       | 4-8                  | Controls the number of sampling steps (default: 8)                          |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `audio` | AUDIO | The generated audio file based on the text prompt |
+| Output Name | Data Type | Description                                       |
+| ----------- | --------- | ------------------------------------------------- |
+| `audio`     | AUDIO     | The generated audio file based on the text prompt |
 
 **Source**: `comfy_api_nodes/nodes_stability.py`
 

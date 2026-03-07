@@ -12,20 +12,20 @@ The InstructPixToPixConditioning node prepares conditioning data for InstructPix
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| pixels | Image | — |  |
+| Parameter | Type         | Default | Description |
+| --------- | ------------ | ------- | ----------- |
+| positive  | Conditioning | —       |             |
+| negative  | Conditioning | —       |             |
+| vae       | Vae          | —       |             |
+| pixels    | Image        | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Positive conditioning data with attached latent image representation |
-| `negative` | CONDITIONING | Negative conditioning data with attached latent image representation |
-| `latent` | LATENT | Empty latent tensor with the same dimensions as the encoded image |
+| Output Name | Data Type    | Description                                                          |
+| ----------- | ------------ | -------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Positive conditioning data with attached latent image representation |
+| `negative`  | CONDITIONING | Negative conditioning data with attached latent image representation |
+| `latent`    | LATENT       | Empty latent tensor with the same dimensions as the encoded image    |
 
 **Source**: `comfy_extras/nodes_ip2p.py`
 

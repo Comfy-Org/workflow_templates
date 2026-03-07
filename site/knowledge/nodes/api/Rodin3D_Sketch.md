@@ -12,16 +12,16 @@ This node generates 3D assets using the Rodin API. It takes input images and con
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `Images` | IMAGE | Yes | - | Input images to be converted into 3D models |
-| `Seed` | INT | No | 0-65535 | Random seed value for generation (default: 0) |
+| Parameter | Data Type | Required | Range   | Description                                   |
+| --------- | --------- | -------- | ------- | --------------------------------------------- |
+| `Images`  | IMAGE     | Yes      | -       | Input images to be converted into 3D models   |
+| `Seed`    | INT       | No       | 0-65535 | Random seed value for generation (default: 0) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `3D Model Path` | STRING | File path to the generated 3D model |
+| Output Name     | Data Type | Description                         |
+| --------------- | --------- | ----------------------------------- |
+| `3D Model Path` | STRING    | File path to the generated 3D model |
 
 **Source**: `comfy_api_nodes/nodes_rodin.py`
 

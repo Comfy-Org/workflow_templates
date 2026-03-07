@@ -12,18 +12,18 @@ This node applies a specific animation to a 3D character model that has already 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `rig_task_id` | STRING | Yes | N/A | The unique task ID from a previously completed Meshy character rigging operation. |
-| `action_id` | INT | Yes | 0 to 696 | The ID number of the animation action to apply. Visit <https://docs.meshy.ai/en/api/animation-library> for a list of available values. (default: 0) |
+| Parameter     | Data Type | Required | Range    | Description                                                                                                                                         |
+| ------------- | --------- | -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rig_task_id` | STRING    | Yes      | N/A      | The unique task ID from a previously completed Meshy character rigging operation.                                                                   |
+| `action_id`   | INT       | Yes      | 0 to 696 | The ID number of the animation action to apply. Visit <https://docs.meshy.ai/en/api/animation-library> for a list of available values. (default: 0) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `model_file` | STRING | A string identifier for the animated model. This output is provided for backward compatibility only. |
-| `GLB` | FILE3DGLB | The animated 3D model file in GLB format. |
-| `FBX` | FILE3DFBX | The animated 3D model file in FBX format. |
+| Output Name  | Data Type | Description                                                                                          |
+| ------------ | --------- | ---------------------------------------------------------------------------------------------------- |
+| `model_file` | STRING    | A string identifier for the animated model. This output is provided for backward compatibility only. |
+| `GLB`        | FILE3DGLB | The animated 3D model file in GLB format.                                                            |
+| `FBX`        | FILE3DFBX | The animated 3D model file in FBX format.                                                            |
 
 **Source**: `comfy_api_nodes/nodes_meshy.py`
 

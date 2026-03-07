@@ -12,15 +12,15 @@ The CFGZeroStar node applies a specialized guidance scaling technique to diffusi
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| model     | Model | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `patched_model` | MODEL | The modified model with CFGZeroStar guidance scaling applied |
+| Output Name     | Data Type | Description                                                  |
+| --------------- | --------- | ------------------------------------------------------------ |
+| `patched_model` | MODEL     | The modified model with CFGZeroStar guidance scaling applied |
 
 **Source**: `comfy_extras/nodes_cfg.py`
 

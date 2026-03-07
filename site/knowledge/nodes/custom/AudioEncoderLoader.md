@@ -10,16 +10,17 @@ The AudioEncoderLoader node loads audio encoder models from your available audio
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| audio_encoder_name | Combo | — |  |
+| Parameter          | Type  | Default | Description |
+| ------------------ | ----- | ------- | ----------- |
+| audio_encoder_name | Combo | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, audio_encoder_name | AudioEncoder |

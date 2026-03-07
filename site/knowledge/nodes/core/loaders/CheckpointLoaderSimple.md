@@ -14,17 +14,17 @@ This node automatically detects all model files in the `ComfyUI/models/checkpoin
 
 ## Inputs
 
-| Parameter      | Data Type | Input Type | Default | Range | Description |
-|----------------|-----------|------------|---------|-------|-------------|
-| `ckpt_name`    | STRING    | Widget     | null    | All model files in checkpoints folder | Select the checkpoint model file name to load, which determines the AI model used for subsequent image generation |
+| Parameter   | Data Type | Input Type | Default | Range                                 | Description                                                                                                       |
+| ----------- | --------- | ---------- | ------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `ckpt_name` | STRING    | Widget     | null    | All model files in checkpoints folder | Select the checkpoint model file name to load, which determines the AI model used for subsequent image generation |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL | The model used for denoising latents. |
-| CLIP | CLIP | The CLIP model used for encoding text prompts. |
-| VAE | VAE | The VAE model used for encoding and decoding images to and from latent space. |
+| Output | Type  | Description                                                                   |
+| ------ | ----- | ----------------------------------------------------------------------------- |
+| MODEL  | MODEL | The model used for denoising latents.                                         |
+| CLIP   | CLIP  | The CLIP model used for encoding text prompts.                                |
+| VAE    | VAE   | The VAE model used for encoding and decoding images to and from latent space. |
 
 **Source**: `nodes.py`
 

@@ -1,0 +1,151 @@
+---
+/**
+ * Profile page - /templates/:username
+ * Displays a creator's profile with sidebar card and workflow grid.
+ * Reads profile data from creators.json and filters templates by username field.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HubNavbar from '../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../components/hub/SiteFooter.astro';
+import SidebarSection from '../../components/template-detail/SidebarSection.astro';
+import BackButton from '../../components/BackButton.astro';
+import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
+import { getLocaleFromPath } from '../../i18n/utils';
+import { absoluteUrl } from '../../config/site';
+import creatorsData from '../../../creators.json';
+
+interface CreatorProfile {
+  displayName: string;
+  handle: string;
+  summary: string;
+  social?: string;
+  avatarUrl?: string;
+  coverUrl?: string;
+}
+
+const creators = creatorsData as Record<string, CreatorProfile>;
+
+export function getStaticPaths() {
+  const data = creatorsData as Record<string, CreatorProfile>;
+  return Object.keys(data).map((key) => ({ params: { username: key } }));
+}
+
+const { username } = Astro.params;
+const locale = getLocaleFromPath(Astro.url.pathname);
+const creator = creators[username!];
+
+const templates = await getCollection('templates');
+const profileTemplates = templates
+  .filter((tmpl) => !tmpl.id.includes('/') && tmpl.data.username === username)
+  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+
+const canonicalUrl = absoluteUrl(`/templates/${username}/`);
+
+// Serialize template data for the Vue island (plain objects only)
+const serialized = profileTemplates.map((tmpl) => ({
+  name: tmpl.data.name,
+  title: tmpl.data.title || tmpl.data.name,
+  tags: tmpl.data.tags || [],
+  logos: tmpl.data.logos || [],
+  usage: tmpl.data.usage || 0,
+  date: tmpl.data.date || '',
+  thumbnails: tmpl.data.thumbnails || [],
+  username: tmpl.data.username || '',
+  creatorDisplayName: creator.displayName,
+  isApp: tmpl.data.isApp || false,
+}));
+
+// Parse social link for display
+function getSocialDisplay(social?: string): { label: string; url: string } | null {
+  if (!social) return null;
+  if (social.includes('x.com') || social.includes('twitter.com')) {
+    return { label: 'X/Twitter', url: `https://${social}` };
+  }
+  if (social.includes('instagram.com')) {
+    return { label: 'Instagram', url: `https://${social}` };
+  }
+  return { label: 'Website', url: `https://${social}` };
+}
+
+const socialLink = getSocialDisplay(creator.social);
+---
+
+<BaseLayout
+  title={`${creator.displayName} (@${creator.handle}) - ComfyUI Workflow Templates`}
+  description={creator.summary}
+  canonicalUrl={canonicalUrl}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pb-20">
+    <!-- Profile Layout: Sidebar + Content -->
+    <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 pt-8">
+      <!-- Left Sidebar -->
+      <aside class="w-full lg:w-[328px] shrink-0">
+        <div class="lg:sticky lg:top-16 flex flex-col gap-8 pt-8">
+          <BackButton locale={locale} class="self-start" />
+          <SidebarSection contentClass="p-8 gap-6">
+            <!-- Avatar -->
+            <div class="flex flex-col gap-4">
+              {
+                creator.avatarUrl ? (
+                  <img
+                    src={creator.avatarUrl}
+                    alt={creator.displayName}
+                    class="size-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
+                    <span class="text-black text-2xl font-bold">
+                      {creator.displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )
+              }
+              <!-- Name & Handle -->
+              <div class="flex flex-col">
+                <p class="text-white text-base font-bold">{creator.displayName}</p>
+                <p class="text-hub-muted text-sm">@{creator.handle}</p>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <p class="text-hub-muted text-sm leading-normal">{creator.summary}</p>
+
+            <!-- Social Links -->
+            {
+              socialLink && (
+                <div class="flex items-center gap-2 text-sm text-hub-muted">
+                  <a
+                    href={socialLink.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="underline hover:text-white transition-colors"
+                  >
+                    {socialLink.label}
+                  </a>
+                </div>
+              )
+            }
+          </SidebarSection>
+        </div>
+      </aside>
+
+      <!-- Right Content: Interactive browse (Vue island) -->
+      <WorkflowGrid
+        client:load
+        templates={serialized}
+        locale={locale}
+        gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+        hideAuthor
+      />
+    </div>
+  </div>
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

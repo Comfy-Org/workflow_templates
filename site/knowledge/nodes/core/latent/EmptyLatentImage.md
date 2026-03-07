@@ -8,16 +8,16 @@ The `EmptyLatentImage` node is designed to generate a blank latent space represe
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | INT | 512 | The width of the latent images in pixels. |
-| height | INT | 512 | The height of the latent images in pixels. |
-| batch_size | INT | 1 | The number of latent images in the batch. |
+| Parameter  | Type | Default | Description                                |
+| ---------- | ---- | ------- | ------------------------------------------ |
+| width      | INT  | 512     | The width of the latent images in pixels.  |
+| height     | INT  | 512     | The height of the latent images in pixels. |
+| batch_size | INT  | 1       | The number of latent images in the batch.  |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
+| Output | Type   | Description                   |
+| ------ | ------ | ----------------------------- |
 | LATENT | LATENT | The empty latent image batch. |
 
 **Source**: `nodes.py`

@@ -1,6 +1,6 @@
 # DifferentialDiffusion
 
-**Category**: _for_testing
+**Category**: \_for_testing
 
 **Display Name**: Differential Diffusion
 
@@ -14,18 +14,19 @@ The Differential Diffusion node modifies the denoising process by applying a bin
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| strength | Float | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| model     | Model | —       |             |
+| strength  | Float | 1.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-            is_experimental=True,
-        )
+is_experimental=True,
+)
 
     @classmethod
     def execute(cls, model, strength=1.0) -> io.NodeOutput:

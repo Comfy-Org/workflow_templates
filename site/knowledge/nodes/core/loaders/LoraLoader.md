@@ -11,25 +11,25 @@ The LoRA Loader node is primarily used to load LoRA models. You can think of LoR
 - Apply specific artistic styles (like ink painting)
 - Add characteristics of certain characters (like game characters)
 - Add specific details to the image
-All of these can be achieved through LoRA.
+  All of these can be achieved through LoRA.
 
 If you need to load multiple LoRA models, you can directly chain multiple nodes together, as shown below:
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | MODEL | — | The diffusion model the LoRA will be applied to. |
-| clip | CLIP | — | The CLIP model the LoRA will be applied to. |
-| strength_model | FLOAT | 1.0 | How strongly to modify the diffusion model. This value can be negative. |
-| strength_clip | FLOAT | 1.0 | How strongly to modify the CLIP model. This value can be negative. |
+| Parameter      | Type  | Default | Description                                                             |
+| -------------- | ----- | ------- | ----------------------------------------------------------------------- |
+| model          | MODEL | —       | The diffusion model the LoRA will be applied to.                        |
+| clip           | CLIP  | —       | The CLIP model the LoRA will be applied to.                             |
+| strength_model | FLOAT | 1.0     | How strongly to modify the diffusion model. This value can be negative. |
+| strength_clip  | FLOAT | 1.0     | How strongly to modify the CLIP model. This value can be negative.      |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL | The modified diffusion model. |
-| CLIP | CLIP | The modified CLIP model. |
+| Output | Type  | Description                   |
+| ------ | ----- | ----------------------------- |
+| MODEL  | MODEL | The modified diffusion model. |
+| CLIP   | CLIP  | The modified CLIP model.      |
 
 **Source**: `nodes.py`
 

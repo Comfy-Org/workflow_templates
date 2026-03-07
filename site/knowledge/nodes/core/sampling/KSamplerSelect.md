@@ -8,16 +8,17 @@ The KSamplerSelect node is designed to select a specific sampler based on the pr
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| sampler_name | Combo | — |  |
+| Parameter    | Type  | Default | Description |
+| ------------ | ----- | ------- | ----------- |
+| sampler_name | Combo | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, sampler_name) -> io.NodeOutput:

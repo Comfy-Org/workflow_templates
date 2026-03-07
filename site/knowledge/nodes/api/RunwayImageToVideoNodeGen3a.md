@@ -12,13 +12,13 @@ The Runway Image to Video (Gen3a Turbo) node generates a video from a single sta
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `prompt` | STRING | Yes | N/A | Text prompt for the generation (default: "") |
-| `start_frame` | IMAGE | Yes | N/A | Start frame to be used for the video |
-| `duration` | COMBO | Yes | Multiple options available | Video duration selection from available options |
-| `ratio` | COMBO | Yes | Multiple options available | Aspect ratio selection from available options |
-| `seed` | INT | No | 0-4294967295 | Random seed for generation (default: 0) |
+| Parameter     | Data Type | Required | Range                      | Description                                     |
+| ------------- | --------- | -------- | -------------------------- | ----------------------------------------------- |
+| `prompt`      | STRING    | Yes      | N/A                        | Text prompt for the generation (default: "")    |
+| `start_frame` | IMAGE     | Yes      | N/A                        | Start frame to be used for the video            |
+| `duration`    | COMBO     | Yes      | Multiple options available | Video duration selection from available options |
+| `ratio`       | COMBO     | Yes      | Multiple options available | Aspect ratio selection from available options   |
+| `seed`        | INT       | No       | 0-4294967295               | Random seed for generation (default: 0)         |
 
 **Parameter Constraints:**
 
@@ -28,9 +28,9 @@ The Runway Image to Video (Gen3a Turbo) node generates a video from a single sta
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | VIDEO | The generated video sequence |
+| Output Name | Data Type | Description                  |
+| ----------- | --------- | ---------------------------- |
+| `output`    | VIDEO     | The generated video sequence |
 
 **Source**: `comfy_api_nodes/nodes_runway.py`
 

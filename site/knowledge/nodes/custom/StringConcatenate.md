@@ -14,19 +14,20 @@ The StringConcatenate node combines two text strings into one by joining them wi
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| string_a | String | — |  |
-| string_b | String | — |  |
-| delimiter | String | — |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| string_a  | String | —       |             |
+| string_b  | String | —       |             |
+| delimiter | String | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ]
-        )
+]
+)
 
     @classmethod
     def execute(cls, string_a, string_b, delimiter):

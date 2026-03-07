@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | basic_inpaint |
-| Title | Basic Inpainting Workflow |
+| Field       | Value                                                                        |
+| ----------- | ---------------------------------------------------------------------------- |
+| Name        | basic_inpaint                                                                |
+| Title       | Basic Inpainting Workflow                                                    |
 | Description | Modify specific parts of an image using inpainting with mask editor support. |
-| Media Type | image |
-| Tags | Inpainting, Image |
-| Models | Stable Diffusion |
+| Media Type  | image                                                                        |
+| Tags        | Inpainting, Image                                                            |
+| Models      | Stable Diffusion                                                             |
 
 ## OUTPUT: Generated Content
 

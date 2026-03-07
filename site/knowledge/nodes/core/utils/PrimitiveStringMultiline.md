@@ -12,16 +12,17 @@ The PrimitiveStringMultiline node provides a multiline text input field for ente
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| value | String | — |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| value     | String | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, value: str) -> io.NodeOutput:

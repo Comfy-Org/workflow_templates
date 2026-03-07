@@ -12,19 +12,19 @@ The Runway Text to Image node generates images from text prompts using Runway's 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `prompt` | STRING | Yes | - | Text prompt for the generation (default: "") |
-| `ratio` | COMBO | Yes | "16:9"<br>"1:1"<br>"21:9"<br>"2:3"<br>"3:2"<br>"4:5"<br>"5:4"<br>"9:16"<br>"9:21" | Aspect ratio for the generated image |
-| `reference_image` | IMAGE | No | - | Optional reference image to guide the generation |
+| Parameter         | Data Type | Required | Range                                                                             | Description                                      |
+| ----------------- | --------- | -------- | --------------------------------------------------------------------------------- | ------------------------------------------------ |
+| `prompt`          | STRING    | Yes      | -                                                                                 | Text prompt for the generation (default: "")     |
+| `ratio`           | COMBO     | Yes      | "16:9"<br>"1:1"<br>"21:9"<br>"2:3"<br>"3:2"<br>"4:5"<br>"5:4"<br>"9:16"<br>"9:21" | Aspect ratio for the generated image             |
+| `reference_image` | IMAGE     | No       | -                                                                                 | Optional reference image to guide the generation |
 
 **Note:** The reference image must have dimensions not exceeding 7999x7999 pixels and an aspect ratio between 0.5 and 2.0. When a reference image is provided, it guides the image generation process.
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | IMAGE | The generated image based on the text prompt and optional reference image |
+| Output Name | Data Type | Description                                                               |
+| ----------- | --------- | ------------------------------------------------------------------------- |
+| `output`    | IMAGE     | The generated image based on the text prompt and optional reference image |
 
 **Source**: `comfy_api_nodes/nodes_runway.py`
 

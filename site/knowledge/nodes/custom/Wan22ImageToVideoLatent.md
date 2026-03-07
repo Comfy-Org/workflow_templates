@@ -10,22 +10,23 @@ The Wan22ImageToVideoLatent node creates video latent representations from image
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| vae | Vae | — |  |
-| width | Int | 1280 |  |
-| height | Int | 704 |  |
-| length | Int | 49 |  |
-| batch_size | Int | 1 |  |
-| start_image | Image | — |  |
+| Parameter   | Type  | Default | Description |
+| ----------- | ----- | ------- | ----------- |
+| vae         | Vae   | —       |             |
+| width       | Int   | 1280    |             |
+| height      | Int   | 704     |             |
+| length      | Int   | 49      |             |
+| batch_size  | Int   | 1       |             |
+| start_image | Image | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, vae, width, height, length, batch_size, start_image=None) -> io.NodeOutput:

@@ -12,16 +12,16 @@ Creates Recraft Controls for customizing Recraft generation. This node allows yo
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `colors` | COLOR | No | - | Color settings for the main elements |
-| `background_color` | COLOR | No | - | Background color setting |
+| Parameter          | Data Type | Required | Range | Description                          |
+| ------------------ | --------- | -------- | ----- | ------------------------------------ |
+| `colors`           | COLOR     | No       | -     | Color settings for the main elements |
+| `background_color` | COLOR     | No       | -     | Background color setting             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `recraft_controls` | CONTROLS | The configured Recraft controls containing color settings |
+| Output Name        | Data Type | Description                                               |
+| ------------------ | --------- | --------------------------------------------------------- |
+| `recraft_controls` | CONTROLS  | The configured Recraft controls containing color settings |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

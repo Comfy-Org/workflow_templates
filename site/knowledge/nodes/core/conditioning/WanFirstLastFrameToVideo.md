@@ -12,27 +12,27 @@ The WanFirstLastFrameToVideo node creates video conditioning by combining start 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 81 |  |
-| batch_size | Int | 1 |  |
-| clip_vision_start_image | ClipVisionOutput | — |  |
-| clip_vision_end_image | ClipVisionOutput | — |  |
-| start_image | Image | — |  |
-| end_image | Image | — |  |
+| Parameter               | Type             | Default | Description |
+| ----------------------- | ---------------- | ------- | ----------- |
+| positive                | Conditioning     | —       |             |
+| negative                | Conditioning     | —       |             |
+| vae                     | Vae              | —       |             |
+| width                   | Int              | 832     |             |
+| height                  | Int              | 480     |             |
+| length                  | Int              | 81      |             |
+| batch_size              | Int              | 1       |             |
+| clip_vision_start_image | ClipVisionOutput | —       |             |
+| clip_vision_end_image   | ClipVisionOutput | —       |             |
+| start_image             | Image            | —       |             |
+| end_image               | Image            | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Positive conditioning with applied video frame encoding and CLIP vision features |
-| `negative` | CONDITIONING | Negative conditioning with applied video frame encoding and CLIP vision features |
-| `latent` | LATENT | Empty latent tensor with dimensions matching the specified video parameters |
+| Output Name | Data Type    | Description                                                                      |
+| ----------- | ------------ | -------------------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Positive conditioning with applied video frame encoding and CLIP vision features |
+| `negative`  | CONDITIONING | Negative conditioning with applied video frame encoding and CLIP vision features |
+| `latent`    | LATENT       | Empty latent tensor with dimensions matching the specified video parameters      |
 
 **Source**: `comfy_extras/nodes_wan.py`
 

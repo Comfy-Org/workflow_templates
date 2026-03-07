@@ -12,25 +12,25 @@ The HunyuanVideo15ImageToVideo node prepares conditioning and latent space data 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 848 |  |
-| height | Int | 480 |  |
-| length | Int | 33 |  |
-| batch_size | Int | 1 |  |
-| start_image | Image | — |  |
-| clip_vision_output | ClipVisionOutput | — |  |
+| Parameter          | Type             | Default | Description |
+| ------------------ | ---------------- | ------- | ----------- |
+| positive           | Conditioning     | —       |             |
+| negative           | Conditioning     | —       |             |
+| vae                | Vae              | —       |             |
+| width              | Int              | 848     |             |
+| height             | Int              | 480     |             |
+| length             | Int              | 33      |             |
+| batch_size         | Int              | 1       |             |
+| start_image        | Image            | —       |             |
+| clip_vision_output | ClipVisionOutput | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | The modified positive conditioning, which may now include the encoded starting image or CLIP vision output. |
-| `negative` | CONDITIONING | The modified negative conditioning, which may now include the encoded starting image or CLIP vision output. |
-| `latent` | LATENT | An empty latent tensor with dimensions configured for the specified batch size, video length, width, and height. |
+| Output Name | Data Type    | Description                                                                                                      |
+| ----------- | ------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | The modified positive conditioning, which may now include the encoded starting image or CLIP vision output.      |
+| `negative`  | CONDITIONING | The modified negative conditioning, which may now include the encoded starting image or CLIP vision output.      |
+| `latent`    | LATENT       | An empty latent tensor with dimensions configured for the specified batch size, video length, width, and height. |
 
 **Source**: `comfy_extras/nodes_hunyuan.py`
 

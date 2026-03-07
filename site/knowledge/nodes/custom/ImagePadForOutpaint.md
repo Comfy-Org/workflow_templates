@@ -8,20 +8,20 @@ This node is designed for preparing images for the outpainting process by adding
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| left | INT | 0 |  |
-| top | INT | 0 |  |
-| right | INT | 0 |  |
-| bottom | INT | 0 |  |
-| feathering | INT | 40 |  |
+| Parameter  | Type | Default | Description |
+| ---------- | ---- | ------- | ----------- |
+| left       | INT  | 0       |             |
+| top        | INT  | 0       |             |
+| right      | INT  | 0       |             |
+| bottom     | INT  | 0       |             |
+| feathering | INT  | 40      |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| IMAGE | IMAGE |  |
-| MASK | MASK |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| IMAGE  | IMAGE |             |
+| MASK   | MASK  |             |
 
 **Source**: `nodes.py`
 

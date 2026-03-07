@@ -12,15 +12,15 @@ The PixVerse Template node allows you to select from available templates for Pix
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `template` | STRING | Yes | Multiple options available | The template to use for PixVerse video generation. The available options correspond to predefined templates in the PixVerse system. |
+| Parameter  | Data Type | Required | Range                      | Description                                                                                                                         |
+| ---------- | --------- | -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `template` | STRING    | Yes      | Multiple options available | The template to use for PixVerse video generation. The available options correspond to predefined templates in the PixVerse system. |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `pixverse_template` | INT | The template ID corresponding to the selected template name, which can be used by other PixVerse nodes for video generation. |
+| Output Name         | Data Type | Description                                                                                                                  |
+| ------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `pixverse_template` | INT       | The template ID corresponding to the selected template name, which can be used by other PixVerse nodes for video generation. |
 
 **Source**: `comfy_api_nodes/nodes_pixverse.py`
 

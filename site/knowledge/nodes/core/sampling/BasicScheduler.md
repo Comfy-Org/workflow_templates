@@ -8,19 +8,20 @@ The `BasicScheduler` node is designed to compute a sequence of sigma values for 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| scheduler | Combo | — |  |
-| steps | Int | 20 |  |
-| denoise | Float | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| model     | Model | —       |             |
+| scheduler | Combo | —       |             |
+| steps     | Int   | 20      |             |
+| denoise   | Float | 1.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, model, scheduler, steps, denoise) -> io.NodeOutput:

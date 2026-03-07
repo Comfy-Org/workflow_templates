@@ -10,15 +10,15 @@ The PreviewAny node displays a preview of any input data type in text format. It
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `source` | ANY | Yes | Any data type | Accepts any input data type for preview display |
+| Parameter | Data Type | Required | Range         | Description                                     |
+| --------- | --------- | -------- | ------------- | ----------------------------------------------- |
+| `source`  | ANY       | Yes      | Any data type | Accepts any input data type for preview display |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| UI Text Display | TEXT | Displays the input data converted to text format in the user interface |
+| Output Name     | Data Type | Description                                                            |
+| --------------- | --------- | ---------------------------------------------------------------------- |
+| UI Text Display | TEXT      | Displays the input data converted to text format in the user interface |
 
 **Source**: `comfy_extras/nodes_preview_any.py`
 

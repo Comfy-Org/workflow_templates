@@ -9,15 +9,15 @@ The ImageScale node is designed for resizing images to specific dimensions, offe
 ## Inputs
 
 | Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | INT | 512 |  |
-| height | INT | 512 |  |
+| --------- | ---- | ------- | ----------- |
+| width     | INT  | 512     |             |
+| height    | INT  | 512     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| IMAGE | IMAGE |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| IMAGE  | IMAGE |             |
 
 **Source**: `nodes.py`
 

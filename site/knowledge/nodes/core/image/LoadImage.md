@@ -8,16 +8,16 @@ The LoadImage node is designed to load and preprocess images from a specified pa
 
 ## Inputs
 
-| Parameter | Data Type | Description |
-|-----------|--------------|-------------|
+| Parameter | Data Type     | Description                                                                                                                                                                                                               |
+| --------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `image`   | COMBO[STRING] | The 'image' parameter specifies the identifier of the image to be loaded and processed. It is crucial for determining the path to the image file and subsequently loading the image for transformation and normalization. |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| IMAGE | IMAGE |  |
-| MASK | MASK |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| IMAGE  | IMAGE |             |
+| MASK   | MASK  |             |
 
 **Source**: `nodes.py`
 
