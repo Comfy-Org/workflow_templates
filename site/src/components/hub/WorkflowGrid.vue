@@ -19,6 +19,7 @@ export interface WorkflowTemplate {
   thumbnails: string[];
   username?: string;
   creatorDisplayName?: string;
+  isApp?: boolean;
 }
 
 const props = withDefaults(
@@ -57,7 +58,8 @@ function toggleSort() {
 }
 
 const tabbedTemplates = computed(() => {
-  if (activeTab.value === 'comfyApps') return [];
+  if (activeTab.value === 'comfyApps') return props.templates.filter((t) => t.isApp);
+  if (activeTab.value === 'nodeGraphs') return props.templates.filter((t) => !t.isApp);
   return props.templates;
 });
 
@@ -146,7 +148,7 @@ onUnmounted(() => {
   <div class="flex-1 w-full min-w-0">
     <!-- Mobile Tabs + Sort bar (popover pills) -->
     <div
-      class="flex lg:hidden items-center gap-2 py-8"
+      class="flex lg:hidden items-center gap-2 py-8 pr-1 -mr-1"
       :class="stickyToolbar ? 'sticky top-16 bg-page z-40' : ''"
     >
       <!-- Type popover -->
@@ -299,7 +301,7 @@ onUnmounted(() => {
 
     <!-- Desktop Tabs + Sort bar -->
     <div
-      class="hidden lg:flex items-center justify-between py-8"
+      class="hidden lg:flex items-center justify-between py-8 pr-1 -mr-1"
       :class="stickyToolbar ? 'sticky top-16 bg-page z-40' : ''"
     >
       <!-- Tab pills -->
@@ -362,18 +364,15 @@ onUnmounted(() => {
         :locale="locale"
         :username="tmpl.username"
         :creator-display-name="tmpl.creatorDisplayName"
+        :is-app="tmpl.isApp"
         :hide-author="hideAuthor"
       />
     </div>
 
     <!-- Empty state -->
     <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-white/40">
-      <p class="text-lg">
-        {{
-          activeTab === 'comfyApps' ? 'Comfy Apps coming soon' : 'No templates match your filters'
-        }}
-      </p>
-      <p v-if="activeTab !== 'comfyApps'" class="text-sm mt-2">Try removing some filters</p>
+      <p class="text-lg">No templates match your filters</p>
+      <p class="text-sm mt-2">Try removing some filters</p>
     </div>
 
     <!-- Load more -->

@@ -82,6 +82,9 @@ const templateSchema = z.object({
   // Search ranking
   searchRank: z.number().optional(),
 
+  // Workflow type
+  isApp: z.boolean().default(false),
+
   // Override tracking
   humanEdited: z.boolean().default(false),
   lastAIGeneration: z.string().optional(),

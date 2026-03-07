@@ -17,6 +17,7 @@ type SearchTemplate = {
   thumbnails: string[];
   username: string;
   creatorDisplayName: string;
+  isApp: boolean;
 };
 
 interface Props {
@@ -49,6 +50,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
     username: tmpl.data.username || '',
     creatorDisplayName:
       (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
+    isApp: tmpl.data.isApp || false,
   }));
 }
 ---
@@ -57,7 +59,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
   <div class="max-w-400 mx-auto h-16 lg:h-20 px-4 sm:px-6 lg:px-16 flex items-center">
     <!-- Left: Logo -->
     <div
-      class="w-28 lg:min-w-[var(--hub-sidebar-width)] lg:max-w-[var(--hub-sidebar-width)] flex items-center justify-start"
+      class="w-20 lg:min-w-[var(--hub-sidebar-width)] lg:max-w-[var(--hub-sidebar-width)] flex items-center justify-start"
     >
       <a href={localizeUrl('/', locale)} class="shrink-0">
         <img src="/brand/comfy-c-yellow.svg" alt="Comfy" class="h-8 w-12 lg:hidden" />
@@ -65,16 +67,18 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
       </a>
     </div>
 
-    <!-- Center: Search Popover (Vue island) -->
-    <SearchPopover client:load templates={templates} locale={locale} />
-
+    <div class="w-full px-4 lg:pr-8 lg:pl-0">
+      <!-- Center: Search Popover (Vue island) -->
+      <SearchPopover client:load templates={templates} locale={locale} />
+    </div>
     <!-- Right: Actions (desktop) -->
     <div class="hidden lg:flex items-center gap-4 shrink-0">
       <a
-        href="/submit"
+        href="https://links.comfy.org/hubearlyaccess"
         class="inline-flex items-center justify-center h-10 px-5 rounded-full border border-white/20 text-white/90 text-sm font-bold hover:bg-white/5 transition-colors whitespace-nowrap"
+        target="_blank"
       >
-        Submit Creation
+        Apply to Join
       </a>
       <a
         href="https://cloud.comfy.org/cloud/signup?utm_source=workflow_hub&utm_medium=inhouse_social&utm_campaign=free_tier&utm_content=post"
@@ -82,7 +86,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
         rel="noopener noreferrer"
         class="inline-flex items-center justify-center h-10 px-5 rounded-full bg-brand text-page text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
       >
-        Get free credits
+        Try Comfy Cloud for free
       </a>
     </div>
 

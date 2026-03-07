@@ -15,6 +15,7 @@ export interface TemplateInfo {
   username?: string;
   size?: number;
   vram?: number;
+  isApp?: boolean;
 }
 
 export interface TemplateCategory {

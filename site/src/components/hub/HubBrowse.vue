@@ -26,6 +26,7 @@ export interface SerializedTemplate {
   thumbnails: string[];
   username: string;
   creatorDisplayName: string;
+  isApp: boolean;
 }
 
 const props = defineProps<{
@@ -123,6 +124,7 @@ const filteredTemplates = computed(() => {
 
   const tagBadges = badges.filter((b) => b.type === 'tag').map((b) => b.value);
   const modelBadges = badges.filter((b) => b.type === 'model').map((b) => b.value);
+  const modeBadges = badges.filter((b) => b.type === 'mode').map((b) => b.value);
 
   let result = [...props.templates];
 
@@ -132,6 +134,14 @@ const filteredTemplates = computed(() => {
 
   if (modelBadges.length > 0) {
     result = result.filter((t) => modelBadges.some((model) => t.models.includes(model)));
+  }
+
+  if (modeBadges.length > 0) {
+    result = result.filter((t) => {
+      if (modeBadges.includes('app')) return t.isApp;
+      if (modeBadges.includes('nodeGraph')) return !t.isApp;
+      return true;
+    });
   }
 
   return result;

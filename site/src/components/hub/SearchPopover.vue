@@ -16,6 +16,7 @@ import { watchDebounced } from '@vueuse/core';
 import { useHubStore } from '@/composables/useHubStore';
 import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
+import { IconApps, IconWorkflow } from '@/components/ui/icons';
 
 export interface SearchTemplate {
   name: string;
@@ -30,6 +31,7 @@ export interface SearchTemplate {
   thumbnails: string[];
   username: string;
   creatorDisplayName: string;
+  isApp: boolean;
 }
 
 const props = defineProps<{
@@ -129,6 +131,9 @@ const badgeFilteredTemplates = computed(() => {
   const modelBadges = store.filterBadges.value
     .filter((b) => b.type === 'model')
     .map((b) => b.value);
+  const modeBadges = store.filterBadges.value
+    .filter((b) => b.type === 'mode')
+    .map((b) => b.value);
 
   let result = [...props.templates];
 
@@ -138,6 +143,14 @@ const badgeFilteredTemplates = computed(() => {
 
   if (modelBadges.length > 0) {
     result = result.filter((t) => modelBadges.some((model) => t.models.includes(model)));
+  }
+
+  if (modeBadges.length > 0) {
+    result = result.filter((t) => {
+      if (modeBadges.includes('app')) return t.isApp;
+      if (modeBadges.includes('nodeGraph')) return !t.isApp;
+      return true;
+    });
   }
 
   return result;
@@ -273,9 +286,15 @@ const remainingModelCount = computed(() =>
   Math.max(0, allModels.value.length - DISCOVERY_PREVIEW_COUNT)
 );
 
+// Mode filter items for the discovery panel
+const modeItems = [
+  { name: 'Comfy Apps', value: 'app' },
+  { name: 'Node Graphs', value: 'nodeGraph' },
+];
+
 // ── Badge actions ──
 
-function addFilterBadge(type: 'tag' | 'model', value: string) {
+function addFilterBadge(type: 'tag' | 'model' | 'mode', value: string) {
   store.addBadge({ type, value });
   searchQuery.value = '';
   inputRef.value?.focus();
@@ -294,6 +313,7 @@ function removeLastBadge() {
 const discCreatorOffset = computed(() => popularWorkflows.value.length);
 const discTagOffset = computed(() => discCreatorOffset.value + topCreators.value.length);
 const discModelOffset = computed(() => discTagOffset.value + previewTags.value.length);
+const discModeOffset = computed(() => discModelOffset.value + previewModels.value.length);
 
 // Active results panel offsets
 const activeSugModelOffset = computed(() => filterSuggestions.value.tags.length);
@@ -321,7 +341,8 @@ const totalNavigable = computed(() => {
     popularWorkflows.value.length +
     topCreators.value.length +
     previewTags.value.length +
-    previewModels.value.length
+    previewModels.value.length +
+    modeItems.length
   );
 });
 
@@ -365,9 +386,13 @@ function activateItem(index: number) {
     } else if (index < popCount + creatorCount + tagCount) {
       const tag = previewTags.value[index - popCount - creatorCount];
       if (tag) addFilterBadge('tag', tag.name);
-    } else {
+    } else if (index < popCount + creatorCount + tagCount + previewModels.value.length) {
       const model = previewModels.value[index - popCount - creatorCount - tagCount];
       if (model) addFilterBadge('model', model.name);
+    } else {
+      const mode =
+        modeItems[index - popCount - creatorCount - tagCount - previewModels.value.length];
+      if (mode) addFilterBadge('mode', mode.value);
     }
   }
 }
@@ -416,6 +441,16 @@ const CREATOR_COLORS = ['#c8ff00', '#ff4444', '#ff4444'];
 
 function getCreatorColor(index: number): string {
   return CREATOR_COLORS[index % CREATOR_COLORS.length];
+}
+
+const MODE_LABELS: Record<string, string> = {
+  app: 'Comfy Apps',
+  nodeGraph: 'Node Graphs',
+};
+
+function badgeLabel(badge: { type: string; value: string }): string {
+  if (badge.type === 'mode') return MODE_LABELS[badge.value] || badge.value;
+  return badge.value;
 }
 
 function formatUsage(usage: number): string {
@@ -483,8 +518,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full pr-8">
-    <div class="relative">
+  <div ref="containerRef" class="w-full">
+    <div class="lg:relative">
       <!-- Search Input with Badges -->
       <div
         class="flex items-center gap-1.5 min-h-10 px-3 rounded-full transition-colors"
@@ -518,7 +553,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badge.value }}
+              {{ badgeLabel(badge) }}
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -550,7 +585,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badge.value }}
+              {{ badgeLabel(badge) }}
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -628,7 +663,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && !hasActiveFilters"
-          class="absolute left-0 right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px]"
+          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
             <!-- Popular Workflows -->
@@ -752,6 +787,33 @@ onUnmounted(() => {
                   + {{ remainingModelCount }} more
                 </button>
               </div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
+                  >Modes</span
+                >
+                <Badge
+                  variant="hub-filter"
+                  as="button"
+                  class="h-6 px-2.5 inline-flex items-center gap-1"
+                  :class="{ 'ring-1 ring-brand': activeIndex === discModeOffset }"
+                  :data-nav-index="discModeOffset"
+                  @click="addFilterBadge('mode', 'nodeGraph')"
+                >
+                  <IconWorkflow class="size-3" />
+                  Node Graphs
+                </Badge>
+                <Badge
+                  variant="hub-filter"
+                  as="button"
+                  class="h-6 px-2.5 inline-flex items-center gap-1"
+                  :class="{ 'ring-1 ring-brand': activeIndex === discModeOffset + 1 }"
+                  :data-nav-index="discModeOffset + 1"
+                  @click="addFilterBadge('mode', 'app')"
+                >
+                  <IconApps class="size-3" />
+                  Comfy Apps
+                </Badge>
+              </div>
             </section>
           </div>
         </div>
@@ -768,7 +830,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && hasActiveFilters"
-          class="absolute left-0 right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px]"
+          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
           <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">

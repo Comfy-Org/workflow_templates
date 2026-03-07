@@ -7,7 +7,7 @@ import { ref } from 'vue';
  */
 
 export interface FilterBadge {
-  type: 'tag' | 'model';
+  type: 'tag' | 'model' | 'mode';
   value: string;
 }
 

@@ -5,6 +5,7 @@
  * Same visual structure: square thumbnail, logo overlay, title, author, tag pills.
  */
 import { Badge } from '@/components/ui/badge';
+import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { computed } from 'vue';
 import { slugify } from '@/lib/slugify';
 
@@ -49,6 +50,7 @@ interface Props {
   locale?: string;
   username?: string;
   creatorDisplayName?: string;
+  isApp?: boolean;
   hideAuthor?: boolean;
 }
 
@@ -59,6 +61,7 @@ const props = withDefaults(defineProps<Props>(), {
   locale: 'en',
   username: '',
   creatorDisplayName: 'ComfyUI',
+  isApp: false,
   hideAuthor: false,
 });
 
@@ -178,11 +181,16 @@ const creatorUrl = computed(() => {
         <span v-else class="text-white/50 text-sm truncate">{{ authorName }}</span>
       </div>
 
-      <!-- Tag pills -->
-      <div
-        v-if="displayTags.length > 0"
-        class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto"
-      >
+      <!-- Type badge + Tag pills -->
+      <div class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
+        <Badge v-if="isApp" variant="hub-pill" class="flex items-center gap-1 shrink-0">
+          <IconApps class="size-3" />
+          <span>Comfy App</span>
+        </Badge>
+        <Badge v-else variant="hub-pill" class="flex items-center gap-1 shrink-0">
+          <IconWorkflow class="size-3" />
+          <span>Node Graph</span>
+        </Badge>
         <a
           v-for="tag in displayTags"
           :key="tag"
