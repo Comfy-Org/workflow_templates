@@ -1,92 +1,396 @@
 {
   "id": "38388b39-6b12-4bbb-a177-62d3ef221d8f",
   "revision": 0,
-  "last_node_id": 12,
-  "last_link_id": 11,
+  "last_node_id": 19,
+  "last_link_id": 16,
   "nodes": [
     {
-      "id": 5,
-      "type": "ImageBatch",
+      "id": 12,
+      "type": "Preview3D",
       "pos": [
-        -210,
+        435.33333333333337,
         753.3333333333334
       ],
       "size": [
-        190,
-        46
+        720,
+        810
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model_file",
+          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 11
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.6.0",
+        "Node name for S&R": "Preview3D"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 1,
+      "type": "TripoImageToModelNode",
+      "pos": [
+        31.66666666666667,
+        753.3333333333334
+      ],
+      "size": [
+        291.6666666666667,
+        403.33333333333337
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": [
+            11
+          ]
+        },
+        {
+          "name": "model task_id",
+          "type": "MODEL_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.5.1",
+        "Node name for S&R": "TripoImageToModelNode"
+      },
+      "widgets_values": [
+        "v3.0-20250812",
+        "person:person2cartoon",
+        true,
+        true,
+        42,
+        "default",
+        42,
+        "detailed",
+        "geometry",
+        -1,
+        false,
+        "standard"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 13,
+      "type": "SaveGLB",
+      "pos": [
+        1267.3333333333335,
+        753.3333333333334
+      ],
+      "size": [
+        650,
+        800
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "link": 12
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3"
+      },
+      "widgets_values": [
+        "3d/tripo_image2model",
+        ""
+      ]
+    },
+    {
+      "id": 14,
+      "type": "TripoRefineNode",
+      "pos": [
+        -1120,
+        1240
+      ],
+      "size": [
+        320.6015625,
+        66
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model_task_id",
+          "type": "MODEL_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "model task_id",
+          "type": "MODEL_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoRefineNode"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 15,
+      "type": "TripoRigNode",
+      "pos": [
+        -1120,
+        1380
+      ],
+      "size": [
+        320.6015625,
+        66
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "original_model_task_id",
+          "type": "MODEL_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "rig task_id",
+          "type": "RIG_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoRigNode"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 16,
+      "type": "TripoRetargetNode",
+      "pos": [
+        -1120,
+        1080
+      ],
+      "size": [
+        320.6015625,
+        98
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "original_model_task_id",
+          "type": "RIG_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "retarget task_id",
+          "type": "RETARGET_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoRetargetNode"
+      },
+      "widgets_values": [
+        "preset:idle"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 17,
+      "type": "TripoConversionNode",
+      "pos": [
+        -1120,
+        1510
+      ],
+      "size": [
+        320.6015625,
+        466
       ],
       "flags": {},
       "order": 3,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
-          "name": "image1",
-          "type": "IMAGE",
-          "link": 1
-        },
-        {
-          "name": "image2",
-          "type": "IMAGE",
-          "link": 7
+          "name": "original_model_task_id",
+          "type": "MODEL_TASK_ID,RIG_TASK_ID,RETARGET_TASK_ID",
+          "link": null
         }
       ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            4
-          ]
-        }
-      ],
+      "outputs": [],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "ImageBatch"
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoConversionNode"
       },
-      "widgets_values": []
+      "widgets_values": [
+        "GLTF",
+        false,
+        -1,
+        4096,
+        "JPEG",
+        false,
+        false,
+        0,
+        false,
+        1,
+        false,
+        false,
+        false,
+        "",
+        "blender",
+        false,
+        "default",
+        false
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
-      "id": 6,
-      "type": "ImageBatch",
+      "id": 18,
+      "type": "TripoTextureNode",
       "pos": [
-        -210,
-        853.3333333333334
+        -1120,
+        820
       ],
       "size": [
-        190,
-        50
+        320.6015625,
+        194
       ],
       "flags": {},
       "order": 4,
-      "mode": 0,
+      "mode": 4,
       "inputs": [
         {
-          "name": "image1",
-          "type": "IMAGE",
-          "link": 4
-        },
-        {
-          "name": "image2",
-          "type": "IMAGE",
-          "link": 8
+          "name": "model_task_id",
+          "type": "MODEL_TASK_ID",
+          "link": null
         }
       ],
       "outputs": [
         {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            10
-          ]
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "model task_id",
+          "type": "MODEL_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
         }
       ],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "ImageBatch"
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoTextureNode"
       },
-      "widgets_values": []
+      "widgets_values": [
+        true,
+        true,
+        42,
+        "standard",
+        "original_image"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 2,
@@ -100,7 +404,7 @@
         411.1197916666667
       ],
       "flags": {},
-      "order": 0,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -108,7 +412,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            1
+            14
           ]
         },
         {
@@ -139,7 +443,7 @@
         411.1197916666667
       ],
       "flags": {},
-      "order": 1,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -147,7 +451,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            7
+            15
           ]
         },
         {
@@ -178,7 +482,7 @@
         411.1197916666667
       ],
       "flags": {},
-      "order": 2,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -186,7 +490,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            8
+            16
           ]
         },
         {
@@ -206,151 +510,64 @@
       ]
     },
     {
-      "id": 1,
-      "type": "TripoImageToModelNode",
+      "id": 19,
+      "type": "BatchImagesNode",
       "pos": [
-        31.66666666666667,
-        753.3333333333334
+        -210,
+        750
       ],
       "size": [
-        291.6666666666667,
-        403.33333333333337
+        169.32421875,
+        86
       ],
       "flags": {},
-      "order": 5,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
-          "name": "image",
+          "label": "image0",
+          "name": "images.image0",
           "type": "IMAGE",
-          "link": 10
+          "link": 14
+        },
+        {
+          "label": "image1",
+          "name": "images.image1",
+          "type": "IMAGE",
+          "link": 15
+        },
+        {
+          "label": "image2",
+          "name": "images.image2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 16
+        },
+        {
+          "label": "image3",
+          "name": "images.image3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
         }
       ],
       "outputs": [
         {
-          "name": "model_file",
-          "type": "STRING",
-          "links": [
-            11
-          ]
-        },
-        {
-          "name": "model task_id",
-          "type": "MODEL_TASK_ID",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "TripoImageToModelNode"
-      },
-      "widgets_values": [
-        "v3.0-20250812",
-        "person:person2cartoon",
-        true,
-        true,
-        42,
-        "default",
-        42,
-        "detailed",
-        "geometry",
-        -1,
-        false,
-        "standard"
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 12,
-      "type": "Preview3D",
-      "pos": [
-        360,
-        750
-      ],
-      "size": [
-        720,
-        810
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "camera_info",
-          "shape": 7,
-          "type": "LOAD3D_CAMERA",
-          "link": null
-        },
-        {
-          "name": "bg_image",
-          "shape": 7,
+          "name": "IMAGE",
           "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "model_file",
-          "type": "STRING",
-          "widget": {
-            "name": "model_file"
-          },
-          "link": 11
+          "links": [
+            13
+          ]
         }
       ],
-      "outputs": [],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.6.0",
-        "Node name for S&R": "Preview3D"
-      },
-      "widgets_values": [
-        "",
-        ""
-      ]
+        "ver": "0.16.3",
+        "Node name for S&R": "BatchImagesNode"
+      }
     }
   ],
   "links": [
-    [
-      1,
-      2,
-      0,
-      5,
-      0,
-      "IMAGE"
-    ],
-    [
-      4,
-      5,
-      0,
-      6,
-      0,
-      "IMAGE"
-    ],
-    [
-      7,
-      4,
-      0,
-      5,
-      1,
-      "IMAGE"
-    ],
-    [
-      8,
-      3,
-      0,
-      6,
-      1,
-      "IMAGE"
-    ],
-    [
-      10,
-      6,
-      0,
-      1,
-      0,
-      "IMAGE"
-    ],
     [
       11,
       1,
@@ -358,19 +575,73 @@
       12,
       2,
       "STRING"
+    ],
+    [
+      12,
+      1,
+      2,
+      13,
+      0,
+      "FILE_3D_GLB"
+    ],
+    [
+      13,
+      19,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      14,
+      2,
+      0,
+      19,
+      0,
+      "IMAGE"
+    ],
+    [
+      15,
+      4,
+      0,
+      19,
+      1,
+      "IMAGE"
+    ],
+    [
+      16,
+      3,
+      0,
+      19,
+      2,
+      "IMAGE"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Tripo Toolset (select and ctrl-b to enable)",
+      "bounding": [
+        -1250,
+        730,
+        610,
+        1290
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.666194479848338,
+      "scale": 0.45501979362635014,
       "offset": [
-        864.3539174467419,
-        -515.251849633988
+        2950.917573857411,
+        -36.85261661773319
       ]
     },
-    "frontendVersion": "1.35.9",
+    "frontendVersion": "1.39.19",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,

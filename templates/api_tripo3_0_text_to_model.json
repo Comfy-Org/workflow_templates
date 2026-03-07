@@ -1,9 +1,80 @@
 {
   "id": "ef49adbe-6e63-45c0-9f29-fa4677f627ac",
   "revision": 0,
-  "last_node_id": 31,
-  "last_link_id": 20,
+  "last_node_id": 37,
+  "last_link_id": 21,
   "nodes": [
+    {
+      "id": 31,
+      "type": "Preview3D",
+      "pos": [
+        -5880,
+        1290
+      ],
+      "size": [
+        670,
+        540
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "camera_info",
+          "shape": 7,
+          "type": "LOAD3D_CAMERA",
+          "link": null
+        },
+        {
+          "name": "bg_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model_file",
+          "type": "STRING,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_FBX,FILE_3D_OBJ,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "widget": {
+            "name": "model_file"
+          },
+          "link": 20
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.6.0",
+        "Node name for S&R": "Preview3D"
+      },
+      "widgets_values": [
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -5870,
+        1890
+      ],
+      "size": [
+        230,
+        88
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note",
+      "properties": {},
+      "widgets_values": [
+        "You can use the export function in the preview 3D node to download it.\n\nFor local user the output file will be saved at ComfyUI/output/3d\n"
+      ],
+      "color": "#432",
+      "bgcolor": "#000"
+    },
     {
       "id": 3,
       "type": "TripoTextToModelNode",
@@ -16,7 +87,7 @@
         540
       ],
       "flags": {},
-      "order": 0,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -31,6 +102,13 @@
           "name": "model task_id",
           "type": "MODEL_TASK_ID",
           "links": []
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": [
+            21
+          ]
         }
       ],
       "properties": {
@@ -57,75 +135,281 @@
       "bgcolor": "#653"
     },
     {
-      "id": 31,
-      "type": "Preview3D",
+      "id": 32,
+      "type": "SaveGLB",
       "pos": [
-        -5880,
+        -5170,
         1290
       ],
       "size": [
-        670,
+        410,
         540
       ],
       "flags": {},
-      "order": 2,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
-          "name": "camera_info",
-          "shape": 7,
-          "type": "LOAD3D_CAMERA",
-          "link": null
-        },
-        {
-          "name": "bg_image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        },
-        {
-          "name": "model_file",
-          "type": "STRING",
-          "widget": {
-            "name": "model_file"
-          },
-          "link": 20
+          "name": "mesh",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "link": 21
         }
       ],
       "outputs": [],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.6.0",
-        "Node name for S&R": "Preview3D"
+        "ver": "0.16.3"
       },
       "widgets_values": [
-        "",
+        "3d/ComfyUI",
         ""
       ]
     },
     {
-      "id": 5,
-      "type": "MarkdownNote",
+      "id": 33,
+      "type": "TripoRefineNode",
       "pos": [
-        -5160,
-        1290
+        -6790,
+        1770
       ],
       "size": [
-        230,
-        88
+        320.6015625,
+        66
       ],
       "flags": {},
-      "order": 1,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note",
-      "properties": {},
+      "order": 2,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model_task_id",
+          "type": "MODEL_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "model task_id",
+          "type": "MODEL_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoRefineNode"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 34,
+      "type": "TripoRigNode",
+      "pos": [
+        -6790,
+        1910
+      ],
+      "size": [
+        320.6015625,
+        66
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "original_model_task_id",
+          "type": "MODEL_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "rig task_id",
+          "type": "RIG_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoRigNode"
+      },
+      "widgets_values": [],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 35,
+      "type": "TripoRetargetNode",
+      "pos": [
+        -6790,
+        1610
+      ],
+      "size": [
+        320.6015625,
+        98
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "original_model_task_id",
+          "type": "RIG_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "retarget task_id",
+          "type": "RETARGET_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoRetargetNode"
+      },
       "widgets_values": [
-        "You can use the export function in the preview 3D node to download it.\n\nFor local user the output file will be saved at ComfyUI/output/3d\n"
+        "preset:idle"
       ],
       "color": "#432",
-      "bgcolor": "#000"
+      "bgcolor": "#653"
+    },
+    {
+      "id": 36,
+      "type": "TripoConversionNode",
+      "pos": [
+        -6790,
+        2040
+      ],
+      "size": [
+        320.6015625,
+        466
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "original_model_task_id",
+          "type": "MODEL_TASK_ID,RIG_TASK_ID,RETARGET_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoConversionNode"
+      },
+      "widgets_values": [
+        "GLTF",
+        false,
+        -1,
+        4096,
+        "JPEG",
+        false,
+        false,
+        0,
+        false,
+        1,
+        false,
+        false,
+        false,
+        "",
+        "blender",
+        false,
+        "default",
+        false
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 37,
+      "type": "TripoTextureNode",
+      "pos": [
+        -6790,
+        1350
+      ],
+      "size": [
+        320.6015625,
+        194
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "model_task_id",
+          "type": "MODEL_TASK_ID",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model_file",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "model task_id",
+          "type": "MODEL_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.16.3",
+        "Node name for S&R": "TripoTextureNode"
+      },
+      "widgets_values": [
+        true,
+        true,
+        42,
+        "standard",
+        "original_image"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -136,19 +420,41 @@
       31,
       2,
       "STRING"
+    ],
+    [
+      21,
+      3,
+      2,
+      32,
+      0,
+      "FILE_3D_GLB"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Tripo Toolset (select and ctrl-b to enable)",
+      "bounding": [
+        -6920,
+        1260,
+        610,
+        1290
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7343739220480222,
+      "scale": 0.28313293757766095,
       "offset": [
-        6741.098787706117,
-        -957.3502317331993
+        9388.94046516696,
+        -238.3843237738563
       ]
     },
-    "frontendVersion": "1.35.9",
+    "frontendVersion": "1.39.19",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
