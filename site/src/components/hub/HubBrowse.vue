@@ -52,15 +52,15 @@ const topTags = computed(() => {
     .map(([name]) => name);
 });
 
-// Derive top models from template data
+// Derive top models from template data (ranked by total usage)
 const topModels = computed(() => {
-  const counts = new Map<string, number>();
+  const usageTotals = new Map<string, number>();
   for (const t of props.templates) {
     for (const m of t.models) {
-      counts.set(m, (counts.get(m) || 0) + 1);
+      usageTotals.set(m, (usageTotals.get(m) || 0) + (t.usage || 0));
     }
   }
-  return Array.from(counts.entries())
+  return Array.from(usageTotals.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5)
     .map(([name]) => name);
