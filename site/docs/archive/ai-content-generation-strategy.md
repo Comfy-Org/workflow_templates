@@ -345,9 +345,9 @@ interface ContentVariant {
 **Phase 1: URL-based (Simplest)**
 
 ```
-/templates/flux_schnell/           → Default variant
-/templates/flux_schnell/?v=tutorial → Tutorial variant
-/templates/flux_schnell/?v=showcase → Showcase variant
+/workflows/flux_schnell/           → Default variant
+/workflows/flux_schnell/?v=tutorial → Tutorial variant
+/workflows/flux_schnell/?v=showcase → Showcase variant
 ```
 
 **Phase 2: Cookie-based (Better)**

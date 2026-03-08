@@ -1,6 +1,6 @@
 # SEO Setup Guide
 
-Manual setup instructions for search engine optimization of `comfy.org/templates`.
+Manual setup instructions for search engine optimization of `comfy.org/workflows`.
 
 ## Table of Contents
 
@@ -14,11 +14,11 @@ Manual setup instructions for search engine optimization of `comfy.org/templates
 
 ## Domain Architecture
 
-The templates site is served at `https://comfy.org/templates/` via Framer Multi-Site rewrite:
+The templates site is served at `https://comfy.org/workflows/` via Framer Multi-Site rewrite:
 
 - **Framer** owns `comfy.org` and serves all marketing pages
-- Framer rewrites `/templates/*` → the Astro site on Vercel
-- Visitors see `comfy.org/templates/...` in the browser (no redirect)
+- Framer rewrites `/workflows/*` → the Astro site on Vercel
+- Visitors see `comfy.org/workflows/...` in the browser (no redirect)
 - All SEO authority consolidates under `comfy.org`
 
 The Vercel deployment URL (`workflow-templates.vercel.app`) returns `X-Robots-Tag: noindex` to prevent duplicate indexing.
@@ -36,7 +36,7 @@ This is the key manual step that makes the subpath architecture work:
 1. Go to the [Framer](https://framer.com) dashboard and select the `comfy.org` domain
 2. Open the **Multi Site** tab
 3. Add a rewrite rule:
-   - **Path:** `/templates/*`
+   - **Path:** `/workflows/*`
    - **Type:** External
    - **Destination:** `https://workflow-templates.vercel.app`
 4. **Publish** the Framer project to apply changes
@@ -47,23 +47,23 @@ This is the key manual step that makes the subpath architecture work:
 
 Internal links from the main site pass domain authority to the templates subpath. Sitemap discovery alone is insufficient for SEO — search engines weigh internal links heavily.
 
-- Add navigation links from Framer marketing pages to key `/templates/` pages
-- Add footer links to template categories (e.g., `/templates/?type=image`, `/templates/?type=video`)
-- Include "Browse Templates" or similar CTA links from relevant pages (e.g., model pages, feature pages)
+- Add navigation links from Framer marketing pages to key `/workflows/` pages
+- Add footer links to template categories (e.g., `/workflows/?type=image`, `/workflows/?type=video`)
+- Include "Browse Workflows" or similar CTA links from relevant pages (e.g., model pages, feature pages)
 
 ### Verification
 
 After publishing the Framer project:
 
-1. Visit `https://comfy.org/templates/` and confirm the page loads correctly
+1. Visit `https://comfy.org/workflows/` and confirm the page loads correctly
 2. Check that all assets (CSS, JS, images) load without errors
-3. Verify the URL bar shows `comfy.org/templates/...` (not a redirect to `workflow-templates.vercel.app`)
+3. Verify the URL bar shows `comfy.org/workflows/...` (not a redirect to `workflow-templates.vercel.app`)
 
 ---
 
 ## Google Search Console Setup
 
-Since the templates site lives under `comfy.org/templates/`, you use the existing `comfy.org` GSC property (or create one if it doesn't exist).
+Since the templates site lives under `comfy.org/workflows/`, you use the existing `comfy.org` GSC property (or create one if it doesn't exist).
 
 ### 1. Add Property (if needed)
 
@@ -89,10 +89,10 @@ Choose one of these verification methods:
 
 1. Download the verification file from GSC (e.g., `google1234567890abcdef.html`)
 2. Place it in `site/public/` directory
-3. Deploy the site — Framer should pass through the file at `comfy.org/templates/google1234567890abcdef.html`
+3. Deploy the site — Framer should pass through the file at `comfy.org/workflows/google1234567890abcdef.html`
 4. Click **Verify** in GSC
 
-> Note: Since the file is served under `/templates/`, this method only works if GSC accepts it at a subpath. DNS verification is more reliable for subpath setups.
+> Note: Since the file is served under `/workflows/`, this method only works if GSC accepts it at a subpath. DNS verification is more reliable for subpath setups.
 
 #### Option C: HTML Meta Tag
 
@@ -106,7 +106,7 @@ Choose one of these verification methods:
 ### 3. Submit Sitemap
 
 1. In GSC, go to **Sitemaps** in the left sidebar
-2. Enter the sitemap URL: `https://comfy.org/templates/sitemap-index.xml`
+2. Enter the sitemap URL: `https://comfy.org/workflows/sitemap-index.xml`
 3. Click **Submit**
 
 ### 4. Set Up Monitoring Alerts
@@ -153,7 +153,7 @@ This automatically imports your sitemap and verification.
    - XML file (add to `public/`)
    - Meta tag (add to layout)
    - CNAME record
-3. Submit sitemap: `https://comfy.org/templates/sitemap-index.xml`
+3. Submit sitemap: `https://comfy.org/workflows/sitemap-index.xml`
 
 ---
 
@@ -161,7 +161,7 @@ This automatically imports your sitemap and verification.
 
 ### Sitemap Location
 
-- **Index:** `https://comfy.org/templates/sitemap-index.xml`
+- **Index:** `https://comfy.org/workflows/sitemap-index.xml`
 - Generated automatically by `@astrojs/sitemap` during build
 - Uses `PUBLIC_SITE_ORIGIN` env var (`https://comfy.org`) for canonical URLs
 - Framer also auto-merges sitemaps from Multi-Site rewrite sources
@@ -172,10 +172,10 @@ Use these URLs to ping search engines after sitemap updates:
 
 ```bash
 # Google
-curl "https://www.google.com/ping?sitemap=https://comfy.org/templates/sitemap-index.xml"
+curl "https://www.google.com/ping?sitemap=https://comfy.org/workflows/sitemap-index.xml"
 
 # Bing
-curl "https://www.bing.com/ping?sitemap=https://comfy.org/templates/sitemap-index.xml"
+curl "https://www.bing.com/ping?sitemap=https://comfy.org/workflows/sitemap-index.xml"
 ```
 
 ### Verify Indexing Status
@@ -198,7 +198,7 @@ curl "https://www.bing.com/ping?sitemap=https://comfy.org/templates/sitemap-inde
 Test specific pages:
 
 1. In GSC, use **URL Inspection** tool
-2. Enter a page URL (e.g., `https://comfy.org/templates/flux_schnell/`)
+2. Enter a page URL (e.g., `https://comfy.org/workflows/flux_schnell/`)
 3. Check if it's indexed
 4. Request indexing if needed
 

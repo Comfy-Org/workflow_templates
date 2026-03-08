@@ -131,7 +131,7 @@ const langInfo = LANGUAGES[locale];
       title={t('meta.title', locale)}
       description={t('meta.description', locale)}
       locale={locale}
-      hreflangBasePath="/templates/"
+      hreflangBasePath="/workflows/"
     />
   </head>
   <body>

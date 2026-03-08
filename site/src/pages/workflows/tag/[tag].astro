@@ -10,7 +10,6 @@ import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { slugify } from '../../../lib/slugify';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { modelPath } from '../../../lib/routes';
 import { badgeVariants } from '../../../components/ui/badge';
 import creatorsData from '../../../../creators.json';
 
@@ -19,48 +18,58 @@ const creators = creatorsData as Record<string, { displayName: string }>;
 export async function getStaticPaths() {
   const templates = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
 
-  const modelMap = new Map<string, typeof templates>();
+  const tagMap = new Map<
+    string,
+    { slug: string; originalTag: string; templates: typeof templates }
+  >();
 
   for (const template of templates) {
-    const models = template.data.models || [];
-    for (const model of models) {
-      const normalized = slugify(model);
-      if (!modelMap.has(normalized)) {
-        modelMap.set(normalized, []);
+    const tags = template.data.tags || [];
+    for (const tag of tags) {
+      // Skip empty tags
+      if (!tag || typeof tag !== 'string' || tag.trim() === '') continue;
+
+      const slug = slugify(tag);
+      // Skip tags that produce empty slugs (e.g., tags with only special characters)
+      if (!slug) continue;
+
+      if (!tagMap.has(slug)) {
+        tagMap.set(slug, { slug, originalTag: tag, templates: [] });
       }
-      modelMap.get(normalized)!.push(template);
+      tagMap.get(slug)!.templates.push(template);
     }
   }
 
-  return Array.from(modelMap.entries()).map(([name, modelTemplates]) => {
-    const originalName =
-      modelTemplates[0]?.data.models?.find((m: string) => slugify(m) === name) || name;
-
-    return {
-      params: { name },
+  return Array.from(tagMap.values())
+    .filter(({ slug }) => slug && slug.length > 0)
+    .map(({ slug, originalTag, templates }) => ({
+      params: { tag: slug },
       props: {
-        templates: modelTemplates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0)),
-        modelName: originalName,
+        tagName: originalTag,
+        templates: templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0)),
       },
-    };
-  });
+    }));
 }
 
-const { name } = Astro.params;
-const { templates, modelName } = Astro.props;
+interface Props {
+  tagName: string;
+  templates: Awaited<ReturnType<typeof getCollection<'templates'>>>;
+}
+
+const { tagName, templates } = Astro.props;
+const { tag } = Astro.params;
 
 const locale = getLocaleFromPath(Astro.url.pathname);
-const basePath = modelPath(name!);
-
-const title = `${modelName} ComfyUI Workflows - Free Templates`;
-const description = `Browse ${templates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
-
+const basePath = `/workflows/tag/${tag}/`;
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+
+const title = `${tagName} ComfyUI Workflows - ${t('nav.templates', locale)}`;
+const description = `Browse ${templates.length} ComfyUI workflow templates tagged with "${tagName}". Free, ready-to-use AI generation workflows.`;
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: `${modelName} ComfyUI Workflows`,
+  name: `${tagName} ComfyUI Workflows`,
   description,
   url: canonicalUrl,
 };
@@ -73,10 +82,10 @@ const breadcrumbStructuredData = {
     {
       '@type': 'ListItem',
       position: 2,
-      name: t('labels.models', locale),
-      item: absoluteUrl(localizeUrl('/templates/model/', locale)),
+      name: t('nav.templates', locale),
+      item: absoluteUrl(localizeUrl('/workflows/', locale)),
     },
-    { '@type': 'ListItem', position: 3, name: modelName },
+    { '@type': 'ListItem', position: 3, name: tagName },
   ],
 };
 
@@ -105,7 +114,9 @@ const serialized = templates.map((tmpl) => ({
   theme="dark"
   hideDefaultFooter
 >
-  <HreflangTags slot="head" basePath={basePath} />
+  <HreflangTags basePath={basePath} slot="head" />
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} />
+
   <HubNavbar />
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
     <!-- Back -->
@@ -114,10 +125,10 @@ const serialized = templates.map((tmpl) => ({
     </nav>
 
     <!-- Header -->
-    <div class="mb-12">
-      <span class={badgeVariants({ variant: 'hub-pill' })}>Model</span>
+    <div class="mb-12 text-center">
+      <span class={badgeVariants({ variant: 'hub-pill' })}>Tag</span>
       <h1 class="text-3xl font-bold text-white mt-3">
-        {modelName} Workflows
+        {tagName}
       </h1>
       <p class="text-hub-muted text-base mt-2">
         {templates.length} workflow{templates.length !== 1 ? 's' : ''}
@@ -132,12 +143,6 @@ const serialized = templates.map((tmpl) => ({
       gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
     />
   </div>
-
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbStructuredData)}
-  />
 
   <Fragment slot="footer">
     <SiteFooter />

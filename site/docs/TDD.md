@@ -50,7 +50,7 @@ interface TemplateInfo {
 | **H2 (How-to)**      | `title + tags`             | `How to {action} with {model} in ComfyUI` |
 | **H2 (Guide)**       | Generated                  | `Step-by-Step Guide: {task}`              |
 | **Meta Description** | AI-generated               | 150-160 chars from template data          |
-| **URL Slug**         | `name`                     | `/templates/{name}/`                      |
+| **URL Slug**         | `name`                     | `/workflows/{name}/`                      |
 | **Open Graph Image** | `{name}-1.webp`            | Primary output thumbnail                  |
 | **Structured Data**  | Multiple fields            | SoftwareApplication schema                |
 | **Keywords**         | `tags + models`            | Natural inclusion in body text            |
@@ -160,8 +160,8 @@ export const collections = { templates };
 ```
 comfy.org/
 ├── /                                    # Homepage: featured templates
-├── /templates/                          # All templates listing
-├── /templates/{slug}/                   # Template detail page
+├── /workflows/                          # All workflows listing
+├── /workflows/{slug}/                   # Workflow detail page
 ├── /category/{type}/                    # image | video | audio | 3d
 ├── /tag/{tag}/                          # Portrait | API | Inpainting | ...
 ├── /model/{model}/                      # Flux | Qwen | Wan | ...
@@ -173,9 +173,9 @@ comfy.org/
 | Option                | Implementation                    | SEO Impact                                 |
 | --------------------- | --------------------------------- | ------------------------------------------ |
 | `templates.comfy.org` | Subdomain DNS + Cloudflare/Vercel | Builds separate authority, easy to measure |
-| `comfy.org/templates` | Reverse proxy from main site      | Inherits main domain authority             |
+| `comfy.org/workflows` | Reverse proxy from main site      | Inherits main domain authority             |
 
-**Decision:** Using `comfy.org/templates` via Framer Multi-Site rewrite. See `docs/framer-subpath-plan.md`.
+**Decision:** Using `comfy.org/workflows` via Framer Multi-Site rewrite. See `docs/framer-subpath-plan.md`.
 
 ---
 

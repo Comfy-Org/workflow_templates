@@ -1,7 +1,7 @@
 ---
 /**
  * Localized template detail page
- * Generates pages like /zh/templates/flux_schnell/, /ja/templates/flux_schnell/, etc.
+ * Generates pages like /zh/workflows/flux_schnell/, /ja/workflows/flux_schnell/, etc.
  */
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
@@ -45,26 +45,26 @@ const templates = await getTemplatesForLocale(locale);
 const template = templates.find((t) => t.data.name === templateName);
 
 if (!template) {
-  return Astro.redirect(`/${locale}/templates/`);
+  return Astro.redirect(`/${locale}/workflows/`);
 }
 
 const { data } = template;
 
 const title = `${data.title || data.name} - ComfyUI`;
-const canonicalUrl = absoluteUrl('/' + locale + '/templates/' + data.name + '/');
+const canonicalUrl = absoluteUrl('/' + locale + '/workflows/' + data.name + '/');
 
 const thumbnails = data.thumbnails || [];
 const primaryThumbnail = thumbnails[0] || null;
 const ogImage = primaryThumbnail
-  ? `/templates/thumbnails/${primaryThumbnail}`
-  : `/templates/og/${data.name}.png`;
+  ? `/workflows/thumbnails/${primaryThumbnail}`
+  : `/workflows/og/${data.name}.png`;
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
   headline: data.title || data.name,
   description: data.description,
-  image: primaryThumbnail ? absoluteUrl('/templates/thumbnails/' + primaryThumbnail) : undefined,
+  image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
   datePublished: data.date,
   inLanguage: locale,
 };
@@ -90,7 +90,7 @@ const breadcrumbStructuredData = {
       '@type': 'ListItem',
       position: 2,
       name: t('nav.templates', locale),
-      item: absoluteUrl('/' + locale + '/templates/'),
+      item: absoluteUrl('/' + locale + '/workflows/'),
     },
     { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
   ],
@@ -119,7 +119,7 @@ const softwareAppStructuredData = {
   ogType="article"
   structuredData={structuredData}
   locale={locale}
-  hreflangBasePath={`/templates/${data.name}/`}
+  hreflangBasePath={`/workflows/${data.name}/`}
   theme="dark"
   hideDefaultFooter
 >
