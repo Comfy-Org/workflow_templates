@@ -12,16 +12,16 @@ Generates images synchronously via OpenAI's GPT Image 1 endpoint. This node can 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `prompt` | STRING | Yes | - | Text prompt for GPT Image 1 (default: "") |
-| `seed` | INT | No | 0 to 2147483647 | Random seed for generation (default: 0) - not implemented yet in backend |
-| `quality` | COMBO | No | "low"<br>"medium"<br>"high" | Image quality, affects cost and generation time (default: "low") |
-| `background` | COMBO | No | "opaque"<br>"transparent" | Return image with or without background (default: "opaque") |
-| `size` | COMBO | No | "auto"<br>"1024x1024"<br>"1024x1536"<br>"1536x1024" | Image size (default: "auto") |
-| `n` | INT | No | 1 to 8 | How many images to generate (default: 1) |
-| `image` | IMAGE | No | - | Optional reference image for image editing (default: None) |
-| `mask` | MASK | No | - | Optional mask for inpainting (white areas will be replaced) (default: None) |
+| Parameter    | Data Type | Required | Range                                               | Description                                                                 |
+| ------------ | --------- | -------- | --------------------------------------------------- | --------------------------------------------------------------------------- |
+| `prompt`     | STRING    | Yes      | -                                                   | Text prompt for GPT Image 1 (default: "")                                   |
+| `seed`       | INT       | No       | 0 to 2147483647                                     | Random seed for generation (default: 0) - not implemented yet in backend    |
+| `quality`    | COMBO     | No       | "low"<br>"medium"<br>"high"                         | Image quality, affects cost and generation time (default: "low")            |
+| `background` | COMBO     | No       | "opaque"<br>"transparent"                           | Return image with or without background (default: "opaque")                 |
+| `size`       | COMBO     | No       | "auto"<br>"1024x1024"<br>"1024x1536"<br>"1536x1024" | Image size (default: "auto")                                                |
+| `n`          | INT       | No       | 1 to 8                                              | How many images to generate (default: 1)                                    |
+| `image`      | IMAGE     | No       | -                                                   | Optional reference image for image editing (default: None)                  |
+| `mask`       | MASK      | No       | -                                                   | Optional mask for inpainting (white areas will be replaced) (default: None) |
 
 **Parameter Constraints:**
 
@@ -32,9 +32,9 @@ Generates images synchronously via OpenAI's GPT Image 1 endpoint. This node can 
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `IMAGE` | IMAGE | Generated or edited image(s) |
+| Output Name | Data Type | Description                  |
+| ----------- | --------- | ---------------------------- |
+| `IMAGE`     | IMAGE     | Generated or edited image(s) |
 
 **Source**: `comfy_api_nodes/nodes_openai.py`
 

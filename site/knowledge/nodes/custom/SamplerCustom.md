@@ -10,24 +10,24 @@ The SamplerCustom node is designed to provide a flexible and customizable sampli
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| add_noise | Boolean | True |  |
-| noise_seed | Int | 0 |  |
-| cfg | Float | 8.0 |  |
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| sampler | Sampler | — |  |
-| sigmas | Sigmas | — |  |
-| latent_image | Latent | — |  |
+| Parameter    | Type         | Default | Description |
+| ------------ | ------------ | ------- | ----------- |
+| model        | Model        | —       |             |
+| add_noise    | Boolean      | True    |             |
+| noise_seed   | Int          | 0       |             |
+| cfg          | Float        | 8.0     |             |
+| positive     | Conditioning | —       |             |
+| negative     | Conditioning | —       |             |
+| sampler      | Sampler      | —       |             |
+| sigmas       | Sigmas       | —       |             |
+| latent_image | Latent       | —       |             |
 
 ## Outputs
 
-| Parameter | Data Type | Description |
-|-----------|--------------|-------------|
-| `output`  | `LATENT`     | The 'output' represents the primary result of the sampling process, containing the generated samples. |
-| `denoised_output` | `LATENT` | The 'denoised_output' represents the samples after a denoising process has been applied, potentially enhancing the clarity and quality of the generated samples. |
+| Parameter         | Data Type | Description                                                                                                                                                      |
+| ----------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `output`          | `LATENT`  | The 'output' represents the primary result of the sampling process, containing the generated samples.                                                            |
+| `denoised_output` | `LATENT`  | The 'denoised_output' represents the samples after a denoising process has been applied, potentially enhancing the clarity and quality of the generated samples. |
 
 **Source**: `comfy_extras/nodes_custom_sampler.py`
 

@@ -10,20 +10,21 @@ The EmptyLTXVLatentVideo node creates an empty latent tensor for video processin
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | Int | 768 |  |
-| height | Int | 512 |  |
-| length | Int | 97 |  |
-| batch_size | Int | 1 |  |
+| Parameter  | Type | Default | Description |
+| ---------- | ---- | ------- | ----------- |
+| width      | Int  | 768     |             |
+| height     | Int  | 512     |             |
+| length     | Int  | 97      |             |
+| batch_size | Int  | 1       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, width, height, length, batch_size=1) -> io.NodeOutput:

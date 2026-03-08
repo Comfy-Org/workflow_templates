@@ -14,28 +14,28 @@ The WanTrackToVideo node converts motion tracking data into video sequences by p
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| tracks | String | [] |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 81 |  |
-| batch_size | Int | 1 |  |
-| temperature | Float | 220.0 |  |
-| topk | Int | 2 |  |
-| start_image | Image | — |  |
-| clip_vision_output | ClipVisionOutput | — |  |
+| Parameter          | Type             | Default | Description |
+| ------------------ | ---------------- | ------- | ----------- |
+| positive           | Conditioning     | —       |             |
+| negative           | Conditioning     | —       |             |
+| vae                | Vae              | —       |             |
+| tracks             | String           | []      |             |
+| width              | Int              | 832     |             |
+| height             | Int              | 480     |             |
+| length             | Int              | 81      |             |
+| batch_size         | Int              | 1       |             |
+| temperature        | Float            | 220.0   |             |
+| topk               | Int              | 2       |             |
+| start_image        | Image            | —       |             |
+| clip_vision_output | ClipVisionOutput | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Positive conditioning with motion track information applied |
-| `negative` | CONDITIONING | Negative conditioning with motion track information applied |
-| `latent` | LATENT | Generated video latent representation |
+| Output Name | Data Type    | Description                                                 |
+| ----------- | ------------ | ----------------------------------------------------------- |
+| `positive`  | CONDITIONING | Positive conditioning with motion track information applied |
+| `negative`  | CONDITIONING | Negative conditioning with motion track information applied |
+| `latent`    | LATENT       | Generated video latent representation                       |
 
 **Source**: `comfy_extras/nodes_wan.py`
 

@@ -8,15 +8,15 @@ The ModelSamplingAuraFlow node applies a specialized sampling configuration to d
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| shift | FLOAT | 1.73 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| shift     | FLOAT | 1.73    |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `model` | MODEL | The modified model with AuraFlow sampling configuration applied |
+| Output Name | Data Type | Description                                                     |
+| ----------- | --------- | --------------------------------------------------------------- |
+| `model`     | MODEL     | The modified model with AuraFlow sampling configuration applied |
 
 **Source**: `comfy_extras/nodes_model_advanced.py`
 

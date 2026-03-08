@@ -10,19 +10,20 @@ The EmptySD3LatentImage node creates a blank latent image tensor specifically fo
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | Int | 1024 |  |
-| height | Int | 1024 |  |
-| batch_size | Int | 1 |  |
+| Parameter  | Type | Default | Description |
+| ---------- | ---- | ------- | ----------- |
+| width      | Int  | 1024    |             |
+| height     | Int  | 1024    |             |
+| batch_size | Int  | 1       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, width, height, batch_size=1) -> io.NodeOutput:

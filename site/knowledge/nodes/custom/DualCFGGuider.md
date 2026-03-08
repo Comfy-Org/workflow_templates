@@ -12,22 +12,23 @@ The DualCFGGuider node creates a guidance system for dual classifier-free guidan
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| cond1 | Conditioning | — |  |
-| cond2 | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| cfg_conds | Float | 8.0 |  |
-| cfg_cond2_negative | Float | 8.0 |  |
-| style | Combo | — |  |
+| Parameter          | Type         | Default | Description |
+| ------------------ | ------------ | ------- | ----------- |
+| model              | Model        | —       |             |
+| cond1              | Conditioning | —       |             |
+| cond2              | Conditioning | —       |             |
+| negative           | Conditioning | —       |             |
+| cfg_conds          | Float        | 8.0     |             |
+| cfg_cond2_negative | Float        | 8.0     |             |
+| style              | Combo        | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, model, cond1, cond2, negative, cfg_conds, cfg_cond2_negative, style) -> io.NodeOutput:

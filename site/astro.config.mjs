@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
+import vue from '@astrojs/vue';
+
 // Build template date lookup at config time
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const templateDates = new Map();
@@ -117,6 +119,7 @@ export default defineConfig({
       // Exclude OG image routes from sitemap
       filter: (page) => !page.includes('/templates/og/'),
     }),
+    vue(),
   ],
   output: 'static',
   adapter: vercel({

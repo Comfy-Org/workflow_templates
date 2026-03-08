@@ -12,15 +12,15 @@ The WanMoveTracksFromCoords node creates a set of motion tracks from a list of c
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| track_coords | String | [] |  |
-| track_mask | Mask | — |  |
+| Parameter    | Type   | Default | Description |
+| ------------ | ------ | ------- | ----------- |
+| track_coords | String | []      |             |
+| track_mask   | Mask   | —       |             |
 
 ## Outputs
 
-| Output | Type |
-|--------|------|
+| Output | Type   |
+| ------ | ------ |
 | Tracks | Tracks |
 
 **Source**: `comfy_extras/nodes_wanmove.py`

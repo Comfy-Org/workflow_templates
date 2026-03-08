@@ -10,17 +10,17 @@ The VoxelToMesh node converts 3D voxel data into mesh geometry using different a
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `voxel` | VOXEL | Yes | - | The input voxel data to convert to mesh geometry |
-| `algorithm` | COMBO | Yes | "surface net"<br>"basic" | The algorithm used for mesh conversion from voxel data |
-| `threshold` | FLOAT | Yes | -1.0 to 1.0 | The threshold value for surface extraction (default: 0.6) |
+| Parameter   | Data Type | Required | Range                    | Description                                               |
+| ----------- | --------- | -------- | ------------------------ | --------------------------------------------------------- |
+| `voxel`     | VOXEL     | Yes      | -                        | The input voxel data to convert to mesh geometry          |
+| `algorithm` | COMBO     | Yes      | "surface net"<br>"basic" | The algorithm used for mesh conversion from voxel data    |
+| `threshold` | FLOAT     | Yes      | -1.0 to 1.0              | The threshold value for surface extraction (default: 0.6) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `MESH` | MESH | The generated 3D mesh containing vertices and faces |
+| Output Name | Data Type | Description                                         |
+| ----------- | --------- | --------------------------------------------------- |
+| `MESH`      | MESH      | The generated 3D mesh containing vertices and faces |
 
 **Source**: `comfy_extras/nodes_hunyuan3d.py`
 

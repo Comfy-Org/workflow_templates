@@ -12,13 +12,13 @@ The Runway Image to Video (Gen4 Turbo) node generates a video from a single star
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `prompt` | STRING | Yes | - | Text prompt for the generation (default: empty string) |
-| `start_frame` | IMAGE | Yes | - | Start frame to be used for the video |
-| `duration` | COMBO | Yes | Multiple options available | Video duration selection from available duration options |
-| `ratio` | COMBO | Yes | Multiple options available | Aspect ratio selection from available Gen4 Turbo aspect ratio options |
-| `seed` | INT | No | 0 to 4294967295 | Random seed for generation (default: 0) |
+| Parameter     | Data Type | Required | Range                      | Description                                                           |
+| ------------- | --------- | -------- | -------------------------- | --------------------------------------------------------------------- |
+| `prompt`      | STRING    | Yes      | -                          | Text prompt for the generation (default: empty string)                |
+| `start_frame` | IMAGE     | Yes      | -                          | Start frame to be used for the video                                  |
+| `duration`    | COMBO     | Yes      | Multiple options available | Video duration selection from available duration options              |
+| `ratio`       | COMBO     | Yes      | Multiple options available | Aspect ratio selection from available Gen4 Turbo aspect ratio options |
+| `seed`        | INT       | No       | 0 to 4294967295            | Random seed for generation (default: 0)                               |
 
 **Parameter Constraints:**
 
@@ -28,9 +28,9 @@ The Runway Image to Video (Gen4 Turbo) node generates a video from a single star
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | VIDEO | The generated video based on the input frame and prompt |
+| Output Name | Data Type | Description                                             |
+| ----------- | --------- | ------------------------------------------------------- |
+| `output`    | VIDEO     | The generated video based on the input frame and prompt |
 
 **Source**: `comfy_api_nodes/nodes_runway.py`
 

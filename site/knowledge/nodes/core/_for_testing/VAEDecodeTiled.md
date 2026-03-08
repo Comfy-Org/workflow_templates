@@ -1,6 +1,6 @@
 # VAEDecodeTiled
 
-**Category**: _for_testing
+**Category**: \_for_testing
 
 ## Description
 
@@ -10,18 +10,18 @@ The VAEDecodeTiled node decodes latent representations into images using a tiled
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| tile_size | INT | 512 |  |
-| overlap | INT | 64 |  |
-| temporal_size | INT | 64 | Only used for video VAEs: Amount of frames to decode at a time. |
-| temporal_overlap | INT | 8 | Only used for video VAEs: Amount of frames to overlap. |
+| Parameter        | Type | Default | Description                                                     |
+| ---------------- | ---- | ------- | --------------------------------------------------------------- |
+| tile_size        | INT  | 512     |                                                                 |
+| overlap          | INT  | 64      |                                                                 |
+| temporal_size    | INT  | 64      | Only used for video VAEs: Amount of frames to decode at a time. |
+| temporal_overlap | INT  | 8       | Only used for video VAEs: Amount of frames to overlap.          |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| IMAGE | IMAGE |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| IMAGE  | IMAGE |             |
 
 **Source**: `nodes.py`
 

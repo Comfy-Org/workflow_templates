@@ -12,19 +12,20 @@ The LatentConcat node combines two latent samples along a specified dimension. I
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| samples1 | Latent | — |  |
-| samples2 | Latent | — |  |
-| dim | Combo | — |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| samples1  | Latent | —       |             |
+| samples2  | Latent | —       |             |
+| dim       | Combo  | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, samples1, samples2, dim) -> io.NodeOutput:

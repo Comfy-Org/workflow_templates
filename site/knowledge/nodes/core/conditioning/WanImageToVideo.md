@@ -12,25 +12,25 @@ The WanImageToVideo node prepares conditioning and latent representations for vi
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 81 |  |
-| batch_size | Int | 1 |  |
-| clip_vision_output | ClipVisionOutput | — |  |
-| start_image | Image | — |  |
+| Parameter          | Type             | Default | Description |
+| ------------------ | ---------------- | ------- | ----------- |
+| positive           | Conditioning     | —       |             |
+| negative           | Conditioning     | —       |             |
+| vae                | Vae              | —       |             |
+| width              | Int              | 832     |             |
+| height             | Int              | 480     |             |
+| length             | Int              | 81      |             |
+| batch_size         | Int              | 1       |             |
+| clip_vision_output | ClipVisionOutput | —       |             |
+| start_image        | Image            | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Modified positive conditioning with image and vision data incorporated |
-| `negative` | CONDITIONING | Modified negative conditioning with image and vision data incorporated |
-| `latent` | LATENT | Empty latent space tensor ready for video generation |
+| Output Name | Data Type    | Description                                                            |
+| ----------- | ------------ | ---------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Modified positive conditioning with image and vision data incorporated |
+| `negative`  | CONDITIONING | Modified negative conditioning with image and vision data incorporated |
+| `latent`    | LATENT       | Empty latent space tensor ready for video generation                   |
 
 **Source**: `comfy_extras/nodes_wan.py`
 

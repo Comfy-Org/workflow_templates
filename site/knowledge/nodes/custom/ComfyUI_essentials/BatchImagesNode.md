@@ -14,18 +14,19 @@ The Batch Images node combines multiple individual images into a single batch. I
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| image | Image | — |  |
-| images | Autogrow | — |  |
+| Parameter | Type     | Default | Description |
+| --------- | -------- | ------- | ----------- |
+| image     | Image    | —       |             |
+| images    | Autogrow | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )
-            ]
-        )
+]
+)
 
     @classmethod
     def execute(cls, images: io.Autogrow.Type) -> io.NodeOutput:

@@ -12,18 +12,19 @@ This node is designed for upscaling images using a specified upscale model. It e
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| upscale_model | UpscaleModel | — |  |
-| image | Image | — |  |
+| Parameter     | Type         | Default | Description |
+| ------------- | ------------ | ------- | ----------- |
+| upscale_model | UpscaleModel | —       |             |
+| image         | Image        | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, upscale_model, image) -> io.NodeOutput:

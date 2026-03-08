@@ -22,18 +22,19 @@ The final output is a black and white image, where white parts are detected edge
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| image | Image | — |  |
-| low_threshold | Float | 0.4 |  |
-| high_threshold | Float | 0.8 |  |
+| Parameter      | Type  | Default | Description |
+| -------------- | ----- | ------- | ----------- |
+| image          | Image | —       |             |
+| low_threshold  | Float | 0.4     |             |
+| high_threshold | Float | 0.8     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def detect_edge(cls, image, low_threshold, high_threshold):

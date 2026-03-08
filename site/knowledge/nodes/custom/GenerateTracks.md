@@ -14,27 +14,27 @@ The `GenerateTracks` node creates multiple parallel motion paths for video gener
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| start_x | Float | 0.0 |  |
-| start_y | Float | 0.0 |  |
-| end_x | Float | 1.0 |  |
-| end_y | Float | 1.0 |  |
-| num_frames | Int | 81 |  |
-| num_tracks | Int | 5 |  |
-| track_spread | Float | 0.025 | Normalized distance between tracks. Tracks are spread perpendicular to the motion direction. |
-| bezier | Boolean | False | Enable Bezier curve path using the mid point as control point. |
-| mid_x | Float | 0.5 | Normalized X control point for Bezier curve. Only used when 'bezier' is enabled. |
-| mid_y | Float | 0.5 | Normalized Y control point for Bezier curve. Only used when 'bezier' is enabled. |
-| interpolation | Combo | — | Controls the timing/speed of movement along the path. |
-| track_mask | Mask | — | Optional mask to indicate visible frames. |
+| Parameter     | Type    | Default | Description                                                                                  |
+| ------------- | ------- | ------- | -------------------------------------------------------------------------------------------- |
+| width         | Int     | 832     |                                                                                              |
+| height        | Int     | 480     |                                                                                              |
+| start_x       | Float   | 0.0     |                                                                                              |
+| start_y       | Float   | 0.0     |                                                                                              |
+| end_x         | Float   | 1.0     |                                                                                              |
+| end_y         | Float   | 1.0     |                                                                                              |
+| num_frames    | Int     | 81      |                                                                                              |
+| num_tracks    | Int     | 5       |                                                                                              |
+| track_spread  | Float   | 0.025   | Normalized distance between tracks. Tracks are spread perpendicular to the motion direction. |
+| bezier        | Boolean | False   | Enable Bezier curve path using the mid point as control point.                               |
+| mid_x         | Float   | 0.5     | Normalized X control point for Bezier curve. Only used when 'bezier' is enabled.             |
+| mid_y         | Float   | 0.5     | Normalized Y control point for Bezier curve. Only used when 'bezier' is enabled.             |
+| interpolation | Combo   | —       | Controls the timing/speed of movement along the path.                                        |
+| track_mask    | Mask    | —       | Optional mask to indicate visible frames.                                                    |
 
 ## Outputs
 
-| Output | Type |
-|--------|------|
+| Output | Type   |
+| ------ | ------ |
 | Tracks | Tracks |
 
 **Source**: `comfy_extras/nodes_wanmove.py`

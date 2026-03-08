@@ -12,17 +12,18 @@ The EmptyAceStepLatentAudio node creates empty latent audio samples of a specifi
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| seconds | Float | 120.0 |  |
-| batch_size | Int | 1 | The number of latent images in the batch. |
+| Parameter  | Type  | Default | Description                               |
+| ---------- | ----- | ------- | ----------------------------------------- |
+| seconds    | Float | 120.0   |                                           |
+| batch_size | Int   | 1       | The number of latent images in the batch. |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, seconds, batch_size) -> io.NodeOutput:

@@ -12,27 +12,27 @@ The WanSoundImageToVideo node generates video content from images with optional 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 77 |  |
-| batch_size | Int | 1 |  |
-| audio_encoder_output | AudioEncoderOutput | — |  |
-| ref_image | Image | — |  |
-| control_video | Image | — |  |
-| ref_motion | Image | — |  |
+| Parameter            | Type               | Default | Description |
+| -------------------- | ------------------ | ------- | ----------- |
+| positive             | Conditioning       | —       |             |
+| negative             | Conditioning       | —       |             |
+| vae                  | Vae                | —       |             |
+| width                | Int                | 832     |             |
+| height               | Int                | 480     |             |
+| length               | Int                | 77      |             |
+| batch_size           | Int                | 1       |             |
+| audio_encoder_output | AudioEncoderOutput | —       |             |
+| ref_image            | Image              | —       |             |
+| control_video        | Image              | —       |             |
+| ref_motion           | Image              | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Processed positive conditioning that has been modified for video generation |
-| `negative` | CONDITIONING | Processed negative conditioning that has been modified for video generation |
-| `latent` | LATENT | Generated video representation in latent space that can be decoded into final video frames |
+| Output Name | Data Type    | Description                                                                                |
+| ----------- | ------------ | ------------------------------------------------------------------------------------------ |
+| `positive`  | CONDITIONING | Processed positive conditioning that has been modified for video generation                |
+| `negative`  | CONDITIONING | Processed negative conditioning that has been modified for video generation                |
+| `latent`    | LATENT       | Generated video representation in latent space that can be decoded into final video frames |
 
 **Source**: `comfy_extras/nodes_wan.py`
 

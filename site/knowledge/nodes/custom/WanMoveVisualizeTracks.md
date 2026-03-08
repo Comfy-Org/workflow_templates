@@ -10,22 +10,23 @@ The WanMoveVisualizeTracks node overlays motion tracking data onto a sequence of
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| images | Image | — |  |
-| tracks | Tracks | — |  |
-| line_resolution | Int | 24 |  |
-| circle_size | Int | 12 |  |
-| opacity | Float | 0.75 |  |
-| line_width | Int | 16 |  |
+| Parameter       | Type   | Default | Description |
+| --------------- | ------ | ------- | ----------- |
+| images          | Image  | —       |             |
+| tracks          | Tracks | —       |             |
+| line_resolution | Int    | 24      |             |
+| circle_size     | Int    | 12      |             |
+| opacity         | Float  | 0.75    |             |
+| line_width      | Int    | 16      |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, images, line_resolution, circle_size, opacity, line_width, tracks=None) -> io.NodeOutput:

@@ -12,8 +12,10 @@ export interface TemplateInfo {
   requiresCustomNodes?: string[];
   tutorialUrl?: string;
   usage?: number;
+  username?: string;
   size?: number;
   vram?: number;
+  isApp?: boolean;
 }
 
 export interface TemplateCategory {

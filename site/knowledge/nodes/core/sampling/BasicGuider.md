@@ -10,17 +10,18 @@ The BasicGuider node creates a simple guidance mechanism for the sampling proces
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| conditioning | Conditioning | — |  |
+| Parameter    | Type         | Default | Description |
+| ------------ | ------------ | ------- | ----------- |
+| model        | Model        | —       |             |
+| conditioning | Conditioning | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, model, conditioning) -> io.NodeOutput:

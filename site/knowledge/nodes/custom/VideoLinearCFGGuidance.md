@@ -8,15 +8,15 @@ The VideoLinearCFGGuidance node applies a linear conditioning guidance scale to 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| min_cfg | FLOAT | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| min_cfg   | FLOAT | 1.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| MODEL  | MODEL |             |
 
 **Source**: `comfy_extras/nodes_video_model.py`
 

@@ -171,7 +171,9 @@ test.describe('Thumbnail Loading', () => {
   test('template cards have thumbnail images', async ({ page }) => {
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
-    const thumbnailImages = page.locator('main a[data-astro-prefetch] img[src^="/templates/thumbnails/"]');
+    const thumbnailImages = page.locator(
+      'main a[data-astro-prefetch] img[src^="/templates/thumbnails/"]'
+    );
     const count = await thumbnailImages.count();
     expect(count).toBeGreaterThan(0);
   });

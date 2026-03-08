@@ -10,16 +10,17 @@ The RandomNoise node generates random noise patterns based on a seed value. It c
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| noise_seed | Int | 0 |  |
+| Parameter  | Type | Default | Description |
+| ---------- | ---- | ------- | ----------- |
+| noise_seed | Int  | 0       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, noise_seed) -> io.NodeOutput:

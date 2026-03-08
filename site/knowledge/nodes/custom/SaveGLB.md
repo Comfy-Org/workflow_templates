@@ -14,16 +14,16 @@ The SaveGLB node saves 3D mesh data as GLB files, which is a common format for 3
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `mesh` | MESH | Yes | - | The 3D mesh data to be saved as a GLB file |
-| `filename_prefix` | STRING | No | - | The prefix for the output filename (default: "mesh/ComfyUI") |
+| Parameter         | Data Type | Required | Range | Description                                                  |
+| ----------------- | --------- | -------- | ----- | ------------------------------------------------------------ |
+| `mesh`            | MESH      | Yes      | -     | The 3D mesh data to be saved as a GLB file                   |
+| `filename_prefix` | STRING    | No       | -     | The prefix for the output filename (default: "mesh/ComfyUI") |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `ui` | UI | Displays the saved GLB files in the user interface with filename and subfolder information |
+| Output Name | Data Type | Description                                                                                |
+| ----------- | --------- | ------------------------------------------------------------------------------------------ |
+| `ui`        | UI        | Displays the saved GLB files in the user interface with filename and subfolder information |
 
 **Source**: `comfy_extras/nodes_hunyuan3d.py`
 

@@ -14,18 +14,18 @@ The VAEEncodeAudio node converts audio data into a latent representation using a
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `audio` | AUDIO | Yes | - | The audio data to encode, containing waveform and sample rate information |
-| `vae` | VAE | Yes | - | The Variational Autoencoder model used to encode the audio into latent space |
+| Parameter | Data Type | Required | Range | Description                                                                  |
+| --------- | --------- | -------- | ----- | ---------------------------------------------------------------------------- |
+| `audio`   | AUDIO     | Yes      | -     | The audio data to encode, containing waveform and sample rate information    |
+| `vae`     | VAE       | Yes      | -     | The Variational Autoencoder model used to encode the audio into latent space |
 
 **Note:** The audio input is automatically resampled to 44100 Hz if the original sample rate differs from this value.
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `LATENT` | LATENT | The encoded audio representation in latent space, containing compressed samples |
+| Output Name | Data Type | Description                                                                     |
+| ----------- | --------- | ------------------------------------------------------------------------------- |
+| `LATENT`    | LATENT    | The encoded audio representation in latent space, containing compressed samples |
 
 **Source**: `comfy_extras/nodes_audio.py`
 

@@ -10,15 +10,15 @@ The ModelPatchLoader node loads specialized model patches from the model_patches
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `name` | STRING | Yes | All available model patch files from model_patches folder | The filename of the model patch to load from the model_patches directory |
+| Parameter | Data Type | Required | Range                                                     | Description                                                              |
+| --------- | --------- | -------- | --------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `name`    | STRING    | Yes      | All available model patch files from model_patches folder | The filename of the model patch to load from the model_patches directory |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL_PATCH | MODEL_PATCH |  |
+| Output      | Type        | Description |
+| ----------- | ----------- | ----------- |
+| MODEL_PATCH | MODEL_PATCH |             |
 
 **Source**: `comfy_extras/nodes_model_patch.py`
 

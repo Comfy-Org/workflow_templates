@@ -12,18 +12,18 @@ The Rodin 3D Smooth node generates 3D assets using the Rodin API by processing i
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `Images` | IMAGE | Yes | - | Input images to use for 3D model generation |
-| `Seed` | INT | Yes | - | Random seed value for generation consistency |
-| `Material_Type` | STRING | Yes | - | Type of material to apply to the 3D model |
-| `Polygon_count` | STRING | Yes | - | Target polygon count for the generated 3D model |
+| Parameter       | Data Type | Required | Range | Description                                     |
+| --------------- | --------- | -------- | ----- | ----------------------------------------------- |
+| `Images`        | IMAGE     | Yes      | -     | Input images to use for 3D model generation     |
+| `Seed`          | INT       | Yes      | -     | Random seed value for generation consistency    |
+| `Material_Type` | STRING    | Yes      | -     | Type of material to apply to the 3D model       |
+| `Polygon_count` | STRING    | Yes      | -     | Target polygon count for the generated 3D model |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `3D Model Path` | STRING | File path to the downloaded 3D model |
+| Output Name     | Data Type | Description                          |
+| --------------- | --------- | ------------------------------------ |
+| `3D Model Path` | STRING    | File path to the downloaded 3D model |
 
 **Source**: `comfy_api_nodes/nodes_rodin.py`
 

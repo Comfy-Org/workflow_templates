@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | controlnet_scribble |
-| Title | ControlNet Scribble Guide |
+| Field       | Value                                                                                    |
+| ----------- | ---------------------------------------------------------------------------------------- |
+| Name        | controlnet_scribble                                                                      |
+| Title       | ControlNet Scribble Guide                                                                |
 | Description | Generate images from rough sketches using ControlNet scribble model for precise control. |
-| Media Type | image |
-| Tags | ControlNet, Image |
-| Models | Stable Diffusion, ControlNet v1.1 |
+| Media Type  | image                                                                                    |
+| Tags        | ControlNet, Image                                                                        |
+| Models      | Stable Diffusion, ControlNet v1.1                                                        |
 
 ## OUTPUT: Generated Content
 

@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | flux_2_dev |
-| Title | Flux.2 Dev Text to Image |
+| Field       | Value                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| Name        | flux_2_dev                                                                                          |
+| Title       | Flux.2 Dev Text to Image                                                                            |
 | Description | Next-gen image model with 4MP output, multi-reference consistency, and professional text rendering. |
-| Media Type | image |
-| Tags | Text to Image, Image |
-| Models | Flux.2, BFL |
+| Media Type  | image                                                                                               |
+| Tags        | Text to Image, Image                                                                                |
+| Models      | Flux.2, BFL                                                                                         |
 
 ## OUTPUT: Generated Content
 

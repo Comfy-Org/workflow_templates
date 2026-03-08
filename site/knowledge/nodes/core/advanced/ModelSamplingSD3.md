@@ -10,15 +10,15 @@ The ModelSamplingSD3 node applies Stable Diffusion 3 sampling parameters to a mo
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| shift | FLOAT | 3.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| shift     | FLOAT | 3.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| MODEL  | MODEL |             |
 
 **Source**: `comfy_extras/nodes_model_advanced.py`
 

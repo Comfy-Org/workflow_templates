@@ -14,23 +14,24 @@ The RegexReplace node finds and replaces text in strings using regular expressio
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| string | String | — |  |
-| regex_pattern | String | — |  |
-| replace | String | — |  |
-| case_insensitive | Boolean | True |  |
-| multiline | Boolean | False |  |
-| dotall | Boolean | False |  |
-| count | Int | 0 |  |
+| Parameter        | Type    | Default | Description |
+| ---------------- | ------- | ------- | ----------- |
+| string           | String  | —       |             |
+| regex_pattern    | String  | —       |             |
+| replace          | String  | —       |             |
+| case_insensitive | Boolean | True    |             |
+| multiline        | Boolean | False   |             |
+| dotall           | Boolean | False   |             |
+| count            | Int     | 0       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ]
-        )
+]
+)
 
     @classmethod
     def execute(cls, string, regex_pattern, replace, case_insensitive=True, multiline=False, dotall=False, count=0):

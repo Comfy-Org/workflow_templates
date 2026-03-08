@@ -12,16 +12,16 @@ The EmptyLatentAudio node creates empty latent tensors for audio processing. It 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `seconds` | FLOAT | Yes | 1.0 - 1000.0 | The duration of the audio in seconds (default: 47.6) |
-| `batch_size` | INT | Yes | 1 - 4096 | The number of latent images in the batch (default: 1) |
+| Parameter    | Data Type | Required | Range        | Description                                           |
+| ------------ | --------- | -------- | ------------ | ----------------------------------------------------- |
+| `seconds`    | FLOAT     | Yes      | 1.0 - 1000.0 | The duration of the audio in seconds (default: 47.6)  |
+| `batch_size` | INT       | Yes      | 1 - 4096     | The number of latent images in the batch (default: 1) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `LATENT` | LATENT | Returns an empty latent tensor for audio processing with specified duration and batch size |
+| Output Name | Data Type | Description                                                                                |
+| ----------- | --------- | ------------------------------------------------------------------------------------------ |
+| `LATENT`    | LATENT    | Returns an empty latent tensor for audio processing with specified duration and batch size |
 
 **Source**: `comfy_extras/nodes_audio.py`
 

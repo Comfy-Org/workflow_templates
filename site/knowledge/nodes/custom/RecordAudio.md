@@ -14,15 +14,15 @@ The RecordAudio node loads audio files that have been recorded or selected throu
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `audio` | AUDIO_RECORD | Yes | N/A | The audio recording input from the audio recording interface |
+| Parameter | Data Type    | Required | Range | Description                                                  |
+| --------- | ------------ | -------- | ----- | ------------------------------------------------------------ |
+| `audio`   | AUDIO_RECORD | Yes      | N/A   | The audio recording input from the audio recording interface |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `AUDIO` | AUDIO | The processed audio data containing waveform and sample rate information |
+| Output Name | Data Type | Description                                                              |
+| ----------- | --------- | ------------------------------------------------------------------------ |
+| `AUDIO`     | AUDIO     | The processed audio data containing waveform and sample rate information |
 
 **Source**: `comfy_extras/nodes_audio.py`
 

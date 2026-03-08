@@ -8,15 +8,15 @@ The ImageScaleBy node is designed for upscaling images by a specified scale fact
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| scale_by | FLOAT | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| scale_by  | FLOAT | 1.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| IMAGE | IMAGE |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| IMAGE  | IMAGE |             |
 
 **Source**: `nodes.py`
 

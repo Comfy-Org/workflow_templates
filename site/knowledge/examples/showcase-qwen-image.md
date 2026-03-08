@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | qwen_image |
-| Title | Qwen-Image Text to Image |
+| Field       | Value                                                                                               |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| Name        | qwen_image                                                                                          |
+| Title       | Qwen-Image Text to Image                                                                            |
 | Description | Generate high-quality images with excellent multilingual text rendering using Qwen-Image 20B model. |
-| Media Type | image |
-| Tags | Text to Image, Image |
-| Models | Qwen-Image |
+| Media Type  | image                                                                                               |
+| Tags        | Text to Image, Image                                                                                |
+| Models      | Qwen-Image                                                                                          |
 
 ## OUTPUT: Generated Content
 

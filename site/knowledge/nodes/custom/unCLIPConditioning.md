@@ -8,16 +8,16 @@ This node is designed to integrate CLIP vision outputs into the conditioning pro
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| strength | FLOAT | 1.0 |  |
-| noise_augmentation | FLOAT | 0.0 |  |
+| Parameter          | Type  | Default | Description |
+| ------------------ | ----- | ------- | ----------- |
+| strength           | FLOAT | 1.0     |             |
+| noise_augmentation | FLOAT | 0.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| CONDITIONING | CONDITIONING |  |
+| Output       | Type         | Description |
+| ------------ | ------------ | ----------- |
+| CONDITIONING | CONDITIONING |             |
 
 **Source**: `nodes.py`
 

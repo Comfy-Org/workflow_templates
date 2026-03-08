@@ -12,19 +12,19 @@ The WaveSpeed Image Upscale node uses an external AI service to increase the res
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `model` | STRING | Yes | `"SeedVR2"`<br>`"Ultimate"` | The AI model to use for upscaling. "SeedVR2" and "Ultimate" offer different quality and pricing tiers. |
-| `image` | IMAGE | Yes | | The input image to be upscaled. |
-| `target_resolution` | STRING | Yes | `"2K"`<br>`"4K"`<br>`"8K"` | The desired output resolution for the upscaled image. |
+| Parameter           | Data Type | Required | Range                       | Description                                                                                            |
+| ------------------- | --------- | -------- | --------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `model`             | STRING    | Yes      | `"SeedVR2"`<br>`"Ultimate"` | The AI model to use for upscaling. "SeedVR2" and "Ultimate" offer different quality and pricing tiers. |
+| `image`             | IMAGE     | Yes      |                             | The input image to be upscaled.                                                                        |
+| `target_resolution` | STRING    | Yes      | `"2K"`<br>`"4K"`<br>`"8K"`  | The desired output resolution for the upscaled image.                                                  |
 
 **Note:** This node requires exactly one input image. Providing a batch of images will result in an error.
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `image` | IMAGE | The upscaled, high-resolution output image. |
+| Output Name | Data Type | Description                                 |
+| ----------- | --------- | ------------------------------------------- |
+| `image`     | IMAGE     | The upscaled, high-resolution output image. |
 
 **Source**: `comfy_api_nodes/nodes_wavespeed.py`
 

@@ -12,17 +12,17 @@ This node allows you to select a style from Recraft's Infinite Style Library usi
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `style_id` | STRING | Yes | Any valid UUID | UUID of style from Infinite Style Library. |
+| Parameter  | Data Type | Required | Range          | Description                                |
+| ---------- | --------- | -------- | -------------- | ------------------------------------------ |
+| `style_id` | STRING    | Yes      | Any valid UUID | UUID of style from Infinite Style Library. |
 
 **Note:** The `style_id` input cannot be empty. If an empty string is provided, the node will raise an exception.
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `recraft_style` | STYLEV3 | The selected style object from Recraft's Infinite Style Library |
+| Output Name     | Data Type | Description                                                     |
+| --------------- | --------- | --------------------------------------------------------------- |
+| `recraft_style` | STYLEV3   | The selected style object from Recraft's Infinite Style Library |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

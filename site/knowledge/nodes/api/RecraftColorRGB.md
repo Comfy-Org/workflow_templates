@@ -12,18 +12,18 @@ Create Recraft Color by choosing specific RGB values. This node allows you to de
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `r` | INT | Yes | 0-255 | Red value of color (default: 0) |
-| `g` | INT | Yes | 0-255 | Green value of color (default: 0) |
-| `b` | INT | Yes | 0-255 | Blue value of color (default: 0) |
-| `recraft_color` | COLOR | No | - | Optional existing Recraft color to extend |
+| Parameter       | Data Type | Required | Range | Description                               |
+| --------------- | --------- | -------- | ----- | ----------------------------------------- |
+| `r`             | INT       | Yes      | 0-255 | Red value of color (default: 0)           |
+| `g`             | INT       | Yes      | 0-255 | Green value of color (default: 0)         |
+| `b`             | INT       | Yes      | 0-255 | Blue value of color (default: 0)          |
+| `recraft_color` | COLOR     | No       | -     | Optional existing Recraft color to extend |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `recraft_color` | COLOR | The created Recraft color object containing the specified RGB values |
+| Output Name     | Data Type | Description                                                          |
+| --------------- | --------- | -------------------------------------------------------------------- |
+| `recraft_color` | COLOR     | The created Recraft color object containing the specified RGB values |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

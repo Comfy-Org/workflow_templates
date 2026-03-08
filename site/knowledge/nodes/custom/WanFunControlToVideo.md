@@ -18,26 +18,26 @@ The node's position in the ComfyUI node hierarchy indicates that it operates in 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 81 |  |
-| batch_size | Int | 1 |  |
-| clip_vision_output | ClipVisionOutput | — |  |
-| start_image | Image | — |  |
-| control_video | Image | — |  |
+| Parameter          | Type             | Default | Description |
+| ------------------ | ---------------- | ------- | ----------- |
+| positive           | Conditioning     | —       |             |
+| negative           | Conditioning     | —       |             |
+| vae                | Vae              | —       |             |
+| width              | Int              | 832     |             |
+| height             | Int              | 480     |             |
+| length             | Int              | 81      |             |
+| batch_size         | Int              | 1       |             |
+| clip_vision_output | ClipVisionOutput | —       |             |
+| start_image        | Image            | —       |             |
+| control_video      | Image            | —       |             |
 
 ## Outputs
 
-| Parameter Name      | Data Type           | Description                                                  |
-|:-------------------|:-------------------|:-------------------------------------------------------------|
-| positive           | CONDITIONING       | Provides enhanced positive conditioning data, including encoded start_image and control_video. |
-| negative           | CONDITIONING       | Provides negative conditioning data that has also been enhanced, containing the same concat_latent_image. |
-| latent             | LATENT             | A dictionary containing an empty latent tensor with the key "samples". |
+| Parameter Name | Data Type    | Description                                                                                               |
+| :------------- | :----------- | :-------------------------------------------------------------------------------------------------------- |
+| positive       | CONDITIONING | Provides enhanced positive conditioning data, including encoded start_image and control_video.            |
+| negative       | CONDITIONING | Provides negative conditioning data that has also been enhanced, containing the same concat_latent_image. |
+| latent         | LATENT       | A dictionary containing an empty latent tensor with the key "samples".                                    |
 
 **Source**: `comfy_extras/nodes_wan.py`
 
