@@ -265,8 +265,8 @@ When generating content, select appropriate template based on:
 
 ### URL Structure
 
-- English (default): `/templates/`, `/templates/{slug}/`
-- Other locales: `/{locale}/templates/`, `/{locale}/templates/{slug}/`
+- English (default): `/workflows/`, `/workflows/{slug}/`
+- Other locales: `/{locale}/workflows/`, `/{locale}/workflows/{slug}/`
 
 ### Key i18n Files
 
@@ -281,7 +281,7 @@ When generating content, select appropriate template based on:
 1. Source data: `../templates/index.{lang}.json` (12 files)
 2. Sync script reads all locale files and writes to `src/content/templates/`
 3. English templates at root, localized at `src/content/templates/{locale}/`
-4. Pages generated at `/{locale}/templates/` via `[locale]/templates/` routes
+4. Pages generated at `/{locale}/workflows/` via `[locale]/templates/` routes
 
 ## Environment Variables
 

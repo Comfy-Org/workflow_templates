@@ -85,24 +85,24 @@ const logoPath = computed(() => (providerName.value ? getLogoPath(providerName.v
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
 const templateUrl = computed(() => {
-  const base = `/templates/${props.name}/`;
+  const base = `/workflows/${props.name}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 
 const primaryThumb = computed(() =>
-  props.thumbnails.length > 0 ? `/templates/thumbnails/${props.thumbnails[0]}` : null
+  props.thumbnails.length > 0 ? `/workflows/thumbnails/${props.thumbnails[0]}` : null
 );
 
 const displayTags = computed(() => props.tags.slice(0, 3));
 
 function getTagUrl(tag: string): string {
-  const base = `/templates/tag/${slugify(tag)}/`;
+  const base = `/workflows/tag/${slugify(tag)}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 }
 
 const creatorUrl = computed(() => {
   if (!props.username) return null;
-  const base = `/templates/${props.username}/`;
+  const base = `/workflows/${props.username}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 </script>

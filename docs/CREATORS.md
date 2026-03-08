@@ -85,9 +85,9 @@ templates/index.json (username field)
 
 ## URL Structure
 
-- `/templates/` — Hub page with all templates (creator shown on each card)
-- `/templates/{username}/` — Creator profile page (e.g. `/templates/hellorob/`)
-- `/templates/{template-name}/` — Individual template detail page
+- `/workflows/` — Hub page with all templates (creator shown on each card)
+- `/workflows/{username}/` — Creator profile page (e.g. `/workflows/hellorob/`)
+- `/workflows/{template-name}/` — Individual template detail page
 
 Profile pages are statically generated from `creators.json` keys via `getStaticPaths()` in `[username].astro`.
 
@@ -141,7 +141,7 @@ Groups templates by `username`, excludes `"ComfyUI"`, sorts by total usage. Requ
 
 3. Run `pnpm run sync` in `site/` to propagate changes
 
-4. A profile page at `/templates/newuser/` is automatically generated
+4. A profile page at `/workflows/newuser/` is automatically generated
 
 ## Key Files
 

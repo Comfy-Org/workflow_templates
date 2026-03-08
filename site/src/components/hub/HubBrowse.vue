@@ -162,7 +162,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
       >
         <!-- Top Creators link -->
         <div>
-          <a href="/templates/creators/">
+          <a href="/workflows/creators/">
             <Button variant="pill-outline" size="pill" class="justify-center">
               Top Creators
               <svg
@@ -270,7 +270,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
       <div class="flex-1 overflow-y-auto px-5 py-6 space-y-8">
         <!-- Top Creators link -->
         <div>
-          <a href="/templates/creators/">
+          <a href="/workflows/creators/">
             <Button variant="pill-outline" size="pill" class="w-full justify-center">
               Top Creators
               <svg

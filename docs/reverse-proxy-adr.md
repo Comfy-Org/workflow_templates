@@ -15,7 +15,7 @@ The Comfy Org operates two web properties:
 - **Marketing site** (Framer): comfy.org — landing pages, pricing, about, blog
 - **Templates site** (Astro on Vercel): workflow-templates.vercel.app — 200+ ComfyUI workflow templates in 11 languages
 
-The templates site needs to be served at `comfy.org/templates/` to:
+The templates site needs to be served at `comfy.org/workflows/` to:
 
 1. Inherit domain authority from comfy.org for SEO
 2. Present a unified experience to users
@@ -27,8 +27,8 @@ Use a **Cloudflare Worker** ([`Comfy-Org/comfy-router`](https://github.com/Comfy
 
 ```
 User → Cloudflare Edge (Worker)
-  ├─ /templates/*           → Vercel (Astro static site)
-  ├─ /{locale}/templates/*  → Vercel (i18n, 11 locales)
+  ├─ /workflows/*           → Vercel (Astro static site)
+  ├─ /{locale}/workflows/*  → Vercel (i18n, 11 locales)
   ├─ /_astro/*, static assets → Vercel
   └─ /* (everything else)   → Framer (marketing site)
 ```

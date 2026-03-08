@@ -228,8 +228,8 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
 
 function getTemplateUrl(name: string): string {
   return props.locale && props.locale !== 'en'
-    ? `/${props.locale}/templates/${name}/`
-    : `/templates/${name}/`;
+    ? `/${props.locale}/workflows/${name}/`
+    : `/workflows/${name}/`;
 }
 
 // React to search focus requests from other components (e.g. HubBrowse sidebar)
@@ -379,8 +379,8 @@ function activateItem(index: number) {
       if (creator) {
         const url =
           props.locale && props.locale !== 'en'
-            ? `/${props.locale}/templates/${creator.username}/`
-            : `/templates/${creator.username}/`;
+            ? `/${props.locale}/workflows/${creator.username}/`
+            : `/workflows/${creator.username}/`;
         window.location.href = url;
       }
     } else if (index < popCount + creatorCount + tagCount) {
@@ -461,7 +461,7 @@ function formatUsage(usage: number): string {
 }
 
 function getPrimaryThumb(thumbnails: string[]): string | null {
-  return thumbnails.length > 0 ? `/templates/thumbnails/${thumbnails[0]}` : null;
+  return thumbnails.length > 0 ? `/workflows/thumbnails/${thumbnails[0]}` : null;
 }
 
 function handleFocus() {
@@ -718,8 +718,8 @@ onUnmounted(() => {
                   :key="creator.username"
                   :href="
                     locale && locale !== 'en'
-                      ? `/${locale}/templates/${creator.username}/`
-                      : `/templates/${creator.username}/`
+                      ? `/${locale}/workflows/${creator.username}/`
+                      : `/workflows/${creator.username}/`
                   "
                   :data-nav-index="discCreatorOffset + i"
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
@@ -943,7 +943,7 @@ onUnmounted(() => {
                   <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
                     <img
                       v-if="hit.thumbnail"
-                      :src="`/templates/thumbnails/${hit.thumbnail}`"
+                      :src="`/workflows/thumbnails/${hit.thumbnail}`"
                       :alt="hit.title"
                       loading="lazy"
                       class="w-full h-full object-cover"
