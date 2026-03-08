@@ -14,18 +14,18 @@ The SaveVideo node saves input video content to your ComfyUI output directory. I
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| video | Video | — | The video to save. |
+| Parameter       | Type   | Default       | Description                                                                                                                                                    |
+| --------------- | ------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| video           | Video  | —             | The video to save.                                                                                                                                             |
 | filename_prefix | String | video/ComfyUI | The prefix for the file to save. This may include formatting information such as %date:yyyy-MM-dd% or %Empty Latent Image.width% to include values from nodes. |
-| format | Combo | — |  |
-| codec | Combo | — |  |
+| format          | Combo  | —             |                                                                                                                                                                |
+| codec           | Combo  | —             |                                                                                                                                                                |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| *No outputs* | - | This node does not return any output data. |
+| Output Name  | Data Type | Description                                |
+| ------------ | --------- | ------------------------------------------ |
+| _No outputs_ | -         | This node does not return any output data. |
 
 **Source**: `comfy_extras/nodes_video.py`
 

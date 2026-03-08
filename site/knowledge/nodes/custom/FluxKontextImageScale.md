@@ -8,17 +8,18 @@ This node scales the input image to an optimal size used during Flux Kontext mod
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| image | Image | — |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| image     | Image | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, image) -> io.NodeOutput:

@@ -12,17 +12,18 @@ The LatentUpscaleModelLoader node loads a specialized model designed for upscali
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model_name | Combo | — |  |
+| Parameter  | Type  | Default | Description |
+| ---------- | ----- | ------- | ----------- |
+| model_name | Combo | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, model_name | LatentUpscaleModel |

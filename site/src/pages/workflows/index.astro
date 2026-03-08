@@ -1,0 +1,73 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HubNavbar from '../../components/hub/HubNavbar.astro';
+import HubHero from '../../components/hub/HubHero.astro';
+import HubBrowse from '../../components/hub/HubBrowse.vue';
+import SiteFooter from '../../components/hub/SiteFooter.astro';
+import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
+import { absoluteUrl } from '../../config/site';
+import creatorsData from '../../../creators.json';
+
+const creators = creatorsData as Record<string, { displayName: string }>;
+const locale = getLocaleFromPath(Astro.url.pathname);
+const templates = await getCollection('templates');
+const allTemplates = templates
+  .filter((tmpl) => !tmpl.id.includes('/'))
+  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+
+const canonicalUrl = absoluteUrl(localizeUrl('/workflows/', locale));
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: t('meta.title', locale),
+  description: t('meta.description', locale),
+  url: canonicalUrl,
+};
+
+// Serialize template data for the Vue island (plain objects only)
+const serialized = allTemplates.map((tmpl) => ({
+  name: tmpl.data.name,
+  title: tmpl.data.title || tmpl.data.name,
+  description: tmpl.data.description || '',
+  mediaType: tmpl.data.mediaType,
+  tags: tmpl.data.tags || [],
+  models: tmpl.data.models || [],
+  logos: tmpl.data.logos || [],
+  usage: tmpl.data.usage || 0,
+  date: tmpl.data.date || '',
+  thumbnails: tmpl.data.thumbnails || [],
+  username: tmpl.data.username || '',
+  creatorDisplayName:
+    (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
+  isApp: tmpl.data.isApp || false,
+}));
+
+const mediaTypes = ['image', 'video', 'audio', '3d'];
+---
+
+<BaseLayout
+  title={`${t('meta.title', locale)} - Free AI Generation Workflows`}
+  description={t('meta.description', locale)}
+  canonicalUrl={canonicalUrl}
+  ogImage="/og-default.png"
+  structuredData={structuredData}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar templates={serialized} />
+
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16">
+    <HubHero />
+
+    <!-- Interactive browse (Vue island) -->
+    <HubBrowse client:load templates={serialized} locale={locale} mediaTypes={mediaTypes} />
+  </div>
+
+  <!-- Custom Footer -->
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

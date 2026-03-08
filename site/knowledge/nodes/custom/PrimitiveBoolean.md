@@ -12,16 +12,17 @@ The Boolean node provides a simple way to pass boolean (true/false) values throu
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| value | Boolean | — |  |
+| Parameter | Type    | Default | Description |
+| --------- | ------- | ------- | ----------- |
+| value     | Boolean | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, value: bool) -> io.NodeOutput:

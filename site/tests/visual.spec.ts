@@ -11,7 +11,9 @@ test.describe('Visual Regression Tests', () => {
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
     // Mask animated video/image thumbnails that cause instability
-    const thumbnails = page.locator('main a[data-astro-prefetch] img, main a[data-astro-prefetch] video');
+    const thumbnails = page.locator(
+      'main a[data-astro-prefetch] img, main a[data-astro-prefetch] video'
+    );
     const masks = await thumbnails.all();
     await expect(page).toHaveScreenshot('templates-listing.png', {
       mask: masks,
@@ -59,7 +61,9 @@ test.describe('Visual Regression Tests', () => {
       if (response?.ok()) {
         await page.waitForLoadState('networkidle');
         // Mask animated thumbnails
-        const thumbnails = page.locator('main a[data-astro-prefetch] img, main a[data-astro-prefetch] video');
+        const thumbnails = page.locator(
+          'main a[data-astro-prefetch] img, main a[data-astro-prefetch] video'
+        );
         const masks = await thumbnails.all();
         await expect(page).toHaveScreenshot('category.png', {
           mask: masks,
@@ -77,7 +81,9 @@ test.describe('Visual Regression Tests', () => {
     if (href) {
       await page.goto(href);
       await page.waitForLoadState('networkidle');
-      const thumbnails = page.locator('main a[data-astro-prefetch] img, main a[data-astro-prefetch] video');
+      const thumbnails = page.locator(
+        'main a[data-astro-prefetch] img, main a[data-astro-prefetch] video'
+      );
       const masks = await thumbnails.all();
       await expect(page).toHaveScreenshot('category.png', {
         mask: masks,

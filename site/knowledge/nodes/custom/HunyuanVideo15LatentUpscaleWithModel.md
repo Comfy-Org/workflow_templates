@@ -12,22 +12,23 @@ The Hunyuan Video 15 Latent Upscale With Model node increases the resolution of 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | LatentUpscaleModel | — |  |
-| samples | Latent | — |  |
-| upscale_method | Combo | bilinear |  |
-| width | Int | 1280 |  |
-| height | Int | 720 |  |
-| crop | Combo | — |  |
+| Parameter      | Type               | Default  | Description |
+| -------------- | ------------------ | -------- | ----------- |
+| model          | LatentUpscaleModel | —        |             |
+| samples        | Latent             | —        |             |
+| upscale_method | Combo              | bilinear |             |
+| width          | Int                | 1280     |             |
+| height         | Int                | 720      |             |
+| crop           | Combo              | —        |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, model, samples, upscale_method, width, height, crop) -> io.NodeOutput:

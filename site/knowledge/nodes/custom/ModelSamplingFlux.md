@@ -10,18 +10,18 @@ The ModelSamplingFlux node applies Flux model sampling to a given model by calcu
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| max_shift | FLOAT | 1.15 |  |
-| base_shift | FLOAT | 0.5 |  |
-| width | INT | 1024 |  |
-| height | INT | 1024 |  |
+| Parameter  | Type  | Default | Description |
+| ---------- | ----- | ------- | ----------- |
+| max_shift  | FLOAT | 1.15    |             |
+| base_shift | FLOAT | 0.5     |             |
+| width      | INT   | 1024    |             |
+| height     | INT   | 1024    |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| MODEL | MODEL |  |
+| Output | Type  | Description |
+| ------ | ----- | ----------- |
+| MODEL  | MODEL |             |
 
 **Source**: `comfy_extras/nodes_model_advanced.py`
 

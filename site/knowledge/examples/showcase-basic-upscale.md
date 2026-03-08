@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | basic_upscale |
-| Title | Image Upscaling with ESRGAN |
+| Field       | Value                                                                                   |
+| ----------- | --------------------------------------------------------------------------------------- |
+| Name        | basic_upscale                                                                           |
+| Title       | Image Upscaling with ESRGAN                                                             |
 | Description | Convert low-resolution images to high-resolution using AI upscaling models like ESRGAN. |
-| Media Type | image |
-| Tags | Upscale, Image |
-| Models | ESRGAN |
+| Media Type  | image                                                                                   |
+| Tags        | Upscale, Image                                                                          |
+| Models      | ESRGAN                                                                                  |
 
 ## OUTPUT: Generated Content
 

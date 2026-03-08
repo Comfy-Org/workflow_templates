@@ -1,0 +1,148 @@
+---
+/**
+ * Localized template detail page
+ * Generates pages like /zh/workflows/flux_schnell/, /ja/workflows/flux_schnell/, etc.
+ */
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
+import TemplateDetailPage from '../../../components/template-detail/TemplateDetailPage.astro';
+import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { t } from '../../../i18n/ui';
+import { getTemplatesForLocale } from '../../../lib/templates';
+import { absoluteUrl } from '../../../config/site';
+
+export async function getStaticPaths() {
+  const paths: {
+    params: { locale: string; slug: string };
+    props: { locale: Locale; templateName: string };
+  }[] = [];
+
+  // Get all English templates (the source of truth for template names)
+  const enTemplates = await getCollection('templates');
+  const templateNames = enTemplates.filter((t) => !t.id.includes('/')).map((t) => t.data.name);
+
+  // Generate paths for all non-default locales
+  for (const locale of LOCALES) {
+    if (locale === DEFAULT_LOCALE) continue;
+
+    for (const templateName of templateNames) {
+      paths.push({
+        params: { locale, slug: templateName },
+        props: { locale: locale as Locale, templateName },
+      });
+    }
+  }
+
+  return paths;
+}
+
+const { locale, templateName } = Astro.props as { locale: Locale; templateName: string };
+
+// Get templates for this locale
+const templates = await getTemplatesForLocale(locale);
+const template = templates.find((t) => t.data.name === templateName);
+
+if (!template) {
+  return Astro.redirect(`/${locale}/workflows/`);
+}
+
+const { data } = template;
+
+const title = `${data.title || data.name} - ComfyUI`;
+const canonicalUrl = absoluteUrl('/' + locale + '/workflows/' + data.name + '/');
+
+const thumbnails = data.thumbnails || [];
+const primaryThumbnail = thumbnails[0] || null;
+const ogImage = primaryThumbnail
+  ? `/workflows/thumbnails/${primaryThumbnail}`
+  : `/workflows/og/${data.name}.png`;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: data.title || data.name,
+  description: data.description,
+  image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
+  datePublished: data.date,
+  inLanguage: locale,
+};
+
+const faqStructuredData = data.faqItems?.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: data.faqItems.map((item: { question: string; answer: string }) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    }
+  : null;
+
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/' + locale + '/') },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: t('nav.templates', locale),
+      item: absoluteUrl('/' + locale + '/workflows/'),
+    },
+    { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
+  ],
+};
+
+const softwareAppStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: data.title || data.name,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Windows, macOS, Linux',
+  description: data.metaDescription || data.description,
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+};
+---
+
+<BaseLayout
+  title={title}
+  description={data.metaDescription || data.description}
+  canonicalUrl={canonicalUrl}
+  ogImage={ogImage}
+  ogType="article"
+  structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath={`/workflows/${data.name}/`}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <TemplateDetailPage template={{ data }} locale={locale} />
+
+  {
+    faqStructuredData && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+    )
+  }
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(softwareAppStructuredData)}
+  />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbStructuredData)}
+  />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

@@ -12,20 +12,20 @@ The SamplerCustomAdvanced node performs advanced latent space sampling using cus
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| noise | Noise | — |  |
-| guider | Guider | — |  |
-| sampler | Sampler | — |  |
-| sigmas | Sigmas | — |  |
-| latent_image | Latent | — |  |
+| Parameter    | Type    | Default | Description |
+| ------------ | ------- | ------- | ----------- |
+| noise        | Noise   | —       |             |
+| guider       | Guider  | —       |             |
+| sampler      | Sampler | —       |             |
+| sigmas       | Sigmas  | —       |             |
+| latent_image | Latent  | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | LATENT | The final sampled latent representation after completing the sampling process |
-| `denoised_output` | LATENT | A denoised version of the output when available, otherwise returns the same as the output |
+| Output Name       | Data Type | Description                                                                               |
+| ----------------- | --------- | ----------------------------------------------------------------------------------------- |
+| `output`          | LATENT    | The final sampled latent representation after completing the sampling process             |
+| `denoised_output` | LATENT    | A denoised version of the output when available, otherwise returns the same as the output |
 
 **Source**: `comfy_extras/nodes_custom_sampler.py`
 

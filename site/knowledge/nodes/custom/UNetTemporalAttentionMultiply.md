@@ -1,6 +1,6 @@
 # UNetTemporalAttentionMultiply
 
-**Category**: _for_testing/attention_experiments
+**Category**: \_for_testing/attention_experiments
 
 ## Description
 
@@ -10,21 +10,22 @@ The UNetTemporalAttentionMultiply node applies multiplication factors to differe
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| self_structural | Float | 1.0 |  |
-| self_temporal | Float | 1.0 |  |
-| cross_structural | Float | 1.0 |  |
-| cross_temporal | Float | 1.0 |  |
+| Parameter        | Type  | Default | Description |
+| ---------------- | ----- | ------- | ----------- |
+| model            | Model | —       |             |
+| self_structural  | Float | 1.0     |             |
+| self_temporal    | Float | 1.0     |             |
+| cross_structural | Float | 1.0     |             |
+| cross_temporal   | Float | 1.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-            is_experimental=True,
-        )
+is_experimental=True,
+)
 
     @classmethod
     def execute(cls, model, self_structural, self_temporal, cross_structural, cross_temporal) -> io.NodeOutput:

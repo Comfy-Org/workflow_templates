@@ -8,20 +8,21 @@ The ImageScaleToTotalPixels node is designed for resizing images to a specified 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| image | Image | — |  |
-| upscale_method | Combo | — |  |
-| megapixels | Float | 1.0 |  |
-| resolution_steps | Int | 1 |  |
+| Parameter        | Type  | Default | Description |
+| ---------------- | ----- | ------- | ----------- |
+| image            | Image | —       |             |
+| upscale_method   | Combo | —       |             |
+| megapixels       | Float | 1.0     |             |
+| resolution_steps | Int   | 1       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, image, upscale_method, megapixels, resolution_steps) -> io.NodeOutput:

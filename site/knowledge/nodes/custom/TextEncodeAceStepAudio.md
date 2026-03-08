@@ -10,19 +10,20 @@ The TextEncodeAceStepAudio node processes text inputs for audio conditioning by 
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| clip | Clip | — |  |
-| tags | String | — |  |
-| lyrics | String | — |  |
-| lyrics_strength | Float | 1.0 |  |
+| Parameter       | Type   | Default | Description |
+| --------------- | ------ | ------- | ----------- |
+| clip            | Clip   | —       |             |
+| tags            | String | —       |             |
+| lyrics          | String | —       |             |
+| lyrics_strength | Float  | 1.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, clip, tags, lyrics, lyrics_strength) -> io.NodeOutput:

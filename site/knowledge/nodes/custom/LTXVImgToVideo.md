@@ -12,25 +12,25 @@ The LTXVImgToVideo node converts an input image into a video latent representati
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| image | Image | — |  |
-| width | Int | 768 |  |
-| height | Int | 512 |  |
-| length | Int | 97 |  |
-| batch_size | Int | 1 |  |
-| strength | Float | 1.0 |  |
+| Parameter  | Type         | Default | Description |
+| ---------- | ------------ | ------- | ----------- |
+| positive   | Conditioning | —       |             |
+| negative   | Conditioning | —       |             |
+| vae        | Vae          | —       |             |
+| image      | Image        | —       |             |
+| width      | Int          | 768     |             |
+| height     | Int          | 512     |             |
+| length     | Int          | 97      |             |
+| batch_size | Int          | 1       |             |
+| strength   | Float        | 1.0     |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Processed positive conditioning with video frame masking applied |
-| `negative` | CONDITIONING | Processed negative conditioning with video frame masking applied |
-| `latent` | LATENT | Video latent representation containing the encoded frames and noise mask for video generation |
+| Output Name | Data Type    | Description                                                                                   |
+| ----------- | ------------ | --------------------------------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | Processed positive conditioning with video frame masking applied                              |
+| `negative`  | CONDITIONING | Processed negative conditioning with video frame masking applied                              |
+| `latent`    | LATENT       | Video latent representation containing the encoded frames and noise mask for video generation |
 
 **Source**: `comfy_extras/nodes_lt.py`
 

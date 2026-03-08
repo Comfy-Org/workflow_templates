@@ -14,18 +14,18 @@ The MaskPreview node generates a visual preview of a mask by converting it into 
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `mask` | MASK | Yes | - | The mask data to be previewed and converted to image format |
-| `filename_prefix` | STRING | No | - | Prefix for the output filename (default: "ComfyUI") |
-| `prompt` | PROMPT | No | - | Prompt information for metadata (automatically provided) |
-| `extra_pnginfo` | EXTRA_PNGINFO | No | - | Additional PNG information for metadata (automatically provided) |
+| Parameter         | Data Type     | Required | Range | Description                                                      |
+| ----------------- | ------------- | -------- | ----- | ---------------------------------------------------------------- |
+| `mask`            | MASK          | Yes      | -     | The mask data to be previewed and converted to image format      |
+| `filename_prefix` | STRING        | No       | -     | Prefix for the output filename (default: "ComfyUI")              |
+| `prompt`          | PROMPT        | No       | -     | Prompt information for metadata (automatically provided)         |
+| `extra_pnginfo`   | EXTRA_PNGINFO | No       | -     | Additional PNG information for metadata (automatically provided) |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `ui` | DICT | Contains the preview image information and metadata for display |
+| Output Name | Data Type | Description                                                     |
+| ----------- | --------- | --------------------------------------------------------------- |
+| `ui`        | DICT      | Contains the preview image information and metadata for display |
 
 **Source**: `comfy_extras/nodes_mask.py`
 

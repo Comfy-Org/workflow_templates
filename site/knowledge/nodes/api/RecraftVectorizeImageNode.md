@@ -12,17 +12,17 @@ Generates SVG synchronously from an input image. This node converts raster image
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | The input image to convert to SVG format |
-| `auth_token` | AUTH_TOKEN_COMFY_ORG | No | - | Authentication token for API access |
-| `comfy_api_key` | API_KEY_COMFY_ORG | No | - | API key for Comfy.org services |
+| Parameter       | Data Type            | Required | Range | Description                              |
+| --------------- | -------------------- | -------- | ----- | ---------------------------------------- |
+| `image`         | IMAGE                | Yes      | -     | The input image to convert to SVG format |
+| `auth_token`    | AUTH_TOKEN_COMFY_ORG | No       | -     | Authentication token for API access      |
+| `comfy_api_key` | API_KEY_COMFY_ORG    | No       | -     | API key for Comfy.org services           |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `SVG` | SVG | The generated vector graphics output combining all processed images |
+| Output Name | Data Type | Description                                                         |
+| ----------- | --------- | ------------------------------------------------------------------- |
+| `SVG`       | SVG       | The generated vector graphics output combining all processed images |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

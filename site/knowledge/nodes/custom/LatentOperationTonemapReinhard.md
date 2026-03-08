@@ -12,17 +12,18 @@ The LatentOperationTonemapReinhard node applies Reinhard tonemapping to latent v
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| multiplier | Float | 1.0 |  |
+| Parameter  | Type  | Default | Description |
+| ---------- | ----- | ------- | ----------- |
+| multiplier | Float | 1.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, multiplier) -> io.NodeOutput:

@@ -12,16 +12,16 @@ The CFGNorm node applies a normalization technique to the classifier-free guidan
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| strength | Float | 1.0 |  |
+| Parameter | Type  | Default | Description |
+| --------- | ----- | ------- | ----------- |
+| model     | Model | —       |             |
+| strength  | Float | 1.0     |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `patched_model` | MODEL | Returns the modified model with CFG normalization applied to its sampling process |
+| Output Name     | Data Type | Description                                                                       |
+| --------------- | --------- | --------------------------------------------------------------------------------- |
+| `patched_model` | MODEL     | Returns the modified model with CFG normalization applied to its sampling process |
 
 **Source**: `comfy_extras/nodes_cfg.py`
 

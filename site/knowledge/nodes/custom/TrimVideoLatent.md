@@ -10,18 +10,19 @@ The TrimVideoLatent node removes frames from the beginning of a video latent rep
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| samples | Latent | — |  |
-| trim_amount | Int | 0 |  |
+| Parameter   | Type   | Default | Description |
+| ----------- | ------ | ------- | ----------- |
+| samples     | Latent | —       |             |
+| trim_amount | Int    | 0       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, samples, trim_amount) -> io.NodeOutput:

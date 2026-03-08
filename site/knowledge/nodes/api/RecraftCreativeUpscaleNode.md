@@ -12,15 +12,15 @@ The Recraft Creative Upscale Image node enhances a raster image by increasing it
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | | The input image to be upscaled. |
+| Parameter | Data Type | Required | Range | Description                     |
+| --------- | --------- | -------- | ----- | ------------------------------- |
+| `image`   | IMAGE     | Yes      |       | The input image to be upscaled. |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `image` | IMAGE | The resulting upscaled image with enhanced details. |
+| Output Name | Data Type | Description                                         |
+| ----------- | --------- | --------------------------------------------------- |
+| `image`     | IMAGE     | The resulting upscaled image with enhanced details. |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

@@ -10,19 +10,19 @@ The EasyCache node implements a native caching system for models to improve perf
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — | The model to add EasyCache to. |
-| reuse_threshold | Float | 0.2 | The threshold for reusing cached steps. |
-| start_percent | Float | 0.15 | The relative sampling step to begin use of EasyCache. |
-| end_percent | Float | 0.95 | The relative sampling step to end use of EasyCache. |
-| verbose | Boolean | False | Whether to log verbose information. |
+| Parameter       | Type    | Default | Description                                           |
+| --------------- | ------- | ------- | ----------------------------------------------------- |
+| model           | Model   | —       | The model to add EasyCache to.                        |
+| reuse_threshold | Float   | 0.2     | The threshold for reusing cached steps.               |
+| start_percent   | Float   | 0.15    | The relative sampling step to begin use of EasyCache. |
+| end_percent     | Float   | 0.95    | The relative sampling step to end use of EasyCache.   |
+| verbose         | Boolean | False   | Whether to log verbose information.                   |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `model` | MODEL | The model with EasyCache functionality added. |
+| Output Name | Data Type | Description                                   |
+| ----------- | --------- | --------------------------------------------- |
+| `model`     | MODEL     | The model with EasyCache functionality added. |
 
 **Source**: `comfy_extras/nodes_easycache.py`
 

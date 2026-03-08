@@ -146,7 +146,7 @@ An override system lets us add custom content without regenerating from AI. Manu
 
 | Decision       | Owner           | Options                                        |
 | -------------- | --------------- | ---------------------------------------------- |
-| Domain         | Product + Infra | `comfy.org/templates` (decided)                |
+| Domain         | Product + Infra | `comfy.org/workflows` (decided)                |
 | Initial scope  | Product         | Top 50 vs all templates for M1                 |
 | Content review | Product         | Pre-deploy review vs post-deploy fixes         |
 

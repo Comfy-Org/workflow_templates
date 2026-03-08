@@ -7,6 +7,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
+import vue from '@astrojs/vue';
+
 // Build template date lookup at config time
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const templateDates = new Map();
@@ -45,16 +47,16 @@ export default defineConfig({
   integrations: [
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
-      filenameBase: 'sitemap-templates',
+      filenameBase: 'sitemap-workflows',
       // Include Framer's marketing sitemap in the index
       customSitemaps: ['https://comfy.org/sitemap.xml'],
       serialize(item) {
         const url = new URL(item.url);
         const pathname = url.pathname;
 
-        // Template detail pages: /templates/{slug}/ or /{locale}/templates/{slug}/
+        // Template detail pages: /workflows/{slug}/ or /{locale}/workflows/{slug}/
         const templateMatch = pathname.match(
-          /^(?:\/([a-z]{2}(?:-[A-Z]{2})?))?\/templates\/([^/]+)\/?$/
+          /^(?:\/([a-z]{2}(?:-[A-Z]{2})?))?\/workflows\/([^/]+)\/?$/
         );
         if (templateMatch) {
           const slug = templateMatch[2];
@@ -76,32 +78,32 @@ export default defineConfig({
           return item;
         }
 
-        // Templates index (including localized versions)
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/?$/)) {
+        // Workflows index (including localized versions)
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/?$/)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'daily';
           item.priority = 0.9;
           return item;
         }
 
-        // Category pages: /templates/category/{type}/ or /{locale}/templates/category/{type}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/category\//)) {
+        // Category pages: /workflows/category/{type}/ or /{locale}/workflows/category/{type}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/category\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.7;
           return item;
         }
 
-        // Model pages: /templates/model/{model}/ or /{locale}/templates/model/{model}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/model\//)) {
+        // Model pages: /workflows/model/{model}/ or /{locale}/workflows/model/{model}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/model\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.6;
           return item;
         }
 
-        // Tag pages: /templates/tag/{tag}/ or /{locale}/templates/tag/{tag}/
-        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/templates\/tag\//)) {
+        // Tag pages: /workflows/tag/{tag}/ or /{locale}/workflows/tag/{tag}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/tag\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.6;
@@ -115,8 +117,9 @@ export default defineConfig({
         return item;
       },
       // Exclude OG image routes from sitemap
-      filter: (page) => !page.includes('/templates/og/'),
+      filter: (page) => !page.includes('/workflows/og/'),
     }),
+    vue(),
   ],
   output: 'static',
   adapter: vercel({

@@ -10,18 +10,19 @@ The WanMoveConcatTrack node combines two sets of motion tracking data into a sin
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| tracks_1 | Tracks | — |  |
-| tracks_2 | Tracks | — |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| tracks_1  | Tracks | —       |             |
+| tracks_2  | Tracks | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, tracks_1=None, tracks_2=None) -> io.NodeOutput:

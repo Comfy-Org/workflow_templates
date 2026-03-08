@@ -14,17 +14,17 @@ The AudioConcat node combines two audio inputs by joining them together. It take
 
 ## Inputs
 
-| Parameter | Data Type | Input Type | Default | Range | Description |
-|-----------|-----------|------------|---------|-------|-------------|
-| `audio1` | AUDIO | required | - | - | The first audio input to be concatenated |
-| `audio2` | AUDIO | required | - | - | The second audio input to be concatenated |
-| `direction` | COMBO | required | after | ['after', 'before'] | Whether to append audio2 after or before audio1 |
+| Parameter   | Data Type | Input Type | Default | Range               | Description                                     |
+| ----------- | --------- | ---------- | ------- | ------------------- | ----------------------------------------------- |
+| `audio1`    | AUDIO     | required   | -       | -                   | The first audio input to be concatenated        |
+| `audio2`    | AUDIO     | required   | -       | -                   | The second audio input to be concatenated       |
+| `direction` | COMBO     | required   | after   | ['after', 'before'] | Whether to append audio2 after or before audio1 |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `AUDIO` | AUDIO | The combined audio containing both input audio files joined together |
+| Output Name | Data Type | Description                                                          |
+| ----------- | --------- | -------------------------------------------------------------------- |
+| `AUDIO`     | AUDIO     | The combined audio containing both input audio files joined together |
 
 **Source**: `comfy_extras/nodes_audio.py`
 

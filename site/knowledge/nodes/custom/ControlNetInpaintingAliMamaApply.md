@@ -14,24 +14,24 @@ The ControlNetInpaintingAliMamaApply node applies ControlNet conditioning for in
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| control_net | ControlNet | — |  |
-| vae | Vae | — |  |
-| image | Image | — |  |
-| mask | Mask | — |  |
-| strength | Float | 1.0 |  |
-| start_percent | Float | 0.0 |  |
-| end_percent | Float | 1.0 |  |
+| Parameter     | Type         | Default | Description |
+| ------------- | ------------ | ------- | ----------- |
+| positive      | Conditioning | —       |             |
+| negative      | Conditioning | —       |             |
+| control_net   | ControlNet   | —       |             |
+| vae           | Vae          | —       |             |
+| image         | Image        | —       |             |
+| mask          | Mask         | —       |             |
+| strength      | Float        | 1.0     |             |
+| start_percent | Float        | 0.0     |             |
+| end_percent   | Float        | 1.0     |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | The modified positive conditioning with ControlNet applied for inpainting |
-| `negative` | CONDITIONING | The modified negative conditioning with ControlNet applied for inpainting |
+| Output Name | Data Type    | Description                                                               |
+| ----------- | ------------ | ------------------------------------------------------------------------- |
+| `positive`  | CONDITIONING | The modified positive conditioning with ControlNet applied for inpainting |
+| `negative`  | CONDITIONING | The modified negative conditioning with ControlNet applied for inpainting |
 
 **Source**: `comfy_extras/nodes_controlnet.py`
 

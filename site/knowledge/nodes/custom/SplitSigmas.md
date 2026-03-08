@@ -10,16 +10,16 @@ The SplitSigmas node is designed for dividing a sequence of sigma values into tw
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| sigmas | Sigmas | — |  |
-| step | Int | 0 |  |
+| Parameter | Type   | Default | Description |
+| --------- | ------ | ------- | ----------- |
+| sigmas    | Sigmas | —       |             |
+| step      | Int    | 0       |             |
 
 ## Outputs
 
-| Parameter | Data Type | Description |
-|-----------|-------------|-------------|
-| `sigmas`  | `SIGMAS`    | The node outputs two sequences of sigma values, each representing a part of the original sequence divided at the specified step. These outputs are crucial for subsequent operations that require differentiated handling of sigma values. |
+| Parameter | Data Type | Description                                                                                                                                                                                                                                |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `sigmas`  | `SIGMAS`  | The node outputs two sequences of sigma values, each representing a part of the original sequence divided at the specified step. These outputs are crucial for subsequent operations that require differentiated handling of sigma values. |
 
 **Source**: `comfy_extras/nodes_custom_sampler.py`
 

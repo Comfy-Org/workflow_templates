@@ -8,18 +8,18 @@ This node applies advanced control net transformations to conditioning data base
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| strength | FLOAT | 1.0 |  |
-| start_percent | FLOAT | 0.0 |  |
-| end_percent | FLOAT | 1.0 |  |
+| Parameter     | Type  | Default | Description |
+| ------------- | ----- | ------- | ----------- |
+| strength      | FLOAT | 1.0     |             |
+| start_percent | FLOAT | 0.0     |             |
+| end_percent   | FLOAT | 1.0     |             |
 
 ## Outputs
 
-| Output | Type | Description |
-|--------|------|-------------|
-| positive | CONDITIONING |  |
-| negative | CONDITIONING |  |
+| Output   | Type         | Description |
+| -------- | ------------ | ----------- |
+| positive | CONDITIONING |             |
+| negative | CONDITIONING |             |
 
 **Source**: `nodes.py`
 

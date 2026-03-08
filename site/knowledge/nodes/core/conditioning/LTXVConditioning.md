@@ -12,18 +12,18 @@ The LTXVConditioning node adds frame rate information to both positive and negat
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| frame_rate | Float | 25.0 |  |
+| Parameter  | Type         | Default | Description |
+| ---------- | ------------ | ------- | ----------- |
+| positive   | Conditioning | —       |             |
+| negative   | Conditioning | —       |             |
+| frame_rate | Float        | 25.0    |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | The positive conditioning with frame rate information applied |
-| `negative` | CONDITIONING | The negative conditioning with frame rate information applied |
+| Output Name | Data Type    | Description                                                   |
+| ----------- | ------------ | ------------------------------------------------------------- |
+| `positive`  | CONDITIONING | The positive conditioning with frame rate information applied |
+| `negative`  | CONDITIONING | The negative conditioning with frame rate information applied |
 
 **Source**: `comfy_extras/nodes_lt.py`
 

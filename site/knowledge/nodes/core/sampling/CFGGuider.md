@@ -10,19 +10,20 @@ The CFGGuider node creates a guidance system for controlling the sampling proces
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model | Model | — |  |
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| cfg | Float | 8.0 |  |
+| Parameter | Type         | Default | Description |
+| --------- | ------------ | ------- | ----------- |
+| model     | Model        | —       |             |
+| positive  | Conditioning | —       |             |
+| negative  | Conditioning | —       |             |
+| cfg       | Float        | 8.0     |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )]
-        )
+)
 
     @classmethod
     def execute(cls, model, positive, negative, cfg) -> io.NodeOutput:

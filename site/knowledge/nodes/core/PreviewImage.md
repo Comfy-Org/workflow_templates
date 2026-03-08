@@ -4,9 +4,9 @@ The PreviewImage node is designed for creating temporary preview images. It auto
 
 ## Inputs
 
-| Parameter | Data Type | Description |
-|-----------|-------------|-------------|
-| `images`  | `IMAGE`     | The 'images' input specifies the images to be processed and saved as temporary preview images. This is the primary input for the node, determining which images will undergo the preview generation process. |
+| Parameter | Data Type | Description                                                                                                                                                                                                  |
+| --------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `images`  | `IMAGE`   | The 'images' input specifies the images to be processed and saved as temporary preview images. This is the primary input for the node, determining which images will undergo the preview generation process. |
 
 ## Outputs
 

@@ -4,14 +4,14 @@
 
 ## INPUT: Template Metadata
 
-| Field | Value |
-|-------|-------|
-| Name | wan_video_t2v |
-| Title | Wan 2.1 Text to Video |
+| Field       | Value                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------- |
+| Name        | wan_video_t2v                                                                               |
+| Title       | Wan 2.1 Text to Video                                                                       |
 | Description | Generate videos from text prompts using Wan 2.1 model with 1.3B and 14B parameter versions. |
-| Media Type | video |
-| Tags | Text to Video, Video |
-| Models | Wan 2.1 |
+| Media Type  | video                                                                                       |
+| Tags        | Text to Video, Video                                                                        |
+| Models      | Wan 2.1                                                                                     |
 
 ## OUTPUT: Generated Content
 

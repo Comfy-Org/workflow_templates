@@ -10,23 +10,23 @@ The HunyuanVideo15SuperResolution node prepares conditioning data for a video su
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| start_image | Image | — |  |
-| clip_vision_output | ClipVisionOutput | — |  |
-| latent | Latent | — |  |
-| noise_augmentation | Float | 0.70 |  |
+| Parameter          | Type             | Default | Description |
+| ------------------ | ---------------- | ------- | ----------- |
+| positive           | Conditioning     | —       |             |
+| negative           | Conditioning     | —       |             |
+| vae                | Vae              | —       |             |
+| start_image        | Image            | —       |             |
+| clip_vision_output | ClipVisionOutput | —       |             |
+| latent             | Latent           | —       |             |
+| noise_augmentation | Float            | 0.70    |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | The modified positive conditioning, now containing the concatenated latent, noise augmentation, and optional CLIP vision data. |
-| `negative` | CONDITIONING | The modified negative conditioning, now containing the concatenated latent, noise augmentation, and optional CLIP vision data. |
-| `latent` | LATENT | The input latent is passed through unchanged. |
+| Output Name | Data Type    | Description                                                                                                                    |
+| ----------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| `positive`  | CONDITIONING | The modified positive conditioning, now containing the concatenated latent, noise augmentation, and optional CLIP vision data. |
+| `negative`  | CONDITIONING | The modified negative conditioning, now containing the concatenated latent, noise augmentation, and optional CLIP vision data. |
+| `latent`    | LATENT       | The input latent is passed through unchanged.                                                                                  |
 
 **Source**: `comfy_extras/nodes_hunyuan.py`
 

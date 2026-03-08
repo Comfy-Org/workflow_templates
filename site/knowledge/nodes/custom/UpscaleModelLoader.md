@@ -12,17 +12,18 @@ The UpscaleModelLoader node is designed for loading upscale models from a specif
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| model_name | Combo | — |  |
+| Parameter  | Type  | Default | Description |
+| ---------- | ----- | ------- | ----------- |
+| model_name | Combo | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | ),
-            ],
-        )
+],
+)
 
     @classmethod
     def execute(cls, model_name | UpscaleModel |

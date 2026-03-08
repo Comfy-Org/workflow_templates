@@ -171,7 +171,9 @@ test.describe('Thumbnail Loading', () => {
   test('template cards have thumbnail images', async ({ page }) => {
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
-    const thumbnailImages = page.locator('main a[data-astro-prefetch] img[src^="/templates/thumbnails/"]');
+    const thumbnailImages = page.locator(
+      'main a[data-astro-prefetch] img[src^="/workflows/thumbnails/"]'
+    );
     const count = await thumbnailImages.count();
     expect(count).toBeGreaterThan(0);
   });
@@ -179,7 +181,7 @@ test.describe('Thumbnail Loading', () => {
   test('thumbnail images load successfully (no broken images)', async ({ page }) => {
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
-    const images = page.locator('main img[src^="/templates/thumbnails/"]');
+    const images = page.locator('main img[src^="/workflows/thumbnails/"]');
     const count = await images.count();
     expect(count).toBeGreaterThan(0);
 
@@ -199,7 +201,7 @@ test.describe('Thumbnail Loading', () => {
     await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const heroImages = page.locator('article img[src^="/templates/thumbnails/"]');
+    const heroImages = page.locator('article img[src^="/workflows/thumbnails/"]');
     const count = await heroImages.count();
     if (count > 0) {
       const naturalWidth = await heroImages
@@ -213,7 +215,7 @@ test.describe('Thumbnail Loading', () => {
     await page.goto('/templates');
     await page.waitForLoadState('networkidle');
 
-    const images = page.locator('main img[src^="/templates/thumbnails/"]');
+    const images = page.locator('main img[src^="/workflows/thumbnails/"]');
     const count = await images.count();
     expect(count).toBeGreaterThan(0);
 

@@ -12,15 +12,15 @@ This node allows you to select the logo raster style and choose from available s
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `substyle` | STRING | Yes | Multiple options available | The specific logo raster substyle to apply for logo generation |
+| Parameter  | Data Type | Required | Range                      | Description                                                    |
+| ---------- | --------- | -------- | -------------------------- | -------------------------------------------------------------- |
+| `substyle` | STRING    | Yes      | Multiple options available | The specific logo raster substyle to apply for logo generation |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | IMAGE | The generated logo image with the selected raster style applied |
+| Output Name | Data Type | Description                                                     |
+| ----------- | --------- | --------------------------------------------------------------- |
+| `output`    | IMAGE     | The generated logo image with the selected raster style applied |
 
 **Source**: `comfy_api_nodes/nodes_recraft.py`
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This directory contains the AI content generation pipeline for the ComfyUI template site.
+Astro 5 static site with Vue 3 interactive islands. Consumes template data from `../templates/` and deploys to templates.comfy.org via Vercel.
 
 ## ⚠️ Scope Boundaries
 
@@ -265,8 +265,8 @@ When generating content, select appropriate template based on:
 
 ### URL Structure
 
-- English (default): `/templates/`, `/templates/{slug}/`
-- Other locales: `/{locale}/templates/`, `/{locale}/templates/{slug}/`
+- English (default): `/workflows/`, `/workflows/{slug}/`
+- Other locales: `/{locale}/workflows/`, `/{locale}/workflows/{slug}/`
 
 ### Key i18n Files
 
@@ -281,7 +281,7 @@ When generating content, select appropriate template based on:
 1. Source data: `../templates/index.{lang}.json` (12 files)
 2. Sync script reads all locale files and writes to `src/content/templates/`
 3. English templates at root, localized at `src/content/templates/{locale}/`
-4. Pages generated at `/{locale}/templates/` via `[locale]/templates/` routes
+4. Pages generated at `/{locale}/workflows/` via `[locale]/templates/` routes
 
 ## Environment Variables
 
@@ -322,6 +322,137 @@ Run `pnpm install` to set up hooks (via `prepare` script).
 - `docs/ROADMAP.md` - AI content generation roadmap
 - `docs/design-integration-guide.md` - **REQUIRED READING** when implementing Figma designs
 - `docs/seo-setup-guide.md` - Search engine setup instructions
+
+## Vue 3 & Astro Coding Standards
+
+All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro patterns. Write senior-level, production-quality code.
+
+### Vue 3 — Required Patterns
+
+- `<script setup lang="ts">` for all components — no Options API
+- Standard reactivity: `ref()`, `computed()`, `watch()`, `watchEffect()`
+- Props via `defineProps<T>()`, emits via `defineEmits<T>()`
+- Cross-component state via shared composables in `src/composables/` using module-level reactive refs
+- Template refs via `useTemplateRef()` or `ref<HTMLElement | null>(null)`
+- Lifecycle: `onMounted()`, `onUnmounted()` — always clean up listeners
+
+### Vue 3 — Forbidden Patterns
+
+- `document.dispatchEvent(new CustomEvent(...))` for component communication — use composables
+- `document.addEventListener(...)` to listen for custom events from other Vue components
+- Event bus libraries or mitt — use shared composables with reactive state instead
+- Options API (`data()`, `methods`, `computed:`, `watch:` as object)
+- `this.$emit`, `this.$refs`, or any `this`-based API
+- Mixins — use composables
+
+### Astro — Required Patterns
+
+- Astro components (`.astro`) for static/SSR content, Vue islands (`client:load`/`client:visible`) for interactivity
+- Pass data from Astro to Vue via props only — serialize to plain objects
+- For Astro-to-Vue runtime communication (e.g. a button in `.astro` triggering Vue state), attach event listeners to specific DOM elements by ID inside the Vue component's `onMounted()` — do NOT use inline `<script>` tags with `dispatchEvent`
+- Cross-island state sharing via shared composables (module-level refs are singletons in the browser bundle)
+
+## Island Architecture (Astro + Vue 3)
+
+Astro renders pages as static HTML at build time. Interactive sections use Vue 3 components mounted as **islands** via `client:*` directives. Each island is an independent Vue app instance — they do NOT share a Vue app context.
+
+### When to use `.astro` vs `.vue`
+
+| Use case                           | Component type            | Notes                            |
+| ---------------------------------- | ------------------------- | -------------------------------- |
+| Static content, layouts, SEO       | `.astro`                  | No client JS shipped             |
+| Interactive UI needed on page load | `.vue` + `client:load`    | Filters, search, drawers         |
+| Interactive UI below the fold      | `.vue` + `client:visible` | Hydrates when scrolled into view |
+| SSR-only Vue (no interactivity)    | `.vue` without `client:*` | Renders at build, zero client JS |
+
+### Data flow: Astro → Vue island
+
+Astro pages own data fetching. Serialize content collection entries to **plain JSON-compatible objects** before passing as props:
+
+```astro
+---
+const templates = await getCollection('templates');
+const serialized = templates.map((t) => ({
+  name: t.data.name,
+  title: t.data.title,
+  // ... only plain values: string, number, boolean, arrays, plain objects
+}));
+---
+
+<MyVueIsland client:load templates={serialized} locale={locale} />
+```
+
+Vue islands receive data via `defineProps<T>()`. Never pass `Date`, `Map`, `Set`, class instances, or functions — only JSON-serializable data.
+
+### Cross-island communication
+
+`provide`/`inject`, `$emit`, and `$parent` do NOT work across islands (separate Vue apps). Use **shared composables** with module-level reactive state in `src/composables/`:
+
+```ts
+// src/composables/useHubStore.ts
+import { ref } from 'vue';
+
+const mobileDrawerOpen = ref(false); // module-level singleton
+const searchFocusTrigger = ref(0);
+
+export function useHubStore() {
+  return {
+    mobileDrawerOpen,
+    searchFocusTrigger,
+    toggleMobileDrawer() {
+      mobileDrawerOpen.value = !mobileDrawerOpen.value;
+    },
+    requestSearchFocus() {
+      searchFocusTrigger.value++;
+    },
+  };
+}
+```
+
+Both islands import the same composable → share the same refs → fully reactive:
+
+```ts
+// Island A (HubBrowse.vue)
+const store = useHubStore();
+store.requestSearchFocus(); // triggers watcher in Island B
+
+// Island B (SearchPopover.vue)
+const store = useHubStore();
+watch(
+  () => store.searchFocusTrigger.value,
+  () => {
+    inputRef.value?.focus();
+  }
+);
+```
+
+### Astro → Vue runtime bridge
+
+When a DOM element in `.astro` markup (e.g. a hamburger button rendered server-side) needs to trigger Vue state, the **Vue island** owns the listener — not the Astro file:
+
+```ts
+// In the Vue island's <script setup>
+const store = useHubStore();
+
+onMounted(() => {
+  document.getElementById('astro-button-id')?.addEventListener('click', store.someAction);
+});
+
+onUnmounted(() => {
+  document.getElementById('astro-button-id')?.removeEventListener('click', store.someAction);
+});
+```
+
+**Do NOT** add inline `<script>` tags in `.astro` files that `dispatchEvent(new CustomEvent(...))`. The Vue island is responsible for bridging to any Astro-rendered DOM elements.
+
+### Within a single island: standard Vue
+
+Components within the same island (parent → child Vue components) use normal Vue patterns:
+
+- **Props down**: `defineProps<T>()`
+- **Events up**: `defineEmits<T>()` + `@event` in parent template
+- **Provide/inject**: works within the same island's component tree
+- **Composables**: for shared logic within the island
 
 ## ⚠️ Design Implementation Warning
 

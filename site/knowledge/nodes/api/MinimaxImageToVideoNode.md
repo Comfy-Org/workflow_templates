@@ -12,18 +12,18 @@ Generates videos synchronously based on an image and prompt, and optional parame
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | Image to use as first frame of video generation |
-| `prompt_text` | STRING | Yes | - | Text prompt to guide the video generation (default: empty string) |
-| `model` | COMBO | Yes | "I2V-01-Director"<br>"I2V-01"<br>"I2V-01-live" | Model to use for video generation (default: "I2V-01") |
-| `seed` | INT | No | 0 to 18446744073709551615 | The random seed used for creating the noise (default: 0) |
+| Parameter     | Data Type | Required | Range                                          | Description                                                       |
+| ------------- | --------- | -------- | ---------------------------------------------- | ----------------------------------------------------------------- |
+| `image`       | IMAGE     | Yes      | -                                              | Image to use as first frame of video generation                   |
+| `prompt_text` | STRING    | Yes      | -                                              | Text prompt to guide the video generation (default: empty string) |
+| `model`       | COMBO     | Yes      | "I2V-01-Director"<br>"I2V-01"<br>"I2V-01-live" | Model to use for video generation (default: "I2V-01")             |
+| `seed`        | INT       | No       | 0 to 18446744073709551615                      | The random seed used for creating the noise (default: 0)          |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `output` | VIDEO | The generated video output |
+| Output Name | Data Type | Description                |
+| ----------- | --------- | -------------------------- |
+| `output`    | VIDEO     | The generated video output |
 
 **Source**: `comfy_api_nodes/nodes_minimax.py`
 

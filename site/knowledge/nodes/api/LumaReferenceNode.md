@@ -12,17 +12,17 @@ This node holds an image and weight value for use with the Luma Generate Image n
 
 ## Inputs
 
-| Parameter | Data Type | Required | Range | Description |
-|-----------|-----------|----------|-------|-------------|
-| `image` | IMAGE | Yes | - | Image to use as reference. |
-| `weight` | FLOAT | Yes | 0.0 - 1.0 | Weight of image reference (default: 1.0). |
-| `luma_ref` | LUMA_REF | No | - | Optional existing Luma reference chain to add to. |
+| Parameter  | Data Type | Required | Range     | Description                                       |
+| ---------- | --------- | -------- | --------- | ------------------------------------------------- |
+| `image`    | IMAGE     | Yes      | -         | Image to use as reference.                        |
+| `weight`   | FLOAT     | Yes      | 0.0 - 1.0 | Weight of image reference (default: 1.0).         |
+| `luma_ref` | LUMA_REF  | No       | -         | Optional existing Luma reference chain to add to. |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `luma_ref` | LUMA_REF | The Luma reference chain containing the image and weight. |
+| Output Name | Data Type | Description                                               |
+| ----------- | --------- | --------------------------------------------------------- |
+| `luma_ref`  | LUMA_REF  | The Luma reference chain containing the image and weight. |
 
 **Source**: `comfy_api_nodes/nodes_luma.py`
 

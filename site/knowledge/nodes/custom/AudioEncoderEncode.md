@@ -10,17 +10,18 @@ The AudioEncoderEncode node processes audio data by encoding it using an audio e
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| audio_encoder | AudioEncoder | — |  |
-| audio | Audio | — |  |
+| Parameter     | Type         | Default | Description |
+| ------------- | ------------ | ------- | ----------- |
+| audio_encoder | AudioEncoder | —       |             |
+| audio         | Audio        | —       |             |
 
 ## Outputs
 
 | Output | Type |
-|--------|------|
+| ------ | ---- |
+
 | )],
-        )
+)
 
     @classmethod
     def execute(cls, audio_encoder, audio | AudioEncoderOutput |

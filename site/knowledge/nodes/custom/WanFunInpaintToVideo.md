@@ -12,26 +12,26 @@ The WanFunInpaintToVideo node creates video sequences by inpainting between star
 
 ## Inputs
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| positive | Conditioning | — |  |
-| negative | Conditioning | — |  |
-| vae | Vae | — |  |
-| width | Int | 832 |  |
-| height | Int | 480 |  |
-| length | Int | 81 |  |
-| batch_size | Int | 1 |  |
-| clip_vision_output | ClipVisionOutput | — |  |
-| start_image | Image | — |  |
-| end_image | Image | — |  |
+| Parameter          | Type             | Default | Description |
+| ------------------ | ---------------- | ------- | ----------- |
+| positive           | Conditioning     | —       |             |
+| negative           | Conditioning     | —       |             |
+| vae                | Vae              | —       |             |
+| width              | Int              | 832     |             |
+| height             | Int              | 480     |             |
+| length             | Int              | 81      |             |
+| batch_size         | Int              | 1       |             |
+| clip_vision_output | ClipVisionOutput | —       |             |
+| start_image        | Image            | —       |             |
+| end_image          | Image            | —       |             |
 
 ## Outputs
 
-| Output Name | Data Type | Description |
-|-------------|-----------|-------------|
-| `positive` | CONDITIONING | Processed positive conditioning output |
-| `negative` | CONDITIONING | Processed negative conditioning output |
-| `latent` | LATENT | Generated video latent representation |
+| Output Name | Data Type    | Description                            |
+| ----------- | ------------ | -------------------------------------- |
+| `positive`  | CONDITIONING | Processed positive conditioning output |
+| `negative`  | CONDITIONING | Processed negative conditioning output |
+| `latent`    | LATENT       | Generated video latent representation  |
 
 **Source**: `comfy_extras/nodes_wan.py`
 
