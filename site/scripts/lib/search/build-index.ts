@@ -5,7 +5,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import MiniSearch from 'minisearch';
-import { CONTENT_DIR, SITE_DIR, TEMPLATES_DIR } from '../paths';
+import { CONTENT_DIR, SITE_DIR } from '../paths';
 import { logger } from '../logger';
 
 interface SearchDocument {
