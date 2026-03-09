@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { computed } from 'vue';
 import { slugify } from '@/lib/slugify';
+import { tagDisplayName } from '@/lib/tag-aliases';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -50,6 +51,7 @@ interface Props {
   locale?: string;
   username?: string;
   creatorDisplayName?: string;
+  creatorAvatarUrl?: string;
   isApp?: boolean;
   hideAuthor?: boolean;
 }
@@ -61,6 +63,7 @@ const props = withDefaults(defineProps<Props>(), {
   locale: 'en',
   username: '',
   creatorDisplayName: 'ComfyUI',
+  creatorAvatarUrl: '',
   isApp: false,
   hideAuthor: false,
 });
@@ -165,7 +168,14 @@ const creatorUrl = computed(() => {
 
       <!-- Author line -->
       <div v-if="!hideAuthor" class="flex items-center gap-2 pt-4">
+        <img
+          v-if="creatorAvatarUrl"
+          :src="creatorAvatarUrl"
+          :alt="authorName"
+          class="size-5 rounded-full shrink-0 object-cover"
+        />
         <div
+          v-else
           class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
         >
           <span class="text-black text-[10px] font-bold leading-none">{{
@@ -183,22 +193,14 @@ const creatorUrl = computed(() => {
 
       <!-- Type badge + Tag pills -->
       <div class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
-        <Badge v-if="isApp" variant="hub-pill" class="flex items-center gap-1 shrink-0">
-          <IconApps class="size-3" />
-          <span>Comfy App</span>
-        </Badge>
-        <Badge v-else variant="hub-pill" class="flex items-center gap-1 shrink-0">
-          <IconWorkflow class="size-3" />
-          <span>Node Graph</span>
-        </Badge>
         <a
           v-for="tag in displayTags"
           :key="tag"
           :href="getTagUrl(tag)"
           class="tag-link relative z-10"
         >
-          <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors">
-            {{ tag.toLowerCase().replace(/\s+/g, '-') }}
+          <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors truncate max-w-28">
+            {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
           </Badge>
         </a>
       </div>

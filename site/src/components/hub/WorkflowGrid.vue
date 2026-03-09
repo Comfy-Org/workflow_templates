@@ -19,6 +19,7 @@ export interface WorkflowTemplate {
   thumbnails: string[];
   username?: string;
   creatorDisplayName?: string;
+  creatorAvatarUrl?: string;
   isApp?: boolean;
 }
 
@@ -364,6 +365,7 @@ onUnmounted(() => {
         :locale="locale"
         :username="tmpl.username"
         :creator-display-name="tmpl.creatorDisplayName"
+        :creator-avatar-url="tmpl.creatorAvatarUrl"
         :is-app="tmpl.isApp"
         :hide-author="hideAuthor"
       />

@@ -31,6 +31,21 @@ export interface SearchResults {
 // Module-level cache — shared across all consumers
 let indexPromise: Promise<MiniSearch> | null = null;
 
+// Must match the tokenizer used at index build time (build-index.ts)
+function tokenize(text: string): string[] {
+  const tokens: string[] = [];
+  const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+  for (const word of words) {
+    tokens.push(word);
+    if (word.includes('-')) {
+      for (const part of word.split('-')) {
+        if (part) tokens.push(part);
+      }
+    }
+  }
+  return tokens;
+}
+
 async function loadIndex(): Promise<MiniSearch> {
   const response = await fetch('/search-index.json');
   if (!response.ok) {
@@ -49,6 +64,7 @@ async function loadIndex(): Promise<MiniSearch> {
       'usage',
       'tagsArray',
     ],
+    tokenize,
   });
 }
 
@@ -118,6 +134,7 @@ export async function search(
   let results = index.search(trimmed, {
     prefix: true,
     fuzzy: 0.2,
+    tokenize,
   });
 
   // Scope results to allowed IDs when badge filters are active
