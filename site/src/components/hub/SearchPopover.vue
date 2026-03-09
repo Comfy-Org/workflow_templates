@@ -17,6 +17,7 @@ import { useHubStore } from '@/composables/useHubStore';
 import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
+import { tagDisplayName } from '@/lib/tag-aliases';
 
 export interface SearchTemplate {
   name: string;
@@ -31,11 +32,21 @@ export interface SearchTemplate {
   thumbnails: string[];
   username: string;
   creatorDisplayName: string;
+  creatorAvatarUrl: string;
   isApp: boolean;
+}
+
+export interface CreatorEntry {
+  username: string;
+  displayName: string;
+  summary?: string;
+  social?: string;
+  avatarUrl?: string;
 }
 
 const props = defineProps<{
   templates: SearchTemplate[];
+  creators: CreatorEntry[];
   locale: string;
 }>();
 
@@ -57,14 +68,9 @@ const hasBadges = computed(() => store.filterBadges.value.length > 0);
 const hasActiveFilters = computed(() => hasQuery.value || hasBadges.value);
 
 const MAX_BADGES_DESKTOP = 4;
-const MAX_BADGES_MOBILE = 2;
 const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MAX_BADGES_DESKTOP));
 const overflowCountDesktop = computed(() =>
   Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP)
-);
-const visibleBadgesMobile = computed(() => store.filterBadges.value.slice(0, MAX_BADGES_MOBILE));
-const overflowCountMobile = computed(() =>
-  Math.max(0, store.filterBadges.value.length - MAX_BADGES_MOBILE)
 );
 
 // ── All tags and models with counts (for filter suggestions) ──
@@ -108,7 +114,11 @@ const filterSuggestions = computed(() => {
   );
 
   const matchingTags = allTags.value
-    .filter((t) => !activeTags.has(t.name) && t.name.toLowerCase().includes(q))
+    .filter(
+      (t) =>
+        !activeTags.has(t.name) &&
+        (t.name.toLowerCase().includes(q) || tagDisplayName(t.name).toLowerCase().includes(q))
+    )
     .slice(0, 5);
 
   const matchingModels = allModels.value
@@ -131,9 +141,7 @@ const badgeFilteredTemplates = computed(() => {
   const modelBadges = store.filterBadges.value
     .filter((b) => b.type === 'model')
     .map((b) => b.value);
-  const modeBadges = store.filterBadges.value
-    .filter((b) => b.type === 'mode')
-    .map((b) => b.value);
+  const modeBadges = store.filterBadges.value.filter((b) => b.type === 'mode').map((b) => b.value);
 
   let result = [...props.templates];
 
@@ -217,6 +225,34 @@ const displayedWorkflows = computed(() => {
   return [];
 });
 
+// Creator search — matches against the full creators.json list
+const matchedCreators = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase();
+  if (!q) return [];
+  // Build a usage map from templates for sorting + workflow count
+  const usageMap = new Map<string, { count: number; usage: number }>();
+  for (const tmpl of props.templates) {
+    if (!tmpl.username) continue;
+    const existing = usageMap.get(tmpl.username);
+    if (existing) {
+      existing.count++;
+      existing.usage += tmpl.usage;
+    } else {
+      usageMap.set(tmpl.username, { count: 1, usage: tmpl.usage });
+    }
+  }
+  return props.creators
+    .filter((c) => c.displayName.toLowerCase().includes(q) || c.username.toLowerCase().includes(q))
+    .map((c) => ({
+      username: c.username,
+      displayName: c.displayName,
+      avatarUrl: c.avatarUrl || '',
+      workflowCount: usageMap.get(c.username)?.count || 0,
+    }))
+    .sort((a, b) => b.workflowCount - a.workflowCount)
+    .slice(0, 5);
+});
+
 const MEDIA_TYPE_LABELS: Record<string, string> = {
   image: 'Image',
   video: 'Video',
@@ -246,32 +282,27 @@ const popularWorkflows = computed(() =>
   [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
 );
 
-// Top creators — unique creators sorted by total usage, top 3
+// Top creators from creators.json, enriched with workflow count + total usage
 const topCreators = computed(() => {
-  const creatorMap = new Map<string, { username: string; displayName: string; usage: number }>();
+  const usageMap = new Map<string, { count: number; usage: number }>();
   for (const tmpl of props.templates) {
-    const displayName = tmpl.creatorDisplayName || 'ComfyUI';
-    const key = tmpl.username || displayName;
-    const existing = creatorMap.get(key);
+    if (!tmpl.username) continue;
+    const existing = usageMap.get(tmpl.username);
     if (existing) {
+      existing.count++;
       existing.usage += tmpl.usage;
     } else {
-      creatorMap.set(key, { username: tmpl.username, displayName, usage: tmpl.usage });
+      usageMap.set(tmpl.username, { count: 1, usage: tmpl.usage });
     }
   }
-  return Array.from(creatorMap.values())
+  return props.creators
+    .filter((c) => usageMap.has(c.username))
+    .map((c) => ({ ...c, ...(usageMap.get(c.username) || { count: 0, usage: 0 }) }))
     .sort((a, b) => b.usage - a.usage)
     .slice(0, 3);
 });
 
-// Unique creator count for the discovery panel header
-const uniqueCreatorCount = computed(() => {
-  const creators = new Set<string>();
-  for (const tmpl of props.templates) {
-    creators.add(tmpl.username || tmpl.creatorDisplayName || 'ComfyUI');
-  }
-  return creators.size;
-});
+const uniqueCreatorCount = computed(() => props.creators.length);
 
 // Discovery preview — top 5 of each (matching sidebar) with remaining counts
 const DISCOVERY_PREVIEW_COUNT = 5;
@@ -315,14 +346,17 @@ const discTagOffset = computed(() => discCreatorOffset.value + topCreators.value
 const discModelOffset = computed(() => discTagOffset.value + previewTags.value.length);
 const discModeOffset = computed(() => discModelOffset.value + previewModels.value.length);
 
-// Active results panel offsets
+// Active results panel offsets — order: suggestions → creators → workflows
 const activeSugModelOffset = computed(() => filterSuggestions.value.tags.length);
-const activeWorkflowOffset = computed(() => {
-  if (!(hasQuery.value && hasFilterSuggestions.value)) return 0;
-  return filterSuggestions.value.tags.length + filterSuggestions.value.models.length;
+const activeCreatorOffset = computed(() => {
+  let offset = 0;
+  if (hasQuery.value && hasFilterSuggestions.value) {
+    offset += filterSuggestions.value.tags.length + filterSuggestions.value.models.length;
+  }
+  return offset;
 });
-const activeCreatorOffset = computed(
-  () => activeWorkflowOffset.value + displayedWorkflows.value.length
+const activeWorkflowOffset = computed(
+  () => activeCreatorOffset.value + matchedCreators.value.length
 );
 
 const totalNavigable = computed(() => {
@@ -332,8 +366,8 @@ const totalNavigable = computed(() => {
     if (hasQuery.value && hasFilterSuggestions.value) {
       total += filterSuggestions.value.tags.length + filterSuggestions.value.models.length;
     }
-    if (hasQuery.value && searchResults.value) {
-      total += Math.min(searchResults.value.creators.length, 5);
+    if (hasQuery.value) {
+      total += matchedCreators.value.length;
     }
     return total;
   }
@@ -358,13 +392,12 @@ function activateItem(index: number) {
       addFilterBadge('tag', filterSuggestions.value.tags[index].name);
     } else if (index < sugTotal) {
       addFilterBadge('model', filterSuggestions.value.models[index - sugTagCount].name);
-    } else if (index < sugTotal + displayedWorkflows.value.length) {
-      const wf = displayedWorkflows.value[index - sugTotal];
-      if (wf) window.location.href = getTemplateUrl(wf.id);
-    } else {
-      const creators = searchResults.value?.creators.slice(0, 5) || [];
-      const creator = creators[index - sugTotal - displayedWorkflows.value.length];
+    } else if (index < sugTotal + matchedCreators.value.length) {
+      const creator = matchedCreators.value[index - sugTotal];
       if (creator) window.location.href = getTemplateUrl(creator.username);
+    } else {
+      const wf = displayedWorkflows.value[index - sugTotal - matchedCreators.value.length];
+      if (wf) window.location.href = getTemplateUrl(wf.id);
     }
   } else {
     const popCount = popularWorkflows.value.length;
@@ -450,6 +483,7 @@ const MODE_LABELS: Record<string, string> = {
 
 function badgeLabel(badge: { type: string; value: string }): string {
   if (badge.type === 'mode') return MODE_LABELS[badge.value] || badge.value;
+  if (badge.type === 'tag') return tagDisplayName(badge.value);
   return badge.value;
 }
 
@@ -541,40 +575,8 @@ onUnmounted(() => {
           />
         </svg>
 
-        <!-- Inline filter badges — mobile (max 2) -->
+        <!-- Inline filter badges — desktop only (max 4) -->
         <template v-if="hasBadges">
-          <div class="contents lg:hidden">
-            <Badge
-              v-for="badge in visibleBadgesMobile"
-              :key="`m:${badge.type}:${badge.value}`"
-              variant="hub-filter"
-              as="button"
-              type="button"
-              class="h-6 px-2.5 text-xs gap-1"
-              @click.stop="store.removeBadge(badge)"
-            >
-              {{ badgeLabel(badge) }}
-              <svg
-                class="size-3 opacity-60"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </Badge>
-            <Badge v-if="overflowCountMobile > 0" variant="hub-filter" class="h-6 px-2.5 text-xs">
-              +{{ overflowCountMobile }} more
-            </Badge>
-          </div>
-
-          <!-- Inline filter badges — desktop (max 4) -->
           <div class="hidden lg:contents">
             <Badge
               v-for="badge in visibleBadgesDesktop"
@@ -611,10 +613,8 @@ onUnmounted(() => {
           ref="inputRef"
           v-model="searchQuery"
           type="text"
-          :placeholder="
-            hasBadges ? 'Search within filters...' : 'Search workflows, models, creators...'
-          "
-          class="flex-1 min-w-[120px] bg-transparent text-white text-sm font-normal placeholder:text-hub-muted outline-none py-2"
+          :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
+          class="flex-1 min-w-0 bg-transparent text-white text-sm font-normal placeholder:text-hub-muted outline-none py-2"
           @focus="handleFocus"
           @keydown="handleKeydown"
         />
@@ -646,7 +646,7 @@ onUnmounted(() => {
         <!-- Slash shortcut hint -->
         <kbd
           v-if="!isOpen && !hasQuery && !hasBadges"
-          class="hidden sm:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-white/5 text-white/30 text-xs font-mono leading-none"
+          class="hidden lg:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-white/5 text-white/30 text-xs font-mono leading-none"
           aria-hidden="true"
           >/</kbd
         >
@@ -665,6 +665,38 @@ onUnmounted(() => {
           v-if="isOpen && !hasActiveFilters"
           class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
+          <!-- Pinned mobile badge row -->
+          <div
+            v-if="hasBadges"
+            class="lg:hidden flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-1"
+          >
+            <Badge
+              v-for="badge in store.filterBadges.value"
+              :key="`mp:${badge.type}:${badge.value}`"
+              variant="hub-filter"
+              as="button"
+              type="button"
+              class="h-6 px-2.5 text-xs gap-1"
+              @click.stop="store.removeBadge(badge)"
+            >
+              {{ badgeLabel(badge) }}
+              <svg
+                class="size-3 opacity-60"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Badge>
+          </div>
+
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
             <!-- Popular Workflows -->
             <section>
@@ -725,9 +757,15 @@ onUnmounted(() => {
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === discCreatorOffset + i }"
                 >
+                  <img
+                    v-if="creator.avatarUrl"
+                    :src="creator.avatarUrl"
+                    :alt="creator.displayName"
+                    class="size-5 rounded-full shrink-0 object-cover"
+                  />
                   <span
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
-                    :style="{ backgroundColor: getCreatorColor(i) }"
+                    v-else
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
@@ -753,7 +791,7 @@ onUnmounted(() => {
                   :data-nav-index="discTagOffset + i"
                   @click="addFilterBadge('tag', tag.name)"
                 >
-                  {{ tag.name }}
+                  {{ tagDisplayName(tag.name) }}
                 </Badge>
                 <button
                   v-if="remainingTagCount > 0"
@@ -832,6 +870,38 @@ onUnmounted(() => {
           v-if="isOpen && hasActiveFilters"
           class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
+          <!-- Pinned mobile badge row -->
+          <div
+            v-if="hasBadges"
+            class="lg:hidden flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-1"
+          >
+            <Badge
+              v-for="badge in store.filterBadges.value"
+              :key="`mp2:${badge.type}:${badge.value}`"
+              variant="hub-filter"
+              as="button"
+              type="button"
+              class="h-6 px-2.5 text-xs gap-1"
+              @click.stop="store.removeBadge(badge)"
+            >
+              {{ badgeLabel(badge) }}
+              <svg
+                class="size-3 opacity-60"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Badge>
+          </div>
+
           <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">
             <div class="flex items-center gap-3 text-white/50">
@@ -872,7 +942,7 @@ onUnmounted(() => {
                   :data-nav-index="i"
                   @click="addFilterBadge('tag', tag.name)"
                 >
-                  {{ tag.name }}
+                  {{ tagDisplayName(tag.name) }}
                   <span class="text-white/30 text-[10px]">{{ tag.count }}</span>
                 </Badge>
                 <Badge
@@ -897,10 +967,46 @@ onUnmounted(() => {
               class="border-t border-white/5"
             />
 
+            <!-- Creator results (only when text searching) -->
+            <section v-if="hasQuery && matchedCreators.length > 0">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+                Creators
+              </h3>
+              <div class="flex flex-wrap gap-2">
+                <a
+                  v-for="(creator, i) in matchedCreators"
+                  :key="creator.username"
+                  :href="getTemplateUrl(creator.username)"
+                  :data-nav-index="activeCreatorOffset + i"
+                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+                  :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
+                >
+                  <img
+                    v-if="creator.avatarUrl"
+                    :src="creator.avatarUrl"
+                    :alt="creator.displayName"
+                    class="size-5 rounded-full shrink-0 object-cover"
+                  />
+                  <span
+                    v-else
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+                  >
+                    {{ creator.displayName.charAt(0).toUpperCase() }}
+                  </span>
+                  {{ creator.displayName }}
+                  <span class="text-white/30 text-xs">{{ creator.workflowCount }}</span>
+                </a>
+              </div>
+            </section>
+
             <!-- No results -->
             <div
               v-if="
-                hasQuery && hasSearched && searchResults && searchResults.workflows.length === 0
+                hasQuery &&
+                hasSearched &&
+                searchResults &&
+                searchResults.workflows.length === 0 &&
+                matchedCreators.length === 0
               "
               class="text-center py-4"
             >
@@ -924,7 +1030,7 @@ onUnmounted(() => {
             </div>
 
             <!-- Workflow results -->
-            <section v-else-if="displayedWorkflows.length > 0">
+            <section v-if="displayedWorkflows.length > 0">
               <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
                 Workflows
                 <span class="text-white/30 font-normal ml-1"
@@ -962,32 +1068,6 @@ onUnmounted(() => {
                   <span class="text-[10px] uppercase tracking-wide text-white/30 shrink-0">
                     {{ hit.mediaTypeLabel }}
                   </span>
-                </a>
-              </div>
-            </section>
-
-            <!-- Creator results (only when text searching) -->
-            <section v-if="hasQuery && searchResults && searchResults.creators.length > 0">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
-                Creators
-              </h3>
-              <div class="flex flex-wrap gap-2">
-                <a
-                  v-for="(creator, i) in searchResults.creators.slice(0, 5)"
-                  :key="creator.username"
-                  :href="getTemplateUrl(creator.username)"
-                  :data-nav-index="activeCreatorOffset + i"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
-                  :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
-                >
-                  <span
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black"
-                    :style="{ backgroundColor: getCreatorColor(i) }"
-                  >
-                    {{ creator.displayName.charAt(0).toUpperCase() }}
-                  </span>
-                  {{ creator.displayName }}
-                  <span class="text-white/30 text-xs">{{ creator.workflowCount }}</span>
                 </a>
               </div>
             </section>

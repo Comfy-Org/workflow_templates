@@ -12,7 +12,7 @@ import { badgeVariants } from '../ui/badge';
 import { slugify } from '../../lib/slugify';
 import creatorsData from '../../../creators.json';
 
-const creatorsMap = creatorsData as Record<string, { displayName: string }>;
+const creatorsMap = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
 
 interface Props {
   name: string;
@@ -52,8 +52,10 @@ const logoProvider = logos?.[0]?.provider;
 const providerName = Array.isArray(logoProvider) ? logoProvider[0] : logoProvider;
 const logoPath = providerName ? getModelLogoPath(providerName, providerName) : null;
 
-// Get author display name from creators.json via username
-const authorName = creatorsMap[username || '']?.displayName || 'ComfyUI';
+// Get author display name and avatar from creators.json via username
+const creatorData = creatorsMap[username || ''];
+const authorName = creatorData?.displayName || 'ComfyUI';
+const avatarUrl = creatorData?.avatarUrl || '';
 const creatorUrl = username ? localizeUrl(`/workflows/${username}/`, locale) : null;
 ---
 
@@ -119,11 +121,15 @@ const creatorUrl = username ? localizeUrl(`/workflows/${username}/`, locale) : n
     {
       !hideAuthor && (
         <div class="flex items-center gap-2 pt-4">
-          <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
-            <span class="text-black text-[10px] font-bold leading-none">
-              {authorName.charAt(0).toUpperCase()}
-            </span>
-          </div>
+          {avatarUrl ? (
+            <img src={avatarUrl} alt={authorName} class="size-5 rounded-full shrink-0 object-cover" />
+          ) : (
+            <div class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]">
+              <span class="text-black text-[10px] font-bold leading-none">
+                {authorName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+          )}
           {creatorUrl ? (
             <a
               href={creatorUrl}
