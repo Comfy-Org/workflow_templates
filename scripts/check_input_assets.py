@@ -16,9 +16,11 @@ from typing import List, Dict, Tuple, Optional
 # Add new node types to this list as they are discovered
 ASSET_NODE_TYPES = [
     "LoadImage",
-    "LoadAudio", 
-    "VHS_LoadVideo", 
-    "LoadVideo"
+    "LoadAudio",
+    "VHS_LoadVideo",
+    "LoadVideo",
+    "Load3D",
+    "LoadImageMask",
 ]
 
 
