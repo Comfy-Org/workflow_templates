@@ -27,12 +27,15 @@ if (fs.existsSync(templatesDir)) {
   }
 }
 
+// Build timestamp used as lastmod fallback for pages without a specific date
+const buildDate = new Date().toISOString();
+
 // Supported locales (matches src/i18n/config.ts)
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
 
 // https://astro.build/config
 export default defineConfig({
-  site: (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, ''),
+  site: (process.env.PUBLIC_SITE_ORIGIN || 'https://www.comfy.org').replace(/\/$/, ''),
   prefetch: {
     prefetchAll: false,
     defaultStrategy: 'hover',
@@ -49,7 +52,7 @@ export default defineConfig({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
       filenameBase: 'sitemap-workflows',
       // Include Framer's marketing sitemap in the index
-      customSitemaps: ['https://comfy.org/sitemap.xml'],
+      customSitemaps: ['https://www.comfy.org/sitemap.xml'],
       serialize(item) {
         const url = new URL(item.url);
         const pathname = url.pathname;
@@ -61,9 +64,7 @@ export default defineConfig({
         if (templateMatch) {
           const slug = templateMatch[2];
           const date = templateDates.get(slug);
-          if (date) {
-            item.lastmod = new Date(date).toISOString();
-          }
+          item.lastmod = date ? new Date(date).toISOString() : buildDate;
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'monthly';
           item.priority = 0.8;
@@ -72,6 +73,7 @@ export default defineConfig({
 
         // Homepage
         if (pathname === '/' || pathname === '') {
+          item.lastmod = buildDate;
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'daily';
           item.priority = 1.0;
@@ -80,6 +82,7 @@ export default defineConfig({
 
         // Workflows index (including localized versions)
         if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/?$/)) {
+          item.lastmod = buildDate;
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'daily';
           item.priority = 0.9;
