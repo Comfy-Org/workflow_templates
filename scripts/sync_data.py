@@ -1200,6 +1200,9 @@ class TemplateSyncManager:
             if missing_assets:
                 self.syncer.logger.warning(f"  ⚠️  Validation found {len(missing_assets)} missing asset(s)")
                 self.syncer.logger.warning(f"  ✅ {len(valid_assets)} asset(s) successfully validated")
+                self.syncer.logger.warning("  Missing assets:")
+                for asset in sorted(missing_assets, key=lambda x: (x["workflow"], x["filename"])):
+                    self.syncer.logger.warning(f"    - [{asset['node_type']}] {asset['filename']}  (in {asset['workflow']})")
             else:
                 self.syncer.logger.info(f"  ✅ Validation passed: All {len(valid_assets)} asset(s) found")
             
