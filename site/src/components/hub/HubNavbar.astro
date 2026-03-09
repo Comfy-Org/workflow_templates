@@ -26,7 +26,10 @@ interface Props {
   templates?: SearchTemplate[];
 }
 
-const creatorsMap = creatorsData as Record<string, { displayName: string; handle?: string; summary?: string; social?: string; avatarUrl?: string }>;
+const creatorsMap = creatorsData as Record<
+  string,
+  { displayName: string; handle?: string; summary?: string; social?: string; avatarUrl?: string }
+>;
 const locale = getLocaleFromPath(Astro.url.pathname);
 
 // Serialize creators.json into a flat array for SearchPopover
@@ -61,8 +64,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
     username: tmpl.data.username || '',
     creatorDisplayName:
       (tmpl.data.username && creatorsMap[tmpl.data.username]?.displayName) || 'ComfyUI',
-    creatorAvatarUrl:
-      (tmpl.data.username && creatorsMap[tmpl.data.username]?.avatarUrl) || '',
+    creatorAvatarUrl: (tmpl.data.username && creatorsMap[tmpl.data.username]?.avatarUrl) || '',
     isApp: tmpl.data.isApp || false,
   }));
 }
@@ -74,7 +76,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
     <div
       class="w-20 lg:min-w-[var(--hub-sidebar-width)] lg:max-w-[var(--hub-sidebar-width)] flex items-center justify-start"
     >
-      <a href={localizeUrl('/', locale)} class="shrink-0">
+      <a href={localizeUrl('/workflows/', locale)} class="shrink-0">
         <img src="/brand/comfy-c-yellow.svg" alt="Comfy" class="h-8 w-12 lg:hidden" />
         <img src="/brand/comfy-hub-logo.svg" alt="Comfy" class="hidden lg:block h-8 w-auto" />
       </a>
