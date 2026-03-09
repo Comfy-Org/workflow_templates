@@ -216,44 +216,66 @@ jobs:
           for pkg in $PACKAGES; do
             if [ "$pkg" != "meta" ]; then
               echo "📦 Building package: $pkg"
-              
+
               if ! python -m build --outdir dist packages/$pkg; then
                 echo "❌ Failed to build package $pkg"
                 exit 1
               fi
-              
+
               echo "🚀 Publishing $pkg to PyPI..."
-              if ! twine upload dist/*$pkg* 2>/dev/null; then
-                echo "⚠️ Upload failed for $pkg (may already exist), continuing..."
-              else
-                echo "✅ Successfully published $pkg"
+              # --skip-existing returns exit code 0 if version already on PyPI (idempotent)
+              # Real upload failures (auth, network, etc.) will still exit non-zero and abort the workflow
+              if ! twine upload --skip-existing dist/*$pkg*; then
+                echo "❌ Failed to upload $pkg - aborting to prevent broken meta package"
+                exit 1
               fi
-              
+              echo "✅ Successfully published $pkg"
+
               rm -f dist/*$pkg*
             fi
           done
-          
+
+          # Before publishing meta, verify all pinned subpackage dependencies are on PyPI
+          echo -e "\n--- Pre-publish dependency check for meta package ---"
+          META_DEPS=$(grep -E 'comfyui-workflow-templates-[a-z-]+==\S+' pyproject.toml | grep -oE 'comfyui-workflow-templates-[a-z-]+==[0-9.]+')
+          ALL_DEPS_OK=true
+          for dep in $META_DEPS; do
+            pkg_name=$(echo "$dep" | cut -d= -f1)
+            pkg_ver=$(echo "$dep" | cut -d= -f3)
+            pypi_check=$(curl -s --max-time 10 "https://pypi.org/pypi/$pkg_name/$pkg_ver/json" -o /dev/null -w "%{http_code}")
+            if [ "$pypi_check" = "200" ]; then
+              echo "✓ $pkg_name==$pkg_ver is available on PyPI"
+            else
+              echo "❌ $pkg_name==$pkg_ver is NOT on PyPI (HTTP $pypi_check) - cannot publish meta"
+              ALL_DEPS_OK=false
+            fi
+          done
+          if [ "$ALL_DEPS_OK" = "false" ]; then
+            echo "❌ One or more meta dependencies are missing from PyPI. Aborting."
+            exit 1
+          fi
+
           # Then build and publish meta package
           echo -e "\n--- Building Meta Package ---"
           for pkg in $PACKAGES; do
             if [ "$pkg" = "meta" ]; then
               echo "📦 Building root meta package"
-              
+
               if ! python -m build --outdir dist .; then
                 echo "❌ Failed to build meta package"
                 exit 1
               fi
-              
+
               echo "🚀 Publishing meta package to PyPI..."
-              if ! twine upload dist/comfyui_workflow_templates-*; then
+              if ! twine upload --skip-existing dist/comfyui_workflow_templates-*; then
                 echo "❌ Failed to upload meta package"
                 exit 1
               fi
-              
+
               echo "✅ Successfully published meta package"
             fi
           done
-          
+
           echo -e "\n🎉 All packages published successfully!"
         env:
           TWINE_USERNAME: __token__
