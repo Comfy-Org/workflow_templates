@@ -6,7 +6,7 @@ This script synchronizes template information from the English master file (inde
 to all other language versions, with automatic tag translation support.
 
 Key Features:
-- Auto-sync technical fields (models, date, size, vram, etc.)
+- Auto-sync technical fields (models, date, size, vram, username, etc.)
 - Automatic tag translation using i18n.json
 - Preserve language-specific translations (title, description)
 - Detect and track new tags for manual translation
@@ -88,6 +88,7 @@ class TemplateSyncer:
             "date",
             "size",
             "vram",
+            "username",
             "mediaType",
             "mediaSubtype", 
             "tutorialUrl",
