@@ -307,9 +307,10 @@ const uniqueCreatorCount = computed(() => props.creators.length);
 // Discovery preview — top 5 of each (matching sidebar) with remaining counts
 const DISCOVERY_PREVIEW_COUNT = 5;
 
-const previewTags = computed(() => allTags.value.slice(0, DISCOVERY_PREVIEW_COUNT));
+const DISCOVERY_TAG_COUNT = 4;
+const previewTags = computed(() => allTags.value.slice(0, DISCOVERY_TAG_COUNT));
 const remainingTagCount = computed(() =>
-  Math.max(0, allTags.value.length - DISCOVERY_PREVIEW_COUNT)
+  Math.max(0, allTags.value.length - DISCOVERY_TAG_COUNT)
 );
 
 const previewModels = computed(() => allModels.value.slice(0, DISCOVERY_PREVIEW_COUNT));
