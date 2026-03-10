@@ -18,6 +18,7 @@ import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
+import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 
 export interface SearchTemplate {
@@ -416,8 +417,8 @@ function activateItem(index: number) {
       if (creator) {
         const url =
           props.locale && props.locale !== 'en'
-            ? `/${props.locale}/workflows/${creator.username}/`
-            : `/workflows/${creator.username}/`;
+            ? `/${props.locale}/workflows/${slugify(creator.username)}/`
+            : `/workflows/${slugify(creator.username)}/`;
         window.location.href = url;
       }
     } else if (index < popCount + creatorCount + tagCount) {
@@ -769,8 +770,8 @@ onUnmounted(() => {
                   :key="creator.username"
                   :href="
                     locale && locale !== 'en'
-                      ? `/${locale}/workflows/${creator.username}/`
-                      : `/workflows/${creator.username}/`
+                      ? `/${locale}/workflows/${slugify(creator.username)}/`
+                      : `/workflows/${slugify(creator.username)}/`
                   "
                   :data-nav-index="discCreatorOffset + i"
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"

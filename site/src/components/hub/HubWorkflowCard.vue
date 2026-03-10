@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { computed } from 'vue';
 import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
+import { slugify } from '@/lib/slugify';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -113,7 +114,7 @@ function getTagUrl(tag: string): string {
 
 const creatorUrl = computed(() => {
   if (!props.username) return null;
-  const base = `/workflows/${props.username}/`;
+  const base = `/workflows/${slugify(props.username)}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 
