@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { DEFAULT_LOCALE } from './constants';
-import { CONTENT_DIR, TEMPLATES_DIR, THUMBNAILS_DIR } from './paths';
+import { CONTENT_DIR, THUMBNAILS_DIR } from './paths';
 import { logger } from './logger';
 import { parseArgs } from './args';
 import { loadTemplateIndex, flattenTemplates, getTopByUsage } from './index-reader';
