@@ -75,6 +75,13 @@ function closeDrawer() {
   store.closeMobileDrawer();
 }
 
+function applyFilters() {
+  store.closeMobileDrawer();
+  if (store.filterBadges.value.length > 0) {
+    store.requestSearchFocus();
+  }
+}
+
 // Lock body scroll when drawer is open
 function lockBodyScroll(lock: boolean) {
   if (lock) {
@@ -209,7 +216,7 @@ onUnmounted(() => {
       <button
         type="button"
         class="h-10 rounded-full bg-brand text-page text-sm font-bold cursor-pointer hover:brightness-75 active:brightness-50 transition-all"
-        @click="closeDrawer"
+        @click="applyFilters"
       >
         Done
       </button>

@@ -8,6 +8,7 @@ import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
+import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 
 import creatorsData from '../../../creators.json';
 
@@ -218,7 +219,7 @@ function formatRelativeDate(dateStr: string): string {
               class="flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors"
               data-template={data.name}
             >
-              Share Workflow
+              Share by URL
             </button>
           </div>
 
@@ -234,8 +235,8 @@ function formatRelativeDate(dateStr: string): string {
                       href: localizeUrl(`/workflows/category/${data.mediaType}/`, locale),
                     },
                     ...data.tags.map((tag: string) => ({
-                      label: tag,
-                      href: localizeUrl(`/workflows/tag/${slugify(tag)}/`, locale),
+                      label: tagDisplayName(tag),
+                      href: localizeUrl(`/workflows/tag/${tagSlug(tag)}/`, locale),
                     })),
                   ]}
                 />
@@ -296,18 +297,45 @@ function formatRelativeDate(dateStr: string): string {
   // Share button
   const shareBtn = document.getElementById('share-workflow-btn');
   if (shareBtn) {
-    shareBtn.addEventListener('click', () => {
+    shareBtn.addEventListener('click', function () {
       phCapture('share_button_clicked', { template_name: templateName });
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        const textNode = shareBtn.lastChild;
+      var url = window.location.href;
+
+      function showCopied() {
+        var textNode = shareBtn.lastChild;
         if (textNode) {
-          const original = textNode.textContent;
+          var original = textNode.textContent;
           textNode.textContent = ' Link copied!';
-          setTimeout(() => {
+          setTimeout(function () {
             textNode.textContent = original;
           }, 2000);
         }
-      });
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(showCopied).catch(function () {
+          fallbackCopy(url);
+        });
+      } else {
+        fallbackCopy(url);
+      }
+
+      function fallbackCopy(text) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        try {
+          document.execCommand('copy');
+          showCopied();
+        } catch (e) {
+          // silent fail
+        }
+        document.body.removeChild(textarea);
+      }
     });
   }
 

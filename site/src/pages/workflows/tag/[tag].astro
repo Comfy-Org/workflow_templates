@@ -8,7 +8,7 @@ import HreflangTags from '../../../components/HreflangTags.astro';
 import BackButton from '../../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { slugify } from '../../../lib/slugify';
+import { tagSlug, tagDisplayName } from '../../../lib/tag-aliases';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { badgeVariants } from '../../../components/ui/badge';
 import creatorsData from '../../../../creators.json';
@@ -29,7 +29,7 @@ export async function getStaticPaths() {
       // Skip empty tags
       if (!tag || typeof tag !== 'string' || tag.trim() === '') continue;
 
-      const slug = slugify(tag);
+      const slug = tagSlug(tag);
       // Skip tags that produce empty slugs (e.g., tags with only special characters)
       if (!slug) continue;
 
@@ -45,7 +45,7 @@ export async function getStaticPaths() {
     .map(({ slug, originalTag, templates }) => ({
       params: { tag: slug },
       props: {
-        tagName: originalTag,
+        tagName: tagDisplayName(originalTag),
         templates: templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0)),
       },
     }));
