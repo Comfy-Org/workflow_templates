@@ -41,7 +41,7 @@ export interface CreatorEntry {
   username: string;
   displayName: string;
   summary?: string;
-  social?: string;
+  social?: string | string[];
   avatarUrl?: string;
 }
 
