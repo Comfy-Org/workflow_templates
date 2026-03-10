@@ -126,11 +126,15 @@ export async function buildSearchIndex(): Promise<void> {
   miniSearch.addAll(documents);
 
   // Write to public/
-  const outputPath = path.join(SITE_DIR, 'public', 'search-index.json');
+  const outputDir = path.join(SITE_DIR, 'public', 'workflows');
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
+  }
+  const outputPath = path.join(outputDir, 'search-index.json');
   const serialized = JSON.stringify(miniSearch);
   fs.writeFileSync(outputPath, serialized);
 
   const sizeKB = (Buffer.byteLength(serialized) / 1024).toFixed(1);
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  logger.info(`Search index written to public/search-index.json (${sizeKB} KB, ${duration}s)`);
+  logger.info(`Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`);
 }

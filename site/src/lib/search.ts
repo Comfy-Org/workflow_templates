@@ -47,7 +47,7 @@ function tokenize(text: string): string[] {
 }
 
 async function loadIndex(): Promise<MiniSearch> {
-  const response = await fetch('/search-index.json');
+  const response = await fetch('/workflows/search-index.json');
   if (!response.ok) {
     throw new Error(`Failed to load search index: ${response.status}`);
   }
