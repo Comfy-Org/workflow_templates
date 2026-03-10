@@ -18,6 +18,7 @@ import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
+import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 
 export interface SearchTemplate {
   name: string;
@@ -192,6 +193,7 @@ watchDebounced(
       searchResults.value = await searchIndex(trimmed, {
         allowedIds: badgeFilteredIds.value ?? undefined,
       });
+      trackSearchPerformed(trimmed);
     } finally {
       isSearching.value = false;
       hasSearched.value = true;
@@ -327,6 +329,7 @@ const modeItems = [
 
 function addFilterBadge(type: 'tag' | 'model' | 'mode', value: string) {
   store.addBadge({ type, value });
+  trackFilterApplied(type, value);
   searchQuery.value = '';
   inputRef.value?.focus();
 }

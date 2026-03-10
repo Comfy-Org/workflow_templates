@@ -1,0 +1,23 @@
+---
+// PostHog analytics initialization — loaded on every page via BaseLayout.
+// Uses different project keys for staging vs production (detected by hostname).
+---
+
+<script>
+  import { initPostHog, trackRunButtonClicked, trackSignupCtaClicked } from '../lib/posthog';
+  initPostHog();
+
+  // Global delegation for run-cloud and signup CTA buttons across all pages
+  document.addEventListener('click', (e) => {
+    const target = (e.target as HTMLElement).closest('.run-cloud-btn');
+    if (target) {
+      const templateName = target.getAttribute('data-template') || '';
+      const location = target.getAttribute('data-location') || 'unknown';
+      if (templateName) {
+        trackRunButtonClicked(templateName, location);
+      } else {
+        trackSignupCtaClicked(location);
+      }
+    }
+  });
+</script>

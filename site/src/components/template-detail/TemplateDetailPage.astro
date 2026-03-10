@@ -198,7 +198,9 @@ function formatRelativeDate(dateStr: string): string {
               href={getCloudCtaUrl(data.name, 'hero')}
               target="_blank"
               rel="noopener noreferrer"
-              class="flex items-center justify-center h-10 bg-brand rounded-full text-sm font-bold text-page hover:opacity-90 transition-opacity"
+              class="run-cloud-btn flex items-center justify-center h-10 bg-brand rounded-full text-sm font-bold text-page hover:opacity-90 transition-opacity"
+              data-template={data.name}
+              data-location="hero"
             >
               {t('cta.tryCloud', locale)}
             </a>
@@ -214,6 +216,7 @@ function formatRelativeDate(dateStr: string): string {
               type="button"
               id="share-workflow-btn"
               class="flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors"
+              data-template={data.name}
             >
               Share Workflow
             </button>
@@ -260,29 +263,45 @@ function formatRelativeDate(dateStr: string): string {
   </div>
 </article>
 
-<script is:inline define:vars={{ templateName: data.name }}>
-  document.querySelectorAll('a[href*="cloud.comfy.org"]').forEach((link) => {
+<script is:inline define:vars={{ templateName: data.name, mediaType: data.mediaType }}>
+  // PostHog helper — safe to call before/after init
+  function phCapture(event, props) {
+    if (window.posthog) window.posthog.capture(event, props);
+  }
+
+  // Track template page view
+  phCapture('template_viewed', { template_name: templateName, media_type: mediaType });
+
+  // Run on Cloud button
+  document.querySelectorAll('.run-cloud-btn').forEach((link) => {
     link.addEventListener('click', () => {
+      var loc = link.getAttribute('data-location') || 'hero';
+      phCapture('run_button_clicked', { template_name: templateName, location: loc });
       if (window.va) {
-        window.va('event', { name: 'cta_click', template: templateName, location: 'hero' });
+        window.va('event', { name: 'cta_click', template: templateName, location: loc });
       }
     });
   });
+
+  // Download JSON button
   document.querySelectorAll('.download-json-btn').forEach((link) => {
     link.addEventListener('click', () => {
+      phCapture('download_button_clicked', { template_name: templateName });
       if (window.va) {
         window.va('event', { name: 'download_json', template: templateName });
       }
     });
   });
 
-  const shareBtn = document.getElementById('share-workflow-btn');
+  // Share button
+  var shareBtn = document.getElementById('share-workflow-btn');
   if (shareBtn) {
     shareBtn.addEventListener('click', () => {
+      phCapture('share_button_clicked', { template_name: templateName });
       navigator.clipboard.writeText(window.location.href).then(() => {
-        const textNode = shareBtn.lastChild;
+        var textNode = shareBtn.lastChild;
         if (textNode) {
-          const original = textNode.textContent;
+          var original = textNode.textContent;
           textNode.textContent = ' Link copied!';
           setTimeout(() => {
             textNode.textContent = original;
@@ -293,14 +312,14 @@ function formatRelativeDate(dateStr: string): string {
   }
 
   // Accordion for workflow description
-  const descText = document.querySelector('.workflow-description-text');
-  const showMoreBtn = document.querySelector('.workflow-show-more');
+  var descText = document.querySelector('.workflow-description-text');
+  var showMoreBtn = document.querySelector('.workflow-show-more');
   if (descText && showMoreBtn) {
     // Check if text is clamped (overflowing)
     if (descText.scrollHeight > descText.clientHeight) {
       showMoreBtn.classList.remove('hidden');
     }
-    let expanded = false;
+    var expanded = false;
     showMoreBtn.addEventListener('click', () => {
       expanded = !expanded;
       if (expanded) {
