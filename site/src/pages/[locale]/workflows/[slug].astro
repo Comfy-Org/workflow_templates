@@ -1,9 +1,11 @@
 ---
 /**
- * Localized template detail page
- * Generates pages like /zh/workflows/flux_schnell/, /ja/workflows/flux_schnell/, etc.
+ * Localized template detail page (on-demand rendered)
+ * Serves pages like /zh/workflows/flux_schnell/, /ja/workflows/flux_schnell/, etc.
+ * Rendered at the edge on first request, then cached by Vercel CDN.
  */
-import { getCollection } from 'astro:content';
+export const prerender = false;
+
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
@@ -13,36 +15,18 @@ import { t } from '../../../i18n/ui';
 import { getTemplatesForLocale } from '../../../lib/templates';
 import { absoluteUrl } from '../../../config/site';
 
-export async function getStaticPaths() {
-  const paths: {
-    params: { locale: string; slug: string };
-    props: { locale: Locale; templateName: string };
-  }[] = [];
+const { locale, slug } = Astro.params;
 
-  // Get all English templates (the source of truth for template names)
-  const enTemplates = await getCollection('templates');
-  const templateNames = enTemplates.filter((t) => !t.id.includes('/')).map((t) => t.data.name);
-
-  // Generate paths for all non-default locales
-  for (const locale of LOCALES) {
-    if (locale === DEFAULT_LOCALE) continue;
-
-    for (const templateName of templateNames) {
-      paths.push({
-        params: { locale, slug: templateName },
-        props: { locale: locale as Locale, templateName },
-      });
-    }
-  }
-
-  return paths;
+// Validate locale
+if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
+  return Astro.redirect('/workflows/');
 }
 
-const { locale, templateName } = Astro.props as { locale: Locale; templateName: string };
+const typedLocale = locale as Locale;
 
 // Get templates for this locale
-const templates = await getTemplatesForLocale(locale);
-const template = templates.find((t) => t.data.name === templateName);
+const templates = await getTemplatesForLocale(typedLocale);
+const template = templates.find((t) => t.data.name === slug);
 
 if (!template) {
   return Astro.redirect(`/${locale}/workflows/`);
@@ -89,7 +73,7 @@ const breadcrumbStructuredData = {
     {
       '@type': 'ListItem',
       position: 2,
-      name: t('nav.templates', locale),
+      name: t('nav.templates', typedLocale),
       item: absoluteUrl('/' + locale + '/workflows/'),
     },
     { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
@@ -118,13 +102,13 @@ const softwareAppStructuredData = {
   ogImage={ogImage}
   ogType="article"
   structuredData={structuredData}
-  locale={locale}
+  locale={typedLocale}
   hreflangBasePath={`/workflows/${data.name}/`}
   theme="dark"
   hideDefaultFooter
 >
   <HubNavbar />
-  <TemplateDetailPage template={{ data }} locale={locale} />
+  <TemplateDetailPage template={{ data }} locale={typedLocale} />
 
   {
     faqStructuredData && (

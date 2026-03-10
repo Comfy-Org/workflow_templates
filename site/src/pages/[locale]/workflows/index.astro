@@ -1,8 +1,11 @@
 ---
 /**
- * Localized templates index page
- * Generates pages like /zh/workflows/, /ja/workflows/, etc.
+ * Localized templates index page (on-demand rendered)
+ * Serves pages like /zh/workflows/, /ja/workflows/, etc.
+ * Rendered at the edge on first request, then cached by Vercel CDN.
  */
+export const prerender = false;
+
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
@@ -12,19 +15,18 @@ import { t } from '../../../i18n/ui';
 import { getTemplatesForLocale, sortByUsage } from '../../../lib/templates';
 import { absoluteUrl } from '../../../config/site';
 
-export async function getStaticPaths() {
-  // Generate paths for all non-default locales
-  return LOCALES.filter((locale) => locale !== DEFAULT_LOCALE).map((locale) => ({
-    params: { locale },
-    props: { locale },
-  }));
+const { locale } = Astro.params;
+
+// Validate locale
+if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
+  return Astro.redirect('/workflows/');
 }
 
-const { locale } = Astro.props as { locale: Locale };
-const langInfo = LANGUAGES[locale];
+const typedLocale = locale as Locale;
+const langInfo = LANGUAGES[typedLocale];
 
 // Get templates for this locale (with English fallback)
-const templates = await getTemplatesForLocale(locale);
+const templates = await getTemplatesForLocale(typedLocale);
 const sortedTemplates = sortByUsage(templates);
 
 const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
@@ -32,20 +34,20 @@ const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: t('meta.title', locale),
-  description: t('meta.description', locale),
+  name: t('meta.title', typedLocale),
+  description: t('meta.description', typedLocale),
   url: canonicalUrl,
   inLanguage: locale,
 };
 ---
 
 <BaseLayout
-  title={`${t('meta.title', locale)} - ComfyUI`}
-  description={t('meta.description', locale)}
+  title={`${t('meta.title', typedLocale)} - ComfyUI`}
+  description={t('meta.description', typedLocale)}
   canonicalUrl={canonicalUrl}
   ogImage="/og-default.png"
   structuredData={structuredData}
-  locale={locale}
+  locale={typedLocale}
   hreflangBasePath="/workflows/"
   theme="dark"
   hideDefaultFooter
@@ -55,10 +57,10 @@ const structuredData = {
     <!-- Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl sm:text-5xl font-bold text-white mb-4">
-        {t('nav.templates', locale)}
+        {t('nav.templates', typedLocale)}
       </h1>
       <p class="text-xl text-white/70 max-w-2xl mx-auto">
-        {t('meta.description', locale)}
+        {t('meta.description', typedLocale)}
       </p>
     </div>
 
@@ -67,9 +69,9 @@ const structuredData = {
       <span class="flex items-center gap-2">
         <span class="w-2 h-2 bg-green-500 rounded-full"></span>
         {sortedTemplates.length}
-        {t('template.count', locale)}
+        {t('template.count', typedLocale)}
       </span>
-      <span>{t('template.updated', locale)}</span>
+      <span>{t('template.updated', typedLocale)}</span>
     </div>
 
     <!-- Grid -->
@@ -88,7 +90,7 @@ const structuredData = {
             usage={template.data.usage}
             date={template.data.date}
             thumbnails={template.data.thumbnails}
-            locale={locale}
+            locale={typedLocale}
           />
         ))
       }
