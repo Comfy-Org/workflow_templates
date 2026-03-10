@@ -24,7 +24,7 @@ export function initPostHog(): void {
  * All tracked events follow the object_verb taxonomy:
  * - snake_case
  * - past tense verbs
- * - e.g. hub:run_button_clicked, hub:template_viewed
+ * - e.g. hub:run_button_clicked, hub:search_performed
  */
 type EventProperties = Record<string, string | number | boolean | undefined>;
 
@@ -54,16 +54,6 @@ export function trackDownloadButtonClicked(templateName: string): void {
 export function trackShareButtonClicked(templateName: string): void {
   capture('hub:share_button_clicked', {
     template_name: templateName,
-  });
-}
-
-export function trackTemplateViewed(
-  templateName: string,
-  mediaType: string,
-): void {
-  capture('hub:template_viewed', {
-    template_name: templateName,
-    media_type: mediaType,
   });
 }
 
