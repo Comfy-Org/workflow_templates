@@ -275,7 +275,7 @@ function formatRelativeDate(dateStr: string): string {
   // Run on Cloud button
   document.querySelectorAll('.run-cloud-btn').forEach((link) => {
     link.addEventListener('click', () => {
-      var loc = link.getAttribute('data-location') || 'hero';
+      const loc = link.getAttribute('data-location') || 'hero';
       phCapture('run_button_clicked', { template_name: templateName, location: loc });
       if (window.va) {
         window.va('event', { name: 'cta_click', template: templateName, location: loc });
@@ -294,14 +294,14 @@ function formatRelativeDate(dateStr: string): string {
   });
 
   // Share button
-  var shareBtn = document.getElementById('share-workflow-btn');
+  const shareBtn = document.getElementById('share-workflow-btn');
   if (shareBtn) {
     shareBtn.addEventListener('click', () => {
       phCapture('share_button_clicked', { template_name: templateName });
       navigator.clipboard.writeText(window.location.href).then(() => {
-        var textNode = shareBtn.lastChild;
+        const textNode = shareBtn.lastChild;
         if (textNode) {
-          var original = textNode.textContent;
+          const original = textNode.textContent;
           textNode.textContent = ' Link copied!';
           setTimeout(() => {
             textNode.textContent = original;
@@ -312,14 +312,14 @@ function formatRelativeDate(dateStr: string): string {
   }
 
   // Accordion for workflow description
-  var descText = document.querySelector('.workflow-description-text');
-  var showMoreBtn = document.querySelector('.workflow-show-more');
+  const descText = document.querySelector('.workflow-description-text');
+  const showMoreBtn = document.querySelector('.workflow-show-more');
   if (descText && showMoreBtn) {
     // Check if text is clamped (overflowing)
     if (descText.scrollHeight > descText.clientHeight) {
       showMoreBtn.classList.remove('hidden');
     }
-    var expanded = false;
+    let expanded = false;
     showMoreBtn.addEventListener('click', () => {
       expanded = !expanded;
       if (expanded) {
