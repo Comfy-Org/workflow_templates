@@ -9,10 +9,12 @@ export function initPostHog(): void {
 
   posthog.init(POSTHOG_KEY, {
     api_host: 'https://ph.comfy.org',
+    ui_host: 'https://us.posthog.com',
     person_profiles: 'identified_only',
     capture_pageview: true,
     capture_pageleave: true,
     autocapture: false,
+    debug: import.meta.env.DEV,
   });
 
   initialized = true;
@@ -22,7 +24,7 @@ export function initPostHog(): void {
  * All tracked events follow the object_verb taxonomy:
  * - snake_case
  * - past tense verbs
- * - e.g. run_button_clicked, template_viewed
+ * - e.g. hub:run_button_clicked, hub:template_viewed
  */
 type EventProperties = Record<string, string | number | boolean | undefined>;
 
@@ -37,20 +39,20 @@ export function trackRunButtonClicked(
   templateName: string,
   location: string,
 ): void {
-  capture('run_button_clicked', {
+  capture('hub:run_button_clicked', {
     template_name: templateName,
     location,
   });
 }
 
 export function trackDownloadButtonClicked(templateName: string): void {
-  capture('download_button_clicked', {
+  capture('hub:download_button_clicked', {
     template_name: templateName,
   });
 }
 
 export function trackShareButtonClicked(templateName: string): void {
-  capture('share_button_clicked', {
+  capture('hub:share_button_clicked', {
     template_name: templateName,
   });
 }
@@ -59,14 +61,14 @@ export function trackTemplateViewed(
   templateName: string,
   mediaType: string,
 ): void {
-  capture('template_viewed', {
+  capture('hub:template_viewed', {
     template_name: templateName,
     media_type: mediaType,
   });
 }
 
 export function trackSearchPerformed(query: string): void {
-  capture('search_performed', {
+  capture('hub:search_performed', {
     query,
   });
 }
@@ -75,14 +77,14 @@ export function trackFilterApplied(
   filterType: string,
   filterValue: string,
 ): void {
-  capture('filter_applied', {
+  capture('hub:filter_applied', {
     filter_type: filterType,
     filter_value: filterValue,
   });
 }
 
 export function trackSignupCtaClicked(location: string): void {
-  capture('signup_cta_clicked', {
+  capture('hub:signup_cta_clicked', {
     location,
   });
 }
