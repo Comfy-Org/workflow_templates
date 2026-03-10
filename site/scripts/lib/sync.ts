@@ -23,28 +23,20 @@ import {
 import type { TemplateInfo, SyncedTemplate } from './types';
 
 /**
- * Scan the templates directory for `.app.json` files and return a Set of
- * template names that are Comfy Apps.  The naming convention is
- * `{name}.app.json` — we match files ending in `.app.json` and derive the
- * template name by stripping that suffix.  A template whose *name* happens
- * to contain the word "app" but lacks the `.app.json` extension is NOT
- * treated as an app.
+ * Check whether a template name denotes a Comfy App.
+ *
+ * The convention is that app template names end with `.app` — for example
+ * `templates_liveportrat.app`.  The corresponding workflow file on disk is
+ * `{name}.json` (i.e. `templates_liveportrat.app.json`) and thumbnails
+ * follow the same pattern (`{name}-1.webp`).
  */
-function detectAppTemplates(): Set<string> {
-  const apps = new Set<string>();
-  for (const file of fs.readdirSync(TEMPLATES_DIR)) {
-    if (file.endsWith('.app.json')) {
-      const name = file.slice(0, -'.app.json'.length);
-      apps.add(name);
-    }
-  }
-  return apps;
+function isAppTemplate(name: string): boolean {
+  return name.endsWith('.app');
 }
 
 function createSyncedTemplate(
   template: TemplateInfo,
   locale: string,
-  appNames: Set<string>,
 ): SyncedTemplate {
   const thumbnails = findThumbnails(template.name);
   const workflow = readWorkflowJson(template.name);
@@ -76,7 +68,7 @@ function createSyncedTemplate(
     requiredNodes,
     authorNotes,
     workflowModels,
-    isApp: appNames.has(template.name) || undefined,
+    isApp: isAppTemplate(template.name) || undefined,
   };
 }
 
@@ -94,12 +86,14 @@ export function runSync(): void {
     process.exit(1);
   }
 
-  const appNames = detectAppTemplates();
-  if (appNames.size > 0) {
-    logger.info(`Detected ${appNames.size} Comfy App template(s): ${[...appNames].join(', ')}`);
+  const allEnTemplates = flattenTemplates(enCategories);
+  const appTemplates = allEnTemplates.filter((t) => isAppTemplate(t.name));
+  if (appTemplates.length > 0) {
+    logger.info(
+      `Detected ${appTemplates.length} Comfy App template(s): ${appTemplates.map((t) => t.name).join(', ')}`,
+    );
   }
 
-  const allEnTemplates = flattenTemplates(enCategories);
   const templatesToProcess = getTopByUsage(allEnTemplates, limit);
   const templateNames = new Set(templatesToProcess.map((t) => t.name));
 
@@ -133,7 +127,7 @@ export function runSync(): void {
         continue;
       }
 
-      const synced = createSyncedTemplate(template, locale, appNames);
+      const synced = createSyncedTemplate(template, locale);
 
       const outputPath = getOutputPath(templateName, locale);
       fs.writeFileSync(outputPath, JSON.stringify(synced, null, 2));
