@@ -19,7 +19,7 @@ interface CreatorProfile {
   displayName: string;
   handle: string;
   summary: string;
-  social?: string;
+  social?: string | string[];
   avatarUrl?: string;
   coverUrl?: string;
 }
@@ -57,18 +57,45 @@ const serialized = profileTemplates.map((tmpl) => ({
 }));
 
 // Parse social link for display
-function getSocialDisplay(social?: string): { label: string; url: string } | null {
-  if (!social) return null;
+function getSocialDisplay(social: string): { label: string; url: string } {
+  const url = social.startsWith('http://') || social.startsWith('https://')
+    ? social
+    : `https://${social}`;
+
   if (social.includes('x.com') || social.includes('twitter.com')) {
-    return { label: 'X/Twitter', url: `https://${social}` };
+    return { label: 'X', url };
   }
   if (social.includes('instagram.com')) {
-    return { label: 'Instagram', url: `https://${social}` };
+    return { label: 'Instagram', url };
   }
-  return { label: 'Website', url: `https://${social}` };
+  if (social.includes('youtube.com') || social.includes('youtu.be')) {
+    return { label: 'YouTube', url };
+  }
+  if (social.includes('tiktok.com')) {
+    return { label: 'TikTok', url };
+  }
+  if (social.includes('linkedin.com')) {
+    return { label: 'LinkedIn', url };
+  }
+  if (social.includes('github.com')) {
+    return { label: 'GitHub', url };
+  }
+  if (social.includes('facebook.com')) {
+    return { label: 'Facebook', url };
+  }
+  if (social.includes('threads.net') || social.includes('threads.com')) {
+    return { label: 'Threads', url };
+  }
+  return { label: 'Website', url };
 }
 
-const socialLink = getSocialDisplay(creator.social);
+function getSocialLinks(social?: string | string[]): { label: string; url: string }[] {
+  if (!social) return [];
+  const entries = Array.isArray(social) ? social : [social];
+  return entries.map(getSocialDisplay);
+}
+
+const socialLinks = getSocialLinks(creator.social);
 ---
 
 <BaseLayout
@@ -117,16 +144,18 @@ const socialLink = getSocialDisplay(creator.social);
 
             <!-- Social Links -->
             {
-              socialLink && (
-                <div class="flex items-center gap-2 text-sm text-hub-muted">
-                  <a
-                    href={socialLink.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="underline hover:text-white transition-colors"
-                  >
-                    {socialLink.label}
-                  </a>
+              socialLinks.length > 0 && (
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-hub-muted">
+                  {socialLinks.map((link) => (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="underline hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
                 </div>
               )
             }
