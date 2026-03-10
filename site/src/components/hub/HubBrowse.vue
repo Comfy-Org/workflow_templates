@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import WorkflowGrid from './WorkflowGrid.vue';
 import { useHubStore } from '@/composables/useHubStore';
 import { tagDisplayName } from '@/lib/tag-aliases';
+import { trackFilterApplied } from '@/lib/posthog';
 
 export interface SerializedTemplate {
   name: string;
@@ -68,10 +69,12 @@ const topModels = computed(() => {
 // Toggle helpers using shared store badges
 function toggleTagFilter(tag: string) {
   store.toggleBadge({ type: 'tag', value: tag });
+  trackFilterApplied('tag', tag);
 }
 
 function toggleModelFilter(model: string) {
   store.toggleBadge({ type: 'model', value: model });
+  trackFilterApplied('model', model);
 }
 
 function isTagActive(tag: string): boolean {
