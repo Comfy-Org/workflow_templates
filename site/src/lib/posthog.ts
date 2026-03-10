@@ -1,23 +1,13 @@
 import posthog from 'posthog-js';
 
-const POSTHOG_STAGING_KEY = 'phc_I86RrsKajBkKfL6z4ABf1uxnLtvO1NLZvAEOGUujSDD';
-const POSTHOG_PROD_KEY = 'phc_iKfK86id4xVYws9LybMje0h44eGtfwFgRPIBehmy8rO';
+const POSTHOG_KEY = import.meta.env.PUBLIC_POSTHOG_KEY;
 
 let initialized = false;
 
-function isProduction(): boolean {
-  if (typeof window === 'undefined') return false;
-  const hostname = window.location.hostname;
-  return hostname === 'www.comfy.org' || hostname === 'comfy.org';
-}
-
 export function initPostHog(): void {
-  if (typeof window === 'undefined' || initialized) return;
+  if (typeof window === 'undefined' || initialized || !POSTHOG_KEY) return;
 
-  const isProd = isProduction();
-  const apiKey = isProd ? POSTHOG_PROD_KEY : POSTHOG_STAGING_KEY;
-
-  posthog.init(apiKey, {
+  posthog.init(POSTHOG_KEY, {
     api_host: 'https://ph.comfy.org',
     person_profiles: 'identified_only',
     capture_pageview: true,
