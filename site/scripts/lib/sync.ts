@@ -18,6 +18,7 @@ import {
   copyWorkflowJson,
   ensureDirectories,
   syncLogos,
+  syncAvatars,
   getOutputPath,
 } from './filesystem';
 import type { TemplateInfo, SyncedTemplate } from './types';
@@ -176,6 +177,7 @@ export function runSync(): void {
   }
 
   const logosSynced = syncLogos();
+  const avatarsSynced = syncAvatars();
 
   logger.info(`\n=== Sync complete ===`);
   logger.info(`Total: ${syncedCount} template files synced`);
@@ -184,6 +186,9 @@ export function runSync(): void {
   }
   if (logosSynced > 0) {
     logger.info(`Synced ${logosSynced} logos`);
+  }
+  if (avatarsSynced > 0) {
+    logger.info(`Synced ${avatarsSynced} avatars`);
   }
   if (orphansRemoved > 0) {
     logger.info(`Removed ${orphansRemoved} orphan content files`);

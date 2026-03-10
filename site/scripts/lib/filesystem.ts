@@ -8,6 +8,8 @@ import {
   WORKFLOWS_DIR,
   LOGOS_SRC_DIR,
   LOGOS_DEST_DIR,
+  AVATARS_SRC_DIR,
+  AVATARS_DEST_DIR,
 } from './paths';
 import { logger } from './logger';
 
@@ -81,6 +83,10 @@ export function ensureDirectories(locales: string[]): void {
   if (!fs.existsSync(LOGOS_DEST_DIR)) {
     fs.mkdirSync(LOGOS_DEST_DIR, { recursive: true });
   }
+
+  if (!fs.existsSync(AVATARS_DEST_DIR)) {
+    fs.mkdirSync(AVATARS_DEST_DIR, { recursive: true });
+  }
 }
 
 export function syncLogos(): number {
@@ -95,6 +101,25 @@ export function syncLogos(): number {
     const src = path.join(LOGOS_SRC_DIR, file);
     const destName = LOGO_FILENAME_FIXES[file] || file;
     const dest = path.join(LOGOS_DEST_DIR, destName);
+    if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
+      fs.copyFileSync(src, dest);
+      count++;
+    }
+  }
+  return count;
+}
+
+export function syncAvatars(): number {
+  if (!fs.existsSync(AVATARS_SRC_DIR)) {
+    logger.warn('  Warning: avatars source directory not found, skipping avatar sync');
+    return 0;
+  }
+
+  let count = 0;
+  for (const file of fs.readdirSync(AVATARS_SRC_DIR)) {
+    if (!file.endsWith('.png') && !file.endsWith('.webp')) continue;
+    const src = path.join(AVATARS_SRC_DIR, file);
+    const dest = path.join(AVATARS_DEST_DIR, file);
     if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
       fs.copyFileSync(src, dest);
       count++;

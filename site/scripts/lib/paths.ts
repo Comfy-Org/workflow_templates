@@ -9,3 +9,5 @@ export const THUMBNAILS_DIR = path.join(SITE_DIR, 'public', 'workflows', 'thumbn
 export const WORKFLOWS_DIR = path.join(SITE_DIR, 'public', 'workflows');
 export const LOGOS_SRC_DIR = path.join(TEMPLATES_DIR, 'logo');
 export const LOGOS_DEST_DIR = path.join(SITE_DIR, 'public', 'logos');
+export const AVATARS_SRC_DIR = path.join(SITE_DIR, 'avatars');
+export const AVATARS_DEST_DIR = path.join(SITE_DIR, 'public', 'workflows', 'avatars');
