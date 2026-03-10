@@ -7,8 +7,7 @@
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { computed } from 'vue';
-import { slugify } from '@/lib/slugify';
-import { tagDisplayName } from '@/lib/tag-aliases';
+import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -92,14 +91,23 @@ const templateUrl = computed(() => {
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 
-const primaryThumb = computed(() =>
-  props.thumbnails.length > 0 ? `/workflows/thumbnails/${props.thumbnails[0]}` : null
-);
+const primaryThumb = computed(() => {
+  if (props.thumbnails.length === 0) return null;
+  const file = props.thumbnails[0];
+  if (file.endsWith('.mp3') || file.endsWith('.webm') || file.endsWith('.mp4')) return null;
+  return `/workflows/thumbnails/${file}`;
+});
+
+const isAudioThumb = computed(() => {
+  if (props.thumbnails.length === 0) return false;
+  const file = props.thumbnails[0];
+  return file.endsWith('.mp3') || file.endsWith('.webm');
+});
 
 const displayTags = computed(() => props.tags.slice(0, 3));
 
 function getTagUrl(tag: string): string {
-  const base = `/workflows/tag/${slugify(tag)}/`;
+  const base = `/workflows/tag/${tagSlug(tag)}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 }
 
@@ -108,15 +116,19 @@ const creatorUrl = computed(() => {
   const base = `/workflows/${props.username}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
+
+function handleCardClick() {
+  window.location.href = templateUrl.value;
+}
 </script>
 
 <template>
-  <div class="group relative overflow-hidden transition-all duration-200 content-auto">
-    <!-- Stretched link covering entire card -->
-    <a :href="templateUrl" class="absolute inset-0 z-0" aria-hidden="true"></a>
-
+  <div
+    class="group transition-all duration-200 content-auto cursor-pointer"
+    @click="handleCardClick"
+  >
     <!-- Thumbnail -->
-    <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative pointer-events-none">
+    <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative">
       <img
         v-if="primaryThumb"
         :src="primaryThumb"
@@ -125,6 +137,25 @@ const creatorUrl = computed(() => {
         decoding="async"
         class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
       />
+      <div
+        v-else-if="isAudioThumb"
+        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
+      >
+        <svg
+          class="w-16 h-16 text-white/20"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+          />
+        </svg>
+      </div>
       <div
         v-else
         class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
@@ -158,52 +189,69 @@ const creatorUrl = computed(() => {
       </div>
     </div>
 
-    <!-- Content -->
-    <div class="pt-3 pb-1 pointer-events-none">
+    <!-- Title -->
+    <div class="pt-3 pb-1">
       <h3
         class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors"
       >
         {{ title }}
       </h3>
+    </div>
 
-      <!-- Author line -->
-      <div v-if="!hideAuthor" class="flex items-center gap-2 pt-4">
-        <img
-          v-if="creatorAvatarUrl"
-          :src="creatorAvatarUrl"
-          :alt="authorName"
-          class="size-5 rounded-full shrink-0 object-cover"
-        />
-        <div
-          v-else
-          class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
-        >
-          <span class="text-black text-[10px] font-bold leading-none">{{
-            authorName.charAt(0).toUpperCase()
-          }}</span>
-        </div>
-        <a
-          v-if="creatorUrl"
-          :href="creatorUrl"
-          class="creator-link pointer-events-auto relative z-10 text-white/50 text-sm truncate hover:text-white transition-colors"
-          >{{ authorName }}</a
-        >
-        <span v-else class="text-white/50 text-sm truncate">{{ authorName }}</span>
+    <!-- Author line -->
+    <a
+      v-if="!hideAuthor && creatorUrl"
+      :href="creatorUrl"
+      class="creator-link flex items-center gap-2 pt-2 w-fit text-white/50 hover:text-white transition-colors"
+      @click.stop
+    >
+      <img
+        v-if="creatorAvatarUrl"
+        :src="creatorAvatarUrl"
+        :alt="authorName"
+        class="size-5 rounded-full shrink-0 object-cover"
+      />
+      <div
+        v-else
+        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+      >
+        <span class="text-black text-[10px] font-bold leading-none">{{
+          authorName.charAt(0).toUpperCase()
+        }}</span>
       </div>
+      <span class="text-sm truncate">{{ authorName }}</span>
+    </a>
+    <div v-else-if="!hideAuthor" class="flex items-center gap-2 pt-2">
+      <img
+        v-if="creatorAvatarUrl"
+        :src="creatorAvatarUrl"
+        :alt="authorName"
+        class="size-5 rounded-full shrink-0 object-cover"
+      />
+      <div
+        v-else
+        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+      >
+        <span class="text-black text-[10px] font-bold leading-none">{{
+          authorName.charAt(0).toUpperCase()
+        }}</span>
+      </div>
+      <span class="text-white/50 text-sm truncate">{{ authorName }}</span>
+    </div>
 
-      <!-- Type badge + Tag pills -->
-      <div class="flex items-center gap-1.5 pt-4 overflow-hidden pointer-events-auto">
-        <a
-          v-for="tag in displayTags"
-          :key="tag"
-          :href="getTagUrl(tag)"
-          class="tag-link relative z-10"
-        >
-          <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors truncate max-w-28">
-            {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
-          </Badge>
-        </a>
-      </div>
+    <!-- Tag pills -->
+    <div class="flex items-center gap-1.5 pt-4 overflow-hidden">
+      <a
+        v-for="tag in displayTags"
+        :key="tag"
+        :href="getTagUrl(tag)"
+        class="tag-link"
+        @click.stop
+      >
+        <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors truncate max-w-28">
+          {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
+        </Badge>
+      </a>
     </div>
   </div>
 </template>

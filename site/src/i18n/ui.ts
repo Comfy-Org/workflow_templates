@@ -3,8 +3,8 @@ import type { Locale } from './config';
 // UI string translations (static text used across the site)
 export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   en: {
-    'hub.title': 'Comfy Hub',
-    'hub.subtitle': "Discover the World's Top Creators",
+    'hub.title': 'ComfyHub',
+    'hub.subtitle': "Discover the World's Top Creators and Workflows",
     'hub.filters': 'FILTERS',
     'hub.models': 'MODELS',
     'hub.showMore': 'Show more...',
@@ -58,7 +58,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'Try on Comfy Cloud',
   },
   zh: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': '发现全球顶级创作者',
     'hub.filters': '筛选',
     'hub.models': '模型',
@@ -112,7 +112,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': '在 Comfy Cloud 试用',
   },
   'zh-TW': {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': '探索全球頂級創作者',
     'hub.filters': '篩選',
     'hub.models': '模型',
@@ -166,7 +166,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': '在 Comfy Cloud 試用',
   },
   ja: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': '世界のトップクリエイターを発見',
     'hub.filters': 'フィルター',
     'hub.models': 'モデル',
@@ -221,7 +221,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'Comfy Cloudで試す',
   },
   ko: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': '세계 최고의 크리에이터를 만나보세요',
     'hub.filters': '필터',
     'hub.models': '모델',
@@ -276,7 +276,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'Comfy Cloud에서 사용',
   },
   es: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': 'Descubre a los Mejores Creadores del Mundo',
     'hub.filters': 'FILTROS',
     'hub.models': 'MODELOS',
@@ -331,7 +331,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'Probar en Comfy Cloud',
   },
   fr: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': 'Découvrez les Meilleurs Créateurs du Monde',
     'hub.filters': 'FILTRES',
     'hub.models': 'MODÈLES',
@@ -386,7 +386,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'Essayer sur Comfy Cloud',
   },
   ru: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': 'Откройте для себя лучших создателей мира',
     'hub.filters': 'ФИЛЬТРЫ',
     'hub.models': 'МОДЕЛИ',
@@ -441,7 +441,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'Попробовать в Comfy Cloud',
   },
   tr: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': 'Dünyanın En İyi Yaratıcılarını Keşfedin',
     'hub.filters': 'FİLTRELER',
     'hub.models': 'MODELLER',
@@ -496,7 +496,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': "Comfy Cloud'da Dene",
   },
   ar: {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': 'اكتشف أفضل المبدعين في العالم',
     'hub.filters': 'التصفية',
     'hub.models': 'النماذج',
@@ -551,7 +551,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.tryOnCloud': 'جرب على Comfy Cloud',
   },
   'pt-BR': {
-    'hub.title': 'Comfy Hub',
+    'hub.title': 'ComfyHub',
     'hub.subtitle': 'Descubra os Melhores Criadores do Mundo',
     'hub.filters': 'FILTROS',
     'hub.models': 'MODELOS',

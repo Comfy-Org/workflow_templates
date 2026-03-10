@@ -498,8 +498,15 @@ function formatUsage(usage: number): string {
   return String(usage);
 }
 
+function isAudioFile(file: string): boolean {
+  return file.endsWith('.mp3') || file.endsWith('.webm');
+}
+
 function getPrimaryThumb(thumbnails: string[]): string | null {
-  return thumbnails.length > 0 ? `/workflows/thumbnails/${thumbnails[0]}` : null;
+  if (thumbnails.length === 0) return null;
+  const file = thumbnails[0];
+  if (isAudioFile(file) || file.endsWith('.mp4')) return null;
+  return `/workflows/thumbnails/${file}`;
 }
 
 function handleFocus() {
@@ -556,11 +563,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full">
-    <div class="lg:relative">
+  <div ref="containerRef" class="w-full min-w-0">
+    <div class="lg:relative min-w-0">
       <!-- Search Input with Badges -->
       <div
-        class="flex items-center gap-1.5 min-h-10 px-3 rounded-full transition-colors"
+        class="flex items-center gap-1.5 w-full min-h-10 px-3 rounded-full transition-colors"
         :class="[isOpen ? 'bg-hub-surface ring-1 ring-brand' : 'bg-hub-surface']"
         @click="inputRef?.focus()"
       >
@@ -727,6 +734,14 @@ onUnmounted(() => {
                       loading="lazy"
                       class="w-full h-full object-cover"
                     />
+                    <div
+                      v-else-if="wf.thumbnails.length > 0 && isAudioFile(wf.thumbnails[0])"
+                      class="w-full h-full flex items-center justify-center"
+                    >
+                      <svg class="w-5 h-5 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                      </svg>
+                    </div>
                   </div>
                   <div class="min-w-0 flex-1">
                     <p
@@ -1052,12 +1067,20 @@ onUnmounted(() => {
                 >
                   <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
                     <img
-                      v-if="hit.thumbnail"
+                      v-if="hit.thumbnail && !isAudioFile(hit.thumbnail)"
                       :src="`/workflows/thumbnails/${hit.thumbnail}`"
                       :alt="hit.title"
                       loading="lazy"
                       class="w-full h-full object-cover"
                     />
+                    <div
+                      v-else-if="hit.thumbnail && isAudioFile(hit.thumbnail)"
+                      class="w-full h-full flex items-center justify-center"
+                    >
+                      <svg class="w-5 h-5 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                      </svg>
+                    </div>
                   </div>
                   <div class="min-w-0 flex-1">
                     <p
