@@ -76,7 +76,7 @@ function formatRelativeDate(dateStr: string): string {
 }
 ---
 
-<article class="bg-page min-h-screen text-content scroll-smooth">
+<article class="template-detail-page bg-page min-h-screen text-content scroll-smooth" data-template={data.name} data-media-type={data.mediaType}>
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-16 pb-32">
     <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 justify-between w-full">
       {/* Back button */}
@@ -264,30 +264,20 @@ function formatRelativeDate(dateStr: string): string {
   </div>
 </article>
 
-<script is:inline define:vars={{ templateName: data.name, mediaType: data.mediaType }}>
-  // PostHog helper — safe to call before/after init
-  function phCapture(event, props) {
-    if (window.posthog) window.posthog.capture(event, props);
-  }
-
-  // Track template page view
-  phCapture('template_viewed', { template_name: templateName, media_type: mediaType });
-
-  // Run on Cloud button
+<script is:inline define:vars={{ templateName: data.name }}>
+  // Run on Cloud button — Vercel analytics
   document.querySelectorAll('.run-cloud-btn').forEach((link) => {
     link.addEventListener('click', () => {
       const loc = link.getAttribute('data-location') || 'hero';
-      phCapture('run_button_clicked', { template_name: templateName, location: loc });
       if (window.va) {
         window.va('event', { name: 'cta_click', template: templateName, location: loc });
       }
     });
   });
 
-  // Download JSON button
+  // Download JSON button — Vercel analytics
   document.querySelectorAll('.download-json-btn').forEach((link) => {
     link.addEventListener('click', () => {
-      phCapture('download_button_clicked', { template_name: templateName });
       if (window.va) {
         window.va('event', { name: 'download_json', template: templateName });
       }
@@ -298,7 +288,6 @@ function formatRelativeDate(dateStr: string): string {
   const shareBtn = document.getElementById('share-workflow-btn');
   if (shareBtn) {
     shareBtn.addEventListener('click', function () {
-      phCapture('share_button_clicked', { template_name: templateName });
       var url = window.location.href;
 
       function showCopied() {
