@@ -16,7 +16,7 @@ interface CreatorProfile {
   displayName: string;
   handle: string;
   summary: string;
-  social?: string;
+  social?: string | string[];
   avatarUrl?: string;
   coverUrl?: string;
 }
@@ -288,12 +288,12 @@ function formatRelativeDate(dateStr: string): string {
   const shareBtn = document.getElementById('share-workflow-btn');
   if (shareBtn) {
     shareBtn.addEventListener('click', function () {
-      var url = window.location.href;
+      const url = window.location.href;
 
       function showCopied() {
-        var textNode = shareBtn.lastChild;
+        const textNode = shareBtn.lastChild;
         if (textNode) {
-          var original = textNode.textContent;
+          const original = textNode.textContent;
           textNode.textContent = ' Link copied!';
           setTimeout(function () {
             textNode.textContent = original;
@@ -310,7 +310,7 @@ function formatRelativeDate(dateStr: string): string {
       }
 
       function fallbackCopy(text) {
-        var textarea = document.createElement('textarea');
+        const textarea = document.createElement('textarea');
         textarea.value = text;
         textarea.style.position = 'fixed';
         textarea.style.opacity = '0';
@@ -320,7 +320,7 @@ function formatRelativeDate(dateStr: string): string {
         try {
           document.execCommand('copy');
           showCopied();
-        } catch (e) {
+        } catch {
           // silent fail
         }
         document.body.removeChild(textarea);
