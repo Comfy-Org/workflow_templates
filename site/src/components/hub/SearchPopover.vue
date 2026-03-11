@@ -271,6 +271,12 @@ function getTemplateUrl(name: string): string {
     : `/workflows/${name}/`;
 }
 
+function getCreatorUrl(username: string): string {
+  return props.locale && props.locale !== 'en'
+    ? `/${props.locale}/workflows/${slugify(username)}/`
+    : `/workflows/${slugify(username)}/`;
+}
+
 // React to search focus requests from other components (e.g. HubBrowse sidebar)
 watch(
   () => store.searchFocusTrigger.value,
@@ -399,7 +405,7 @@ function activateItem(index: number) {
       addFilterBadge('model', filterSuggestions.value.models[index - sugTagCount].name);
     } else if (index < sugTotal + matchedCreators.value.length) {
       const creator = matchedCreators.value[index - sugTotal];
-      if (creator) window.location.href = getTemplateUrl(creator.username);
+      if (creator) window.location.href = getCreatorUrl(creator.username);
     } else {
       const wf = displayedWorkflows.value[index - sugTotal - matchedCreators.value.length];
       if (wf) window.location.href = getTemplateUrl(wf.id);
@@ -414,13 +420,7 @@ function activateItem(index: number) {
       if (wf) window.location.href = getTemplateUrl(wf.name);
     } else if (index < popCount + creatorCount) {
       const creator = topCreators.value[index - popCount];
-      if (creator) {
-        const url =
-          props.locale && props.locale !== 'en'
-            ? `/${props.locale}/workflows/${slugify(creator.username)}/`
-            : `/workflows/${slugify(creator.username)}/`;
-        window.location.href = url;
-      }
+      if (creator) window.location.href = getCreatorUrl(creator.username);
     } else if (index < popCount + creatorCount + tagCount) {
       const tag = previewTags.value[index - popCount - creatorCount];
       if (tag) addFilterBadge('tag', tag.name);
@@ -768,11 +768,7 @@ onUnmounted(() => {
                 <a
                   v-for="(creator, i) in topCreators"
                   :key="creator.username"
-                  :href="
-                    locale && locale !== 'en'
-                      ? `/${locale}/workflows/${slugify(creator.username)}/`
-                      : `/workflows/${slugify(creator.username)}/`
-                  "
+                  :href="getCreatorUrl(creator.username)"
                   :data-nav-index="discCreatorOffset + i"
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === discCreatorOffset + i }"
@@ -996,7 +992,7 @@ onUnmounted(() => {
                 <a
                   v-for="(creator, i) in matchedCreators"
                   :key="creator.username"
-                  :href="getTemplateUrl(creator.username)"
+                  :href="getCreatorUrl(creator.username)"
                   :data-nav-index="activeCreatorOffset + i"
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
