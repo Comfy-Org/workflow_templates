@@ -1,8 +1,10 @@
 ---
 /**
- * Localized template detail page (on-demand rendered)
- * Serves pages like /zh/workflows/flux_schnell/, /ja/workflows/flux_schnell/, etc.
- * Rendered at the edge on first request, then cached by Vercel CDN.
+ * Localized template detail OR creator profile page (on-demand rendered)
+ * Serves pages like /zh/workflows/flux_schnell/, /ja/workflows/kosinkadink/, etc.
+ *
+ * Since SSR can't distinguish [slug] from [username] at the routing level,
+ * this file handles both: first tries to match a template, then a creator.
  */
 export const prerender = false;
 
@@ -10,10 +12,44 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import TemplateDetailPage from '../../../components/template-detail/TemplateDetailPage.astro';
+import SidebarSection from '../../../components/template-detail/SidebarSection.astro';
+import BackButton from '../../../components/BackButton.astro';
+import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
 import { getTemplatesForLocale } from '../../../lib/templates';
 import { absoluteUrl } from '../../../config/site';
+import { slugify } from '../../../lib/slugify';
+import type { WorkflowTemplate } from '../../../components/hub/WorkflowGrid.vue';
+import creatorsData from '../../../../creators.json';
+
+interface TemplateData {
+  name: string;
+  title?: string;
+  description: string;
+  extendedDescription?: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  thumbnails?: string[];
+  tags?: string[];
+  models?: string[];
+  username?: string;
+  date?: string;
+  metaDescription?: string;
+  faqItems?: { question: string; answer: string }[];
+  [key: string]: unknown;
+}
+
+interface CreatorProfile {
+  displayName: string;
+  handle: string;
+  summary: string;
+  social?: string | string[];
+  avatarUrl?: string;
+}
+
+const creators = creatorsData as Record<string, CreatorProfile>;
 
 const { locale, slug } = Astro.params;
 
@@ -25,108 +61,272 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 const typedLocale = locale as Locale;
 
 // Get templates for this locale
-const templates = await getTemplatesForLocale(typedLocale);
-const template = templates.find((t) => t.data.name === slug);
+const allTemplates = await getTemplatesForLocale(typedLocale);
+const template = allTemplates.find((t) => t.data.name === slug);
 
-if (!template) {
+// Check if this is a creator profile
+const slugToUsername = new Map<string, string>();
+for (const key of Object.keys(creators)) {
+  slugToUsername.set(slugify(key), key);
+}
+const rawUsername = slug ? slugToUsername.get(slug) : undefined;
+const isCreatorProfile = !template && !!rawUsername;
+
+// If neither template nor creator, redirect
+if (!template && !isCreatorProfile) {
   return Astro.redirect(`/${locale}/workflows/`);
 }
 
-const { data } = template;
+// --- Shared ---
+let pageTitle = '';
+let pageDescription = '';
+let canonicalUrl = '';
+let ogImage = '/og-default.png';
+let ogType: 'article' | 'website' = 'website';
+let structuredData: Record<string, unknown> = {};
+let hreflangBasePath = '';
 
-const title = `${data.title || data.name} - ComfyUI`;
-const canonicalUrl = absoluteUrl('/' + locale + '/workflows/' + data.name + '/');
+// --- Creator profile variables ---
+let creator: CreatorProfile | null = null;
+let creatorSerialized: WorkflowTemplate[] = [];
+let socialLinks: { label: string; url: string }[] = [];
 
-const thumbnails = data.thumbnails || [];
-const primaryThumbnail = thumbnails[0] || null;
-const ogImage = primaryThumbnail
-  ? `/workflows/thumbnails/${primaryThumbnail}`
-  : `/workflows/og/${data.name}.png`;
+// --- Template detail variables ---
+let templateData: TemplateData | null = null;
+let faqStructuredData: Record<string, unknown> | null = null;
+let breadcrumbStructuredData: Record<string, unknown> | null = null;
+let softwareAppStructuredData: Record<string, unknown> | null = null;
 
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'TechArticle',
-  headline: data.title || data.name,
-  description: data.description,
-  image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
-  datePublished: data.date,
-  inLanguage: locale,
-};
+if (isCreatorProfile && rawUsername) {
+  creator = creators[rawUsername];
+  const profileTemplates = allTemplates
+    .filter((tmpl) => tmpl.data.username === rawUsername)
+    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
 
-const faqStructuredData = data.faqItems?.length
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: data.faqItems.map((item: { question: string; answer: string }) => ({
-        '@type': 'Question',
-        name: item.question,
-        acceptedAnswer: { '@type': 'Answer', text: item.answer },
-      })),
-    }
-  : null;
+  creatorSerialized = profileTemplates.map((tmpl) => ({
+    name: tmpl.data.name,
+    title: tmpl.data.title || tmpl.data.name,
+    tags: tmpl.data.tags || [],
+    logos: tmpl.data.logos || [],
+    usage: tmpl.data.usage || 0,
+    date: tmpl.data.date || '',
+    thumbnails: tmpl.data.thumbnails || [],
+    username: tmpl.data.username || '',
+    creatorDisplayName: creator!.displayName,
+    isApp: tmpl.data.isApp || false,
+  }));
 
-const breadcrumbStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/' + locale + '/') },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: t('nav.templates', typedLocale),
-      item: absoluteUrl('/' + locale + '/workflows/'),
-    },
-    { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
-  ],
-};
+  function getSocialDisplay(social: string): { label: string; url: string } {
+    const url =
+      social.startsWith('http://') || social.startsWith('https://') ? social : `https://${social}`;
+    if (social.includes('x.com') || social.includes('twitter.com')) return { label: 'X', url };
+    if (social.includes('instagram.com')) return { label: 'Instagram', url };
+    if (social.includes('youtube.com') || social.includes('youtu.be'))
+      return { label: 'YouTube', url };
+    if (social.includes('tiktok.com')) return { label: 'TikTok', url };
+    if (social.includes('linkedin.com')) return { label: 'LinkedIn', url };
+    if (social.includes('github.com')) return { label: 'GitHub', url };
+    if (social.includes('facebook.com')) return { label: 'Facebook', url };
+    if (social.includes('threads.net') || social.includes('threads.com'))
+      return { label: 'Threads', url };
+    return { label: 'Website', url };
+  }
 
-const softwareAppStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
-  name: data.title || data.name,
-  applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Windows, macOS, Linux',
-  description: data.metaDescription || data.description,
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'USD',
-  },
-};
+  const socialEntries = creator.social
+    ? Array.isArray(creator.social)
+      ? creator.social
+      : [creator.social]
+    : [];
+  socialLinks = socialEntries.map(getSocialDisplay);
+
+  pageTitle = `${creator.displayName} (@${creator.handle}) - ComfyUI Workflow Templates`;
+  pageDescription = creator.summary;
+  canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
+  structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    name: creator.displayName,
+    description: creator.summary,
+    url: canonicalUrl,
+    inLanguage: locale,
+  };
+} else if (template) {
+  const { data } = template;
+  templateData = data as TemplateData;
+
+  pageTitle = `${data.title || data.name} - ComfyUI`;
+  pageDescription = data.metaDescription || data.description;
+  canonicalUrl = absoluteUrl('/' + locale + '/workflows/' + data.name + '/');
+  hreflangBasePath = `/workflows/${data.name}/`;
+  ogType = 'article';
+
+  const thumbnails = data.thumbnails || [];
+  const primaryThumbnail = thumbnails[0] || null;
+  ogImage = primaryThumbnail
+    ? `/workflows/thumbnails/${primaryThumbnail}`
+    : `/workflows/og/${data.name}.png`;
+
+  structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'TechArticle',
+    headline: data.title || data.name,
+    description: data.description,
+    image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
+    datePublished: data.date,
+    inLanguage: locale,
+  };
+
+  faqStructuredData = data.faqItems?.length
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        mainEntity: data.faqItems.map((item: { question: string; answer: string }) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      }
+    : null;
+
+  breadcrumbStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: absoluteUrl('/' + locale + '/') },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: t('nav.templates', typedLocale),
+        item: absoluteUrl('/' + locale + '/workflows/'),
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: data.title || data.name,
+        item: canonicalUrl,
+      },
+    ],
+  };
+
+  softwareAppStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: data.title || data.name,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    description: data.metaDescription || data.description,
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+  };
+}
 ---
 
-<BaseLayout
-  title={title}
-  description={data.metaDescription || data.description}
-  canonicalUrl={canonicalUrl}
-  ogImage={ogImage}
-  ogType="article"
-  structuredData={structuredData}
-  locale={typedLocale}
-  hreflangBasePath={`/workflows/${data.name}/`}
-  theme="dark"
-  hideDefaultFooter
->
-  <HubNavbar />
-  <TemplateDetailPage template={{ data }} locale={typedLocale} />
+{
+  isCreatorProfile && creator ? (
+    <BaseLayout
+      title={pageTitle}
+      description={pageDescription}
+      canonicalUrl={canonicalUrl}
+      locale={typedLocale}
+      theme="dark"
+      hideDefaultFooter
+    >
+      <HubNavbar />
 
-  {
-    faqStructuredData && (
-      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
-    )
-  }
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={JSON.stringify(softwareAppStructuredData)}
-  />
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbStructuredData)}
-  />
+      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pb-20">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 pt-8">
+          <aside class="w-full lg:w-[328px] shrink-0">
+            <div class="lg:sticky lg:top-16 flex flex-col gap-8 pt-8">
+              <BackButton locale={typedLocale} class="self-start" />
+              <SidebarSection contentClass="p-8 gap-6">
+                <div class="flex flex-col gap-4">
+                  {creator.avatarUrl ? (
+                    <img
+                      src={creator.avatarUrl}
+                      alt={creator.displayName}
+                      class="size-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
+                      <span class="text-black text-2xl font-bold">
+                        {creator.displayName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div class="flex flex-col">
+                    <p class="text-white text-base font-bold">{creator.displayName}</p>
+                    <p class="text-hub-muted text-sm">@{creator.handle}</p>
+                  </div>
+                </div>
+                <p class="text-hub-muted text-sm leading-normal">{creator.summary}</p>
+                {socialLinks.length > 0 && (
+                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-hub-muted">
+                    {socialLinks.map((link) => (
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="underline hover:text-white transition-colors"
+                      >
+                        {link.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </SidebarSection>
+            </div>
+          </aside>
 
-  <Fragment slot="footer">
-    <SiteFooter />
-  </Fragment>
-</BaseLayout>
+          <WorkflowGrid
+            client:load
+            templates={creatorSerialized}
+            locale={typedLocale}
+            gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            hideAuthor
+          />
+        </div>
+      </div>
+
+      <Fragment slot="footer">
+        <SiteFooter />
+      </Fragment>
+    </BaseLayout>
+  ) : (
+    <BaseLayout
+      title={pageTitle}
+      description={pageDescription}
+      canonicalUrl={canonicalUrl}
+      ogImage={ogImage}
+      ogType={ogType}
+      structuredData={structuredData}
+      locale={typedLocale}
+      hreflangBasePath={hreflangBasePath}
+      theme="dark"
+      hideDefaultFooter
+    >
+      <HubNavbar />
+      <TemplateDetailPage template={{ data: templateData! }} locale={typedLocale} />
+
+      {faqStructuredData && (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={JSON.stringify(faqStructuredData)}
+        />
+      )}
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={JSON.stringify(softwareAppStructuredData)}
+      />
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={JSON.stringify(breadcrumbStructuredData)}
+      />
+
+      <Fragment slot="footer">
+        <SiteFooter />
+      </Fragment>
+    </BaseLayout>
+  )
+}

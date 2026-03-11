@@ -1,0 +1,198 @@
+---
+/**
+ * Localized creators listing page (on-demand rendered)
+ * Serves pages like /zh/workflows/creators/, /ja/workflows/creators/, etc.
+ */
+export const prerender = false;
+
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
+import WorkflowCard from '../../../components/hub/WorkflowCard.astro';
+import BackButton from '../../../components/BackButton.astro';
+import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { localizeUrl } from '../../../i18n/utils';
+import { absoluteUrl } from '../../../config/site';
+import { slugify } from '../../../lib/slugify';
+import creatorsData from '../../../../creators.json';
+
+interface CreatorProfile {
+  displayName: string;
+  handle: string;
+  summary: string;
+  social?: string | string[];
+  avatarUrl?: string;
+}
+
+const creators = creatorsData as Record<string, CreatorProfile>;
+
+const { locale } = Astro.params;
+
+// Validate locale
+if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
+  return Astro.redirect('/workflows/creators/');
+}
+
+const typedLocale = locale as Locale;
+
+const templates = await getCollection('templates');
+
+// Group templates by username, excluding ComfyUI
+const creatorMap = new Map<
+  string,
+  { profile: CreatorProfile; username: string; templates: typeof templates; totalUsage: number }
+>();
+
+for (const tmpl of templates) {
+  if (tmpl.id.includes('/')) continue;
+  const username = tmpl.data.username;
+  if (!username || username === 'ComfyUI') continue;
+  const profile = creators[username];
+  if (!profile) continue;
+
+  if (!creatorMap.has(username)) {
+    creatorMap.set(username, { profile, username, templates: [], totalUsage: 0 });
+  }
+  const group = creatorMap.get(username)!;
+  group.templates.push(tmpl);
+  group.totalUsage += tmpl.data.usage || 0;
+}
+
+// Sort creators by total usage (most popular first)
+const sortedCreators = Array.from(creatorMap.values()).sort((a, b) => b.totalUsage - a.totalUsage);
+
+// Sort each creator's templates by usage
+for (const group of sortedCreators) {
+  group.templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+}
+
+const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
+---
+
+<BaseLayout
+  title="Top Creators - ComfyUI Workflow Templates"
+  description="Discover the world's top ComfyUI workflow creators and their best templates."
+  canonicalUrl={canonicalUrl}
+  locale={typedLocale}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pb-32">
+    <!-- Sidebar + Main Content -->
+    <div class="flex items-start gap-16 pt-8">
+      <!-- Main Content -->
+      <div class="flex-1 min-w-0">
+        <!-- Header -->
+        <div class="flex items-center justify-start pb-8 pt-8">
+          <BackButton locale={typedLocale} />
+          <h1
+            class="hidden lg:block text-2xl font-semibold text-white absolute left-1/2 -translate-1/2"
+          >
+            Discover the World's Top Creators
+          </h1>
+        </div>
+        <h1 class="block lg:hidden text-2xl font-semibold text-white">
+          Discover the World's Top Creators
+        </h1>
+        <!-- Creator rows -->
+        <div class="flex flex-col gap-16 pt-8">
+          {
+            sortedCreators.map(({ profile, username, templates: tmplList }) => (
+              <div class="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start">
+                {/* Creator profile info */}
+                <div class="w-full lg:w-52 shrink-0 flex flex-col gap-6">
+                  {/* Avatar */}
+                  {profile.avatarUrl ? (
+                    <img
+                      src={profile.avatarUrl}
+                      alt={profile.displayName}
+                      class="size-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
+                      <span class="text-black text-lg font-bold">
+                        {profile.displayName.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Name & Handle */}
+                  <div class="flex flex-col gap-2">
+                    <p class="font-bold text-base text-white">{profile.displayName}</p>
+                    <p class="text-sm text-hub-muted">@{profile.handle}</p>
+                  </div>
+
+                  {/* Summary */}
+                  <p class="text-xs text-hub-muted leading-normal line-clamp-3">
+                    {profile.summary}
+                  </p>
+
+                  {/* Open Profile button */}
+                  <div>
+                    <a
+                      href={localizeUrl(`/workflows/${slugify(username)}/`, typedLocale)}
+                      class="inline-flex items-center justify-center gap-1 h-8 px-4 rounded-full bg-hub-surface text-xs text-white hover:brightness-125 transition-all"
+                    >
+                      Open Profile
+                      <svg
+                        class="size-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 12h14m0 0l-7-7m7 7l-7 7"
+                        />
+                      </svg>
+                    </a>
+                  </div>
+                </div>
+
+                {/* Workflow cards */}
+                <div class="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 min-w-0">
+                  {tmplList.slice(0, 5).map((tmpl) => (
+                    <WorkflowCard
+                      name={tmpl.data.name}
+                      title={tmpl.data.title || tmpl.data.name}
+                      description={tmpl.data.description || ''}
+                      mediaType={tmpl.data.mediaType}
+                      mediaSubtype={tmpl.data.mediaSubtype}
+                      thumbnailVariant={tmpl.data.thumbnailVariant}
+                      tags={tmpl.data.tags}
+                      logos={tmpl.data.logos}
+                      thumbnails={tmpl.data.thumbnails}
+                      username={tmpl.data.username}
+                      locale={typedLocale}
+                      hideAuthor
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          }
+
+          {/* Empty state */}
+          {
+            sortedCreators.length === 0 && (
+              <div class="text-center py-20 text-white/40">
+                <p class="text-lg">No creators found</p>
+                <p class="text-sm mt-2">Check back soon for featured creators</p>
+              </div>
+            )
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
