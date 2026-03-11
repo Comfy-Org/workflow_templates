@@ -10,7 +10,8 @@ export function initPostHog(): void {
   posthog.init(POSTHOG_KEY, {
     api_host: 'https://ph.comfy.org',
     ui_host: 'https://us.posthog.com',
-    person_profiles: 'identified_only',
+    person_profiles: 'always',
+    cross_subdomain_cookie: true,
     capture_pageview: true,
     capture_pageleave: true,
     autocapture: false,
