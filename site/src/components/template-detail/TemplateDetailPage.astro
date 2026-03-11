@@ -48,7 +48,9 @@ const { data } = template;
 
 const creator = data.username ? creators[data.username] : null;
 const authorName = creator ? creator.displayName : 'ComfyUI';
-const authorProfileUrl = creator ? localizeUrl(`/workflows/${slugify(data.username!)}/`, locale) : null;
+const authorProfileUrl = creator
+  ? localizeUrl(`/workflows/${slugify(data.username!)}/`, locale)
+  : null;
 const thumbnails = data.thumbnails || [];
 
 const mediaTypeLabels: Record<string, string> = {
@@ -76,7 +78,11 @@ function formatRelativeDate(dateStr: string): string {
 }
 ---
 
-<article class="template-detail-page bg-page min-h-screen text-content scroll-smooth" data-template={data.name} data-media-type={data.mediaType}>
+<article
+  class="template-detail-page bg-page min-h-screen text-content scroll-smooth"
+  data-template={data.name}
+  data-media-type={data.mediaType}
+>
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-16 pb-32">
     <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 justify-between w-full">
       {/* Back button */}
@@ -213,14 +219,6 @@ function formatRelativeDate(dateStr: string): string {
             >
               {t('cta.downloadJson', locale)}
             </a>
-            <button
-              type="button"
-              id="share-workflow-btn"
-              class="flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors"
-              data-template={data.name}
-            >
-              Share by URL
-            </button>
           </div>
 
           {/* Categories */}
@@ -302,9 +300,12 @@ function formatRelativeDate(dateStr: string): string {
       }
 
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(showCopied).catch(function () {
-          fallbackCopy(url);
-        });
+        navigator.clipboard
+          .writeText(url)
+          .then(showCopied)
+          .catch(function () {
+            fallbackCopy(url);
+          });
       } else {
         fallbackCopy(url);
       }

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /**
- * HubWorkflowCard - Vue equivalent of WorkflowCard.astro
- * Needed because Astro components can't render inside Vue islands.
- * Same visual structure: square thumbnail, logo overlay, title, author, tag pills.
+ * HubWorkflowCard - Unified workflow card component.
+ * Used inside Vue islands (WorkflowGrid.vue) and SSR-rendered in Astro pages.
+ * Visual structure: square thumbnail, logo overlay, title, author, tag pills.
  */
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';

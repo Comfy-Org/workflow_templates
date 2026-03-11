@@ -9,7 +9,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
-import WorkflowCard from '../../components/hub/WorkflowCard.astro';
+import HubWorkflowCard from '../../components/hub/HubWorkflowCard.vue';
 import BackButton from '../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
@@ -147,17 +147,15 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                 {/* Workflow cards */}
                 <div class="flex-1 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-5 gap-4 min-w-0">
                   {tmplList.slice(0, 5).map((tmpl) => (
-                    <WorkflowCard
+                    <HubWorkflowCard
                       name={tmpl.data.name}
                       title={tmpl.data.title || tmpl.data.name}
-                      description={tmpl.data.description || ''}
-                      mediaType={tmpl.data.mediaType}
-                      mediaSubtype={tmpl.data.mediaSubtype}
-                      thumbnailVariant={tmpl.data.thumbnailVariant}
                       tags={tmpl.data.tags}
                       logos={tmpl.data.logos}
                       thumbnails={tmpl.data.thumbnails}
                       username={tmpl.data.username}
+                      creatorDisplayName={profile.displayName}
+                      creatorAvatarUrl={profile.avatarUrl}
                       locale={locale}
                       hideAuthor
                     />

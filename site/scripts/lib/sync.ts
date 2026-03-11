@@ -59,6 +59,7 @@ function createSyncedTemplate(
 
   return {
     ...template,
+    username: template.username || 'ComfyUI',
     extendedDescription: template.description,
     howToUse: ['Load the template', 'Configure inputs', 'Run the workflow'],
     metaDescription: template.description.slice(0, 160),
