@@ -8,6 +8,7 @@ import ThumbnailDisplay from '../ThumbnailDisplay.astro';
 import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
 import { getModelLogoPath } from '../../lib/model-logos';
+import { slugify } from '../../lib/slugify';
 import { badgeVariants } from '../ui/badge';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import creatorsData from '../../../creators.json';
@@ -56,7 +57,7 @@ const logoPath = providerName ? getModelLogoPath(providerName, providerName) : n
 const creatorData = creatorsMap[username || ''];
 const authorName = creatorData?.displayName || 'ComfyUI';
 const avatarUrl = creatorData?.avatarUrl || '';
-const creatorUrl = username ? localizeUrl(`/workflows/${username}/`, locale) : null;
+const creatorUrl = username ? localizeUrl(`/workflows/${slugify(username)}/`, locale) : null;
 ---
 
 <div class="group transition-all duration-200">

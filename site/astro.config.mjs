@@ -32,6 +32,15 @@ const buildDate = new Date().toISOString();
 
 // Supported locales (matches src/i18n/config.ts)
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
+const nonDefaultLocales = locales.filter((l) => l !== 'en');
+
+// Build sitemap URLs for on-demand locale pages (not discovered at build time)
+const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://www.comfy.org').replace(/\/$/, '');
+const templateNames = [...templateDates.keys()];
+const localeCustomPages = nonDefaultLocales.flatMap((locale) => [
+  `${siteOrigin}/${locale}/workflows/`,
+  ...templateNames.map((name) => `${siteOrigin}/${locale}/workflows/${name}/`),
+]);
 
 // https://astro.build/config
 export default defineConfig({
@@ -53,6 +62,8 @@ export default defineConfig({
       filenameBase: 'sitemap-workflows',
       // Include Framer's marketing sitemap in the index
       customSitemaps: ['https://www.comfy.org/sitemap.xml'],
+      // Include on-demand locale pages that aren't discovered at build time
+      customPages: localeCustomPages,
       serialize(item) {
         const url = new URL(item.url);
         const pathname = url.pathname;

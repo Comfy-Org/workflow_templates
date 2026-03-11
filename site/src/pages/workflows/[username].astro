@@ -13,6 +13,7 @@ import BackButton from '../../components/BackButton.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
+import { slugify } from '../../lib/slugify';
 import creatorsData from '../../../creators.json';
 
 interface CreatorProfile {
@@ -26,21 +27,28 @@ interface CreatorProfile {
 
 const creators = creatorsData as Record<string, CreatorProfile>;
 
-export function getStaticPaths() {
-  const data = creatorsData as Record<string, CreatorProfile>;
-  return Object.keys(data).map((key) => ({ params: { username: key } }));
+// Build slug → raw username lookup
+const slugToUsername = new Map<string, string>();
+for (const key of Object.keys(creators)) {
+  slugToUsername.set(slugify(key), key);
 }
 
-const { username } = Astro.params;
+export function getStaticPaths() {
+  const data = creatorsData as Record<string, CreatorProfile>;
+  return Object.keys(data).map((key) => ({ params: { username: slugify(key) } }));
+}
+
+const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
-const creator = creators[username!];
+const rawUsername = slugToUsername.get(slugParam!)!;
+const creator = creators[rawUsername];
 
 const templates = await getCollection('templates');
 const profileTemplates = templates
-  .filter((tmpl) => !tmpl.id.includes('/') && tmpl.data.username === username)
+  .filter((tmpl) => !tmpl.id.includes('/') && tmpl.data.username === rawUsername)
   .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
 
-const canonicalUrl = absoluteUrl(`/workflows/${username}/`);
+const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
 
 // Serialize template data for the Vue island (plain objects only)
 const serialized = profileTemplates.map((tmpl) => ({
