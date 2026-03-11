@@ -8,7 +8,7 @@ export function initPostHog(): void {
   if (typeof window === 'undefined' || initialized || !POSTHOG_KEY) return;
 
   posthog.init(POSTHOG_KEY, {
-    api_host: 'https://ph.comfy.org',
+    api_host: 'https://t.comfy.org',
     ui_host: 'https://us.posthog.com',
     person_profiles: 'identified_only',
     capture_pageview: true,
