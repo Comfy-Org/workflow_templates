@@ -27,12 +27,23 @@ export async function getTemplatesForLocale(locale: Locale): Promise<Template[]>
     }
   }
 
-  // Return localized where available, fall back to English
+  // Return localized where available, fall back to English.
+  // Preserve English tags and models since they are routing identifiers
+  // (used in URL slugs) and non-ASCII translations produce empty slugs.
   return enTemplates
     .filter((t) => !t.id.includes('/'))
     .map((enTemplate) => {
       const localizedVersion = localizedMap.get(enTemplate.id);
-      return localizedVersion || enTemplate;
+      if (!localizedVersion) return enTemplate;
+
+      return {
+        ...localizedVersion,
+        data: {
+          ...localizedVersion.data,
+          tags: enTemplate.data.tags,
+          models: enTemplate.data.models,
+        },
+      } as Template;
     });
 }
 
