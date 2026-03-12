@@ -318,9 +318,7 @@ const DISCOVERY_PREVIEW_COUNT = 5;
 
 const DISCOVERY_TAG_COUNT = 4;
 const previewTags = computed(() => allTags.value.slice(0, DISCOVERY_TAG_COUNT));
-const remainingTagCount = computed(() =>
-  Math.max(0, allTags.value.length - DISCOVERY_TAG_COUNT)
-);
+const remainingTagCount = computed(() => Math.max(0, allTags.value.length - DISCOVERY_TAG_COUNT));
 
 const previewModels = computed(() => allModels.value.slice(0, DISCOVERY_PREVIEW_COUNT));
 const remainingModelCount = computed(() =>
@@ -739,8 +737,19 @@ onUnmounted(() => {
                       v-else-if="wf.thumbnails.length > 0 && isAudioFile(wf.thumbnails[0])"
                       class="w-full h-full flex items-center justify-center"
                     >
-                      <svg class="w-5 h-5 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                      <svg
+                        class="w-5 h-5 text-white/20"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                        />
                       </svg>
                     </div>
                   </div>
@@ -809,13 +818,13 @@ onUnmounted(() => {
                 >
                   {{ tagDisplayName(tag.name) }}
                 </Badge>
-                <button
+                <div
                   v-if="remainingTagCount > 0"
-                  class="text-xs text-white/30 hover:text-white/50 transition-colors cursor-pointer"
+                  class="text-xs text-white/30"
                   @click="inputRef?.focus()"
                 >
                   + {{ remainingTagCount }} more
-                </button>
+                </div>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
@@ -833,13 +842,13 @@ onUnmounted(() => {
                 >
                   {{ model.name }}
                 </Badge>
-                <button
+                <div
                   v-if="remainingModelCount > 0"
-                  class="text-xs text-white/30 hover:text-white/50 transition-colors cursor-pointer"
+                  class="text-xs text-white/30"
                   @click="inputRef?.focus()"
                 >
                   + {{ remainingModelCount }} more
-                </button>
+                </div>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
@@ -1074,8 +1083,19 @@ onUnmounted(() => {
                       v-else-if="hit.thumbnail && isAudioFile(hit.thumbnail)"
                       class="w-full h-full flex items-center justify-center"
                     >
-                      <svg class="w-5 h-5 text-white/20" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                      <svg
+                        class="w-5 h-5 text-white/20"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="1.5"
+                          d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
+                        />
                       </svg>
                     </div>
                   </div>
