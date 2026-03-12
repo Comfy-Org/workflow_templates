@@ -18,6 +18,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'LAST UPDATE',
     'labels.categories': 'CATEGORIES',
     'cta.tryCloud': 'Try on Comfy Cloud',
+    'cta.tryCloudSubline': '✦ Get Free Credits',
     'labels.workflowPreviewNote':
       'This is a simplified visualization. The actual workflow may contain additional nodes and connections.',
     'labels.nodeUses': 'Uses',
@@ -73,6 +74,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': '最后更新',
     'labels.categories': '分类',
     'cta.tryCloud': '在 Comfy Cloud 试用',
+    'cta.tryCloudSubline': '✦ 获取免费额度',
     'labels.workflowPreviewNote': '这是简化的可视化。实际工作流可能包含更多节点和连接。',
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI 工作流',
@@ -127,6 +129,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': '最後更新',
     'labels.categories': '分類',
     'cta.tryCloud': '在 Comfy Cloud 試用',
+    'cta.tryCloudSubline': '✦ 獲取免費額度',
     'labels.workflowPreviewNote': '這是簡化的視覺化。實際工作流可能包含更多節點和連接。',
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI 工作流',
@@ -181,6 +184,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': '最終更新',
     'labels.categories': 'カテゴリー',
     'cta.tryCloud': 'Comfy Cloudで試す',
+    'cta.tryCloudSubline': '✦ 無料クレジットを獲得',
     'labels.workflowPreviewNote':
       'これは簡略化された視覚化です。実際のワークフローには追加のノードと接続が含まれる場合があります。',
     'labels.nodeUses': '使用',
@@ -236,6 +240,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': '최종 업데이트',
     'labels.categories': '카테고리',
     'cta.tryCloud': 'Comfy Cloud에서 사용해보기',
+    'cta.tryCloudSubline': '✦ 무료 크레딧 받기',
     'labels.workflowPreviewNote':
       '이것은 간소화된 시각화입니다. 실제 워크플로우에는 추가 노드와 연결이 포함될 수 있습니다.',
     'labels.nodeUses': '사용',
@@ -291,6 +296,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'ÚLTIMA ACTUALIZACIÓN',
     'labels.categories': 'CATEGORÍAS',
     'cta.tryCloud': 'Probar en Comfy Cloud',
+    'cta.tryCloudSubline': '✦ Obtén Créditos Gratis',
     'labels.workflowPreviewNote':
       'Esta es una visualización simplificada. El workflow real puede contener nodos y conexiones adicionales.',
     'labels.nodeUses': 'Usa',
@@ -346,6 +352,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'DERNIÈRE MISE À JOUR',
     'labels.categories': 'CATÉGORIES',
     'cta.tryCloud': 'Essayer sur Comfy Cloud',
+    'cta.tryCloudSubline': '✦ Crédits Gratuits',
     'labels.workflowPreviewNote':
       'Ceci est une visualisation simplifiée. Le workflow réel peut contenir des nœuds et connexions supplémentaires.',
     'labels.nodeUses': 'Utilise',
@@ -401,6 +408,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'ПОСЛЕДНЕЕ ОБНОВЛЕНИЕ',
     'labels.categories': 'КАТЕГОРИИ',
     'cta.tryCloud': 'Попробовать в Comfy Cloud',
+    'cta.tryCloudSubline': '✦ Бесплатные Кредиты',
     'labels.workflowPreviewNote':
       'Это упрощённая визуализация. Фактический воркфлоу может содержать дополнительные узлы и связи.',
     'labels.nodeUses': 'Использует',
@@ -456,6 +464,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'SON GÜNCELLEME',
     'labels.categories': 'KATEGORİLER',
     'cta.tryCloud': "Comfy Cloud'da Dene",
+    'cta.tryCloudSubline': '✦ Ücretsiz Kredi Al',
     'labels.workflowPreviewNote':
       'Bu basitleştirilmiş bir görselleştirmedir. Gerçek iş akışı ek düğümler ve bağlantılar içerebilir.',
     'labels.nodeUses': 'Kullanır',
@@ -511,6 +520,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'آخر تحديث',
     'labels.categories': 'الفئات',
     'cta.tryCloud': 'جرب على Comfy Cloud',
+    'cta.tryCloudSubline': '✦ احصل على رصيد مجاني',
     'labels.workflowPreviewNote':
       'هذا تصور مبسط. قد يحتوي سير العمل الفعلي على عقد واتصالات إضافية.',
     'labels.nodeUses': 'يستخدم',
@@ -566,6 +576,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.lastUpdate': 'ÚLTIMA ATUALIZAÇÃO',
     'labels.categories': 'CATEGORIAS',
     'cta.tryCloud': 'Experimentar no Comfy Cloud',
+    'cta.tryCloudSubline': '✦ Ganhe Créditos Grátis',
     'labels.workflowPreviewNote':
       'Esta é uma visualização simplificada. O workflow real pode conter nós e conexões adicionais.',
     'labels.nodeUses': 'Usa',
