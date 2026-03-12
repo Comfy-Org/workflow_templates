@@ -51,4 +51,10 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: site
           vercel-args: '--prebuilt'
-          alias-domains: pr-{{PR_NUMBER}}.workflow-templates.vercel.app
+
+      - name: Comment preview URL
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vercel-preview
+          message: |
+            🚀 **Preview deployed:** ${{ steps.deploy.outputs.preview-url }}
