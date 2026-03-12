@@ -6,6 +6,8 @@ import '../styles/global.css';
 import { LANGUAGES, type Locale } from '../i18n/config';
 import { getLocaleFromPath } from '../i18n/utils';
 
+const GA_ID = import.meta.env.PUBLIC_GA_MEASUREMENT_ID;
+
 interface Props {
   title: string;
   description: string;
@@ -49,6 +51,18 @@ const bodyClasses = isDark
 <!doctype html>
 <html lang={locale} dir={htmlDir} class="scroll-smooth">
   <head>
+    {GA_ID && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+        <script is:inline define:vars={{ GA_ID }}>
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = gtag;
+          gtag('js', new Date());
+          gtag('config', GA_ID);
+        </script>
+      </>
+    )}
     <SEOHead
       title={title}
       description={description}
