@@ -5,9 +5,9 @@ describe('getCloudCtaUrl', () => {
   it('includes all required UTM parameters', () => {
     const url = getCloudCtaUrl('my-template', 'hero');
     const parsed = new URL(url);
-    expect(parsed.searchParams.get('utm_source')).toBe('templates');
-    expect(parsed.searchParams.get('utm_medium')).toBe('web');
-    expect(parsed.searchParams.get('utm_campaign')).toBe('template-detail');
+    expect(parsed.searchParams.get('utm_source')).toBe('workflow_hub');
+    expect(parsed.searchParams.get('utm_medium')).toBe('site_CTA');
+    expect(parsed.searchParams.get('utm_campaign')).toBe('hub_preview');
     expect(parsed.searchParams.get('utm_content')).toBe('my-template');
     expect(parsed.searchParams.get('utm_term')).toBe('hero');
     expect(parsed.searchParams.get('template')).toBe('my-template');
