@@ -39,32 +39,44 @@ export function capture(eventName: string, properties?: EventProperties): void {
 export function trackRunButtonClicked(
   templateName: string,
   location: string,
+  author?: string,
 ): void {
   capture('hub:run_button_clicked', {
     template_name: templateName,
     location,
+    author,
   });
 }
 
-export function trackDownloadButtonClicked(templateName: string): void {
+export function trackDownloadButtonClicked(
+  templateName: string,
+  author?: string,
+): void {
   capture('hub:download_button_clicked', {
     template_name: templateName,
+    author,
   });
 }
 
-export function trackShareButtonClicked(templateName: string): void {
+export function trackShareButtonClicked(
+  templateName: string,
+  author?: string,
+): void {
   capture('hub:share_button_clicked', {
     template_name: templateName,
+    author,
   });
 }
 
 export function trackTemplateViewed(
   templateName: string,
   mediaType: string,
+  author?: string,
 ): void {
   capture('hub:template_viewed', {
     template_name: templateName,
     media_type: mediaType,
+    author,
   });
 }
 

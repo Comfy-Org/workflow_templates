@@ -20,8 +20,9 @@
   if (detailPage) {
     const name = detailPage.getAttribute('data-template') || '';
     const mediaType = detailPage.getAttribute('data-media-type') || '';
+    const author = detailPage.getAttribute('data-author') || undefined;
     if (name) {
-      trackTemplateViewed(name, mediaType);
+      trackTemplateViewed(name, mediaType, author);
     }
   }
 
@@ -34,8 +35,9 @@
     if (runBtn) {
       const templateName = runBtn.getAttribute('data-template') || '';
       const location = runBtn.getAttribute('data-location') || 'unknown';
+      const author = runBtn.getAttribute('data-author') || undefined;
       if (templateName) {
-        trackRunButtonClicked(templateName, location);
+        trackRunButtonClicked(templateName, location, author);
       } else {
         trackSignupCtaClicked(location);
       }
@@ -46,7 +48,8 @@
     const downloadBtn = target.closest('.download-json-btn');
     if (downloadBtn) {
       const templateName = downloadBtn.getAttribute('data-template') || '';
-      if (templateName) trackDownloadButtonClicked(templateName);
+      const author = downloadBtn.getAttribute('data-author') || undefined;
+      if (templateName) trackDownloadButtonClicked(templateName, author);
       return;
     }
 
@@ -54,7 +57,8 @@
     const shareBtn = target.closest('#share-workflow-btn');
     if (shareBtn) {
       const templateName = shareBtn.getAttribute('data-template') || '';
-      if (templateName) trackShareButtonClicked(templateName);
+      const author = shareBtn.getAttribute('data-author') || undefined;
+      if (templateName) trackShareButtonClicked(templateName, author);
     }
   });
 </script>
