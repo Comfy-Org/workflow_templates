@@ -253,8 +253,8 @@ test.describe('UTM Parameter Tracking', () => {
       const url = new URL(ctaHref!);
       const params = url.searchParams;
 
-      expect(params.get('utm_source')).toBe('templates');
-      expect(params.get('utm_medium')).toBe('web');
+      expect(params.get('utm_source')).toBe('workflow_hub');
+      expect(params.get('utm_medium')).toBe('site_CTA');
       expect(params.has('utm_campaign')).toBeTruthy();
       expect(params.has('utm_content')).toBeTruthy();
       expect(params.has('template')).toBeTruthy();
