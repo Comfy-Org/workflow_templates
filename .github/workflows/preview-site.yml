@@ -1,0 +1,60 @@
+name: Preview Site
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'templates/**'
+
+concurrency:
+  group: preview-${{ github.head_ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      SKIP_AI_GENERATION: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      - name: Restore content cache
+        uses: actions/cache@v4
+        with:
+          path: site/.content-cache
+          key: content-cache-${{ hashFiles('templates/**', 'site/src/**') }}
+          restore-keys: |
+            content-cache-
+
+      - name: Sync templates
+        run: pnpm run sync:en-only
+        working-directory: site
+
+      - name: Build Astro site
+        run: pnpm run build
+        working-directory: site
+
+      - name: Deploy preview to Vercel
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: site
+          vercel-args: '--prebuilt'
+
+      - name: Comment preview URL
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vercel-preview
+          message: |
+            🚀 **Preview deployed:** ${{ steps.deploy.outputs.preview-url }}
