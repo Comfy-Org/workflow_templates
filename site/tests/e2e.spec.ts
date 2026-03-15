@@ -130,6 +130,76 @@ test.describe('SEO Essentials', () => {
   });
 });
 
+test.describe('Search Filter "+X more" Expansion', () => {
+  /**
+   * Opens the search popover discovery panel by focusing the search input.
+   * Returns the search input locator.
+   */
+  async function openDiscoveryPanel(page: import('@playwright/test').Page) {
+    await page.goto('/workflows/');
+    const searchInput = page.locator(
+      'input[placeholder*="Search workflows"]'
+    );
+    await expect(searchInput).toBeAttached({ timeout: 10000 });
+    await searchInput.click();
+    return searchInput;
+  }
+
+  test('clicking "+X more" on Categories expands to show all tags', async ({ page }) => {
+    await openDiscoveryPanel(page);
+
+    const moreTagsBtn = page.getByTestId('show-more-tags');
+    // If there are enough tags to show the button
+    if ((await moreTagsBtn.count()) > 0) {
+      const row = page.getByTestId('filter-row-categories');
+      const badgesBefore = await row.locator('button').count();
+
+      await moreTagsBtn.click();
+
+      // Button should disappear after clicking
+      await expect(moreTagsBtn).not.toBeAttached();
+      // More badges should now be visible
+      const badgesAfter = await row.locator('button').count();
+      expect(badgesAfter).toBeGreaterThan(badgesBefore);
+    }
+  });
+
+  test('clicking "+X more" on Models expands to show all models', async ({ page }) => {
+    await openDiscoveryPanel(page);
+
+    const moreModelsBtn = page.getByTestId('show-more-models');
+    if ((await moreModelsBtn.count()) > 0) {
+      const row = page.getByTestId('filter-row-models');
+      const badgesBefore = await row.locator('button').count();
+
+      await moreModelsBtn.click();
+
+      await expect(moreModelsBtn).not.toBeAttached();
+      const badgesAfter = await row.locator('button').count();
+      expect(badgesAfter).toBeGreaterThan(badgesBefore);
+    }
+  });
+
+  test('expanded filter badges are clickable and add filters', async ({ page }) => {
+    await openDiscoveryPanel(page);
+
+    const moreTagsBtn = page.getByTestId('show-more-tags');
+    if ((await moreTagsBtn.count()) > 0) {
+      await moreTagsBtn.click();
+
+      // Click the last tag badge (one that was previously hidden)
+      const row = page.getByTestId('filter-row-categories');
+      const badges = row.locator('button');
+      const lastBadge = badges.last();
+      await lastBadge.click();
+
+      // A filter badge should now be active (search input placeholder changes)
+      const searchInput = page.locator('input[placeholder="Search..."]');
+      await expect(searchInput).toBeAttached({ timeout: 3000 });
+    }
+  });
+});
+
 test.describe('Error Handling', () => {
   test('404 page renders correctly', async ({ page }) => {
     const response = await page.goto('/this-page-does-not-exist-xyz123');
