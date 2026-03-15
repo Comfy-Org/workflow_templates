@@ -808,7 +808,7 @@ onUnmounted(() => {
             <!-- Filter by — two labeled rows with "+ N more" -->
             <section class="space-y-3">
               <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50">Filter by</h3>
-              <div class="flex items-center gap-2 flex-wrap">
+              <div data-testid="filter-row-categories" class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
                   >Categories</span
                 >
@@ -826,13 +826,14 @@ onUnmounted(() => {
                 </Badge>
                 <button
                   v-if="!showAllTags && remainingTagCount > 0"
+                  data-testid="show-more-tags"
                   class="text-xs text-white/30 hover:text-white/60 transition-colors"
                   @click="showAllTags = true"
                 >
                   + {{ remainingTagCount }} more
                 </button>
               </div>
-              <div class="flex items-center gap-2 flex-wrap">
+              <div data-testid="filter-row-models" class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
                   >Models</span
                 >
@@ -850,6 +851,7 @@ onUnmounted(() => {
                 </Badge>
                 <button
                   v-if="!showAllModels && remainingModelCount > 0"
+                  data-testid="show-more-models"
                   class="text-xs text-white/30 hover:text-white/60 transition-colors"
                   @click="showAllModels = true"
                 >
