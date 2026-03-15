@@ -317,10 +317,16 @@ const uniqueCreatorCount = computed(() => props.creators.length);
 const DISCOVERY_PREVIEW_COUNT = 5;
 
 const DISCOVERY_TAG_COUNT = 4;
-const previewTags = computed(() => allTags.value.slice(0, DISCOVERY_TAG_COUNT));
+const showAllTags = ref(false);
+const showAllModels = ref(false);
+const previewTags = computed(() =>
+  showAllTags.value ? allTags.value : allTags.value.slice(0, DISCOVERY_TAG_COUNT)
+);
 const remainingTagCount = computed(() => Math.max(0, allTags.value.length - DISCOVERY_TAG_COUNT));
 
-const previewModels = computed(() => allModels.value.slice(0, DISCOVERY_PREVIEW_COUNT));
+const previewModels = computed(() =>
+  showAllModels.value ? allModels.value : allModels.value.slice(0, DISCOVERY_PREVIEW_COUNT)
+);
 const remainingModelCount = computed(() =>
   Math.max(0, allModels.value.length - DISCOVERY_PREVIEW_COUNT)
 );
@@ -818,13 +824,13 @@ onUnmounted(() => {
                 >
                   {{ tagDisplayName(tag.name) }}
                 </Badge>
-                <div
-                  v-if="remainingTagCount > 0"
-                  class="text-xs text-white/30"
-                  @click="inputRef?.focus()"
+                <button
+                  v-if="!showAllTags && remainingTagCount > 0"
+                  class="text-xs text-white/30 hover:text-white/60 transition-colors"
+                  @click="showAllTags = true"
                 >
                   + {{ remainingTagCount }} more
-                </div>
+                </button>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
@@ -842,13 +848,13 @@ onUnmounted(() => {
                 >
                   {{ model.name }}
                 </Badge>
-                <div
-                  v-if="remainingModelCount > 0"
-                  class="text-xs text-white/30"
-                  @click="inputRef?.focus()"
+                <button
+                  v-if="!showAllModels && remainingModelCount > 0"
+                  class="text-xs text-white/30 hover:text-white/60 transition-colors"
+                  @click="showAllModels = true"
                 >
                   + {{ remainingModelCount }} more
-                </div>
+                </button>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
