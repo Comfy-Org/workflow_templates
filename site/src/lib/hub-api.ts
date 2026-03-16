@@ -25,11 +25,11 @@ export interface HubLabelInfo {
 }
 
 export interface HubProfile {
-  id: string;
   username: string;
   display_name?: string;
   description?: string;
   avatar_url?: string;
+  website_urls?: string[];
 }
 
 export interface HubWorkflowSummary {
@@ -38,7 +38,7 @@ export interface HubWorkflowSummary {
   description?: string;
   tags: LabelRef[];
   models: LabelRef[];
-  custom_nodes: LabelRef[];
+  custom_nodes?: LabelRef[];
   thumbnail_type?: 'image' | 'video' | 'image_comparison';
   thumbnail_url?: string;
   thumbnail_comparison_url?: string;
@@ -48,7 +48,6 @@ export interface HubWorkflowSummary {
 
 export interface HubWorkflowDetail extends HubWorkflowSummary {
   workflow_id: string;
-  listed: boolean;
   tutorial_url?: string;
   metadata?: Record<string, unknown>;
   sample_image_urls?: string[];
@@ -181,13 +180,17 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary) {
  * used by [slug].astro and TemplateDetailPage.astro.
  */
 export function toTemplateData(workflow: HubWorkflowDetail) {
+  const mediaType =
+    (workflow.metadata?.media_type as string) || inferMediaType(workflow);
+  const mediaSubtype = (workflow.metadata?.media_subtype as string) || undefined;
+
   return {
     name: workflow.share_id,
     title: workflow.name,
     description: workflow.description || '',
     extendedDescription: (workflow.metadata?.extendedDescription as string) || '',
-    mediaType: inferMediaType(workflow) as 'image' | 'video' | 'audio' | '3d',
-    mediaSubtype: undefined as string | undefined,
+    mediaType: mediaType as 'image' | 'video' | 'audio' | '3d',
+    mediaSubtype,
     thumbnailVariant: mapThumbnailVariant(workflow.thumbnail_type),
     thumbnails: buildThumbnailList(workflow),
     tags: workflow.tags.map((t) => t.name),
