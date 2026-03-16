@@ -215,6 +215,22 @@ function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
   return list;
 }
 
+/**
+ * Fetch full details for all listed workflows (build-time helper).
+ * Uses Promise.allSettled to gracefully skip individual failures.
+ */
+export async function listAllWorkflowDetails(): Promise<HubWorkflowDetail[]> {
+  const { workflows } = await listWorkflows({ limit: 1000 });
+  const results = await Promise.allSettled(
+    workflows.map((w) => getWorkflow(w.share_id))
+  );
+  return results
+    .filter(
+      (r): r is PromiseFulfilledResult<HubWorkflowDetail> => r.status === 'fulfilled'
+    )
+    .map((r) => r.value);
+}
+
 function mapThumbnailVariant(
   type?: string
 ): 'compareSlider' | 'hoverDissolve' | 'hoverZoom' | 'zoomHover' | undefined {
