@@ -135,7 +135,7 @@ export default defineConfig({
     }),
     vue(),
   ],
-  output: 'hybrid',
+  output: 'static',
   adapter: vercel({
     webAnalytics: { enabled: true },
   }),
