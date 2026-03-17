@@ -17,13 +17,6 @@ export interface LabelRef {
   display_name: string;
 }
 
-export interface HubLabelInfo {
-  name: string;
-  display_name: string;
-  description?: string;
-  type: 'tag' | 'model' | 'custom_node';
-}
-
 export interface HubProfile {
   username: string;
   display_name?: string;
@@ -68,10 +61,6 @@ export interface HubWorkflowListResponse {
   next_cursor?: string;
 }
 
-export interface HubLabelListResponse {
-  labels: HubLabelInfo[];
-}
-
 /**
  * Template index entry — matches HubWorkflowTemplateEntry from the backend.
  * Returned by GET /api/hub/workflows/index in the same shape as index.json.
@@ -88,7 +77,7 @@ export interface HubWorkflowTemplateEntry {
   mediaSubtype?: string;
   size?: number;
   vram?: number;
-  openSource?: boolean;
+  openSource?: boolean | null;
   username?: string;
   tutorialUrl?: string;
   logos?: Record<string, unknown>[];
@@ -160,16 +149,6 @@ export async function listWorkflows(
  */
 export async function getWorkflow(shareId: string): Promise<HubWorkflowDetail> {
   return hubFetch<HubWorkflowDetail>(`/api/hub/workflows/${encodeURIComponent(shareId)}`);
-}
-
-/**
- * List hub labels, optionally filtered by type (public, no auth required).
- */
-export async function listLabels(
-  type?: 'tag' | 'model' | 'custom_node'
-): Promise<HubLabelListResponse> {
-  const qs = type ? `?type=${type}` : '';
-  return hubFetch<HubLabelListResponse>(`/api/hub/labels${qs}`);
 }
 
 /**
