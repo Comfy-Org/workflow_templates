@@ -16,12 +16,6 @@ import { absoluteUrl } from '../../../../config/site';
 import { slugify } from '../../../../lib/slugify';
 import { getWorkflow, toTemplateData } from '../../../../lib/hub-api';
 
-// ISR: cache for 60s, serve stale for up to 10 min while revalidating
-Astro.response.headers.set(
-  'CDN-Cache-Control',
-  'public, max-age=60, stale-while-revalidate=600'
-);
-
 const { locale, username, slug } = Astro.params;
 
 // Validate locale
@@ -51,10 +45,16 @@ interface TemplateData {
 
 // Try hub API first, fall back to content collection
 let data: TemplateData;
+let hubSuccess = false;
 try {
   const workflow = await getWorkflow(slug!);
   data = toTemplateData(workflow);
-} catch {
+  hubSuccess = true;
+} catch (err) {
+  const is404 = err instanceof Error && err.message.includes('404');
+  if (!is404) {
+    console.error('Hub API error, falling back to content collection:', err);
+  }
   const templates = await getTemplatesForLocale(typedLocale);
   const found = templates.find((t) => t.data.name === slug);
   if (!found) {
@@ -62,6 +62,14 @@ try {
   }
   data = found.data;
 }
+
+// ISR cache: full TTL for hub data, short TTL for fallback to avoid caching stale/degraded pages
+Astro.response.headers.set(
+  'CDN-Cache-Control',
+  hubSuccess
+    ? 'public, max-age=60, stale-while-revalidate=600'
+    : 'public, max-age=10, stale-while-revalidate=30'
+);
 
 // Validate username matches the workflow owner — redirect to correct URL if not
 const correctUsername = slugify(data.username || 'comfy');
