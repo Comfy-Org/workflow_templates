@@ -236,6 +236,42 @@ export async function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
   return hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index');
 }
 
+// ---------------------------------------------------------------------------
+// Slug → ShareID resolution
+// ---------------------------------------------------------------------------
+
+let slugToShareId: Map<string, string> | null = null;
+
+/**
+ * Build and cache the slug → shareId mapping from the index endpoint.
+ * Called once per server lifecycle; subsequent calls return the cached map.
+ */
+async function getSlugMap(): Promise<Map<string, string>> {
+  if (slugToShareId) return slugToShareId;
+
+  const entries = await listWorkflowIndex();
+  slugToShareId = new Map();
+  for (const entry of entries) {
+    if (entry.shareId) {
+      slugToShareId.set(entry.name, entry.shareId);
+    }
+  }
+  return slugToShareId;
+}
+
+/**
+ * Get a workflow detail by slug. Resolves slug → shareId via the index,
+ * then fetches the full detail by shareId.
+ */
+export async function getWorkflowBySlug(slug: string): Promise<HubWorkflowDetail> {
+  const map = await getSlugMap();
+  const shareId = map.get(slug);
+  if (!shareId) {
+    throw new Error(`Hub API error: 404 Not Found — no shareId for slug "${slug}"`);
+  }
+  return getWorkflow(shareId);
+}
+
 function mapThumbnailVariant(
   type?: string
 ): 'compareSlider' | 'hoverDissolve' | 'hoverZoom' | 'zoomHover' | undefined {

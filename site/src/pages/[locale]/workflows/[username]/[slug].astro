@@ -14,7 +14,7 @@ import { t } from '../../../../i18n/ui';
 import { getTemplatesForLocale } from '../../../../lib/templates';
 import { absoluteUrl } from '../../../../config/site';
 import { slugify } from '../../../../lib/slugify';
-import { getWorkflow, toTemplateData } from '../../../../lib/hub-api';
+import { getWorkflowBySlug, toTemplateData } from '../../../../lib/hub-api';
 
 const { locale, username, slug } = Astro.params;
 
@@ -47,7 +47,7 @@ interface TemplateData {
 let data: TemplateData;
 let hubSuccess = false;
 try {
-  const workflow = await getWorkflow(slug!);
+  const workflow = await getWorkflowBySlug(slug!);
   data = toTemplateData(workflow);
   hubSuccess = true;
 } catch (err) {
