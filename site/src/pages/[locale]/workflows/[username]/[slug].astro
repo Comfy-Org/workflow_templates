@@ -31,8 +31,26 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
+interface TemplateData {
+  name: string;
+  title?: string;
+  description: string;
+  extendedDescription?: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaSubtype?: string;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  thumbnails?: string[];
+  tags?: string[];
+  models?: string[];
+  username?: string;
+  date?: string;
+  metaDescription?: string;
+  faqItems?: { question: string; answer: string }[];
+  [key: string]: unknown;
+}
+
 // Try hub API first, fall back to content collection
-let data: Record<string, any>;
+let data: TemplateData;
 try {
   const workflow = await getWorkflow(slug!);
   data = toTemplateData(workflow);

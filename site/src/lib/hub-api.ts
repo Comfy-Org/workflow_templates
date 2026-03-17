@@ -203,7 +203,7 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function inferMediaType(workflow: HubWorkflowSummary): string {
+function inferMediaType(workflow: HubWorkflowSummary): 'image' | 'video' | 'audio' | '3d' {
   const tags = workflow.tags.map((t) => t.name.toLowerCase());
   if (tags.includes('video') || tags.includes('animation')) return 'video';
   if (tags.includes('audio')) return 'audio';
