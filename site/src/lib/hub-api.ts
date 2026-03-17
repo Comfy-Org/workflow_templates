@@ -93,7 +93,7 @@ async function hubFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
+      Accept: 'application/json',
       ...init?.headers,
     },
   });
