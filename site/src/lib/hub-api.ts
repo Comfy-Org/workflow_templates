@@ -72,6 +72,37 @@ export interface HubLabelListResponse {
   labels: HubLabelInfo[];
 }
 
+/**
+ * Template index entry — matches HubWorkflowTemplateEntry from the backend.
+ * Returned by GET /api/hub/workflows/index in the same shape as index.json.
+ */
+export interface HubWorkflowTemplateEntry {
+  name: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  models?: string[];
+  requiresCustomNodes?: string[];
+  thumbnailVariant?: string;
+  mediaType?: string;
+  mediaSubtype?: string;
+  size?: number;
+  vram?: number;
+  openSource?: boolean;
+  username?: string;
+  tutorialUrl?: string;
+  logos?: Record<string, unknown>[];
+  date?: string;
+  io?: {
+    inputs?: Record<string, unknown>[];
+    outputs?: Record<string, unknown>[];
+  };
+  includeOnDistributions?: string[];
+  thumbnailUrl?: string;
+  thumbnailComparisonUrl?: string;
+  shareId?: string;
+}
+
 // ---------------------------------------------------------------------------
 // Query parameters
 // ---------------------------------------------------------------------------
@@ -219,19 +250,11 @@ function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
 }
 
 /**
- * Fetch full details for all listed workflows (build-time helper).
- * Uses Promise.allSettled to gracefully skip individual failures.
+ * Fetch all workflows in template index format (build-time helper).
+ * Single request — backend returns the full list with no pagination.
  */
-export async function listAllWorkflowDetails(): Promise<HubWorkflowDetail[]> {
-  const { workflows } = await listWorkflows({ limit: 1000 });
-  const results = await Promise.allSettled(
-    workflows.map((w) => getWorkflow(w.share_id))
-  );
-  return results
-    .filter(
-      (r): r is PromiseFulfilledResult<HubWorkflowDetail> => r.status === 'fulfilled'
-    )
-    .map((r) => r.value);
+export async function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
+  return hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index');
 }
 
 function mapThumbnailVariant(
