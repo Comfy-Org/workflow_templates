@@ -1,9 +1,13 @@
 ---
 /**
- * Profile page - /workflows/:username
+ * Creator profile page — ISR
+ * /workflows/[username]/
+ *
  * Displays a creator's profile with sidebar card and workflow grid.
- * Reads profile data from creators.json and filters templates by username field.
+ * Rendered on first request, then cached at CDN edge.
  */
+export const prerender = false;
+
 import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
@@ -15,6 +19,12 @@ import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
 import { slugify } from '../../lib/slugify';
 import creatorsData from '../../../creators.json';
+
+// ISR: cache for 60s, serve stale for up to 10 min while revalidating
+Astro.response.headers.set(
+  'CDN-Cache-Control',
+  'public, max-age=60, stale-while-revalidate=600'
+);
 
 interface CreatorProfile {
   displayName: string;
@@ -33,14 +43,14 @@ for (const key of Object.keys(creators)) {
   slugToUsername.set(slugify(key), key);
 }
 
-export function getStaticPaths() {
-  const data = creatorsData as Record<string, CreatorProfile>;
-  return Object.keys(data).map((key) => ({ params: { username: slugify(key) } }));
-}
-
 const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
-const rawUsername = slugToUsername.get(slugParam!)!;
+const rawUsername = slugToUsername.get(slugParam!);
+
+if (!rawUsername) {
+  return Astro.redirect('/workflows/');
+}
+
 const creator = creators[rawUsername];
 
 const templates = await getCollection('templates');

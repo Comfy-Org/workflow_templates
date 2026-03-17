@@ -1,0 +1,133 @@
+---
+/**
+ * Workflow detail page — ISR
+ * /workflows/[username]/[slug]/
+ *
+ * Rendered on first request, then cached at CDN edge.
+ * Stale-while-revalidate keeps data fresh in the background.
+ */
+export const prerender = false;
+
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
+import TemplateDetailPage from '../../../components/template-detail/TemplateDetailPage.astro';
+import { DEFAULT_LOCALE } from '../../../i18n/config';
+import { getTemplatesForLocale } from '../../../lib/templates';
+import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { getWorkflow, toTemplateData } from '../../../lib/hub-api';
+
+// ISR: cache for 60s, serve stale for up to 10 min while revalidating
+Astro.response.headers.set(
+  'CDN-Cache-Control',
+  'public, max-age=60, stale-while-revalidate=600'
+);
+
+const { username, slug } = Astro.params;
+const locale = DEFAULT_LOCALE;
+
+// Try hub API first, fall back to content collection
+let data: Record<string, any>;
+try {
+  const workflow = await getWorkflow(slug!);
+  data = toTemplateData(workflow);
+} catch {
+  const templates = await getTemplatesForLocale(DEFAULT_LOCALE);
+  const found = templates.find((t) => t.data.name === slug);
+  if (!found) {
+    return Astro.redirect('/workflows/');
+  }
+  data = found.data;
+}
+
+const title = `${data.title || data.name} - ComfyUI Workflow`;
+const hreflangBasePath = `/workflows/${username}/${data.name}/`;
+const canonicalUrl = absoluteUrl(hreflangBasePath);
+
+const thumbnails = data.thumbnails || [];
+const primaryThumbnail = thumbnails[0] || null;
+const ogImage = primaryThumbnail
+  ? `/workflows/thumbnails/${primaryThumbnail}`
+  : `/workflows/og/${data.name}.png`;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: data.title || data.name,
+  description: data.description,
+  image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
+  datePublished: data.date,
+  inLanguage: 'en',
+};
+
+const faqStructuredData = data.faqItems?.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: data.faqItems.map((item: { question: string; answer: string }) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    }
+  : null;
+
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+    { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
+    { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
+  ],
+};
+
+const softwareAppStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: data.title || data.name,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Windows, macOS, Linux',
+  description: data.metaDescription || data.description,
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'USD',
+  },
+};
+---
+
+<BaseLayout
+  title={title}
+  description={data.metaDescription || data.description}
+  canonicalUrl={canonicalUrl}
+  ogImage={ogImage}
+  ogType="article"
+  structuredData={structuredData}
+  hreflangBasePath={hreflangBasePath}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <TemplateDetailPage template={{ data }} locale={locale} />
+
+  {
+    faqStructuredData && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+    )
+  }
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(softwareAppStructuredData)}
+  />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbStructuredData)}
+  />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
