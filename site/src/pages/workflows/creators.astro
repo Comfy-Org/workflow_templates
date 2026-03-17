@@ -14,6 +14,7 @@ import BackButton from '../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
 import { slugify } from '../../lib/slugify';
+import { listWorkflowIndex } from '../../lib/hub-api';
 import creatorsData from '../../../creators.json';
 
 interface CreatorProfile {
@@ -24,38 +25,66 @@ interface CreatorProfile {
   avatarUrl?: string;
 }
 
+interface TemplateEntry {
+  name: string;
+  title: string;
+  tags: string[];
+  logos: Record<string, unknown>[];
+  thumbnails: string[];
+  username: string;
+}
+
 const creators = creatorsData as Record<string, CreatorProfile>;
 const locale = getLocaleFromPath(Astro.url.pathname);
-const templates = await getCollection('templates');
+
+// Try hub API first, fall back to content collection
+let allTemplates: TemplateEntry[];
+try {
+  const entries = await listWorkflowIndex();
+  allTemplates = entries.map((e) => ({
+    name: e.name,
+    title: e.title || e.name,
+    tags: e.tags || [],
+    logos: e.logos || [],
+    thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
+    username: e.username || '',
+  }));
+} catch {
+  const collection = await getCollection('templates');
+  allTemplates = collection
+    .filter((t) => !t.id.includes('/'))
+    .map((t) => ({
+      name: t.data.name,
+      title: t.data.title || t.data.name,
+      tags: t.data.tags || [],
+      logos: t.data.logos || [],
+      thumbnails: t.data.thumbnails || [],
+      username: t.data.username || '',
+    }));
+}
 
 // Group templates by username, excluding ComfyUI
 const creatorMap = new Map<
   string,
-  { profile: CreatorProfile; username: string; templates: typeof templates; totalUsage: number }
+  { profile: CreatorProfile; username: string; templates: TemplateEntry[] }
 >();
 
-for (const tmpl of templates) {
-  if (tmpl.id.includes('/')) continue;
-  const username = tmpl.data.username;
+for (const tmpl of allTemplates) {
+  const username = tmpl.username;
   if (!username || username === 'ComfyUI') continue;
   const profile = creators[username];
   if (!profile) continue;
 
   if (!creatorMap.has(username)) {
-    creatorMap.set(username, { profile, username, templates: [], totalUsage: 0 });
+    creatorMap.set(username, { profile, username, templates: [] });
   }
-  const group = creatorMap.get(username)!;
-  group.templates.push(tmpl);
-  group.totalUsage += tmpl.data.usage || 0;
+  creatorMap.get(username)!.templates.push(tmpl);
 }
 
-// Sort creators by total usage (most popular first)
-const sortedCreators = Array.from(creatorMap.values()).sort((a, b) => b.totalUsage - a.totalUsage);
-
-// Sort each creator's templates by usage
-for (const group of sortedCreators) {
-  group.templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
-}
+// Sort creators by template count (most first)
+const sortedCreators = Array.from(creatorMap.values()).sort(
+  (a, b) => b.templates.length - a.templates.length
+);
 
 const canonicalUrl = absoluteUrl('/workflows/creators/');
 ---
@@ -149,12 +178,12 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                   {tmplList.slice(0, 5).map((tmpl) => (
                     <HubWorkflowCard
                       client:load
-                      name={tmpl.data.name}
-                      title={tmpl.data.title || tmpl.data.name}
-                      tags={tmpl.data.tags}
-                      logos={tmpl.data.logos}
-                      thumbnails={tmpl.data.thumbnails}
-                      username={tmpl.data.username}
+                      name={tmpl.name}
+                      title={tmpl.title}
+                      tags={tmpl.tags}
+                      logos={tmpl.logos}
+                      thumbnails={tmpl.thumbnails}
+                      username={tmpl.username}
                       creatorDisplayName={profile.displayName}
                       creatorAvatarUrl={profile.avatarUrl}
                       locale={locale}

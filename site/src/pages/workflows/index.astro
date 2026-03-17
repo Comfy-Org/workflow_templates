@@ -9,16 +9,36 @@ import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 import { absoluteUrl } from '../../config/site';
 import creatorsData from '../../../creators.json';
-import { listWorkflows, toSerializedTemplate } from '../../lib/hub-api';
+import { listWorkflowIndex, type HubWorkflowTemplateEntry } from '../../lib/hub-api';
 
 const creators = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
 const locale = getLocaleFromPath(Astro.url.pathname);
 
+function entryToSerialized(entry: HubWorkflowTemplateEntry) {
+  return {
+    name: entry.name,
+    title: entry.title || entry.name,
+    description: entry.description || '',
+    mediaType: entry.mediaType || 'image',
+    tags: entry.tags || [],
+    models: entry.models || [],
+    logos: (entry.logos || []) as { provider: string | string[] }[],
+    usage: 0,
+    date: entry.date || '',
+    thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
+    username: entry.username || '',
+    creatorDisplayName:
+      (entry.username && creators[entry.username]?.displayName) || 'ComfyUI',
+    creatorAvatarUrl: (entry.username && creators[entry.username]?.avatarUrl) || '',
+    isApp: false,
+  };
+}
+
 // Try hub API first, fall back to content collection
-let serialized: ReturnType<typeof toSerializedTemplate>[];
+let serialized: ReturnType<typeof entryToSerialized>[];
 try {
-  const { workflows } = await listWorkflows({ limit: 1000 });
-  serialized = workflows.map(toSerializedTemplate);
+  const entries = await listWorkflowIndex();
+  serialized = entries.map(entryToSerialized);
 } catch {
   const templates = await getCollection('templates');
   const allTemplates = templates

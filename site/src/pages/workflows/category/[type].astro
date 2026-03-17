@@ -12,6 +12,7 @@ import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { categoryPath } from '../../../lib/routes';
 import { badgeVariants } from '../../../components/ui/badge';
 import creatorsData from '../../../../creators.json';
+import { listWorkflowIndex, type HubWorkflowTemplateEntry } from '../../../lib/hub-api';
 
 const creators = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
 
@@ -39,11 +40,40 @@ const categoryName = t(categoryTranslationKeys[type], locale);
 const title = `${categoryName} Workflows - ${t('meta.title', locale)}`;
 const description = t('meta.description', locale);
 
-const allTemplates = await getCollection('templates');
-const templates = allTemplates
-  .filter((tmpl) => !tmpl.id.includes('/'))
-  .filter((tmpl) => tmpl.data.mediaType === type)
-  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+// Try hub API first, fall back to content collection
+let filteredEntries: { name: string; title: string; tags: string[]; logos: Record<string, unknown>[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
+try {
+  const entries = await listWorkflowIndex();
+  filteredEntries = entries
+    .filter((e) => (e.mediaType || 'image') === type)
+    .map((e) => ({
+      name: e.name,
+      title: e.title || e.name,
+      tags: e.tags || [],
+      logos: e.logos || [],
+      date: e.date || '',
+      thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
+      username: e.username || '',
+      isApp: false,
+    }));
+} catch {
+  const allTemplates = await getCollection('templates');
+  filteredEntries = allTemplates
+    .filter((tmpl) => !tmpl.id.includes('/'))
+    .filter((tmpl) => tmpl.data.mediaType === type)
+    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0))
+    .map((tmpl) => ({
+      name: tmpl.data.name,
+      title: tmpl.data.title || tmpl.data.name,
+      tags: tmpl.data.tags || [],
+      logos: tmpl.data.logos || [],
+      date: tmpl.data.date || '',
+      thumbnails: tmpl.data.thumbnails || [],
+      username: tmpl.data.username || '',
+      isApp: tmpl.data.isApp || false,
+    }));
+}
+const templates = filteredEntries;
 
 const basePath = categoryPath(type);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
@@ -181,18 +211,11 @@ const faqStructuredData = faqItems.length
 
 // Serialize templates for the Vue WorkflowGrid island
 const serialized = templates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  tags: tmpl.data.tags || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
+  ...tmpl,
+  usage: 0,
   creatorDisplayName:
-    (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
-  creatorAvatarUrl: (tmpl.data.username && creators[tmpl.data.username]?.avatarUrl) || '',
-  isApp: tmpl.data.isApp || false,
+    (tmpl.username && creators[tmpl.username]?.displayName) || 'ComfyUI',
+  creatorAvatarUrl: (tmpl.username && creators[tmpl.username]?.avatarUrl) || '',
 }));
 ---
 

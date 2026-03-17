@@ -13,17 +13,57 @@ import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { modelPath } from '../../../lib/routes';
 import { badgeVariants } from '../../../components/ui/badge';
 import creatorsData from '../../../../creators.json';
+import { listWorkflowIndex } from '../../../lib/hub-api';
 
 const creators = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
 
+interface TemplateEntry {
+  name: string;
+  title: string;
+  tags: string[];
+  logos: Record<string, unknown>[];
+  date: string;
+  thumbnails: string[];
+  username: string;
+  models: string[];
+  isApp: boolean;
+}
+
 export async function getStaticPaths() {
-  const templates = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
+  // Try hub API first, fall back to content collection
+  let allTemplates: TemplateEntry[];
+  try {
+    const entries = await listWorkflowIndex();
+    allTemplates = entries.map((e) => ({
+      name: e.name,
+      title: e.title || e.name,
+      tags: e.tags || [],
+      logos: e.logos || [],
+      date: e.date || '',
+      thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
+      username: e.username || '',
+      models: e.models || [],
+      isApp: false,
+    }));
+  } catch {
+    const collection = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
+    allTemplates = collection.map((t) => ({
+      name: t.data.name,
+      title: t.data.title || t.data.name,
+      tags: t.data.tags || [],
+      logos: t.data.logos || [],
+      date: t.data.date || '',
+      thumbnails: t.data.thumbnails || [],
+      username: t.data.username || '',
+      models: t.data.models || [],
+      isApp: t.data.isApp || false,
+    }));
+  }
 
-  const modelMap = new Map<string, typeof templates>();
+  const modelMap = new Map<string, TemplateEntry[]>();
 
-  for (const template of templates) {
-    const models = template.data.models || [];
-    for (const model of models) {
+  for (const template of allTemplates) {
+    for (const model of template.models) {
       const normalized = slugify(model);
       if (!modelMap.has(normalized)) {
         modelMap.set(normalized, []);
@@ -34,12 +74,12 @@ export async function getStaticPaths() {
 
   return Array.from(modelMap.entries()).map(([name, modelTemplates]) => {
     const originalName =
-      modelTemplates[0]?.data.models?.find((m: string) => slugify(m) === name) || name;
+      modelTemplates[0]?.models?.find((m: string) => slugify(m) === name) || name;
 
     return {
       params: { name },
       props: {
-        templates: modelTemplates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0)),
+        templates: modelTemplates,
         modelName: originalName,
       },
     };
@@ -82,18 +122,11 @@ const breadcrumbStructuredData = {
 
 // Serialize templates for the Vue WorkflowGrid island
 const serialized = templates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  tags: tmpl.data.tags || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
+  ...tmpl,
+  usage: 0,
   creatorDisplayName:
-    (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
-  creatorAvatarUrl: (tmpl.data.username && creators[tmpl.data.username]?.avatarUrl) || '',
-  isApp: tmpl.data.isApp || false,
+    (tmpl.username && creators[tmpl.username]?.displayName) || 'ComfyUI',
+  creatorAvatarUrl: (tmpl.username && creators[tmpl.username]?.avatarUrl) || '',
 }));
 ---
 
