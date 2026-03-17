@@ -16,6 +16,7 @@ import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { getTemplatesForLocale } from '../../../lib/templates';
 import { absoluteUrl } from '../../../config/site';
 import { slugify } from '../../../lib/slugify';
+import { listWorkflowIndex } from '../../../lib/hub-api';
 import type { WorkflowTemplate } from '../../../components/hub/WorkflowGrid.vue';
 import creatorsData from '../../../../creators.json';
 
@@ -45,12 +46,26 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 const typedLocale = locale as Locale;
 
 // Check if this is a template slug — redirect to new URL structure
-const allTemplates = await getTemplatesForLocale(typedLocale);
-const template = allTemplates.find((t) => t.data.name === slug);
-if (template) {
-  const username = slugify(template.data.username || 'comfy');
-  return Astro.redirect(`/${locale}/workflows/${username}/${slug}/`, 301);
+// Try hub API first, fallback to content collection
+let templateUsername: string | undefined;
+try {
+  const entries = await listWorkflowIndex();
+  const entry = entries.find((e) => e.name === slug);
+  if (entry) {
+    templateUsername = slugify(entry.username || 'comfy');
+  }
+} catch {
+  const allTemplates = await getTemplatesForLocale(typedLocale);
+  const template = allTemplates.find((t) => t.data.name === slug);
+  if (template) {
+    templateUsername = slugify(template.data.username || 'comfy');
+  }
 }
+if (templateUsername) {
+  return Astro.redirect(`/${locale}/workflows/${templateUsername}/${slug}/`, 301);
+}
+
+const allTemplates = await getTemplatesForLocale(typedLocale);
 
 // Check if this is a creator profile
 const slugToUsername = new Map<string, string>();
