@@ -15,6 +15,7 @@ import {
 import {
   findThumbnails,
   copyThumbnails,
+  copyDetailImages,
   copyWorkflowJson,
   ensureDirectories,
   syncLogos,
@@ -57,6 +58,11 @@ function createSyncedTemplate(
     workflowModels = models.length > 0 ? models : undefined;
   }
 
+  const detailImages =
+    template.thumbnail && locale === DEFAULT_LOCALE
+      ? copyDetailImages(template.thumbnail)
+      : undefined;
+
   return {
     ...template,
     username: template.username || 'ComfyUI',
@@ -65,6 +71,7 @@ function createSyncedTemplate(
     metaDescription: template.description.slice(0, 160),
     suggestedUseCases: [],
     thumbnails,
+    detailImages: detailImages && detailImages.length > 0 ? detailImages : undefined,
     locale: locale === DEFAULT_LOCALE ? undefined : locale,
     estimatedTime,
     requiredNodes,

@@ -27,9 +27,11 @@ const templateSchema = z.object({
     .optional(),
   usage: z.number().optional(),
   username: z.string().optional(),
+  includeOnDistributions: z.array(z.string()).optional(),
 
   // Synced assets
   thumbnails: z.array(z.string()).default([]),
+  detailImages: z.array(z.string()).optional(),
   size: z.number().optional(),
   vram: z.number().optional(),
   authorNotes: z.string().optional(),
