@@ -5,6 +5,7 @@
  */
 export const prerender = false;
 
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
@@ -14,13 +15,10 @@ import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { t } from '../../../../i18n/ui';
 import { localizeUrl } from '../../../../i18n/utils';
-import { getTemplatesForLocale } from '../../../../lib/templates';
 import { SITE_ORIGIN, absoluteUrl } from '../../../../config/site';
 import { categoryPath } from '../../../../lib/routes';
 import { badgeVariants } from '../../../../components/ui/badge';
-import creatorsData from '../../../../../creators.json';
-
-const creators = creatorsData as Record<string, { displayName: string }>;
+import { listWorkflowIndex, getProfileCache } from '../../../../lib/hub-api';
 
 type MediaType = 'image' | 'video' | 'audio' | '3d';
 
@@ -52,10 +50,42 @@ const categoryName = t(categoryTranslationKeys[mediaType], typedLocale);
 const title = `${categoryName} Workflows - ${t('meta.title', typedLocale)}`;
 const description = t('meta.description', typedLocale);
 
-const allTemplates = await getTemplatesForLocale(typedLocale);
-const templates = allTemplates
-  .filter((tmpl) => tmpl.data.mediaType === mediaType)
-  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+// Try hub API first, fall back to content collection
+let filteredEntries: { name: string; shareId: string; title: string; tags: string[]; logos: { provider: string | string[] }[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
+try {
+  const entries = await listWorkflowIndex();
+  filteredEntries = entries
+    .filter((e) => (e.mediaType || 'image') === mediaType)
+    .map((e) => ({
+      name: e.name,
+      shareId: e.shareId || '',
+      title: e.title || e.name,
+      tags: e.tags || [],
+      logos: (e.logos || []) as { provider: string | string[] }[],
+      date: e.date || '',
+      thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
+      username: e.username || '',
+      isApp: false,
+    }));
+} catch {
+  const allTemplates = await getCollection('templates');
+  filteredEntries = allTemplates
+    .filter((tmpl) => !tmpl.id.includes('/'))
+    .filter((tmpl) => tmpl.data.mediaType === mediaType)
+    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0))
+    .map((tmpl) => ({
+      name: tmpl.data.name,
+      shareId: '',
+      title: tmpl.data.title || tmpl.data.name,
+      tags: tmpl.data.tags || [],
+      logos: tmpl.data.logos || [],
+      date: tmpl.data.date || '',
+      thumbnails: tmpl.data.thumbnails || [],
+      username: tmpl.data.username || '',
+      isApp: tmpl.data.isApp || false,
+    }));
+}
+const templates = filteredEntries;
 
 const basePath = categoryPath(mediaType);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
@@ -85,18 +115,13 @@ const breadcrumbStructuredData = {
 };
 
 // Serialize templates for the Vue WorkflowGrid island
+const profiles = await getProfileCache();
 const serialized = templates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  tags: tmpl.data.tags || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
+  ...tmpl,
+  usage: 0,
   creatorDisplayName:
-    (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
-  isApp: tmpl.data.isApp || false,
+    (tmpl.username && profiles.get(tmpl.username)?.display_name) || tmpl.username || 'ComfyUI',
+  creatorAvatarUrl: (tmpl.username && profiles.get(tmpl.username)?.avatar_url) || '',
 }));
 ---
 
