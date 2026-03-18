@@ -17,7 +17,7 @@ import BackButton from '../../components/BackButton.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, getProfile } from '../../lib/hub-api';
+import { listWorkflowIndex, getProfile, extractShareId } from '../../lib/hub-api';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -30,6 +30,12 @@ const locale = getLocaleFromPath(Astro.url.pathname);
 
 if (!slugParam) {
   return Astro.redirect('/workflows/');
+}
+
+// If URL contains a share_id suffix, this is a workflow detail page — not a creator profile.
+// Rewrite to the catchall route which handles ISR detail rendering.
+if (extractShareId(slugParam)) {
+  return Astro.rewrite(`/workflows/detail/${slugParam}`);
 }
 
 // Fetch profile from hub API
