@@ -45,24 +45,25 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-// Check if this is a template slug — redirect to new URL structure
+// Check if this is a template slug — redirect to new URL format
 // Try hub API first, fallback to content collection
-let templateUsername: string | undefined;
+let redirectUrl: string | undefined;
 try {
   const entries = await listWorkflowIndex();
   const entry = entries.find((e) => e.name === slug);
-  if (entry) {
-    templateUsername = slugify(entry.username || 'comfy');
+  if (entry && entry.shareId) {
+    redirectUrl = `/${locale}/workflows/${entry.name}-${entry.shareId}/`;
   }
 } catch {
   const allTemplates = await getTemplatesForLocale(typedLocale);
   const template = allTemplates.find((t) => t.data.name === slug);
   if (template) {
-    templateUsername = slugify(template.data.username || 'comfy');
+    // Content collection doesn't have shareId, redirect to English canonical
+    redirectUrl = `/workflows/`;
   }
 }
-if (templateUsername) {
-  return Astro.redirect(`/${locale}/workflows/${templateUsername}/${slug}/`, 301);
+if (redirectUrl) {
+  return Astro.redirect(redirectUrl, 301);
 }
 
 const allTemplates = await getTemplatesForLocale(typedLocale);
