@@ -30,6 +30,7 @@ const templateSchema = z.object({
 
   // Synced assets
   thumbnails: z.array(z.string()).default([]),
+  detailImages: z.array(z.string()).optional(),
   size: z.number().optional(),
   vram: z.number().optional(),
   authorNotes: z.string().optional(),

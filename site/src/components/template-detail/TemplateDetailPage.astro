@@ -34,6 +34,7 @@ interface Props {
       mediaSubtype?: string;
       thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
       thumbnails?: string[];
+      detailImages?: string[];
       tags?: string[];
       models?: string[];
       username?: string;
@@ -51,7 +52,7 @@ const authorName = creator ? creator.displayName : 'ComfyUI';
 const authorProfileUrl = creator
   ? localizeUrl(`/workflows/${slugify(data.username!)}/`, locale)
   : null;
-const thumbnails = data.thumbnails || [];
+const thumbnails = data.detailImages?.length ? data.detailImages : (data.thumbnails || []);
 
 const mediaTypeLabels: Record<string, string> = {
   image: t('category.image', locale),
@@ -104,7 +105,8 @@ function formatRelativeDate(dateStr: string): string {
                 title={data.title || data.name}
                 variant={data.thumbnailVariant}
                 mediaSubtype={data.mediaSubtype}
-                class="w-full aspect-square"
+                class={data.detailImages?.length ? 'w-full' : 'w-full aspect-square'}
+                naturalAspect={!!data.detailImages?.length}
                 loading="eager"
                 fetchpriority="high"
                 sizes="(min-width: 1024px) 60vw, 100vw"

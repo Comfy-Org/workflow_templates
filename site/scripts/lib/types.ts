@@ -5,6 +5,7 @@ export interface TemplateInfo {
   mediaType: 'image' | 'video' | 'audio' | '3d';
   mediaSubtype?: string;
   thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover';
+  thumbnail?: string[];
   tags?: string[];
   models?: string[];
   date?: string;
@@ -46,6 +47,7 @@ export interface SyncedTemplate extends TemplateInfo {
   metaDescription: string;
   suggestedUseCases: string[];
   thumbnails: string[];
+  detailImages?: string[];
   locale?: string;
   estimatedTime?: string;
   requiredNodes?: RequiredNodeInfo[];

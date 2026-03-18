@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const SITE_DIR = path.resolve(__dirname, '..', '..');
+export const REPO_ROOT = path.join(SITE_DIR, '..');
 export const TEMPLATES_DIR = path.join(SITE_DIR, '..', 'templates');
 export const CONTENT_DIR = path.join(SITE_DIR, 'src', 'content', 'templates');
 export const THUMBNAILS_DIR = path.join(SITE_DIR, 'public', 'workflows', 'thumbnails');

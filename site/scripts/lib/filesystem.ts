@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { ASSET_EXTENSIONS, DEFAULT_LOCALE, LOGO_FILENAME_FIXES } from './constants';
 import {
+  REPO_ROOT,
   TEMPLATES_DIR,
   CONTENT_DIR,
   THUMBNAILS_DIR,
@@ -11,6 +12,8 @@ import {
   AVATARS_SRC_DIR,
   AVATARS_DEST_DIR,
 } from './paths';
+
+export const DETAIL_IMAGES_DIR = path.join(THUMBNAILS_DIR, 'detail');
 import { logger } from './logger';
 
 export function escapeRegExp(string: string): string {
@@ -44,6 +47,32 @@ export function copyThumbnails(templateName: string): void {
       }
     }
   }
+}
+
+/**
+ * Copy detail images specified in the `thumbnail` field of index.json into
+ * DETAIL_IMAGES_DIR. Paths are relative to the repo root (e.g. "input/foo.png",
+ * "output/bar.mp4"). Returns the flat filenames for use as `detailImages`.
+ */
+export function copyDetailImages(thumbnailPaths: string[]): string[] {
+  if (!fs.existsSync(DETAIL_IMAGES_DIR)) {
+    fs.mkdirSync(DETAIL_IMAGES_DIR, { recursive: true });
+  }
+  const result: string[] = [];
+  for (const relPath of thumbnailPaths) {
+    const src = path.join(REPO_ROOT, relPath);
+    if (!fs.existsSync(src)) {
+      logger.warn(`  Warning: detail image not found: ${relPath}`);
+      continue;
+    }
+    const destName = path.basename(relPath);
+    const dest = path.join(DETAIL_IMAGES_DIR, destName);
+    if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
+      fs.copyFileSync(src, dest);
+    }
+    result.push(`detail/${destName}`);
+  }
+  return result;
 }
 
 export function copyWorkflowJson(templateName: string): void {
