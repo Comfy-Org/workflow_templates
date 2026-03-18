@@ -19,6 +19,7 @@ interface Props {
   loading?: 'lazy' | 'eager';
   fetchpriority?: 'high' | 'low' | 'auto';
   sizes?: string;
+  naturalAspect?: boolean;
 }
 
 const {
@@ -30,6 +31,7 @@ const {
   loading = 'lazy',
   fetchpriority,
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 640px',
+  naturalAspect = false,
 } = Astro.props;
 
 // If thumbnail is already a full URL, use it directly; otherwise prepend local path
@@ -38,6 +40,8 @@ function thumbUrl(thumb: string): string {
   return `/workflows/thumbnails/${thumb}`;
 }
 
+const imgClass = naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover';
+
 const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
 const primarySrc = primaryThumb ? thumbUrl(primaryThumb) : '';
@@ -45,6 +49,7 @@ const secondarySrc = secondaryThumb ? thumbUrl(secondaryThumb) : '';
 const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm');
+const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov');
 ---
 
 {
@@ -98,11 +103,35 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         </audio>
       </div>
     </div>
+  ) : isVideo ? (
+    <div class={`video-thumb flex flex-col gap-2 ${className}`}>
+      <video
+        src={primarySrc}
+        class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
+        autoplay
+        controls
+        loop
+        muted
+        playsinline
+        preload="auto"
+      />
+      {secondaryThumb && (
+        <video
+          src={secondarySrc}
+          class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
+          controls
+          loop
+          muted
+          playsinline
+          preload="metadata"
+        />
+      )}
+    </div>
   ) : variant === 'compareSlider' && hasSecondImage ? (
     <div class={`compare-slider relative overflow-hidden ${className}`} data-compare-slider>
       <img
-        src={primarySrc}
-        alt={`${title} - Before`}
+        src={secondarySrc}
+        alt={`${title} - After`}
         loading={loading}
         fetchpriority={fetchpriority}
         width="640"
@@ -110,15 +139,15 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         decoding="async"
         draggable="false"
         sizes={sizes}
-        class="w-full h-full object-cover"
+        class={imgClass}
       />
       <div
         class="compare-overlay absolute inset-0 overflow-hidden"
         style="clip-path: inset(0 50% 0 0);"
       >
         <img
-          src={secondarySrc}
-          alt={`${title} - After`}
+          src={primarySrc}
+          alt={`${title} - Before`}
           loading={loading}
           width="640"
           height="360"
@@ -164,7 +193,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         decoding="async"
         draggable="false"
         sizes={sizes}
-        class="w-full h-full object-cover transition-opacity duration-500"
+        class={`${imgClass} transition-opacity duration-500`}
       />
       <img
         src={secondarySrc}
@@ -190,7 +219,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         decoding="async"
         draggable="false"
         sizes={sizes}
-        class="w-full h-full object-cover"
+        class={imgClass}
       />
     </div>
   ) : variant === 'zoomHover' ? (
@@ -205,7 +234,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         decoding="async"
         draggable="false"
         sizes={sizes}
-        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125"
+        class={`${imgClass} transition-transform duration-500 group-hover:scale-125`}
       />
     </div>
   ) : (
@@ -220,7 +249,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         decoding="async"
         draggable="false"
         sizes={sizes}
-        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        class={`${imgClass} transition-transform duration-300 group-hover:scale-105`}
       />
     </div>
   )

@@ -2,18 +2,18 @@
   "id": "ec7da562-7e21-4dac-a0d2-f4441e1efd3b",
   "revision": 0,
   "last_node_id": 121,
-  "last_link_id": 219,
+  "last_link_id": 222,
   "nodes": [
     {
       "id": 97,
       "type": "LoadImage",
       "pos": [
-        47.578369140625,
-        247.8372039794922
+        47.911716585938905,
+        250.50386466180174
       ],
       "size": [
-        608.1323852539062,
-        485.1783447265625
+        608.125,
+        485.16927083333337
       ],
       "flags": {},
       "order": 0,
@@ -37,9 +37,14 @@
       ],
       "title": "Start Frame Image",
       "properties": {
-        "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
-        "ver": "0.3.45"
+        "ver": "0.3.45",
+        "Node name for S&R": "LoadImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": [
         "03_video_wan2_2_14B_i2v_subgraphed_input_image.png",
@@ -50,15 +55,15 @@
       "id": 108,
       "type": "SaveVideo",
       "pos": [
-        1087.284423828125,
-        246.28770446777344
+        1087.617728602351,
+        248.95438116119445
       ],
       "size": [
-        751.137451171875,
-        483.25408935546875
+        751.1328125,
+        483.2421875
       ],
       "flags": {},
-      "order": 5,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -69,9 +74,14 @@
       ],
       "outputs": [],
       "properties": {
-        "Node name for S&R": "SaveVideo",
         "cnr_id": "comfy-core",
-        "ver": "0.3.49"
+        "ver": "0.3.49",
+        "Node name for S&R": "SaveVideo",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
       },
       "widgets_values": [
         "video/Wan2.2_image_to_video",
@@ -83,12 +93,12 @@
       "id": 118,
       "type": "MarkdownNote",
       "pos": [
-        -450,
-        250
+        -449.6666245906385,
+        252.66666806708238
       ],
       "size": [
         480,
-        240
+        344.30989583333337
       ],
       "flags": {},
       "order": 1,
@@ -96,7 +106,13 @@
       "inputs": [],
       "outputs": [],
       "title": "Note: how to use this workflow",
-      "properties": {},
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
       "widgets_values": [
         "**Wan2.2 Image to Video(Subgraph)** node is a subgraph, which is converted from the Wan2.2 image to video workflow.\n\nYou can find the tutorial and original workflow [here](https://docs.comfy.org/tutorials/video/wan/wan2_2).\n\n\nThis workflow requires high VRAM (More than 20GB). If you are running this workflow locally, please make sure you have enough VRAM.\n\n## For Comfy Cloud users\n\nIf you are using [cloud.comfy.org](https://cloud.comfy.org/):\n\n1. Since the workflow in the Cloud will have the input image ready, for the first run, you can just click the run button to see what happens. \n\n2. Try to upload your own image to the **Start Frame Image**, and then try to describe the video you want to generate in the **Wan2.2 Image to Video(Subgraph)**."
       ],
@@ -104,15 +120,92 @@
       "bgcolor": "#000"
     },
     {
+      "id": 116,
+      "type": "98e3bef8-6d56-4445-94c0-7281b1cf3503",
+      "pos": [
+        699.3576799751058,
+        250.67823574475284
+      ],
+      "size": [
+        353.64583333333337,
+        465.28645833333337
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "start_image",
+          "type": "IMAGE",
+          "link": 218
+        },
+        {
+          "label": "Positive Prompt",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        },
+        {
+          "label": "frames",
+          "name": "length",
+          "type": "INT",
+          "widget": {
+            "name": "length"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            219
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "93",
+            "text"
+          ],
+          [
+            "98",
+            "width"
+          ],
+          [
+            "98",
+            "height"
+          ],
+          [
+            "98",
+            "length"
+          ]
+        ],
+        "cnr_id": "comfy-core",
+        "ver": "0.3.65",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
       "id": 119,
       "type": "MarkdownNote",
       "pos": [
-        -450,
-        540
+        -449.66666951427186,
+        701.333314006831
       ],
       "size": [
         480,
-        580
+        884.6223958333334
       ],
       "flags": {},
       "order": 2,
@@ -128,94 +221,10 @@
         }
       },
       "widgets_values": [
-        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/wan2_2\n)\n\n## VRAM Usage\n\nThe following data was tested using an RTX 4090 24GB\n\n| Model            | Size |VRAM Usage | 1st Generation | 2nd Generation |\n|---------------------|-------|-----------|---------------|-----------------|\n| fp8_scaled               |640*640| 84%               | ≈  536s              | ≈ 513s                   |\n| fp8_scaled +  4steps LoRA  | 640*640  | 83%                | ≈ 97s               | ≈ 71s                   |\n\n**Diffusion Model**\n- [wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors)\n- [wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors)\n\n**LoRA**\n- [wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors)\n- [wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors)\n\n**VAE**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors)\n\n**Text Encoder**   \n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n\nFile save location\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   ├─── wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors\n│   │   └─── wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors\n│   ├───📂 loras/\n│   │   ├─── wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors\n│   │   └─── wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   └───📂 vae/\n│       └── wan_2.1_vae.safetensors\n```\n"
+        "[Tutorial](https://docs.comfy.org/tutorials/video/wan/wan2_2\n)\n\n## VRAM Usage\n\nThe following data was tested using an RTX 4090 24GB\n\n| Model            | Size |VRAM Usage | 1st Generation | 2nd Generation |\n|---------------------|-------|-----------|---------------|-----------------|\n| fp8_scaled               |640*640| 84%               | ≈  536s              | ≈ 513s                   |\n| fp8_scaled +  4steps LoRA  | 640*640  | 83%                | ≈ 97s               | ≈ 71s                   |\n\n**Diffusion Model**\n- [wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors)\n- [wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors)\n\n**LoRA**\n- [wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors)\n- [wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors)\n\n**VAE**\n- [wan_2.1_vae.safetensors](https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors)\n\n**Text Encoder**   \n- [umt5_xxl_fp8_e4m3fn_scaled.safetensors](https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors)\n\n\nFile save location\n\n```\nComfyUI/\n├───📂 models/\n│   ├───📂 diffusion_models/\n│   │   ├─── wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors\n│   │   └─── wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors\n│   ├───📂 loras/\n│   │   ├─── wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors\n│   │   └─── wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors\n│   ├───📂 text_encoders/\n│   │   └─── umt5_xxl_fp8_e4m3fn_scaled.safetensors \n│   └───📂 vae/\n│       └── wan_2.1_vae.safetensors\n```\n\nIf you have any problems running this workflow, please report template-related issues via this link: [report the template issue here](https://github.com/Comfy-Org/workflow_templates/issues)"
       ],
       "color": "#432",
       "bgcolor": "#000"
-    },
-    {
-      "id": 121,
-      "type": "MarkdownNote",
-      "pos": [
-        -450,
-        1170
-      ],
-      "size": [
-        480,
-        88
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Report Template Issue",
-      "properties": {},
-      "widgets_values": [
-        "If you have any problems running this workflow, please report template-related issues via this link: [report the template issue here](https://github.com/Comfy-Org/workflow_templates/issues)"
-      ],
-      "color": "#432",
-      "bgcolor": "#000"
-    },
-    {
-      "id": 116,
-      "type": "98e3bef8-6d56-4445-94c0-7281b1cf3503",
-      "pos": [
-        699.0244140625,
-        248.0115966796875
-      ],
-      "size": [
-        353.6471252441406,
-        465.28741455078125
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "start_image",
-          "type": "IMAGE",
-          "link": 218
-        }
-      ],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            219
-          ]
-        }
-      ],
-      "title": "Wan2.2 Image to Video (Simplified)",
-      "properties": {
-        "proxyWidgets": [
-          [
-            "-1",
-            "text"
-          ],
-          [
-            "-1",
-            "width"
-          ],
-          [
-            "-1",
-            "height"
-          ],
-          [
-            "-1",
-            "length"
-          ]
-        ],
-        "cnr_id": "comfy-core",
-        "ver": "0.3.65"
-      },
-      "widgets_values": [
-        "A felt-style little eagle cashier greeting, waving, and smiling at the camera.",
-        1280,
-        720,
-        81
-      ]
     }
   ],
   "links": [
@@ -244,7 +253,7 @@
         "version": 1,
         "state": {
           "lastGroupId": 16,
-          "lastNodeId": 115,
+          "lastNodeId": 121,
           "lastLinkId": 222,
           "lastRerouteId": 0
         },
@@ -380,16 +389,21 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "CLIPLoader",
               "cnr_id": "comfy-core",
               "ver": "0.3.45",
+              "Node name for S&R": "CLIPLoader",
               "models": [
                 {
                   "name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors",
                   "directory": "text_encoders"
                 }
-              ]
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
@@ -425,16 +439,21 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "VAELoader",
               "cnr_id": "comfy-core",
               "ver": "0.3.45",
+              "Node name for S&R": "VAELoader",
               "models": [
                 {
                   "name": "wan_2.1_vae.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors",
                   "directory": "vae"
                 }
-              ]
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "wan_2.1_vae.safetensors"
@@ -467,16 +486,21 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "UNETLoader",
               "cnr_id": "comfy-core",
               "ver": "0.3.45",
+              "Node name for S&R": "UNETLoader",
               "models": [
                 {
                   "name": "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
                   "directory": "diffusion_models"
                 }
-              ]
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors",
@@ -510,16 +534,21 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "UNETLoader",
               "cnr_id": "comfy-core",
               "ver": "0.3.45",
+              "Node name for S&R": "UNETLoader",
               "models": [
                 {
                   "name": "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/diffusion_models/wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
                   "directory": "diffusion_models"
                 }
-              ]
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "wan2.2_i2v_low_noise_14B_fp8_scaled.safetensors",
@@ -562,9 +591,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "ModelSamplingSD3",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "ModelSamplingSD3",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               5.000000000000001
@@ -603,16 +637,21 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "LoraLoaderModelOnly",
               "cnr_id": "comfy-core",
               "ver": "0.3.49",
+              "Node name for S&R": "LoraLoaderModelOnly",
               "models": [
                 {
                   "name": "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
                   "directory": "loras"
                 }
-              ]
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
@@ -652,16 +691,21 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "LoraLoaderModelOnly",
               "cnr_id": "comfy-core",
               "ver": "0.3.49",
+              "Node name for S&R": "LoraLoaderModelOnly",
               "models": [
                 {
                   "name": "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/loras/wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
                   "directory": "loras"
                 }
-              ]
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
@@ -702,9 +746,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "ModelSamplingSD3",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "ModelSamplingSD3",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               5.000000000000001
@@ -750,9 +799,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "CreateVideo",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "CreateVideo",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               16
@@ -798,9 +852,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "VAEDecode",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "VAEDecode",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": []
           },
@@ -855,9 +914,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "KSamplerAdvanced",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "KSamplerAdvanced",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "enable",
@@ -923,9 +987,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "KSamplerAdvanced",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "KSamplerAdvanced",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "disable",
@@ -984,9 +1053,14 @@
             ],
             "title": "CLIP Text Encode (Positive Prompt)",
             "properties": {
-              "Node name for S&R": "CLIPTextEncode",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "CLIPTextEncode",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "A felt-style little eagle cashier greeting, waving, and smiling at the camera."
@@ -1029,9 +1103,14 @@
             ],
             "title": "CLIP Text Encode (Negative Prompt)",
             "properties": {
-              "Node name for S&R": "CLIPTextEncode",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "CLIPTextEncode",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走"
@@ -1146,9 +1225,14 @@
               }
             ],
             "properties": {
-              "Node name for S&R": "WanImageToVideo",
               "cnr_id": "comfy-core",
-              "ver": "0.3.45"
+              "ver": "0.3.45",
+              "Node name for S&R": "WanImageToVideo",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
             },
             "widgets_values": [
               1280,
@@ -1435,24 +1519,28 @@
             "type": "INT"
           }
         ],
-        "extra": {}
+        "extra": {
+          "workflowRendererVersion": "LG"
+        }
       }
     ]
   },
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.36994792931933085,
+      "scale": 0.42180504028036264,
       "offset": [
-        1907.3706418938493,
-        451.42216402585325
+        682.3400284939953,
+        445.62097104135665
       ]
     },
-    "frontendVersion": "1.32.1",
+    "frontendVersion": "1.41.20",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true
+    "VHS_KeepIntermediate": true,
+    "workflowRendererVersion": "LG",
+    "ue_links": []
   },
   "version": 0.4
 }
