@@ -11,10 +11,7 @@ import { t } from '../../../i18n/ui';
 import { tagSlug, tagDisplayName } from '../../../lib/tag-aliases';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { badgeVariants } from '../../../components/ui/badge';
-import creatorsData from '../../../../creators.json';
 import { listWorkflowIndex, getProfileCache } from '../../../lib/hub-api';
-
-const creators = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
 
 interface TemplateEntry {
   name: string;
@@ -126,8 +123,8 @@ const serialized = templates.map((tmpl) => ({
   ...tmpl,
   usage: 0,
   creatorDisplayName:
-    (tmpl.username && (profiles.get(tmpl.username)?.display_name || creators[tmpl.username]?.displayName)) || 'ComfyUI',
-  creatorAvatarUrl: (tmpl.username && (profiles.get(tmpl.username)?.avatar_url || creators[tmpl.username]?.avatarUrl)) || '',
+    (tmpl.username && profiles.get(tmpl.username)?.display_name) || tmpl.username || 'ComfyUI',
+  creatorAvatarUrl: (tmpl.username && profiles.get(tmpl.username)?.avatar_url) || '',
 }));
 ---
 
