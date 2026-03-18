@@ -161,6 +161,36 @@ export async function getProfile(username: string): Promise<HubProfile> {
 }
 
 // ---------------------------------------------------------------------------
+// Profile cache — built at startup from index usernames
+// ---------------------------------------------------------------------------
+
+let profileCache: Map<string, HubProfile> | null = null;
+
+/**
+ * Fetch and cache all creator profiles referenced in the workflow index.
+ * Called once; subsequent calls return the cached map.
+ */
+export async function getProfileCache(): Promise<Map<string, HubProfile>> {
+  if (profileCache) return profileCache;
+
+  profileCache = new Map();
+  try {
+    const entries = await listWorkflowIndex();
+    const usernames = [...new Set(entries.map((e) => e.username).filter(Boolean) as string[])];
+    const results = await Promise.allSettled(usernames.map((u) => getProfile(u)));
+    for (let i = 0; i < usernames.length; i++) {
+      const result = results[i];
+      if (result.status === 'fulfilled') {
+        profileCache.set(usernames[i], result.value);
+      }
+    }
+  } catch {
+    // Index fetch failed — return empty cache, pages will use fallback display names
+  }
+  return profileCache;
+}
+
+// ---------------------------------------------------------------------------
 // Helpers — map API responses to existing frontend data shapes
 // ---------------------------------------------------------------------------
 

@@ -9,19 +9,7 @@ import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
-
-import creatorsData from '../../../creators.json';
-
-interface CreatorProfile {
-  displayName: string;
-  handle: string;
-  summary: string;
-  social?: string | string[];
-  avatarUrl?: string;
-  coverUrl?: string;
-}
-
-const creators = creatorsData as Record<string, CreatorProfile>;
+import { getProfileCache } from '../../lib/hub-api';
 
 interface Props {
   template: {
@@ -46,8 +34,10 @@ interface Props {
 const { template, locale } = Astro.props;
 const { data } = template;
 
-const creator = data.username ? creators[data.username] : null;
-const authorName = creator?.displayName || data.username || 'ComfyUI';
+const profiles = await getProfileCache();
+const profile = data.username ? profiles.get(data.username) : null;
+const authorName = profile?.display_name || data.username || 'ComfyUI';
+const authorAvatarUrl = profile?.avatar_url || null;
 const authorProfileUrl = data.username
   ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
   : null;
@@ -163,9 +153,9 @@ function formatRelativeDate(dateStr: string): string {
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">
                 {
-                  creator?.avatarUrl ? (
+                  authorAvatarUrl ? (
                     <img
-                      src={creator.avatarUrl}
+                      src={authorAvatarUrl}
                       alt={authorName}
                       class="w-full h-full object-cover"
                       loading="lazy"
