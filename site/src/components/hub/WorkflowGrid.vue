@@ -12,6 +12,7 @@ import HubWorkflowCard from './HubWorkflowCard.vue';
 export interface WorkflowTemplate {
   name: string;
   title: string;
+  shareId?: string;
   tags: string[];
   logos: { provider: string | string[] }[];
   usage: number;
@@ -359,6 +360,7 @@ onUnmounted(() => {
         :key="tmpl.name"
         :name="tmpl.name"
         :title="tmpl.title"
+        :share-id="tmpl.shareId"
         :tags="tmpl.tags"
         :logos="tmpl.logos"
         :thumbnails="tmpl.thumbnails"

@@ -45,6 +45,7 @@ const MODEL_TO_LOGO: Record<string, string> = {
 interface Props {
   name: string;
   title: string;
+  shareId?: string;
   tags?: string[];
   logos?: { provider: string | string[] }[];
   thumbnails?: string[];
@@ -88,7 +89,8 @@ const logoPath = computed(() => (providerName.value ? getLogoPath(providerName.v
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
 const templateUrl = computed(() => {
-  const base = `/workflows/${props.name}/`;
+  const slug = props.shareId ? `${props.name}-${props.shareId}` : props.name;
+  const base = `/workflows/${slug}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 

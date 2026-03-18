@@ -19,6 +19,7 @@ const creators = creatorsData as Record<string, { displayName: string; avatarUrl
 
 interface TemplateEntry {
   name: string;
+  shareId: string;
   title: string;
   tags: string[];
   logos: { provider: string | string[] }[];
@@ -36,6 +37,7 @@ export async function getStaticPaths() {
     const entries = await listWorkflowIndex();
     allTemplates = entries.map((e) => ({
       name: e.name,
+      shareId: e.shareId || '',
       title: e.title || e.name,
       tags: e.tags || [],
       logos: (e.logos || []) as { provider: string | string[] }[],
@@ -49,6 +51,7 @@ export async function getStaticPaths() {
     const collection = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
     allTemplates = collection.map((t) => ({
       name: t.data.name,
+      shareId: '',
       title: t.data.title || t.data.name,
       tags: t.data.tags || [],
       logos: t.data.logos || [],

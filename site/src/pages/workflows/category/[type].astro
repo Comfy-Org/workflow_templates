@@ -41,13 +41,14 @@ const title = `${categoryName} Workflows - ${t('meta.title', locale)}`;
 const description = t('meta.description', locale);
 
 // Try hub API first, fall back to content collection
-let filteredEntries: { name: string; title: string; tags: string[]; logos: { provider: string | string[] }[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
+let filteredEntries: { name: string; shareId: string; title: string; tags: string[]; logos: { provider: string | string[] }[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
 try {
   const entries = await listWorkflowIndex();
   filteredEntries = entries
     .filter((e) => (e.mediaType || 'image') === type)
     .map((e) => ({
       name: e.name,
+      shareId: e.shareId || '',
       title: e.title || e.name,
       tags: e.tags || [],
       logos: (e.logos || []) as { provider: string | string[] }[],
@@ -64,6 +65,7 @@ try {
     .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0))
     .map((tmpl) => ({
       name: tmpl.data.name,
+      shareId: '',
       title: tmpl.data.title || tmpl.data.name,
       tags: tmpl.data.tags || [],
       logos: tmpl.data.logos || [],

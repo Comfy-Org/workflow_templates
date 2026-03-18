@@ -17,6 +17,7 @@ const locale = getLocaleFromPath(Astro.url.pathname);
 function entryToSerialized(entry: HubWorkflowTemplateEntry) {
   return {
     name: entry.name,
+    shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
     mediaType: (entry.mediaType || 'image') as 'image' | 'video' | 'audio' | '3d',
@@ -46,6 +47,7 @@ try {
     .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
   serialized = allTemplates.map((tmpl) => ({
     name: tmpl.data.name,
+    shareId: '',
     title: tmpl.data.title || tmpl.data.name,
     description: tmpl.data.description || '',
     mediaType: tmpl.data.mediaType,
