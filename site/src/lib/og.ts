@@ -13,10 +13,10 @@ async function loadFonts(): Promise<SatoriOptions['fonts']> {
   fontsPromise = (async () => {
     const [regular, bold] = await Promise.all([
       fetch(
-        'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hiA.woff2'
+        'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfMZg.ttf'
       ).then((r) => r.arrayBuffer()),
       fetch(
-        'https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hiA.woff2'
+        'https://fonts.gstatic.com/s/inter/v20/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYMZg.ttf'
       ).then((r) => r.arrayBuffer()),
     ]);
     return [
