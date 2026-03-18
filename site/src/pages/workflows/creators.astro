@@ -1,11 +1,11 @@
 ---
 /**
  * Creators listing page - /workflows/creators
- * Displays all creators (excluding ComfyUI) with their top workflows.
+ * Displays all creators with their top workflows.
  * Each row shows creator profile info on the left and a horizontal
  * grid of their most popular workflow cards on the right.
+ * Data source: Hub API (listWorkflowIndex + getProfileCache).
  */
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
@@ -13,17 +13,7 @@ import HubWorkflowCard from '../../components/hub/HubWorkflowCard.vue';
 import BackButton from '../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { slugify } from '../../lib/slugify';
-import { listWorkflowIndex } from '../../lib/hub-api';
-import creatorsData from '../../../creators.json';
-
-interface CreatorProfile {
-  displayName: string;
-  handle: string;
-  summary: string;
-  social?: string | string[];
-  avatarUrl?: string;
-}
+import { listWorkflowIndex, getProfileCache } from '../../lib/hub-api';
 
 interface TemplateEntry {
   name: string;
@@ -35,11 +25,11 @@ interface TemplateEntry {
   username: string;
 }
 
-const creators = creatorsData as Record<string, CreatorProfile>;
 const locale = getLocaleFromPath(Astro.url.pathname);
+const profiles = await getProfileCache();
 
-// Try hub API first, fall back to content collection
-let allTemplates: TemplateEntry[];
+// Fetch all workflows from hub API
+let allTemplates: TemplateEntry[] = [];
 try {
   const entries = await listWorkflowIndex();
   allTemplates = entries.map((e) => ({
@@ -52,34 +42,27 @@ try {
     username: e.username || '',
   }));
 } catch {
-  const collection = await getCollection('templates');
-  allTemplates = collection
-    .filter((t) => !t.id.includes('/'))
-    .map((t) => ({
-      name: t.data.name,
-      shareId: '',
-      title: t.data.title || t.data.name,
-      tags: t.data.tags || [],
-      logos: t.data.logos || [],
-      thumbnails: t.data.thumbnails || [],
-      username: t.data.username || '',
-    }));
+  // API failed — show empty page
 }
 
-// Group templates by username, excluding ComfyUI
+// Group templates by username
 const creatorMap = new Map<
   string,
-  { profile: CreatorProfile; username: string; templates: TemplateEntry[] }
+  { displayName: string; avatarUrl: string; username: string; templates: TemplateEntry[] }
 >();
 
 for (const tmpl of allTemplates) {
   const username = tmpl.username;
-  if (!username || username === 'ComfyUI') continue;
-  const profile = creators[username];
-  if (!profile) continue;
+  if (!username) continue;
 
   if (!creatorMap.has(username)) {
-    creatorMap.set(username, { profile, username, templates: [] });
+    const profile = profiles.get(username);
+    creatorMap.set(username, {
+      displayName: profile?.display_name || username,
+      avatarUrl: profile?.avatar_url || '',
+      username,
+      templates: [],
+    });
   }
   creatorMap.get(username)!.templates.push(tmpl);
 }
@@ -121,40 +104,35 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
         <!-- Creator rows -->
         <div class="flex flex-col gap-16 pt-8">
           {
-            sortedCreators.map(({ profile, username, templates: tmplList }) => (
+            sortedCreators.map(({ displayName, avatarUrl, username, templates: tmplList }) => (
               <div class="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start">
                 {/* Creator profile info */}
                 <div class="w-full lg:w-52 shrink-0 flex flex-col gap-6">
                   {/* Avatar */}
-                  {profile.avatarUrl ? (
+                  {avatarUrl ? (
                     <img
-                      src={profile.avatarUrl}
-                      alt={profile.displayName}
+                      src={avatarUrl}
+                      alt={displayName}
                       class="size-16 rounded-full object-cover"
                     />
                   ) : (
                     <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
                       <span class="text-black text-lg font-bold">
-                        {profile.displayName.charAt(0).toUpperCase()}
+                        {displayName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
 
                   {/* Name & Handle */}
                   <div class="flex flex-col gap-2">
-                    <p class="font-bold text-base text-white">{profile.displayName}</p>
-                    <p class="text-sm text-hub-muted">@{profile.handle}</p>
+                    <p class="font-bold text-base text-white">{displayName}</p>
+                    <p class="text-sm text-hub-muted">@{username}</p>
                   </div>
-
-                  {/* Summary */}
-                  <p class="text-xs text-hub-muted leading-normal line-clamp-3">
-                    {profile.summary}
-                  </p>
 
                   {/* Open Profile button */}
                   <div>
                     <a
-                      href={localizeUrl(`/workflows/${slugify(username)}/`, locale)}
+                      href={localizeUrl(`/workflows/${username}/`, locale)}
                       class="inline-flex items-center justify-center gap-1 h-8 px-4 rounded-full bg-hub-surface text-xs text-white hover:brightness-125 transition-all"
                     >
                       Open Profile
@@ -188,8 +166,8 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                       logos={tmpl.logos}
                       thumbnails={tmpl.thumbnails}
                       username={tmpl.username}
-                      creatorDisplayName={profile.displayName}
-                      creatorAvatarUrl={profile.avatarUrl}
+                      creatorDisplayName={displayName}
+                      creatorAvatarUrl={avatarUrl}
                       locale={locale}
                       hideAuthor
                     />

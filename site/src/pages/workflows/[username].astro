@@ -5,10 +5,10 @@
  *
  * Displays a creator's profile with sidebar card and workflow grid.
  * Rendered on first request, then cached at CDN edge.
+ * Data source: Hub API (listWorkflowIndex + getProfile).
  */
 export const prerender = false;
 
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
@@ -17,8 +17,7 @@ import BackButton from '../../components/BackButton.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { slugify } from '../../lib/slugify';
-import creatorsData from '../../../creators.json';
+import { listWorkflowIndex, getProfile } from '../../lib/hub-api';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -26,100 +25,95 @@ Astro.response.headers.set(
   'public, max-age=60, stale-while-revalidate=600'
 );
 
-interface CreatorProfile {
-  displayName: string;
-  handle: string;
-  summary: string;
-  social?: string | string[];
-  avatarUrl?: string;
-  coverUrl?: string;
-}
-
-const creators = creatorsData as Record<string, CreatorProfile>;
-
-// Build slug → raw username lookup
-const slugToUsername = new Map<string, string>();
-for (const key of Object.keys(creators)) {
-  slugToUsername.set(slugify(key), key);
-}
-
 const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
-const rawUsername = slugToUsername.get(slugParam!);
 
-if (!rawUsername) {
+if (!slugParam) {
   return Astro.redirect('/workflows/');
 }
 
-const creator = creators[rawUsername];
+// Fetch profile from hub API
+let displayName = slugParam;
+let avatarUrl: string | null = null;
+let description = '';
+let websiteUrls: string[] = [];
+try {
+  const profile = await getProfile(slugParam);
+  displayName = profile.display_name || slugParam;
+  avatarUrl = profile.avatar_url || null;
+  description = profile.description || '';
+  websiteUrls = profile.website_urls || [];
+} catch {
+  // Profile API failed — use username as display name
+}
 
-const templates = await getCollection('templates');
-const profileTemplates = templates
-  .filter((tmpl) => !tmpl.id.includes('/') && tmpl.data.username === rawUsername)
-  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+// Fetch workflows for this creator from index
+let serialized: {
+  name: string;
+  shareId: string;
+  title: string;
+  tags: string[];
+  logos: { provider: string | string[] }[];
+  usage: number;
+  date: string;
+  thumbnails: string[];
+  username: string;
+  creatorDisplayName: string;
+  creatorAvatarUrl: string;
+  isApp: boolean;
+}[] = [];
+
+try {
+  const entries = await listWorkflowIndex();
+  const filtered = entries.filter((e) => e.username === slugParam);
+  serialized = filtered.map((e) => ({
+    name: e.name,
+    shareId: e.shareId || '',
+    title: e.title || e.name,
+    tags: e.tags || [],
+    logos: (e.logos || []) as { provider: string | string[] }[],
+    usage: 0,
+    date: e.date || '',
+    thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
+    username: e.username || '',
+    creatorDisplayName: displayName,
+    creatorAvatarUrl: avatarUrl || '',
+    isApp: false,
+  }));
+} catch {
+  // Index API failed — show empty grid
+}
+
+// If no profile and no workflows, redirect
+if (!displayName && serialized.length === 0) {
+  return Astro.redirect('/workflows/');
+}
 
 const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
 
-// Serialize template data for the Vue island (plain objects only)
-const serialized = profileTemplates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  tags: tmpl.data.tags || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
-  creatorDisplayName: creator.displayName,
-  creatorAvatarUrl: creator.avatarUrl || '',
-  isApp: tmpl.data.isApp || false,
-}));
-
-// Parse social link for display
+// Parse social links from website_urls
 function getSocialDisplay(social: string): { label: string; url: string } {
   const url = social.startsWith('http://') || social.startsWith('https://')
     ? social
     : `https://${social}`;
 
-  if (social.includes('x.com') || social.includes('twitter.com')) {
-    return { label: 'X', url };
-  }
-  if (social.includes('instagram.com')) {
-    return { label: 'Instagram', url };
-  }
-  if (social.includes('youtube.com') || social.includes('youtu.be')) {
-    return { label: 'YouTube', url };
-  }
-  if (social.includes('tiktok.com')) {
-    return { label: 'TikTok', url };
-  }
-  if (social.includes('linkedin.com')) {
-    return { label: 'LinkedIn', url };
-  }
-  if (social.includes('github.com')) {
-    return { label: 'GitHub', url };
-  }
-  if (social.includes('facebook.com')) {
-    return { label: 'Facebook', url };
-  }
-  if (social.includes('threads.net') || social.includes('threads.com')) {
-    return { label: 'Threads', url };
-  }
+  if (social.includes('x.com') || social.includes('twitter.com')) return { label: 'X', url };
+  if (social.includes('instagram.com')) return { label: 'Instagram', url };
+  if (social.includes('youtube.com') || social.includes('youtu.be')) return { label: 'YouTube', url };
+  if (social.includes('tiktok.com')) return { label: 'TikTok', url };
+  if (social.includes('linkedin.com')) return { label: 'LinkedIn', url };
+  if (social.includes('github.com')) return { label: 'GitHub', url };
+  if (social.includes('facebook.com')) return { label: 'Facebook', url };
+  if (social.includes('threads.net') || social.includes('threads.com')) return { label: 'Threads', url };
   return { label: 'Website', url };
 }
 
-function getSocialLinks(social?: string | string[]): { label: string; url: string }[] {
-  if (!social) return [];
-  const entries = Array.isArray(social) ? social : [social];
-  return entries.map(getSocialDisplay);
-}
-
-const socialLinks = getSocialLinks(creator.social);
+const socialLinks = websiteUrls.map(getSocialDisplay);
 ---
 
 <BaseLayout
-  title={`${creator.displayName} (@${creator.handle}) - ComfyUI Workflow Templates`}
-  description={creator.summary}
+  title={`${displayName} (@${slugParam}) - ComfyUI Workflow Templates`}
+  description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
   theme="dark"
   hideDefaultFooter
@@ -137,29 +131,31 @@ const socialLinks = getSocialLinks(creator.social);
             <!-- Avatar -->
             <div class="flex flex-col gap-4">
               {
-                creator.avatarUrl ? (
+                avatarUrl ? (
                   <img
-                    src={creator.avatarUrl}
-                    alt={creator.displayName}
+                    src={avatarUrl}
+                    alt={displayName}
                     class="size-16 rounded-full object-cover"
                   />
                 ) : (
                   <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
                     <span class="text-black text-2xl font-bold">
-                      {creator.displayName.charAt(0).toUpperCase()}
+                      {displayName.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )
               }
               <!-- Name & Handle -->
               <div class="flex flex-col">
-                <p class="text-white text-base font-bold">{creator.displayName}</p>
-                <p class="text-hub-muted text-sm">@{creator.handle}</p>
+                <p class="text-white text-base font-bold">{displayName}</p>
+                <p class="text-hub-muted text-sm">@{slugParam}</p>
               </div>
             </div>
 
             <!-- Bio -->
-            <p class="text-hub-muted text-sm leading-normal">{creator.summary}</p>
+            {description && (
+              <p class="text-hub-muted text-sm leading-normal">{description}</p>
+            )}
 
             <!-- Social Links -->
             {
