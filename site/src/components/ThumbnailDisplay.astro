@@ -34,18 +34,10 @@ const {
   naturalAspect = false,
 } = Astro.props;
 
-// If thumbnail is already a full URL, use it directly; otherwise prepend local path
-function thumbUrl(thumb: string): string {
-  if (thumb.startsWith('http://') || thumb.startsWith('https://')) return thumb;
-  return `/workflows/thumbnails/${thumb}`;
-}
-
 const imgClass = naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover';
 
 const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
-const primarySrc = primaryThumb ? thumbUrl(primaryThumb) : '';
-const secondarySrc = secondaryThumb ? thumbUrl(secondaryThumb) : '';
 const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm');
@@ -97,7 +89,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
         <span class="text-sm text-white/50">{title}</span>
         <audio controls preload="none" class="w-full max-w-[300px]">
           <source
-            src={primarySrc}
+            src={`/workflows/thumbnails/${primaryThumb}`}
             type={primaryThumb.endsWith('.mp3') ? 'audio/mpeg' : 'audio/webm'}
           />
         </audio>
@@ -106,7 +98,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
   ) : isVideo ? (
     <div class={`video-thumb flex flex-col gap-2 ${className}`}>
       <video
-        src={primarySrc}
+        src={`/workflows/thumbnails/${primaryThumb}`}
         class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
         autoplay
         controls
@@ -117,7 +109,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
       />
       {secondaryThumb && (
         <video
-          src={secondarySrc}
+          src={`/workflows/thumbnails/${secondaryThumb}`}
           class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
           controls
           loop
@@ -130,7 +122,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
   ) : variant === 'compareSlider' && hasSecondImage ? (
     <div class={`compare-slider relative overflow-hidden ${className}`} data-compare-slider>
       <img
-        src={secondarySrc}
+        src={`/workflows/thumbnails/${secondaryThumb}`}
         alt={`${title} - After`}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -146,7 +138,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
         style="clip-path: inset(0 50% 0 0);"
       >
         <img
-          src={primarySrc}
+          src={`/workflows/thumbnails/${primaryThumb}`}
           alt={`${title} - Before`}
           loading={loading}
           width="640"
@@ -184,7 +176,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
   ) : variant === 'hoverDissolve' && hasSecondImage ? (
     <div class={`hover-dissolve group relative overflow-hidden ${className}`}>
       <img
-        src={primarySrc}
+        src={`/workflows/thumbnails/${primaryThumb}`}
         alt={`${title} - State 1`}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -196,7 +188,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
         class={`${imgClass} transition-opacity duration-500`}
       />
       <img
-        src={secondarySrc}
+        src={`/workflows/thumbnails/${secondaryThumb}`}
         alt={`${title} - State 2`}
         loading={loading}
         width="640"
@@ -210,7 +202,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
   ) : isAnimated ? (
     <div class={`animated-thumb group relative overflow-hidden ${className}`}>
       <img
-        src={primarySrc}
+        src={`/workflows/thumbnails/${primaryThumb}`}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -225,7 +217,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
   ) : variant === 'zoomHover' ? (
     <div class={`zoom-hover group relative overflow-hidden ${className}`}>
       <img
-        src={primarySrc}
+        src={`/workflows/thumbnails/${primaryThumb}`}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -240,7 +232,7 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
   ) : (
     <div class={`default-thumb group relative overflow-hidden ${className}`}>
       <img
-        src={primarySrc}
+        src={`/workflows/thumbnails/${primaryThumb}`}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}
