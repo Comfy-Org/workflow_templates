@@ -1,0 +1,18 @@
+name: Cron Rebuild Site
+
+on:
+  schedule:
+    # Every 15 minutes — rebuilds the site to pick up new UGC workflows
+    # for search index, sitemap, filter pages, and pre-rendered detail pages.
+    - cron: '*/15 * * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Vercel Deploy Hook
+        run: |
+          curl -sS -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -o /dev/null -w "HTTP %{http_code}"
