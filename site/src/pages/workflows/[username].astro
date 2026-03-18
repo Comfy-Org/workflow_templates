@@ -13,11 +13,13 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import SidebarSection from '../../components/template-detail/SidebarSection.astro';
+import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
 import BackButton from '../../components/BackButton.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
-import { absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, getProfile, extractShareId } from '../../lib/hub-api';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
+import { DEFAULT_LOCALE } from '../../i18n/config';
+import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId } from '../../lib/hub-api';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -33,9 +35,22 @@ if (!slugParam) {
 }
 
 // If URL contains a share_id suffix, this is a workflow detail page — not a creator profile.
-// Rewrite to the catchall route which handles ISR detail rendering.
-if (extractShareId(slugParam)) {
-  return Astro.rewrite(`/workflows/detail/${slugParam}`);
+const detailShareId = extractShareId(slugParam);
+let isDetailPage = false;
+let detailData: ReturnType<typeof toTemplateData> | null = null;
+
+if (detailShareId) {
+  try {
+    const workflow = await getWorkflow(detailShareId);
+    detailData = toTemplateData(workflow);
+    isDetailPage = true;
+  } catch (err) {
+    const is404 = err instanceof Error && err.message.includes('404');
+    if (!is404) {
+      console.error('Hub API error on ISR detail:', err);
+    }
+    return Astro.redirect('/workflows/');
+  }
 }
 
 // Fetch profile from hub API
@@ -115,8 +130,57 @@ function getSocialDisplay(social: string): { label: string; url: string } {
 }
 
 const socialLinks = websiteUrls.map(getSocialDisplay);
+
+// Detail page variables (only used when isDetailPage is true)
+const detailTitle = detailData ? `${detailData.title || detailData.name} - ComfyUI Workflow` : '';
+const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slugParam}/`) : '';
+const detailThumbnails = detailData?.thumbnails || [];
+const detailPrimaryThumbnail = detailThumbnails[0] || null;
+const detailOgImage = detailPrimaryThumbnail || (detailData ? `/workflows/og/${detailData.name}.png` : '');
+const detailStructuredData = detailData ? {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: detailData.title || detailData.name,
+  description: detailData.description,
+  image: detailPrimaryThumbnail || undefined,
+  datePublished: detailData.date,
+  inLanguage: 'en',
+} : null;
+const detailBreadcrumb = detailData ? {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+    { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
+    { '@type': 'ListItem', position: 3, name: detailData.title || detailData.name, item: detailCanonicalUrl },
+  ],
+} : null;
 ---
 
+{isDetailPage && detailData ? (
+<BaseLayout
+  title={detailTitle}
+  description={detailData.metaDescription || detailData.description}
+  canonicalUrl={detailCanonicalUrl}
+  ogImage={detailOgImage}
+  ogType="article"
+  structuredData={detailStructuredData}
+  hreflangBasePath={`/workflows/${slugParam}/`}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <TemplateDetailPage template={{ data: detailData }} locale={DEFAULT_LOCALE} />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(detailBreadcrumb)}
+  />
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
+) : (
 <BaseLayout
   title={`${displayName} (@${slugParam}) - ComfyUI Workflow Templates`}
   description={description || `Workflows by ${displayName}`}
@@ -199,3 +263,4 @@ const socialLinks = websiteUrls.map(getSocialDisplay);
     <SiteFooter />
   </Fragment>
 </BaseLayout>
+)}
