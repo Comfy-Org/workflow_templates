@@ -149,6 +149,7 @@ export default defineConfig({
       // Legacy redirects are /workflows/{slug}/ without a 12-char hex share_id suffix.
       // Canonical detail pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
       filter: (page) => {
+        if (page.includes('/api/og.png')) return false;
         if (page.includes('/workflows/og/')) return false;
         // Check if this is a workflow detail path (not category/tag/model/creators)
         const match = page.match(/\/workflows\/([^/]+)\/$/);

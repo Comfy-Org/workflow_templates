@@ -22,6 +22,7 @@ import {
   type HubWorkflowTemplateEntry,
 } from '../../lib/hub-api';
 import { slugify } from '../../lib/slugify';
+import { workflowOgUrl } from '../../lib/og-url';
 
 export async function getStaticPaths() {
   let entries: HubWorkflowTemplateEntry[] = [];
@@ -111,7 +112,7 @@ const canonicalUrl = absoluteUrl(`/workflows/${urlSlug}/`);
 
 const thumbnails = data.thumbnails;
 const primaryThumbnail = thumbnails[0] || null;
-const ogImage = primaryThumbnail || `/workflows/og/${data.name}.png`;
+const ogImage = workflowOgUrl(data.title, primaryThumbnail || undefined, data.username || undefined);
 
 const structuredData = {
   '@context': 'https://schema.org',

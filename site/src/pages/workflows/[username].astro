@@ -20,6 +20,7 @@ import { getLocaleFromPath } from '../../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId } from '../../lib/hub-api';
+import { workflowOgUrl, creatorOgUrl } from '../../lib/og-url';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -136,7 +137,7 @@ const detailTitle = detailData ? `${detailData.title || detailData.name} - Comfy
 const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slugParam}/`) : '';
 const detailThumbnails = detailData?.thumbnails || [];
 const detailPrimaryThumbnail = detailThumbnails[0] || null;
-const detailOgImage = detailPrimaryThumbnail || (detailData ? `/workflows/og/${detailData.name}.png` : '');
+const detailOgImage = detailData ? workflowOgUrl(detailData.title || detailData.name, detailPrimaryThumbnail || undefined, detailData.username || undefined) : '';
 const detailStructuredData = detailData ? {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
@@ -185,6 +186,7 @@ const detailBreadcrumb = detailData ? {
   title={`${displayName} (@${slugParam}) - ComfyUI Workflow Templates`}
   description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
+  ogImage={creatorOgUrl(displayName, slugParam, avatarUrl || undefined)}
   theme="dark"
   hideDefaultFooter
 >
