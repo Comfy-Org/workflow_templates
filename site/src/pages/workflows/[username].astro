@@ -41,14 +41,13 @@ let detailData: ReturnType<typeof toTemplateData> | null = null;
 
 if (detailShareId) {
   try {
+    console.log(`[ISR Detail] Fetching workflow for shareId: ${detailShareId}, API base: ${import.meta.env.PUBLIC_HUB_API_URL || 'https://api.comfy.org'}`);
     const workflow = await getWorkflow(detailShareId);
+    console.log(`[ISR Detail] Got workflow: ${workflow.name}`);
     detailData = toTemplateData(workflow);
     isDetailPage = true;
   } catch (err) {
-    const is404 = err instanceof Error && err.message.includes('404');
-    if (!is404) {
-      console.error('Hub API error on ISR detail:', err);
-    }
+    console.error('[ISR Detail] Error:', err);
     return Astro.redirect('/workflows/');
   }
 }
