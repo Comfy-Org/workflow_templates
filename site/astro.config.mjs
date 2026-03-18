@@ -34,11 +34,28 @@ const buildDate = new Date().toISOString();
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
 const nonDefaultLocales = locales.filter((l) => l !== 'en');
 
-// Locale workflow index pages (on-demand, not discovered at build time)
+// Custom sitemap pages for ISR routes not discovered at build time
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://www.comfy.org').replace(/\/$/, '');
+
+// Creator profile pages — extract unique usernames from synced templates
+const creatorUsernames = new Set();
+if (fs.existsSync(templatesDir)) {
+  const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
+  for (const file of files) {
+    try {
+      const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
+      if (content.username) creatorUsernames.add(content.username);
+    } catch {
+      // Skip invalid JSON
+    }
+  }
+}
+
+const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
 const localeCustomPages = nonDefaultLocales.map((locale) =>
   `${siteOrigin}/${locale}/workflows/`
 );
+const customPages = [...creatorPages, ...localeCustomPages];
 
 // https://astro.build/config
 export default defineConfig({
@@ -61,7 +78,7 @@ export default defineConfig({
       // Include Framer's marketing sitemap in the index
       customSitemaps: ['https://www.comfy.org/sitemap.xml'],
       // Include on-demand locale pages that aren't discovered at build time
-      customPages: localeCustomPages,
+      customPages: customPages,
       serialize(item) {
         const url = new URL(item.url);
         const pathname = url.pathname;
