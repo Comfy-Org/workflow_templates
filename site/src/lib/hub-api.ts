@@ -204,8 +204,8 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary) {
     title: workflow.name,
     description: workflow.description || '',
     mediaType: inferMediaType(workflow),
-    tags: workflow.tags.map((t) => t.name),
-    models: workflow.models.map((m) => m.name),
+    tags: (workflow.tags || []).map((t) => t.name),
+    models: (workflow.models || []).map((m) => m.name),
     logos: [] as { provider: string | string[] }[],
     usage: 0,
     date: workflow.publish_time || '',
@@ -235,8 +235,8 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
     mediaSubtype,
     thumbnailVariant: mapThumbnailVariant(workflow.thumbnail_type),
     thumbnails: buildThumbnailList(workflow),
-    tags: workflow.tags.map((t) => t.name),
-    models: workflow.models.map((m) => m.name),
+    tags: (workflow.tags || []).map((t) => t.name),
+    models: (workflow.models || []).map((m) => m.name),
     username: workflow.profile.username,
     date: workflow.publish_time || '',
     metaDescription: (workflow.metadata?.metaDescription as string) || workflow.description || '',
@@ -246,7 +246,7 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
 }
 
 function inferMediaType(workflow: HubWorkflowSummary): 'image' | 'video' | 'audio' | '3d' {
-  const tags = workflow.tags.map((t) => t.name.toLowerCase());
+  const tags = (workflow.tags || []).map((t) => t.name.toLowerCase());
   if (tags.includes('video') || tags.includes('animation')) return 'video';
   if (tags.includes('audio')) return 'audio';
   if (tags.includes('3d')) return '3d';
