@@ -237,39 +237,34 @@ export async function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
 }
 
 // ---------------------------------------------------------------------------
-// Slug → ShareID resolution
+// URL utilities — /workflows/{slug}-{shareId} format
 // ---------------------------------------------------------------------------
 
-let slugToShareId: Map<string, string> | null = null;
+const SHARE_ID_LENGTH = 12;
 
 /**
- * Build and cache the slug → shareId mapping from the index endpoint.
- * Called once per server lifecycle; subsequent calls return the cached map.
+ * Build a workflow URL path from an index entry.
+ * Format: /workflows/{slug}-{shareId}/
  */
-async function getSlugMap(): Promise<Map<string, string>> {
-  if (slugToShareId) return slugToShareId;
-
-  const entries = await listWorkflowIndex();
-  slugToShareId = new Map();
-  for (const entry of entries) {
-    if (entry.shareId) {
-      slugToShareId.set(entry.name, entry.shareId);
-    }
-  }
-  return slugToShareId;
+export function workflowUrl(entry: HubWorkflowTemplateEntry): string {
+  const slug = entry.name || entry.shareId || '';
+  const shareId = entry.shareId || '';
+  return `/workflows/${slug}-${shareId}/`;
 }
 
 /**
- * Get a workflow detail by slug. Resolves slug → shareId via the index,
- * then fetches the full detail by shareId.
+ * Extract the share_id from a workflow URL segment.
+ * The last 12 characters after the final hyphen are the share_id.
+ * e.g. "flux-schnell-e90e933d6c5d" → "e90e933d6c5d"
  */
-export async function getWorkflowBySlug(slug: string): Promise<HubWorkflowDetail> {
-  const map = await getSlugMap();
-  const shareId = map.get(slug);
-  if (!shareId) {
-    throw new Error(`Hub API error: 404 Not Found — no shareId for slug "${slug}"`);
+export function extractShareId(urlSegment: string): string | null {
+  const lastHyphen = urlSegment.lastIndexOf('-');
+  if (lastHyphen === -1) return null;
+  const candidate = urlSegment.slice(lastHyphen + 1);
+  if (candidate.length === SHARE_ID_LENGTH && /^[0-9a-f]+$/.test(candidate)) {
+    return candidate;
   }
-  return getWorkflow(shareId);
+  return null;
 }
 
 function mapThumbnailVariant(

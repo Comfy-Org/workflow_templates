@@ -1,0 +1,133 @@
+---
+/**
+ * ISR catch-all for workflows not known at build time.
+ * URL: /workflows/{slug}-{share_id}/
+ *
+ * Extracts share_id from URL, fetches data from detail API.
+ * Handles UGC workflows published after the last build.
+ */
+export const prerender = false;
+
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HubNavbar from '../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../components/hub/SiteFooter.astro';
+import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
+import { DEFAULT_LOCALE } from '../../i18n/config';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
+import { getWorkflow, toTemplateData, extractShareId } from '../../lib/hub-api';
+
+const { catchall } = Astro.params;
+const segment = catchall || '';
+
+// Extract share_id from URL: /workflows/{slug}-{share_id}
+const shareId = extractShareId(segment);
+if (!shareId) {
+  return Astro.redirect('/workflows/');
+}
+
+// Fetch workflow detail by share_id
+let data;
+let hubSuccess = false;
+try {
+  const workflow = await getWorkflow(shareId);
+  data = toTemplateData(workflow);
+  hubSuccess = true;
+} catch (err) {
+  const is404 = err instanceof Error && err.message.includes('404');
+  if (!is404) {
+    console.error('Hub API error on ISR catch-all:', err);
+  }
+  return Astro.redirect('/workflows/');
+}
+
+// ISR cache headers
+Astro.response.headers.set(
+  'CDN-Cache-Control',
+  'public, max-age=60, stale-while-revalidate=600'
+);
+
+const locale = DEFAULT_LOCALE;
+const title = `${data.title || data.name} - ComfyUI Workflow`;
+const canonicalUrl = absoluteUrl(`/workflows/${segment}/`);
+
+const thumbnails = data.thumbnails || [];
+const primaryThumbnail = thumbnails[0] || null;
+const ogImage = primaryThumbnail || `/workflows/og/${data.name}.png`;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: data.title || data.name,
+  description: data.description,
+  image: primaryThumbnail || undefined,
+  datePublished: data.date,
+  inLanguage: 'en',
+};
+
+const faqStructuredData = data.faqItems?.length
+  ? {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: data.faqItems.map((item: { question: string; answer: string }) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      })),
+    }
+  : null;
+
+const breadcrumbStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+    { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
+    { '@type': 'ListItem', position: 3, name: data.title || data.name, item: canonicalUrl },
+  ],
+};
+
+const softwareAppStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: data.title || data.name,
+  applicationCategory: 'MultimediaApplication',
+  operatingSystem: 'Windows, macOS, Linux',
+  description: data.metaDescription || data.description,
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+};
+---
+
+<BaseLayout
+  title={title}
+  description={data.metaDescription || data.description}
+  canonicalUrl={canonicalUrl}
+  ogImage={ogImage}
+  ogType="article"
+  structuredData={structuredData}
+  hreflangBasePath={`/workflows/${segment}/`}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <TemplateDetailPage template={{ data }} locale={locale} />
+
+  {
+    faqStructuredData && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+    )
+  }
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(softwareAppStructuredData)}
+  />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(breadcrumbStructuredData)}
+  />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
