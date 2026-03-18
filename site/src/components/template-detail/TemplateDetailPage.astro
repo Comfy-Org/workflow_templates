@@ -47,9 +47,9 @@ const { template, locale } = Astro.props;
 const { data } = template;
 
 const creator = data.username ? creators[data.username] : null;
-const authorName = creator ? creator.displayName : 'ComfyUI';
-const authorProfileUrl = creator
-  ? localizeUrl(`/workflows/${slugify(data.username!)}/`, locale)
+const authorName = creator?.displayName || data.username || 'ComfyUI';
+const authorProfileUrl = data.username
+  ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
   : null;
 const thumbnails = data.thumbnails || [];
 
