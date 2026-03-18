@@ -505,6 +505,7 @@ function getPrimaryThumb(thumbnails: string[]): string | null {
   if (thumbnails.length === 0) return null;
   const file = thumbnails[0];
   if (isAudioFile(file) || file.endsWith('.mp4')) return null;
+  if (file.startsWith('http://') || file.startsWith('https://')) return file;
   return `/workflows/thumbnails/${file}`;
 }
 
@@ -1074,7 +1075,7 @@ onUnmounted(() => {
                   <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
                     <img
                       v-if="hit.thumbnail && !isAudioFile(hit.thumbnail)"
-                      :src="`/workflows/thumbnails/${hit.thumbnail}`"
+                      :src="hit.thumbnail.startsWith('http') ? hit.thumbnail : `/workflows/thumbnails/${hit.thumbnail}`"
                       :alt="hit.title"
                       loading="lazy"
                       class="w-full h-full object-cover"

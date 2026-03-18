@@ -32,8 +32,16 @@ const {
   sizes = '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 640px',
 } = Astro.props;
 
+// If thumbnail is already a full URL, use it directly; otherwise prepend local path
+function thumbUrl(thumb: string): string {
+  if (thumb.startsWith('http://') || thumb.startsWith('https://')) return thumb;
+  return `/workflows/thumbnails/${thumb}`;
+}
+
 const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
+const primarySrc = primaryThumb ? thumbUrl(primaryThumb) : '';
+const secondarySrc = secondaryThumb ? thumbUrl(secondaryThumb) : '';
 const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm');
@@ -84,7 +92,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         <span class="text-sm text-white/50">{title}</span>
         <audio controls preload="none" class="w-full max-w-[300px]">
           <source
-            src={`/workflows/thumbnails/${primaryThumb}`}
+            src={primarySrc}
             type={primaryThumb.endsWith('.mp3') ? 'audio/mpeg' : 'audio/webm'}
           />
         </audio>
@@ -93,7 +101,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
   ) : variant === 'compareSlider' && hasSecondImage ? (
     <div class={`compare-slider relative overflow-hidden ${className}`} data-compare-slider>
       <img
-        src={`/workflows/thumbnails/${primaryThumb}`}
+        src={primarySrc}
         alt={`${title} - Before`}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -109,7 +117,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         style="clip-path: inset(0 50% 0 0);"
       >
         <img
-          src={`/workflows/thumbnails/${secondaryThumb}`}
+          src={secondarySrc}
           alt={`${title} - After`}
           loading={loading}
           width="640"
@@ -147,7 +155,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
   ) : variant === 'hoverDissolve' && hasSecondImage ? (
     <div class={`hover-dissolve group relative overflow-hidden ${className}`}>
       <img
-        src={`/workflows/thumbnails/${primaryThumb}`}
+        src={primarySrc}
         alt={`${title} - State 1`}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -159,7 +167,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
         class="w-full h-full object-cover transition-opacity duration-500"
       />
       <img
-        src={`/workflows/thumbnails/${secondaryThumb}`}
+        src={secondarySrc}
         alt={`${title} - State 2`}
         loading={loading}
         width="640"
@@ -173,7 +181,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
   ) : isAnimated ? (
     <div class={`animated-thumb group relative overflow-hidden ${className}`}>
       <img
-        src={`/workflows/thumbnails/${primaryThumb}`}
+        src={primarySrc}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -188,7 +196,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
   ) : variant === 'zoomHover' ? (
     <div class={`zoom-hover group relative overflow-hidden ${className}`}>
       <img
-        src={`/workflows/thumbnails/${primaryThumb}`}
+        src={primarySrc}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -203,7 +211,7 @@ const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm'
   ) : (
     <div class={`default-thumb group relative overflow-hidden ${className}`}>
       <img
-        src={`/workflows/thumbnails/${primaryThumb}`}
+        src={primarySrc}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}

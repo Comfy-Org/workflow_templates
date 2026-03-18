@@ -96,6 +96,7 @@ const primaryThumb = computed(() => {
   if (props.thumbnails.length === 0) return null;
   const file = props.thumbnails[0];
   if (file.endsWith('.mp3') || file.endsWith('.webm') || file.endsWith('.mp4')) return null;
+  if (file.startsWith('http://') || file.startsWith('https://')) return file;
   return `/workflows/thumbnails/${file}`;
 });
 
