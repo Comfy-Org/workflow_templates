@@ -49,12 +49,11 @@ export async function getStaticPaths() {
     });
 
     // Legacy redirect: /workflows/{name}/ → /workflows/{name}-{shareId}/
-    if (name !== shareId) {
-      paths.push({
-        params: { slug: name },
-        props: { entry: null, legacySlug: name, legacyShareId: shareId },
-      });
-    }
+    // Also handles UGC where name == shareId (card links use /workflows/{name}/)
+    paths.push({
+      params: { slug: name },
+      props: { entry: null, legacySlug: name, legacyShareId: shareId },
+    });
   }
 
   return paths;
