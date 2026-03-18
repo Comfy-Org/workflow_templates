@@ -2,11 +2,13 @@
  * Hub API client for fetching workflow data from the backend.
  *
  * API spec based on cloud PR #2840.
- * Base URL is configurable via HUB_API_URL env var (server-side only).
+ * Base URL is configurable via PUBLIC_HUB_API_URL env var.
+ * Note: PUBLIC_ prefix is required for Astro build-time access in getStaticPaths().
+ * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
 const HUB_API_BASE =
-  (process.env.HUB_API_URL || 'https://api.comfy.org').replace(/\/$/, '');
+  (import.meta.env.PUBLIC_HUB_API_URL || 'https://api.comfy.org').replace(/\/$/, '');
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
