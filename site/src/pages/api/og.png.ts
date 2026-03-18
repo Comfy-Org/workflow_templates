@@ -33,7 +33,13 @@ export const GET: APIRoute = async ({ url }) => {
     return new Response('Missing required parameters', { status: 400 });
   }
 
-  const png = await renderOgPng(layout);
+  let png: Uint8Array;
+  try {
+    png = await renderOgPng(layout);
+  } catch (err) {
+    console.error('OG image render failed:', err);
+    return new Response('Internal render error', { status: 500 });
+  }
 
   return new Response(png as unknown as BodyInit, {
     headers: {
