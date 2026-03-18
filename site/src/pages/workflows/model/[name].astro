@@ -21,7 +21,7 @@ interface TemplateEntry {
   name: string;
   title: string;
   tags: string[];
-  logos: Record<string, unknown>[];
+  logos: { provider: string | string[] }[];
   date: string;
   thumbnails: string[];
   username: string;
@@ -38,7 +38,7 @@ export async function getStaticPaths() {
       name: e.name,
       title: e.title || e.name,
       tags: e.tags || [],
-      logos: e.logos || [],
+      logos: (e.logos || []) as { provider: string | string[] }[],
       date: e.date || '',
       thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
       username: e.username || '',

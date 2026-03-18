@@ -12,7 +12,7 @@ import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { categoryPath } from '../../../lib/routes';
 import { badgeVariants } from '../../../components/ui/badge';
 import creatorsData from '../../../../creators.json';
-import { listWorkflowIndex, type HubWorkflowTemplateEntry } from '../../../lib/hub-api';
+import { listWorkflowIndex } from '../../../lib/hub-api';
 
 const creators = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
 
@@ -41,7 +41,7 @@ const title = `${categoryName} Workflows - ${t('meta.title', locale)}`;
 const description = t('meta.description', locale);
 
 // Try hub API first, fall back to content collection
-let filteredEntries: { name: string; title: string; tags: string[]; logos: Record<string, unknown>[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
+let filteredEntries: { name: string; title: string; tags: string[]; logos: { provider: string | string[] }[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
 try {
   const entries = await listWorkflowIndex();
   filteredEntries = entries
@@ -50,7 +50,7 @@ try {
       name: e.name,
       title: e.title || e.name,
       tags: e.tags || [],
-      logos: e.logos || [],
+      logos: (e.logos || []) as { provider: string | string[] }[],
       date: e.date || '',
       thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
       username: e.username || '',
