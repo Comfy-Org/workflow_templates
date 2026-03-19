@@ -1,5 +1,6 @@
 import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
+import sharp from 'sharp';
 import type { SatoriOptions } from 'satori';
 
 const WIDTH = 1200;
@@ -36,12 +37,14 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
     const res = await fetch(url);
     if (!res.ok) return null;
     const contentType = res.headers.get('content-type') || 'image/png';
-    // satori only supports PNG and JPEG — skip unsupported formats
+    let buffer = Buffer.from(await res.arrayBuffer());
+    // satori only supports PNG/JPEG — convert other formats (e.g. WebP)
+    let finalContentType = contentType;
     if (!contentType.includes('png') && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
-      return null;
+      buffer = await sharp(buffer).png().toBuffer();
+      finalContentType = 'image/png';
     }
-    const buffer = Buffer.from(await res.arrayBuffer());
-    return `data:${contentType};base64,${buffer.toString('base64')}`;
+    return `data:${finalContentType};base64,${buffer.toString('base64')}`;
   } catch {
     return null;
   }
