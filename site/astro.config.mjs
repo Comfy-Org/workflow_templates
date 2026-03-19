@@ -132,7 +132,7 @@ export default defineConfig({
       },
       // Exclude OG image routes from sitemap
       filter: (page) =>
-        !page.includes('/workflows/og/') && !page.includes('/api/og.png'),
+        !page.includes('/workflows/og/') && !page.includes('/workflows/og.png'),
     }),
     vue(),
   ],
