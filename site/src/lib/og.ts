@@ -36,6 +36,10 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
     const res = await fetch(url);
     if (!res.ok) return null;
     const contentType = res.headers.get('content-type') || 'image/png';
+    // satori only supports PNG and JPEG — skip unsupported formats
+    if (!contentType.includes('png') && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
+      return null;
+    }
     const buffer = Buffer.from(await res.arrayBuffer());
     return `data:${contentType};base64,${buffer.toString('base64')}`;
   } catch {
