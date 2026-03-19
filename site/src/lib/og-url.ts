@@ -6,7 +6,7 @@ export function workflowOgUrl(
   const params = new URLSearchParams({ type: 'workflow', title });
   if (thumbnail) params.set('thumbnail', thumbnail);
   if (creator) params.set('creator', creator);
-  return `/api/og.png?${params}`;
+  return `/workflows/og.png?${params}`;
 }
 
 export function creatorOgUrl(
@@ -16,5 +16,5 @@ export function creatorOgUrl(
 ): string {
   const params = new URLSearchParams({ type: 'creator', name, username });
   if (avatar) params.set('avatar', avatar);
-  return `/api/og.png?${params}`;
+  return `/workflows/og.png?${params}`;
 }
