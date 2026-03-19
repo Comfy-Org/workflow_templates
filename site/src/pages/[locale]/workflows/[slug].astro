@@ -82,7 +82,7 @@ if (!template && !isCreatorProfile) {
 let pageTitle = '';
 let pageDescription = '';
 let canonicalUrl = '';
-let ogImage = '/og-default.png';
+let ogImage = '/workflows/og-default.png';
 let ogType: 'article' | 'website' = 'website';
 let structuredData: Record<string, unknown> = {};
 let hreflangBasePath = '';
@@ -166,7 +166,7 @@ if (isCreatorProfile && rawUsername) {
   ogImage = workflowOgUrl(
     data.title || data.name,
     primaryThumbnail ? absoluteUrl(`/workflows/thumbnails/${primaryThumbnail}`) : undefined,
-    data.username || undefined,
+    data.username || undefined
   );
 
   structuredData = {
@@ -311,11 +311,7 @@ if (isCreatorProfile && rawUsername) {
       <TemplateDetailPage template={{ data: templateData! }} locale={typedLocale} />
 
       {faqStructuredData && (
-        <script
-          is:inline
-          type="application/ld+json"
-          set:html={JSON.stringify(faqStructuredData)}
-        />
+        <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
       )}
       <script
         is:inline

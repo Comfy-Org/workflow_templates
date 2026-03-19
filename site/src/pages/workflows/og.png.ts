@@ -1,12 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import {
-  renderOgPng,
-  workflowLayout,
-  creatorLayout,
-  fetchImageAsDataUri,
-} from '../../lib/og';
+import { renderOgPng, workflowLayout, creatorLayout, fetchImageAsDataUri } from '../../lib/og';
 
 export const GET: APIRoute = async ({ url }) => {
   const type = url.searchParams.get('type');
@@ -20,14 +15,10 @@ export const GET: APIRoute = async ({ url }) => {
   let layout;
 
   if (type === 'workflow' && title) {
-    const thumbnailDataUri = thumbnail
-      ? await fetchImageAsDataUri(thumbnail)
-      : null;
+    const thumbnailDataUri = thumbnail ? await fetchImageAsDataUri(thumbnail) : null;
     layout = workflowLayout(title, thumbnailDataUri, creator || undefined);
   } else if (type === 'creator' && name && username) {
-    const avatarDataUri = avatar
-      ? await fetchImageAsDataUri(avatar)
-      : null;
+    const avatarDataUri = avatar ? await fetchImageAsDataUri(avatar) : null;
     layout = creatorLayout(name, username, avatarDataUri);
   } else {
     return new Response('Missing required parameters', { status: 400 });
@@ -44,8 +35,7 @@ export const GET: APIRoute = async ({ url }) => {
   return new Response(png as unknown as BodyInit, {
     headers: {
       'Content-Type': 'image/png',
-      'CDN-Cache-Control':
-        'public, s-maxage=86400, stale-while-revalidate=3600',
+      'CDN-Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=3600',
       'Cache-Control': 'public, max-age=3600',
     },
   });

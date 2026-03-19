@@ -39,7 +39,7 @@ export function capture(eventName: string, properties?: EventProperties): void {
 export function trackRunButtonClicked(
   templateName: string,
   location: string,
-  author?: string,
+  author?: string
 ): void {
   capture('hub:run_button_clicked', {
     template_name: templateName,
@@ -48,20 +48,14 @@ export function trackRunButtonClicked(
   });
 }
 
-export function trackDownloadButtonClicked(
-  templateName: string,
-  author?: string,
-): void {
+export function trackDownloadButtonClicked(templateName: string, author?: string): void {
   capture('hub:download_button_clicked', {
     template_name: templateName,
     author,
   });
 }
 
-export function trackShareButtonClicked(
-  templateName: string,
-  author?: string,
-): void {
+export function trackShareButtonClicked(templateName: string, author?: string): void {
   capture('hub:share_button_clicked', {
     template_name: templateName,
     author,
@@ -71,7 +65,7 @@ export function trackShareButtonClicked(
 export function trackTemplateViewed(
   templateName: string,
   mediaType: string,
-  author?: string,
+  author?: string
 ): void {
   capture('hub:template_viewed', {
     template_name: templateName,
@@ -86,10 +80,7 @@ export function trackSearchPerformed(query: string): void {
   });
 }
 
-export function trackFilterApplied(
-  filterType: string,
-  filterValue: string,
-): void {
+export function trackFilterApplied(filterType: string, filterValue: string): void {
   capture('hub:filter_applied', {
     filter_type: filterType,
     filter_value: filterValue,
