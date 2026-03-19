@@ -20,6 +20,7 @@ import { t } from '../../../i18n/ui';
 import { getTemplatesForLocale } from '../../../lib/templates';
 import { absoluteUrl } from '../../../config/site';
 import { slugify } from '../../../lib/slugify';
+import { workflowOgUrl, creatorOgUrl } from '../../../lib/og-url';
 import type { WorkflowTemplate } from '../../../components/hub/WorkflowGrid.vue';
 import creatorsData from '../../../../creators.json';
 
@@ -162,9 +163,11 @@ if (isCreatorProfile && rawUsername) {
 
   const thumbnails = data.thumbnails || [];
   const primaryThumbnail = thumbnails[0] || null;
-  ogImage = primaryThumbnail
-    ? `/workflows/thumbnails/${primaryThumbnail}`
-    : `/workflows/og/${data.name}.png`;
+  ogImage = workflowOgUrl(
+    data.title || data.name,
+    primaryThumbnail ? absoluteUrl(`/workflows/thumbnails/${primaryThumbnail}`) : undefined,
+    data.username || undefined,
+  );
 
   structuredData = {
     '@context': 'https://schema.org',
@@ -226,6 +229,7 @@ if (isCreatorProfile && rawUsername) {
       title={pageTitle}
       description={pageDescription}
       canonicalUrl={canonicalUrl}
+      ogImage={creatorOgUrl(creator!.displayName, creator!.handle, creator!.avatarUrl)}
       locale={typedLocale}
       theme="dark"
       hideDefaultFooter
