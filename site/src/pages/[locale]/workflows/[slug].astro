@@ -19,6 +19,7 @@ import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId } from '../../../lib/hub-api';
+import { workflowOgUrl, creatorOgUrl } from '../../../lib/og-url';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -163,7 +164,11 @@ const detailTitle = detailData ? `${detailData.title || detailData.name} - Comfy
 const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slug}/`) : '';
 const detailThumbnails = detailData?.thumbnails || [];
 const detailPrimaryThumbnail = detailThumbnails[0] || null;
-const detailOgImage = detailPrimaryThumbnail || (detailData ? `/workflows/og/${detailData.name}.png` : '');
+const detailOgImage = detailData ? workflowOgUrl(
+  detailData.title || detailData.name,
+  detailPrimaryThumbnail || undefined,
+  detailData.username || undefined
+) : '';
 const detailStructuredData = detailData ? {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
@@ -222,6 +227,7 @@ const structuredData = !isDetailPage ? {
   title={`${displayName} (@${slug}) - ComfyUI Workflow Templates`}
   description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
+  ogImage={creatorOgUrl(displayName, slug!, avatarUrl || undefined)}
   structuredData={structuredData ?? undefined}
   locale={typedLocale}
   theme="dark"
