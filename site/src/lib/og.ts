@@ -37,24 +37,19 @@ async function fetchImageAsDataUri(url: string): Promise<string | null> {
     const res = await fetch(url);
     if (!res.ok) return null;
     const contentType = res.headers.get('content-type') || 'image/png';
-    let buffer = Buffer.from(await res.arrayBuffer());
+    const raw = Buffer.from(await res.arrayBuffer());
     // satori only supports PNG/JPEG — convert other formats (e.g. WebP)
-    let finalContentType = contentType;
-    if (!contentType.includes('png') && !contentType.includes('jpeg') && !contentType.includes('jpg')) {
-      buffer = await sharp(buffer).png().toBuffer();
-      finalContentType = 'image/png';
-    }
-    return `data:${finalContentType};base64,${buffer.toString('base64')}`;
+    const needsConversion =
+      !contentType.includes('png') && !contentType.includes('jpeg') && !contentType.includes('jpg');
+    const pngBuffer = needsConversion ? await sharp(raw).png().toBuffer() : raw;
+    const mime = needsConversion ? 'image/png' : contentType;
+    return `data:${mime};base64,${pngBuffer.toString('base64')}`;
   } catch {
     return null;
   }
 }
 
-function workflowLayout(
-  title: string,
-  thumbnailDataUri: string | null,
-  creatorName?: string
-) {
+function workflowLayout(title: string, thumbnailDataUri: string | null, creatorName?: string) {
   const logo = LOGO_DATA_URI;
   return {
     type: 'div',
@@ -160,11 +155,7 @@ function workflowLayout(
   };
 }
 
-function creatorLayout(
-  displayName: string,
-  username: string,
-  avatarDataUri: string | null
-) {
+function creatorLayout(displayName: string, username: string, avatarDataUri: string | null) {
   const logo = LOGO_DATA_URI;
   return {
     type: 'div',

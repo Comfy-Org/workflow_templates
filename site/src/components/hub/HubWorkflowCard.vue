@@ -242,13 +242,7 @@ function handleCardClick() {
 
     <!-- Tag pills -->
     <div class="flex items-center gap-1.5 pt-4 overflow-hidden">
-      <a
-        v-for="tag in displayTags"
-        :key="tag"
-        :href="getTagUrl(tag)"
-        class="tag-link"
-        @click.stop
-      >
+      <a v-for="tag in displayTags" :key="tag" :href="getTagUrl(tag)" class="tag-link" @click.stop>
         <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors truncate max-w-28">
           {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
         </Badge>

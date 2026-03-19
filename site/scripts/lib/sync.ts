@@ -36,10 +36,7 @@ function isAppTemplate(name: string): boolean {
   return name.endsWith('.app');
 }
 
-function createSyncedTemplate(
-  template: TemplateInfo,
-  locale: string,
-): SyncedTemplate {
+function createSyncedTemplate(template: TemplateInfo, locale: string): SyncedTemplate {
   const thumbnails = findThumbnails(template.name);
   const workflow = readWorkflowJson(template.name);
 
@@ -99,7 +96,7 @@ export function runSync(): void {
   const appTemplates = allEnTemplates.filter((t) => isAppTemplate(t.name));
   if (appTemplates.length > 0) {
     logger.info(
-      `Detected ${appTemplates.length} Comfy App template(s): ${appTemplates.map((t) => t.name).join(', ')}`,
+      `Detected ${appTemplates.length} Comfy App template(s): ${appTemplates.map((t) => t.name).join(', ')}`
     );
   }
 

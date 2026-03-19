@@ -136,5 +136,7 @@ export async function buildSearchIndex(): Promise<void> {
 
   const sizeKB = (Buffer.byteLength(serialized) / 1024).toFixed(1);
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  logger.info(`Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`);
+  logger.info(
+    `Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`
+  );
 }
