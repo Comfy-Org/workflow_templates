@@ -17,12 +17,8 @@ document.querySelectorAll('[data-compare-slider]').forEach((slider) => {
     updatePosition((e as MouseEvent).clientX);
   });
 
-  slider.addEventListener(
-    'touchmove',
-    (e) => {
-      e.preventDefault();
-      if ((e as TouchEvent).touches[0]) updatePosition((e as TouchEvent).touches[0].clientX);
-    },
-    { passive: false }
-  );
+  slider.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if ((e as TouchEvent).touches[0]) updatePosition((e as TouchEvent).touches[0].clientX);
+  }, { passive: false });
 });

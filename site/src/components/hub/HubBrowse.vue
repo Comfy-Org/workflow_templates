@@ -198,5 +198,6 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
         :sticky-toolbar="true"
       />
     </div>
+
   </div>
 </template>

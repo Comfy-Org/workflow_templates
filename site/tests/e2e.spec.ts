@@ -137,7 +137,9 @@ test.describe('Search Filter "+X more" Expansion', () => {
    */
   async function openDiscoveryPanel(page: import('@playwright/test').Page) {
     await page.goto('/workflows/');
-    const searchInput = page.locator('input[placeholder*="Search workflows"]');
+    const searchInput = page.locator(
+      'input[placeholder*="Search workflows"]'
+    );
     await expect(searchInput).toBeAttached({ timeout: 10000 });
     await searchInput.click();
     return searchInput;
