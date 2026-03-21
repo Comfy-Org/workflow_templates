@@ -41,10 +41,26 @@ export interface HubWorkflowSummary {
   profile: HubProfile;
 }
 
+export interface HubWorkflowMetadata {
+  media_type?: string;
+  media_subtype?: string;
+  open_source?: boolean;
+  size?: number;
+  vram?: number;
+  // AI-generated content (written by backend task worker)
+  extended_description?: string;
+  meta_description?: string;
+  how_to_use?: string[];
+  suggested_use_cases?: string[];
+  faq_items?: Array<{ question: string; answer: string }>;
+  content_template?: string;
+  [key: string]: unknown;
+}
+
 export interface HubWorkflowDetail extends HubWorkflowSummary {
   workflow_id: string;
   tutorial_url?: string;
-  metadata?: Record<string, unknown>;
+  metadata?: HubWorkflowMetadata;
   sample_image_urls?: string[];
   workflow_json: Record<string, unknown>;
   assets: AssetInfo[];
@@ -99,6 +115,29 @@ export interface HubWorkflowTemplateEntry {
   suggestedUseCases?: string[];
   faqItems?: Array<{ question: string; answer: string }>;
   contentTemplate?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Serialized types — shared across all pages for Vue islands
+// ---------------------------------------------------------------------------
+
+/** Shape passed to WorkflowGrid, HubBrowse, SearchPopover, etc. */
+export interface SerializedTemplate {
+  name: string;
+  shareId: string;
+  title: string;
+  description: string;
+  mediaType: 'image' | 'video' | 'audio' | '3d';
+  tags: string[];
+  models: string[];
+  logos: { provider: string | string[] }[];
+  usage: number;
+  date: string;
+  thumbnails: string[];
+  username: string;
+  creatorDisplayName: string;
+  creatorAvatarUrl: string;
+  isApp: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -168,8 +207,21 @@ export async function getProfile(username: string): Promise<HubProfile> {
 }
 
 // ---------------------------------------------------------------------------
-// Profile cache — built at startup from index usernames
+// Caches — module-level singletons, built once per process
 // ---------------------------------------------------------------------------
+
+let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
+
+/**
+ * Fetch and cache the workflow index. Called many times across pages during
+ * a single build; the actual HTTP request fires only once.
+ */
+export function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
+  if (!indexCache) {
+    indexCache = hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index');
+  }
+  return indexCache;
+}
 
 let profileCache: Map<string, HubProfile> | null = null;
 
@@ -198,22 +250,91 @@ export async function getProfileCache(): Promise<Map<string, HubProfile>> {
 }
 
 // ---------------------------------------------------------------------------
-// Helpers — map API responses to existing frontend data shapes
+// Serializers — single source of truth for mapping API data → Vue props
 // ---------------------------------------------------------------------------
+
+/**
+ * Convert a HubWorkflowTemplateEntry (from index endpoint) to the shared
+ * SerializedTemplate shape used by Vue grid/search islands.
+ */
+export function serializeIndexEntry(
+  entry: HubWorkflowTemplateEntry,
+  profiles: Map<string, HubProfile>
+): SerializedTemplate {
+  const profile = entry.username ? profiles.get(entry.username) : null;
+  return {
+    name: entry.name,
+    shareId: entry.shareId || '',
+    title: entry.title || entry.name,
+    description: entry.description || '',
+    mediaType: (entry.mediaType || 'image') as 'image' | 'video' | 'audio' | '3d',
+    tags: entry.tags || [],
+    models: entry.models || [],
+    logos: (entry.logos || []) as { provider: string | string[] }[],
+    usage: 0,
+    date: entry.date || '',
+    thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
+    username: entry.username || '',
+    creatorDisplayName: profile?.display_name || entry.username || 'ComfyUI',
+    creatorAvatarUrl: profile?.avatar_url || '',
+    isApp: false,
+  };
+}
+
+/**
+ * Convert a content collection entry to SerializedTemplate (fallback path).
+ */
+export function serializeCollectionEntry(
+  data: {
+    name: string;
+    title?: string;
+    description?: string;
+    mediaType: 'image' | 'video' | 'audio' | '3d';
+    tags?: string[];
+    models?: string[];
+    logos?: { provider: string | string[] }[];
+    usage?: number;
+    date?: string;
+    thumbnails?: string[];
+    username?: string;
+    isApp?: boolean;
+  },
+  profiles: Map<string, HubProfile>
+): SerializedTemplate {
+  const profile = data.username ? profiles.get(data.username) : null;
+  return {
+    name: data.name,
+    shareId: '',
+    title: data.title || data.name,
+    description: data.description || '',
+    mediaType: data.mediaType,
+    tags: data.tags || [],
+    models: data.models || [],
+    logos: data.logos || [],
+    usage: data.usage || 0,
+    date: data.date || '',
+    thumbnails: data.thumbnails || [],
+    username: data.username || '',
+    creatorDisplayName: profile?.display_name || data.username || 'ComfyUI',
+    creatorAvatarUrl: profile?.avatar_url || '',
+    isApp: data.isApp || false,
+  };
+}
 
 /**
  * Convert a HubWorkflowSummary to the serialized template shape
  * used by HubBrowse.vue and other Vue islands.
  */
-export function toSerializedTemplate(workflow: HubWorkflowSummary) {
+export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTemplate {
   return {
     name: workflow.share_id,
+    shareId: workflow.share_id,
     title: workflow.name,
     description: workflow.description || '',
     mediaType: inferMediaType(workflow),
     tags: (workflow.tags || []).map((t) => t.name),
     models: (workflow.models || []).map((m) => m.name),
-    logos: [] as { provider: string | string[] }[],
+    logos: [],
     usage: 0,
     date: workflow.publish_time || '',
     thumbnails: buildThumbnailList(workflow),
@@ -229,17 +350,15 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary) {
  * used by [slug].astro and TemplateDetailPage.astro.
  */
 export function toTemplateData(workflow: HubWorkflowDetail) {
-  const mediaType =
-    (workflow.metadata?.media_type as string) || inferMediaType(workflow);
-  const mediaSubtype = (workflow.metadata?.media_subtype as string) || undefined;
-
   const meta = workflow.metadata || {};
+  const mediaType = meta.media_type || inferMediaType(workflow);
+  const mediaSubtype = meta.media_subtype || undefined;
 
   return {
     name: workflow.share_id,
     title: workflow.name,
     description: workflow.description || '',
-    extendedDescription: (meta.extended_description as string) || '',
+    extendedDescription: meta.extended_description || '',
     mediaType: mediaType as 'image' | 'video' | 'audio' | '3d',
     mediaSubtype,
     thumbnailVariant: mapThumbnailVariant(workflow.thumbnail_type),
@@ -248,11 +367,11 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
     models: (workflow.models || []).map((m) => m.name),
     username: workflow.profile.username,
     date: workflow.publish_time || '',
-    metaDescription: (meta.meta_description as string) || workflow.description || '',
-    howToUse: (meta.how_to_use as string[]) || [],
-    suggestedUseCases: (meta.suggested_use_cases as string[]) || [],
-    faqItems: (meta.faq_items as { question: string; answer: string }[]) || [],
-    contentTemplate: (meta.content_template as string) || undefined,
+    metaDescription: meta.meta_description || workflow.description || '',
+    howToUse: meta.how_to_use || [],
+    suggestedUseCases: meta.suggested_use_cases || [],
+    faqItems: meta.faq_items || [],
+    contentTemplate: meta.content_template || undefined,
     tutorialUrl: workflow.tutorial_url,
   };
 }
@@ -270,14 +389,6 @@ function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
   if (workflow.thumbnail_url) list.push(workflow.thumbnail_url);
   if (workflow.thumbnail_comparison_url) list.push(workflow.thumbnail_comparison_url);
   return list;
-}
-
-/**
- * Fetch all workflows in template index format (build-time helper).
- * Single request — backend returns the full list with no pagination.
- */
-export async function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
-  return hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index');
 }
 
 // ---------------------------------------------------------------------------
@@ -305,7 +416,7 @@ export function extractShareId(urlSegment: string): string | null {
   const lastHyphen = urlSegment.lastIndexOf('-');
   if (lastHyphen === -1) return null;
   const candidate = urlSegment.slice(lastHyphen + 1);
-  if (candidate.length === SHARE_ID_LENGTH && /^[0-9a-f]+$/.test(candidate)) {
+  if (candidate.length === SHARE_ID_LENGTH && /^[0-9a-fA-F]+$/.test(candidate)) {
     return candidate;
   }
   return null;

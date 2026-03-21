@@ -13,42 +13,25 @@ import HubWorkflowCard from '../../components/hub/HubWorkflowCard.vue';
 import BackButton from '../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, getProfileCache } from '../../lib/hub-api';
-
-interface TemplateEntry {
-  name: string;
-  shareId: string;
-  title: string;
-  tags: string[];
-  logos: { provider: string | string[] }[];
-  thumbnails: string[];
-  username: string;
-}
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const profiles = await getProfileCache();
 
 // Fetch all workflows from hub API
-let allTemplates: TemplateEntry[] = [];
+let allTemplates: SerializedTemplate[] = [];
 try {
   const entries = await listWorkflowIndex();
-  allTemplates = entries.map((e) => ({
-    name: e.name,
-    shareId: e.shareId || '',
-    title: e.title || e.name,
-    tags: e.tags || [],
-    logos: (e.logos || []) as { provider: string | string[] }[],
-    thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
-    username: e.username || '',
-  }));
-} catch {
+  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles));
+} catch (err) {
+  console.error('Hub API failed for creators page:', err);
   // API failed — show empty page
 }
 
 // Group templates by username
 const creatorMap = new Map<
   string,
-  { displayName: string; avatarUrl: string; username: string; templates: TemplateEntry[] }
+  { displayName: string; avatarUrl: string; username: string; templates: SerializedTemplate[] }
 >();
 
 for (const tmpl of allTemplates) {
@@ -56,10 +39,9 @@ for (const tmpl of allTemplates) {
   if (!username) continue;
 
   if (!creatorMap.has(username)) {
-    const profile = profiles.get(username);
     creatorMap.set(username, {
-      displayName: profile?.display_name || username,
-      avatarUrl: profile?.avatar_url || '',
+      displayName: tmpl.creatorDisplayName,
+      avatarUrl: tmpl.creatorAvatarUrl,
       username,
       templates: [],
     });

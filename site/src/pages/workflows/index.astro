@@ -8,60 +8,23 @@ import SiteFooter from '../../components/hub/SiteFooter.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 import { absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, getProfileCache, type HubWorkflowTemplateEntry } from '../../lib/hub-api';
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../lib/hub-api';
 
 const profiles = await getProfileCache();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
-function entryToSerialized(entry: HubWorkflowTemplateEntry) {
-  const profile = entry.username ? profiles.get(entry.username) : null;
-  return {
-    name: entry.name,
-    shareId: entry.shareId || '',
-    title: entry.title || entry.name,
-    description: entry.description || '',
-    mediaType: (entry.mediaType || 'image') as 'image' | 'video' | 'audio' | '3d',
-    tags: entry.tags || [],
-    models: entry.models || [],
-    logos: (entry.logos || []) as unknown as { provider: string | string[] }[],
-    usage: 0,
-    date: entry.date || '',
-    thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
-    username: entry.username || '',
-    creatorDisplayName: profile?.display_name || entry.username || 'ComfyUI',
-    creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: false,
-  };
-}
-
 // Try hub API first, fall back to content collection
-let serialized: ReturnType<typeof entryToSerialized>[];
+let serialized: SerializedTemplate[];
 try {
   const entries = await listWorkflowIndex();
-  serialized = entries.map(entryToSerialized);
-} catch {
+  serialized = entries.map((e) => serializeIndexEntry(e, profiles));
+} catch (err) {
+  console.error('Hub API failed, falling back to content collection:', err);
   const templates = await getCollection('templates');
   const allTemplates = templates
     .filter((tmpl) => !tmpl.id.includes('/'))
     .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
-  serialized = allTemplates.map((tmpl) => ({
-    name: tmpl.data.name,
-    shareId: '',
-    title: tmpl.data.title || tmpl.data.name,
-    description: tmpl.data.description || '',
-    mediaType: tmpl.data.mediaType,
-    tags: tmpl.data.tags || [],
-    models: tmpl.data.models || [],
-    logos: (tmpl.data.logos || []) as { provider: string | string[] }[],
-    usage: tmpl.data.usage || 0,
-    date: tmpl.data.date || '',
-    thumbnails: tmpl.data.thumbnails || [],
-    username: tmpl.data.username || '',
-    creatorDisplayName:
-      (tmpl.data.username && profiles.get(tmpl.data.username)?.display_name) || tmpl.data.username || 'ComfyUI',
-    creatorAvatarUrl: (tmpl.data.username && profiles.get(tmpl.data.username)?.avatar_url) || '',
-    isApp: tmpl.data.isApp || false,
-  }));
+  serialized = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
 }
 
 const canonicalUrl = absoluteUrl(localizeUrl('/workflows/', locale));

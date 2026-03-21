@@ -11,7 +11,7 @@ import { t } from '../../../i18n/ui';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { categoryPath } from '../../../lib/routes';
 import { badgeVariants } from '../../../components/ui/badge';
-import { listWorkflowIndex, getProfileCache } from '../../../lib/hub-api';
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../../lib/hub-api';
 
 type MediaType = 'image' | 'video' | 'audio' | '3d';
 
@@ -38,41 +38,23 @@ const title = `${categoryName} Workflows - ${t('meta.title', locale)}`;
 const description = t('meta.description', locale);
 
 // Try hub API first, fall back to content collection
-let filteredEntries: { name: string; shareId: string; title: string; tags: string[]; logos: { provider: string | string[] }[]; date: string; thumbnails: string[]; username: string; isApp: boolean }[];
+const profiles = await getProfileCache();
+let filteredSerialized: SerializedTemplate[];
 try {
   const entries = await listWorkflowIndex();
-  filteredEntries = entries
+  filteredSerialized = entries
     .filter((e) => (e.mediaType || 'image') === type)
-    .map((e) => ({
-      name: e.name,
-      shareId: e.shareId || '',
-      title: e.title || e.name,
-      tags: e.tags || [],
-      logos: (e.logos || []) as { provider: string | string[] }[],
-      date: e.date || '',
-      thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
-      username: e.username || '',
-      isApp: false,
-    }));
-} catch {
+    .map((e) => serializeIndexEntry(e, profiles));
+} catch (err) {
+  console.error('Hub API failed, falling back to content collection:', err);
   const allTemplates = await getCollection('templates');
-  filteredEntries = allTemplates
+  filteredSerialized = allTemplates
     .filter((tmpl) => !tmpl.id.includes('/'))
     .filter((tmpl) => tmpl.data.mediaType === type)
     .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0))
-    .map((tmpl) => ({
-      name: tmpl.data.name,
-      shareId: '',
-      title: tmpl.data.title || tmpl.data.name,
-      tags: tmpl.data.tags || [],
-      logos: tmpl.data.logos || [],
-      date: tmpl.data.date || '',
-      thumbnails: tmpl.data.thumbnails || [],
-      username: tmpl.data.username || '',
-      isApp: tmpl.data.isApp || false,
-    }));
+    .map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
 }
-const templates = filteredEntries;
+const templates = filteredSerialized;
 
 const basePath = categoryPath(type);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
@@ -208,15 +190,8 @@ const faqStructuredData = faqItems.length
     }
   : null;
 
-// Serialize templates for the Vue WorkflowGrid island
-const profiles = await getProfileCache();
-const serialized = templates.map((tmpl) => ({
-  ...tmpl,
-  usage: 0,
-  creatorDisplayName:
-    (tmpl.username && profiles.get(tmpl.username)?.display_name) || tmpl.username || 'ComfyUI',
-  creatorAvatarUrl: (tmpl.username && profiles.get(tmpl.username)?.avatar_url) || '',
-}));
+// Templates are already serialized above
+const serialized = templates;
 ---
 
 <BaseLayout

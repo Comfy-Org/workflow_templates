@@ -12,57 +12,25 @@ import { slugify } from '../../../lib/slugify';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { modelPath } from '../../../lib/routes';
 import { badgeVariants } from '../../../components/ui/badge';
-import { listWorkflowIndex, getProfileCache } from '../../../lib/hub-api';
-
-interface TemplateEntry {
-  name: string;
-  shareId: string;
-  title: string;
-  tags: string[];
-  logos: { provider: string | string[] }[];
-  date: string;
-  thumbnails: string[];
-  username: string;
-  models: string[];
-  isApp: boolean;
-}
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../../lib/hub-api';
 
 export async function getStaticPaths() {
+  const profiles = await getProfileCache();
+
   // Try hub API first, fall back to content collection
-  let allTemplates: TemplateEntry[];
+  let allSerialized: SerializedTemplate[];
   try {
     const entries = await listWorkflowIndex();
-    allTemplates = entries.map((e) => ({
-      name: e.name,
-      shareId: e.shareId || '',
-      title: e.title || e.name,
-      tags: e.tags || [],
-      logos: (e.logos || []) as { provider: string | string[] }[],
-      date: e.date || '',
-      thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
-      username: e.username || '',
-      models: e.models || [],
-      isApp: false,
-    }));
-  } catch {
+    allSerialized = entries.map((e) => serializeIndexEntry(e, profiles));
+  } catch (err) {
+    console.error('Hub API failed, falling back to content collection:', err);
     const collection = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
-    allTemplates = collection.map((t) => ({
-      name: t.data.name,
-      shareId: '',
-      title: t.data.title || t.data.name,
-      tags: t.data.tags || [],
-      logos: t.data.logos || [],
-      date: t.data.date || '',
-      thumbnails: t.data.thumbnails || [],
-      username: t.data.username || '',
-      models: t.data.models || [],
-      isApp: t.data.isApp || false,
-    }));
+    allSerialized = collection.map((t) => serializeCollectionEntry(t.data, profiles));
   }
 
-  const modelMap = new Map<string, TemplateEntry[]>();
+  const modelMap = new Map<string, SerializedTemplate[]>();
 
-  for (const template of allTemplates) {
+  for (const template of allSerialized) {
     for (const model of template.models) {
       const normalized = slugify(model);
       if (!modelMap.has(normalized)) {
@@ -87,7 +55,7 @@ export async function getStaticPaths() {
 }
 
 const { name } = Astro.params;
-const { templates, modelName } = Astro.props;
+const { templates, modelName } = Astro.props as { templates: SerializedTemplate[]; modelName: string };
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const basePath = modelPath(name!);
@@ -120,15 +88,8 @@ const breadcrumbStructuredData = {
   ],
 };
 
-// Serialize templates for the Vue WorkflowGrid island
-const profiles = await getProfileCache();
-const serialized = templates.map((tmpl) => ({
-  ...tmpl,
-  usage: 0,
-  creatorDisplayName:
-    (tmpl.username && profiles.get(tmpl.username)?.display_name) || tmpl.username || 'ComfyUI',
-  creatorAvatarUrl: (tmpl.username && profiles.get(tmpl.username)?.avatar_url) || '',
-}));
+// Templates are already serialized from getStaticPaths
+const serialized = templates;
 ---
 
 <BaseLayout

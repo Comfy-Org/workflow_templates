@@ -3,27 +3,10 @@ import { getCollection } from 'astro:content';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import SearchPopover from './SearchPopover.vue';
 import MobileFilterDrawer from './MobileFilterDrawer.vue';
-import { getProfileCache } from '../../lib/hub-api';
-
-type SearchTemplate = {
-  name: string;
-  title: string;
-  description: string;
-  mediaType: 'image' | 'video' | 'audio' | '3d';
-  tags: string[];
-  models: string[];
-  logos: { provider: string | string[] }[];
-  usage: number;
-  date: string;
-  thumbnails: string[];
-  username: string;
-  creatorDisplayName: string;
-  creatorAvatarUrl: string;
-  isApp: boolean;
-};
+import { getProfileCache, serializeCollectionEntry, type SerializedTemplate } from '../../lib/hub-api';
 
 interface Props {
-  templates?: SearchTemplate[];
+  templates?: SerializedTemplate[];
 }
 
 const profiles = await getProfileCache();
@@ -39,7 +22,7 @@ const creatorsList = Array.from(profiles.entries()).map(([username, profile]) =>
 }));
 
 // Use provided templates or fetch and serialize them
-let templates: SearchTemplate[];
+let templates: SerializedTemplate[];
 if (Astro.props.templates && Astro.props.templates.length > 0) {
   templates = Astro.props.templates;
 } else {
@@ -47,25 +30,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
     .filter((tmpl) => !tmpl.id.includes('/'))
     .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
 
-  templates = allTemplates.map((tmpl) => {
-    const profile = tmpl.data.username ? profiles.get(tmpl.data.username) : null;
-    return {
-      name: tmpl.data.name,
-      title: tmpl.data.title || tmpl.data.name,
-      description: tmpl.data.description || '',
-      mediaType: tmpl.data.mediaType,
-      tags: tmpl.data.tags || [],
-      models: tmpl.data.models || [],
-      logos: tmpl.data.logos || [],
-      usage: tmpl.data.usage || 0,
-      date: tmpl.data.date || '',
-      thumbnails: tmpl.data.thumbnails || [],
-      username: tmpl.data.username || '',
-      creatorDisplayName: profile?.display_name || tmpl.data.username || 'ComfyUI',
-      creatorAvatarUrl: profile?.avatar_url || '',
-      isApp: tmpl.data.isApp || false,
-    };
-  });
+  templates = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
 }
 ---
 
