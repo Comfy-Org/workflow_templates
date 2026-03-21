@@ -228,7 +228,7 @@ const displayedWorkflows = computed(() => {
   return [];
 });
 
-// Creator search — matches against the full creators.json list
+// Creator search — matches against the creators list from hub API profiles
 const matchedCreators = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return [];
@@ -291,7 +291,7 @@ const popularWorkflows = computed(() =>
   [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
 );
 
-// Top creators from creators.json, enriched with workflow count + total usage
+// Top creators from hub API profiles, enriched with workflow count + total usage
 const topCreators = computed(() => {
   const usageMap = new Map<string, { count: number; usage: number }>();
   for (const tmpl of props.templates) {
