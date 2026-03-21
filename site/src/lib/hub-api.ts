@@ -92,6 +92,13 @@ export interface HubWorkflowTemplateEntry {
   thumbnailUrl?: string;
   thumbnailComparisonUrl?: string;
   shareId?: string;
+  // AI-generated content fields (from backend metadata)
+  extendedDescription?: string;
+  metaDescription?: string;
+  howToUse?: string[];
+  suggestedUseCases?: string[];
+  faqItems?: Array<{ question: string; answer: string }>;
+  contentTemplate?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -226,11 +233,13 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
     (workflow.metadata?.media_type as string) || inferMediaType(workflow);
   const mediaSubtype = (workflow.metadata?.media_subtype as string) || undefined;
 
+  const meta = workflow.metadata || {};
+
   return {
     name: workflow.share_id,
     title: workflow.name,
     description: workflow.description || '',
-    extendedDescription: (workflow.metadata?.extendedDescription as string) || '',
+    extendedDescription: (meta.extended_description as string) || '',
     mediaType: mediaType as 'image' | 'video' | 'audio' | '3d',
     mediaSubtype,
     thumbnailVariant: mapThumbnailVariant(workflow.thumbnail_type),
@@ -239,8 +248,11 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
     models: (workflow.models || []).map((m) => m.name),
     username: workflow.profile.username,
     date: workflow.publish_time || '',
-    metaDescription: (workflow.metadata?.metaDescription as string) || workflow.description || '',
-    faqItems: (workflow.metadata?.faqItems as { question: string; answer: string }[]) || [],
+    metaDescription: (meta.meta_description as string) || workflow.description || '',
+    howToUse: (meta.how_to_use as string[]) || [],
+    suggestedUseCases: (meta.suggested_use_cases as string[]) || [],
+    faqItems: (meta.faq_items as { question: string; answer: string }[]) || [],
+    contentTemplate: (meta.content_template as string) || undefined,
     tutorialUrl: workflow.tutorial_url,
   };
 }
