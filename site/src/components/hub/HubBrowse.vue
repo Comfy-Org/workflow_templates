@@ -28,6 +28,8 @@ export interface SerializedTemplate {
   username: string;
   creatorDisplayName: string;
   isApp: boolean;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  mediaSubtype?: string;
 }
 
 const props = defineProps<{
