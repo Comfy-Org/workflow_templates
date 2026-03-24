@@ -5,10 +5,10 @@
  * Visual structure: square thumbnail, logo overlay, title, author, tag pills.
  */
 import { Badge } from '@/components/ui/badge';
-import { IconApps, IconWorkflow } from '@/components/ui/icons';
-import { computed } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
+import { initCompareSlider } from '@/lib/initCompareSlider';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -42,6 +42,8 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Bria: 'bria',
 };
 
+type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+
 interface Props {
   name: string;
   title: string;
@@ -55,6 +57,8 @@ interface Props {
   creatorAvatarUrl?: string;
   isApp?: boolean;
   hideAuthor?: boolean;
+  thumbnailVariant?: ThumbnailVariant;
+  mediaSubtype?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -67,6 +71,7 @@ const props = withDefaults(defineProps<Props>(), {
   creatorAvatarUrl: '',
   isApp: false,
   hideAuthor: false,
+  mediaSubtype: '',
 });
 
 function getLogoPath(name: string): string | null {
@@ -94,18 +99,101 @@ const templateUrl = computed(() => {
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 
-const primaryThumb = computed(() => {
-  if (props.thumbnails.length === 0) return null;
-  const file = props.thumbnails[0];
-  if (file.endsWith('.mp3') || file.endsWith('.webm') || file.endsWith('.mp4')) return null;
-  if (file.startsWith('http://') || file.startsWith('https://')) return file;
-  return `/workflows/thumbnails/${file}`;
-});
+const primaryFile = computed(() => props.thumbnails[0] ?? null);
+const secondaryFile = computed(() => props.thumbnails[1] ?? null);
 
 const isAudioThumb = computed(() => {
-  if (props.thumbnails.length === 0) return false;
-  const file = props.thumbnails[0];
-  return file.endsWith('.mp3') || file.endsWith('.webm');
+  const f = primaryFile.value;
+  return Boolean(f && (f.endsWith('.mp3') || f.endsWith('.webm')));
+});
+
+const isVideoPrimary = computed(() => {
+  const f = primaryFile.value;
+  return Boolean(f && (f.endsWith('.mp4') || f.endsWith('.mov')));
+});
+
+const primaryUrl = computed(() => {
+  const f = primaryFile.value;
+  if (!f) return null;
+  if (f.endsWith('.mp3') || f.endsWith('.webm') || f.endsWith('.mp4') || f.endsWith('.mov')) {
+    return null;
+  }
+  if (f.startsWith('http://') || f.startsWith('https://')) return f;
+  return `/workflows/thumbnails/${f}`;
+});
+
+const hasSecondImage = computed(() => {
+  const f = secondaryFile.value;
+  if (!f) return false;
+  if (f.endsWith('.mp4') || f.endsWith('.mov') || f.endsWith('.mp3') || f.endsWith('.webm')) {
+    return false;
+  }
+  return true;
+});
+
+const secondaryUrl = computed(() => {
+  if (!hasSecondImage.value || !secondaryFile.value) return null;
+  const f = secondaryFile.value;
+  if (f.startsWith('http://') || f.startsWith('https://')) return f;
+  return `/workflows/thumbnails/${f}`;
+});
+
+const showCompare = computed(
+  () =>
+    props.thumbnailVariant === 'compareSlider' &&
+    hasSecondImage.value &&
+    Boolean(primaryUrl.value && secondaryUrl.value)
+);
+
+const showHoverDissolve = computed(
+  () =>
+    props.thumbnailVariant === 'hoverDissolve' &&
+    hasSecondImage.value &&
+    Boolean(primaryUrl.value && secondaryUrl.value)
+);
+
+const isAnimatedWebp = computed(
+  () =>
+    props.mediaSubtype === 'webp' &&
+    Boolean(primaryUrl.value) &&
+    !showCompare.value &&
+    !showHoverDissolve.value
+);
+
+const showZoomHover = computed(() => {
+  const v = props.thumbnailVariant;
+  if (v !== 'zoomHover' && v !== 'hoverZoom') return false;
+  if (!primaryUrl.value) return false;
+  if (showCompare.value || showHoverDissolve.value) return false;
+  return true;
+});
+
+const compareRoot = ref<HTMLElement | null>(null);
+let removeCompareListeners: (() => void) | undefined;
+
+function bindCompare() {
+  removeCompareListeners?.();
+  removeCompareListeners = undefined;
+  if (props.thumbnailVariant !== 'compareSlider' || !hasSecondImage.value) return;
+  const el = compareRoot.value;
+  if (!el) return;
+  removeCompareListeners = initCompareSlider(el);
+}
+
+watch(
+  () => [props.thumbnailVariant, props.thumbnails, compareRoot.value] as const,
+  () => {
+    nextTick(bindCompare);
+  },
+  { flush: 'post', deep: true }
+);
+
+onMounted(() => {
+  nextTick(bindCompare);
+});
+
+onUnmounted(() => {
+  removeCompareListeners?.();
 });
 
 const displayTags = computed(() => props.tags.slice(0, 3));
@@ -133,14 +221,79 @@ function handleCardClick() {
   >
     <!-- Thumbnail -->
     <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative">
-      <img
-        v-if="primaryThumb"
-        :src="primaryThumb"
-        :alt="title"
-        loading="lazy"
-        decoding="async"
-        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-      />
+      <!-- Compare slider -->
+      <div
+        v-if="showCompare"
+        ref="compareRoot"
+        class="compare-slider relative h-full w-full overflow-hidden"
+        data-compare-slider
+      >
+        <img
+          :src="primaryUrl || ''"
+          :alt="`${title} - After`"
+          loading="lazy"
+          decoding="async"
+          draggable="false"
+          class="w-full h-full object-cover select-none"
+        />
+        <div
+          class="compare-overlay absolute inset-0 overflow-hidden"
+          style="clip-path: inset(0 50% 0 0)"
+        >
+          <img
+            :src="secondaryUrl || ''"
+            :alt="`${title} - Before`"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+            class="w-full h-full object-cover select-none"
+          />
+        </div>
+        <div
+          class="compare-handle absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize"
+          style="left: 50%"
+          aria-hidden="true"
+        >
+          <div
+            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center"
+          >
+            <svg
+              class="w-4 h-4 text-gray-600"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <path d="M8 12H16M8 12L11 9M8 12L11 15M16 12L13 9M16 12L13 15" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hover crossfade -->
+      <div
+        v-else-if="showHoverDissolve"
+        class="group/thumb relative h-full w-full overflow-hidden"
+      >
+        <img
+          :src="primaryUrl || ''"
+          :alt="`${title} - 1`"
+          loading="lazy"
+          decoding="async"
+          draggable="false"
+          class="w-full h-full object-cover transition-opacity duration-500 select-none"
+        />
+        <img
+          :src="secondaryUrl || ''"
+          :alt="`${title} - 2`"
+          loading="lazy"
+          decoding="async"
+          draggable="false"
+          class="absolute inset-0 w-full h-full object-cover opacity-0 group-hover/thumb:opacity-100 transition-opacity duration-500 select-none"
+        />
+      </div>
+
       <div
         v-else-if="isAudioThumb"
         class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
@@ -160,6 +313,57 @@ function handleCardClick() {
           />
         </svg>
       </div>
+
+      <div
+        v-else-if="isVideoPrimary"
+        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
+      >
+        <svg
+          class="w-10 h-10 text-white/20"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="1.5"
+            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
+          />
+        </svg>
+      </div>
+
+      <img
+        v-else-if="primaryUrl && isAnimatedWebp"
+        :src="primaryUrl"
+        :alt="title"
+        loading="lazy"
+        decoding="async"
+        draggable="false"
+        class="w-full h-full object-cover select-none"
+      />
+
+      <img
+        v-else-if="primaryUrl && showZoomHover"
+        :src="primaryUrl"
+        :alt="title"
+        loading="lazy"
+        decoding="async"
+        draggable="false"
+        class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-125 select-none"
+      />
+
+      <img
+        v-else-if="primaryUrl"
+        :src="primaryUrl"
+        :alt="title"
+        loading="lazy"
+        decoding="async"
+        draggable="false"
+        class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 select-none"
+      />
+
       <div
         v-else
         class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"

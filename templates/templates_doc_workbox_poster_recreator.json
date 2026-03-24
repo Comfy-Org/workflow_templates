@@ -1,0 +1,363 @@
+{
+  "id": "1527146f-eb2c-4e39-aeed-cdb99c4265cf",
+  "revision": 0,
+  "last_node_id": 29,
+  "last_link_id": 48,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "SaveImage",
+      "pos": [
+        2900,
+        3490
+      ],
+      "size": [
+        540,
+        620
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 45
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Poster_maker"
+      ]
+    },
+    {
+      "id": 22,
+      "type": "MarkdownNote",
+      "pos": [
+        1900.666790012242,
+        3922.6665025292214
+      ],
+      "size": [
+        357.875,
+        221.25
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Generate Mode",
+      "properties": {},
+      "widgets_values": [
+        "## On_false: Poster remake mode\nEnter the content you want on the new poster\n## On_true: Image edit mode\nRegular image edit"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 26,
+      "type": "ComfySwitchNode",
+      "pos": [
+        1910.6667762460727,
+        3722.666777852611
+      ],
+      "size": [
+        324,
+        124.65625
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "STRING",
+          "link": 46
+        },
+        {
+          "name": "on_true",
+          "type": "STRING",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            48
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ]
+    },
+    {
+      "id": 27,
+      "type": "StringConcatenate",
+      "pos": [
+        1460.666596790045,
+        4222.666821899987
+      ],
+      "size": [
+        225,
+        8.65625
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 43
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "You are a master poster designer. Refer to the style, color and font style of the pictures I uploaded, and transform them into a realistic real person style to design a poster with visual impact and artistry. Change the posture, face and clothing of the character. The main title font should be artistic, mainly white and large, and try not to cover the character's face. Without referring to the watermark LOGO and the tiny text, the following is the content of the poster：",
+        "",
+        ""
+      ]
+    },
+    {
+      "id": 28,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        1461.0002181683255,
+        3933.9999756091065
+      ],
+      "size": [
+        330,
+        240
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            43,
+            47
+          ]
+        }
+      ],
+      "title": "Prompt",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Imitate any style, \nrecreate any poster."
+      ]
+    },
+    {
+      "id": 25,
+      "type": "GeminiImage2Node",
+      "pos": [
+        2381.000616125846,
+        3493.9995160756916
+      ],
+      "size": [
+        468,
+        600
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 44
+        },
+        {
+          "name": "files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 48
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            45
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiImage2Node"
+      },
+      "widgets_values": [
+        "",
+        "Nano Banana 2 (Gemini 3.1 Flash Image)",
+        935249916317050,
+        "randomize",
+        "auto",
+        "2K",
+        "IMAGE",
+        "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        1461.333440079779,
+        3503.3328587532014
+      ],
+      "size": [
+        324,
+        376.78125
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            44
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "reference_poster.png",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      43,
+      28,
+      0,
+      27,
+      0,
+      "STRING"
+    ],
+    [
+      44,
+      3,
+      0,
+      25,
+      0,
+      "IMAGE"
+    ],
+    [
+      45,
+      25,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      46,
+      27,
+      0,
+      26,
+      0,
+      "STRING"
+    ],
+    [
+      47,
+      28,
+      0,
+      26,
+      1,
+      "STRING"
+    ],
+    [
+      48,
+      26,
+      0,
+      25,
+      2,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Switch Mode",
+      "bounding": [
+        1900.6666666666667,
+        3652.6666666666665,
+        344,
+        206.928125
+      ],
+      "color": "#3f789e",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.505536674583123,
+      "offset": [
+        238.11072671027932,
+        -2532.4729315664113
+      ]
+    },
+    "workflowRendererVersion": "Vue",
+    "frontendVersion": "1.41.13",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

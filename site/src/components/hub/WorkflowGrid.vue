@@ -9,6 +9,12 @@ import { Button } from '@/components/ui/button';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import HubWorkflowCard from './HubWorkflowCard.vue';
 
+export type HubThumbnailVariant =
+  | 'compareSlider'
+  | 'hoverDissolve'
+  | 'zoomHover'
+  | 'hoverZoom';
+
 export interface WorkflowTemplate {
   name: string;
   title: string;
@@ -22,6 +28,8 @@ export interface WorkflowTemplate {
   creatorDisplayName?: string;
   creatorAvatarUrl?: string;
   isApp?: boolean;
+  thumbnailVariant?: HubThumbnailVariant;
+  mediaSubtype?: string;
 }
 
 const props = withDefaults(
@@ -370,6 +378,8 @@ onUnmounted(() => {
         :creator-avatar-url="tmpl.creatorAvatarUrl"
         :is-app="tmpl.isApp"
         :hide-author="hideAuthor"
+        :thumbnail-variant="tmpl.thumbnailVariant"
+        :media-subtype="tmpl.mediaSubtype"
       />
     </div>
 
