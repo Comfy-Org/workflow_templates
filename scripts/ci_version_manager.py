@@ -160,6 +160,10 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
             # Core package affects meta
             elif pkg == "meta" and (file.startswith("packages/") or file == "pyproject.toml"):
                 filtered_files.append(file)
+            # sync_bundles.py changes affect all bundle packages (filtering logic may change
+            # which templates end up in each package)
+            elif pkg_bundle and file == "scripts/sync_bundles.py":
+                filtered_files.append(file)
             # Template files affecting this package's bundle
             elif pkg_bundle and file.startswith("templates/"):
                 template_name = Path(file).stem.split('-')[0]
