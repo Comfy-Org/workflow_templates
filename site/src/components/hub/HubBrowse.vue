@@ -13,7 +13,7 @@ import WorkflowGrid from './WorkflowGrid.vue';
 import { useHubStore } from '@/composables/useHubStore';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { trackFilterApplied } from '@/lib/posthog';
-import type { MediaType } from '@/lib/hub-api';
+import type { MediaType, ThumbnailVariant } from '@/lib/hub-api';
 
 export interface SerializedTemplate {
   name: string;
@@ -29,7 +29,7 @@ export interface SerializedTemplate {
   username: string;
   creatorDisplayName: string;
   isApp: boolean;
-  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  thumbnailVariant?: ThumbnailVariant;
   mediaSubtype?: string;
 }
 

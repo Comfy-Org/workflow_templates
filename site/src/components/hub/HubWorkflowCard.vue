@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
+import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 
 const MODEL_TO_LOGO: Record<string, string> = {
@@ -41,8 +42,6 @@ const MODEL_TO_LOGO: Record<string, string> = {
   PixVerse: 'pixverse',
   Bria: 'bria',
 };
-
-type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
 
 interface Props {
   name: string;

@@ -19,7 +19,7 @@ import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 import { DEFAULT_LOCALE } from '../../i18n/config';
-import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache } from '../../lib/hub-api';
+import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
@@ -78,38 +78,13 @@ try {
 }
 
 // Fetch workflows for this creator from index
-let serialized: {
-  name: string;
-  shareId: string;
-  title: string;
-  tags: string[];
-  logos: { provider: string | string[] }[];
-  usage: number;
-  date: string;
-  thumbnails: string[];
-  username: string;
-  creatorDisplayName: string;
-  creatorAvatarUrl: string;
-  isApp: boolean;
-}[] = [];
+const profiles = await getProfileCache();
+let serialized: SerializedTemplate[] = [];
 
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
-  serialized = filtered.map((e) => ({
-    name: e.name,
-    shareId: e.shareId || '',
-    title: e.title || e.name,
-    tags: e.tags || [],
-    logos: (e.logos || []) as { provider: string | string[] }[],
-    usage: 0,
-    date: e.date || '',
-    thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
-    username: e.profile?.username || e.username || '',
-    creatorDisplayName: displayName,
-    creatorAvatarUrl: avatarUrl || '',
-    isApp: false,
-  }));
+  serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
 } catch {
   // Index API failed — show empty grid
 }

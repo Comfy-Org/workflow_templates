@@ -15,6 +15,7 @@ const HUB_API_BASE =
 // ---------------------------------------------------------------------------
 
 export type MediaType = 'image' | 'video' | 'audio' | '3d';
+export type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
 
 export interface LabelRef {
   name: string;
@@ -91,7 +92,7 @@ export interface HubWorkflowTemplateEntry {
   tags?: string[];
   models?: string[];
   requiresCustomNodes?: string[];
-  thumbnailVariant?: string;
+  thumbnailVariant?: ThumbnailVariant;
   mediaType?: MediaType;
   mediaSubtype?: string;
   size?: number;
@@ -141,7 +142,7 @@ export interface SerializedTemplate {
   creatorDisplayName: string;
   creatorAvatarUrl: string;
   isApp: boolean;
-  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  thumbnailVariant?: ThumbnailVariant;
   mediaSubtype?: string;
 }
 
@@ -287,7 +288,7 @@ export function serializeIndexEntry(
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
     isApp: false,
-    thumbnailVariant: entry.thumbnailVariant as SerializedTemplate['thumbnailVariant'],
+    thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
 }
@@ -309,7 +310,7 @@ export function serializeCollectionEntry(
     thumbnails?: string[];
     username?: string;
     isApp?: boolean;
-    thumbnailVariant?: string;
+    thumbnailVariant?: ThumbnailVariant;
     mediaSubtype?: string;
   },
   profiles: Map<string, HubProfile>
@@ -331,7 +332,7 @@ export function serializeCollectionEntry(
     creatorDisplayName: profile?.display_name || data.username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
     isApp: data.isApp || false,
-    thumbnailVariant: data.thumbnailVariant as SerializedTemplate['thumbnailVariant'],
+    thumbnailVariant: data.thumbnailVariant,
     mediaSubtype: data.mediaSubtype,
   };
 }
@@ -439,7 +440,7 @@ export function extractShareId(urlSegment: string): string | null {
 
 function mapThumbnailVariant(
   type?: string
-): 'compareSlider' | 'hoverDissolve' | 'hoverZoom' | 'zoomHover' | undefined {
+): ThumbnailVariant | undefined {
   if (type === 'image_comparison') return 'compareSlider';
   return undefined;
 }
