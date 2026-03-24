@@ -56,6 +56,126 @@ jobs:
           python scripts/sync_bundles.py
           echo "✅ Manifest sync complete"
 
+      - name: Check package sizes
+        id: size_check
+        run: |
+          echo "=== Checking package sizes against PyPI 100MB limit ==="
+
+          # PyPI hard limit is 100MB per file. We warn at 85MB and error at 95MB.
+          WARN_MB=85
+          ERROR_MB=95
+          LIMIT_MB=100
+
+          WARN_BYTES=$((WARN_MB * 1024 * 1024))
+          ERROR_BYTES=$((ERROR_MB * 1024 * 1024))
+
+          PACKAGES=(
+            "media_api:packages/media_api/src/comfyui_workflow_templates_media_api"
+            "media_image:packages/media_image/src/comfyui_workflow_templates_media_image"
+            "media_video:packages/media_video/src/comfyui_workflow_templates_media_video"
+            "media_other:packages/media_other/src/comfyui_workflow_templates_media_other"
+          )
+
+          HAS_WARNING=false
+          HAS_ERROR=false
+          COMMENT_ROWS=""
+
+          for ENTRY in "${PACKAGES[@]}"; do
+            PKG_NAME="${ENTRY%%:*}"
+            PKG_DIR="${ENTRY##*:}"
+
+            if [ ! -d "$PKG_DIR" ]; then
+              echo "⚠️  Directory not found: $PKG_DIR (skipping)"
+              continue
+            fi
+
+            SIZE_BYTES=$(du -sb "$PKG_DIR" | cut -f1)
+            SIZE_MB=$(echo "scale=1; $SIZE_BYTES / 1048576" | bc)
+
+            if [ "$SIZE_BYTES" -ge "$ERROR_BYTES" ]; then
+              STATUS="🔴 CRITICAL"
+              HAS_ERROR=true
+            elif [ "$SIZE_BYTES" -ge "$WARN_BYTES" ]; then
+              STATUS="🟡 WARNING"
+              HAS_WARNING=true
+            else
+              STATUS="🟢 OK"
+            fi
+
+            echo "$STATUS  $PKG_NAME: ${SIZE_MB}MB / ${LIMIT_MB}MB limit"
+            COMMENT_ROWS="${COMMENT_ROWS}| \`comfyui-workflow-templates-${PKG_NAME/_/-}\` | ${SIZE_MB} MB | ${LIMIT_MB} MB | ${STATUS} |\n"
+          done
+
+          # Write outputs for the comment step
+          echo "has_warning=$HAS_WARNING" >> "$GITHUB_OUTPUT"
+          echo "has_error=$HAS_ERROR" >> "$GITHUB_OUTPUT"
+
+          # Build the full comment body and store it (multi-line via delimiter)
+          {
+            echo "COMMENT_BODY<<EOF"
+            if [ "$HAS_ERROR" = "true" ]; then
+              echo "## ⚠️ Package Size Warning — Approaching PyPI 100 MB Limit"
+              echo ""
+              echo "> **One or more packages are critically close to (≥${ERROR_MB} MB) the PyPI 100 MB per-file upload limit.**"
+              echo "> Publishing will likely fail unless templates are moved to a different bundle."
+            elif [ "$HAS_WARNING" = "true" ]; then
+              echo "## ⚠️ Package Size Warning — Approaching PyPI 100 MB Limit"
+              echo ""
+              echo "> One or more packages are approaching (≥${WARN_MB} MB) the PyPI 100 MB per-file upload limit."
+              echo "> Consider moving some templates to a different bundle before this reaches the limit."
+            else
+              echo "## ✅ Package Sizes OK"
+              echo ""
+              echo "> All packages are within safe limits."
+            fi
+            echo ""
+            echo "| Package | Estimated Size | Limit | Status |"
+            echo "|---------|---------------|-------|--------|"
+            printf "$COMMENT_ROWS"
+            echo ""
+            echo "<sub>Thresholds: 🟡 ≥${WARN_MB} MB (warning) · 🔴 ≥${ERROR_MB} MB (critical) · Limit: ${LIMIT_MB} MB</sub>"
+            echo ""
+            echo "<sub>_Sizes are measured from the synced package source directories. Actual sdist/wheel may differ slightly._</sub>"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$HAS_ERROR" = "true" ]; then
+            echo ""
+            echo "❌ One or more packages are critically close to the PyPI 100MB limit!"
+            echo "   Move templates to another bundle in bundles.json before publishing."
+          fi
+
+      - name: Post package size comment on PR
+        if: always() && (steps.size_check.outputs.has_warning == 'true' || steps.size_check.outputs.has_error == 'true')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- package-size-check -->';
+            const body = marker + '\n' + `${{ steps.size_check.outputs.COMMENT_BODY }}`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
       - name: Auto-bump package versions if needed
         run: |
           echo "=== Analyzing template changes and bumping versions ==="
