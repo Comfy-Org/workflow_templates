@@ -81,7 +81,7 @@ if (!isDetailPage) {
   }
 }
 
-// Fetch profile from hub API
+// Fetch profile — try dedicated endpoint first, fall back to index-embedded profiles
 let displayName = slug;
 let avatarUrl: string | null = null;
 let description = '';
@@ -93,7 +93,15 @@ try {
   description = profile.description || '';
   websiteUrls = profile.website_urls || [];
 } catch {
-  // Profile API failed — use username as display name
+  // Profile endpoint unavailable — fall back to cached profile from index
+  const cachedProfiles = await getProfileCache();
+  const cached = cachedProfiles.get(slug);
+  if (cached) {
+    displayName = cached.display_name || slug;
+    avatarUrl = cached.avatar_url || null;
+    description = cached.description || '';
+    websiteUrls = cached.website_urls || [];
+  }
 }
 
 // Fetch workflows for this creator from index
@@ -102,7 +110,7 @@ let serialized: SerializedTemplate[] = [];
 
 try {
   const entries = await listWorkflowIndex();
-  const filtered = entries.filter((e) => e.username === slug);
+  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
   serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
 } catch (err) {
   console.error('Hub API failed for creator grid:', err);

@@ -19,7 +19,7 @@ import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 import { DEFAULT_LOCALE } from '../../i18n/config';
-import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId } from '../../lib/hub-api';
+import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache } from '../../lib/hub-api';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
@@ -54,7 +54,7 @@ if (detailShareId) {
   }
 }
 
-// Fetch profile from hub API
+// Fetch profile — try dedicated endpoint first, fall back to index-embedded profiles
 let displayName = slugParam;
 let avatarUrl: string | null = null;
 let description = '';
@@ -66,7 +66,15 @@ try {
   description = profile.description || '';
   websiteUrls = profile.website_urls || [];
 } catch {
-  // Profile API failed — use username as display name
+  // Profile endpoint unavailable — fall back to cached profile from index
+  const profiles = await getProfileCache();
+  const cached = profiles.get(slugParam);
+  if (cached) {
+    displayName = cached.display_name || slugParam;
+    avatarUrl = cached.avatar_url || null;
+    description = cached.description || '';
+    websiteUrls = cached.website_urls || [];
+  }
 }
 
 // Fetch workflows for this creator from index
@@ -87,7 +95,7 @@ let serialized: {
 
 try {
   const entries = await listWorkflowIndex();
-  const filtered = entries.filter((e) => e.username === slugParam);
+  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
   serialized = filtered.map((e) => ({
     name: e.name,
     shareId: e.shareId || '',
@@ -97,7 +105,7 @@ try {
     usage: 0,
     date: e.date || '',
     thumbnails: [e.thumbnailUrl, e.thumbnailComparisonUrl].filter(Boolean) as string[],
-    username: e.username || '',
+    username: e.profile?.username || e.username || '',
     creatorDisplayName: displayName,
     creatorAvatarUrl: avatarUrl || '',
     isApp: false,

@@ -98,6 +98,8 @@ export interface HubWorkflowTemplateEntry {
   vram?: number;
   openSource?: boolean | null;
   username?: string;
+  /** Embedded profile from the index endpoint (eliminates N+1 profile calls) */
+  profile?: HubProfile;
   tutorialUrl?: string;
   logos?: Record<string, unknown>[];
   date?: string;
@@ -229,8 +231,8 @@ export function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
 let profileCache: Map<string, HubProfile> | null = null;
 
 /**
- * Fetch and cache all creator profiles referenced in the workflow index.
- * Called once; subsequent calls return the cached map.
+ * Build and cache a profile map from the embedded profile data in the index.
+ * The index endpoint already includes profile objects, so no extra API calls needed.
  */
 export async function getProfileCache(): Promise<Map<string, HubProfile>> {
   if (profileCache) return profileCache;
@@ -238,12 +240,14 @@ export async function getProfileCache(): Promise<Map<string, HubProfile>> {
   profileCache = new Map();
   try {
     const entries = await listWorkflowIndex();
-    const usernames = [...new Set(entries.map((e) => e.username).filter(Boolean) as string[])];
-    const results = await Promise.allSettled(usernames.map((u) => getProfile(u)));
-    for (let i = 0; i < usernames.length; i++) {
-      const result = results[i];
-      if (result.status === 'fulfilled') {
-        profileCache.set(usernames[i], result.value);
+    for (const entry of entries) {
+      const profile = entry.profile;
+      if (profile?.username && !profileCache.has(profile.username)) {
+        profileCache.set(profile.username, profile);
+      }
+      // Also index by top-level username if present (legacy/fallback)
+      if (entry.username && !profileCache.has(entry.username) && profile) {
+        profileCache.set(entry.username, profile);
       }
     }
   } catch {
@@ -264,7 +268,9 @@ export function serializeIndexEntry(
   entry: HubWorkflowTemplateEntry,
   profiles: Map<string, HubProfile>
 ): SerializedTemplate {
-  const profile = entry.username ? profiles.get(entry.username) : null;
+  // Prefer embedded profile, fall back to profile cache by username
+  const username = entry.profile?.username || entry.username || '';
+  const profile = entry.profile || (username ? profiles.get(username) : null);
   return {
     name: entry.name,
     shareId: entry.shareId || '',
@@ -277,8 +283,8 @@ export function serializeIndexEntry(
     usage: 0,
     date: entry.date || '',
     thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
-    username: entry.username || '',
-    creatorDisplayName: profile?.display_name || entry.username || 'ComfyUI',
+    username,
+    creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
     isApp: false,
     thumbnailVariant: entry.thumbnailVariant as SerializedTemplate['thumbnailVariant'],
