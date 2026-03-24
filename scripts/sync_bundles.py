@@ -21,6 +21,7 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
+from typing import Optional
 
 # Distribution values that are considered "local" (non-cloud).
 # A template is cloud-only when its includeOnDistributions is non-empty
@@ -163,7 +164,7 @@ def load_bundles_config() -> dict:
     return normalized
 
 
-def build_manifest(filter_pip: bool = True, excluded_names: frozenset[str] | None = None):
+def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] = None):
     bundle_map = load_bundles_config()
     if excluded_names is None:
         excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
@@ -268,7 +269,7 @@ def sync_bundle_directories(
     manifest: dict,
     dry_run: bool = False,
     filter_pip: bool = True,
-    excluded_names: frozenset[str] | None = None,
+    excluded_names: Optional[frozenset] = None,
 ) -> None:
     if dry_run:
         return
@@ -350,7 +351,9 @@ def main():
     excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
     manifest = build_manifest(filter_pip=filter_pip, excluded_names=excluded_names)
     write_manifest(manifest, dry_run=args.dry_run)
-    sync_bundle_directories(manifest, dry_run=args.dry_run, filter_pip=filter_pip, excluded_names=excluded_names)
+    sync_bundle_directories(
+        manifest, dry_run=args.dry_run, filter_pip=filter_pip, excluded_names=excluded_names
+    )
     target = CORE_MANIFEST if not args.dry_run else SAMPLE_MANIFEST
     print(f"Wrote manifest to {target}")
     if not args.dry_run:

@@ -1,6 +1,5 @@
 import importlib.util
 import json
-import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -66,7 +65,12 @@ def test_manifest_includes_all_template_assets():
         and path.suffix.lower() in SUPPORTED_EXTENSIONS
         # Exclude assets belonging to pip-filtered templates.
         # Asset filenames always start with the template name (e.g. "foo.json", "foo-1.webp").
-        and not any(path.name == ex + path.suffix or path.name.startswith(ex + "-") or path.name.startswith(ex + ".") for ex in excluded)
+        and not any(
+            path.name == ex + path.suffix
+            or path.name.startswith(ex + "-")
+            or path.name.startswith(ex + ".")
+            for ex in excluded
+        )
     }
     missing = sorted(files_on_disk - manifest_assets)
     assert not missing, f"Assets missing from manifest: {missing}"
