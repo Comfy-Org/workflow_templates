@@ -67,27 +67,34 @@ BUNDLE_TARGETS = {
 }
 BUNDLES_CONFIG = ROOT / "bundles.json"
 
-def get_cloud_only_template_names() -> frozenset[str]:
-    """Return the set of template names that are cloud-only (excluded from pip packages).
+def get_pip_excluded_template_names() -> frozenset[str]:
+    """Return the set of template names that must be excluded from pip packages.
 
-    A template is cloud-only when its ``includeOnDistributions`` field is
-    present, non-empty, and contains *no* local-distribution values.
+    Two categories are excluded:
+
+    1. **Cloud-only**: ``includeOnDistributions`` is non-empty and contains no
+       local-distribution values — these templates cannot run locally.
+    2. **Requires custom nodes**: ``requiresCustomNodes`` is non-empty — pip
+       package users have no mechanism to install custom nodes automatically,
+       so these templates would be broken out of the box.
     """
     index_path = TEMPLATES_DIR / "index.json"
     with index_path.open("r", encoding="utf-8") as f:
         categories = json.load(f)
 
-    cloud_only: set[str] = set()
+    excluded: set[str] = set()
     for category in categories:
         for tmpl in category.get("templates", []):
             distributions = tmpl.get("includeOnDistributions", [])
             if distributions and not any(d in LOCAL_DISTRIBUTIONS for d in distributions):
-                cloud_only.add(tmpl["name"])
-    return frozenset(cloud_only)
+                excluded.add(tmpl["name"])
+            elif tmpl.get("requiresCustomNodes"):
+                excluded.add(tmpl["name"])
+    return frozenset(excluded)
 
 
-def filter_index_for_pip(raw_json: bytes, cloud_only_names: frozenset[str]) -> bytes:
-    """Return a rewritten index JSON with cloud-only templates removed.
+def filter_index_for_pip(raw_json: bytes, excluded_names: frozenset[str]) -> bytes:
+    """Return a rewritten index JSON with excluded templates removed.
 
     Works for both the primary ``index.json`` and every locale variant
     (``index.{locale}.json``), which share the same list-of-categories shape.
@@ -97,7 +104,7 @@ def filter_index_for_pip(raw_json: bytes, cloud_only_names: frozenset[str]) -> b
     for category in categories:
         templates = [
             t for t in category.get("templates", [])
-            if t.get("name") not in cloud_only_names
+            if t.get("name") not in excluded_names
         ]
         if templates:
             filtered.append({**category, "templates": templates})
@@ -257,11 +264,12 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
     if dry_run:
         return
 
-    cloud_only_names = get_cloud_only_template_names()
-    if cloud_only_names:
+    excluded_names = get_pip_excluded_template_names()
+    if excluded_names:
         print(
-            f"Excluding {len(cloud_only_names)} cloud-only template(s) from pip packages: "
-            + ", ".join(sorted(cloud_only_names))
+            f"Excluding {len(excluded_names)} template(s) from pip packages "
+            f"(cloud-only or requires custom nodes): "
+            + ", ".join(sorted(excluded_names))
         )
 
     # Index data JSON file stems — these are rewritten (cloud-only entries removed)
@@ -283,8 +291,8 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
         target_root = BUNDLE_TARGETS[bundle]
         template_id = template["id"]
 
-        # Skip all assets for cloud-only workflow templates.
-        if template_id in cloud_only_names:
+        # Skip all assets for excluded templates (cloud-only or requires custom nodes).
+        if template_id in excluded_names:
             continue
 
         for asset in template["assets"]:
@@ -300,7 +308,7 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
             # cloud-only template entries are removed from the distributed package.
             filename_stem = Path(asset["filename"]).stem
             if filename_stem in index_data_stems and asset["filename"].endswith(".json"):
-                dest.write_bytes(filter_index_for_pip(src.read_bytes(), cloud_only_names))
+                dest.write_bytes(filter_index_for_pip(src.read_bytes(), excluded_names))
             else:
                 shutil.copy2(src, dest)
 
