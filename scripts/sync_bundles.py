@@ -260,17 +260,21 @@ def build_manifest():
     return manifest
 
 
-def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
+def sync_bundle_directories(manifest: dict, dry_run: bool = False, filter_pip: bool = True) -> None:
     if dry_run:
         return
 
-    excluded_names = get_pip_excluded_template_names()
-    if excluded_names:
-        print(
-            f"Excluding {len(excluded_names)} template(s) from pip packages "
-            f"(cloud-only or requires custom nodes): "
-            + ", ".join(sorted(excluded_names))
-        )
+    if filter_pip:
+        excluded_names = get_pip_excluded_template_names()
+        if excluded_names:
+            print(
+                f"Excluding {len(excluded_names)} template(s) from pip packages "
+                f"(cloud-only or requires custom nodes): "
+                + ", ".join(sorted(excluded_names))
+            )
+    else:
+        excluded_names = frozenset()
+        print("--no-filter: pip exclusion disabled, syncing all templates")
 
     # Index data JSON file stems — these are rewritten (cloud-only entries removed)
     # rather than copied verbatim.  The schema file is excluded from this set
@@ -330,13 +334,21 @@ def main():
         action="store_true",
         help="Only regenerate sample manifest (no copying into package directories).",
     )
+    parser.add_argument(
+        "--no-filter",
+        action="store_true",
+        help=(
+            "Disable pip exclusion filter — sync ALL templates including cloud-only and "
+            "requiresCustomNodes ones. Use this to revert the filtering behaviour temporarily."
+        ),
+    )
     args = parser.parse_args()
 
     if not TEMPLATES_DIR.exists():
         raise SystemExit(f"Templates directory not found: {TEMPLATES_DIR}")
     manifest = build_manifest()
     write_manifest(manifest, dry_run=args.dry_run)
-    sync_bundle_directories(manifest, dry_run=args.dry_run)
+    sync_bundle_directories(manifest, dry_run=args.dry_run, filter_pip=not args.no_filter)
     target = CORE_MANIFEST if not args.dry_run else SAMPLE_MANIFEST
     print(f"Wrote manifest to {target}")
     if not args.dry_run:
