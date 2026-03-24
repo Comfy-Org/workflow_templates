@@ -163,8 +163,9 @@ def load_bundles_config() -> dict:
     return normalized
 
 
-def build_manifest():
+def build_manifest(filter_pip: bool = True):
     bundle_map = load_bundles_config()
+    excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
 
     declared_templates = {tpl for templates in bundle_map.values() for tpl in templates}
     on_disk_templates = {
@@ -188,6 +189,8 @@ def build_manifest():
     templates = []
     for bundle, template_ids in bundle_map.items():
         for template_id in template_ids:
+            if template_id in excluded_names:
+                continue
             _ = load_template_data(template_id)  # ensure JSON is readable
             assets = []
             json_name = f"{template_id}.json"
@@ -264,19 +267,15 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False, filter_pip: b
     if dry_run:
         return
 
+    # The manifest passed in is already filtered by build_manifest(filter_pip=...).
+    # We still need excluded_names here to rewrite the index JSON files on disk.
     if filter_pip:
         excluded_names = get_pip_excluded_template_names()
-        if excluded_names:
-            print(
-                f"Excluding {len(excluded_names)} template(s) from pip packages "
-                f"(cloud-only or requires custom nodes): "
-                + ", ".join(sorted(excluded_names))
-            )
     else:
         excluded_names = frozenset()
         print("--no-filter: pip exclusion disabled, syncing all templates")
 
-    # Index data JSON file stems — these are rewritten (cloud-only entries removed)
+    # Index data JSON file stems — these are rewritten (excluded entries removed)
     # rather than copied verbatim.  The schema file is excluded from this set
     # because it is a JSON Schema object, not a list-of-categories.
     index_data_stems = {
@@ -293,11 +292,6 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False, filter_pip: b
     for template in manifest["templates"]:
         bundle = template["bundle"]
         target_root = BUNDLE_TARGETS[bundle]
-        template_id = template["id"]
-
-        # Skip all assets for excluded templates (cloud-only or requires custom nodes).
-        if template_id in excluded_names:
-            continue
 
         for asset in template["assets"]:
             src = TEMPLATES_DIR / asset["filename"]
@@ -346,7 +340,7 @@ def main():
 
     if not TEMPLATES_DIR.exists():
         raise SystemExit(f"Templates directory not found: {TEMPLATES_DIR}")
-    manifest = build_manifest()
+    manifest = build_manifest(filter_pip=not args.no_filter)
     write_manifest(manifest, dry_run=args.dry_run)
     sync_bundle_directories(manifest, dry_run=args.dry_run, filter_pip=not args.no_filter)
     target = CORE_MANIFEST if not args.dry_run else SAMPLE_MANIFEST
