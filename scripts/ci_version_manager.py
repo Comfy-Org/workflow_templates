@@ -165,6 +165,17 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                 template_name = Path(file).stem.split('-')[0]
                 if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
                     filtered_files.append(file)
+            # manifest.json changes: check if this bundle's template set actually changed
+            elif pkg_bundle and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
+                try:
+                    old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
+                    old_ids = {e["id"] for e in old_manifest.get("templates", []) if e.get("bundle") == pkg_bundle}
+                    cur_manifest = json.loads(Path(file).read_text())
+                    cur_ids = {e["id"] for e in cur_manifest.get("templates", []) if e.get("bundle") == pkg_bundle}
+                    if old_ids != cur_ids:
+                        filtered_files.append(file)
+                except Exception:
+                    filtered_files.append(file)
             # bundles.json changes affecting this package's bundle
             elif pkg_bundle and file == "bundles.json":
                 try:
@@ -184,72 +195,11 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     except:
         return []
 
-def get_manifest_affected_bundles() -> Set[str]:
-    """Return bundle package names whose template set changed according to the current manifest.
-
-    Compares the manifest at the merge-base commit with the manifest in the working tree
-    (which has already been updated by sync_bundles.py).  This catches cases where
-    sync_bundles.py logic changes cause templates to be added/removed from a bundle even
-    though no template source files were directly modified (e.g. new pip-exclusion filter).
-    """
-    bundle_to_pkg = {
-        "media-api": "media_api",
-        "media-video": "media_video",
-        "media-image": "media_image",
-        "media-other": "media_other",
-    }
-    manifest_path = (
-        ROOT / "packages" / "core" / "src"
-        / "comfyui_workflow_templates_core" / "manifest.json"
-    )
-    if not manifest_path.exists():
-        return set()
-
-    try:
-        base = run_git(["merge-base", "HEAD", "origin/main"])
-    except subprocess.CalledProcessError:
-        try:
-            base = run_git(["merge-base", "HEAD", "main"])
-        except subprocess.CalledProcessError:
-            return set()
-
-    try:
-        base_manifest_raw = run_git(["show", f"{base}:packages/core/src/comfyui_workflow_templates_core/manifest.json"])
-        base_manifest = json.loads(base_manifest_raw)
-    except Exception:
-        return set()  # no base manifest to compare against
-
-    current_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-
-    def bundle_template_ids(manifest: dict) -> dict:
-        result: dict = {}
-        for entry in manifest.get("templates", []):
-            b = entry.get("bundle")
-            if b:
-                result.setdefault(b, set()).add(entry["id"])
-        return result
-
-    base_by_bundle = bundle_template_ids(base_manifest)
-    current_by_bundle = bundle_template_ids(current_manifest)
-
-    affected: Set[str] = set()
-    for bundle, pkg in bundle_to_pkg.items():
-        if base_by_bundle.get(bundle) != current_by_bundle.get(bundle):
-            affected.add(pkg)
-            print(f"Package {pkg} needs bump: manifest bundle '{bundle}' changed")
-    return affected
-
-
 def get_changed_packages() -> Set[str]:
     """Determine which packages need version bumps based on changes since their last version bump"""
     try:
         packages = ["core", "media_api", "media_video", "media_image", "media_other", "meta"]
         affected = set()
-
-        # Detect packages whose template set changed in the manifest (catches sync_bundles.py
-        # logic changes that don't touch template source files directly).
-        manifest_affected = get_manifest_affected_bundles()
-        affected |= manifest_affected
 
         for pkg in packages:
             current_version = get_current_version(pkg)
@@ -264,8 +214,7 @@ def get_changed_packages() -> Set[str]:
                 if len(affecting_files) > 5:
                     print(f"  ... and {len(affecting_files) - 5} more files")
             else:
-                if pkg not in affected:
-                    print(f"Package {pkg} up to date since version {current_version}")
+                print(f"Package {pkg} up to date since version {current_version}")
 
         # If any non-meta packages changed, also bump meta
         if affected - {"meta"}:
