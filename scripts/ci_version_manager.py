@@ -165,6 +165,17 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                 template_name = Path(file).stem.split('-')[0]
                 if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
                     filtered_files.append(file)
+            # manifest.json changes: check if this bundle's template set actually changed
+            elif pkg_bundle and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
+                try:
+                    old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
+                    old_ids = {e["id"] for e in old_manifest.get("templates", []) if e.get("bundle") == pkg_bundle}
+                    cur_manifest = json.loads(Path(file).read_text())
+                    cur_ids = {e["id"] for e in cur_manifest.get("templates", []) if e.get("bundle") == pkg_bundle}
+                    if old_ids != cur_ids:
+                        filtered_files.append(file)
+                except Exception:
+                    filtered_files.append(file)
             # bundles.json changes affecting this package's bundle
             elif pkg_bundle and file == "bundles.json":
                 try:
@@ -189,12 +200,12 @@ def get_changed_packages() -> Set[str]:
     try:
         packages = ["core", "media_api", "media_video", "media_image", "media_other", "meta"]
         affected = set()
-        
+
         for pkg in packages:
             current_version = get_current_version(pkg)
             last_bump_commit = find_last_version_bump_commit(pkg, current_version)
             affecting_files = get_files_affecting_package(pkg, last_bump_commit)
-            
+
             if affecting_files:
                 affected.add(pkg)
                 print(f"Package {pkg} needs bump: {len(affecting_files)} files changed since version {current_version}")
@@ -204,7 +215,7 @@ def get_changed_packages() -> Set[str]:
                     print(f"  ... and {len(affecting_files) - 5} more files")
             else:
                 print(f"Package {pkg} up to date since version {current_version}")
-        
+
         # If any non-meta packages changed, also bump meta
         if affected - {"meta"}:
             affected.add("meta")
