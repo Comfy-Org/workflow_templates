@@ -4,7 +4,7 @@ import type { Locale } from './config';
 export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   en: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': "Discover the World's Top Creators and Workflows",
+    'hub.subtitle': "Discover the World's Top Creators and ComfyUI Workflows",
     'hub.filters': 'FILTERS',
     'hub.models': 'MODELS',
     'hub.showMore': 'Show more...',
@@ -23,7 +23,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
       'This is a simplified visualization. The actual workflow may contain additional nodes and connections.',
     'labels.nodeUses': 'Uses',
     'meta.title': 'ComfyUI Workflows',
-    'meta.description': 'Browse free, ready-to-use ComfyUI workflows',
+    'meta.description': 'Free Official ComfyUI workflow templates for AI image generation, video creation, and audio synthesis. Discover cutting-edge AI generation technology',
     'template.count': 'templates',
     'template.updated': 'Updated daily',
     'template.runs': 'runs',
@@ -60,14 +60,14 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   zh: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': '发现全球顶级创作者',
+    'hub.subtitle': '发现全球顶级创作者和 ComfyUI 工作流',
     'hub.filters': '筛选',
     'hub.models': '模型',
     'hub.showMore': '查看更多...',
     'hub.topCreators': '顶级创作者',
     'hub.submitCreation': '提交作品',
     'hub.search': '搜索...',
-    'nav.templates': '工作流',
+    'nav.templates': 'ComfyUI 工作流',
     'nav.back': '返回工作流列表',
     'nav.backShort': '返回',
     'labels.createdBy': '创建者',
@@ -78,7 +78,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.workflowPreviewNote': '这是简化的可视化。实际工作流可能包含更多节点和连接。',
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI 工作流',
-    'meta.description': '浏览免费、开箱即用的 ComfyUI 工作流',
+    'meta.description': 'ComfyUI 官方工作流模板，支持 AI 图像生成、视频创作和音频合成。专业的 Stable Diffusion、Flux、SDXL 工作流。',
     'template.count': '个模板',
     'template.updated': '每日更新',
     'template.runs': '次运行',
@@ -115,7 +115,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   'zh-TW': {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': '探索全球頂級創作者',
+    'hub.subtitle': '探索全球頂級創作者和 ComfyUI 工作流',
     'hub.filters': '篩選',
     'hub.models': '模型',
     'hub.showMore': '查看更多...',
@@ -170,7 +170,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   ja: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': '世界のトップクリエイターを発見',
+    'hub.subtitle': '世界のトップクリエイターと ComfyUI ワークフローを発見',
     'hub.filters': 'フィルター',
     'hub.models': 'モデル',
     'hub.showMore': 'もっと見る...',
@@ -226,7 +226,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   ko: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': '세계 최고의 크리에이터를 만나보세요',
+    'hub.subtitle': '세계 최고의 크리에이터와 ComfyUI 워크플로우를 만나보세요',
     'hub.filters': '필터',
     'hub.models': '모델',
     'hub.showMore': '더 보기...',
@@ -282,7 +282,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   es: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': 'Descubre a los Mejores Creadores del Mundo',
+    'hub.subtitle': 'Descubre a los Mejores Creadores del Mundo y ComfyUI Workflows',
     'hub.filters': 'FILTROS',
     'hub.models': 'MODELOS',
     'hub.showMore': 'Ver más...',
@@ -338,7 +338,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   fr: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': 'Découvrez les Meilleurs Créateurs du Monde',
+    'hub.subtitle': 'Découvrez les Meilleurs Créateurs du Monde et ComfyUI Workflows',
     'hub.filters': 'FILTRES',
     'hub.models': 'MODÈLES',
     'hub.showMore': 'Voir plus...',
@@ -394,7 +394,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   ru: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': 'Откройте для себя лучших создателей мира',
+    'hub.subtitle': 'Откройте для себя лучших создателей мира и ComfyUI Workflows',
     'hub.filters': 'ФИЛЬТРЫ',
     'hub.models': 'МОДЕЛИ',
     'hub.showMore': 'Показать ещё...',
@@ -450,7 +450,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   tr: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': 'Dünyanın En İyi Yaratıcılarını Keşfedin',
+    'hub.subtitle': 'Dünyanın En İyi Yaratıcılarını ve ComfyUI Workflows Keşfedin',
     'hub.filters': 'FİLTRELER',
     'hub.models': 'MODELLER',
     'hub.showMore': 'Daha fazla...',
@@ -506,7 +506,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   ar: {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': 'اكتشف أفضل المبدعين في العالم',
+    'hub.subtitle': 'اكتشف أفضل المبدعين في العالم و ComfyUI Workflows',
     'hub.filters': 'التصفية',
     'hub.models': 'النماذج',
     'hub.showMore': 'عرض المزيد...',
@@ -562,7 +562,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   },
   'pt-BR': {
     'hub.title': 'ComfyHub',
-    'hub.subtitle': 'Descubra os Melhores Criadores do Mundo',
+    'hub.subtitle': 'Descubra os Melhores Criadores do Mundo e ComfyUI Workflows',
     'hub.filters': 'FILTROS',
     'hub.models': 'MODELOS',
     'hub.showMore': 'Ver mais...',

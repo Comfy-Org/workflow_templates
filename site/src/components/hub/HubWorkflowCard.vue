@@ -225,7 +225,7 @@ function handleCardClick() {
       >
         <img
           :src="primaryUrl || ''"
-          :alt="`${title} - After`"
+          :alt="`ComfyUI workflow preview: ${title} - After`"
           loading="lazy"
           decoding="async"
           draggable="false"
@@ -237,7 +237,7 @@ function handleCardClick() {
         >
           <img
             :src="secondaryUrl || ''"
-            :alt="`${title} - Before`"
+            :alt="`ComfyUI workflow preview: ${title} - Before`"
             loading="lazy"
             decoding="async"
             draggable="false"
@@ -273,7 +273,7 @@ function handleCardClick() {
       >
         <img
           :src="primaryUrl || ''"
-          :alt="`${title} - 1`"
+          :alt="`ComfyUI workflow: ${title} - Preview 1`"
           loading="lazy"
           decoding="async"
           draggable="false"
@@ -281,7 +281,7 @@ function handleCardClick() {
         />
         <img
           :src="secondaryUrl || ''"
-          :alt="`${title} - 2`"
+          :alt="`ComfyUI workflow: ${title} - Preview 2`"
           loading="lazy"
           decoding="async"
           draggable="false"
@@ -332,7 +332,7 @@ function handleCardClick() {
       <img
         v-else-if="primaryUrl && isAnimatedWebp"
         :src="primaryUrl"
-        :alt="title"
+        :alt="`ComfyUI workflow template: ${title}`"
         loading="lazy"
         decoding="async"
         draggable="false"
@@ -342,7 +342,7 @@ function handleCardClick() {
       <img
         v-else-if="primaryUrl && showZoomHover"
         :src="primaryUrl"
-        :alt="title"
+        :alt="`ComfyUI workflow template: ${title}`"
         loading="lazy"
         decoding="async"
         draggable="false"
@@ -352,7 +352,7 @@ function handleCardClick() {
       <img
         v-else-if="primaryUrl"
         :src="primaryUrl"
-        :alt="title"
+        :alt="`ComfyUI workflow template: ${title}`"
         loading="lazy"
         decoding="async"
         draggable="false"

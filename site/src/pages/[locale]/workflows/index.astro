@@ -33,6 +33,25 @@ const allTemplates = sortByUsage(templates);
 
 const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
 
+// WebSite structured data for SEO
+const websiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: t('meta.title', typedLocale),
+  url: canonicalUrl,
+  description: t('meta.description', typedLocale),
+  inLanguage: locale,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${canonicalUrl}?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
+// CollectionPage structured data
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
@@ -40,6 +59,26 @@ const structuredData = {
   description: t('meta.description', typedLocale),
   url: canonicalUrl,
   inLanguage: locale,
+  numberOfItems: allTemplates.length,
+};
+
+// ItemList structured data for top workflows
+const itemListStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: t('meta.title', typedLocale),
+  description: t('meta.description', typedLocale),
+  numberOfItems: Math.min(allTemplates.length, 20),
+  itemListElement: allTemplates.slice(0, 20).map((tmpl, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    item: {
+      '@type': 'SoftwareApplication',
+      name: tmpl.data.title || tmpl.data.name,
+      url: absoluteUrl(`/${locale}/workflows/${tmpl.data.name}/`),
+      applicationCategory: 'MultimediaApplication',
+    },
+  })),
 };
 
 // Serialize template data for the Vue island (plain objects only)
@@ -67,7 +106,7 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
 ---
 
 <BaseLayout
-  title={`${t('meta.title', typedLocale)} - ComfyUI`}
+  title={typedLocale === 'zh' ? 'ComfyUI 工作流 - 免费官方 AI 图像、视频、3D 和音频生成模板' : typedLocale === 'zh-TW' ? 'ComfyUI 工作流 - 免費官方 AI 圖像、視頻、3D 和音頻生成模板' : typedLocale === 'ja' ? 'ComfyUI ワークフロー - 無料公式 AI 画像・動画・3D・音声生成テンプレート' : typedLocale === 'ko' ? 'ComfyUI 워크플로우 - 무료 공식 AI 이미지, 비디오, 3D 및 오디오 생성 템플릿' : typedLocale === 'es' ? 'ComfyUI Workflows - Plantillas Oficiales Gratuitas de Generación de Imágenes, Video, 3D y Audio con IA' : typedLocale === 'fr' ? 'ComfyUI Workflows - Modèles Officiels Gratuits de Génération d\'Images, Vidéo, 3D et Audio par IA' : typedLocale === 'ru' ? 'ComfyUI Workflows - Бесплатные официальные шаблоны генерации изображений, видео, 3D и аудио с помощью ИИ' : typedLocale === 'tr' ? 'ComfyUI Workflows - Ücretsiz Resmi AI Görüntü, Video, 3D ve Ses Oluşturma Şablonları' : typedLocale === 'ar' ? 'ComfyUI Workflows - قوالب رسمية مجانية لتوليد الصور والفيديو والصوت بالذكاء الاصطناعي' : typedLocale === 'pt-BR' ? 'ComfyUI Workflows - Templates Oficiais Gratuitos de Geração de Imagens, Vídeo, 3D e Áudio com IA' : `ComfyUI Workflows - Free Official AI Image, Video, 3D & Audio Generation Templates`}
   description={t('meta.description', typedLocale)}
   canonicalUrl={canonicalUrl}
   ogImage="/workflows/og-default.png"
@@ -85,6 +124,10 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
     <!-- Interactive browse (Vue island) -->
     <HubBrowse client:load templates={serialized} locale={typedLocale} mediaTypes={mediaTypes} />
   </div>
+
+  <!-- Additional structured data for SEO -->
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteStructuredData)} />
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(itemListStructuredData)} />
 
   <!-- Custom Footer -->
   <Fragment slot="footer">

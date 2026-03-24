@@ -22,7 +22,7 @@ const { template } = Astro.props;
 const locale = DEFAULT_LOCALE;
 const { data } = template;
 
-const title = `${data.title || data.name} - ComfyUI Workflow`;
+const title = `${data.title || data.name} - Official ComfyUI Workflow Template`;
 const hreflangBasePath = `/workflows/${data.name}/`;
 const canonicalUrl = absoluteUrl(hreflangBasePath);
 
@@ -38,10 +38,16 @@ const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
   headline: data.title || data.name,
-  description: data.description,
+  description: data.metaDescription || data.description,
   image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
   datePublished: data.date,
   inLanguage: 'en',
+  keywords: ['ComfyUI workflow', 'ComfyUI template', data.title || data.name, ...(data.tags || []), ...(data.models || [])].join(', '),
+  about: {
+    '@type': 'Thing',
+    name: 'ComfyUI Workflows',
+    description: 'Node-based AI workflow system',
+  },
 };
 
 const faqStructuredData = data.faqItems?.length
@@ -69,15 +75,17 @@ const breadcrumbStructuredData = {
 const softwareAppStructuredData = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: data.title || data.name,
+  name: `${data.title || data.name} - ComfyUI Workflow`,
   applicationCategory: 'MultimediaApplication',
   operatingSystem: 'Windows, macOS, Linux',
   description: data.metaDescription || data.description,
+  keywords: ['ComfyUI', 'workflow template', 'AI generation', ...(data.tags || [])].join(', '),
   offers: {
     '@type': 'Offer',
     price: '0',
     priceCurrency: 'USD',
   },
+  featureList: data.tags?.join(', ') || '',
 };
 ---
 

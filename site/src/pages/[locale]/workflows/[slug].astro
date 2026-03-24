@@ -157,7 +157,7 @@ if (isCreatorProfile && rawUsername) {
   const { data } = template;
   templateData = data as TemplateData;
 
-  pageTitle = `${data.title || data.name} - ComfyUI`;
+  pageTitle = `${data.title || data.name} - Official ComfyUI Workflow Template`;
   pageDescription = data.metaDescription || data.description;
   canonicalUrl = absoluteUrl('/' + locale + '/workflows/' + data.name + '/');
   hreflangBasePath = `/workflows/${data.name}/`;
@@ -175,10 +175,16 @@ if (isCreatorProfile && rawUsername) {
     '@context': 'https://schema.org',
     '@type': 'TechArticle',
     headline: data.title || data.name,
-    description: data.description,
+    description: data.metaDescription || data.description,
     image: primaryThumbnail ? absoluteUrl('/workflows/thumbnails/' + primaryThumbnail) : undefined,
     datePublished: data.date,
     inLanguage: locale,
+    keywords: ['ComfyUI workflow', 'ComfyUI template', data.title || data.name, ...(data.tags || []), ...(data.models || [])].join(', '),
+    about: {
+      '@type': 'Thing',
+      name: 'ComfyUI Workflows',
+      description: 'Node-based AI workflow system',
+    },
   };
 
   faqStructuredData = data.faqItems?.length

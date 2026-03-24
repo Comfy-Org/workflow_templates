@@ -19,12 +19,51 @@ const allTemplates = templates
 
 const canonicalUrl = absoluteUrl(localizeUrl('/workflows/', locale));
 
+// WebSite structured data for SEO
+const websiteStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'ComfyUI Workflows',
+  alternateName: 'ComfyHub',
+  url: canonicalUrl,
+  description: t('meta.description', locale),
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: {
+      '@type': 'EntryPoint',
+      urlTemplate: `${canonicalUrl}?q={search_term_string}`,
+    },
+    'query-input': 'required name=search_term_string',
+  },
+};
+
+// CollectionPage structured data
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: t('meta.title', locale),
   description: t('meta.description', locale),
   url: canonicalUrl,
+  numberOfItems: allTemplates.length,
+};
+
+// ItemList structured data for top workflows
+const itemListStructuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: 'ComfyUI Workflow Templates',
+  description: 'Collection of free ComfyUI workflow templates',
+  numberOfItems: Math.min(allTemplates.length, 20),
+  itemListElement: allTemplates.slice(0, 20).map((tmpl, idx) => ({
+    '@type': 'ListItem',
+    position: idx + 1,
+    item: {
+      '@type': 'SoftwareApplication',
+      name: tmpl.data.title || tmpl.data.name,
+      url: absoluteUrl(`/workflows/${tmpl.data.name}/`),
+      applicationCategory: 'MultimediaApplication',
+    },
+  })),
 };
 
 // Serialize template data for the Vue island (plain objects only)
@@ -52,7 +91,7 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
 ---
 
 <BaseLayout
-  title={`${t('meta.title', locale)} - Free AI Generation Workflows`}
+  title="ComfyUI Workflows - Free Official AI Image, Video, 3D & Audio Generation Templates"
   description={t('meta.description', locale)}
   canonicalUrl={canonicalUrl}
   ogImage="/workflows/og-default.png"
@@ -68,6 +107,10 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
     <!-- Interactive browse (Vue island) -->
     <HubBrowse client:load templates={serialized} locale={locale} mediaTypes={mediaTypes} />
   </div>
+
+  <!-- Additional structured data for SEO -->
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(websiteStructuredData)} />
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(itemListStructuredData)} />
 
   <!-- Custom Footer -->
   <Fragment slot="footer">
