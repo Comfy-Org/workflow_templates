@@ -1,3 +1,9 @@
+# Triggers: (1) workflow_dispatch — always runs. (2) workflow_run after
+# "Publish to PyPI" on main — runs only if that workflow succeeded AND
+# repository variable DEPLOY_SITE_ON_PYPI_PUBLISH is not the string "false".
+# To disable version-bump chain deploy: Settings > Secrets and variables >
+# Actions > Variables — set DEPLOY_SITE_ON_PYPI_PUBLISH to false. Remove it or
+# set to true to enable (matches historical behavior when unset).
 name: Deploy Template Site
 
 on:
@@ -30,7 +36,13 @@ permissions:
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    if: >-
+      github.event_name == 'workflow_dispatch'
+      || (
+        github.event_name == 'workflow_run'
+        && github.event.workflow_run.conclusion == 'success'
+        && vars.DEPLOY_SITE_ON_PYPI_PUBLISH != 'false'
+      )
     env:
       OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       PUBLIC_POSTHOG_KEY: phc_iKfK86id4xVYws9LybMje0h44eGtfwFgRPIBehmy8rO
