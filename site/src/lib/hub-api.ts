@@ -138,6 +138,8 @@ export interface SerializedTemplate {
   creatorDisplayName: string;
   creatorAvatarUrl: string;
   isApp: boolean;
+  thumbnailVariant?: 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+  mediaSubtype?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -278,6 +280,8 @@ export function serializeIndexEntry(
     creatorDisplayName: profile?.display_name || entry.username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
     isApp: false,
+    thumbnailVariant: entry.thumbnailVariant as SerializedTemplate['thumbnailVariant'],
+    mediaSubtype: entry.mediaSubtype,
   };
 }
 
@@ -298,6 +302,8 @@ export function serializeCollectionEntry(
     thumbnails?: string[];
     username?: string;
     isApp?: boolean;
+    thumbnailVariant?: string;
+    mediaSubtype?: string;
   },
   profiles: Map<string, HubProfile>
 ): SerializedTemplate {
@@ -318,6 +324,8 @@ export function serializeCollectionEntry(
     creatorDisplayName: profile?.display_name || data.username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
     isApp: data.isApp || false,
+    thumbnailVariant: data.thumbnailVariant as SerializedTemplate['thumbnailVariant'],
+    mediaSubtype: data.mediaSubtype,
   };
 }
 
