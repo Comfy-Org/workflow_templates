@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import os
 from pathlib import Path
@@ -20,6 +21,15 @@ for root in PACKAGE_ROOTS:
 
 import comfyui_workflow_templates_core.loader as loader  # noqa: E402
 
+# Load get_pip_excluded_template_names from sync_bundles.py without adding the
+# scripts/ directory permanently to sys.path.
+_spec = importlib.util.spec_from_file_location(
+    "sync_bundles", REPO_ROOT / "scripts" / "sync_bundles.py"
+)
+_sync_bundles = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_sync_bundles)
+get_pip_excluded_template_names = _sync_bundles.get_pip_excluded_template_names
+
 
 def load_bundle_config():
     path = REPO_ROOT / "bundles.json"
@@ -29,6 +39,7 @@ def load_bundle_config():
 
 def test_manifest_aligns_with_bundles_config():
     config = load_bundle_config()
+    excluded = get_pip_excluded_template_names()
     manifest_map = {entry.template_id: entry.bundle for entry in loader.iter_templates()}
 
     config_map = {}
@@ -37,7 +48,8 @@ def test_manifest_aligns_with_bundles_config():
             assert template_id not in config_map, (
                 f"Duplicate template '{template_id}' in bundles.json"
             )
-            config_map[template_id] = bundle
+            if template_id not in excluded:
+                config_map[template_id] = bundle
 
     assert manifest_map.keys() == config_map.keys(), (
         "Mismatch between manifest and bundles.json templates"

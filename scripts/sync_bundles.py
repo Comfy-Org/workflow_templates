@@ -6,6 +6,14 @@ Reads `bundles.json` to determine which templates belong to each media package,
 hashes every workflow/asset, writes the consolidated manifest into the core
 package, and mirrors assets into the bundle package directories. A copy of the
 manifest is saved to `prd/phase1-manifest-sample.json` for review.
+
+Cloud-only filtering
+--------------------
+Templates whose ``includeOnDistributions`` list contains only cloud-specific
+values (currently "cloud") are excluded from pip packages because local users
+cannot run them.  During ``sync_bundle_directories`` the index JSON files are
+rewritten on the fly with those entries removed, and the matching workflow
+JSON / thumbnail assets are skipped entirely.
 """
 
 import argparse
@@ -13,6 +21,12 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
+from typing import Optional
+
+# Distribution values that are considered "local" (non-cloud).
+# A template is cloud-only when its includeOnDistributions is non-empty
+# and contains none of these values.
+LOCAL_DISTRIBUTIONS = {"local", "desktop", "mac", "windows"}
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = ROOT / "templates"
@@ -53,6 +67,50 @@ BUNDLE_TARGETS = {
     / "templates",
 }
 BUNDLES_CONFIG = ROOT / "bundles.json"
+
+def get_pip_excluded_template_names() -> frozenset[str]:
+    """Return the set of template names that must be excluded from pip packages.
+
+    Two categories are excluded:
+
+    1. **Cloud-only**: ``includeOnDistributions`` is non-empty and contains no
+       local-distribution values — these templates cannot run locally.
+    2. **Requires custom nodes**: ``requiresCustomNodes`` is non-empty — pip
+       package users have no mechanism to install custom nodes automatically,
+       so these templates would be broken out of the box.
+    """
+    index_path = TEMPLATES_DIR / "index.json"
+    with index_path.open("r", encoding="utf-8") as f:
+        categories = json.load(f)
+
+    excluded: set[str] = set()
+    for category in categories:
+        for tmpl in category.get("templates", []):
+            distributions = tmpl.get("includeOnDistributions", [])
+            if distributions and not any(d in LOCAL_DISTRIBUTIONS for d in distributions):
+                excluded.add(tmpl["name"])
+            elif tmpl.get("requiresCustomNodes"):
+                excluded.add(tmpl["name"])
+    return frozenset(excluded)
+
+
+def filter_index_for_pip(raw_json: bytes, excluded_names: frozenset[str]) -> bytes:
+    """Return a rewritten index JSON with excluded templates removed.
+
+    Works for both the primary ``index.json`` and every locale variant
+    (``index.{locale}.json``), which share the same list-of-categories shape.
+    """
+    categories = json.loads(raw_json)
+    filtered = []
+    for category in categories:
+        templates = [
+            t for t in category.get("templates", [])
+            if t.get("name") not in excluded_names
+        ]
+        if templates:
+            filtered.append({**category, "templates": templates})
+    return json.dumps(filtered, indent=2, ensure_ascii=False).encode("utf-8")
+
 
 def sha256_for_file(path: Path) -> str:
     h = hashlib.sha256()
@@ -106,8 +164,10 @@ def load_bundles_config() -> dict:
     return normalized
 
 
-def build_manifest():
+def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] = None):
     bundle_map = load_bundles_config()
+    if excluded_names is None:
+        excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
 
     declared_templates = {tpl for templates in bundle_map.values() for tpl in templates}
     on_disk_templates = {
@@ -131,6 +191,8 @@ def build_manifest():
     templates = []
     for bundle, template_ids in bundle_map.items():
         for template_id in template_ids:
+            if template_id in excluded_names:
+                continue
             _ = load_template_data(template_id)  # ensure JSON is readable
             assets = []
             json_name = f"{template_id}.json"
@@ -203,9 +265,32 @@ def build_manifest():
     return manifest
 
 
-def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
+def sync_bundle_directories(
+    manifest: dict,
+    dry_run: bool = False,
+    filter_pip: bool = True,
+    excluded_names: Optional[frozenset] = None,
+) -> None:
     if dry_run:
         return
+
+    # The manifest passed in is already filtered by build_manifest(filter_pip=...).
+    # We still need excluded_names here to rewrite the index JSON files on disk.
+    if excluded_names is None:
+        if filter_pip:
+            excluded_names = get_pip_excluded_template_names()
+        else:
+            excluded_names = frozenset()
+    if not filter_pip:
+        print("--no-filter: pip exclusion disabled, syncing all templates")
+
+    # Discover index data files dynamically from the templates directory.
+    # These are filtered rather than copied verbatim.
+    # "index.schema.json" is intentionally excluded — it's a JSON Schema, not template data.
+    index_data_filenames: set[str] = {"index.json"}
+    for p in TEMPLATES_DIR.glob("index.*.json"):
+        if p.name != "index.schema.json":
+            index_data_filenames.add(p.name)
 
     for target in BUNDLE_TARGETS.values():
         if target.exists():
@@ -215,15 +300,22 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
     for template in manifest["templates"]:
         bundle = template["bundle"]
         target_root = BUNDLE_TARGETS[bundle]
+
         for asset in template["assets"]:
             src = TEMPLATES_DIR / asset["filename"]
             if not src.exists():
                 # Some optional assets (e.g., preview) may not exist; skip silently.
                 continue
-            
+
             dest = target_root / asset["filename"]
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dest)
+
+            # Index data JSON files are filtered rather than copied verbatim so that
+            # cloud-only template entries are removed from the distributed package.
+            if Path(asset["filename"]).name in index_data_filenames:
+                dest.write_bytes(filter_index_for_pip(src.read_bytes(), excluded_names))
+            else:
+                shutil.copy2(src, dest)
 
 
 def write_manifest(manifest: dict, dry_run: bool = False) -> None:
@@ -243,13 +335,25 @@ def main():
         action="store_true",
         help="Only regenerate sample manifest (no copying into package directories).",
     )
+    parser.add_argument(
+        "--no-filter",
+        action="store_true",
+        help=(
+            "Disable pip exclusion filter — sync ALL templates including cloud-only and "
+            "requiresCustomNodes ones. Use this to revert the filtering behaviour temporarily."
+        ),
+    )
     args = parser.parse_args()
 
     if not TEMPLATES_DIR.exists():
         raise SystemExit(f"Templates directory not found: {TEMPLATES_DIR}")
-    manifest = build_manifest()
+    filter_pip = not args.no_filter
+    excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
+    manifest = build_manifest(filter_pip=filter_pip, excluded_names=excluded_names)
     write_manifest(manifest, dry_run=args.dry_run)
-    sync_bundle_directories(manifest, dry_run=args.dry_run)
+    sync_bundle_directories(
+        manifest, dry_run=args.dry_run, filter_pip=filter_pip, excluded_names=excluded_names
+    )
     target = CORE_MANIFEST if not args.dry_run else SAMPLE_MANIFEST
     print(f"Wrote manifest to {target}")
     if not args.dry_run:

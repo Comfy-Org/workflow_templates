@@ -53,6 +53,10 @@ jobs:
           # This step validates that all templates are assigned to bundles
           # and generates updated manifest files with SHA256 hashes
           # Must run BEFORE version detection so core package manifest.json changes are detected
+          #
+          # Pip exclusion filter (cloud-only + requiresCustomNodes templates) is ON by default.
+          # To temporarily disable it and ship all templates, add --no-filter:
+          #   python scripts/sync_bundles.py --no-filter
           python scripts/sync_bundles.py
           echo "✅ Manifest sync complete"
 
