@@ -45,9 +45,14 @@ jobs:
       - name: Check for orphaned templates
         run: |
           echo "🔍 Checking for templates without manifest entries..."
+          excluded=$(python3 scripts/list_pip_excluded.py)
           cd templates
           orphaned=0
           for json_file in *.json; do
+            template_name="${json_file%.json}"
+            if echo "$excluded" | grep -qx "$template_name"; then
+              continue
+            fi
             if ! grep -q "\"$json_file\"" ../packages/core/src/comfyui_workflow_templates_core/manifest.json; then
               echo "⚠️  Orphaned template: $json_file"
               orphaned=$((orphaned + 1))

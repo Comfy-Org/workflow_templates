@@ -163,9 +163,10 @@ def load_bundles_config() -> dict:
     return normalized
 
 
-def build_manifest(filter_pip: bool = True):
+def build_manifest(filter_pip: bool = True, excluded_names: frozenset[str] | None = None):
     bundle_map = load_bundles_config()
-    excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
+    if excluded_names is None:
+        excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
 
     declared_templates = {tpl for templates in bundle_map.values() for tpl in templates}
     on_disk_templates = {
@@ -263,26 +264,32 @@ def build_manifest(filter_pip: bool = True):
     return manifest
 
 
-def sync_bundle_directories(manifest: dict, dry_run: bool = False, filter_pip: bool = True) -> None:
+def sync_bundle_directories(
+    manifest: dict,
+    dry_run: bool = False,
+    filter_pip: bool = True,
+    excluded_names: frozenset[str] | None = None,
+) -> None:
     if dry_run:
         return
 
     # The manifest passed in is already filtered by build_manifest(filter_pip=...).
     # We still need excluded_names here to rewrite the index JSON files on disk.
-    if filter_pip:
-        excluded_names = get_pip_excluded_template_names()
-    else:
-        excluded_names = frozenset()
+    if excluded_names is None:
+        if filter_pip:
+            excluded_names = get_pip_excluded_template_names()
+        else:
+            excluded_names = frozenset()
+    if not filter_pip:
         print("--no-filter: pip exclusion disabled, syncing all templates")
 
-    # Index data JSON file stems — these are rewritten (excluded entries removed)
-    # rather than copied verbatim.  The schema file is excluded from this set
-    # because it is a JSON Schema object, not a list-of-categories.
-    index_data_stems = {
-        "index",
-        "index.ar", "index.es", "index.fr", "index.ja", "index.ko",
-        "index.pt-BR", "index.ru", "index.tr", "index.zh", "index.zh-TW",
-    }
+    # Discover index data files dynamically from the templates directory.
+    # These are filtered rather than copied verbatim.
+    # "index.schema.json" is intentionally excluded — it's a JSON Schema, not template data.
+    index_data_filenames: set[str] = {"index.json"}
+    for p in TEMPLATES_DIR.glob("index.*.json"):
+        if p.name != "index.schema.json":
+            index_data_filenames.add(p.name)
 
     for target in BUNDLE_TARGETS.values():
         if target.exists():
@@ -304,8 +311,7 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False, filter_pip: b
 
             # Index data JSON files are filtered rather than copied verbatim so that
             # cloud-only template entries are removed from the distributed package.
-            filename_stem = Path(asset["filename"]).stem
-            if filename_stem in index_data_stems and asset["filename"].endswith(".json"):
+            if Path(asset["filename"]).name in index_data_filenames:
                 dest.write_bytes(filter_index_for_pip(src.read_bytes(), excluded_names))
             else:
                 shutil.copy2(src, dest)
@@ -340,9 +346,11 @@ def main():
 
     if not TEMPLATES_DIR.exists():
         raise SystemExit(f"Templates directory not found: {TEMPLATES_DIR}")
-    manifest = build_manifest(filter_pip=not args.no_filter)
+    filter_pip = not args.no_filter
+    excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
+    manifest = build_manifest(filter_pip=filter_pip, excluded_names=excluded_names)
     write_manifest(manifest, dry_run=args.dry_run)
-    sync_bundle_directories(manifest, dry_run=args.dry_run, filter_pip=not args.no_filter)
+    sync_bundle_directories(manifest, dry_run=args.dry_run, filter_pip=filter_pip, excluded_names=excluded_names)
     target = CORE_MANIFEST if not args.dry_run else SAMPLE_MANIFEST
     print(f"Wrote manifest to {target}")
     if not args.dry_run:
