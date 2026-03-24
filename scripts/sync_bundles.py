@@ -6,6 +6,14 @@ Reads `bundles.json` to determine which templates belong to each media package,
 hashes every workflow/asset, writes the consolidated manifest into the core
 package, and mirrors assets into the bundle package directories. A copy of the
 manifest is saved to `prd/phase1-manifest-sample.json` for review.
+
+Cloud-only filtering
+--------------------
+Templates whose ``includeOnDistributions`` list contains only cloud-specific
+values (currently "cloud") are excluded from pip packages because local users
+cannot run them.  During ``sync_bundle_directories`` the index JSON files are
+rewritten on the fly with those entries removed, and the matching workflow
+JSON / thumbnail assets are skipped entirely.
 """
 
 import argparse
@@ -13,6 +21,11 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
+
+# Distribution values that are considered "local" (non-cloud).
+# A template is cloud-only when its includeOnDistributions is non-empty
+# and contains none of these values.
+LOCAL_DISTRIBUTIONS = {"local", "desktop", "mac", "windows"}
 
 ROOT = Path(__file__).resolve().parents[1]
 TEMPLATES_DIR = ROOT / "templates"
@@ -53,6 +66,43 @@ BUNDLE_TARGETS = {
     / "templates",
 }
 BUNDLES_CONFIG = ROOT / "bundles.json"
+
+def get_cloud_only_template_names() -> frozenset[str]:
+    """Return the set of template names that are cloud-only (excluded from pip packages).
+
+    A template is cloud-only when its ``includeOnDistributions`` field is
+    present, non-empty, and contains *no* local-distribution values.
+    """
+    index_path = TEMPLATES_DIR / "index.json"
+    with index_path.open("r", encoding="utf-8") as f:
+        categories = json.load(f)
+
+    cloud_only: set[str] = set()
+    for category in categories:
+        for tmpl in category.get("templates", []):
+            distributions = tmpl.get("includeOnDistributions", [])
+            if distributions and not any(d in LOCAL_DISTRIBUTIONS for d in distributions):
+                cloud_only.add(tmpl["name"])
+    return frozenset(cloud_only)
+
+
+def filter_index_for_pip(raw_json: bytes, cloud_only_names: frozenset[str]) -> bytes:
+    """Return a rewritten index JSON with cloud-only templates removed.
+
+    Works for both the primary ``index.json`` and every locale variant
+    (``index.{locale}.json``), which share the same list-of-categories shape.
+    """
+    categories = json.loads(raw_json)
+    filtered = []
+    for category in categories:
+        templates = [
+            t for t in category.get("templates", [])
+            if t.get("name") not in cloud_only_names
+        ]
+        if templates:
+            filtered.append({**category, "templates": templates})
+    return json.dumps(filtered, indent=2, ensure_ascii=False).encode("utf-8")
+
 
 def sha256_for_file(path: Path) -> str:
     h = hashlib.sha256()
@@ -207,6 +257,22 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
     if dry_run:
         return
 
+    cloud_only_names = get_cloud_only_template_names()
+    if cloud_only_names:
+        print(
+            f"Excluding {len(cloud_only_names)} cloud-only template(s) from pip packages: "
+            + ", ".join(sorted(cloud_only_names))
+        )
+
+    # Index data JSON file stems — these are rewritten (cloud-only entries removed)
+    # rather than copied verbatim.  The schema file is excluded from this set
+    # because it is a JSON Schema object, not a list-of-categories.
+    index_data_stems = {
+        "index",
+        "index.ar", "index.es", "index.fr", "index.ja", "index.ko",
+        "index.pt-BR", "index.ru", "index.tr", "index.zh", "index.zh-TW",
+    }
+
     for target in BUNDLE_TARGETS.values():
         if target.exists():
             shutil.rmtree(target)
@@ -215,15 +281,28 @@ def sync_bundle_directories(manifest: dict, dry_run: bool = False) -> None:
     for template in manifest["templates"]:
         bundle = template["bundle"]
         target_root = BUNDLE_TARGETS[bundle]
+        template_id = template["id"]
+
+        # Skip all assets for cloud-only workflow templates.
+        if template_id in cloud_only_names:
+            continue
+
         for asset in template["assets"]:
             src = TEMPLATES_DIR / asset["filename"]
             if not src.exists():
                 # Some optional assets (e.g., preview) may not exist; skip silently.
                 continue
-            
+
             dest = target_root / asset["filename"]
             dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dest)
+
+            # Index data JSON files are filtered rather than copied verbatim so that
+            # cloud-only template entries are removed from the distributed package.
+            filename_stem = Path(asset["filename"]).stem
+            if filename_stem in index_data_stems and asset["filename"].endswith(".json"):
+                dest.write_bytes(filter_index_for_pip(src.read_bytes(), cloud_only_names))
+            else:
+                shutil.copy2(src, dest)
 
 
 def write_manifest(manifest: dict, dry_run: bool = False) -> None:
