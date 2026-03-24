@@ -20,12 +20,13 @@ import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
+import type { MediaType } from '@/lib/hub-api';
 
 export interface SearchTemplate {
   name: string;
   title: string;
   description: string;
-  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaType: MediaType;
   tags: string[];
   models: string[];
   logos: { provider: string | string[] }[];

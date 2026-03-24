@@ -13,12 +13,13 @@ import WorkflowGrid from './WorkflowGrid.vue';
 import { useHubStore } from '@/composables/useHubStore';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { trackFilterApplied } from '@/lib/posthog';
+import type { MediaType } from '@/lib/hub-api';
 
 export interface SerializedTemplate {
   name: string;
   title: string;
   description: string;
-  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaType: MediaType;
   tags: string[];
   models: string[];
   logos: { provider: string | string[] }[];

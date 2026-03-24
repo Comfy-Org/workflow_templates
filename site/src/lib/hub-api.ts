@@ -14,6 +14,8 @@ const HUB_API_BASE =
 // Types — mirrors backend OpenAPI schemas
 // ---------------------------------------------------------------------------
 
+export type MediaType = 'image' | 'video' | 'audio' | '3d';
+
 export interface LabelRef {
   name: string;
   display_name: string;
@@ -42,7 +44,7 @@ export interface HubWorkflowSummary {
 }
 
 export interface HubWorkflowMetadata {
-  media_type?: string;
+  media_type?: MediaType;
   media_subtype?: string;
   open_source?: boolean;
   size?: number;
@@ -54,7 +56,6 @@ export interface HubWorkflowMetadata {
   suggested_use_cases?: string[];
   faq_items?: Array<{ question: string; answer: string }>;
   content_template?: string;
-  [key: string]: unknown;
 }
 
 export interface HubWorkflowDetail extends HubWorkflowSummary {
@@ -91,7 +92,7 @@ export interface HubWorkflowTemplateEntry {
   models?: string[];
   requiresCustomNodes?: string[];
   thumbnailVariant?: string;
-  mediaType?: string;
+  mediaType?: MediaType;
   mediaSubtype?: string;
   size?: number;
   vram?: number;
@@ -127,7 +128,7 @@ export interface SerializedTemplate {
   shareId: string;
   title: string;
   description: string;
-  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaType: MediaType;
   tags: string[];
   models: string[];
   logos: { provider: string | string[] }[];
@@ -269,7 +270,7 @@ export function serializeIndexEntry(
     shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
-    mediaType: (entry.mediaType || 'image') as 'image' | 'video' | 'audio' | '3d',
+    mediaType: entry.mediaType || 'image',
     tags: entry.tags || [],
     models: entry.models || [],
     logos: (entry.logos || []) as { provider: string | string[] }[],
@@ -293,7 +294,7 @@ export function serializeCollectionEntry(
     name: string;
     title?: string;
     description?: string;
-    mediaType: 'image' | 'video' | 'audio' | '3d';
+    mediaType: MediaType;
     tags?: string[];
     models?: string[];
     logos?: { provider: string | string[] }[];
@@ -367,7 +368,7 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
     title: workflow.name,
     description: workflow.description || '',
     extendedDescription: meta.extended_description || '',
-    mediaType: mediaType as 'image' | 'video' | 'audio' | '3d',
+    mediaType: mediaType,
     mediaSubtype,
     thumbnailVariant: mapThumbnailVariant(workflow.thumbnail_type),
     thumbnails: buildThumbnailList(workflow),
@@ -384,7 +385,7 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function inferMediaType(workflow: HubWorkflowSummary): 'image' | 'video' | 'audio' | '3d' {
+function inferMediaType(workflow: HubWorkflowSummary): MediaType {
   const tags = (workflow.tags || []).map((t) => t.name.toLowerCase());
   if (tags.includes('video') || tags.includes('animation')) return 'video';
   if (tags.includes('audio')) return 'audio';

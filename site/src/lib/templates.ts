@@ -3,6 +3,7 @@
  */
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '../i18n/config';
+import type { MediaType } from './hub-api';
 
 export type Template = CollectionEntry<'templates'>;
 
@@ -94,7 +95,7 @@ export function sortByUsage(templates: Template[]): Template[] {
  */
 export function filterByMediaType(
   templates: Template[],
-  mediaType: 'image' | 'video' | 'audio' | '3d'
+  mediaType: MediaType
 ): Template[] {
   return templates.filter((t) => t.data.mediaType === mediaType);
 }
