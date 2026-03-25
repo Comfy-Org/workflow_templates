@@ -25,13 +25,17 @@ interface SearchDocument {
   tagsArray: string[];
 }
 
-interface CreatorsJson {
-  [username: string]: {
-    displayName: string;
-    handle: string;
-    summary?: string;
-    social?: string;
-  };
+/** Shape returned by GET /api/hub/workflows/index */
+interface IndexEntry {
+  name?: string;
+  title?: string;
+  description?: string;
+  tags?: string[];
+  models?: string[];
+  mediaType?: string;
+  username?: string;
+  thumbnailUrl?: string;
+  shareId?: string;
 }
 
 const MEDIA_TYPE_LABELS: Record<string, string> = {
@@ -41,46 +45,104 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
   '3d': '3D',
 };
 
+async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
+  const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
+  if (!apiUrl) return null;
+  try {
+    const res = await fetch(`${apiUrl}/api/hub/workflows/index`);
+    if (!res.ok) return null;
+    return (await res.json()) as IndexEntry[];
+  } catch {
+    return null;
+  }
+}
+
+async function fetchProfileDisplayName(username: string): Promise<string> {
+  const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
+  if (!apiUrl) return username;
+  try {
+    const res = await fetch(`${apiUrl}/api/hub/profiles/${encodeURIComponent(username)}`);
+    if (!res.ok) return username;
+    const profile = (await res.json()) as { display_name?: string };
+    return profile.display_name || username;
+  } catch {
+    return username;
+  }
+}
+
 export async function buildSearchIndex(): Promise<void> {
   const startTime = Date.now();
 
-  // Load creators mapping
-  const creatorsPath = path.join(SITE_DIR, 'creators.json');
-  let creators: CreatorsJson = {};
-  if (fs.existsSync(creatorsPath)) {
-    creators = JSON.parse(fs.readFileSync(creatorsPath, 'utf-8'));
-  }
-
-  // Read all English template JSONs from synced content
-  const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json') && !f.includes('/'));
-
   const documents: SearchDocument[] = [];
 
-  for (const file of files) {
-    const filePath = path.join(CONTENT_DIR, file);
-    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+  // Try hub API first, fall back to content collection files
+  const hubEntries = await fetchIndexEntries();
+  if (hubEntries) {
+    logger.info(`Building search index from hub API (${hubEntries.length} entries)`);
 
-    const username = data.username || 'ComfyUI';
-    const creatorInfo = creators[username];
-    const creatorName = creatorInfo?.displayName || username;
-    const tags: string[] = data.tags || [];
-    const models: string[] = data.models || [];
-    const thumbnails: string[] = data.thumbnails || [];
+    // Resolve display names from profile API
+    const usernames = [...new Set(hubEntries.map((e) => e.username).filter(Boolean) as string[])];
+    const displayNames = new Map<string, string>();
+    const results = await Promise.allSettled(
+      usernames.map(async (u) => ({ username: u, displayName: await fetchProfileDisplayName(u) }))
+    );
+    for (const r of results) {
+      if (r.status === 'fulfilled') {
+        displayNames.set(r.value.username, r.value.displayName);
+      }
+    }
 
-    documents.push({
-      id: data.name,
-      title: data.title || data.name,
-      description: data.description || '',
-      tags: tags.map(tagSearchText).join(' '),
-      models: models.join(' '),
-      mediaType: data.mediaType || 'image',
-      mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType] || data.mediaType,
-      username,
-      creatorName,
-      thumbnail: thumbnails[0] || '',
-      usage: data.usage || 0,
-      tagsArray: tags.map(tagDisplayName),
-    });
+    for (const data of hubEntries) {
+      const username = data.username || 'ComfyUI';
+      const creatorName = displayNames.get(username) || username;
+      const tags = data.tags || [];
+      const models = data.models || [];
+      const name = data.name || data.shareId || '';
+
+      documents.push({
+        id: name,
+        title: data.title || name,
+        description: data.description || '',
+        tags: tags.map(tagSearchText).join(' '),
+        models: models.join(' '),
+        mediaType: data.mediaType || 'image',
+        mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType || ''] || data.mediaType || 'image',
+        username,
+        creatorName,
+        thumbnail: data.thumbnailUrl || '',
+        usage: 0,
+        tagsArray: tags.map(tagDisplayName),
+      });
+    }
+  } else {
+    // Fallback: read from synced content collection files
+    const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json') && !f.includes('/'));
+    logger.info(`Building search index from content collection (${files.length} files)`);
+
+    for (const file of files) {
+      const filePath = path.join(CONTENT_DIR, file);
+      const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+      const username = data.username || 'ComfyUI';
+      const tags: string[] = data.tags || [];
+      const models: string[] = data.models || [];
+      const thumbnails: string[] = data.thumbnails || [];
+
+      documents.push({
+        id: data.name,
+        title: data.title || data.name,
+        description: data.description || '',
+        tags: tags.map(tagSearchText).join(' '),
+        models: models.join(' '),
+        mediaType: data.mediaType || 'image',
+        mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType] || data.mediaType,
+        username,
+        creatorName: username,
+        thumbnail: thumbnails[0] || '',
+        usage: data.usage || 0,
+        tagsArray: tags.map(tagDisplayName),
+      });
+    }
   }
 
   logger.info(`Indexing ${documents.length} templates...`);

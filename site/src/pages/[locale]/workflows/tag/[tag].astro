@@ -5,6 +5,7 @@
  */
 export const prerender = false;
 
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
@@ -14,13 +15,10 @@ import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { t } from '../../../../i18n/ui';
 import { localizeUrl } from '../../../../i18n/utils';
-import { getTemplatesForLocale } from '../../../../lib/templates';
 import { tagSlug, tagDisplayName } from '../../../../lib/tag-aliases';
 import { SITE_ORIGIN, absoluteUrl } from '../../../../config/site';
 import { badgeVariants } from '../../../../components/ui/badge';
-import creatorsData from '../../../../../creators.json';
-
-const creators = creatorsData as Record<string, { displayName: string }>;
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../../../lib/hub-api';
 
 const { locale, tag } = Astro.params;
 
@@ -30,25 +28,32 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 }
 
 const typedLocale = locale as Locale;
+const profiles = await getProfileCache();
 
-// Get templates for this locale
-const allTemplates = await getTemplatesForLocale(typedLocale);
+// Try hub API first, fall back to content collection
+let allTemplates: SerializedTemplate[];
+try {
+  const entries = await listWorkflowIndex();
+  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles));
+} catch (err) {
+  console.error('Hub API failed, falling back to content collection:', err);
+  const collection = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
+  allTemplates = collection.map((t) => serializeCollectionEntry(t.data, profiles));
+}
 
 // Find templates matching this tag slug
-const matchingTemplates = allTemplates
-  .filter((tmpl) => {
-    const tags = tmpl.data.tags || [];
-    return tags.some((t: string) => tagSlug(t) === tag);
-  })
-  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+const matchingTemplates = allTemplates.filter((tmpl) =>
+  tmpl.tags.some((t: string) => tagSlug(t) === tag)
+);
 
 if (matchingTemplates.length === 0) {
   return Astro.redirect(`/${locale}/workflows/`);
 }
 
 // Get display name from the first matching tag
-const firstMatchingTag =
-  matchingTemplates[0].data.tags?.find((t: string) => tagSlug(t) === tag) || tag || '';
+const firstMatchingTag = matchingTemplates[0].tags?.find(
+  (t: string) => tagSlug(t) === tag
+) || tag || '';
 const tagName = tagDisplayName(firstMatchingTag);
 
 const basePath = `/workflows/tag/${tag}/`;
@@ -81,22 +86,8 @@ const breadcrumbStructuredData = {
   ],
 };
 
-// Serialize templates for the Vue WorkflowGrid island
-const serialized = matchingTemplates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  tags: tmpl.data.tags || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
-  creatorDisplayName:
-    (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
-  isApp: tmpl.data.isApp || false,
-  thumbnailVariant: tmpl.data.thumbnailVariant,
-  mediaSubtype: tmpl.data.mediaSubtype,
-}));
+// matchingTemplates are already SerializedTemplate[] with profile data
+const serialized = matchingTemplates;
 ---
 
 <BaseLayout

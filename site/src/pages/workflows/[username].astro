@@ -1,119 +1,178 @@
 ---
 /**
- * Profile page - /workflows/:username
+ * Creator profile page — ISR
+ * /workflows/[username]/
+ *
  * Displays a creator's profile with sidebar card and workflow grid.
- * Reads profile data from creators.json and filters templates by username field.
+ * Rendered on first request, then cached at CDN edge.
+ * Data source: Hub API (listWorkflowIndex + getProfile).
  */
-import { getCollection } from 'astro:content';
+export const prerender = false;
+
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import SidebarSection from '../../components/template-detail/SidebarSection.astro';
+import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
 import BackButton from '../../components/BackButton.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { getLocaleFromPath } from '../../i18n/utils';
-import { absoluteUrl } from '../../config/site';
-import { slugify } from '../../lib/slugify';
-import { creatorOgUrl } from '../../lib/og-url';
-import creatorsData from '../../../creators.json';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
+import { DEFAULT_LOCALE } from '../../i18n/config';
+import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
+import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 
-interface CreatorProfile {
-  displayName: string;
-  handle: string;
-  summary: string;
-  social?: string | string[];
-  avatarUrl?: string;
-  coverUrl?: string;
-}
-
-const creators = creatorsData as Record<string, CreatorProfile>;
-
-// Build slug → raw username lookup
-const slugToUsername = new Map<string, string>();
-for (const key of Object.keys(creators)) {
-  slugToUsername.set(slugify(key), key);
-}
-
-export function getStaticPaths() {
-  const data = creatorsData as Record<string, CreatorProfile>;
-  return Object.keys(data).map((key) => ({ params: { username: slugify(key) } }));
-}
+// ISR: cache for 60s, serve stale for up to 10 min while revalidating
+Astro.response.headers.set(
+  'CDN-Cache-Control',
+  'public, max-age=60, stale-while-revalidate=600'
+);
 
 const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
-const rawUsername = slugToUsername.get(slugParam!)!;
-const creator = creators[rawUsername];
 
-const templates = await getCollection('templates');
-const profileTemplates = templates
-  .filter((tmpl) => !tmpl.id.includes('/') && tmpl.data.username === rawUsername)
-  .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+if (!slugParam) {
+  return Astro.redirect('/workflows/');
+}
+
+// If URL contains a share_id suffix, this is a workflow detail page — not a creator profile.
+const detailShareId = extractShareId(slugParam);
+let isDetailPage = false;
+let detailData: ReturnType<typeof toTemplateData> | null = null;
+
+if (detailShareId) {
+  try {
+    const workflow = await getWorkflow(detailShareId);
+    detailData = toTemplateData(workflow);
+    isDetailPage = true;
+  } catch (err) {
+    const is404 = err instanceof Error && err.message.includes('404');
+    if (!is404) {
+      console.error('Hub API error on ISR detail:', err);
+    }
+    return Astro.redirect('/workflows/');
+  }
+}
+
+// Fetch profile — try dedicated endpoint first, fall back to index-embedded profiles
+let displayName = slugParam;
+let avatarUrl: string | null = null;
+let description = '';
+let websiteUrls: string[] = [];
+try {
+  const profile = await getProfile(slugParam);
+  displayName = profile.display_name || slugParam;
+  avatarUrl = profile.avatar_url || null;
+  description = profile.description || '';
+  websiteUrls = profile.website_urls || [];
+} catch {
+  // Profile endpoint unavailable — fall back to cached profile from index
+  const profiles = await getProfileCache();
+  const cached = profiles.get(slugParam);
+  if (cached) {
+    displayName = cached.display_name || slugParam;
+    avatarUrl = cached.avatar_url || null;
+    description = cached.description || '';
+    websiteUrls = cached.website_urls || [];
+  }
+}
+
+// Fetch workflows for this creator from index
+const profiles = await getProfileCache();
+let serialized: SerializedTemplate[] = [];
+
+try {
+  const entries = await listWorkflowIndex();
+  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
+  serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
+} catch {
+  // Index API failed — show empty grid
+}
+
+// If no profile and no workflows, redirect
+if (!displayName && serialized.length === 0) {
+  return Astro.redirect('/workflows/');
+}
 
 const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
 
-// Serialize template data for the Vue island (plain objects only)
-const serialized = profileTemplates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  tags: tmpl.data.tags || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
-  creatorDisplayName: creator.displayName,
-  creatorAvatarUrl: creator.avatarUrl || '',
-  isApp: tmpl.data.isApp || false,
-  thumbnailVariant: tmpl.data.thumbnailVariant,
-  mediaSubtype: tmpl.data.mediaSubtype,
-}));
-
-// Parse social link for display
+// Parse social links from website_urls
 function getSocialDisplay(social: string): { label: string; url: string } {
   const url =
     social.startsWith('http://') || social.startsWith('https://') ? social : `https://${social}`;
 
-  if (social.includes('x.com') || social.includes('twitter.com')) {
-    return { label: 'X', url };
-  }
-  if (social.includes('instagram.com')) {
-    return { label: 'Instagram', url };
-  }
-  if (social.includes('youtube.com') || social.includes('youtu.be')) {
-    return { label: 'YouTube', url };
-  }
-  if (social.includes('tiktok.com')) {
-    return { label: 'TikTok', url };
-  }
-  if (social.includes('linkedin.com')) {
-    return { label: 'LinkedIn', url };
-  }
-  if (social.includes('github.com')) {
-    return { label: 'GitHub', url };
-  }
-  if (social.includes('facebook.com')) {
-    return { label: 'Facebook', url };
-  }
-  if (social.includes('threads.net') || social.includes('threads.com')) {
-    return { label: 'Threads', url };
-  }
+  if (social.includes('x.com') || social.includes('twitter.com')) return { label: 'X', url };
+  if (social.includes('instagram.com')) return { label: 'Instagram', url };
+  if (social.includes('youtube.com') || social.includes('youtu.be')) return { label: 'YouTube', url };
+  if (social.includes('tiktok.com')) return { label: 'TikTok', url };
+  if (social.includes('linkedin.com')) return { label: 'LinkedIn', url };
+  if (social.includes('github.com')) return { label: 'GitHub', url };
+  if (social.includes('facebook.com')) return { label: 'Facebook', url };
+  if (social.includes('threads.net') || social.includes('threads.com')) return { label: 'Threads', url };
   return { label: 'Website', url };
 }
 
-function getSocialLinks(social?: string | string[]): { label: string; url: string }[] {
-  if (!social) return [];
-  const entries = Array.isArray(social) ? social : [social];
-  return entries.map(getSocialDisplay);
-}
+const socialLinks = websiteUrls.map(getSocialDisplay);
 
-const socialLinks = getSocialLinks(creator.social);
+// Detail page variables (only used when isDetailPage is true)
+const detailTitle = detailData ? `${detailData.title || detailData.name} - ComfyUI Workflow` : '';
+const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slugParam}/`) : '';
+const detailThumbnails = detailData?.thumbnails || [];
+const detailPrimaryThumbnail = detailThumbnails[0] || null;
+const detailOgImage = detailData ? workflowOgUrl(
+  detailData.title || detailData.name,
+  detailPrimaryThumbnail || undefined,
+  detailData.username || undefined
+) : '';
+const detailStructuredData = detailData ? {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: detailData.title || detailData.name,
+  description: detailData.description,
+  image: detailPrimaryThumbnail || undefined,
+  datePublished: detailData.date,
+  inLanguage: 'en',
+} : null;
+const detailBreadcrumb = detailData ? {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
+    { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
+    { '@type': 'ListItem', position: 3, name: detailData.title || detailData.name, item: detailCanonicalUrl },
+  ],
+} : null;
 ---
 
+{isDetailPage && detailData ? (
 <BaseLayout
-  title={`${creator.displayName} (@${creator.handle}) - ComfyUI Workflow Templates`}
-  description={creator.summary}
+  title={detailTitle}
+  description={detailData.metaDescription || detailData.description}
+  canonicalUrl={detailCanonicalUrl}
+  ogImage={detailOgImage}
+  ogType="article"
+  structuredData={detailStructuredData ?? undefined}
+  hreflangBasePath={`/workflows/${slugParam}/`}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <TemplateDetailPage template={{ data: detailData }} locale={DEFAULT_LOCALE} />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={JSON.stringify(detailBreadcrumb)}
+  />
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
+) : (
+<BaseLayout
+  title={`${displayName} (@${slugParam}) - ComfyUI Workflow Templates`}
+  description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
-  ogImage={creatorOgUrl(creator.displayName, creator.handle, creator.avatarUrl)}
+  ogImage={creatorOgUrl(displayName, slugParam!, avatarUrl || undefined)}
   theme="dark"
   hideDefaultFooter
 >
@@ -130,29 +189,31 @@ const socialLinks = getSocialLinks(creator.social);
             <!-- Avatar -->
             <div class="flex flex-col gap-4">
               {
-                creator.avatarUrl ? (
+                avatarUrl ? (
                   <img
-                    src={creator.avatarUrl}
-                    alt={creator.displayName}
+                    src={avatarUrl}
+                    alt={displayName}
                     class="size-16 rounded-full object-cover"
                   />
                 ) : (
                   <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
                     <span class="text-black text-2xl font-bold">
-                      {creator.displayName.charAt(0).toUpperCase()}
+                      {displayName.charAt(0).toUpperCase()}
                     </span>
                   </div>
                 )
               }
               <!-- Name & Handle -->
               <div class="flex flex-col">
-                <p class="text-white text-base font-bold">{creator.displayName}</p>
-                <p class="text-hub-muted text-sm">@{creator.handle}</p>
+                <p class="text-white text-base font-bold">{displayName}</p>
+                <p class="text-hub-muted text-sm">@{slugParam}</p>
               </div>
             </div>
 
             <!-- Bio -->
-            <p class="text-hub-muted text-sm leading-normal">{creator.summary}</p>
+            {description && (
+              <p class="text-hub-muted text-sm leading-normal">{description}</p>
+            )}
 
             <!-- Social Links -->
             {
@@ -190,3 +251,4 @@ const socialLinks = getSocialLinks(creator.social);
     <SiteFooter />
   </Fragment>
 </BaseLayout>
+)}

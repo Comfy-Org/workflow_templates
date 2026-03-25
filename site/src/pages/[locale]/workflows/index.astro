@@ -6,6 +6,7 @@
  */
 export const prerender = false;
 
+import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import HubHero from '../../../components/hub/HubHero.astro';
@@ -13,11 +14,10 @@ import HubBrowse from '../../../components/hub/HubBrowse.vue';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
-import { getTemplatesForLocale, sortByUsage } from '../../../lib/templates';
 import { absoluteUrl } from '../../../config/site';
-import creatorsData from '../../../../creators.json';
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../../lib/hub-api';
 
-const creators = creatorsData as Record<string, { displayName: string; avatarUrl?: string }>;
+const profiles = await getProfileCache();
 const { locale } = Astro.params;
 
 // Validate locale
@@ -27,9 +27,19 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-// Get templates for this locale (with English fallback)
-const templates = await getTemplatesForLocale(typedLocale);
-const allTemplates = sortByUsage(templates);
+// Try hub API first, fall back to content collection
+let serialized: SerializedTemplate[];
+try {
+  const entries = await listWorkflowIndex();
+  serialized = entries.map((e) => serializeIndexEntry(e, profiles));
+} catch (err) {
+  console.error('Hub API failed, falling back to content collection:', err);
+  const templates = await getCollection('templates');
+  const allTemplates = templates
+    .filter((tmpl) => !tmpl.id.includes('/'))
+    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
+  serialized = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
+}
 
 const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
 
@@ -41,27 +51,6 @@ const structuredData = {
   url: canonicalUrl,
   inLanguage: locale,
 };
-
-// Serialize template data for the Vue island (plain objects only)
-const serialized = allTemplates.map((tmpl) => ({
-  name: tmpl.data.name,
-  title: tmpl.data.title || tmpl.data.name,
-  description: tmpl.data.description || '',
-  mediaType: tmpl.data.mediaType,
-  tags: tmpl.data.tags || [],
-  models: tmpl.data.models || [],
-  logos: tmpl.data.logos || [],
-  usage: tmpl.data.usage || 0,
-  date: tmpl.data.date || '',
-  thumbnails: tmpl.data.thumbnails || [],
-  username: tmpl.data.username || '',
-  creatorDisplayName:
-    (tmpl.data.username && creators[tmpl.data.username]?.displayName) || 'ComfyUI',
-  creatorAvatarUrl: (tmpl.data.username && creators[tmpl.data.username]?.avatarUrl) || '',
-  isApp: tmpl.data.isApp || false,
-  thumbnailVariant: tmpl.data.thumbnailVariant,
-  mediaSubtype: tmpl.data.mediaSubtype,
-}));
 
 const mediaTypes = ['image', 'video', 'audio', '3d'];
 ---

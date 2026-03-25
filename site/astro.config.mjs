@@ -34,13 +34,28 @@ const buildDate = new Date().toISOString();
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
 const nonDefaultLocales = locales.filter((l) => l !== 'en');
 
-// Build sitemap URLs for on-demand locale pages (not discovered at build time)
+// Custom sitemap pages for ISR routes not discovered at build time
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://www.comfy.org').replace(/\/$/, '');
-const templateNames = [...templateDates.keys()];
-const localeCustomPages = nonDefaultLocales.flatMap((locale) => [
-  `${siteOrigin}/${locale}/workflows/`,
-  ...templateNames.map((name) => `${siteOrigin}/${locale}/workflows/${name}/`),
-]);
+
+// Creator profile pages — extract unique usernames from synced templates
+const creatorUsernames = new Set();
+if (fs.existsSync(templatesDir)) {
+  const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
+  for (const file of files) {
+    try {
+      const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
+      if (content.username) creatorUsernames.add(content.username);
+    } catch {
+      // Skip invalid JSON
+    }
+  }
+}
+
+const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
+const localeCustomPages = nonDefaultLocales.map((locale) =>
+  `${siteOrigin}/${locale}/workflows/`
+);
+const customPages = [...creatorPages, ...localeCustomPages];
 
 // https://astro.build/config
 export default defineConfig({
@@ -63,7 +78,7 @@ export default defineConfig({
       // Include Framer's marketing sitemap in the index
       customSitemaps: ['https://www.comfy.org/sitemap.xml'],
       // Include on-demand locale pages that aren't discovered at build time
-      customPages: localeCustomPages,
+      customPages: customPages,
       serialize(item) {
         const url = new URL(item.url);
         const pathname = url.pathname;
@@ -130,8 +145,26 @@ export default defineConfig({
         item.priority = 0.5;
         return item;
       },
-      // Exclude OG image routes from sitemap
-      filter: (page) => !page.includes('/workflows/og/') && !page.includes('/workflows/og.png'),
+      // Exclude OG image routes and legacy redirect pages from sitemap.
+      // Legacy redirects are /workflows/{slug}/ without a 12-char hex share_id suffix.
+      // Canonical detail pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
+      filter: (page) => {
+        if (page.includes('/workflows/og/') || page.includes('/workflows/og.png')) return false;
+        // Check if this is a workflow detail path (not category/tag/model/creators)
+        const match = page.match(/\/workflows\/([^/]+)\/$/);
+        if (match) {
+          const segment = match[1];
+          // Skip known sub-paths
+          if (['category', 'tag', 'model', 'creators'].some((p) => page.includes(`/workflows/${p}/`))) return true;
+          // Include if it has a share_id suffix (12 hex chars after last hyphen)
+          const lastHyphen = segment.lastIndexOf('-');
+          if (lastHyphen === -1) return false; // No hyphen = legacy redirect
+          const candidate = segment.slice(lastHyphen + 1);
+          if (candidate.length === 12 && /^[0-9a-f]+$/.test(candidate)) return true;
+          return false; // Has hyphen but not a valid share_id = legacy redirect
+        }
+        return true;
+      },
     }),
     vue(),
   ],

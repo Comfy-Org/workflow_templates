@@ -3,46 +3,26 @@ import { getCollection } from 'astro:content';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import SearchPopover from './SearchPopover.vue';
 import MobileFilterDrawer from './MobileFilterDrawer.vue';
-import creatorsData from '../../../creators.json';
-
-type SearchTemplate = {
-  name: string;
-  title: string;
-  description: string;
-  mediaType: 'image' | 'video' | 'audio' | '3d';
-  tags: string[];
-  models: string[];
-  logos: { provider: string | string[] }[];
-  usage: number;
-  date: string;
-  thumbnails: string[];
-  username: string;
-  creatorDisplayName: string;
-  creatorAvatarUrl: string;
-  isApp: boolean;
-};
+import { getProfileCache, serializeCollectionEntry, type SerializedTemplate } from '../../lib/hub-api';
 
 interface Props {
-  templates?: SearchTemplate[];
+  templates?: SerializedTemplate[];
 }
 
-const creatorsMap = creatorsData as Record<
-  string,
-  { displayName: string; handle?: string; summary?: string; social?: string | string[]; avatarUrl?: string }
->;
+const profiles = await getProfileCache();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
-// Serialize creators.json into a flat array for SearchPopover
-const creatorsList = Object.entries(creatorsMap).map(([username, data]) => ({
+// Derive creators list from profile cache (hub API)
+const creatorsList = Array.from(profiles.entries()).map(([username, profile]) => ({
   username,
-  displayName: data.displayName || username,
-  summary: data.summary || '',
-  social: data.social || '',
-  avatarUrl: data.avatarUrl || '',
+  displayName: profile.display_name || username,
+  summary: profile.description || '',
+  social: profile.website_urls || '',
+  avatarUrl: profile.avatar_url || '',
 }));
 
 // Use provided templates or fetch and serialize them
-let templates: SearchTemplate[];
+let templates: SerializedTemplate[];
 if (Astro.props.templates && Astro.props.templates.length > 0) {
   templates = Astro.props.templates;
 } else {
@@ -50,23 +30,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
     .filter((tmpl) => !tmpl.id.includes('/'))
     .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
 
-  templates = allTemplates.map((tmpl) => ({
-    name: tmpl.data.name,
-    title: tmpl.data.title || tmpl.data.name,
-    description: tmpl.data.description || '',
-    mediaType: tmpl.data.mediaType,
-    tags: tmpl.data.tags || [],
-    models: tmpl.data.models || [],
-    logos: tmpl.data.logos || [],
-    usage: tmpl.data.usage || 0,
-    date: tmpl.data.date || '',
-    thumbnails: tmpl.data.thumbnails || [],
-    username: tmpl.data.username || '',
-    creatorDisplayName:
-      (tmpl.data.username && creatorsMap[tmpl.data.username]?.displayName) || 'ComfyUI',
-    creatorAvatarUrl: (tmpl.data.username && creatorsMap[tmpl.data.username]?.avatarUrl) || '',
-    isApp: tmpl.data.isApp || false,
-  }));
+  templates = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
 }
 ---
 

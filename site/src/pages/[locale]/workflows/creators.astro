@@ -2,10 +2,10 @@
 /**
  * Localized creators listing page (on-demand rendered)
  * Serves pages like /zh/workflows/creators/, /ja/workflows/creators/, etc.
+ * Data source: Hub API (listWorkflowIndex + getProfileCache).
  */
 export const prerender = false;
 
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
@@ -14,18 +14,7 @@ import BackButton from '../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { localizeUrl } from '../../../i18n/utils';
 import { absoluteUrl } from '../../../config/site';
-import { slugify } from '../../../lib/slugify';
-import creatorsData from '../../../../creators.json';
-
-interface CreatorProfile {
-  displayName: string;
-  handle: string;
-  summary: string;
-  social?: string | string[];
-  avatarUrl?: string;
-}
-
-const creators = creatorsData as Record<string, CreatorProfile>;
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../../lib/hub-api';
 
 const { locale } = Astro.params;
 
@@ -35,37 +24,44 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 }
 
 const typedLocale = locale as Locale;
+const profiles = await getProfileCache();
 
-const templates = await getCollection('templates');
+// Fetch all workflows from hub API
+let allTemplates: SerializedTemplate[] = [];
+try {
+  const entries = await listWorkflowIndex();
+  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles));
+} catch (err) {
+  console.error('Hub API failed for creators page:', err);
+  // API failed — show empty page
+}
 
-// Group templates by username, excluding ComfyUI
+// Group templates by username
 const creatorMap = new Map<
   string,
-  { profile: CreatorProfile; username: string; templates: typeof templates; totalUsage: number }
+  { displayName: string; avatarUrl: string; username: string; templates: SerializedTemplate[] }
 >();
 
-for (const tmpl of templates) {
-  if (tmpl.id.includes('/')) continue;
-  const username = tmpl.data.username;
-  if (!username || username === 'ComfyUI') continue;
-  const profile = creators[username];
-  if (!profile) continue;
+for (const tmpl of allTemplates) {
+  const username = tmpl.username;
+  if (!username) continue;
 
   if (!creatorMap.has(username)) {
-    creatorMap.set(username, { profile, username, templates: [], totalUsage: 0 });
+    const profile = profiles.get(username);
+    creatorMap.set(username, {
+      displayName: profile?.display_name || username,
+      avatarUrl: profile?.avatar_url || '',
+      username,
+      templates: [],
+    });
   }
-  const group = creatorMap.get(username)!;
-  group.templates.push(tmpl);
-  group.totalUsage += tmpl.data.usage || 0;
+  creatorMap.get(username)!.templates.push(tmpl);
 }
 
-// Sort creators by total usage (most popular first)
-const sortedCreators = Array.from(creatorMap.values()).sort((a, b) => b.totalUsage - a.totalUsage);
-
-// Sort each creator's templates by usage
-for (const group of sortedCreators) {
-  group.templates.sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
-}
+// Sort creators by template count (most first)
+const sortedCreators = Array.from(creatorMap.values()).sort(
+  (a, b) => b.templates.length - a.templates.length
+);
 
 const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
 ---
@@ -100,40 +96,35 @@ const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
         <!-- Creator rows -->
         <div class="flex flex-col gap-16 pt-8">
           {
-            sortedCreators.map(({ profile, username, templates: tmplList }) => (
+            sortedCreators.map(({ displayName, avatarUrl, username, templates: tmplList }) => (
               <div class="flex flex-col lg:flex-row gap-8 lg:gap-14 items-start">
                 {/* Creator profile info */}
                 <div class="w-full lg:w-52 shrink-0 flex flex-col gap-6">
                   {/* Avatar */}
-                  {profile.avatarUrl ? (
+                  {avatarUrl ? (
                     <img
-                      src={profile.avatarUrl}
-                      alt={profile.displayName}
+                      src={avatarUrl}
+                      alt={displayName}
                       class="size-16 rounded-full object-cover"
                     />
                   ) : (
                     <div class="size-16 rounded-full bg-gradient-to-br from-[#c8ff00] to-[#a0cc00] flex items-center justify-center">
                       <span class="text-black text-lg font-bold">
-                        {profile.displayName.charAt(0).toUpperCase()}
+                        {displayName.charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )}
 
                   {/* Name & Handle */}
                   <div class="flex flex-col gap-2">
-                    <p class="font-bold text-base text-white">{profile.displayName}</p>
-                    <p class="text-sm text-hub-muted">@{profile.handle}</p>
+                    <p class="font-bold text-base text-white">{displayName}</p>
+                    <p class="text-sm text-hub-muted">@{username}</p>
                   </div>
-
-                  {/* Summary */}
-                  <p class="text-xs text-hub-muted leading-normal line-clamp-3">
-                    {profile.summary}
-                  </p>
 
                   {/* Open Profile button */}
                   <div>
                     <a
-                      href={localizeUrl(`/workflows/${slugify(username)}/`, typedLocale)}
+                      href={localizeUrl(`/workflows/${username}/`, typedLocale)}
                       class="inline-flex items-center justify-center gap-1 h-8 px-4 rounded-full bg-hub-surface text-xs text-white hover:brightness-125 transition-all"
                     >
                       Open Profile
@@ -160,18 +151,19 @@ const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
                   {tmplList.slice(0, 5).map((tmpl) => (
                     <HubWorkflowCard
                       client:load
-                      name={tmpl.data.name}
-                      title={tmpl.data.title || tmpl.data.name}
-                      tags={tmpl.data.tags}
-                      logos={tmpl.data.logos}
-                      thumbnails={tmpl.data.thumbnails}
-                      username={tmpl.data.username}
-                      creatorDisplayName={profile.displayName}
-                      creatorAvatarUrl={profile.avatarUrl}
+                      name={tmpl.name}
+                      title={tmpl.title}
+                      shareId={tmpl.shareId}
+                      tags={tmpl.tags}
+                      logos={tmpl.logos}
+                      thumbnails={tmpl.thumbnails}
+                      username={tmpl.username}
+                      creatorDisplayName={displayName}
+                      creatorAvatarUrl={avatarUrl}
                       locale={typedLocale}
                       hideAuthor
-                      thumbnailVariant={tmpl.data.thumbnailVariant}
-                      mediaSubtype={tmpl.data.mediaSubtype}
+                      thumbnailVariant={tmpl.thumbnailVariant}
+                      mediaSubtype={tmpl.mediaSubtype}
                     />
                   ))}
                 </div>

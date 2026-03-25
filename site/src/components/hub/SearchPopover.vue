@@ -20,12 +20,13 @@ import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
+import type { MediaType } from '@/lib/hub-api';
 
 export interface SearchTemplate {
   name: string;
   title: string;
   description: string;
-  mediaType: 'image' | 'video' | 'audio' | '3d';
+  mediaType: MediaType;
   tags: string[];
   models: string[];
   logos: { provider: string | string[] }[];
@@ -228,7 +229,7 @@ const displayedWorkflows = computed(() => {
   return [];
 });
 
-// Creator search — matches against the full creators.json list
+// Creator search — matches against the creators list from hub API profiles
 const matchedCreators = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return [];
@@ -291,7 +292,7 @@ const popularWorkflows = computed(() =>
   [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
 );
 
-// Top creators from creators.json, enriched with workflow count + total usage
+// Top creators from hub API profiles, enriched with workflow count + total usage
 const topCreators = computed(() => {
   const usageMap = new Map<string, { count: number; usage: number }>();
   for (const tmpl of props.templates) {
@@ -511,6 +512,7 @@ function getPrimaryThumb(thumbnails: string[]): string | null {
   if (thumbnails.length === 0) return null;
   const file = thumbnails[0];
   if (isAudioFile(file) || file.endsWith('.mp4')) return null;
+  if (file.startsWith('http://') || file.startsWith('https://')) return file;
   return `/workflows/thumbnails/${file}`;
 }
 
@@ -1082,7 +1084,7 @@ onUnmounted(() => {
                   <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
                     <img
                       v-if="hit.thumbnail && !isAudioFile(hit.thumbnail)"
-                      :src="`/workflows/thumbnails/${hit.thumbnail}`"
+                      :src="hit.thumbnail.startsWith('http') ? hit.thumbnail : `/workflows/thumbnails/${hit.thumbnail}`"
                       :alt="hit.title"
                       loading="lazy"
                       class="w-full h-full object-cover"

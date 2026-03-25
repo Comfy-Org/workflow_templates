@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
+import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 
 const MODEL_TO_LOGO: Record<string, string> = {
@@ -42,11 +43,10 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Bria: 'bria',
 };
 
-type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
-
 interface Props {
   name: string;
   title: string;
+  shareId?: string;
   tags?: string[];
   logos?: { provider: string | string[] }[];
   thumbnails?: string[];
@@ -93,7 +93,8 @@ const logoPath = computed(() => (providerName.value ? getLogoPath(providerName.v
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
 const templateUrl = computed(() => {
-  const base = `/workflows/${props.name}/`;
+  const slug = props.shareId ? `${props.name}-${props.shareId}` : props.name;
+  const base = `/workflows/${slug}/`;
   return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
 });
 
@@ -116,6 +117,7 @@ const primaryUrl = computed(() => {
   if (f.endsWith('.mp3') || f.endsWith('.webm') || f.endsWith('.mp4') || f.endsWith('.mov')) {
     return null;
   }
+  if (f.startsWith('http://') || f.startsWith('https://')) return f;
   return `/workflows/thumbnails/${f}`;
 });
 
@@ -130,7 +132,9 @@ const hasSecondImage = computed(() => {
 
 const secondaryUrl = computed(() => {
   if (!hasSecondImage.value || !secondaryFile.value) return null;
-  return `/workflows/thumbnails/${secondaryFile.value}`;
+  const f = secondaryFile.value;
+  if (f.startsWith('http://') || f.startsWith('https://')) return f;
+  return `/workflows/thumbnails/${f}`;
 });
 
 const showCompare = computed(
