@@ -8,7 +8,7 @@
  */
 
 const HUB_API_BASE =
-  (import.meta.env.PUBLIC_HUB_API_URL || 'https://api.comfy.org').replace(/\/$/, '');
+  (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(/\/$/, '');
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
