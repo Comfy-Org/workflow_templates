@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { getCloudCtaUrl } from '../../src/lib/urls';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { getCloudCtaUrl, getCloudLandingUrl, getComfyCloudBaseUrl } from '../../src/lib/urls';
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+});
 
 describe('getCloudCtaUrl', () => {
   it('includes all required UTM parameters', () => {
@@ -13,14 +17,24 @@ describe('getCloudCtaUrl', () => {
     expect(parsed.searchParams.get('template')).toBe('my-template');
   });
 
-  it('uses cloud.comfy.org as base', () => {
+  it('uses cloud.comfy.org as the default base', () => {
     const url = getCloudCtaUrl('test', 'footer');
-    expect(url).toContain('cloud.comfy.org');
+    expect(new URL(url).origin).toBe('https://cloud.comfy.org');
   });
 
   it('does not include mode parameter', () => {
     const url = getCloudCtaUrl('test', 'nav');
     const parsed = new URL(url);
     expect(parsed.searchParams.has('mode')).toBe(false);
+  });
+
+  it('uses PUBLIC_COMFY_CLOUD_URL when set', () => {
+    vi.stubEnv('PUBLIC_COMFY_CLOUD_URL', 'https://testcloud.comfy.org');
+
+    expect(getComfyCloudBaseUrl()).toBe('https://testcloud.comfy.org');
+    expect(new URL(getCloudCtaUrl('test', 'hero')).origin).toBe('https://testcloud.comfy.org');
+    expect(new URL(getCloudLandingUrl('site_button')).origin).toBe(
+      'https://testcloud.comfy.org'
+    );
   });
 });

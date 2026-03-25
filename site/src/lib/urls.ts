@@ -1,4 +1,30 @@
-const COMFY_CLOUD_BASE_URL = 'https://cloud.comfy.org/';
+const DEFAULT_COMFY_CLOUD_URL = 'https://cloud.comfy.org';
+
+function normalizeCloudUrl(raw?: string): string {
+  const value = raw?.trim();
+  if (!value) return DEFAULT_COMFY_CLOUD_URL;
+
+  try {
+    return new URL(value).origin;
+  } catch {
+    return DEFAULT_COMFY_CLOUD_URL;
+  }
+}
+
+export function getComfyCloudBaseUrl(): string {
+  return normalizeCloudUrl(import.meta.env.PUBLIC_COMFY_CLOUD_URL);
+}
+
+export function getCloudLandingUrl(ctaContent: string): string {
+  const params = new URLSearchParams({
+    utm_source: 'workflow_hub',
+    utm_medium: 'site_CTA',
+    utm_campaign: 'hub_preview',
+    utm_content: ctaContent,
+  });
+
+  return `${getComfyCloudBaseUrl()}/?${params.toString()}`;
+}
 
 export function getCloudCtaUrl(templateName: string, ctaLocation: string): string {
   const params = new URLSearchParams({
@@ -10,5 +36,5 @@ export function getCloudCtaUrl(templateName: string, ctaLocation: string): strin
     utm_term: ctaLocation,
   });
 
-  return `${COMFY_CLOUD_BASE_URL}?${params.toString()}`;
+  return `${getComfyCloudBaseUrl()}/?${params.toString()}`;
 }

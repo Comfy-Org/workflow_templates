@@ -66,7 +66,7 @@ test.describe('Template Detail Page', () => {
     await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('a.run-cloud-btn');
     expect(await ctaLinks.count()).toBeGreaterThan(0);
   });
 
@@ -313,7 +313,7 @@ test.describe('UTM Parameter Tracking', () => {
     await page.waitForLoadState('networkidle');
 
     // Scope to article to exclude navbar CTA links
-    const ctaLinks = page.locator('article a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('article a.run-cloud-btn');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
@@ -346,7 +346,7 @@ test.describe('UTM Parameter Tracking', () => {
     expect(slug).toBeTruthy();
 
     // Scope to article to exclude navbar CTA links
-    const ctaLinks = page.locator('article a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('article a.run-cloud-btn');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
