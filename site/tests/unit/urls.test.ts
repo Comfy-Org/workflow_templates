@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getCloudCtaUrl, getCloudLandingUrl, getComfyCloudBaseUrl } from '../../src/lib/urls';
+import {
+  getCloudCtaUrl,
+  getCloudLandingUrl,
+  getComfyCloudBaseUrl,
+  getWorkflowDownloadUrl,
+} from '../../src/lib/urls';
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -35,6 +40,13 @@ describe('getCloudCtaUrl', () => {
     expect(new URL(getCloudCtaUrl('test', 'hero')).origin).toBe('https://testcloud.comfy.org');
     expect(new URL(getCloudLandingUrl('site_button')).origin).toBe(
       'https://testcloud.comfy.org'
+    );
+  });
+
+  it('builds canonical workflow download URLs from shareId', () => {
+    expect(getWorkflowDownloadUrl('abc123def456')).toBe('/workflows/download/abc123def456.json');
+    expect(getWorkflowDownloadUrl('abc123def456', 'video_ltx2_3_i2v')).toBe(
+      '/workflows/download/abc123def456.json?filename=video_ltx2_3_i2v'
     );
   });
 });

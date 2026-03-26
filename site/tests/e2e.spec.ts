@@ -70,6 +70,22 @@ test.describe('Template Detail Page', () => {
     expect(await ctaLinks.count()).toBeGreaterThan(0);
   });
 
+  test('uses canonical download route', async ({ page }) => {
+    await page.goto('/workflows/');
+    const firstCard = templateCardLink(page);
+    await expect(firstCard).toBeAttached({ timeout: 10000 });
+    const href = await firstCard.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
+    await page.waitForLoadState('networkidle');
+
+    const downloadLink = page.locator('a.download-json-btn').first();
+    await expect(downloadLink).toBeAttached();
+    const downloadHref = await downloadLink.getAttribute('href');
+    expect(downloadHref).toMatch(/^\/workflows\/download\/[^/]+\.json(?:\?.*)?$/);
+  });
+
   test('has structured data', async ({ page }) => {
     await page.goto('/workflows/');
     const firstCard = templateCardLink(page);

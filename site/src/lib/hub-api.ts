@@ -372,6 +372,7 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
 
   return {
     name: workflow.share_id,
+    shareId: workflow.share_id,
     title: workflow.name,
     description: workflow.description || '',
     extendedDescription: meta.extended_description || '',

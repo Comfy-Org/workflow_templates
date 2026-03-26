@@ -38,3 +38,11 @@ export function getCloudCtaUrl(templateName: string, ctaLocation: string): strin
 
   return `${getComfyCloudBaseUrl()}/?${params.toString()}`;
 }
+
+export function getWorkflowDownloadUrl(shareId: string, filename?: string): string {
+  const params = new URLSearchParams();
+  if (filename) params.set('filename', filename);
+  const query = params.toString();
+
+  return `/workflows/download/${encodeURIComponent(shareId)}.json${query ? `?${query}` : ''}`;
+}
