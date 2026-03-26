@@ -69,20 +69,6 @@ jobs:
         run: pnpm run sync
         working-directory: site
 
-      - name: Validate production Hub API URL secret
-        env:
-          HUB_API_URL_PRODUCTION: ${{ secrets.HUB_API_URL_PRODUCTION }}
-          COMFY_CLOUD_URL_PRODUCTION: ${{ secrets.COMFY_CLOUD_URL_PRODUCTION }}
-        run: |
-          if [ -z "${HUB_API_URL_PRODUCTION}" ]; then
-            echo "Missing required GitHub secret: HUB_API_URL_PRODUCTION"
-            exit 1
-          fi
-          if [ -z "${COMFY_CLOUD_URL_PRODUCTION}" ]; then
-            echo "Missing required GitHub secret: COMFY_CLOUD_URL_PRODUCTION"
-            exit 1
-          fi
-
       - name: Build Astro site
         run: pnpm run build
         working-directory: site

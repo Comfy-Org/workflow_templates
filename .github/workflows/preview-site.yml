@@ -39,20 +39,6 @@ jobs:
         run: pnpm run sync:en-only
         working-directory: site
 
-      - name: Validate preview Hub API URL secret
-        env:
-          HUB_API_URL_PREVIEW: ${{ secrets.HUB_API_URL_PREVIEW }}
-          COMFY_CLOUD_URL_PREVIEW: ${{ secrets.COMFY_CLOUD_URL_PREVIEW }}
-        run: |
-          if [ -z "${HUB_API_URL_PREVIEW}" ]; then
-            echo "Missing required GitHub secret: HUB_API_URL_PREVIEW"
-            exit 1
-          fi
-          if [ -z "${COMFY_CLOUD_URL_PREVIEW}" ]; then
-            echo "Missing required GitHub secret: COMFY_CLOUD_URL_PREVIEW"
-            exit 1
-          fi
-
       - name: Build Astro site
         run: pnpm run build
         working-directory: site
