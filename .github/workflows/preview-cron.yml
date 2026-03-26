@@ -91,9 +91,9 @@ jobs:
           vercel-args: '--prebuilt'
 
       - name: Alias main preview
-        if: matrix.is_main && vars.VERCEL_PREVIEW_ALIAS
+        if: matrix.is_main && secrets.VERCEL_PREVIEW_ALIAS
         run: |
-          npx vercel alias ${{ steps.deploy.outputs.preview-url }} ${{ vars.VERCEL_PREVIEW_ALIAS }} \
+          npx vercel alias ${{ steps.deploy.outputs.preview-url }} ${{ secrets.VERCEL_PREVIEW_ALIAS }} \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --scope=${{ secrets.VERCEL_ORG_ID }}
 
