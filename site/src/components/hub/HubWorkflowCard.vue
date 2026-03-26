@@ -325,11 +325,10 @@ function handleCardClick() {
         :src="videoUrl"
         class="w-full h-full object-cover"
         preload="metadata"
+        autoplay
         muted
         loop
         playsinline
-        @mouseenter="($event.target as HTMLVideoElement).play()"
-        @mouseleave="($event.target as HTMLVideoElement).pause()"
       />
 
       <img
