@@ -17,11 +17,8 @@ import { getTemplatesForLocale } from '../../lib/templates';
 import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
 import {
   listWorkflowIndex,
-  extractShareId,
-  workflowUrl,
   type HubWorkflowTemplateEntry,
 } from '../../lib/hub-api';
-import { slugify } from '../../lib/slugify';
 import { workflowOgUrl } from '../../lib/og-url';
 
 export async function getStaticPaths() {
@@ -66,7 +63,6 @@ interface Props {
   legacyShareId: string | null;
 }
 
-const { slug } = Astro.params;
 const { entry, legacySlug, legacyShareId } = Astro.props;
 
 // Legacy redirect: old URL without share_id
@@ -85,6 +81,7 @@ if (!entry) {
 const locale = DEFAULT_LOCALE;
 const data = {
   name: entry.name,
+  shareId: entry.shareId || '',
   title: entry.title || entry.name,
   description: entry.description || '',
   mediaType: entry.mediaType || 'image',
@@ -102,7 +99,6 @@ const data = {
   suggestedUseCases: entry.suggestedUseCases || [],
   faqItems: entry.faqItems || [],
   contentTemplate: entry.contentTemplate,
-  shareId: entry.shareId || '',
 };
 
 const title = `${data.title} - ComfyUI Workflow`;

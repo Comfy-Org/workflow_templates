@@ -5,9 +5,10 @@ on:
     paths:
       - 'site/**'
       - 'templates/**'
+  workflow_dispatch:
 
 concurrency:
-  group: preview-${{ github.head_ref }}
+  group: preview-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
 
 permissions:
@@ -42,7 +43,8 @@ jobs:
         run: pnpm run build
         working-directory: site
         env:
-          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL }}
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PREVIEW }}
+          PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PREVIEW }}
 
       - name: Deploy preview to Vercel
         id: deploy
@@ -55,6 +57,7 @@ jobs:
           vercel-args: '--prebuilt'
 
       - name: Comment preview URL
+        if: github.event_name == 'pull_request'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: vercel-preview

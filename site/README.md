@@ -80,12 +80,33 @@ site/
 
 ## Environment Variables
 
-| Variable             | Required | Description                              |
-| -------------------- | -------- | ---------------------------------------- |
-| `OPENAI_API_KEY`     | Yes\*    | OpenAI API key for AI content generation |
-| `SKIP_AI_GENERATION` | No       | Set to `true` to skip AI generation      |
+| Variable                  | Required | Description                                                   |
+| ------------------------- | -------- | ------------------------------------------------------------- |
+| `OPENAI_API_KEY`          | Yes\*    | OpenAI API key for AI content generation                      |
+| `SKIP_AI_GENERATION`      | No       | Set to `true` to skip AI generation                           |
+| `PUBLIC_HUB_API_URL`      | No       | Hub API base URL for local builds and any manual build setup  |
+| `PUBLIC_COMFY_CLOUD_URL`  | No       | Comfy Cloud app URL used for CTA links in local/manual builds |
 
 \*Required for production builds; can skip for local development.
+
+The app and build scripts continue to read `PUBLIC_HUB_API_URL`. In CI, preview and production
+workflows map different GitHub secrets to that variable:
+
+- Preview: `HUB_API_URL_PREVIEW` -> `PUBLIC_HUB_API_URL`
+- Production: `HUB_API_URL_PRODUCTION` -> `PUBLIC_HUB_API_URL`
+
+CTA links continue to read `PUBLIC_COMFY_CLOUD_URL`. In CI, preview and production workflows map
+different GitHub secrets to that variable:
+
+- Preview: `COMFY_CLOUD_URL_PREVIEW` -> `PUBLIC_COMFY_CLOUD_URL`
+- Production: `COMFY_CLOUD_URL_PRODUCTION` -> `PUBLIC_COMFY_CLOUD_URL`
+
+For local development, set `PUBLIC_HUB_API_URL` and `PUBLIC_COMFY_CLOUD_URL` directly when you
+need to point builds at specific backends.
+
+Production values should also be mirrored in Vercel Project Settings for `PUBLIC_HUB_API_URL` and
+`PUBLIC_COMFY_CLOUD_URL`. The scheduled rebuild workflow triggers a Vercel deploy hook, so that
+path uses Vercel-managed environment variables instead of the GitHub Actions build-time mapping.
 
 ### Skipping AI Generation
 

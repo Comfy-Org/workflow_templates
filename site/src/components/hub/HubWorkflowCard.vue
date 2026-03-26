@@ -111,6 +111,13 @@ const isVideoPrimary = computed(() => {
   return Boolean(f && (f.endsWith('.mp4') || f.endsWith('.mov')));
 });
 
+const videoUrl = computed(() => {
+  if (!isVideoPrimary.value) return null;
+  const f = primaryFile.value!;
+  if (f.startsWith('http://') || f.startsWith('https://')) return f;
+  return `/workflows/thumbnails/${f}`;
+});
+
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
   if (!f) return null;
@@ -313,25 +320,16 @@ function handleCardClick() {
         </svg>
       </div>
 
-      <div
-        v-else-if="isVideoPrimary"
-        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
-      >
-        <svg
-          class="w-10 h-10 text-white/20"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="1.5"
-            d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"
-          />
-        </svg>
-      </div>
+      <video
+        v-else-if="isVideoPrimary && videoUrl"
+        :src="videoUrl"
+        class="w-full h-full object-cover"
+        preload="metadata"
+        autoplay
+        muted
+        loop
+        playsinline
+      />
 
       <img
         v-else-if="primaryUrl && isAnimatedWebp"

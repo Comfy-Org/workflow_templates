@@ -66,8 +66,24 @@ test.describe('Template Detail Page', () => {
     await page.goto(href!);
     await page.waitForLoadState('networkidle');
 
-    const ctaLinks = page.locator('a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('a.run-cloud-btn');
     expect(await ctaLinks.count()).toBeGreaterThan(0);
+  });
+
+  test('uses canonical download route', async ({ page }) => {
+    await page.goto('/workflows/');
+    const firstCard = templateCardLink(page);
+    await expect(firstCard).toBeAttached({ timeout: 10000 });
+    const href = await firstCard.getAttribute('href');
+    expect(href).toBeTruthy();
+
+    await page.goto(href!);
+    await page.waitForLoadState('networkidle');
+
+    const downloadLink = page.locator('a.download-json-btn').first();
+    await expect(downloadLink).toBeAttached();
+    const downloadHref = await downloadLink.getAttribute('href');
+    expect(downloadHref).toMatch(/^\/workflows\/download\/[^/]+\.json(?:\?.*)?$/);
   });
 
   test('has structured data', async ({ page }) => {
@@ -313,7 +329,7 @@ test.describe('UTM Parameter Tracking', () => {
     await page.waitForLoadState('networkidle');
 
     // Scope to article to exclude navbar CTA links
-    const ctaLinks = page.locator('article a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('article a.run-cloud-btn');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 
@@ -346,7 +362,7 @@ test.describe('UTM Parameter Tracking', () => {
     expect(slug).toBeTruthy();
 
     // Scope to article to exclude navbar CTA links
-    const ctaLinks = page.locator('article a[href*="cloud.comfy.org"]');
+    const ctaLinks = page.locator('article a.run-cloud-btn');
     const count = await ctaLinks.count();
     expect(count).toBeGreaterThan(0);
 

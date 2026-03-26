@@ -285,10 +285,25 @@ When generating content, select appropriate template based on:
 
 ## Environment Variables
 
-| Variable             | Required   | Description                     |
-| -------------------- | ---------- | ------------------------------- |
-| `OPENAI_API_KEY`     | For AI gen | OpenAI API key                  |
-| `SKIP_AI_GENERATION` | Optional   | Set `true` for placeholder mode |
+| Variable                 | Required   | Description                                           |
+| ------------------------ | ---------- | ----------------------------------------------------- |
+| `OPENAI_API_KEY`         | For AI gen | OpenAI API key                                        |
+| `SKIP_AI_GENERATION`     | Optional   | Set `true` for placeholder mode                       |
+| `PUBLIC_HUB_API_URL`     | Optional   | Hub API base URL used by local builds and manual runs |
+| `PUBLIC_COMFY_CLOUD_URL` | Optional   | Comfy Cloud app URL used for CTA links                |
+
+The site code and build scripts still read `PUBLIC_HUB_API_URL` for hub API calls and
+`PUBLIC_COMFY_CLOUD_URL` for CTA links.
+
+- CI preview builds map `HUB_API_URL_PREVIEW` to `PUBLIC_HUB_API_URL`
+- CI production builds map `HUB_API_URL_PRODUCTION` to `PUBLIC_HUB_API_URL`
+- CI preview builds map `COMFY_CLOUD_URL_PREVIEW` to `PUBLIC_COMFY_CLOUD_URL`
+- CI production builds map `COMFY_CLOUD_URL_PRODUCTION` to `PUBLIC_COMFY_CLOUD_URL`
+- Local development should set these public env vars directly when a non-default backend is needed
+
+Mirror the production values in Vercel Project Settings for `PUBLIC_HUB_API_URL` and
+`PUBLIC_COMFY_CLOUD_URL`. `cron-rebuild-site.yml` triggers a Vercel deploy hook, so scheduled
+rebuilds use Vercel-managed environment variables rather than the GitHub Actions secret mapping.
 
 ## CI/CD Workflows
 
