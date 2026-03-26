@@ -26,13 +26,13 @@ export function getCloudLandingUrl(ctaContent: string): string {
   return `${getComfyCloudBaseUrl()}/?${params.toString()}`;
 }
 
-export function getCloudCtaUrl(templateName: string, ctaLocation: string): string {
+export function getCloudCtaUrl(shareId: string, ctaLocation: string): string {
   const params = new URLSearchParams({
-    template: templateName,
+    share: shareId,
     utm_source: 'workflow_hub',
     utm_medium: 'site_CTA',
     utm_campaign: 'hub_preview',
-    utm_content: templateName,
+    utm_content: shareId,
     utm_term: ctaLocation,
   });
 
