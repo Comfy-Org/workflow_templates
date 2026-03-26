@@ -19,7 +19,7 @@ describe('getCloudCtaUrl', () => {
     expect(parsed.searchParams.get('utm_campaign')).toBe('hub_preview');
     expect(parsed.searchParams.get('utm_content')).toBe('my-template');
     expect(parsed.searchParams.get('utm_term')).toBe('hero');
-    expect(parsed.searchParams.get('template')).toBe('my-template');
+    expect(parsed.searchParams.get('share')).toBe('my-template');
   });
 
   it('uses cloud.comfy.org as the default base', () => {
