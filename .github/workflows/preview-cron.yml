@@ -24,8 +24,11 @@ jobs:
         run: |
           targets='[]'
 
-          # Always include main
-          targets=$(echo "$targets" | jq -c '. + [{"ref": "main", "is_main": true, "pr": 0}]')
+          # Main with production API (all workflows, no approved filter)
+          targets=$(echo "$targets" | jq -c '. + [{"ref": "main", "is_main": true, "pr": 0, "api_env": "production"}]')
+
+          # Main with test API
+          targets=$(echo "$targets" | jq -c '. + [{"ref": "main", "is_main": true, "pr": 0, "api_env": "test"}]')
 
           # Find open PRs with the "preview-cron" label
           prs=$(gh pr list --label "preview-cron" --state open --json number,headRefName)
@@ -34,7 +37,7 @@ jobs:
             num=$(echo "$row" | jq -r '.number')
             targets=$(echo "$targets" | jq -c \
               --arg ref "$ref" --argjson num "$num" \
-              '. + [{"ref": $ref, "is_main": false, "pr": $num}]')
+              '. + [{"ref": $ref, "is_main": false, "pr": $num, "api_env": "test"}]')
           done
 
           echo "matrix={\"include\":$targets}" >> "$GITHUB_OUTPUT"
@@ -48,7 +51,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
     concurrency:
-      group: preview-cron-${{ matrix.ref }}
+      group: preview-cron-${{ matrix.ref }}-${{ matrix.api_env }}
       cancel-in-progress: true
     env:
       SKIP_AI_GENERATION: 'true'
@@ -65,9 +68,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: site/.content-cache
-          key: content-cache-cron-${{ matrix.ref }}-${{ hashFiles('templates/**', 'site/src/**') }}
+          key: content-cache-cron-${{ matrix.ref }}-${{ matrix.api_env }}-${{ hashFiles('templates/**', 'site/src/**') }}
           restore-keys: |
-            content-cache-cron-${{ matrix.ref }}-
+            content-cache-cron-${{ matrix.ref }}-${{ matrix.api_env }}-
 
       - name: Sync templates
         run: pnpm run sync:en-only
@@ -77,8 +80,8 @@ jobs:
         run: pnpm run build
         working-directory: site
         env:
-          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
-          PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PRODUCTION }}
+          PUBLIC_HUB_API_URL: ${{ matrix.api_env == 'test' && secrets.HUB_API_URL_PREVIEW || secrets.HUB_API_URL_PRODUCTION }}
+          PUBLIC_COMFY_CLOUD_URL: ${{ matrix.api_env == 'test' && secrets.COMFY_CLOUD_URL_PREVIEW || secrets.COMFY_CLOUD_URL_PRODUCTION }}
 
       - name: Deploy to Vercel
         id: deploy
@@ -90,10 +93,17 @@ jobs:
           working-directory: site
           vercel-args: '--prebuilt'
 
-      - name: Alias main preview
-        if: matrix.is_main && secrets.VERCEL_PREVIEW_ALIAS
+      - name: Alias main preview (prod API)
+        if: matrix.is_main && matrix.api_env == 'production' && secrets.VERCEL_PREVIEW_ALIAS
         run: |
           npx vercel alias ${{ steps.deploy.outputs.preview-url }} ${{ secrets.VERCEL_PREVIEW_ALIAS }} \
+            --token=${{ secrets.VERCEL_TOKEN }} \
+            --scope=${{ secrets.VERCEL_ORG_ID }}
+
+      - name: Alias main preview (test API)
+        if: matrix.is_main && matrix.api_env == 'test' && secrets.VERCEL_PREVIEW_TEST_ALIAS
+        run: |
+          npx vercel alias ${{ steps.deploy.outputs.preview-url }} ${{ secrets.VERCEL_PREVIEW_TEST_ALIAS }} \
             --token=${{ secrets.VERCEL_TOKEN }} \
             --scope=${{ secrets.VERCEL_ORG_ID }}
 
