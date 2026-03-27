@@ -28,6 +28,33 @@ pnpm run dev       # Start dev server at localhost:4321
 pnpm run build     # Production build (runs prebuild pipeline automatically)
 ```
 
+### Deployment Environments
+
+The template site is deployed to three environments via GitHub Actions:
+
+```
+main merge (version bump)
+  └─ PyPI publish ─► deploy-site.yml ─► Production (approved only)
+
+Every 15 minutes
+  ├─ cron-rebuild-site.yml ─► Production (approved only)
+  └─ preview-cron.yml      ─► Preview    (all workflows)
+
+PR opened/updated
+  ├─ preview-site.yml      ─► PR Preview (one-off)
+  └─ preview-cron.yml      ─► PR Preview (15-min, requires "preview-cron" label)
+```
+
+| Environment | Workflow | API | Status Filter | Vercel Flag | Trigger |
+|-------------|----------|-----|---------------|-------------|---------|
+| **Production** | `deploy-site.yml` | Production | `approved` only | `--prod` | PyPI publish / manual |
+| **Production** | `cron-rebuild-site.yml` | Production | `approved` only | `--prod` | Every 15 min |
+| **Preview** | `preview-cron.yml` (main) | Production | None (all) | preview + alias | Every 15 min |
+| **PR Preview** | `preview-site.yml` | Configurable | None (all) | preview | PR changes |
+| **PR Preview** | `preview-cron.yml` (PR) | Production | None (all) | preview | Every 15 min |
+
+**Status filtering** is controlled by the `PUBLIC_APPROVED_ONLY` environment variable at build time. When set to `'true'`, only workflows with `status: 'approved'` from the hub API index endpoint are included in the build. The Preview environment omits this flag to show all workflows (pending, approved, rejected, deprecated) for internal review.
+
 ## Quick Start
 
 | Task | Commands |

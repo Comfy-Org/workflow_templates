@@ -16,6 +16,7 @@ const HUB_API_BASE =
 
 export type MediaType = 'image' | 'video' | 'audio' | '3d';
 export type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'deprecated';
 
 export interface LabelRef {
   name: string;
@@ -112,6 +113,7 @@ export interface HubWorkflowTemplateEntry {
   thumbnailUrl?: string;
   thumbnailComparisonUrl?: string;
   shareId?: string;
+  status?: WorkflowStatus;
   // AI-generated content fields (from backend metadata)
   extendedDescription?: string;
   metaDescription?: string;
@@ -218,13 +220,26 @@ export async function getProfile(username: string): Promise<HubProfile> {
 
 let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
 
+const APPROVED_ONLY = import.meta.env.PUBLIC_APPROVED_ONLY === 'true';
+
 /**
  * Fetch and cache the workflow index. Called many times across pages during
  * a single build; the actual HTTP request fires only once.
+ *
+ * When PUBLIC_APPROVED_ONLY is set, only workflows with status === 'approved'
+ * are included. This is used for production builds. Preview builds omit this
+ * flag to show all workflows regardless of status.
  */
 export function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
   if (!indexCache) {
-    indexCache = hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index');
+    indexCache = hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index').then(
+      (entries) => {
+        if (APPROVED_ONLY) {
+          return entries.filter((e) => e.status === 'approved');
+        }
+        return entries;
+      }
+    );
   }
   return indexCache;
 }
