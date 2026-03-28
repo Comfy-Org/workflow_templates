@@ -95,17 +95,23 @@ jobs:
 
       - name: Alias main preview (prod API)
         if: matrix.is_main && matrix.api_env == 'production' && secrets.VERCEL_PREVIEW_ALIAS
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.preview-url }}
+          ALIAS: ${{ secrets.VERCEL_PREVIEW_ALIAS }}
+          VERCEL_TOKEN_VAL: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          npx vercel alias ${{ steps.deploy.outputs.preview-url }} ${{ secrets.VERCEL_PREVIEW_ALIAS }} \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --scope=${{ secrets.VERCEL_ORG_ID }}
+          npx vercel alias "$PREVIEW_URL" "$ALIAS" --token="$VERCEL_TOKEN_VAL" --scope="$VERCEL_SCOPE"
 
       - name: Alias main preview (test API)
         if: matrix.is_main && matrix.api_env == 'test' && secrets.VERCEL_PREVIEW_TEST_ALIAS
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.preview-url }}
+          ALIAS: ${{ secrets.VERCEL_PREVIEW_TEST_ALIAS }}
+          VERCEL_TOKEN_VAL: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_SCOPE: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          npx vercel alias ${{ steps.deploy.outputs.preview-url }} ${{ secrets.VERCEL_PREVIEW_TEST_ALIAS }} \
-            --token=${{ secrets.VERCEL_TOKEN }} \
-            --scope=${{ secrets.VERCEL_ORG_ID }}
+          npx vercel alias "$PREVIEW_URL" "$ALIAS" --token="$VERCEL_TOKEN_VAL" --scope="$VERCEL_SCOPE"
 
       - name: Comment preview URL on PR
         if: matrix.pr > 0

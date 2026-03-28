@@ -9,8 +9,8 @@ on:
   workflow_dispatch: # Allow manual trigger
 
 concurrency:
-  group: cron-rebuild-prod
-  cancel-in-progress: true
+  group: deploy-prod
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -20,6 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       SKIP_AI_GENERATION: 'true'
+      PUBLIC_POSTHOG_KEY: phc_iKfK86id4xVYws9LybMje0h44eGtfwFgRPIBehmy8rO
+      PUBLIC_GA_MEASUREMENT_ID: ${{ secrets.PUBLIC_GA_MEASUREMENT_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
