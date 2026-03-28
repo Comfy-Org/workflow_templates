@@ -93,25 +93,26 @@ jobs:
           working-directory: site
           vercel-args: '--prebuilt'
 
-      - name: Alias main preview (prod API)
-        if: matrix.is_main && matrix.api_env == 'production' && secrets.VERCEL_PREVIEW_ALIAS
+      - name: Alias main preview
+        if: matrix.is_main
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.preview-url }}
-          ALIAS: ${{ secrets.VERCEL_PREVIEW_ALIAS }}
+          PROD_ALIAS: ${{ secrets.VERCEL_PREVIEW_ALIAS }}
+          TEST_ALIAS: ${{ secrets.VERCEL_PREVIEW_TEST_ALIAS }}
+          API_ENV: ${{ matrix.api_env }}
           VERCEL_TOKEN_VAL: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_SCOPE: ${{ secrets.VERCEL_ORG_ID }}
         run: |
-          npx vercel alias "$PREVIEW_URL" "$ALIAS" --token="$VERCEL_TOKEN_VAL" --scope="$VERCEL_SCOPE"
-
-      - name: Alias main preview (test API)
-        if: matrix.is_main && matrix.api_env == 'test' && secrets.VERCEL_PREVIEW_TEST_ALIAS
-        env:
-          PREVIEW_URL: ${{ steps.deploy.outputs.preview-url }}
-          ALIAS: ${{ secrets.VERCEL_PREVIEW_TEST_ALIAS }}
-          VERCEL_TOKEN_VAL: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_SCOPE: ${{ secrets.VERCEL_ORG_ID }}
-        run: |
-          npx vercel alias "$PREVIEW_URL" "$ALIAS" --token="$VERCEL_TOKEN_VAL" --scope="$VERCEL_SCOPE"
+          if [ "$API_ENV" = "production" ]; then
+            ALIAS="$PROD_ALIAS"
+          else
+            ALIAS="$TEST_ALIAS"
+          fi
+          if [ -n "$ALIAS" ]; then
+            npx vercel alias "$PREVIEW_URL" "$ALIAS" --token="$VERCEL_TOKEN_VAL" --scope="$VERCEL_SCOPE"
+          else
+            echo "Alias secret not set for $API_ENV, skipping"
+          fi
 
       - name: Comment preview URL on PR
         if: matrix.pr > 0
