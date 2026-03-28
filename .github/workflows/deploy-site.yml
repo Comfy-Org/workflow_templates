@@ -27,7 +27,7 @@ on:
     branches: [main]
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-prod
   cancel-in-progress: false
 
 permissions:
@@ -75,6 +75,7 @@ jobs:
         env:
           PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
           PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PRODUCTION }}
+          PUBLIC_APPROVED_ONLY: 'true'
 
       - name: Deploy to Vercel
         uses: amondnet/vercel-action@v25

@@ -1,7 +1,7 @@
 /**
  * Hub API client for fetching workflow data from the backend.
  *
- * API spec based on cloud PR #2840.
+ * API spec based on cloud PR #3038.
  * Base URL is configurable via PUBLIC_HUB_API_URL env var.
  * Note: PUBLIC_ prefix is required for Astro build-time access in getStaticPaths().
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
@@ -16,6 +16,7 @@ const HUB_API_BASE =
 
 export type MediaType = 'image' | 'video' | 'audio' | '3d';
 export type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
+export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'deprecated';
 
 export interface LabelRef {
   name: string;
@@ -33,6 +34,7 @@ export interface HubProfile {
 export interface HubWorkflowSummary {
   share_id: string;
   name: string;
+  status: WorkflowStatus;
   description?: string;
   tags: LabelRef[];
   models: LabelRef[];
@@ -112,6 +114,7 @@ export interface HubWorkflowTemplateEntry {
   thumbnailUrl?: string;
   thumbnailComparisonUrl?: string;
   shareId?: string;
+  status: WorkflowStatus;
   // AI-generated content fields (from backend metadata)
   extendedDescription?: string;
   metaDescription?: string;
@@ -156,6 +159,7 @@ export interface ListWorkflowsParams {
   search?: string;
   tag?: string;
   username?: string;
+  status?: WorkflowStatus[];
 }
 
 // ---------------------------------------------------------------------------
@@ -191,6 +195,7 @@ export async function listWorkflows(
   if (params.search) qs.set('search', params.search);
   if (params.tag) qs.set('tag', params.tag);
   if (params.username) qs.set('username', params.username);
+  if (params.status?.length) qs.set('status', params.status.join(','));
 
   const query = qs.toString();
   return hubFetch<HubWorkflowListResponse>(
@@ -218,13 +223,25 @@ export async function getProfile(username: string): Promise<HubProfile> {
 
 let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
 
+const APPROVED_ONLY = import.meta.env.PUBLIC_APPROVED_ONLY === 'true';
+
+/** All status values — used when preview builds need unfiltered results. */
+const ALL_STATUSES: WorkflowStatus[] = ['pending', 'approved', 'rejected', 'deprecated'];
+
 /**
  * Fetch and cache the workflow index. Called many times across pages during
  * a single build; the actual HTTP request fires only once.
+ *
+ * Status filtering is handled server-side via the `?status=` query parameter.
+ * - Production (PUBLIC_APPROVED_ONLY=true): request only approved workflows.
+ * - Preview: pass all statuses to show every workflow regardless of status.
  */
 export function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
   if (!indexCache) {
-    indexCache = hubFetch<HubWorkflowTemplateEntry[]>('/api/hub/workflows/index');
+    const statuses = APPROVED_ONLY ? 'approved' : ALL_STATUSES.join(',');
+    indexCache = hubFetch<HubWorkflowTemplateEntry[]>(
+      `/api/hub/workflows/index?status=${statuses}`
+    );
   }
   return indexCache;
 }
