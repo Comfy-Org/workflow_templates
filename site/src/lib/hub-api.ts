@@ -233,14 +233,14 @@ const ALL_STATUSES: WorkflowStatus[] = ['pending', 'approved', 'rejected', 'depr
  * a single build; the actual HTTP request fires only once.
  *
  * Status filtering is handled server-side via the `?status=` query parameter.
- * - Production (PUBLIC_APPROVED_ONLY=true): omit param → API defaults to approved-only.
+ * - Production (PUBLIC_APPROVED_ONLY=true): request only approved workflows.
  * - Preview: pass all statuses to show every workflow regardless of status.
  */
 export function listWorkflowIndex(): Promise<HubWorkflowTemplateEntry[]> {
   if (!indexCache) {
-    const statusParam = APPROVED_ONLY ? '' : `?status=${ALL_STATUSES.join(',')}`;
+    const statuses = APPROVED_ONLY ? 'approved' : ALL_STATUSES.join(',');
     indexCache = hubFetch<HubWorkflowTemplateEntry[]>(
-      `/api/hub/workflows/index${statusParam}`
+      `/api/hub/workflows/index?status=${statuses}`
     );
   }
   return indexCache;

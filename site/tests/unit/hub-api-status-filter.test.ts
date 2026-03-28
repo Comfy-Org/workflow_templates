@@ -35,7 +35,7 @@ function mockFetchReturning(data: unknown) {
 }
 
 describe('listWorkflowIndex status filtering', () => {
-  it('uses API default (approved-only) when PUBLIC_APPROVED_ONLY is true', async () => {
+  it('requests only approved when PUBLIC_APPROVED_ONLY is true', async () => {
     vi.stubEnv('PUBLIC_APPROVED_ONLY', 'true');
     mockFetchReturning(approvedEntries);
 
@@ -45,10 +45,8 @@ describe('listWorkflowIndex status filtering', () => {
     expect(result).toHaveLength(2);
     expect(result.every((e) => e.status === 'approved')).toBe(true);
 
-    // Should NOT pass ?status= param — API defaults to approved
     const calledUrl = fetchSpy.mock.calls[0][0] as string;
-    expect(calledUrl).toContain('/api/hub/workflows/index');
-    expect(calledUrl).not.toContain('?status=');
+    expect(calledUrl).toContain('?status=approved');
   });
 
   it('passes all statuses when PUBLIC_APPROVED_ONLY is not set', async () => {
