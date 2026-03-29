@@ -43,6 +43,8 @@ export interface HubWorkflowSummary {
   thumbnail_url?: string;
   thumbnail_comparison_url?: string;
   publish_time?: string;
+  usage?: number;
+  isApp?: boolean;
   profile: HubProfile;
 }
 
@@ -99,6 +101,7 @@ export interface HubWorkflowTemplateEntry {
   mediaSubtype?: string;
   size?: number;
   vram?: number;
+  usage?: number;
   openSource?: boolean | null;
   username?: string;
   /** Embedded profile from the index endpoint (eliminates N+1 profile calls) */
@@ -110,6 +113,7 @@ export interface HubWorkflowTemplateEntry {
     inputs?: Record<string, unknown>[];
     outputs?: Record<string, unknown>[];
   };
+  isApp?: boolean;
   includeOnDistributions?: string[];
   thumbnailUrl?: string;
   thumbnailComparisonUrl?: string;
@@ -298,13 +302,13 @@ export function serializeIndexEntry(
     tags: entry.tags || [],
     models: entry.models || [],
     logos: (entry.logos || []) as { provider: string | string[] }[],
-    usage: 0,
+    usage: entry.usage || 0,
     date: entry.date || '',
     thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
     username,
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: false,
+    isApp: entry.isApp ?? entry.name.endsWith('.app'),
     thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
@@ -368,13 +372,13 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTe
     tags: (workflow.tags || []).map((t) => t.name),
     models: (workflow.models || []).map((m) => m.name),
     logos: [],
-    usage: 0,
+    usage: workflow.usage || 0,
     date: workflow.publish_time || '',
     thumbnails: buildThumbnailList(workflow),
     username: workflow.profile.username,
     creatorDisplayName: workflow.profile.display_name || workflow.profile.username,
     creatorAvatarUrl: workflow.profile.avatar_url || '',
-    isApp: false,
+    isApp: workflow.isApp ?? workflow.name.endsWith('.app'),
   };
 }
 
