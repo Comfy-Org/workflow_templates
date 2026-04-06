@@ -11,6 +11,7 @@
  */
 
 import type { ThumbnailVariant } from '../lib/hub-api';
+import { getVideoFrameUrl } from '../lib/video-thumbnail';
 
 interface Props {
   thumbnails: string[];
@@ -52,6 +53,9 @@ const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm');
 const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov');
+const videoPosterUrl = isVideo ? getVideoFrameUrl(primarySrc) : null;
+const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4') || secondaryThumb.endsWith('.mov'))
+  ? getVideoFrameUrl(secondarySrc) : null;
 ---
 
 {
@@ -107,26 +111,54 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
     </div>
   ) : isVideo ? (
     <div class={`video-thumb flex flex-col gap-2 ${className}`}>
-      <video
-        src={primarySrc}
-        class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
-        autoplay
-        controls
-        loop
-        muted
-        playsinline
-        preload="auto"
-      />
-      {secondaryThumb && (
+      <div class="video-fallback-wrapper relative">
         <video
-          src={secondarySrc}
+          src={primarySrc}
+          poster={videoPosterUrl || undefined}
           class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
+          autoplay
           controls
           loop
           muted
           playsinline
-          preload="metadata"
+          preload="auto"
+          data-video-fallback
         />
+        {videoPosterUrl && (
+          <img
+            src={videoPosterUrl}
+            alt={title}
+            class={`${naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'} absolute inset-0 hidden`}
+            data-video-fallback-img
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+      </div>
+      {secondaryThumb && (
+        <div class="video-fallback-wrapper relative">
+          <video
+            src={secondarySrc}
+            poster={secondaryVideoPosterUrl || undefined}
+            class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
+            controls
+            loop
+            muted
+            playsinline
+            preload="metadata"
+            data-video-fallback
+          />
+          {secondaryVideoPosterUrl && (
+            <img
+              src={secondaryVideoPosterUrl}
+              alt={`${title} - secondary`}
+              class={`${naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'} absolute inset-0 hidden`}
+              data-video-fallback-img
+              loading="lazy"
+              decoding="async"
+            />
+          )}
+        </div>
       )}
     </div>
   ) : variant === 'compareSlider' && hasSecondImage ? (
@@ -259,6 +291,21 @@ const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov')
 
 <script>
   import '../scripts/compare-slider';
+
+  // Video fallback: show poster image if video fails to load or play
+  document.querySelectorAll<HTMLVideoElement>('[data-video-fallback]').forEach((video) => {
+    const wrapper = video.closest('.video-fallback-wrapper');
+    const fallbackImg = wrapper?.querySelector<HTMLImageElement>('[data-video-fallback-img]');
+    if (!fallbackImg) return;
+
+    function showFallback() {
+      video.classList.add('hidden');
+      fallbackImg!.classList.remove('hidden');
+    }
+
+    video.addEventListener('error', showFallback);
+    video.addEventListener('stalled', showFallback);
+  });
 </script>
 
 <style>

@@ -10,6 +10,7 @@ import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
+import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -117,6 +118,21 @@ const videoUrl = computed(() => {
   if (f.startsWith('http://') || f.startsWith('https://')) return f;
   return `/workflows/thumbnails/${f}`;
 });
+
+const posterUrl = computed(() => {
+  if (!videoUrl.value) return null;
+  return getVideoFrameUrl(videoUrl.value);
+});
+
+const videoFailed = ref(false);
+
+function onVideoError() {
+  videoFailed.value = true;
+}
+
+function onVideoStalled() {
+  videoFailed.value = true;
+}
 
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
@@ -320,15 +336,28 @@ function handleCardClick() {
         </svg>
       </div>
 
+      <img
+        v-else-if="isVideoPrimary && videoUrl && videoFailed && posterUrl"
+        :src="posterUrl"
+        :alt="title"
+        loading="lazy"
+        decoding="async"
+        draggable="false"
+        class="w-full h-full object-cover select-none"
+      />
+
       <video
         v-else-if="isVideoPrimary && videoUrl"
         :src="videoUrl"
+        :poster="posterUrl || undefined"
         class="w-full h-full object-cover"
         preload="metadata"
         autoplay
         muted
         loop
         playsinline
+        @error="onVideoError"
+        @stalled="onVideoStalled"
       />
 
       <img
