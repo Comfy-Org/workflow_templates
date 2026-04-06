@@ -158,7 +158,7 @@ onUnmounted(() => {
   <div class="flex-1 w-full min-w-0">
     <!-- Mobile Tabs + Sort bar (popover pills) -->
     <div
-      class="flex lg:hidden items-center gap-2 py-8 pr-1 -mr-1"
+      class="flex lg:hidden items-center gap-2 py-8"
       :class="stickyToolbar ? 'sticky top-16 bg-page z-40' : ''"
     >
       <!-- Type popover -->
@@ -311,7 +311,7 @@ onUnmounted(() => {
 
     <!-- Desktop Tabs + Sort bar -->
     <div
-      class="hidden lg:flex items-center justify-between py-8 pr-1 -mr-1"
+      class="hidden lg:flex items-center justify-between py-8"
       :class="stickyToolbar ? 'sticky top-16 bg-page z-40' : ''"
     >
       <!-- Tab pills -->
