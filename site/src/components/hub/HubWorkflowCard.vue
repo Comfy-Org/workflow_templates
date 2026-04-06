@@ -130,9 +130,7 @@ function onVideoError() {
   videoFailed.value = true;
 }
 
-function onVideoStalled() {
-  videoFailed.value = true;
-}
+
 
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
@@ -357,7 +355,6 @@ function handleCardClick() {
         loop
         playsinline
         @error="onVideoError"
-        @stalled="onVideoStalled"
       />
 
       <img

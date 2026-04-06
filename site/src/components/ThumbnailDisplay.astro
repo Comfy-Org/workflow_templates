@@ -111,7 +111,7 @@ const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4
     </div>
   ) : isVideo ? (
     <div class={`video-thumb flex flex-col gap-2 ${className}`}>
-      <div class="video-fallback-wrapper relative">
+      <div class="video-fallback-wrapper">
         <video
           src={primarySrc}
           poster={videoPosterUrl || undefined}
@@ -128,7 +128,7 @@ const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4
           <img
             src={videoPosterUrl}
             alt={title}
-            class={`${naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'} absolute inset-0 hidden`}
+            class={`${naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'} hidden`}
             data-video-fallback-img
             loading="lazy"
             decoding="async"
@@ -136,7 +136,7 @@ const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4
         )}
       </div>
       {secondaryThumb && (
-        <div class="video-fallback-wrapper relative">
+        <div class="video-fallback-wrapper">
           <video
             src={secondarySrc}
             poster={secondaryVideoPosterUrl || undefined}
@@ -152,7 +152,7 @@ const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4
             <img
               src={secondaryVideoPosterUrl}
               alt={`${title} - secondary`}
-              class={`${naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'} absolute inset-0 hidden`}
+              class={`${naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'} hidden`}
               data-video-fallback-img
               loading="lazy"
               decoding="async"
@@ -304,7 +304,6 @@ const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4
     }
 
     video.addEventListener('error', showFallback);
-    video.addEventListener('stalled', showFallback);
   });
 </script>
 
