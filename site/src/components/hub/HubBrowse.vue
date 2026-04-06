@@ -128,7 +128,7 @@ const activeFilterCount = computed(() => store.filterBadges.value.length);
 <template>
   <div class="pb-32">
     <!-- Sidebar + Grid -->
-    <div class="flex items-start justify-between overflow-hidden">
+    <div class="flex items-start justify-between overflow-x-clip">
       <!-- Desktop Sidebar -->
 
       <aside
