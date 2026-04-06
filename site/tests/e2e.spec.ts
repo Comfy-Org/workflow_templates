@@ -216,6 +216,41 @@ test.describe('Search Filter "+X more" Expansion', () => {
   });
 });
 
+test.describe('Tag Pills Scrollability', () => {
+  test('tag container allows horizontal scroll instead of clipping', async ({ page }) => {
+    await page.goto('/workflows/');
+    const firstCard = templateCardLink(page);
+    await expect(firstCard).toBeAttached({ timeout: 10000 });
+
+    // Find a tag container inside a card
+    const tagContainer = page.locator('[data-testid="tag-pills"]').first();
+    await expect(tagContainer).toBeAttached({ timeout: 5000 });
+
+    const overflowX = await tagContainer.evaluate(
+      (el) => getComputedStyle(el).overflowX
+    );
+    expect(overflowX).toBe('auto');
+  });
+
+  test('tag badges do not shrink below their content width', async ({ page }) => {
+    await page.goto('/workflows/');
+    const firstCard = templateCardLink(page);
+    await expect(firstCard).toBeAttached({ timeout: 10000 });
+
+    const tagContainer = page.locator('[data-testid="tag-pills"]').first();
+    await expect(tagContainer).toBeAttached({ timeout: 5000 });
+
+    const badges = tagContainer.locator('a');
+    const count = await badges.count();
+    if (count > 0) {
+      const flexShrink = await badges.first().locator('span').evaluate(
+        (el) => getComputedStyle(el).flexShrink
+      );
+      expect(flexShrink).toBe('0');
+    }
+  });
+});
+
 test.describe('Error Handling', () => {
   test('404 page renders correctly', async ({ page }) => {
     const response = await page.goto('/this-page-does-not-exist-xyz123');
