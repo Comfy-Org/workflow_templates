@@ -571,7 +571,7 @@ onUnmounted(() => {
 
 <template>
   <div ref="containerRef" class="w-full min-w-0">
-    <div class="lg:relative min-w-0">
+    <div class="relative min-w-0">
       <!-- Search Input with Badges -->
       <div
         class="flex items-center gap-1.5 w-full min-h-10 px-3 rounded-full transition-colors"
@@ -681,7 +681,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && !hasActiveFilters"
-          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
+          class="absolute left-0 right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
           <!-- Pinned mobile badge row -->
           <div
@@ -903,7 +903,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && hasActiveFilters"
-          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
+          class="absolute left-0 right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
           <!-- Pinned mobile badge row -->
           <div
