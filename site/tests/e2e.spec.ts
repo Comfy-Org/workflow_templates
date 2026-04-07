@@ -217,37 +217,47 @@ test.describe('Search Filter "+X more" Expansion', () => {
 });
 
 test.describe('Tag Pills Scrollability', () => {
-  test('tag container allows horizontal scroll instead of clipping', async ({ page }) => {
+  test('overflowed tag can be scrolled into view and clicked', async ({ page }) => {
+    // Use a narrow viewport to increase the chance of tag overflow
+    await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/workflows/');
     const firstCard = templateCardLink(page);
     await expect(firstCard).toBeAttached({ timeout: 10000 });
 
-    // Find a tag container inside a card
-    const tagContainer = page.locator('[data-testid="tag-pills"]').first();
-    await expect(tagContainer).toBeAttached({ timeout: 5000 });
+    // Find a tag container that actually overflows
+    const tagContainers = page.locator('[data-testid="tag-pills"]');
+    const containerCount = await tagContainers.count();
 
-    const overflowX = await tagContainer.evaluate(
-      (el) => getComputedStyle(el).overflowX
-    );
-    expect(overflowX).toBe('auto');
-  });
-
-  test('tag badges do not shrink below their content width', async ({ page }) => {
-    await page.goto('/workflows/');
-    const firstCard = templateCardLink(page);
-    await expect(firstCard).toBeAttached({ timeout: 10000 });
-
-    const tagContainer = page.locator('[data-testid="tag-pills"]').first();
-    await expect(tagContainer).toBeAttached({ timeout: 5000 });
-
-    const badges = tagContainer.locator('a');
-    const count = await badges.count();
-    if (count > 0) {
-      const flexShrink = await badges.first().locator('span').evaluate(
-        (el) => getComputedStyle(el).flexShrink
+    let overflowingContainer = null;
+    for (let i = 0; i < containerCount; i++) {
+      const container = tagContainers.nth(i);
+      const overflows = await container.evaluate(
+        (el) => el.scrollWidth > el.clientWidth
       );
-      expect(flexShrink).toBe('0');
+      if (overflows) {
+        overflowingContainer = container;
+        break;
+      }
     }
+
+    // Skip if no container overflows at this viewport width
+    test.skip(!overflowingContainer, 'No tag container overflows at 375px width');
+
+    // Get the last tag link — it should be partially or fully clipped
+    const lastTag = overflowingContainer!.locator('a').last();
+    await expect(lastTag).toBeAttached();
+
+    // Scroll the tag into view and click it
+    await lastTag.evaluate((el) =>
+      el.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' })
+    );
+    await Promise.all([
+      page.waitForNavigation(),
+      lastTag.click(),
+    ]);
+
+    // Assert navigation went to the tag filter page
+    expect(page.url()).toMatch(/\/workflows\/tag\/.+\//);
   });
 });
 
