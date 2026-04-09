@@ -12,6 +12,7 @@
 
 import type { ThumbnailVariant } from '../lib/hub-api';
 import { getVideoFrameUrl } from '../lib/video-thumbnail';
+import { isVideoFile, isAudioFile } from '../lib/media-utils';
 
 interface Props {
   thumbnails: string[];
@@ -51,10 +52,10 @@ const primarySrc = primaryThumb ? thumbUrl(primaryThumb) : '';
 const secondarySrc = secondaryThumb ? thumbUrl(secondaryThumb) : '';
 const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
-const isAudio = primaryThumb?.endsWith('.mp3') || primaryThumb?.endsWith('.webm');
-const isVideo = primaryThumb?.endsWith('.mp4') || primaryThumb?.endsWith('.mov');
+const isAudio = primaryThumb ? isAudioFile(primaryThumb) : false;
+const isVideo = primaryThumb ? isVideoFile(primaryThumb) : false;
 const videoPosterUrl = isVideo ? getVideoFrameUrl(primarySrc) : null;
-const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4') || secondaryThumb.endsWith('.mov'))
+const secondaryVideoPosterUrl = secondaryThumb && isVideoFile(secondaryThumb)
   ? getVideoFrameUrl(secondarySrc) : null;
 ---
 
@@ -292,18 +293,31 @@ const secondaryVideoPosterUrl = secondaryThumb && (secondaryThumb.endsWith('.mp4
 <script>
   import '../scripts/compare-slider';
 
-  // Video fallback: show poster image if video fails to load or play
+  // Video fallback: show poster image if video fails to load, stalls, or autoplay is suppressed
   document.querySelectorAll<HTMLVideoElement>('[data-video-fallback]').forEach((video) => {
     const wrapper = video.closest('.video-fallback-wrapper');
     const fallbackImg = wrapper?.querySelector<HTMLImageElement>('[data-video-fallback-img]');
     if (!fallbackImg) return;
 
+    let fallbackShown = false;
+
     function showFallback() {
+      if (fallbackShown) return;
+      fallbackShown = true;
       video.classList.add('hidden');
       fallbackImg!.classList.remove('hidden');
     }
 
     video.addEventListener('error', showFallback);
+    video.addEventListener('stalled', showFallback);
+
+    // Detect autoplay suppression (low-power mode, data-saver) — if the video
+    // hasn't started playing after 3s, show the fallback image instead.
+    setTimeout(() => {
+      if (video.paused && video.readyState < 3) {
+        showFallback();
+      }
+    }, 3000);
   });
 </script>
 

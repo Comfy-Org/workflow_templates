@@ -7,13 +7,15 @@
  * @param timeSeconds - The time offset in seconds to extract the frame from (default: 1)
  * @returns The Cloudflare frame extraction URL, or null if not applicable
  */
+const CLOUDFLARE_CDN_DOMAIN = 'engcomfy.com';
+
 export function getVideoFrameUrl(
   videoUrl: string,
   timeSeconds: number = 1
 ): string | null {
   try {
     const parsed = new URL(videoUrl);
-    if (!parsed.hostname.includes('engcomfy.com')) return null;
+    if (!parsed.hostname.includes(CLOUDFLARE_CDN_DOMAIN)) return null;
     // Insert cdn-cgi/media/mode=frame,time={N}s/ between the origin and the path
     const framePath = `cdn-cgi/media/mode=frame,time=${timeSeconds}s`;
     return `${parsed.origin}/${framePath}${parsed.pathname}`;

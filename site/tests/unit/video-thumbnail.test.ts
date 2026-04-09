@@ -34,6 +34,21 @@ describe('getVideoFrameUrl', () => {
     );
   });
 
+  it('handles URLs with query strings and hash fragments', () => {
+    const url = 'https://comfy-hub-assets.engcomfy.com/uploads/video.mp4?token=abc#t=5';
+    const result = getVideoFrameUrl(url);
+    expect(result).toBe(
+      'https://comfy-hub-assets.engcomfy.com/cdn-cgi/media/mode=frame,time=1s/uploads/video.mp4'
+    );
+  });
+
+  it('handles zero time offset', () => {
+    const url = 'https://comfy-hub-assets.engcomfy.com/uploads/video.mp4';
+    expect(getVideoFrameUrl(url, 0)).toBe(
+      'https://comfy-hub-assets.engcomfy.com/cdn-cgi/media/mode=frame,time=0s/uploads/video.mp4'
+    );
+  });
+
   it('handles production and test subdomains', () => {
     const test = getVideoFrameUrl(
       'https://comfy-hub-assets-test.engcomfy.com/uploads/v.mp4'
