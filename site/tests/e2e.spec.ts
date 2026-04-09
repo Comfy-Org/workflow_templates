@@ -216,6 +216,51 @@ test.describe('Search Filter "+X more" Expansion', () => {
   });
 });
 
+test.describe('Tag Pills Scrollability', () => {
+  test('overflowed tag can be scrolled into view and clicked', async ({ page }) => {
+    // Use a narrow viewport to increase the chance of tag overflow
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/workflows/');
+    const firstCard = templateCardLink(page);
+    await expect(firstCard).toBeAttached({ timeout: 10000 });
+
+    // Find a tag container that actually overflows
+    const tagContainers = page.locator('[data-testid="tag-pills"]');
+    const containerCount = await tagContainers.count();
+
+    let overflowingContainer = null;
+    for (let i = 0; i < containerCount; i++) {
+      const container = tagContainers.nth(i);
+      const overflows = await container.evaluate(
+        (el) => el.scrollWidth > el.clientWidth
+      );
+      if (overflows) {
+        overflowingContainer = container;
+        break;
+      }
+    }
+
+    // Skip if no container overflows at this viewport width
+    test.skip(!overflowingContainer, 'No tag container overflows at 375px width');
+
+    // Get the last tag link — it should be partially or fully clipped
+    const lastTag = overflowingContainer!.locator('a').last();
+    await expect(lastTag).toBeAttached();
+
+    // Scroll the tag into view and click it
+    await lastTag.evaluate((el) =>
+      el.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' })
+    );
+    await Promise.all([
+      page.waitForNavigation(),
+      lastTag.click(),
+    ]);
+
+    // Assert navigation went to the tag filter page
+    expect(page.url()).toMatch(/\/workflows\/tag\/.+\//);
+  });
+});
+
 test.describe('Error Handling', () => {
   test('404 page renders correctly', async ({ page }) => {
     const response = await page.goto('/this-page-does-not-exist-xyz123');

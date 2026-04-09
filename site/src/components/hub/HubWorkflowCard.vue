@@ -445,7 +445,7 @@ function handleCardClick() {
     </div>
 
     <!-- Tag pills -->
-    <div class="flex items-center gap-1.5 pt-4 overflow-hidden">
+    <div data-testid="tag-pills" class="flex items-center gap-1.5 pt-4 overflow-x-auto scrollbar-hide">
       <a
         v-for="tag in displayTags"
         :key="tag"
@@ -453,7 +453,7 @@ function handleCardClick() {
         class="tag-link"
         @click.stop
       >
-        <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors truncate max-w-28">
+        <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors shrink-0 whitespace-nowrap">
           {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
         </Badge>
       </a>
