@@ -53,7 +53,7 @@ async function main(): Promise<void> {
   // Phase 1: Run sync tasks in parallel (they're independent)
   console.log('📦 Phase 1: Syncing data sources...');
   const phase1Results = await Promise.all([
-    runTask('sync-templates', 'pnpm', ['run', 'sync']),
+    runTask('sync-templates', 'pnpm', ['run', 'sync', '--', '--top-50']),
     runTask('sync-tutorials', 'pnpm', ['run', 'sync:tutorials']),
   ]);
 
