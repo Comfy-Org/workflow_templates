@@ -21,6 +21,7 @@ import { tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import type { MediaType } from '@/lib/hub-api';
+import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 
 export interface SearchTemplate {
   name: string;
@@ -504,14 +505,10 @@ function formatUsage(usage: number): string {
   return String(usage);
 }
 
-function isAudioFile(file: string): boolean {
-  return file.endsWith('.mp3') || file.endsWith('.webm');
-}
-
 function getPrimaryThumb(thumbnails: string[]): string | null {
   if (thumbnails.length === 0) return null;
   const file = thumbnails[0];
-  if (isAudioFile(file) || file.endsWith('.mp4')) return null;
+  if (isAudioFile(file) || isVideoFile(file)) return null;
   if (file.startsWith('http://') || file.startsWith('https://')) return file;
   return `/workflows/thumbnails/${file}`;
 }

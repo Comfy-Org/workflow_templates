@@ -10,6 +10,8 @@ import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
+import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -103,12 +105,12 @@ const secondaryFile = computed(() => props.thumbnails[1] ?? null);
 
 const isAudioThumb = computed(() => {
   const f = primaryFile.value;
-  return Boolean(f && (f.endsWith('.mp3') || f.endsWith('.webm')));
+  return Boolean(f && isAudioFile(f));
 });
 
 const isVideoPrimary = computed(() => {
   const f = primaryFile.value;
-  return Boolean(f && (f.endsWith('.mp4') || f.endsWith('.mov')));
+  return Boolean(f && isVideoFile(f));
 });
 
 const videoUrl = computed(() => {
@@ -118,10 +120,21 @@ const videoUrl = computed(() => {
   return `/workflows/thumbnails/${f}`;
 });
 
+const posterUrl = computed(() => {
+  if (!videoUrl.value) return null;
+  return getVideoFrameUrl(videoUrl.value);
+});
+
+const videoFailed = ref(false);
+
+function onVideoError() {
+  videoFailed.value = true;
+}
+
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
   if (!f) return null;
-  if (f.endsWith('.mp3') || f.endsWith('.webm') || f.endsWith('.mp4') || f.endsWith('.mov')) {
+  if (isMediaFile(f)) {
     return null;
   }
   if (f.startsWith('http://') || f.startsWith('https://')) return f;
@@ -131,7 +144,7 @@ const primaryUrl = computed(() => {
 const hasSecondImage = computed(() => {
   const f = secondaryFile.value;
   if (!f) return false;
-  if (f.endsWith('.mp4') || f.endsWith('.mov') || f.endsWith('.mp3') || f.endsWith('.webm')) {
+  if (isMediaFile(f)) {
     return false;
   }
   return true;
@@ -320,15 +333,27 @@ function handleCardClick() {
         </svg>
       </div>
 
+      <img
+        v-else-if="isVideoPrimary && videoUrl && videoFailed && posterUrl"
+        :src="posterUrl"
+        :alt="title"
+        loading="lazy"
+        decoding="async"
+        draggable="false"
+        class="w-full h-full object-cover select-none"
+      />
+
       <video
         v-else-if="isVideoPrimary && videoUrl"
         :src="videoUrl"
+        :poster="posterUrl || undefined"
         class="w-full h-full object-cover"
         preload="metadata"
         autoplay
         muted
         loop
         playsinline
+        @error="onVideoError"
       />
 
       <img

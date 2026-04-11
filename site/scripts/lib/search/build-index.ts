@@ -49,9 +49,18 @@ async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
   if (!apiUrl) return null;
   try {
-    const res = await fetch(`${apiUrl}/api/hub/workflows/index`);
+    // Match hub-api.ts listWorkflowIndex(): preview builds request all statuses
+    // so the search index includes pending/rejected/deprecated workflows too.
+    // Production builds (PUBLIC_APPROVED_ONLY=true) request only approved.
+    const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
+    const statuses = approvedOnly
+      ? 'approved'
+      : 'pending,approved,rejected,deprecated';
+    const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
     if (!res.ok) return null;
-    return (await res.json()) as IndexEntry[];
+    const entries = (await res.json()) as IndexEntry[];
+    // Return null on empty array so the caller falls back to content collection
+    return entries.length > 0 ? entries : null;
   } catch {
     return null;
   }
