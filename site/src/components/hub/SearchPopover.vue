@@ -414,7 +414,7 @@ function activateItem(index: number) {
       if (creator) window.location.href = getCreatorUrl(creator.username);
     } else {
       const wf = displayedWorkflows.value[index - sugTotal - matchedCreators.value.length];
-      if (wf) window.location.href = getTemplateUrl(wf.id);
+      if (wf) window.location.href = getTemplateUrl(wf.slug || wf.id);
     }
   } else {
     const popCount = popularWorkflows.value.length;
@@ -1073,7 +1073,7 @@ onUnmounted(() => {
                 <a
                   v-for="(hit, i) in displayedWorkflows"
                   :key="hit.id"
-                  :href="getTemplateUrl(hit.id)"
+                  :href="getTemplateUrl(hit.slug || hit.id)"
                   :data-nav-index="activeWorkflowOffset + i"
                   class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
                   :class="{ 'bg-white/10': activeIndex === activeWorkflowOffset + i }"

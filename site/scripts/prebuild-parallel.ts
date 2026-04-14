@@ -83,9 +83,9 @@ async function main(): Promise<void> {
 
   const phase2Failed = phase2Results.filter((r) => !r.success);
   if (phase2Failed.length > 0) {
-    console.warn('\n⚠️  Phase 2: some tasks failed (non-fatal):');
+    console.error('\n❌ Phase 2 failed:');
     for (const f of phase2Failed) {
-      console.warn(`   - ${f.name}: ${f.error}`);
+      console.error(`   - ${f.name}: ${f.error}`);
     }
   }
 
@@ -107,6 +107,10 @@ async function main(): Promise<void> {
   const savedTime = sequentialEstimate - totalDuration;
   if (savedTime > 1000) {
     console.log(`   Saved ~${(savedTime / 1000).toFixed(1)}s vs sequential`);
+  }
+
+  if (phase2Failed.length > 0) {
+    process.exit(1);
   }
 }
 

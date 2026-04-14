@@ -20,6 +20,8 @@ interface SearchDocument {
   username: string;
   creatorName: string;
   // Stored fields for display (not searched)
+  name: string;
+  slug: string;
   thumbnail: string;
   usage: number;
   tagsArray: string[];
@@ -106,10 +108,15 @@ export async function buildSearchIndex(): Promise<void> {
       const creatorName = displayNames.get(username) || username;
       const tags = data.tags || [];
       const models = data.models || [];
-      const name = data.name || data.shareId || '';
+      const shareId = data.shareId || '';
+      const name = data.name || shareId;
+      // Use shareId as the unique ID; name can be duplicated across users
+      const id = shareId || name;
+      // URL slug: "{name}-{shareId}" for hub entries, "{name}" for legacy
+      const slug = shareId ? `${name}-${shareId}` : name;
 
       documents.push({
-        id: name,
+        id,
         title: data.title || name,
         description: data.description || '',
         tags: tags.map(tagSearchText).join(' '),
@@ -118,6 +125,8 @@ export async function buildSearchIndex(): Promise<void> {
         mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType || ''] || data.mediaType || 'image',
         username,
         creatorName,
+        name,
+        slug,
         thumbnail: data.thumbnailUrl || '',
         usage: 0,
         tagsArray: tags.map(tagDisplayName),
@@ -137,9 +146,14 @@ export async function buildSearchIndex(): Promise<void> {
       const models: string[] = data.models || [];
       const thumbnails: string[] = data.thumbnails || [];
 
+      const shareId = data.shareId || '';
+      const name = data.name || shareId;
+      const id = shareId || name;
+      const slug = shareId ? `${name}-${shareId}` : name;
+
       documents.push({
-        id: data.name,
-        title: data.title || data.name,
+        id,
+        title: data.title || name,
         description: data.description || '',
         tags: tags.map(tagSearchText).join(' '),
         models: models.join(' '),
@@ -147,6 +161,8 @@ export async function buildSearchIndex(): Promise<void> {
         mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType] || data.mediaType,
         username,
         creatorName: username,
+        name,
+        slug,
         thumbnail: thumbnails[0] || '',
         usage: data.usage || 0,
         tagsArray: tags.map(tagDisplayName),
@@ -179,6 +195,8 @@ export async function buildSearchIndex(): Promise<void> {
       'title',
       'mediaType',
       'mediaTypeLabel',
+      'name',
+      'slug',
       'thumbnail',
       'username',
       'creatorName',
