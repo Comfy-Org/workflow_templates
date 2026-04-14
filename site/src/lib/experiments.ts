@@ -235,7 +235,7 @@ export function trackExposure(experimentId: string, variant: string): void {
     });
   }
 
-  // Also track via web-vitals attribution if available
+  // Also track via Google Analytics if available
   if (gtag) {
     gtag('event', 'experiment_exposure', {
       experiment_id: experimentId,

@@ -41,13 +41,11 @@ When implementing designs from Figma, you **MUST** preserve certain components a
 
 | Component       | Location                | Purpose                   |
 | --------------- | ----------------------- | ------------------------- |
-| `<Analytics />` | `BaseLayout.astro`      | Vercel Analytics          |
-| `vitals.ts`     | `src/scripts/vitals.ts` | Core Web Vitals reporting |
+| `<Analytics />` | `BaseLayout.astro`      | Vercel Analytics (includes Core Web Vitals) |
 
 **Rules:**
 
 - Keep `<Analytics />` at end of `<body>`
-- Keep vitals script import in layout
 
 ### 4. UTM Parameter Tracking
 
@@ -97,7 +95,6 @@ When implementing a new design:
 - [ ] Internal links use `localizeUrl(path, locale)`
 - [ ] `<html lang={locale} dir={htmlDir}>` preserved
 - [ ] `<Analytics />` component in layout
-- [ ] Vitals script import preserved
 - [ ] Template pages pass `structuredData` prop
 - [ ] Canonical URLs are correct for localized pages
 - [ ] CTA links use `getCloudCtaUrl()` utility
@@ -139,9 +136,6 @@ const langInfo = LANGUAGES[locale];
 
     <!-- REQUIRED: Keep at end of body -->
     <Analytics />
-    <script>
-      import('../scripts/vitals');
-    </script>
   </body>
 </html>
 ```
