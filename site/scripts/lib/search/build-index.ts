@@ -50,22 +50,21 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
 async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
   if (!apiUrl) return null;
-  try {
-    // Match hub-api.ts listWorkflowIndex(): preview builds request all statuses
-    // so the search index includes pending/rejected/deprecated workflows too.
-    // Production builds (PUBLIC_APPROVED_ONLY=true) request only approved.
-    const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
-    const statuses = approvedOnly
-      ? 'approved'
-      : 'pending,approved,rejected,deprecated';
-    const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
-    if (!res.ok) return null;
-    const entries = (await res.json()) as IndexEntry[];
-    // Return null on empty array so the caller falls back to content collection
-    return entries.length > 0 ? entries : null;
-  } catch {
-    return null;
+
+  const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
+  const statuses = approvedOnly
+    ? 'approved'
+    : 'pending,approved,rejected,deprecated';
+  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
+
+  if (!res.ok) {
+    throw new Error(`Hub API returned ${res.status}: ${res.statusText}`);
   }
+  const entries = (await res.json()) as IndexEntry[];
+  if (entries.length === 0) {
+    throw new Error('Hub API returned empty index');
+  }
+  return entries;
 }
 
 async function fetchProfileDisplayName(username: string): Promise<string> {
@@ -86,7 +85,7 @@ export async function buildSearchIndex(): Promise<void> {
 
   const documents: SearchDocument[] = [];
 
-  // Try hub API first, fall back to content collection files
+  // Hub API is the primary source; content collection is only for local/offline builds
   const hubEntries = await fetchIndexEntries();
   if (hubEntries) {
     logger.info(`Building search index from hub API (${hubEntries.length} entries)`);
@@ -133,9 +132,9 @@ export async function buildSearchIndex(): Promise<void> {
       });
     }
   } else {
-    // Fallback: read from synced content collection files
+    // No PUBLIC_HUB_API_URL — local/offline build, use content collection
     const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json') && !f.includes('/'));
-    logger.info(`Building search index from content collection (${files.length} files)`);
+    logger.warn(`No hub API configured — building search index from content collection (${files.length} files)`);
 
     for (const file of files) {
       const filePath = path.join(CONTENT_DIR, file);
