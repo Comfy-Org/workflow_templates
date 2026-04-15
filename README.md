@@ -36,8 +36,10 @@ The template site is deployed to four environments via GitHub Actions:
 main merge (version bump)
   └─ PyPI publish ─► deploy-site.yml ─► Production (approved only)
 
+Once per day (00:00 UTC)
+  └─ cron-rebuild-site.yml         ─► Production         (prod API, approved only)
+
 Every 15 minutes
-  ├─ cron-rebuild-site.yml         ─► Production         (prod API, approved only)
   └─ preview-cron.yml
        ├─ main (prod API)          ─► Preview Prod        (prod API, all workflows)
        └─ main (test API)          ─► Preview Test        (test API, all workflows)
@@ -50,7 +52,7 @@ PR opened/updated
 | Environment | Workflow | API | Status Filter | Vercel Flag | Alias Secret | Trigger |
 |-------------|----------|-----|---------------|-------------|--------------|---------|
 | **Production** | `deploy-site.yml` | Production | `approved` only | `--prod` | — | PyPI publish / manual |
-| **Production** | `cron-rebuild-site.yml` | Production | `approved` only | `--prod` | — | Every 15 min |
+| **Production** | `cron-rebuild-site.yml` | Production | `approved` only | `--prod` | — | Once per day (00:00 UTC) |
 | **Preview Prod** | `preview-cron.yml` (main, prod) | Production | None (all) | preview | `VERCEL_PREVIEW_ALIAS` | Every 15 min |
 | **Preview Test** | `preview-cron.yml` (main, test) | Test | None (all) | preview | `VERCEL_PREVIEW_TEST_ALIAS` | Every 15 min |
 | **PR Preview** | `preview-site.yml` | Configurable | None (all) | preview | — | PR changes |
