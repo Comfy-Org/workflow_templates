@@ -477,11 +477,11 @@ export async function loadSerializedTemplates(
     if (import.meta.env.PUBLIC_HUB_API_URL) {
       throw new Error(`Hub API failed during build: ${err}`);
     }
-    console.warn('No hub API configured, using content collection for local build');
+    console.warn('Hub API error, falling back to content collection:', err);
     const templates = await getCollection();
     return templates
       .filter((tmpl) => !tmpl.id.includes('/'))
-      .sort((a, b) => ((b.data as any).usage || 0) - ((a.data as any).usage || 0))
+      .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0))
       .map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
   }
 }

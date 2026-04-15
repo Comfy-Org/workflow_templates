@@ -47,6 +47,11 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
   '3d': '3D',
 };
 
+/**
+ * Fetch workflow index entries from the hub API.
+ * Returns `null` when no API URL is configured (local dev).
+ * Throws when the API is configured but returns an error or empty response.
+ */
 async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
   if (!apiUrl) return null;
