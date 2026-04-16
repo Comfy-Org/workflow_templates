@@ -6,6 +6,8 @@ import MiniSearch, { type SearchResult } from 'minisearch';
 
 export interface WorkflowHit {
   id: string;
+  name: string;
+  slug: string;
   title: string;
   mediaType: string;
   mediaTypeLabel: string;
@@ -58,6 +60,8 @@ async function loadIndex(): Promise<MiniSearch> {
       'title',
       'mediaType',
       'mediaTypeLabel',
+      'name',
+      'slug',
       'thumbnail',
       'username',
       'creatorName',
@@ -76,9 +80,12 @@ function ensureIndex(): Promise<MiniSearch> {
 }
 
 function mapResult(result: SearchResult): WorkflowHit {
+  const name = (result.name as string) || (result.id as string);
   return {
     id: result.id as string,
-    title: (result.title as string) || (result.id as string),
+    name,
+    slug: (result.slug as string) || name,
+    title: (result.title as string) || name,
     mediaType: (result.mediaType as string) || 'image',
     mediaTypeLabel: (result.mediaTypeLabel as string) || 'Image',
     thumbnail: (result.thumbnail as string) || '',
@@ -123,7 +130,7 @@ function deriveCreators(workflows: WorkflowHit[], query: string): CreatorHit[] {
 
 export async function search(
   query: string,
-  options?: { allowedIds?: Set<string> }
+  options?: { allowedNames?: Set<string> }
 ): Promise<SearchResults> {
   const trimmed = query.trim();
   if (!trimmed) {
@@ -131,18 +138,19 @@ export async function search(
   }
 
   const index = await ensureIndex();
-  let results = index.search(trimmed, {
+  const results = index.search(trimmed, {
     prefix: true,
     fuzzy: 0.2,
     tokenize,
   });
 
-  // Scope results to allowed IDs when badge filters are active
-  if (options?.allowedIds) {
-    results = results.filter((r) => options.allowedIds!.has(r.id as string));
+  let workflows = results.map(mapResult);
+
+  // Scope results to allowed names when badge filters are active
+  if (options?.allowedNames) {
+    workflows = workflows.filter((w) => options.allowedNames!.has(w.name));
   }
 
-  const workflows = results.map(mapResult);
   const creators = deriveCreators(workflows, trimmed);
 
   return { workflows, creators };

@@ -36,25 +36,27 @@ The template site is deployed to four environments via GitHub Actions:
 main merge (version bump)
   └─ PyPI publish ─► deploy-site.yml ─► Production (approved only)
 
-Every 15 minutes
-  ├─ cron-rebuild-site.yml         ─► Production         (prod API, approved only)
+Once per day (00:00 UTC)
+  └─ cron-rebuild-site.yml         ─► Production         (prod API, approved only)
+
+Once per day (00:00 UTC)
   └─ preview-cron.yml
        ├─ main (prod API)          ─► Preview Prod        (prod API, all workflows)
        └─ main (test API)          ─► Preview Test        (test API, all workflows)
 
 PR opened/updated
   ├─ preview-site.yml              ─► PR Preview (one-off)
-  └─ preview-cron.yml (label)      ─► PR Preview (15-min, requires "preview-cron" label)
+  └─ preview-cron.yml (label)      ─► PR Preview (daily, requires "preview-cron" label)
 ```
 
 | Environment | Workflow | API | Status Filter | Vercel Flag | Alias Secret | Trigger |
 |-------------|----------|-----|---------------|-------------|--------------|---------|
 | **Production** | `deploy-site.yml` | Production | `approved` only | `--prod` | — | PyPI publish / manual |
-| **Production** | `cron-rebuild-site.yml` | Production | `approved` only | `--prod` | — | Every 15 min |
-| **Preview Prod** | `preview-cron.yml` (main, prod) | Production | None (all) | preview | `VERCEL_PREVIEW_ALIAS` | Every 15 min |
-| **Preview Test** | `preview-cron.yml` (main, test) | Test | None (all) | preview | `VERCEL_PREVIEW_TEST_ALIAS` | Every 15 min |
+| **Production** | `cron-rebuild-site.yml` | Production | `approved` only | `--prod` | — | Once per day (00:00 UTC) |
+| **Preview Prod** | `preview-cron.yml` (main, prod) | Production | None (all) | preview | `VERCEL_PREVIEW_ALIAS` | Once per day (00:00 UTC) |
+| **Preview Test** | `preview-cron.yml` (main, test) | Test | None (all) | preview | `VERCEL_PREVIEW_TEST_ALIAS` | Once per day (00:00 UTC) |
 | **PR Preview** | `preview-site.yml` | Configurable | None (all) | preview | — | PR changes |
-| **PR Preview** | `preview-cron.yml` (PR) | Test | None (all) | preview | — | Every 15 min |
+| **PR Preview** | `preview-cron.yml` (PR) | Test | None (all) | preview | — | Once per day (00:00 UTC) |
 
 **Status filtering** is controlled by the `PUBLIC_APPROVED_ONLY` environment variable at build time. When set to `'true'`, only workflows with `status: 'approved'` from the hub API index endpoint are included in the build. Preview environments omit this flag to show all workflows (pending, approved, rejected, deprecated) for internal review.
 

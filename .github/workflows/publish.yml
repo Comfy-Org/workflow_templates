@@ -2,22 +2,105 @@ name: Publish to PyPI
 
 # This workflow publishes packages to PyPI and creates GitHub releases.
 # Triggers:
-#   1. When pyproject.toml changes on main branch (version bump from PR merge)  
+#   1. When pyproject.toml changes on main branch (version bump from PR merge)
 #   2. Manual dispatch (for recovery/debugging)
-# 
+#
 # Features:
+#   - Conditional PyPI publishing (only when PR has 'release' label)
+#   - Always creates GitHub Release (regardless of label)
 #   - Version change detection (prevents unnecessary publishes)
 #   - Recovery mode (publishes packages out-of-sync with PyPI)
 #   - Dependency order publishing (subpackages before meta package)
 
 on:
   workflow_dispatch:
+    inputs:
+      force_publish:
+        description: 'Force publish to PyPI (bypass label check)'
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
     paths:
       - "pyproject.toml"
 
 jobs:
+  check-pr-label:
+    runs-on: ubuntu-latest
+    outputs:
+      should-publish: ${{ steps.check.outputs.should_publish }}
+      pr-number: ${{ steps.pr.outputs.number }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Find associated PR
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // For workflow_dispatch, allow force publish
+            if (context.eventName === 'workflow_dispatch') {
+              const forcePublish = '${{ inputs.force_publish }}' === 'true';
+              core.setOutput('number', forcePublish ? 'manual' : '');
+              return;
+            }
+
+            // Find PR associated with this merge commit
+            const commit = context.sha;
+            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: commit,
+            });
+
+            if (prs.length > 0) {
+              const pr = prs[0];
+              core.setOutput('number', pr.number);
+              console.log(`Found associated PR #${pr.number}`);
+            } else {
+              core.setOutput('number', '');
+              console.log('No associated PR found');
+            }
+
+      - name: Check for release label
+        id: check
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = '${{ steps.pr.outputs.number }}';
+
+            // Manual workflow with force_publish
+            if (prNumber === 'manual') {
+              core.setOutput('should_publish', 'true');
+              console.log('✅ Manual workflow dispatch with force_publish=true - will publish to PyPI');
+              return;
+            }
+
+            // No PR found - skip PyPI publish (but still create GitHub release)
+            if (!prNumber) {
+              core.setOutput('should_publish', 'false');
+              console.log('⚠️ No associated PR found - skipping PyPI publish (will only create GitHub release)');
+              return;
+            }
+
+            // Check if PR has 'release' label
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: parseInt(prNumber),
+            });
+
+            const hasReleaseLabel = pr.labels.some(label => label.name === 'release');
+            core.setOutput('should_publish', hasReleaseLabel ? 'true' : 'false');
+
+            if (hasReleaseLabel) {
+              console.log(`✅ PR #${prNumber} has 'release' label - will publish to PyPI`);
+            } else {
+              console.log(`⚠️ PR #${prNumber} does NOT have 'release' label - skipping PyPI publish (will only create GitHub release)`);
+            }
+
   check-version-change:
     runs-on: ubuntu-latest
     # Prevent concurrent publish workflows to avoid race conditions
@@ -49,7 +132,7 @@ jobs:
           fi
 
   publish:
-    needs: check-version-change
+    needs: [check-version-change, check-pr-label]
     if: needs.check-version-change.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
@@ -83,7 +166,20 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip build twine
 
+      - name: Check PyPI publish decision
+        run: |
+          SHOULD_PUBLISH="${{ needs.check-pr-label.outputs.should-publish }}"
+          PR_NUMBER="${{ needs.check-pr-label.outputs.pr-number }}"
+
+          if [ "$SHOULD_PUBLISH" = "true" ]; then
+            echo "📦 Will publish to PyPI (PR #$PR_NUMBER has 'release' label)"
+          else
+            echo "⏭️  Skipping PyPI publish (PR #$PR_NUMBER missing 'release' label)"
+            echo "   Only GitHub Release will be created"
+          fi
+
       - name: Determine packages to build
+        if: needs.check-pr-label.outputs.should-publish == 'true'
         id: changed-packages
         run: |
           echo "=== Package Detection Logic ==="
@@ -183,6 +279,7 @@ jobs:
           fi
 
       - name: Validate bundles before publishing
+        if: needs.check-pr-label.outputs.should-publish == 'true'
         run: |
           echo "=== Pre-publish Bundle Validation ==="
           # Safety check: ensure all templates are assigned to bundles
@@ -190,6 +287,7 @@ jobs:
           ./scripts/ci/validate_bundles.sh
 
       - name: Sync manifest and bundle assets
+        if: needs.check-pr-label.outputs.should-publish == 'true'
         run: |
           source .venv/bin/activate
           echo "=== Syncing manifests and bundle assets ==="
@@ -197,6 +295,7 @@ jobs:
           echo "✅ Manifest and bundle sync complete"
 
       - name: Build and publish packages in dependency order
+        if: needs.check-pr-label.outputs.should-publish == 'true'
         run: |
           source .venv/bin/activate
           rm -rf dist
@@ -282,9 +381,22 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
 
       - name: Create GitHub Release
+        if: always() && needs.check-version-change.outputs.new-version
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "v${{ needs.check-version-change.outputs.new-version }}" \
-          --title "v${{ needs.check-version-change.outputs.new-version }}" \
-          --generate-notes
+          SHOULD_PUBLISH="${{ needs.check-pr-label.outputs.should-publish }}"
+          VERSION="${{ needs.check-version-change.outputs.new-version }}"
+
+          # Create release with appropriate notes
+          if [ "$SHOULD_PUBLISH" = "true" ]; then
+            gh release create "v$VERSION" \
+              --title "v$VERSION" \
+              --notes "📦 **Published to PyPI**: Packages are available via \`pip install comfyui-workflow-templates==$VERSION\`" \
+              --generate-notes
+          else
+            gh release create "v$VERSION" \
+              --title "v$VERSION" \
+              --notes "⚠️ **Not published to PyPI**: This release was created without PyPI packages (PR missing \`release\` label). To publish, add the \`release\` label to the PR and re-trigger the workflow." \
+              --generate-notes
+          fi

@@ -11,21 +11,10 @@ import { t } from '../../../i18n/ui';
 import { tagSlug, tagDisplayName } from '../../../lib/tag-aliases';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { badgeVariants } from '../../../components/ui/badge';
-import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../../lib/hub-api';
+import { loadSerializedTemplates, type SerializedTemplate } from '../../../lib/hub-api';
 
 export async function getStaticPaths() {
-  const profiles = await getProfileCache();
-
-  // Try hub API first, fall back to content collection
-  let allSerialized: SerializedTemplate[];
-  try {
-    const entries = await listWorkflowIndex();
-    allSerialized = entries.map((e) => serializeIndexEntry(e, profiles));
-  } catch (err) {
-    console.error('Hub API failed, falling back to content collection:', err);
-    const collection = (await getCollection('templates')).filter((t) => !t.id.includes('/'));
-    allSerialized = collection.map((t) => serializeCollectionEntry(t.data, profiles));
-  }
+  const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
 
   const tagMap = new Map<
     string,
