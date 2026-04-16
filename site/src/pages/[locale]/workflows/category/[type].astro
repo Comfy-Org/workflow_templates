@@ -18,7 +18,7 @@ import { localizeUrl } from '../../../../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../../config/site';
 import { categoryPath } from '../../../../lib/routes';
 import { badgeVariants } from '../../../../components/ui/badge';
-import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate, type MediaType } from '../../../../lib/hub-api';
+import { loadSerializedTemplates, type SerializedTemplate, type MediaType } from '../../../../lib/hub-api';
 
 const validTypes: MediaType[] = ['image', 'video', 'audio', '3d'];
 
@@ -48,24 +48,8 @@ const categoryName = t(categoryTranslationKeys[mediaType], typedLocale);
 const title = `${categoryName} Workflows - ${t('meta.title', typedLocale)}`;
 const description = t('meta.description', typedLocale);
 
-const profiles = await getProfileCache();
-
-// Try hub API first, fall back to content collection
-let templates: SerializedTemplate[];
-try {
-  const entries = await listWorkflowIndex();
-  templates = entries
-    .filter((e) => (e.mediaType || 'image') === mediaType)
-    .map((e) => serializeIndexEntry(e, profiles));
-} catch (err) {
-  console.error('Hub API failed, falling back to content collection:', err);
-  const allTemplates = await getCollection('templates');
-  templates = allTemplates
-    .filter((tmpl) => !tmpl.id.includes('/'))
-    .filter((tmpl) => tmpl.data.mediaType === mediaType)
-    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0))
-    .map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
-}
+const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
+const templates = allSerialized.filter((tmpl) => tmpl.mediaType === mediaType);
 
 const basePath = categoryPath(mediaType);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));

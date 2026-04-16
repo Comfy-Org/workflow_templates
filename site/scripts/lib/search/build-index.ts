@@ -20,6 +20,8 @@ interface SearchDocument {
   username: string;
   creatorName: string;
   // Stored fields for display (not searched)
+  name: string;
+  slug: string;
   thumbnail: string;
   usage: number;
   tagsArray: string[];
@@ -45,25 +47,29 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
   '3d': '3D',
 };
 
+/**
+ * Fetch workflow index entries from the hub API.
+ * Returns `null` when no API URL is configured (local dev).
+ * Throws when the API is configured but returns an error or empty response.
+ */
 async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
   if (!apiUrl) return null;
-  try {
-    // Match hub-api.ts listWorkflowIndex(): preview builds request all statuses
-    // so the search index includes pending/rejected/deprecated workflows too.
-    // Production builds (PUBLIC_APPROVED_ONLY=true) request only approved.
-    const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
-    const statuses = approvedOnly
-      ? 'approved'
-      : 'pending,approved,rejected,deprecated';
-    const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
-    if (!res.ok) return null;
-    const entries = (await res.json()) as IndexEntry[];
-    // Return null on empty array so the caller falls back to content collection
-    return entries.length > 0 ? entries : null;
-  } catch {
-    return null;
+
+  const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
+  const statuses = approvedOnly
+    ? 'approved'
+    : 'pending,approved,rejected,deprecated';
+  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
+
+  if (!res.ok) {
+    throw new Error(`Hub API returned ${res.status}: ${res.statusText}`);
   }
+  const entries = (await res.json()) as IndexEntry[];
+  if (entries.length === 0) {
+    throw new Error('Hub API returned empty index');
+  }
+  return entries;
 }
 
 async function fetchProfileDisplayName(username: string): Promise<string> {
@@ -84,7 +90,7 @@ export async function buildSearchIndex(): Promise<void> {
 
   const documents: SearchDocument[] = [];
 
-  // Try hub API first, fall back to content collection files
+  // Hub API is the primary source; content collection is only for local/offline builds
   const hubEntries = await fetchIndexEntries();
   if (hubEntries) {
     logger.info(`Building search index from hub API (${hubEntries.length} entries)`);
@@ -106,10 +112,15 @@ export async function buildSearchIndex(): Promise<void> {
       const creatorName = displayNames.get(username) || username;
       const tags = data.tags || [];
       const models = data.models || [];
-      const name = data.name || data.shareId || '';
+      const shareId = data.shareId || '';
+      const name = data.name || shareId;
+      // Use shareId as the unique ID; name can be duplicated across users
+      const id = shareId || name;
+      // URL slug: "{name}-{shareId}" for hub entries, "{name}" for legacy
+      const slug = shareId ? `${name}-${shareId}` : name;
 
       documents.push({
-        id: name,
+        id,
         title: data.title || name,
         description: data.description || '',
         tags: tags.map(tagSearchText).join(' '),
@@ -118,15 +129,17 @@ export async function buildSearchIndex(): Promise<void> {
         mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType || ''] || data.mediaType || 'image',
         username,
         creatorName,
+        name,
+        slug,
         thumbnail: data.thumbnailUrl || '',
         usage: 0,
         tagsArray: tags.map(tagDisplayName),
       });
     }
   } else {
-    // Fallback: read from synced content collection files
+    // No PUBLIC_HUB_API_URL — local/offline build, use content collection
     const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json') && !f.includes('/'));
-    logger.info(`Building search index from content collection (${files.length} files)`);
+    logger.warn(`No hub API configured — building search index from content collection (${files.length} files)`);
 
     for (const file of files) {
       const filePath = path.join(CONTENT_DIR, file);
@@ -137,9 +150,14 @@ export async function buildSearchIndex(): Promise<void> {
       const models: string[] = data.models || [];
       const thumbnails: string[] = data.thumbnails || [];
 
+      const shareId = data.shareId || '';
+      const name = data.name || shareId;
+      const id = shareId || name;
+      const slug = shareId ? `${name}-${shareId}` : name;
+
       documents.push({
-        id: data.name,
-        title: data.title || data.name,
+        id,
+        title: data.title || name,
         description: data.description || '',
         tags: tags.map(tagSearchText).join(' '),
         models: models.join(' '),
@@ -147,6 +165,8 @@ export async function buildSearchIndex(): Promise<void> {
         mediaTypeLabel: MEDIA_TYPE_LABELS[data.mediaType] || data.mediaType,
         username,
         creatorName: username,
+        name,
+        slug,
         thumbnail: thumbnails[0] || '',
         usage: data.usage || 0,
         tagsArray: tags.map(tagDisplayName),
@@ -179,6 +199,8 @@ export async function buildSearchIndex(): Promise<void> {
       'title',
       'mediaType',
       'mediaTypeLabel',
+      'name',
+      'slug',
       'thumbnail',
       'username',
       'creatorName',

@@ -15,9 +15,8 @@ import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
 import { absoluteUrl } from '../../../config/site';
-import { listWorkflowIndex, getProfileCache, serializeIndexEntry, serializeCollectionEntry, type SerializedTemplate } from '../../../lib/hub-api';
+import { loadSerializedTemplates } from '../../../lib/hub-api';
 
-const profiles = await getProfileCache();
 const { locale } = Astro.params;
 
 // Validate locale
@@ -27,19 +26,7 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-// Try hub API first, fall back to content collection
-let serialized: SerializedTemplate[];
-try {
-  const entries = await listWorkflowIndex();
-  serialized = entries.map((e) => serializeIndexEntry(e, profiles));
-} catch (err) {
-  console.error('Hub API failed, falling back to content collection:', err);
-  const templates = await getCollection('templates');
-  const allTemplates = templates
-    .filter((tmpl) => !tmpl.id.includes('/'))
-    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
-  serialized = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
-}
+const serialized = await loadSerializedTemplates(() => getCollection('templates'));
 
 const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
 
