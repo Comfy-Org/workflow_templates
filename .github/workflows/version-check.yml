@@ -19,6 +19,8 @@ on:
     paths:
       - 'templates/**'
       - 'bundles.json'
+      - 'blueprints/**'
+      - 'blueprints_bundles.json'
       - 'pyproject.toml'
 
 permissions:
@@ -58,7 +60,12 @@ jobs:
           # To temporarily disable it and ship all templates, add --no-filter:
           #   python scripts/sync_bundles.py --no-filter
           python scripts/sync_bundles.py
-          echo "✅ Manifest sync complete"
+          echo "✅ Template manifest sync complete"
+
+          echo "=== Syncing blueprints manifests ==="
+          # Sync blueprints from blueprints/ to packages/blueprints/
+          python scripts/sync_blueprints.py
+          echo "✅ Blueprint manifest sync complete"
 
       - name: Check package sizes
         id: size_check
