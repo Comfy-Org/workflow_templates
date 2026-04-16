@@ -37,12 +37,14 @@ workflow_templates/
 ## Two Distinct Systems
 
 ### System 1: Template Packages (Python/PyPI)
+
 - Templates are grouped into 4 media bundles via `bundles.json`
 - `scripts/sync_bundles.py` copies templates + thumbnails into package directories
 - Published to PyPI as `comfyui-workflow-templates-*` packages
 - Version lives in root `pyproject.toml` (currently 0.8.43)
 
 ### System 2: Astro Website (`site/`)
+
 - **Independent project** — own `package.json`, `pnpm-lock.yaml`, tooling
 - Consumes templates from `../templates/` via sync scripts
 - AI content generation pipeline (GPT-4o) enriches template pages
@@ -61,6 +63,7 @@ templates/index.json + *.json + *.webp
 ## Key Commands
 
 ### Root (template management)
+
 ```bash
 npm run sync              # Sync bundle manifests + assets to packages
 python scripts/validate_templates.py   # Validate template JSON
@@ -68,6 +71,7 @@ python scripts/sync_data.py --templates-dir templates  # Sync i18n translations
 ```
 
 ### Site (in site/ directory)
+
 ```bash
 pnpm install              # Install deps (required first)
 pnpm run dev              # Dev server at localhost:4321
@@ -84,7 +88,9 @@ pnpm run test:e2e         # Playwright E2E tests
 ## Template Structure
 
 ### index.json Entry
+
 Each template in `templates/index.json` has:
+
 - `name` — Must match the JSON filename (snake_case, no extension)
 - `title`, `description` — Display metadata
 - `mediaType` — "image" | "video" | "audio" | "3d"
@@ -94,35 +100,45 @@ Each template in `templates/index.json` has:
 - `tutorialUrl`, `openSource`, `requiresCustomNodes`, `io`
 
 ### Workflow JSON Files
+
 Standard ComfyUI workflow format with embedded model metadata:
+
 - `properties.models[]` — Download URLs, SHA256 hashes, target directories
 - `properties.cnr_id` + `properties.ver` — Node version pinning
 
 ### Thumbnails
+
 - Named `{template_name}-1.webp` (primary), `{template_name}-2.webp` (comparison)
 - WebP format, target <1MB, 512×512 or 768×768
 
 ## Bundle Assignment
+
 Templates in `bundles.json` map to Python packages:
-| Bundle | Contents |
-|--------|----------|
-| `media-api` | Templates using external APIs |
-| `media-image` | Image generation/editing |
-| `media-video` | Video generation |
-| `media-other` | Audio, 3D, utilities |
+
+
+| Bundle        | Contents                      |
+| ------------- | ----------------------------- |
+| `media-api`   | Templates using external APIs |
+| `media-image` | Image generation/editing      |
+| `media-video` | Video generation              |
+| `media-other` | Audio, 3D, utilities          |
+
 
 ## Internationalization
 
 ### 11 Supported Languages
+
 en (default), zh, zh-TW, ja, ko, es, fr, ru, tr, ar, pt-BR
 
 ### Template i18n
+
 - Master: `templates/index.json` (English)
 - Locales: `templates/index.{locale}.json`
 - Translation tracking: `scripts/i18n.json`
 - Sync: `python scripts/sync_data.py --templates-dir templates`
 
 ### Site i18n
+
 - Config: `site/src/i18n/config.ts`
 - UI strings: `site/src/i18n/ui.ts`
 - URL pattern: English at `/templates/`, others at `/{locale}/templates/`
@@ -131,6 +147,7 @@ en (default), zh, zh-TW, ja, ko, es, fr, ru, tr, ar, pt-BR
 ## Site Architecture (Astro 5)
 
 ### Key Directories
+
 - `site/src/pages/` — Route pages ([slug].astro, [locale]/templates/)
 - `site/src/components/` — Astro (.astro) and Vue (.vue) components
 - `site/src/composables/` — Shared Vue 3 composables for cross-island state
@@ -141,15 +158,18 @@ en (default), zh, zh-TW, ja, ko, es, fr, ru, tr, ar, pt-BR
 - `site/overrides/templates/` — Human-edited content (survives AI regeneration)
 
 ### Island Architecture (Astro + Vue 3)
-Astro renders pages as static HTML. Interactive sections use Vue 3 components mounted as **islands** via `client:*` directives. Each island is a separate Vue app instance.
+
+Astro renders pages as static HTML. Interactive sections use Vue 3 components mounted as **islands** via `client:`* directives. Each island is a separate Vue app instance.
 
 **When to use Astro vs Vue:**
+
 - `.astro` — Static content, layouts, SEO markup, data fetching (`getCollection()`, API calls)
 - `.vue` with `client:load` — Interactive UI that needs reactivity on page load (filters, search, drawers)
 - `.vue` with `client:visible` — Interactive UI that can wait until scrolled into view (below-fold widgets)
-- `.vue` without `client:*` — SSR-only Vue (renders HTML at build time, no client JS)
+- `.vue` without `client:`* — SSR-only Vue (renders HTML at build time, no client JS)
 
 **Data flow — Astro page → Vue island:**
+
 ```
 [page].astro                          Vue island
 ─────────────                         ──────────
@@ -157,19 +177,23 @@ getCollection('templates')
   → serialize to plain objects
   → pass as props via client:load  →  defineProps<T>()
 ```
+
 Always serialize Astro content collection entries to plain objects before passing to Vue. Vue islands cannot receive Astro class instances, `Date` objects, or `Map`/`Set` — only JSON-serializable data.
 
 **Cross-island communication — Vue island ↔ Vue island:**
 Each `client:load` creates a separate Vue app, so `provide`/`inject` and `$emit` do NOT work across islands. Use shared composables with module-level reactive state:
+
 ```
 site/src/composables/useHubStore.ts   (module-level refs)
    ├── HubBrowse.vue (island 1)      imports useHubStore()
    └── SearchPopover.vue (island 2)  imports useHubStore(), watches shared ref
 ```
+
 Module-level `ref()` values are singletons in the browser bundle — all islands that import the same composable share the same reactive state.
 
 **Astro → Vue runtime bridge:**
 When a DOM element in Astro markup (e.g. a hamburger button) needs to trigger Vue state, the Vue island attaches a listener to that element by ID in `onMounted()`:
+
 ```ts
 // In the Vue island's <script setup>
 onMounted(() => {
@@ -177,9 +201,11 @@ onMounted(() => {
     ?.addEventListener('click', store.someAction);
 });
 ```
+
 Do NOT use inline `<script>` tags in `.astro` files that `dispatchEvent(new CustomEvent(...))`. The Vue island owns the listener.
 
 ### AI Content Pipeline
+
 1. `sync-templates.ts` syncs metadata from `../templates/`
 2. `generate-ai.ts` calls GPT-4o with context from `knowledge/`
 3. Generates: extendedDescription, howToUse[], metaDescription, suggestedUseCases[], faqItems[]
@@ -188,6 +214,7 @@ Do NOT use inline `<script>` tags in `.astro` files that `dispatchEvent(new Cust
 6. Human overrides in `site/overrides/templates/{name}.json` (set `humanEdited: true`)
 
 ### Critical Site Components (DO NOT remove/modify without care)
+
 - `SEOHead.astro` — Meta tags, structured data
 - `HreflangTags.astro` — i18n SEO
 - `t()` calls, `localizeUrl()` — i18n functions
@@ -196,12 +223,14 @@ Do NOT use inline `<script>` tags in `.astro` files that `dispatchEvent(new Cust
 ## CI/CD
 
 ### Template Validation (triggers on templates/ changes)
+
 - `validate-templates.yml` — JSON schema validation
 - `validate-blueprints.yml` — Blueprint validation
 - `validate-manifests.yml` — Manifest sync check
 - `link-checker.yml` — Model download URL validation
 
 ### Site (triggers on site/ changes)
+
 - `lint-site.yml` — ESLint + Prettier
 - `e2e-tests-site.yml` — Playwright tests
 - `visual-regression-site.yml` — Visual regression
@@ -210,15 +239,18 @@ Do NOT use inline `<script>` tags in `.astro` files that `dispatchEvent(new Cust
 - `deploy-site.yml` — Manual Vercel deploy
 
 ## Code Style
+
 - **Python**: Ruff, line-length 100, py312, rules E/F
 - **TypeScript/Astro**: ESLint + Prettier (configured in site/)
 - **Templates**: snake_case naming, JSON format
 - **Commits**: Bump version in `pyproject.toml` when modifying templates
 
 ### Vue 3 & Astro Coding Standards
+
 All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro patterns. Write senior-level, production-quality code.
 
 **Vue 3 — Required Patterns:**
+
 - `<script setup lang="ts">` for all components — no Options API
 - Standard reactivity: `ref()`, `computed()`, `watch()`, `watchEffect()`
 - Props via `defineProps<T>()`, emits via `defineEmits<T>()`
@@ -227,6 +259,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - Lifecycle: `onMounted()`, `onUnmounted()` — never raw `addEventListener` on `window`/`document` without cleanup
 
 **Vue 3 — Forbidden Patterns:**
+
 - `document.dispatchEvent(new CustomEvent(...))` for component communication — use composables
 - `document.addEventListener(...)` to listen for custom events from other Vue components
 - Event bus libraries or mitt — use shared composables with reactive state instead
@@ -235,12 +268,14 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - Mixins — use composables
 
 **Astro — Required Patterns:**
+
 - Astro components (`.astro`) for static/SSR content, Vue islands (`client:load`/`client:visible`) for interactivity
 - Pass data from Astro to Vue via props only — serialize to plain objects
 - For Astro-to-Vue runtime communication (e.g. a button in `.astro` triggering Vue state), attach event listeners to specific DOM elements by ID inside the Vue component's `onMounted()` — do NOT use inline `<script>` tags with `dispatchEvent`
 - Cross-island state sharing via shared composables (module-level refs are singletons in the browser bundle)
 
 ## Claude Skills Available
+
 - `/adding-templates` — Add new workflow templates (full workflow)
 - `/managing-bundles` — Move templates between bundles, reorder
 - `/managing-thumbnails` — Add/replace/audit thumbnails
@@ -249,9 +284,11 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - `/regenerating-ai-content` — Regenerate AI descriptions, manage cache
 
 ## Important Docs
+
 - `docs/SPEC.md` — Formal template JSON schema
 - `docs/BLUEPRINTS.md` — Subgraph blueprint spec
 - `docs/I18N_GUIDE.md` — Translation management workflow
 - `site/docs/PRD.md` — Product requirements for the site
 - `site/docs/TDD.md` — Technical design document
 - `site/docs/design-integration-guide.md` — REQUIRED when implementing Figma designs
+
