@@ -160,6 +160,12 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
             # Core package affects meta
             elif pkg == "meta" and (file.startswith("packages/") or file == "pyproject.toml"):
                 filtered_files.append(file)
+            # Blueprints package: affected by blueprints/ directory and blueprints_bundles.json
+            elif pkg == "blueprints":
+                if file.startswith("blueprints/") or file == "blueprints_bundles.json":
+                    filtered_files.append(file)
+                elif file == "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json":
+                    filtered_files.append(file)
             # Template files affecting this package's bundle
             elif pkg_bundle and file.startswith("templates/"):
                 template_name = Path(file).stem.split('-')[0]
@@ -198,7 +204,7 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
 def get_changed_packages() -> Set[str]:
     """Determine which packages need version bumps based on changes since their last version bump"""
     try:
-        packages = ["core", "media_api", "media_video", "media_image", "media_other", "meta"]
+        packages = ["core", "media_api", "media_video", "media_image", "media_other", "blueprints", "meta"]
         affected = set()
 
         for pkg in packages:
