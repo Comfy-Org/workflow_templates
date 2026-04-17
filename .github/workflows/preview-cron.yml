@@ -85,13 +85,16 @@ jobs:
 
       - name: Deploy to Vercel
         id: deploy
-        uses: amondnet/vercel-action@v25
+        uses: amondnet/vercel-action@v42
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: site
-          vercel-args: '--prebuilt'
+          root-directory: site
+          vercel-output-dir: site/.vercel/output
+          prebuilt: true
+          target: preview
 
       - name: Alias main preview
         if: matrix.is_main

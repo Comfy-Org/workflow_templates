@@ -78,10 +78,13 @@ jobs:
           PUBLIC_APPROVED_ONLY: 'true'
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
+        uses: amondnet/vercel-action@v42
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: site
-          vercel-args: '--prebuilt --prod'
+          root-directory: site
+          vercel-output-dir: site/.vercel/output
+          prebuilt: true
+          target: production
