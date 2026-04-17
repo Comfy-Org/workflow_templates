@@ -303,23 +303,19 @@ const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc
 <script>
   import '../scripts/compare-slider';
 
-  // Video fallback: show poster image if video fails to load, stalls, or autoplay is suppressed.
-  // If no poster image is available, hide the broken video wrapper entirely.
+  // Video fallback: show poster image if video fails to load, stalls, or autoplay is suppressed
   document.querySelectorAll<HTMLVideoElement>('[data-video-fallback]').forEach((video) => {
-    const wrapper = video.closest<HTMLElement>('.video-fallback-wrapper');
+    const wrapper = video.closest('.video-fallback-wrapper');
     const fallbackImg = wrapper?.querySelector<HTMLImageElement>('[data-video-fallback-img]');
+    if (!fallbackImg) return;
 
     let fallbackShown = false;
 
     function showFallback() {
       if (fallbackShown) return;
       fallbackShown = true;
-      if (fallbackImg) {
-        video.classList.add('hidden');
-        fallbackImg.classList.remove('hidden');
-      } else {
-        wrapper?.classList.add('hidden');
-      }
+      video.classList.add('hidden');
+      fallbackImg!.classList.remove('hidden');
     }
 
     video.addEventListener('error', showFallback);
