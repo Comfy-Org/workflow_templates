@@ -50,13 +50,21 @@ jobs:
           PUBLIC_APPROVED_ONLY: 'true'
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v41.1.4
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: site
-          root-directory: site
-          vercel-output-dir: site/.vercel/output
-          prebuilt: true
-          target: production
+        working-directory: site
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          stdout_file="$RUNNER_TEMP/vercel-production.stdout"
+          stderr_file="$RUNNER_TEMP/vercel-production.stderr"
+
+          if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --prod --yes \
+            --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+          else
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+            exit 1
+          fi
