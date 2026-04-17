@@ -122,10 +122,10 @@ onUnmounted(() => {
   >
     <!-- Header -->
     <div class="flex items-center justify-between px-5 py-4">
-      <span class="text-lg font-semibold text-white">Filter</span>
+      <span class="text-lg font-semibold text-content">Filter</span>
       <button
         type="button"
-        class="flex items-center justify-center size-8 rounded-full text-white/60 hover:text-white hover:bg-white/5 transition-colors"
+        class="flex items-center justify-center size-8 rounded-full text-content-muted hover:text-content hover:bg-hub-surface transition-colors"
         aria-label="Close filters"
         @click="closeDrawer"
       >
