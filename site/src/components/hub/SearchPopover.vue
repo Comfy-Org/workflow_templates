@@ -638,7 +638,7 @@ onUnmounted(() => {
         <button
           v-if="hasQuery || hasBadges"
           type="button"
-          class="shrink-0 size-5 flex items-center justify-center rounded-full text-content/40 hover:text-content hover:bg-hub-surface transition-colors"
+          class="shrink-0 size-5 flex items-center justify-center rounded-full text-content-muted hover:text-content hover:bg-hub-surface transition-colors"
           aria-label="Clear all"
           @click.stop="clearAll"
         >
@@ -715,7 +715,7 @@ onUnmounted(() => {
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
             <!-- Popular Workflows -->
             <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Popular Workflows
                 <span class="text-content/30 font-normal ml-1"
                   >({{ formatUsage(templates.length) }}+)</span
@@ -764,7 +764,7 @@ onUnmounted(() => {
                     >
                       {{ wf.title }}
                     </p>
-                    <p class="text-xs text-content/40 truncate">
+                    <p class="text-xs text-content-muted truncate">
                       {{ wf.creatorDisplayName }} · {{ formatUsage(wf.usage) }} runs
                     </p>
                   </div>
@@ -774,7 +774,7 @@ onUnmounted(() => {
 
             <!-- Top Creators -->
             <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Top Creators
                 <span class="text-content/30 font-normal ml-1">({{ uniqueCreatorCount }})</span>
               </h3>
@@ -784,7 +784,7 @@ onUnmounted(() => {
                   :key="creator.username"
                   :href="getCreatorUrl(creator.username)"
                   :data-nav-index="discCreatorOffset + i"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content/80 text-sm font-normal hover:brightness-125 transition-all"
+                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content-secondary text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === discCreatorOffset + i }"
                 >
                   <img
@@ -806,7 +806,7 @@ onUnmounted(() => {
 
             <!-- Filter by — two labeled rows with "+ N more" -->
             <section class="space-y-3">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50">Filter by</h3>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted">Filter by</h3>
               <div data-testid="filter-row-categories" class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-content/30 uppercase tracking-wide w-20 shrink-0"
                   >Categories</span
@@ -826,7 +826,7 @@ onUnmounted(() => {
                 <button
                   v-if="!showAllTags && remainingTagCount > 0"
                   data-testid="show-more-tags"
-                  class="text-xs text-content/30 hover:text-content/60 transition-colors"
+                  class="text-xs text-content/30 hover:text-content-secondary transition-colors"
                   @click="showAllTags = true"
                 >
                   + {{ remainingTagCount }} more
@@ -851,7 +851,7 @@ onUnmounted(() => {
                 <button
                   v-if="!showAllModels && remainingModelCount > 0"
                   data-testid="show-more-models"
-                  class="text-xs text-content/30 hover:text-content/60 transition-colors"
+                  class="text-xs text-content/30 hover:text-content-secondary transition-colors"
                   @click="showAllModels = true"
                 >
                   + {{ remainingModelCount }} more
@@ -936,7 +936,7 @@ onUnmounted(() => {
 
           <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">
-            <div class="flex items-center gap-3 text-content/50">
+            <div class="flex items-center gap-3 text-content-muted">
               <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle
                   class="opacity-25"
@@ -960,7 +960,7 @@ onUnmounted(() => {
           <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
-              <h3 class="text-[11px] font-semibold uppercase tracking-wide text-content/40 mb-2.5">
+              <h3 class="text-[11px] font-semibold uppercase tracking-wide text-content-muted mb-2.5">
                 Narrow by
               </h3>
               <div class="flex flex-wrap gap-1.5">
@@ -1001,7 +1001,7 @@ onUnmounted(() => {
 
             <!-- Creator results (only when text searching) -->
             <section v-if="hasQuery && matchedCreators.length > 0">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Creators
               </h3>
               <div class="flex flex-wrap gap-2">
@@ -1010,7 +1010,7 @@ onUnmounted(() => {
                   :key="creator.username"
                   :href="getCreatorUrl(creator.username)"
                   :data-nav-index="activeCreatorOffset + i"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content/80 text-sm font-normal hover:brightness-125 transition-all"
+                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content-secondary text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
                 >
                   <img
@@ -1042,8 +1042,8 @@ onUnmounted(() => {
               "
               class="text-center py-4"
             >
-              <p class="text-sm text-content/50">
-                No results for "<span class="text-content/70">{{ searchQuery.trim() }}</span
+              <p class="text-sm text-content-muted">
+                No results for "<span class="text-content-secondary">{{ searchQuery.trim() }}</span
                 >"
                 <template v-if="hasBadges"> within active filters</template>
               </p>
@@ -1057,13 +1057,13 @@ onUnmounted(() => {
               v-else-if="!hasQuery && hasBadges && badgeOnlyResults.length === 0"
               class="text-center py-4"
             >
-              <p class="text-sm text-content/50">No workflows match the selected filters</p>
+              <p class="text-sm text-content-muted">No workflows match the selected filters</p>
               <p class="text-xs text-content/30 mt-1">Try removing a filter</p>
             </div>
 
             <!-- Workflow results -->
             <section v-if="displayedWorkflows.length > 0">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Workflows
                 <span class="text-content/30 font-normal ml-1"
                   >({{ displayedWorkflows.length }})</span
@@ -1112,7 +1112,7 @@ onUnmounted(() => {
                     >
                       {{ hit.title }}
                     </p>
-                    <p class="text-xs text-content/40 truncate">
+                    <p class="text-xs text-content-muted truncate">
                       {{ hit.creatorName }} · {{ formatUsage(hit.usage) }} runs
                     </p>
                   </div>
@@ -1136,7 +1136,7 @@ onUnmounted(() => {
                 }}
                 ·
                 <button
-                  class="text-content/40 hover:text-content/60 underline cursor-pointer"
+                  class="text-content-muted hover:text-content-secondary underline cursor-pointer"
                   @click="clearAll"
                 >
                   Clear all

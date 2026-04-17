@@ -206,7 +206,7 @@ onUnmounted(() => {
             :class="
               activeTab === 'all'
                 ? 'text-content font-bold bg-hub-surface'
-                : 'text-content/70 hover:text-content hover:bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectTab('all')"
           >
@@ -218,7 +218,7 @@ onUnmounted(() => {
             :class="
               activeTab === 'nodeGraphs'
                 ? 'text-content font-bold bg-hub-surface'
-                : 'text-content/70 hover:text-content hover:bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectTab('nodeGraphs')"
           >
@@ -231,7 +231,7 @@ onUnmounted(() => {
             :class="
               activeTab === 'comfyApps'
                 ? 'text-content font-bold bg-hub-surface'
-                : 'text-content/70 hover:text-content hover:bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectTab('comfyApps')"
           >
@@ -287,7 +287,7 @@ onUnmounted(() => {
             :class="
               sortBy === 'popular'
                 ? 'text-content font-bold bg-hub-surface'
-                : 'text-content/70 hover:text-content hover:bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectSort('popular')"
           >
@@ -299,7 +299,7 @@ onUnmounted(() => {
             :class="
               sortBy === 'newest'
                 ? 'text-content font-bold bg-hub-surface'
-                : 'text-content/70 hover:text-content hover:bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectSort('newest')"
           >
@@ -384,7 +384,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-content/40">
+    <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-content-muted">
       <p class="text-lg">No templates match your filters</p>
       <p class="text-sm mt-2">Try removing some filters</p>
     </div>

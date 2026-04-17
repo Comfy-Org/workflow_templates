@@ -125,7 +125,7 @@ onUnmounted(() => {
       <span class="text-lg font-semibold text-content">Filter</span>
       <button
         type="button"
-        class="flex items-center justify-center size-8 rounded-full text-content/60 hover:text-content hover:bg-hub-surface transition-colors"
+        class="flex items-center justify-center size-8 rounded-full text-content-muted hover:text-content hover:bg-hub-surface transition-colors"
         aria-label="Close filters"
         @click="closeDrawer"
       >

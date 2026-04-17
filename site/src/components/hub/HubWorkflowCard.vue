@@ -432,7 +432,7 @@ function handleCardClick() {
     <a
       v-if="!hideAuthor && creatorUrl"
       :href="creatorUrl"
-      class="creator-link flex items-center gap-2 pt-2 w-fit text-content/50 hover:text-content transition-colors"
+      class="creator-link flex items-center gap-2 pt-2 w-fit text-content-muted hover:text-content transition-colors"
       @click.stop
     >
       <img
@@ -466,7 +466,7 @@ function handleCardClick() {
           authorName.charAt(0).toUpperCase()
         }}</span>
       </div>
-      <span class="text-content/50 text-sm truncate">{{ authorName }}</span>
+      <span class="text-content-muted text-sm truncate">{{ authorName }}</span>
     </div>
 
     <!-- Tag pills -->
