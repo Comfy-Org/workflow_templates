@@ -239,7 +239,7 @@ function handleCardClick() {
     @click="handleCardClick"
   >
     <!-- Thumbnail -->
-    <div class="aspect-square bg-white/5 rounded-xl overflow-hidden relative">
+    <div class="aspect-square bg-hub-surface rounded-xl overflow-hidden relative">
       <!-- Compare slider -->
       <div
         v-if="showCompare"
@@ -318,7 +318,7 @@ function handleCardClick() {
         class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
       >
         <svg
-          class="w-16 h-16 text-white/20"
+          class="w-16 h-16 text-content/20"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -391,7 +391,7 @@ function handleCardClick() {
         class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
       >
         <svg
-          class="w-10 h-10 text-white/20"
+          class="w-10 h-10 text-content/20"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -413,7 +413,7 @@ function handleCardClick() {
           :alt="providerName || ''"
           class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
         />
-        <span class="text-white text-sm font-semibold drop-shadow-lg">
+        <span class="text-content text-sm font-semibold drop-shadow-lg">
           {{ providerName }}
         </span>
       </div>
@@ -422,7 +422,7 @@ function handleCardClick() {
     <!-- Title -->
     <div class="pt-3 pb-1">
       <h3
-        class="font-semibold text-white text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-white group-has-[.tag-link:hover]:text-white transition-colors"
+        class="font-semibold text-content text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-content group-has-[.tag-link:hover]:text-content transition-colors"
       >
         {{ title }}
       </h3>
@@ -432,7 +432,7 @@ function handleCardClick() {
     <a
       v-if="!hideAuthor && creatorUrl"
       :href="creatorUrl"
-      class="creator-link flex items-center gap-2 pt-2 w-fit text-white/50 hover:text-white transition-colors"
+      class="creator-link flex items-center gap-2 pt-2 w-fit text-content/50 hover:text-content transition-colors"
       @click.stop
     >
       <img
@@ -443,7 +443,7 @@ function handleCardClick() {
       />
       <div
         v-else
-        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
       >
         <span class="text-black text-[10px] font-bold leading-none">{{
           authorName.charAt(0).toUpperCase()
@@ -460,13 +460,13 @@ function handleCardClick() {
       />
       <div
         v-else
-        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
       >
         <span class="text-black text-[10px] font-bold leading-none">{{
           authorName.charAt(0).toUpperCase()
         }}</span>
       </div>
-      <span class="text-white/50 text-sm truncate">{{ authorName }}</span>
+      <span class="text-content/50 text-sm truncate">{{ authorName }}</span>
     </div>
 
     <!-- Tag pills -->
@@ -478,7 +478,7 @@ function handleCardClick() {
         class="tag-link"
         @click.stop
       >
-        <Badge variant="hub-pill" class="hover:bg-white/15 transition-colors shrink-0 whitespace-nowrap">
+        <Badge variant="hub-pill" class="hover:bg-hub-surface transition-colors shrink-0 whitespace-nowrap">
           {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
         </Badge>
       </a>

@@ -16,11 +16,11 @@ export const buttonVariants = cva(
         secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
         ghost: 'hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50',
         link: 'text-primary underline-offset-4 hover:underline',
-        pill: 'rounded-full bg-hub-surface text-white font-normal hover:brightness-125 cursor-pointer',
+        pill: 'rounded-full bg-hub-surface text-content font-normal hover:bg-hub-surface-hover cursor-pointer',
         'pill-active': 'rounded-full bg-white text-page font-bold cursor-pointer',
         'pill-outline':
-          'rounded-full border border-white text-white font-normal hover:bg-white/10 cursor-pointer',
-        'hub-secondary': 'rounded-full bg-hub-surface text-white font-bold hover:brightness-125',
+          'rounded-full border border-divider text-content font-normal hover:bg-hub-surface-hover cursor-pointer',
+        'hub-secondary': 'rounded-full bg-hub-surface text-content font-bold hover:bg-hub-surface-hover',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',

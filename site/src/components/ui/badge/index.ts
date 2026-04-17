@@ -14,11 +14,11 @@ export const badgeVariants = cva(
         destructive:
           'border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60',
         outline: 'text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground',
-        'hub-tag': 'rounded-md border-white/10 bg-white/5 text-white/50',
+        'hub-tag': 'rounded-md border-white/10 bg-hub-surface text-content/50',
         'hub-pill':
-          'border-transparent bg-hub-surface text-content font-normal h-6 px-4 py-1 [a&]:hover:opacity-80 transition-opacity',
+          'border-transparent bg-hub-surface text-content font-normal h-6 px-4 py-1 [a&]:hover:bg-hub-surface-hover transition-colors',
         'hub-filter':
-          'rounded-full border-white/10 bg-white/10 text-white font-normal cursor-pointer hover:bg-white/15 transition-colors',
+          'rounded-full border-white/10 bg-hub-surface text-content font-normal cursor-pointer hover:bg-hub-surface-hover transition-colors',
       },
     },
     defaultVariants: {

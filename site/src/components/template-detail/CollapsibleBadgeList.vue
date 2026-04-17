@@ -50,7 +50,7 @@ onMounted(async () => {
     <button
       v-if="needsCollapse"
       type="button"
-      class="flex items-center justify-between w-full px-4 h-8 mt-2 rounded-full text-xs text-content hover:bg-white/5 transition-colors"
+      class="flex items-center justify-between w-full px-4 h-8 mt-2 rounded-full text-xs text-content hover:bg-hub-surface transition-colors"
       @click="expanded = !expanded"
     >
       {{ expanded ? 'See less' : 'See more' }}

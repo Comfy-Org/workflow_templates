@@ -481,7 +481,7 @@ function clearAll() {
 }
 
 // Creator color palette
-const CREATOR_COLORS = ['#c8ff00', '#ff4444', '#ff4444'];
+const CREATOR_COLORS = ['#f2ff59', '#ff4444', '#ff4444'];
 
 function getCreatorColor(index: number): string {
   return CREATOR_COLORS[index % CREATOR_COLORS.length];
@@ -629,7 +629,7 @@ onUnmounted(() => {
           v-model="searchQuery"
           type="text"
           :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
-          class="flex-1 min-w-0 bg-transparent text-white text-sm font-normal placeholder:text-hub-muted outline-none py-2"
+          class="flex-1 min-w-0 bg-transparent text-content text-sm font-normal placeholder:text-hub-muted outline-none py-2"
           @focus="handleFocus"
           @keydown="handleKeydown"
         />
@@ -638,7 +638,7 @@ onUnmounted(() => {
         <button
           v-if="hasQuery || hasBadges"
           type="button"
-          class="shrink-0 size-5 flex items-center justify-center rounded-full text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+          class="shrink-0 size-5 flex items-center justify-center rounded-full text-content/40 hover:text-content hover:bg-hub-surface transition-colors"
           aria-label="Clear all"
           @click.stop="clearAll"
         >
@@ -661,7 +661,7 @@ onUnmounted(() => {
         <!-- Slash shortcut hint -->
         <kbd
           v-if="!isOpen && !hasQuery && !hasBadges"
-          class="hidden lg:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-white/5 text-white/30 text-xs font-mono leading-none"
+          class="hidden lg:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-hub-surface text-content/30 text-xs font-mono leading-none"
           aria-hidden="true"
           >/</kbd
         >
@@ -678,7 +678,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && !hasActiveFilters"
-          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
+          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-page shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
           <!-- Pinned mobile badge row -->
           <div
@@ -715,9 +715,9 @@ onUnmounted(() => {
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
             <!-- Popular Workflows -->
             <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
                 Popular Workflows
-                <span class="text-white/30 font-normal ml-1"
+                <span class="text-content/30 font-normal ml-1"
                   >({{ formatUsage(templates.length) }}+)</span
                 >
               </h3>
@@ -727,10 +727,10 @@ onUnmounted(() => {
                   :key="wf.name"
                   :href="getTemplateUrl(`${wf.name}-${wf.shareId}`)"
                   :data-nav-index="i"
-                  class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
-                  :class="{ 'bg-white/10': activeIndex === i }"
+                  class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-hub-surface transition-colors group"
+                  :class="{ 'bg-hub-surface': activeIndex === i }"
                 >
-                  <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
+                  <div class="size-12 rounded-lg bg-hub-surface overflow-hidden shrink-0">
                     <img
                       v-if="getPrimaryThumb(wf.thumbnails)"
                       :src="getPrimaryThumb(wf.thumbnails)!"
@@ -743,7 +743,7 @@ onUnmounted(() => {
                       class="w-full h-full flex items-center justify-center"
                     >
                       <svg
-                        class="w-5 h-5 text-white/20"
+                        class="w-5 h-5 text-content/20"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -760,11 +760,11 @@ onUnmounted(() => {
                   </div>
                   <div class="min-w-0 flex-1">
                     <p
-                      class="text-sm font-medium text-white truncate group-hover:text-brand transition-colors"
+                      class="text-sm font-medium text-content truncate group-hover:text-brand transition-colors"
                     >
                       {{ wf.title }}
                     </p>
-                    <p class="text-xs text-white/40 truncate">
+                    <p class="text-xs text-content/40 truncate">
                       {{ wf.creatorDisplayName }} · {{ formatUsage(wf.usage) }} runs
                     </p>
                   </div>
@@ -774,9 +774,9 @@ onUnmounted(() => {
 
             <!-- Top Creators -->
             <section>
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
                 Top Creators
-                <span class="text-white/30 font-normal ml-1">({{ uniqueCreatorCount }})</span>
+                <span class="text-content/30 font-normal ml-1">({{ uniqueCreatorCount }})</span>
               </h3>
               <div class="flex flex-wrap gap-2">
                 <a
@@ -784,7 +784,7 @@ onUnmounted(() => {
                   :key="creator.username"
                   :href="getCreatorUrl(creator.username)"
                   :data-nav-index="discCreatorOffset + i"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content/80 text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === discCreatorOffset + i }"
                 >
                   <img
@@ -795,7 +795,7 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
@@ -806,9 +806,9 @@ onUnmounted(() => {
 
             <!-- Filter by — two labeled rows with "+ N more" -->
             <section class="space-y-3">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50">Filter by</h3>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50">Filter by</h3>
               <div data-testid="filter-row-categories" class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
+                <span class="text-xs text-content/30 uppercase tracking-wide w-20 shrink-0"
                   >Categories</span
                 >
                 <Badge
@@ -826,14 +826,14 @@ onUnmounted(() => {
                 <button
                   v-if="!showAllTags && remainingTagCount > 0"
                   data-testid="show-more-tags"
-                  class="text-xs text-white/30 hover:text-white/60 transition-colors"
+                  class="text-xs text-content/30 hover:text-content/60 transition-colors"
                   @click="showAllTags = true"
                 >
                   + {{ remainingTagCount }} more
                 </button>
               </div>
               <div data-testid="filter-row-models" class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
+                <span class="text-xs text-content/30 uppercase tracking-wide w-20 shrink-0"
                   >Models</span
                 >
                 <Badge
@@ -851,14 +851,14 @@ onUnmounted(() => {
                 <button
                   v-if="!showAllModels && remainingModelCount > 0"
                   data-testid="show-more-models"
-                  class="text-xs text-white/30 hover:text-white/60 transition-colors"
+                  class="text-xs text-content/30 hover:text-content/60 transition-colors"
                   @click="showAllModels = true"
                 >
                   + {{ remainingModelCount }} more
                 </button>
               </div>
               <div class="flex items-center gap-2 flex-wrap">
-                <span class="text-xs text-white/30 uppercase tracking-wide w-20 shrink-0"
+                <span class="text-xs text-content/30 uppercase tracking-wide w-20 shrink-0"
                   >Modes</span
                 >
                 <Badge
@@ -900,7 +900,7 @@ onUnmounted(() => {
       >
         <div
           v-if="isOpen && hasActiveFilters"
-          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-[#1e1f20] shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
+          class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-page shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
           <!-- Pinned mobile badge row -->
           <div
@@ -936,7 +936,7 @@ onUnmounted(() => {
 
           <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">
-            <div class="flex items-center gap-3 text-white/50">
+            <div class="flex items-center gap-3 text-content/50">
               <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                 <circle
                   class="opacity-25"
@@ -960,7 +960,7 @@ onUnmounted(() => {
           <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
-              <h3 class="text-[11px] font-semibold uppercase tracking-wide text-white/40 mb-2.5">
+              <h3 class="text-[11px] font-semibold uppercase tracking-wide text-content/40 mb-2.5">
                 Narrow by
               </h3>
               <div class="flex flex-wrap gap-1.5">
@@ -975,7 +975,7 @@ onUnmounted(() => {
                   @click="addFilterBadge('tag', tag.name)"
                 >
                   {{ tagDisplayName(tag.name) }}
-                  <span class="text-white/30 text-[10px]">{{ tag.count }}</span>
+                  <span class="text-content/30 text-[10px]">{{ tag.count }}</span>
                 </Badge>
                 <Badge
                   v-for="(model, i) in filterSuggestions.models"
@@ -988,7 +988,7 @@ onUnmounted(() => {
                   @click="addFilterBadge('model', model.name)"
                 >
                   {{ model.name }}
-                  <span class="text-white/30 text-[10px]">{{ model.count }}</span>
+                  <span class="text-content/30 text-[10px]">{{ model.count }}</span>
                 </Badge>
               </div>
             </section>
@@ -1001,7 +1001,7 @@ onUnmounted(() => {
 
             <!-- Creator results (only when text searching) -->
             <section v-if="hasQuery && matchedCreators.length > 0">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
                 Creators
               </h3>
               <div class="flex flex-wrap gap-2">
@@ -1010,7 +1010,7 @@ onUnmounted(() => {
                   :key="creator.username"
                   :href="getCreatorUrl(creator.username)"
                   :data-nav-index="activeCreatorOffset + i"
-                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-white/80 text-sm font-normal hover:brightness-125 transition-all"
+                  class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content/80 text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
                 >
                   <img
@@ -1021,12 +1021,12 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-gradient-to-br from-[#c8ff00] to-[#a0cc00]"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
                   {{ creator.displayName }}
-                  <span class="text-white/30 text-xs">{{ creator.workflowCount }}</span>
+                  <span class="text-content/30 text-xs">{{ creator.workflowCount }}</span>
                 </a>
               </div>
             </section>
@@ -1042,12 +1042,12 @@ onUnmounted(() => {
               "
               class="text-center py-4"
             >
-              <p class="text-sm text-white/50">
-                No results for "<span class="text-white/70">{{ searchQuery.trim() }}</span
+              <p class="text-sm text-content/50">
+                No results for "<span class="text-content/70">{{ searchQuery.trim() }}</span
                 >"
                 <template v-if="hasBadges"> within active filters</template>
               </p>
-              <p class="text-xs text-white/30 mt-1">
+              <p class="text-xs text-content/30 mt-1">
                 Try a different search term or remove a filter
               </p>
             </div>
@@ -1057,15 +1057,15 @@ onUnmounted(() => {
               v-else-if="!hasQuery && hasBadges && badgeOnlyResults.length === 0"
               class="text-center py-4"
             >
-              <p class="text-sm text-white/50">No workflows match the selected filters</p>
-              <p class="text-xs text-white/30 mt-1">Try removing a filter</p>
+              <p class="text-sm text-content/50">No workflows match the selected filters</p>
+              <p class="text-xs text-content/30 mt-1">Try removing a filter</p>
             </div>
 
             <!-- Workflow results -->
             <section v-if="displayedWorkflows.length > 0">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-white/50 mb-3">
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content/50 mb-3">
                 Workflows
-                <span class="text-white/30 font-normal ml-1"
+                <span class="text-content/30 font-normal ml-1"
                   >({{ displayedWorkflows.length }})</span
                 >
               </h3>
@@ -1075,10 +1075,10 @@ onUnmounted(() => {
                   :key="hit.id"
                   :href="getTemplateUrl(hit.slug)"
                   :data-nav-index="activeWorkflowOffset + i"
-                  class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-white/5 transition-colors group"
-                  :class="{ 'bg-white/10': activeIndex === activeWorkflowOffset + i }"
+                  class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-hub-surface transition-colors group"
+                  :class="{ 'bg-hub-surface': activeIndex === activeWorkflowOffset + i }"
                 >
-                  <div class="size-12 rounded-lg bg-white/5 overflow-hidden shrink-0">
+                  <div class="size-12 rounded-lg bg-hub-surface overflow-hidden shrink-0">
                     <img
                       v-if="hit.thumbnail && !isAudioFile(hit.thumbnail)"
                       :src="hit.thumbnail.startsWith('http') ? hit.thumbnail : `/workflows/thumbnails/${hit.thumbnail}`"
@@ -1091,7 +1091,7 @@ onUnmounted(() => {
                       class="w-full h-full flex items-center justify-center"
                     >
                       <svg
-                        class="w-5 h-5 text-white/20"
+                        class="w-5 h-5 text-content/20"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -1108,15 +1108,15 @@ onUnmounted(() => {
                   </div>
                   <div class="min-w-0 flex-1">
                     <p
-                      class="text-sm font-medium text-white truncate group-hover:text-brand transition-colors"
+                      class="text-sm font-medium text-content truncate group-hover:text-brand transition-colors"
                     >
                       {{ hit.title }}
                     </p>
-                    <p class="text-xs text-white/40 truncate">
+                    <p class="text-xs text-content/40 truncate">
                       {{ hit.creatorName }} · {{ formatUsage(hit.usage) }} runs
                     </p>
                   </div>
-                  <span class="text-[10px] uppercase tracking-wide text-white/30 shrink-0">
+                  <span class="text-[10px] uppercase tracking-wide text-content/30 shrink-0">
                     {{ hit.mediaTypeLabel }}
                   </span>
                 </a>
@@ -1126,7 +1126,7 @@ onUnmounted(() => {
 
           <!-- Footer -->
           <div class="shrink-0 border-t border-white/10 px-6 py-3">
-            <p class="text-xs text-white/30 text-center">
+            <p class="text-xs text-content/30 text-center">
               <template v-if="hasBadges && !hasQuery">
                 {{ displayedWorkflows.length }} workflow{{
                   displayedWorkflows.length !== 1 ? 's' : ''
@@ -1136,7 +1136,7 @@ onUnmounted(() => {
                 }}
                 ·
                 <button
-                  class="text-white/40 hover:text-white/60 underline cursor-pointer"
+                  class="text-content/40 hover:text-content/60 underline cursor-pointer"
                   @click="clearAll"
                 >
                   Clear all
