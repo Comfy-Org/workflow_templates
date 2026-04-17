@@ -74,17 +74,19 @@ Blueprint files use the **native ComfyUI subgraph format**. This is the same for
 
 ### Key Components
 
-| Path | Description |
-|------|-------------|
-| `id` | UUID of the workflow file |
-| `nodes[0]` | The subgraph node instance (id=-1, type=subgraph UUID) |
-| `nodes[0].properties.proxyWidgets` | Widget values exposed on the node UI |
-| `definitions.subgraphs[0]` | The actual subgraph definition |
-| `definitions.subgraphs[0].name` | Display name shown in node palette |
-| `definitions.subgraphs[0].inputs` | Exposed input slots |
-| `definitions.subgraphs[0].outputs` | Exposed output slots |
-| `definitions.subgraphs[0].nodes` | Internal ComfyUI nodes |
-| `definitions.subgraphs[0].links` | Internal connections |
+
+| Path                               | Description                                            |
+| ---------------------------------- | ------------------------------------------------------ |
+| `id`                               | UUID of the workflow file                              |
+| `nodes[0]`                         | The subgraph node instance (id=-1, type=subgraph UUID) |
+| `nodes[0].properties.proxyWidgets` | Widget values exposed on the node UI                   |
+| `definitions.subgraphs[0]`         | The actual subgraph definition                         |
+| `definitions.subgraphs[0].name`    | Display name shown in node palette                     |
+| `definitions.subgraphs[0].inputs`  | Exposed input slots                                    |
+| `definitions.subgraphs[0].outputs` | Exposed output slots                                   |
+| `definitions.subgraphs[0].nodes`   | Internal ComfyUI nodes                                 |
+| `definitions.subgraphs[0].links`   | Internal connections                                   |
+
 
 ### Input/Output Format
 
@@ -160,18 +162,17 @@ The `blueprints/index.json` file contains extracted metadata for UI display and 
 
 1. Clone/download blueprints to `blueprints/` directory
 2. Run the import script:
-   ```bash
+  ```bash
    python scripts/import_blueprints.py
-   ```
+  ```
 3. This will:
-   - Rename files to snake_case
-   - Generate `index.json` with extracted metadata
-   - Update `blueprints_bundles.json`
-
+  - Rename files to snake_case
+  - Generate `index.json` with extracted metadata
+  - Update `blueprints_bundles.json`
 4. Sync to packages:
-   ```bash
+  ```bash
    python scripts/sync_blueprints.py
-   ```
+  ```
 
 ### Option 2: Create in ComfyUI
 
@@ -219,21 +220,25 @@ with open(path) as f:
 
 ## Differences from Workflow Templates
 
-| Aspect | Workflow Templates | Subgraph Blueprints |
-|--------|-------------------|---------------------|
-| Purpose | Full standalone workflows | Reusable node components |
-| Appears as | Workflow template picker | Node in palette |
-| Packages | Split by media type | Single package |
-| Format | Standard workflow JSON | Subgraph definition with `definitions.subgraphs` |
-| Exposed | Entire workflow | Selected inputs/outputs/widgets |
-| Use case | Starting point for users | Building blocks for workflows |
+
+| Aspect     | Workflow Templates        | Subgraph Blueprints                              |
+| ---------- | ------------------------- | ------------------------------------------------ |
+| Purpose    | Full standalone workflows | Reusable node components                         |
+| Appears as | Workflow template picker  | Node in palette                                  |
+| Packages   | Split by media type       | Single package                                   |
+| Format     | Standard workflow JSON    | Subgraph definition with `definitions.subgraphs` |
+| Exposed    | Entire workflow           | Selected inputs/outputs/widgets                  |
+| Use case   | Starting point for users  | Building blocks for workflows                    |
+
 
 ## Scripts Reference
 
-| Script | Purpose |
-|--------|---------|
-| `scripts/import_blueprints.py` | Normalize filenames, generate index.json and bundles |
-| `scripts/sync_blueprints.py` | Generate manifest, copy assets to package directories |
+
+| Script                         | Purpose                                               |
+| ------------------------------ | ----------------------------------------------------- |
+| `scripts/import_blueprints.py` | Normalize filenames, generate index.json and bundles  |
+| `scripts/sync_blueprints.py`   | Generate manifest, copy assets to package directories |
+
 
 ## Validation
 
