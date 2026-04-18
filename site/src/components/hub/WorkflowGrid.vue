@@ -205,8 +205,8 @@ onUnmounted(() => {
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
             :class="
               activeTab === 'all'
-                ? 'text-white font-bold bg-white/10'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
+                ? 'text-content font-bold bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectTab('all')"
           >
@@ -217,8 +217,8 @@ onUnmounted(() => {
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
             :class="
               activeTab === 'nodeGraphs'
-                ? 'text-white font-bold bg-white/10'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
+                ? 'text-content font-bold bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectTab('nodeGraphs')"
           >
@@ -230,8 +230,8 @@ onUnmounted(() => {
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
             :class="
               activeTab === 'comfyApps'
-                ? 'text-white font-bold bg-white/10'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
+                ? 'text-content font-bold bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectTab('comfyApps')"
           >
@@ -286,8 +286,8 @@ onUnmounted(() => {
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
             :class="
               sortBy === 'popular'
-                ? 'text-white font-bold bg-white/10'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
+                ? 'text-content font-bold bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectSort('popular')"
           >
@@ -298,8 +298,8 @@ onUnmounted(() => {
             class="flex items-center gap-2 w-full px-4 py-2.5 text-xs text-left transition-colors"
             :class="
               sortBy === 'newest'
-                ? 'text-white font-bold bg-white/10'
-                : 'text-white/70 hover:text-white hover:bg-white/5'
+                ? 'text-content font-bold bg-hub-surface'
+                : 'text-content-secondary hover:text-content hover:bg-hub-surface'
             "
             @click="selectSort('newest')"
           >
@@ -384,7 +384,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Empty state -->
-    <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-white/40">
+    <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-content-muted">
       <p class="text-lg">No templates match your filters</p>
       <p class="text-sm mt-2">Try removing some filters</p>
     </div>
