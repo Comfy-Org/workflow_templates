@@ -78,10 +78,32 @@ jobs:
           PUBLIC_APPROVED_ONLY: 'true'
 
       - name: Deploy to Vercel
-        uses: amondnet/vercel-action@v25
-        with:
-          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          working-directory: site
-          vercel-args: '--prebuilt --prod'
+        working-directory: site
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          stdout_file="$RUNNER_TEMP/vercel-production.stdout"
+          stderr_file="$RUNNER_TEMP/vercel-production.stderr"
+          site_output_dir="$GITHUB_WORKSPACE/site/.vercel/output"
+          root_output_dir="$GITHUB_WORKSPACE/.vercel/output"
+
+          if [ ! -d "$site_output_dir" ]; then
+            echo "Expected prebuilt output in $site_output_dir" >&2
+            exit 1
+          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/.vercel"
+          rm -rf "$root_output_dir"
+          cp -R "$site_output_dir" "$root_output_dir"
+
+          if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --prod --yes \
+            --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+          else
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+            exit 1
+          fi
