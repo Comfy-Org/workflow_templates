@@ -6,25 +6,51 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - '**/*.md'
-      - '**/*.json'
-      - 'docs/**'
       - 'templates/**'
       - '.github/.spellcheck.yml'
+      - '.github/.spellcheck-workflows.yml'
       - '.github/.wordlist.txt'
       - '.github/workflows/spellcheck.yml'
+      - '.github/extract_workflow_text.py'
 
 jobs:
-  spellcheck:
-    name: Spellcheck
+  spellcheck-index:
+    name: Spellcheck (templates/index.json)
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+
     - name: Run spellcheck
       uses: rojopolis/spellcheck-github-actions@0.53.0
       with:
         config_path: .github/.spellcheck.yml
 
+  spellcheck-workflows:
+    name: Spellcheck (Workflow JSON notes)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install pyspelling + aspell
+      run: |
+        sudo apt-get install -y aspell aspell-en
+        pip install pyspelling
+
+    - name: Extract MarkdownNote text from workflow JSONs
+      run: |
+        python .github/extract_workflow_text.py \
+          --input-dir templates \
+          --output-file /tmp/workflow_notes.txt
+
+    - name: Spellcheck extracted notes
+      run: |
+        pyspelling \
+          --config .github/.spellcheck-workflows.yml \
+          --source /tmp/workflow_notes.txt
