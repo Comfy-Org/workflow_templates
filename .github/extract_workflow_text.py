@@ -43,6 +43,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-dir", required=True, help="Directory containing workflow JSON files")
     parser.add_argument("--output-file", required=True, help="Output text file for spellchecking")
+    parser.add_argument("--files", nargs="*", help="Specific files to extract (relative or absolute paths); if omitted, all JSONs in --input-dir are used")
     args = parser.parse_args()
 
     input_dir = Path(args.input_dir)
@@ -50,10 +51,13 @@ def main() -> None:
         print(f"Error: {input_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
-    workflow_files = [
-        p for p in sorted(input_dir.glob("*.json"))
-        if not p.name.startswith("index")
-    ]
+    if args.files:
+        workflow_files = sorted(Path(f) for f in args.files if not Path(f).name.startswith("index"))
+    else:
+        workflow_files = [
+            p for p in sorted(input_dir.glob("*.json"))
+            if not p.name.startswith("index")
+        ]
 
     all_texts: list[str] = []
     for wf_path in workflow_files:
