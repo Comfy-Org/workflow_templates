@@ -22,6 +22,7 @@ import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import type { MediaType } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
+import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 
 export interface SearchTemplate {
   name: string;
@@ -505,12 +506,28 @@ function formatUsage(usage: number): string {
   return String(usage);
 }
 
-function getPrimaryThumb(thumbnails: string[]): string | null {
-  if (thumbnails.length === 0) return null;
-  const file = thumbnails[0];
-  if (isAudioFile(file) || isVideoFile(file)) return null;
+function resolveThumbUrl(file: string): string {
   if (file.startsWith('http://') || file.startsWith('https://')) return file;
   return `/workflows/thumbnails/${file}`;
+}
+
+// Returns an <img> src for image thumbnails, or a Cloudflare poster-frame URL
+// for CDN-hosted videos. Returns null when the file has no static preview
+// (audio, or a video that isn't on the Cloudflare CDN) — callers should then
+// render a <video> element (see videoThumbUrl) or an icon placeholder.
+function getImageThumb(file: string | undefined | null): string | null {
+  if (!file) return null;
+  if (isAudioFile(file)) return null;
+  if (isVideoFile(file)) return getVideoFrameUrl(resolveThumbUrl(file));
+  return resolveThumbUrl(file);
+}
+
+// Returns the full video URL when the thumbnail is a video file, otherwise null.
+// Used to drive a <video> fallback for non-CDN videos where the browser
+// renders the first frame for free via preload="metadata".
+function videoThumbUrl(file: string | undefined | null): string | null {
+  if (!file || !isVideoFile(file)) return null;
+  return resolveThumbUrl(file);
 }
 
 function handleFocus() {
@@ -732,11 +749,19 @@ onUnmounted(() => {
                 >
                   <div class="size-12 rounded-lg bg-hub-surface overflow-hidden shrink-0">
                     <img
-                      v-if="getPrimaryThumb(wf.thumbnails)"
-                      :src="getPrimaryThumb(wf.thumbnails)!"
+                      v-if="getImageThumb(wf.thumbnails[0])"
+                      :src="getImageThumb(wf.thumbnails[0])!"
                       :alt="wf.title"
                       loading="lazy"
                       class="w-full h-full object-cover"
+                    />
+                    <video
+                      v-else-if="videoThumbUrl(wf.thumbnails[0])"
+                      :src="videoThumbUrl(wf.thumbnails[0])!"
+                      class="w-full h-full object-cover"
+                      muted
+                      playsinline
+                      preload="metadata"
                     />
                     <div
                       v-else-if="wf.thumbnails.length > 0 && isAudioFile(wf.thumbnails[0])"
@@ -806,7 +831,9 @@ onUnmounted(() => {
 
             <!-- Filter by — two labeled rows with "+ N more" -->
             <section class="space-y-3">
-              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted">Filter by</h3>
+              <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted">
+                Filter by
+              </h3>
               <div data-testid="filter-row-categories" class="flex items-center gap-2 flex-wrap">
                 <span class="text-xs text-content/30 uppercase tracking-wide w-20 shrink-0"
                   >Categories</span
@@ -960,7 +987,9 @@ onUnmounted(() => {
           <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
-              <h3 class="text-[11px] font-semibold uppercase tracking-wide text-content-muted mb-2.5">
+              <h3
+                class="text-[11px] font-semibold uppercase tracking-wide text-content-muted mb-2.5"
+              >
                 Narrow by
               </h3>
               <div class="flex flex-wrap gap-1.5">
@@ -1080,11 +1109,19 @@ onUnmounted(() => {
                 >
                   <div class="size-12 rounded-lg bg-hub-surface overflow-hidden shrink-0">
                     <img
-                      v-if="hit.thumbnail && !isAudioFile(hit.thumbnail)"
-                      :src="hit.thumbnail.startsWith('http') ? hit.thumbnail : `/workflows/thumbnails/${hit.thumbnail}`"
+                      v-if="getImageThumb(hit.thumbnail)"
+                      :src="getImageThumb(hit.thumbnail)!"
                       :alt="hit.title"
                       loading="lazy"
                       class="w-full h-full object-cover"
+                    />
+                    <video
+                      v-else-if="videoThumbUrl(hit.thumbnail)"
+                      :src="videoThumbUrl(hit.thumbnail)!"
+                      class="w-full h-full object-cover"
+                      muted
+                      playsinline
+                      preload="metadata"
                     />
                     <div
                       v-else-if="hit.thumbnail && isAudioFile(hit.thumbnail)"
