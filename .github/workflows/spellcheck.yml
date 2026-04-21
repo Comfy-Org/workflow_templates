@@ -17,18 +17,44 @@ jobs:
   spellcheck-index:
     name: Spellcheck (templates/index.json)
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.check.outputs.result }}
+      errors: ${{ steps.check.outputs.errors }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Run spellcheck
-      uses: rojopolis/spellcheck-github-actions@0.53.0
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
-        config_path: .github/.spellcheck.yml
+        python-version: '3.12'
+
+    - name: Install pyspelling + aspell
+      run: |
+        sudo apt-get install -y aspell aspell-en
+        pip install pyspelling
+
+    - name: Run spellcheck
+      id: check
+      run: |
+        set +e
+        output=$(pyspelling --config .github/.spellcheck.yml 2>&1)
+        exit_code=$?
+        set -e
+        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
+        {
+          echo 'errors<<EOF'
+          echo "$output"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+        exit $exit_code
 
   spellcheck-workflows:
     name: Spellcheck (Workflow JSON notes)
     runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.check.outputs.result }}
+      errors: ${{ steps.check.outputs.errors }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -50,7 +76,80 @@ jobs:
           --output-file /tmp/workflow_notes.txt
 
     - name: Spellcheck extracted notes
+      id: check
       run: |
-        pyspelling \
-          --config .github/.spellcheck-workflows.yml \
-          --source /tmp/workflow_notes.txt
+        set +e
+        output=$(pyspelling --config .github/.spellcheck-workflows.yml --source /tmp/workflow_notes.txt 2>&1)
+        exit_code=$?
+        set -e
+        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
+        {
+          echo 'errors<<EOF'
+          echo "$output"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+        exit $exit_code
+
+  comment:
+    name: Post spellcheck results
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs: [spellcheck-index, spellcheck-workflows]
+    permissions:
+      pull-requests: write
+    steps:
+    - name: Post PR comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const indexResult  = '${{ needs.spellcheck-index.outputs.result }}';
+          const worksResult  = '${{ needs.spellcheck-workflows.outputs.result }}';
+          const indexErrors  = `${{ needs.spellcheck-index.outputs.errors }}`;
+          const worksErrors  = `${{ needs.spellcheck-workflows.outputs.errors }}`;
+
+          const icon  = r => r === 'pass' ? '✅' : '❌';
+          const label = r => r === 'pass' ? 'No issues found' : 'Misspelled words detected';
+
+          let body = `## 🔤 Spellcheck Results\n\n`;
+          body += `| Check | Status |\n|---|---|\n`;
+          body += `| \`templates/index.json\` (titles & descriptions) | ${icon(indexResult)} ${label(indexResult)} |\n`;
+          body += `| Workflow JSON notes (MarkdownNote / Note nodes) | ${icon(worksResult)} ${label(worksResult)} |\n\n`;
+
+          if (indexResult !== 'pass') {
+            body += `<details>\n<summary>❌ index.json errors</summary>\n\n\`\`\`\n${indexErrors}\n\`\`\`\n</details>\n\n`;
+          }
+          if (worksResult !== 'pass') {
+            body += `<details>\n<summary>❌ Workflow notes errors</summary>\n\n\`\`\`\n${worksErrors}\n\`\`\`\n</details>\n\n`;
+          }
+
+          if (indexResult === 'pass' && worksResult === 'pass') {
+            body += `> All spellchecks passed! 🎉\n`;
+          } else {
+            body += `> Add legitimate technical terms to \`.github/.wordlist.txt\` to suppress false positives.\n`;
+          }
+
+          const marker = '<!-- spellcheck-bot -->';
+          body = marker + '\n' + body;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const existing = comments.find(c => c.body.includes(marker));
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
