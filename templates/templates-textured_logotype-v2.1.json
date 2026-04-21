@@ -1,0 +1,738 @@
+{
+  "id": "b82407ed-68b7-4df7-8dd7-3b964422bbe8",
+  "revision": 0,
+  "last_node_id": 17,
+  "last_link_id": 22,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "LoadImage",
+      "pos": [
+        9787.091306051403,
+        -1280
+      ],
+      "size": [
+        288.6328125,
+        482.56510416666674
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            18
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Load Logo Image",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "comfy_logo_b.png",
+        {
+          "name": "upload",
+          "options": {
+            "serialize": false,
+            "canvasOnly": true
+          },
+          "label": "choose file to upload",
+          "type": "button",
+          "y": 70,
+          "last_y": 70,
+          "computedDisabled": false,
+          "clicked": false,
+          "computedHeight": 24
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "ImageBatch",
+      "pos": [
+        10125.448316308417,
+        -1280
+      ],
+      "size": [
+        187.5,
+        80
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image1",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "image2",
+          "type": "IMAGE",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "ImageBatch"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 7,
+      "type": "GeminiImage2Node",
+      "pos": [
+        10355.983664147077,
+        -1280
+      ],
+      "size": [
+        415.01302083333337,
+        369.53125
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            7,
+            14,
+            15
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "GeminiImage2Node"
+      },
+      "widgets_values": [
+        "Apply the texture from the matcap in image 2 into the logo from image 1. The logotype is in a 3d studio setting, match the lighting from the matcap",
+        "gemini-3-pro-image-preview",
+        111,
+        "fixed",
+        "1:1",
+        "1K",
+        "IMAGE+TEXT"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 11,
+      "type": "SaveVideo",
+      "pos": [
+        11810,
+        -1280
+      ],
+      "size": [
+        460.41483301391304,
+        576.2638844322951
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 9
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/ComfyUI",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "ByteDanceFirstLastFrameNode",
+      "pos": [
+        11410,
+        -1280
+      ],
+      "size": [
+        348.3854166666667,
+        379.8046875
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": 7
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "ByteDanceFirstLastFrameNode"
+      },
+      "widgets_values": [
+        "seedance-1-0-pro-250528",
+        "A logo rotates 180 degrees against a white studio background. The logo has a sleek, modern design. The camera remains static, focusing on the logo as it completes a half rotation. The logo's material remains constant throughout the rotation.",
+        "1080p",
+        "adaptive",
+        5,
+        1014447163,
+        "randomize",
+        true,
+        false
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 6,
+      "type": "GeminiImageNode",
+      "pos": [
+        10360,
+        -700
+      ],
+      "size": [
+        409.5572916666667,
+        372.95572916666674
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 14
+        },
+        {
+          "name": "files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            8,
+            16
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "GeminiImageNode"
+      },
+      "widgets_values": [
+        "Display the back view of the input image 1, maintain the lighting angle and shadows",
+        "gemini-2.5-flash-image",
+        222,
+        "fixed",
+        "auto",
+        "IMAGE+TEXT"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 16,
+      "type": "GetImageSize",
+      "pos": [
+        10125.448316308417,
+        -1073.330793705322
+      ],
+      "size": [
+        140,
+        66
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            20
+          ]
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76",
+        "Node name for S&R": "GetImageSize"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 15,
+      "type": "ResizeAndPadImage",
+      "pos": [
+        10125.448316308417,
+        -1029.8477305987146
+      ],
+      "size": [
+        210,
+        122
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 22
+        },
+        {
+          "name": "target_width",
+          "type": "INT",
+          "widget": {
+            "name": "target_width"
+          },
+          "link": 19
+        },
+        {
+          "name": "target_height",
+          "type": "INT",
+          "widget": {
+            "name": "target_height"
+          },
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76",
+        "Node name for S&R": "ResizeAndPadImage"
+      },
+      "widgets_values": [
+        512,
+        512,
+        "white",
+        "area"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "LoadImage",
+      "pos": [
+        9790,
+        -700
+      ],
+      "size": [
+        288.6328125,
+        457.5651041666667
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Load Texture Image",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "logotype_texture.png",
+        {
+          "name": "upload",
+          "options": {
+            "serialize": false,
+            "canvasOnly": true
+          },
+          "label": "choose file to upload",
+          "type": "button",
+          "y": 70,
+          "last_y": 70,
+          "computedDisabled": false,
+          "clicked": false,
+          "computedHeight": 24
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "SaveImage",
+      "pos": [
+        10810,
+        -1280
+      ],
+      "size": [
+        394.887629095471,
+        466.60822529426935
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 15
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    },
+    {
+      "id": 14,
+      "type": "SaveImage",
+      "pos": [
+        10820,
+        -700
+      ],
+      "size": [
+        412.81976843561523,
+        466.60822529426935
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.3.76"
+      },
+      "widgets_values": [
+        "ComfyUI"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      5,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      7,
+      7,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      6,
+      0,
+      10,
+      1,
+      "IMAGE"
+    ],
+    [
+      9,
+      10,
+      0,
+      11,
+      0,
+      "VIDEO"
+    ],
+    [
+      14,
+      7,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ],
+    [
+      15,
+      7,
+      0,
+      13,
+      0,
+      "IMAGE"
+    ],
+    [
+      16,
+      6,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      4,
+      0,
+      16,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      16,
+      0,
+      15,
+      1,
+      "INT"
+    ],
+    [
+      20,
+      16,
+      1,
+      15,
+      2,
+      "INT"
+    ],
+    [
+      21,
+      15,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      22,
+      17,
+      0,
+      15,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6495541302426479,
+      "offset": [
+        -9281.979471240775,
+        1539.1782165560332
+      ]
+    },
+    "frontendVersion": "1.33.10",
+    "workflowRendererVersion": "LG",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

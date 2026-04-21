@@ -1,21 +1,81 @@
 # workflow_templates
 
-ComfyUI workflow templates available in the app by clicking the **Workflow** button then the **Browse Templates** button.
+This repo hosts the official ComfyUI **workflow templates** and **subgraph blueprints**.
+
+## Overview
+
+| Content | Description | Location |
+|---------|-------------|----------|
+| **Workflow Templates** | Full standalone workflows for the template picker | `templates/`, `packages/` |
+| **Subgraph Blueprints** | Reusable node components that appear in the node palette | `blueprints/`, `packages/blueprints/` |
+| **Template Site** | Astro SSG that showcases templates at [templates.comfy.org](https://templates.comfy.org) | `site/` |
+
+The repository uses a **package-per-media** structure for Python distribution:
+
+- `packages/core` – manifest + loader helpers shipped as `comfyui-workflow-templates-core`
+- `packages/media_*` – workflow template JSON + preview assets for each media type
+- `packages/blueprints` – subgraph blueprint JSON + preview assets as `comfyui-subgraph-blueprints`
+- `packages/meta` and the root `pyproject.toml` – the `comfyui-workflow-templates` meta package
+
+### Template Site (`site/`)
+
+The `site/` directory contains an independent Astro static site that provides a browsable, searchable interface for all workflow templates. It includes AI-generated descriptions, i18n support (11 languages), SEO optimization, and automated content pipelines. See [site/AGENTS.md](site/AGENTS.md) for full documentation.
+
+```bash
+cd site
+pnpm install
+pnpm run dev       # Start dev server at localhost:4321
+pnpm run build     # Production build (runs prebuild pipeline automatically)
+```
+
+### Deployment Environments
+
+The template site is deployed to four environments via GitHub Actions:
+
+```
+main merge (version bump)
+  └─ PyPI publish ─► deploy-site.yml ─► Production (approved only)
+
+Once per day (00:00 UTC)
+  └─ cron-rebuild-site.yml         ─► Production         (prod API, approved only)
+
+Once per day (00:00 UTC)
+  └─ preview-cron.yml
+       ├─ main (prod API)          ─► Preview Prod        (prod API, all workflows)
+       └─ main (test API)          ─► Preview Test        (test API, all workflows)
+
+PR opened/updated
+  ├─ preview-site.yml              ─► PR Preview (one-off)
+  └─ preview-cron.yml (label)      ─► PR Preview (daily, requires "preview-cron" label)
+```
+
+| Environment | Workflow | API | Status Filter | Vercel Flag | Alias Secret | Trigger |
+|-------------|----------|-----|---------------|-------------|--------------|---------|
+| **Production** | `deploy-site.yml` | Production | `approved` only | `--prod` | — | PyPI publish / manual |
+| **Production** | `cron-rebuild-site.yml` | Production | `approved` only | `--prod` | — | Once per day (00:00 UTC) |
+| **Preview Prod** | `preview-cron.yml` (main, prod) | Production | None (all) | preview | `VERCEL_PREVIEW_ALIAS` | Once per day (00:00 UTC) |
+| **Preview Test** | `preview-cron.yml` (main, test) | Test | None (all) | preview | `VERCEL_PREVIEW_TEST_ALIAS` | Once per day (00:00 UTC) |
+| **PR Preview** | `preview-site.yml` | Configurable | None (all) | preview | — | PR changes |
+| **PR Preview** | `preview-cron.yml` (PR) | Test | None (all) | preview | — | Once per day (00:00 UTC) |
+
+**Status filtering** is controlled by the `PUBLIC_APPROVED_ONLY` environment variable at build time. When set to `'true'`, only workflows with `status: 'approved'` from the hub API index endpoint are included in the build. Preview environments omit this flag to show all workflows (pending, approved, rejected, deprecated) for internal review.
+
+## Quick Start
+
+| Task | Commands |
+|------|----------|
+| Add a workflow template | Edit `templates/`, `bundles.json`, then `python scripts/sync_bundles.py` |
+| Add a subgraph blueprint | Edit `blueprints/`, `blueprints_bundles.json`, then `python scripts/sync_blueprints.py` |
+| Import external blueprints | Copy JSONs to `blueprints/`, then `python scripts/import_blueprints.py` |
+
+---
 
 - [workflow\_templates](#workflow_templates)
+  - [Overview](#overview)
+  - [Quick Start](#quick-start)
   - [Adding New Templates](#adding-new-templates)
-    - [1 — Find Templates Folder](#1--find-templates-folder)
-    - [2 — Obtain Workflow](#2--obtain-workflow)
-    - [3 — Obtain Thumbnails](#3--obtain-thumbnails)
-    - [4 — Choose Thumbnail Type](#4--choose-thumbnail-type)
-    - [5 — Compress Assets](#5--compress-assets)
-    - [6 — Rename and Move Files](#6--rename-and-move-files)
-    - [7 — Add Entry to `index.json`](#7--add-entry-to-indexjson)
-    - [8 — Embed Models](#8--embed-models)
-    - [9 — Embed Node Versions (optional)](#9--embed-node-versions-optional)
-    - [10 — Add Documentation Nodes (optional)](#10--add-documentation-nodes-optional)
-    - [11 — Bump Version and Create PR](#11--bump-version-and-create-pr)
-    - [12 — Add Translations](#12--add-translations)
+  - [Adding New Blueprints](#adding-new-blueprints)
+  - [Validation](#validation)
 
 ## Adding New Templates
 
@@ -93,7 +153,22 @@ text_to_video_wan-1.webp
 
 Then move the renamed files to your templates folder.
 
-### 7 — Add Entry to `index.json`
+### 7 — Assign Bundle & Sync Assets
+
+Each template lives in one bundle (`media-image`, `media-video`, etc.). Update
+[`bundles.json`](bundles.json) with the template ID so the correct media package ships it.
+After editing `templates/` or `bundles.json`, regenerate the manifest and copy assets into
+the package directories:
+
+```bash
+python scripts/sync_bundles.py
+# or via Nx  
+npm run sync
+```
+
+This step must be run before committing; CI will fail if the manifest/bundles are out of sync.
+
+### 8 — Add Entry to `index.json`
 
 There's an [`index.json`](templates/index.json) file in the templates folder which is where template configurations are set. You will need to add your template to this file, using the fields outlined below:
 
@@ -166,7 +241,7 @@ Now you can start ComfyUI (or refresh browser if already running) and test that 
 >
 > Make sure to use double-quotes `"` instead of single-quotes `'` when adding things to json files
 
-### 8 — Embed Models
+### 9 — Embed Models
 
 Now we need to embed metadata for any models the template workflow uses. This way, the user can download and run the workflow without ever leaving ComfyUI.
 
@@ -296,7 +371,7 @@ You can find the `hash` and `hash_type` for a model on huggingface (see below)or
 >
 > Ensure that the filename being downloaded from the links matches the filenames in the `widgets_values` exactly.
 
-### 9 — Embed Node Versions (optional)
+### 10 — Embed Node Versions (optional)
 
 If your template requires a specific version of Comfy or a custom node, you can specify that using the same process as with models.
 
@@ -330,7 +405,7 @@ The Wan 2.1 workflow requires the SaveWEBM node which wasn't fully supported unt
 
 This can help diagnose issues when others run the workflow and ensure the workflow is more reproducible.
 
-### 10 — Add Documentation Nodes (optional)
+### 11 — Add Documentation Nodes (optional)
 
 If your template corresponds with a page on https://github.com/comfyanonymous/ComfyUI_examples, https://docs.comfy.org/custom-nodes/workflow_templates, etc., you can add a `MarkdownNote` node with links:
 
@@ -346,27 +421,165 @@ Raw markdown used:
 > [Wan 2.1 Tutorial - docs.comfy.org](https://docs.comfy.org/tutorials/video/wan/wan-video) — Explanation of concepts and step-by-step tutorial
 ```
 
-### 11 — Bump Version and Create PR
+### 12 — Sync Translations
+
+Before creating your PR, sync your template to all language versions using the translation management script.
+
+1. Run the translation sync script:
+   ```bash
+   python3 scripts/sync_data.py --templates-dir templates
+   ```
+
+2. The script will:
+   - Auto-sync technical fields (models, date, size, etc.) to all language files
+   - Detect untranslated title/description fields
+   - Add your template to `scripts/i18n.json` for translation tracking
+   - Generate language-specific template files (index.zh.json, index.ja.json, etc.)
+
+3. (Optional) Add translations in `scripts/i18n.json`:
+   ```json
+   {
+     "templates": {
+       "your_template_name": {
+         "title": {
+           "en": "Your Template Title",
+           "zh": "您的模板标题"
+         },
+         "description": {
+           "en": "Your template description",
+           "zh": "您的模板描述"
+         }
+       }
+     }
+   }
+   ```
+
+4. Run sync again to apply your translations
+
+For detailed instructions, see [scripts/I18N_GUIDE.md](scripts/I18N_GUIDE.md).
+
+### 13 — Create PR
 
 1. Fully test the workflow: delete the models, input images, etc. and try it as a new user would. Ensure the process has no hiccups and you can generate the thumbnail image on the first execution (if applicable).
-2. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
-3. Clone the fork to your system (if not a collaborator)
-4. Copy your new workflow and thumbnail(s) into the `templates` folder
-5. Add your changes to the `templates/index.json` file
-6. Bump the version in `pyproject.toml` ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
-7. Commit and push changes
-8. Create a PR on https://github.com/Comfy-Org/workflow_templates
+2. Verify all language files (index.zh.json, index.ja.json, etc.) are synced and committed
+3. Create a fork of https://github.com/Comfy-Org/workflow_templates (or just checkout a new branch if you are a Comfy-Org collaborator)
+4. Clone the fork to your system (if not a collaborator)
+5. Copy your new workflow and thumbnail(s) into the `templates` folder
+6. Add your changes to the `templates/index.json` file
+7. **Bump the version in the root `pyproject.toml`** ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
+8. Commit and push changes
+9. Create a PR on https://github.com/Comfy-Org/workflow_templates
+
+Version bumping and package building are automated via CI/CD. Bumping the root `pyproject.toml` version automatically:
+- Detects which subpackages have changed since their last release
+- Bumps versions only for affected packages
+- Updates all dependency references
+- Builds and publishes packages to PyPI
 
 Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflow_templates/pull/16
 
 Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
 
-### 12 — Add Translations
+---
 
-Make a PR in https://github.com/Comfy-Org/ComfyUI_frontend adding the mapping from your template filename (without extension) to the English display name title. The mapping goes in [`ComfyUI_frontend/src/locales/en/main.json`](https://github.com/Comfy-Org/ComfyUI_frontend/blob/9f0abac57ba0d5752c51198bf8a075b8336fdda1/src/locales/en/main.json#L480-L487).
+## Adding New Blueprints
 
-If you added a new category, do the same in the [categories section of the translation mappings](https://github.com/Comfy-Org/ComfyUI_frontend/blob/9f0abac57ba0d5752c51198bf8a075b8336fdda1/src/locales/en/main.json#L433).
+Subgraph Blueprints are reusable workflow components that appear as single nodes in ComfyUI. They use the native ComfyUI subgraph format.
 
-You can edit the file and make a PR directly on the GitHub website.
+For detailed documentation, see [docs/BLUEPRINTS.md](docs/BLUEPRINTS.md).
 
-Here is the PR I made for the Wan template translations: https://github.com/Comfy-Org/ComfyUI_frontend/pull/3042
+### Quick Guide
+
+#### Option 1: Import from External Source
+
+1. Copy blueprint JSON files to `blueprints/` directory
+2. Run the import script to normalize names and generate metadata:
+   ```bash
+   python scripts/import_blueprints.py
+   ```
+3. Sync to packages:
+   ```bash
+   python scripts/sync_blueprints.py
+   ```
+
+#### Option 2: Create in ComfyUI
+
+1. Build your workflow in ComfyUI
+2. Select nodes → Right-click → "Create Subgraph"
+3. Export the workflow JSON
+4. Copy to `blueprints/` with a snake_case filename (e.g., `text_to_image_flux.json`)
+5. Run import and sync scripts
+
+### Blueprint File Structure
+
+```
+blueprints/
+├── index.json                        # Generated metadata for UI
+├── index.schema.json                 # Validation schema
+├── text_to_image_flux_1_dev.json     # Blueprint (native ComfyUI subgraph format)
+├── text_to_image_flux_1_dev-1.webp   # Thumbnail (optional)
+└── ...
+```
+
+### Blueprint JSON Format
+
+Blueprints use the native ComfyUI subgraph format with `definitions.subgraphs`:
+
+```json
+{
+  "id": "workflow-uuid",
+  "nodes": [{"id": -1, "type": "subgraph-uuid", ...}],
+  "definitions": {
+    "subgraphs": [{
+      "id": "subgraph-uuid",
+      "name": "Text to Image (Flux.1 Dev)",
+      "inputs": [
+        {"name": "text", "type": "STRING"},
+        {"name": "width", "type": "INT"}
+      ],
+      "outputs": [
+        {"name": "IMAGE", "type": "IMAGE"}
+      ],
+      "nodes": [...],
+      "links": [...]
+    }]
+  }
+}
+```
+
+### Sync Commands
+
+```bash
+# Import and normalize external blueprints
+python scripts/import_blueprints.py
+
+# Generate manifest and sync to packages
+python scripts/sync_blueprints.py
+```
+
+### Create PR
+
+1. Test the blueprint in ComfyUI
+2. Ensure `python scripts/sync_blueprints.py` produces no changes
+3. Bump version in root `pyproject.toml`
+4. Create PR
+
+---
+
+## Validation
+
+CI automatically validates:
+
+| Check | Templates | Blueprints |
+|-------|-----------|------------|
+| JSON syntax | ✅ | ✅ |
+| Schema validation | ✅ | ✅ |
+| Bundle consistency | ✅ | ✅ |
+| Manifest sync | ✅ | ✅ |
+| Thumbnails | ✅ | ❌ (optional) |
+
+Run locally before committing:
+```bash
+python scripts/sync_bundles.py      # Templates
+python scripts/sync_blueprints.py   # Blueprints
+```

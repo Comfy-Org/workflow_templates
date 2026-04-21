@@ -30,7 +30,13 @@ jobs:
       - name: Run input assets validation
         id: validation
         run: |
-          python scripts/check_input_assets.py || echo "validation_failed=true" >> $GITHUB_OUTPUT
+          # Run validation and capture exit code
+          if python scripts/check_input_assets.py; then
+            echo "validation_failed=false" >> $GITHUB_OUTPUT
+          else
+            echo "validation_failed=true" >> $GITHUB_OUTPUT
+            echo "❌ Input assets validation failed"
+          fi
         continue-on-error: true
       
       - name: Comment on PR with validation results (failures only)
@@ -124,7 +130,10 @@ jobs:
           path: asset_validation_report.md
           if-no-files-found: warn
       
-      - name: Check validation result
+      - name: Fail workflow if validation failed
+        if: steps.validation.outputs.validation_failed == 'true'
         run: |
-          python scripts/check_input_assets.py
+          echo "❌ Input Assets Validation failed. Please fix the issues before merging this PR."
+          echo "Check the PR comments and artifact for detailed error information."
+          exit 1
 

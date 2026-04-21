@@ -1,0 +1,95 @@
+name: Preview Site
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'templates/**'
+  workflow_dispatch:
+
+concurrency:
+  group: preview-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    env:
+      SKIP_AI_GENERATION: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      - name: Restore content cache
+        uses: actions/cache@v4
+        with:
+          path: site/.content-cache
+          key: content-cache-${{ hashFiles('templates/**', 'site/src/**') }}
+          restore-keys: |
+            content-cache-
+
+      - name: Sync templates
+        run: pnpm run sync:en-only
+        working-directory: site
+
+      - name: Build Astro site
+        run: pnpm run build
+        working-directory: site
+        env:
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PREVIEW }}
+          PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PREVIEW }}
+
+      - name: Deploy preview to Vercel
+        id: deploy
+        working-directory: site
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          stdout_file="$RUNNER_TEMP/vercel-preview.stdout"
+          stderr_file="$RUNNER_TEMP/vercel-preview.stderr"
+          site_output_dir="$GITHUB_WORKSPACE/site/.vercel/output"
+          root_output_dir="$GITHUB_WORKSPACE/.vercel/output"
+
+          if [ ! -d "$site_output_dir" ]; then
+            echo "Expected prebuilt output in $site_output_dir" >&2
+            exit 1
+          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/.vercel"
+          rm -rf "$root_output_dir"
+          cp -R "$site_output_dir" "$root_output_dir"
+
+          if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --yes \
+            --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+
+            preview_url="$(tail -n 1 "$stdout_file" | tr -d '\r')"
+            if [[ ! "$preview_url" =~ ^https?:// ]]; then
+              echo "Could not parse preview URL from Vercel CLI output" >&2
+              exit 1
+            fi
+
+            echo "preview-url=$preview_url" >> "$GITHUB_OUTPUT"
+          else
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+            exit 1
+          fi
+
+      - name: Comment preview URL
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vercel-preview
+          message: |
+            🚀 **Preview deployed:** ${{ steps.deploy.outputs.preview-url }}

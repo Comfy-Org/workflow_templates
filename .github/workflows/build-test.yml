@@ -1,0 +1,67 @@
+name: Build & Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Python tooling
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install --upgrade pip build pytest ruff aiohttp twine
+
+      - name: Sync manifest and bundle assets
+        run: |
+          source .venv/bin/activate
+          python scripts/sync_bundles.py
+
+      - name: Lint Python modules
+        run: |
+          source .venv/bin/activate
+          ruff check scripts/sync_bundles.py packages/core packages/meta
+
+      - name: Build packages
+        run: |
+          source .venv/bin/activate
+          rm -rf dist
+          mkdir dist
+          for pkg in core media_api media_video media_image media_other meta; do
+            python -m build --outdir dist packages/$pkg
+          done
+
+      - name: Run Nx build (sanity)
+        env:
+          NX_ADD_PLUGINS: "false"
+          NX_DAEMON: "false"
+        run: |
+          source .venv/bin/activate
+          npm run build:all
+
+      - name: Run tests
+        env:
+          PYTHONPATH: packages/meta/src:packages/core/src:packages/media_api/src:packages/media_video/src:packages/media_image/src:packages/media_other/src
+        run: |
+          source .venv/bin/activate
+          pytest packages/core/tests

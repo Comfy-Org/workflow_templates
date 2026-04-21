@@ -16,8 +16,11 @@ from typing import List, Dict, Tuple, Optional
 # Add new node types to this list as they are discovered
 ASSET_NODE_TYPES = [
     "LoadImage",
-    "LoadAudio", 
-    "LoadVideo"
+    "LoadAudio",
+    "VHS_LoadVideo",
+    "LoadVideo",
+    "Load3D",
+    "LoadImageMask",
 ]
 
 
@@ -59,9 +62,16 @@ def extract_asset_references(workflow_file: Path, node_types: List[str]) -> List
         if node_type in node_types:
             widgets_values = node.get("widgets_values", [])
             # The first element in widgets_values is typically the filename
-            if widgets_values and len(widgets_values) > 0:
-                asset_filename = widgets_values[0]
-                if asset_filename:  # Skip empty strings
+            # Handle both list and dict formats
+            if widgets_values:
+                asset_filename = None
+                if isinstance(widgets_values, list) and len(widgets_values) > 0:
+                    asset_filename = widgets_values[0]
+                elif isinstance(widgets_values, dict):
+                    # Try common keys for filename
+                    asset_filename = widgets_values.get("image") or widgets_values.get("video") or widgets_values.get("audio")
+                
+                if asset_filename:  # Skip empty strings and None
                     assets.append({
                         "node_id": node.get("id"),
                         "node_type": node_type,
@@ -107,11 +117,12 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
     if missing_assets:
         report.append(f"\n## ❌ Validation Failed\n")
         report.append(f"**{len(missing_assets)} missing asset(s)** found that need to be added to the `input/` folder.\n")
+        report.append(f"✅ **{len(valid_assets)} asset(s)** successfully validated.\n")
     else:
         report.append(f"\n## ✅ Validation Passed\n")
         report.append(f"All {len(valid_assets)} referenced asset(s) are present in the `input/` folder.\n")
     
-    # Missing assets details
+    # Missing assets details - only show if there are missing assets
     if missing_assets:
         report.append("\n## Missing Assets\n")
         report.append("The following assets are referenced in workflow files but not found in `input/`:\n\n")
@@ -123,15 +134,8 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
         
         report.append("\n**Action Required:** Please add the missing files to the `input/` directory.\n")
     
-    # Valid assets summary
-    if valid_assets:
-        report.append("\n## Valid Assets\n")
-        report.append(f"{len(valid_assets)} asset(s) successfully validated:\n\n")
-        report.append("| Workflow File | Node Type | Asset Filename |\n")
-        report.append("|---------------|-----------|----------------|\n")
-        
-        for asset in sorted(valid_assets, key=lambda x: (x["workflow"], x["filename"])):
-            report.append(f"| `{asset['workflow']}` | `{asset['node_type']}` | `{asset['filename']}` |\n")
+    # Valid assets summary - only show count, not full list (to keep report concise)
+    # The full list is still available in the artifact if needed
     
     return "".join(report)
 

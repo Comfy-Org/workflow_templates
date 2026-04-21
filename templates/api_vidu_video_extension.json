@@ -1,0 +1,382 @@
+{
+  "id": "7391bf14-015f-4b3b-ae72-ff93d79479c4",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 10,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "GetVideoComponents",
+      "pos": [
+        1139.9997521055561,
+        4609.9997744874745
+      ],
+      "size": [
+        230,
+        120
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4,
+            6
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetVideoComponents",
+        "cnr_id": "comfy-core",
+        "ver": "0.11.1"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 10,
+      "type": "GetImageSize",
+      "pos": [
+        1139.9997521055561,
+        4769.999685311712
+      ],
+      "size": [
+        230,
+        140
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize",
+        "cnr_id": "comfy-core",
+        "ver": "0.11.1"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 12,
+      "type": "Note",
+      "pos": [
+        2250,
+        3920
+      ],
+      "size": [
+        250,
+        120
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "The extended video will not retain the original audio."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadVideo",
+      "pos": [
+        1139.9997521055561,
+        4089.999873435417
+      ],
+      "size": [
+        490,
+        410
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1,
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.11.1"
+      },
+      "widgets_values": [
+        "lawyer.mp4",
+        "image"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "ImageFromBatch",
+      "pos": [
+        1389.9997559233902,
+        4609.9997744874745
+      ],
+      "size": [
+        270,
+        140
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 6
+        },
+        {
+          "name": "batch_index",
+          "type": "INT",
+          "widget": {
+            "name": "batch_index"
+          },
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageFromBatch",
+        "cnr_id": "comfy-core",
+        "ver": "0.11.1"
+      },
+      "widgets_values": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": 4,
+      "type": "SaveVideo",
+      "pos": [
+        2249.9995629135947,
+        4089.999873435417
+      ],
+      "size": [
+        680,
+        490
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 3
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.11.1"
+      },
+      "widgets_values": [
+        "video/vidu_video_extended",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "ViduExtendVideoNode",
+      "pos": [
+        1679.999069390795,
+        4089.9993008155698
+      ],
+      "size": [
+        430,
+        298.328125
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        },
+        {
+          "name": "end_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 9
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ViduExtendVideoNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.11.1"
+      },
+      "widgets_values": [
+        "viduq2-pro",
+        4,
+        "720p",
+        "",
+        978453909,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      1,
+      0,
+      "VIDEO"
+    ],
+    [
+      3,
+      1,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ],
+    [
+      4,
+      3,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      10,
+      2,
+      5,
+      1,
+      "INT"
+    ],
+    [
+      6,
+      3,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      9,
+      5,
+      0,
+      1,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Get end_frame （select and Ctrl-B to disable）",
+      "bounding": [
+        1130,
+        4540,
+        550,
+        390
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6231372516431514,
+      "offset": [
+        -788.0730737542757,
+        -3588.6055497221287
+      ]
+    },
+    "frontendVersion": "1.43.6",
+    "workflowRendererVersion": "LG",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

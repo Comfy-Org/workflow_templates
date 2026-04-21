@@ -1,0 +1,295 @@
+{
+  "id": "e6c83632-4154-43a4-9962-8a7fb318a3f9",
+  "revision": 0,
+  "last_node_id": 31,
+  "last_link_id": 26,
+  "nodes": [
+    {
+      "id": 26,
+      "type": "BatchImagesNode",
+      "pos": [
+        1970,
+        10520
+      ],
+      "size": [
+        166.388671875,
+        66
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [
+        {
+          "label": "image0",
+          "name": "images.image0",
+          "type": "IMAGE",
+          "link": 26
+        },
+        {
+          "label": "image1",
+          "name": "images.image1",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "BatchImagesNode"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 17,
+      "type": "LoadImage",
+      "pos": [
+        1200,
+        10650
+      ],
+      "size": [
+        600,
+        460
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            23,
+            26
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "giant_trees_sky_pyramid.png",
+        "image"
+      ]
+    },
+    {
+      "id": 31,
+      "type": "Note",
+      "pos": [
+        1900,
+        10640
+      ],
+      "size": [
+        300,
+        120
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Select the Batch Images node, then press Ctrl+B to enable it. Then link the IMAGE output to the reference_images input to enable multiple reference images input.\n\nYou can use up to 4 images."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 23,
+      "type": "KlingOmniProEditVideoNode",
+      "pos": [
+        1842,
+        10080
+      ],
+      "size": [
+        400,
+        226
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 24
+        },
+        {
+          "name": "reference_images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            25
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "KlingOmniProEditVideoNode"
+      },
+      "widgets_values": [
+        "kling-v3-omni",
+        "Keep the character (the man) and the ornate bird character (covered in jewelry and exquisite details) in the reference video completely unchanged—including their actions, postures, and all decorative details. Replace the original desert background in the video with the background environment from the reference image (the scene with giant trees, castles, and a blue sky). Adjust the lighting and color tone of the man and the ornate bird to match the new background for a natural, cohesive visual effect. ",
+        true,
+        "720p"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 14,
+      "type": "SaveVideo",
+      "pos": [
+        2284,
+        10080
+      ],
+      "size": [
+        670,
+        532.875
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 25
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3"
+      },
+      "widgets_values": [
+        "video/kling_o3_video_edit",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 25,
+      "type": "LoadVideo",
+      "pos": [
+        1190,
+        10080
+      ],
+      "size": [
+        610,
+        490
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.12.3",
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "kling_o3_video_input.mp4",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      23,
+      17,
+      0,
+      23,
+      1,
+      "IMAGE"
+    ],
+    [
+      24,
+      25,
+      0,
+      23,
+      0,
+      "VIDEO"
+    ],
+    [
+      25,
+      23,
+      0,
+      14,
+      0,
+      "VIDEO"
+    ],
+    [
+      26,
+      17,
+      0,
+      26,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Multiple reference input",
+      "bounding": [
+        1900,
+        10440,
+        300,
+        140
+      ],
+      "color": "#444",
+      "font_size": 24,
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.8281423133481999,
+      "offset": [
+        -537.4736439559613,
+        -9953.988049103566
+      ]
+    },
+    "frontendVersion": "1.38.13",
+    "workflowRendererVersion": "LG",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
