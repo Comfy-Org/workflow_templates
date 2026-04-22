@@ -54,9 +54,9 @@ const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb ? isAudioFile(primaryThumb) : false;
 const isVideo = primaryThumb ? isVideoFile(primaryThumb) : false;
+const isSecondaryVideo = secondaryThumb ? isVideoFile(secondaryThumb) : false;
 const videoPosterUrl = isVideo ? getVideoFrameUrl(primarySrc) : null;
-const secondaryVideoPosterUrl = secondaryThumb && isVideoFile(secondaryThumb)
-  ? getVideoFrameUrl(secondarySrc) : null;
+const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc) : null;
 ---
 
 {
@@ -136,7 +136,7 @@ const secondaryVideoPosterUrl = secondaryThumb && isVideoFile(secondaryThumb)
           />
         )}
       </div>
-      {secondaryThumb && (
+      {secondaryThumb && isSecondaryVideo && (
         <div class="video-fallback-wrapper">
           <video
             src={secondarySrc}
@@ -160,6 +160,16 @@ const secondaryVideoPosterUrl = secondaryThumb && isVideoFile(secondaryThumb)
             />
           )}
         </div>
+      )}
+      {secondaryThumb && !isSecondaryVideo && (
+        <img
+          src={secondarySrc}
+          alt={`${title} - secondary`}
+          class={naturalAspect ? 'w-full h-auto' : 'w-full h-full object-cover'}
+          loading="lazy"
+          decoding="async"
+          data-hide-on-error
+        />
       )}
     </div>
   ) : variant === 'compareSlider' && hasSecondImage ? (
@@ -318,6 +328,11 @@ const secondaryVideoPosterUrl = secondaryThumb && isVideoFile(secondaryThumb)
         showFallback();
       }
     }, 3000);
+  });
+
+  // Hide images that fail to load (e.g. CDN 404) so we don't render broken icons.
+  document.querySelectorAll<HTMLImageElement>('[data-hide-on-error]').forEach((img) => {
+    img.addEventListener('error', () => img.classList.add('hidden'));
   });
 </script>
 
