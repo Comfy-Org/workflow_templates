@@ -1,0 +1,19 @@
+matrix:
+- name: Workflow Notes
+  sources:
+  - '/tmp/workflow_notes.txt'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.markdown:
+      markdown_extensions:
+      - pymdownx.superfences:
+  - pyspelling.filters.html:
+      comments: false
+      ignores:
+      - code
+      - pre
