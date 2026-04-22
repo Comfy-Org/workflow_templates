@@ -1,0 +1,18 @@
+matrix:
+- name: Index JSON Files
+  sources:
+  - 'templates/index.json'
+  aspell:
+    lang: en
+  dictionary:
+    wordlists:
+    - .github/.wordlist.txt
+    encoding: utf-8
+  pipeline:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      delimiters:
+      - open: '"title":\s*"'
+        close: '"'
+      - open: '"description":\s*"'
+        close: '"'

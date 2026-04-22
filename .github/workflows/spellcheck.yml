@@ -1,0 +1,280 @@
+name: Spellcheck
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'templates/**'
+      - 'scripts/i18n.json'
+      - '.github/.spellcheck.yml'
+      - '.github/.spellcheck-workflows.yml'
+      - '.github/.spellcheck-i18n.yml'
+      - '.github/.wordlist.txt'
+      - '.github/workflows/spellcheck.yml'
+      - '.github/extract_workflow_text.py'
+
+jobs:
+  spellcheck-index:
+    name: Spellcheck (templates/index.json)
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.check.outputs.result }}
+      errors: ${{ steps.check.outputs.errors }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install pyspelling + aspell
+      run: |
+        sudo apt-get install -y aspell aspell-en
+        pip install pyspelling pymdown-extensions
+
+    - name: Run spellcheck (changed lines only on PRs)
+      id: check
+      run: |
+        set +e
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          git fetch origin ${{ github.base_ref }} --depth=1
+          # Extract only added/changed lines from index.json into a temp file
+          git diff origin/${{ github.base_ref }}...HEAD -- templates/index.json \
+            | grep '^+' | grep -v '^+++' | sed 's/^+//' \
+            > /tmp/index_diff_lines.txt
+          if [ ! -s /tmp/index_diff_lines.txt ]; then
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+            echo "errors=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Write a config that points at the diff output instead of the full file
+          cat > /tmp/spellcheck-index-diff.yml << 'SPELLCFG'
+        matrix:
+        - name: Index JSON Files (diff)
+          sources:
+          - '/tmp/index_diff_lines.txt'
+          aspell:
+            lang: en
+          dictionary:
+            wordlists:
+            - .github/.wordlist.txt
+            encoding: utf-8
+          pipeline:
+          - pyspelling.filters.context:
+              context_visible_first: true
+              delimiters:
+              - open: '"title":\s*"'
+                close: '"'
+              - open: '"description":\s*"'
+                close: '"'
+        SPELLCFG
+          output=$(pyspelling --config /tmp/spellcheck-index-diff.yml 2>&1)
+        else
+          output=$(pyspelling --config .github/.spellcheck.yml 2>&1)
+        fi
+        exit_code=$?
+        set -e
+        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
+        {
+          echo 'errors<<EOF'
+          echo "$output"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+        exit $exit_code
+
+  spellcheck-workflows:
+    name: Spellcheck (Workflow JSON notes)
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.check.outputs.result }}
+      errors: ${{ steps.check.outputs.errors }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install pyspelling + aspell
+      run: |
+        sudo apt-get install -y aspell aspell-en
+        pip install pyspelling pymdown-extensions
+
+    - name: Extract MarkdownNote text from workflow JSONs
+      run: |
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          git fetch origin ${{ github.base_ref }} --depth=1
+          # Only extract notes from workflow files changed in this PR
+          changed=$(git diff origin/${{ github.base_ref }}...HEAD --name-only -- 'templates/*.json' \
+            | grep -v 'templates/index' || true)
+          if [ -z "$changed" ]; then
+            echo "" > /tmp/workflow_notes.txt
+          else
+            python .github/extract_workflow_text.py \
+              --input-dir templates \
+              --files $changed \
+              --output-file /tmp/workflow_notes.txt
+          fi
+        else
+          python .github/extract_workflow_text.py \
+            --input-dir templates \
+            --output-file /tmp/workflow_notes.txt
+        fi
+
+    - name: Spellcheck extracted notes
+      id: check
+      run: |
+        set +e
+        output=$(pyspelling --config .github/.spellcheck-workflows.yml --source /tmp/workflow_notes.txt 2>&1)
+        exit_code=$?
+        set -e
+        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
+        {
+          echo 'errors<<EOF'
+          echo "$output"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+        exit $exit_code
+
+  spellcheck-i18n:
+    name: Spellcheck (scripts/i18n.json English fields)
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.check.outputs.result }}
+      errors: ${{ steps.check.outputs.errors }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install pyspelling + aspell
+      run: |
+        sudo apt-get install -y aspell aspell-en
+        pip install pyspelling pymdown-extensions
+
+    - name: Run spellcheck
+      id: check
+      run: |
+        set +e
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          git fetch origin ${{ github.base_ref }} --depth=1
+          git diff origin/${{ github.base_ref }}...HEAD -- scripts/i18n.json \
+            | grep '^+' | grep -v '^+++' | sed 's/^+//' \
+            > /tmp/i18n_diff_lines.txt
+          if [ ! -s /tmp/i18n_diff_lines.txt ]; then
+            echo "result=pass" >> "$GITHUB_OUTPUT"
+            echo "errors=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cat > /tmp/spellcheck-i18n-diff.yml << 'SPELLCFG'
+        matrix:
+        - name: i18n JSON (diff, English fields)
+          sources:
+          - '/tmp/i18n_diff_lines.txt'
+          aspell:
+            lang: en
+          dictionary:
+            wordlists:
+            - .github/.wordlist.txt
+            encoding: utf-8
+          pipeline:
+          - pyspelling.filters.context:
+              context_visible_first: true
+              delimiters:
+              - open: '"en":\s*"'
+                close: '"'
+        SPELLCFG
+          output=$(pyspelling --config /tmp/spellcheck-i18n-diff.yml 2>&1)
+        else
+          output=$(pyspelling --config .github/.spellcheck-i18n.yml 2>&1)
+        fi
+        exit_code=$?
+        set -e
+        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
+        {
+          echo 'errors<<EOF'
+          echo "$output"
+          echo 'EOF'
+        } >> "$GITHUB_OUTPUT"
+        exit $exit_code
+
+  comment:
+    name: Post spellcheck results
+    runs-on: ubuntu-latest
+    if: always() && github.event_name == 'pull_request'
+    needs: [spellcheck-index, spellcheck-workflows, spellcheck-i18n]
+    permissions:
+      pull-requests: write
+    steps:
+    - name: Post PR comment
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const indexResult  = '${{ needs.spellcheck-index.outputs.result }}';
+          const worksResult  = '${{ needs.spellcheck-workflows.outputs.result }}';
+          const i18nResult   = '${{ needs.spellcheck-i18n.outputs.result }}';
+          const indexErrors  = `${{ needs.spellcheck-index.outputs.errors }}`;
+          const worksErrors  = `${{ needs.spellcheck-workflows.outputs.errors }}`;
+          const i18nErrors   = `${{ needs.spellcheck-i18n.outputs.errors }}`;
+
+          const icon  = r => r === 'pass' ? '✅' : '❌';
+          const label = r => r === 'pass' ? 'No issues found' : 'Misspelled words detected';
+
+          let body = `## 🔤 Spellcheck Results\n\n`;
+          body += `| Check | Status |\n|---|---|\n`;
+          body += `| \`templates/index.json\` (titles & descriptions) | ${icon(indexResult)} ${label(indexResult)} |\n`;
+          body += `| Workflow JSON notes (MarkdownNote / Note nodes) | ${icon(worksResult)} ${label(worksResult)} |\n`;
+          body += `| \`scripts/i18n.json\` (English fields) | ${icon(i18nResult)} ${label(i18nResult)} |\n\n`;
+
+          if (indexResult !== 'pass') {
+            body += `<details>\n<summary>❌ index.json errors</summary>\n\n\`\`\`\n${indexErrors}\n\`\`\`\n</details>\n\n`;
+          }
+          if (worksResult !== 'pass') {
+            body += `<details>\n<summary>❌ Workflow notes errors</summary>\n\n\`\`\`\n${worksErrors}\n\`\`\`\n</details>\n\n`;
+          }
+          if (i18nResult !== 'pass') {
+            body += `<details>\n<summary>❌ i18n.json errors</summary>\n\n\`\`\`\n${i18nErrors}\n\`\`\`\n</details>\n\n`;
+          }
+
+          const allPass = indexResult === 'pass' && worksResult === 'pass' && i18nResult === 'pass';
+          if (allPass) {
+            body += `> All spellchecks passed! 🎉\n`;
+          } else {
+            body += `> Add legitimate technical terms to \`.github/.wordlist.txt\` to suppress false positives.\n`;
+          }
+
+          const marker = '<!-- spellcheck-bot -->';
+          body = marker + '\n' + body;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const existing = comments.find(c => c.body.includes(marker));
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
