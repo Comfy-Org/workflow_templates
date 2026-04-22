@@ -511,10 +511,12 @@ function resolveThumbUrl(file: string): string {
   return `/workflows/thumbnails/${file}`;
 }
 
-// Returns an <img> src for image thumbnails, or a Cloudflare poster-frame URL
-// for CDN-hosted videos. Returns null when the file has no static preview
-// (audio, or a video that isn't on the Cloudflare CDN) — callers should then
-// render a <video> element (see videoThumbUrl) or an icon placeholder.
+/**
+ * Returns an <img> src for image thumbnails, or a Cloudflare poster-frame URL
+ * for CDN-hosted videos. Returns null when the file has no static preview
+ * (audio, or a video that isn't on the Cloudflare CDN) — callers should then
+ * render a <video> element (see videoThumbUrl) or an icon placeholder.
+ */
 function getImageThumb(file: string | undefined | null): string | null {
   if (!file) return null;
   if (isAudioFile(file)) return null;
@@ -522,9 +524,11 @@ function getImageThumb(file: string | undefined | null): string | null {
   return resolveThumbUrl(file);
 }
 
-// Returns the full video URL when the thumbnail is a video file, otherwise null.
-// Used to drive a <video> fallback for non-CDN videos where the browser
-// renders the first frame for free via preload="metadata".
+/**
+ * Returns the full video URL when the thumbnail is a video file, otherwise null.
+ * Used to drive a <video> fallback for non-CDN videos where the browser
+ * renders the first frame for free via preload="metadata".
+ */
 function videoThumbUrl(file: string | undefined | null): string | null {
   if (!file || !isVideoFile(file)) return null;
   return resolveThumbUrl(file);
