@@ -1,12 +1,10 @@
 name: Model Analysis Check
 
 on:
-  push:
+  pull_request:
     paths:
       - 'templates/**.json'
-  pull_request_target:
-    paths:
-      - 'templates/**.json'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -43,7 +41,7 @@ jobs:
         continue-on-error: true
     
       - name: Comment on PR about model analysis results (failures only)
-        if: github.event_name == 'pull_request_target' && steps.model_analysis.outputs.model_analysis_failed == 'true'
+        if: github.event_name == 'pull_request' && steps.model_analysis.outputs.model_analysis_failed == 'true'
         uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
