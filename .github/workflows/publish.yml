@@ -34,6 +34,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            pyproject.toml
+          sparse-checkout-cone-mode: false
 
       - name: Find associated PR
         id: pr
@@ -116,6 +120,10 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
           fetch-depth: 0  # Full history needed for tags and version comparison
+          sparse-checkout: |
+            pyproject.toml
+            packages/*/pyproject.toml
+          sparse-checkout-cone-mode: false
 
       - name: Check if version actually changed
         id: check

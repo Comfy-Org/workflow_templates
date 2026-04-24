@@ -26,7 +26,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+        with:
+          sparse-checkout: |
+            templates/*.json
+            blueprints/
+            bundles.json
+            blueprints_bundles.json
+            scripts/
+            packages/
+          sparse-checkout-cone-mode: false
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
