@@ -20,7 +20,14 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    
+      with:
+        sparse-checkout: |
+          templates/
+          scripts/validate_templates.py
+          scripts/validate_thumbnails.py
+          scripts/list_pip_excluded.py
+        sparse-checkout-cone-mode: false
+
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
