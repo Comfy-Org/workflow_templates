@@ -39,46 +39,11 @@ jobs:
         sudo apt-get install -y aspell aspell-en
         pip install pyspelling pymdown-extensions
 
-    - name: Run spellcheck (changed lines only on PRs)
+    - name: Run spellcheck
       id: check
       run: |
         set +e
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          git fetch origin ${{ github.base_ref }} --depth=1
-          # Extract only added/changed lines from index.json into a temp file
-          git diff origin/${{ github.base_ref }}...HEAD -- templates/index.json \
-            | grep '^+' | grep -v '^+++' | sed 's/^+//' \
-            > /tmp/index_diff_lines.txt
-          if [ ! -s /tmp/index_diff_lines.txt ]; then
-            echo "result=pass" >> "$GITHUB_OUTPUT"
-            echo "errors=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Write a config that points at the diff output instead of the full file
-          cat > /tmp/spellcheck-index-diff.yml << 'SPELLCFG'
-        matrix:
-        - name: Index JSON Files (diff)
-          sources:
-          - '/tmp/index_diff_lines.txt'
-          aspell:
-            lang: en
-          dictionary:
-            wordlists:
-            - .github/.wordlist.txt
-            encoding: utf-8
-          pipeline:
-          - pyspelling.filters.context:
-              context_visible_first: true
-              delimiters:
-              - open: '"title":\s*"'
-                close: '"'
-              - open: '"description":\s*"'
-                close: '"'
-        SPELLCFG
-          output=$(pyspelling --config /tmp/spellcheck-index-diff.yml 2>&1)
-        else
-          output=$(pyspelling --config .github/.spellcheck.yml 2>&1)
-        fi
+        output=$(pyspelling --config .github/.spellcheck.yml 2>&1)
         exit_code=$?
         set -e
         echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
@@ -116,24 +81,9 @@ jobs:
 
     - name: Extract MarkdownNote text from workflow JSONs
       run: |
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          git fetch origin ${{ github.base_ref }} --depth=1
-          # Only extract notes from workflow files changed in this PR
-          changed=$(git diff origin/${{ github.base_ref }}...HEAD --name-only -- 'templates/*.json' \
-            | grep -v 'templates/index' || true)
-          if [ -z "$changed" ]; then
-            echo "" > /tmp/workflow_notes.txt
-          else
-            python .github/extract_workflow_text.py \
-              --input-dir templates \
-              --files $changed \
-              --output-file /tmp/workflow_notes.txt
-          fi
-        else
-          python .github/extract_workflow_text.py \
-            --input-dir templates \
-            --output-file /tmp/workflow_notes.txt
-        fi
+        python .github/extract_workflow_text.py \
+          --input-dir templates \
+          --output-file /tmp/workflow_notes.txt
 
     - name: Spellcheck extracted notes
       id: check
@@ -179,38 +129,7 @@ jobs:
       id: check
       run: |
         set +e
-        if [ "${{ github.event_name }}" = "pull_request" ]; then
-          git fetch origin ${{ github.base_ref }} --depth=1
-          git diff origin/${{ github.base_ref }}...HEAD -- scripts/i18n.json \
-            | grep '^+' | grep -v '^+++' | sed 's/^+//' \
-            > /tmp/i18n_diff_lines.txt
-          if [ ! -s /tmp/i18n_diff_lines.txt ]; then
-            echo "result=pass" >> "$GITHUB_OUTPUT"
-            echo "errors=" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          cat > /tmp/spellcheck-i18n-diff.yml << 'SPELLCFG'
-        matrix:
-        - name: i18n JSON (diff, English fields)
-          sources:
-          - '/tmp/i18n_diff_lines.txt'
-          aspell:
-            lang: en
-          dictionary:
-            wordlists:
-            - .github/.wordlist.txt
-            encoding: utf-8
-          pipeline:
-          - pyspelling.filters.context:
-              context_visible_first: true
-              delimiters:
-              - open: '"en":\s*"'
-                close: '"'
-        SPELLCFG
-          output=$(pyspelling --config /tmp/spellcheck-i18n-diff.yml 2>&1)
-        else
-          output=$(pyspelling --config .github/.spellcheck-i18n.yml 2>&1)
-        fi
+        output=$(pyspelling --config .github/.spellcheck-i18n.yml 2>&1)
         exit_code=$?
         set -e
         echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
