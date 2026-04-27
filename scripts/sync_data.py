@@ -35,6 +35,8 @@ import logging
 import argparse
 import sys
 import csv
+import subprocess
+import tempfile
 from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
@@ -1296,6 +1298,67 @@ class TemplateSyncManager:
         else:
             self.syncer.logger.info(f"  ✅ Master file vram data is already correct")
 
+    def run_spellcheck(self) -> None:
+        """Run all three spellchecks (index.json, workflow notes, i18n.json)."""
+        repo_root = self.syncer.templates_dir.parent
+        github_dir = repo_root / ".github"
+        extract_script = github_dir / "extract_workflow_text.py"
+
+        # Check pyspelling is available
+        try:
+            subprocess.run(
+                [sys.executable, "-m", "pyspelling", "--version"],
+                check=True, capture_output=True
+            )
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            self.syncer.logger.warning("  ⚠️  pyspelling not installed, skipping spellcheck (run: pip install pyspelling pymdown-extensions)")
+            return
+
+        errors_found = []
+
+        def _spellcheck_extracted(label: str, extract_args: list, config: str) -> None:
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp:
+                extracted_file = tmp.name
+            try:
+                subprocess.run(
+                    [sys.executable, str(extract_script)] + extract_args + ["--output-file", extracted_file],
+                    check=True, capture_output=True, cwd=str(repo_root)
+                )
+                result = subprocess.run(
+                    [sys.executable, "-m", "pyspelling", "--config", config, "--source", extracted_file],
+                    capture_output=True, text=True, cwd=str(repo_root)
+                )
+                if result.returncode != 0:
+                    errors_found.append((label, result.stdout + result.stderr))
+            finally:
+                os.unlink(extracted_file)
+
+        # 1. index.json — extract titles, descriptions, tags then spellcheck
+        self.syncer.logger.info("  Checking templates/index.json...")
+        _spellcheck_extracted(
+            "index.json",
+            ["--input-dir", str(self.syncer.templates_dir), "--index"],
+            str(github_dir / ".spellcheck-workflows.yml")
+        )
+
+        # 2. Workflow JSON notes (MarkdownNote / Note nodes)
+        self.syncer.logger.info("  Checking workflow JSON notes...")
+        _spellcheck_extracted(
+            "workflow notes",
+            ["--input-dir", str(self.syncer.templates_dir)],
+            str(github_dir / ".spellcheck-workflows.yml")
+        )
+
+        # 3. i18n.json — English fields come from index.json, already checked above
+        # No need to scan the 2MB i18n.json file separately
+
+        if errors_found:
+            for target, output in errors_found:
+                print(f"\n❌ Spellcheck errors in {target}:\n{output.strip()}")
+            raise Exception(f"Spellcheck found errors in: {', '.join(t for t, _ in errors_found)}")
+
+        self.syncer.logger.info("  ✅ All spellchecks passed")
+
     def run_sync(self) -> bool:
         """
         Run complete synchronization process:
@@ -1482,9 +1545,17 @@ class TemplateSyncManager:
         else:
             self.syncer.logger.warning("\n⚠️  analyze_models module not available, skipping model analysis")
 
-        # Step 7: Validate templates
+        # Step 7: Spellcheck
+        self.syncer.logger.info("\n🔤 Step 7: Running spellcheck...")
+        try:
+            self.run_spellcheck()
+        except Exception as e:
+            self.record_error(f"Spellcheck failed: {e}")
+            success = False
+
+        # Step 8: Validate templates
         if validate_templates is not None:
-            self.syncer.logger.info("\n✅ Step 7: Validating templates...")
+            self.syncer.logger.info("\n✅ Step 8: Validating templates...")
             try:
                 # Run the validation main function
                 validation_result = validate_templates.main()
