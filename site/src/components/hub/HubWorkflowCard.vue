@@ -12,6 +12,7 @@ import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
+import { workflowDetailPath } from '@/lib/routes';
 
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
@@ -94,11 +95,7 @@ const logoPath = computed(() => (providerName.value ? getLogoPath(providerName.v
 
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
-const templateUrl = computed(() => {
-  const slug = props.shareId ? `${props.name}-${props.shareId}` : props.name;
-  const base = `/workflows/${slug}/`;
-  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
-});
+const templateUrl = computed(() => workflowDetailPath(props.name, props.shareId, props.locale));
 
 const primaryFile = computed(() => props.thumbnails[0] ?? null);
 const secondaryFile = computed(() => props.thumbnails[1] ?? null);
@@ -229,13 +226,15 @@ const creatorUrl = computed(() => {
 });
 
 function handleCardClick() {
+  if (!templateUrl.value) return;
   window.location.href = templateUrl.value;
 }
 </script>
 
 <template>
   <div
-    class="group transition-all duration-200 content-auto cursor-pointer"
+    class="group transition-all duration-200 content-auto"
+    :class="templateUrl ? 'cursor-pointer' : ''"
     @click="handleCardClick"
   >
     <!-- Thumbnail -->
@@ -291,10 +290,7 @@ function handleCardClick() {
       </div>
 
       <!-- Hover crossfade -->
-      <div
-        v-else-if="showHoverDissolve"
-        class="group/thumb relative h-full w-full overflow-hidden"
-      >
+      <div v-else-if="showHoverDissolve" class="group/thumb relative h-full w-full overflow-hidden">
         <img
           :src="primaryUrl || ''"
           :alt="`${title} - 1`"
@@ -441,10 +437,7 @@ function handleCardClick() {
         :alt="authorName"
         class="size-5 rounded-full shrink-0 object-cover"
       />
-      <div
-        v-else
-        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
-      >
+      <div v-else class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand">
         <span class="text-black text-[10px] font-bold leading-none">{{
           authorName.charAt(0).toUpperCase()
         }}</span>
@@ -458,10 +451,7 @@ function handleCardClick() {
         :alt="authorName"
         class="size-5 rounded-full shrink-0 object-cover"
       />
-      <div
-        v-else
-        class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
-      >
+      <div v-else class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand">
         <span class="text-black text-[10px] font-bold leading-none">{{
           authorName.charAt(0).toUpperCase()
         }}</span>
@@ -470,15 +460,15 @@ function handleCardClick() {
     </div>
 
     <!-- Tag pills -->
-    <div data-testid="tag-pills" class="flex items-center gap-1.5 pt-4 overflow-x-auto scrollbar-hide">
-      <a
-        v-for="tag in displayTags"
-        :key="tag"
-        :href="getTagUrl(tag)"
-        class="tag-link"
-        @click.stop
-      >
-        <Badge variant="hub-pill" class="hover:bg-hub-surface transition-colors shrink-0 whitespace-nowrap">
+    <div
+      data-testid="tag-pills"
+      class="flex items-center gap-1.5 pt-4 overflow-x-auto scrollbar-hide"
+    >
+      <a v-for="tag in displayTags" :key="tag" :href="getTagUrl(tag)" class="tag-link" @click.stop>
+        <Badge
+          variant="hub-pill"
+          class="hover:bg-hub-surface transition-colors shrink-0 whitespace-nowrap"
+        >
           {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
         </Badge>
       </a>

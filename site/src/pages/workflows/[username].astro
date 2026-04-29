@@ -55,12 +55,14 @@ if (detailShareId) {
 }
 
 // Fetch profile — try dedicated endpoint first, fall back to index-embedded profiles
+let profileFound = false;
 let displayName = slugParam;
 let avatarUrl: string | null = null;
 let description = '';
 let websiteUrls: string[] = [];
 try {
   const profile = await getProfile(slugParam);
+  profileFound = true;
   displayName = profile.display_name || slugParam;
   avatarUrl = profile.avatar_url || null;
   description = profile.description || '';
@@ -70,6 +72,7 @@ try {
   const profiles = await getProfileCache();
   const cached = profiles.get(slugParam);
   if (cached) {
+    profileFound = true;
     displayName = cached.display_name || slugParam;
     avatarUrl = cached.avatar_url || null;
     description = cached.description || '';
@@ -89,8 +92,11 @@ try {
   // Index API failed — show empty grid
 }
 
-// If no profile and no workflows, redirect
-if (!displayName && serialized.length === 0) {
+// Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
+// link): not a workflow detail, no profile, and no workflows — redirect instead
+// of rendering a page that would title itself "<slug> (@<slug>)" and get
+// indexed by Google.
+if (!isDetailPage && !profileFound && serialized.length === 0) {
   return Astro.redirect('/workflows/');
 }
 
