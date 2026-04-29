@@ -15,10 +15,7 @@ import TemplateDetailPage from '../../components/template-detail/TemplateDetailP
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { getTemplatesForLocale } from '../../lib/templates';
 import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
-import {
-  listWorkflowIndex,
-  type HubWorkflowTemplateEntry,
-} from '../../lib/hub-api';
+import { listWorkflowIndex, type HubWorkflowTemplateEntry } from '../../lib/hub-api';
 import { workflowOgUrl } from '../../lib/og-url';
 
 export async function getStaticPaths() {
@@ -28,19 +25,24 @@ export async function getStaticPaths() {
   } catch {
     // Fallback to content collection
     const templates = await getTemplatesForLocale(DEFAULT_LOCALE);
-    return templates.map((t) => ({
-      params: { slug: t.data.name },
-      props: { entry: null, legacySlug: t.data.name, legacyShareId: null },
-    }));
+    return templates
+      .filter((t) => Boolean(t.data.name))
+      .map((t) => ({
+        params: { slug: t.data.name },
+        props: { entry: null, legacySlug: t.data.name, legacyShareId: null },
+      }));
   }
 
   const paths = [];
 
   for (const entry of entries) {
-    const shareId = entry.shareId || '';
-    const name = entry.name || shareId;
+    // Skip entries that can't form a valid /workflows/{name}-{shareId}/ slug.
+    // Without this, Astro statically renders indexable broken pages like
+    // /workflows/<name>-/ that Google then surfaces as real results.
+    if (!entry.name || !entry.shareId) continue;
 
-    // New URL: /workflows/{name}-{shareId}/
+    const { name, shareId } = entry;
+
     paths.push({
       params: { slug: `${name}-${shareId}` },
       props: { entry, legacySlug: null, legacyShareId: null },
