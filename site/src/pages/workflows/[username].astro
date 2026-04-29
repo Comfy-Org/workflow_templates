@@ -93,9 +93,10 @@ try {
 }
 
 // Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
-// link): no profile and no workflows — redirect instead of rendering a page that
-// would title itself "<slug> (@<slug>)" and get indexed by Google.
-if (!profileFound && serialized.length === 0) {
+// link): not a workflow detail, no profile, and no workflows — redirect instead
+// of rendering a page that would title itself "<slug> (@<slug>)" and get
+// indexed by Google.
+if (!isDetailPage && !profileFound && serialized.length === 0) {
   return Astro.redirect('/workflows/');
 }
 
