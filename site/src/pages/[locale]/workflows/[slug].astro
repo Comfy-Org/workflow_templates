@@ -119,7 +119,11 @@ let serialized: SerializedTemplate[] = [];
 
 try {
   const entries = await listWorkflowIndex();
-  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
+  // Match by username AND drop rows missing name/shareId so the grid never
+  // renders a card that links to /workflows/undefined/ (FE-223).
+  const filtered = entries.filter(
+    (e) => (e.profile?.username || e.username) === slug && Boolean(e.name) && Boolean(e.shareId)
+  );
   serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
 } catch (err) {
   console.error('Hub API failed for creator grid:', err);

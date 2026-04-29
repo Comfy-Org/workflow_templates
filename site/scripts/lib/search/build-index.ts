@@ -57,9 +57,7 @@ async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   if (!apiUrl) return null;
 
   const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
-  const statuses = approvedOnly
-    ? 'approved'
-    : 'pending,approved,rejected,deprecated';
+  const statuses = approvedOnly ? 'approved' : 'pending,approved,rejected,deprecated';
   const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
 
   if (!res.ok) {
@@ -107,17 +105,23 @@ export async function buildSearchIndex(): Promise<void> {
       }
     }
 
+    let skipped = 0;
     for (const data of hubEntries) {
+      // Drop entries that can't form a clean detail URL. Without this, the
+      // search index emits slugs like "undefined-<id>" or "<name>-undefined"
+      // and the popover renders /workflows/undefined/ links (FE-223).
+      if (!data.name || !data.shareId) {
+        skipped++;
+        continue;
+      }
       const username = data.username || 'ComfyUI';
       const creatorName = displayNames.get(username) || username;
       const tags = data.tags || [];
       const models = data.models || [];
-      const shareId = data.shareId || '';
-      const name = data.name || shareId;
+      const { name, shareId } = data;
       // Use shareId as the unique ID; name can be duplicated across users
-      const id = shareId || name;
-      // URL slug: "{name}-{shareId}" for hub entries, "{name}" for legacy
-      const slug = shareId ? `${name}-${shareId}` : name;
+      const id = shareId;
+      const slug = `${name}-${shareId}`;
 
       documents.push({
         id,
@@ -136,22 +140,33 @@ export async function buildSearchIndex(): Promise<void> {
         tagsArray: tags.map(tagDisplayName),
       });
     }
+    if (skipped > 0) {
+      logger.warn(`Skipped ${skipped} hub entries missing name or shareId — see FE-223`);
+    }
   } else {
     // No PUBLIC_HUB_API_URL — local/offline build, use content collection
-    const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json') && !f.includes('/'));
-    logger.warn(`No hub API configured — building search index from content collection (${files.length} files)`);
+    const files = fs
+      .readdirSync(CONTENT_DIR)
+      .filter((f) => f.endsWith('.json') && !f.includes('/'));
+    logger.warn(
+      `No hub API configured — building search index from content collection (${files.length} files)`
+    );
 
     for (const file of files) {
       const filePath = path.join(CONTENT_DIR, file);
       const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+
+      // Legacy content-collection templates always have a name but may omit
+      // shareId. Drop nameless rows so we never index an empty slug (FE-223).
+      if (!data.name) continue;
 
       const username = data.username || 'ComfyUI';
       const tags: string[] = data.tags || [];
       const models: string[] = data.models || [];
       const thumbnails: string[] = data.thumbnails || [];
 
-      const shareId = data.shareId || '';
-      const name = data.name || shareId;
+      const shareId: string = data.shareId || '';
+      const name: string = data.name;
       const id = shareId || name;
       const slug = shareId ? `${name}-${shareId}` : name;
 
@@ -229,5 +244,7 @@ export async function buildSearchIndex(): Promise<void> {
 
   const sizeKB = (Buffer.byteLength(serialized) / 1024).toFixed(1);
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  logger.info(`Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`);
+  logger.info(
+    `Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`
+  );
 }

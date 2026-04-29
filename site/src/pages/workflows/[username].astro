@@ -86,7 +86,14 @@ let serialized: SerializedTemplate[] = [];
 
 try {
   const entries = await listWorkflowIndex();
-  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
+  // Match by username AND drop rows missing name/shareId so the grid never
+  // renders a card that links to /workflows/undefined/ (FE-223).
+  const filtered = entries.filter(
+    (e) =>
+      (e.profile?.username || e.username) === slugParam &&
+      Boolean(e.name) &&
+      Boolean(e.shareId)
+  );
   serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
 } catch {
   // Index API failed — show empty grid

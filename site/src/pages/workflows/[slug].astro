@@ -34,12 +34,18 @@ export async function getStaticPaths() {
   }
 
   const paths = [];
+  let skipped = 0;
 
   for (const entry of entries) {
     // Skip entries that can't form a valid /workflows/{name}-{shareId}/ slug.
     // Without this, Astro statically renders indexable broken pages like
-    // /workflows/<name>-/ that Google then surfaces as real results.
-    if (!entry.name || !entry.shareId) continue;
+    // /workflows/<name>-/ that Google then surfaces as real results (FE-223).
+    // Hub entries lacking either field are filtered out everywhere (cards,
+    // search index, grids), so dropping them here keeps routing consistent.
+    if (!entry.name || !entry.shareId) {
+      skipped++;
+      continue;
+    }
 
     const { name, shareId } = entry;
 
@@ -54,6 +60,12 @@ export async function getStaticPaths() {
       params: { slug: name },
       props: { entry: null, legacySlug: name, legacyShareId: shareId },
     });
+  }
+
+  if (skipped > 0) {
+    console.warn(
+      `[slug].astro getStaticPaths: skipped ${skipped} hub entries missing name or shareId — see FE-223`
+    );
   }
 
   return paths;
