@@ -65,10 +65,28 @@ def extract_index_english_text(index_path: Path) -> list[str]:
     return texts
 
 
+def build_token_source_map(file_texts: list[tuple[str, list[str]]]) -> dict[str, list[str]]:
+    """Return {lowercase_token: [filename, ...]} for every word in every text block."""
+    import re
+    token_map: dict[str, list[str]] = {}
+    for filename, texts in file_texts:
+        seen: set[str] = set()
+        for text in texts:
+            for token in re.findall(r"[A-Za-z']+", text):
+                t = token.lower()
+                if t not in seen:
+                    seen.add(t)
+                    token_map.setdefault(t, [])
+                    if filename not in token_map[t]:
+                        token_map[t].append(filename)
+    return token_map
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--input-dir", required=True, help="Directory containing workflow JSON files (also used to find index.json with --index)")
     parser.add_argument("--output-file", required=True, help="Output text file for spellchecking")
+    parser.add_argument("--source-map", help="Optional path to write a JSON token→[filename] map for error attribution")
     parser.add_argument("--files", nargs="*", help="Specific files to extract (relative or absolute paths); if omitted, all JSONs in --input-dir are used")
     parser.add_argument("--index", action="store_true", help="Extract English text from index.json instead of workflow note nodes")
     args = parser.parse_args()
@@ -89,6 +107,9 @@ def main() -> None:
         else:
             output.write_text("", encoding="utf-8")
             print(f"No text found in {index_path}; wrote empty file → {output}")
+        if args.source_map:
+            token_map = build_token_source_map([("index.json", all_texts)])
+            Path(args.source_map).write_text(json.dumps(token_map), encoding="utf-8")
         return
 
     if not input_dir.is_dir():
@@ -103,18 +124,24 @@ def main() -> None:
             if not p.name.startswith("index")
         ]
 
+    file_texts: list[tuple[str, list[str]]] = []
     all_texts: list[str] = []
     for wf_path in workflow_files:
         texts = extract_notes_from_workflow(wf_path)
-        all_texts.extend(texts)
+        if texts:
+            file_texts.append((wf_path.name, texts))
+            all_texts.extend(texts)
 
     if all_texts:
         output.write_text("\n\n---\n\n".join(all_texts), encoding="utf-8")
         print(f"Extracted {len(all_texts)} note(s) from {len(workflow_files)} workflow(s) → {output}")
     else:
-        # Write a placeholder so pyspelling doesn't fail on a missing file
         output.write_text("", encoding="utf-8")
         print(f"No notes found in {len(workflow_files)} workflow(s); wrote empty file → {output}")
+
+    if args.source_map:
+        token_map = build_token_source_map(file_texts)
+        Path(args.source_map).write_text(json.dumps(token_map), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -1315,47 +1315,111 @@ class TemplateSyncManager:
             return
 
         errors_found = []
+        spellcheck_config = str(github_dir / ".spellcheck-workflows.yml")
 
-        def _spellcheck_extracted(label: str, extract_args: list, config: str) -> None:
+        def _run_pyspelling(extracted_file: str) -> subprocess.CompletedProcess:
+            # --source only takes effect when combined with --name (pyspelling requirement)
+            return subprocess.run(
+                [sys.executable, "-m", "pyspelling", "--config", spellcheck_config,
+                 "--name", "Workflow Notes", "--source", extracted_file],
+                capture_output=True, text=True, cwd=str(repo_root)
+            )
+
+        def _spellcheck_extracted(label: str, extract_args: list, source_map_path: str | None = None) -> None:
+            """Extract text once, spellcheck once, attribute errors to source files via token map."""
             with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp:
                 extracted_file = tmp.name
             try:
+                extra_args = ["--source-map", source_map_path] if source_map_path else []
                 subprocess.run(
-                    [sys.executable, str(extract_script)] + extract_args + ["--output-file", extracted_file],
+                    [sys.executable, str(extract_script)] + extract_args
+                    + ["--output-file", extracted_file] + extra_args,
                     check=True, capture_output=True, cwd=str(repo_root)
                 )
-                result = subprocess.run(
-                    [sys.executable, "-m", "pyspelling", "--config", config, "--source", extracted_file],
-                    capture_output=True, text=True, cwd=str(repo_root)
-                )
+                result = _run_pyspelling(extracted_file)
                 if result.returncode != 0:
-                    errors_found.append((label, result.stdout + result.stderr))
+                    output = result.stdout + result.stderr
+                    # Attribute misspelled words to source files using the token map
+                    if source_map_path and Path(source_map_path).exists():
+                        attributed = _attribute_errors(output, source_map_path)
+                        errors_found.append((label, attributed))
+                    else:
+                        errors_found.append((label, output))
             finally:
                 os.unlink(extracted_file)
+                if source_map_path and Path(source_map_path).exists():
+                    os.unlink(source_map_path)
+
+        def _attribute_errors(pyspelling_output: str, source_map_path: str) -> str:
+            """Parse misspelled words from pyspelling output and map them back to source files."""
+            import re
+            token_map: Dict[str, List[str]] = json.loads(Path(source_map_path).read_text(encoding="utf-8"))
+
+            misspelled: List[str] = []
+            in_word_block = False
+            for line in pyspelling_output.splitlines():
+                stripped = line.strip()
+                if stripped.startswith("---"):
+                    in_word_block = True
+                    continue
+                if in_word_block and stripped and not stripped.startswith("<"):
+                    misspelled.append(stripped)
+
+            if not misspelled:
+                # Fallback: return raw output if we couldn't parse words
+                return pyspelling_output
+
+            # Group misspelled words by source file
+            by_file: Dict[str, List[str]] = {}
+            unattributed: List[str] = []
+            for word in misspelled:
+                sources = token_map.get(word.lower(), [])
+                if sources:
+                    for src in sources:
+                        by_file.setdefault(src, []).append(word)
+                else:
+                    unattributed.append(word)
+
+            lines = []
+            for filename, words in sorted(by_file.items()):
+                lines.append(f"  {filename}: {', '.join(words)}")
+            if unattributed:
+                lines.append(f"  (source unknown): {', '.join(unattributed)}")
+            return "\n".join(lines)
 
         # 1. index.json — extract titles, descriptions, tags then spellcheck
         self.syncer.logger.info("  Checking templates/index.json...")
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
+            index_source_map = tmp.name
         _spellcheck_extracted(
             "index.json",
             ["--input-dir", str(self.syncer.templates_dir), "--index"],
-            str(github_dir / ".spellcheck-workflows.yml")
+            source_map_path=index_source_map,
         )
 
-        # 2. Workflow JSON notes (MarkdownNote / Note nodes)
+        # 2. Workflow JSON notes — extract all at once, attribute errors via token map
         self.syncer.logger.info("  Checking workflow JSON notes...")
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False) as tmp:
+            notes_source_map = tmp.name
         _spellcheck_extracted(
             "workflow notes",
             ["--input-dir", str(self.syncer.templates_dir)],
-            str(github_dir / ".spellcheck-workflows.yml")
+            source_map_path=notes_source_map,
         )
 
         # 3. i18n.json — English fields come from index.json, already checked above
         # No need to scan the 2MB i18n.json file separately
 
         if errors_found:
+            detail_lines = []
             for target, output in errors_found:
-                print(f"\n❌ Spellcheck errors in {target}:\n{output.strip()}")
-            raise Exception(f"Spellcheck found errors in: {', '.join(t for t, _ in errors_found)}")
+                detail = f"Spellcheck errors in {target}:\n{output.strip()}"
+                self.syncer.logger.error(f"  ❌ {detail}")
+                detail_lines.append(detail)
+            raise Exception(
+                f"Spellcheck found errors in: {', '.join(t for t, _ in errors_found)}\n"
+                + "\n".join(detail_lines)
+            )
 
         self.syncer.logger.info("  ✅ All spellchecks passed")
 

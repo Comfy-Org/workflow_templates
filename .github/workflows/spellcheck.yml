@@ -5,67 +5,28 @@ on:
     branches: [ main ]
     paths:
       - 'templates/**'
-      - 'scripts/i18n.json'
       - '.github/.spellcheck.yml'
       - '.github/.spellcheck-workflows.yml'
-      - '.github/.spellcheck-i18n.yml'
       - '.github/.wordlist.txt'
       - '.github/workflows/spellcheck.yml'
       - '.github/extract_workflow_text.py'
 
+concurrency:
+  group: spellcheck-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  spellcheck-index:
-    name: Spellcheck (templates/index.json)
+  spellcheck:
+    name: Spellcheck
     runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.check.outputs.result }}
-      errors: ${{ steps.check.outputs.errors }}
+    permissions:
+      pull-requests: write
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
         sparse-checkout: |
-          templates/index.json
-          .github/
-        sparse-checkout-cone-mode: false
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
-    - name: Install pyspelling + aspell
-      run: |
-        sudo apt-get install -y aspell aspell-en
-        pip install pyspelling pymdown-extensions
-
-    - name: Run spellcheck
-      id: check
-      run: |
-        set +e
-        output=$(pyspelling --config .github/.spellcheck.yml 2>&1)
-        exit_code=$?
-        set -e
-        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
-        {
-          echo 'errors<<EOF'
-          echo "$output"
-          echo 'EOF'
-        } >> "$GITHUB_OUTPUT"
-        exit $exit_code
-
-  spellcheck-workflows:
-    name: Spellcheck (Workflow JSON notes)
-    runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.check.outputs.result }}
-      errors: ${{ steps.check.outputs.errors }}
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        sparse-checkout: |
-          templates/*.json
+          templates/
           .github/
         sparse-checkout-cone-mode: false
 
@@ -85,92 +46,82 @@ jobs:
           --input-dir templates \
           --output-file /tmp/workflow_notes.txt
 
-    - name: Spellcheck extracted notes
-      id: check
+    - name: Spellcheck templates/index.json
+      id: check_index
       run: |
         set +e
-        output=$(pyspelling --config .github/.spellcheck-workflows.yml --source /tmp/workflow_notes.txt 2>&1)
-        exit_code=$?
-        set -e
-        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
-        {
-          echo 'errors<<EOF'
-          echo "$output"
-          echo 'EOF'
-        } >> "$GITHUB_OUTPUT"
-        exit $exit_code
+        pyspelling --config .github/.spellcheck.yml 2>&1 | tee /tmp/index_errors.txt
+        echo "result=$( [ ${PIPESTATUS[0]} -eq 0 ] && echo pass || echo fail )" >> "$GITHUB_OUTPUT"
 
-  spellcheck-i18n:
-    name: Spellcheck (scripts/i18n.json English fields)
-    runs-on: ubuntu-latest
-    outputs:
-      result: ${{ steps.check.outputs.result }}
-      errors: ${{ steps.check.outputs.errors }}
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        sparse-checkout: |
-          scripts/i18n.json
-          .github/
-        sparse-checkout-cone-mode: false
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-
-    - name: Install pyspelling + aspell
-      run: |
-        sudo apt-get install -y aspell aspell-en
-        pip install pyspelling pymdown-extensions
-
-    - name: Run spellcheck
-      id: check
+    - name: Spellcheck workflow JSON notes
+      id: check_workflows
       run: |
         set +e
-        output=$(pyspelling --config .github/.spellcheck-i18n.yml 2>&1)
-        exit_code=$?
-        set -e
-        echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
-        {
-          echo 'errors<<EOF'
-          echo "$output"
-          echo 'EOF'
-        } >> "$GITHUB_OUTPUT"
-        exit $exit_code
+        pyspelling --config .github/.spellcheck-workflows.yml --name "Workflow Notes" --source /tmp/workflow_notes.txt 2>&1 | tee /tmp/workflows_errors.txt
+        echo "result=$( [ ${PIPESTATUS[0]} -eq 0 ] && echo pass || echo fail )" >> "$GITHUB_OUTPUT"
 
-  save-results:
-    name: Save spellcheck results
-    runs-on: ubuntu-latest
-    if: always() && github.event_name == 'pull_request'
-    needs: [spellcheck-index, spellcheck-workflows, spellcheck-i18n]
-    steps:
-    - name: Write results to artifact
-      run: |
-        mkdir -p /tmp/spellcheck-results
-        cat > /tmp/spellcheck-results/results.json << 'EOF'
-        {
-          "pr_number": ${{ github.event.pull_request.number }},
-          "index_result": "${{ needs.spellcheck-index.outputs.result }}",
-          "workflows_result": "${{ needs.spellcheck-workflows.outputs.result }}",
-          "i18n_result": "${{ needs.spellcheck-i18n.outputs.result }}"
-        }
-        EOF
-        # Save errors to separate files (may be large)
-        cat > /tmp/spellcheck-results/index_errors.txt << 'ERREOF'
-        ${{ needs.spellcheck-index.outputs.errors }}
-        ERREOF
-        cat > /tmp/spellcheck-results/workflows_errors.txt << 'ERREOF'
-        ${{ needs.spellcheck-workflows.outputs.errors }}
-        ERREOF
-        cat > /tmp/spellcheck-results/i18n_errors.txt << 'ERREOF'
-        ${{ needs.spellcheck-i18n.outputs.errors }}
-        ERREOF
-
-    - name: Upload results artifact
-      uses: actions/upload-artifact@v4
+    - name: Post PR comment
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/github-script@v7
       with:
-        name: spellcheck-results
-        path: /tmp/spellcheck-results/
-        retention-days: 1
+        script: |
+          const fs = require('fs');
+          const readFile = p => { try { return fs.readFileSync(p, 'utf8').trim(); } catch { return ''; } };
+
+          const indexResult    = '${{ steps.check_index.outputs.result }}' || 'fail';
+          const workflowResult = '${{ steps.check_workflows.outputs.result }}' || 'fail';
+          const indexErrors    = readFile('/tmp/index_errors.txt');
+          const workflowErrors = readFile('/tmp/workflows_errors.txt');
+
+          const icon  = r => r === 'pass' ? '✅' : '❌';
+          const label = r => r === 'pass' ? 'No issues found' : 'Misspelled words detected';
+
+          let body = `## 🔤 Spellcheck Results\n\n`;
+          body += `| Check | Status |\n|---|---|\n`;
+          body += `| \`templates/index.json\` (titles & descriptions) | ${icon(indexResult)} ${label(indexResult)} |\n`;
+          body += `| Workflow JSON notes (MarkdownNote / Note nodes) | ${icon(workflowResult)} ${label(workflowResult)} |\n\n`;
+
+          if (indexResult !== 'pass' && indexErrors) {
+            body += `<details>\n<summary>❌ index.json errors</summary>\n\n\`\`\`\n${indexErrors}\n\`\`\`\n</details>\n\n`;
+          }
+          if (workflowResult !== 'pass' && workflowErrors) {
+            body += `<details>\n<summary>❌ Workflow notes errors</summary>\n\n\`\`\`\n${workflowErrors}\n\`\`\`\n</details>\n\n`;
+          }
+
+          const allPass = indexResult === 'pass' && workflowResult === 'pass';
+          body += allPass
+            ? '> All spellchecks passed! 🎉\n'
+            : '> Add legitimate technical terms to `.github/.wordlist.txt` to suppress false positives.\n';
+
+          const marker = '<!-- spellcheck-bot -->';
+          body = marker + '\n' + body;
+
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+          const existing = comments.find(c => c.body.includes(marker));
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });
+          }
+
+    - name: Fail if any spellcheck failed
+      if: |
+        steps.check_index.outputs.result == 'fail' ||
+        steps.check_workflows.outputs.result == 'fail'
+      run: |
+        echo "❌ Spellcheck failed — see PR comment for details"
+        exit 1

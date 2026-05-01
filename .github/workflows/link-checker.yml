@@ -26,6 +26,7 @@ jobs:
           sparse-checkout: |
             templates/*.json
             scripts/check_links.py
+            scripts/whitelist.json
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -35,7 +36,7 @@ jobs:
 
       - name: Install lychee
         run: |
-          curl -sSL https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.1/lychee-x86_64-unknown-linux-gnu.tar.gz | tar -xz
+          curl -sSL https://github.com/lycheeverse/lychee/releases/download/lychee-v0.24.1/lychee-x86_64-unknown-linux-gnu.tar.gz | tar -xz --strip-components=1
           sudo mv lychee /usr/local/bin/
           lychee --version
 

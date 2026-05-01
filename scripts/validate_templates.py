@@ -351,6 +351,247 @@ def check_model_metadata_format(index_data: List[Dict], templates_dir: Path) -> 
     return len(errors) == 0, errors
 
 
+def _is_node_id(value) -> bool:
+    """zNodeId: int or string (GroupNode hack)."""
+    return isinstance(value, (int, str))
+
+
+def _is_slot_index(value) -> bool:
+    """zSlotIndex: int, or string parseable as int."""
+    if isinstance(value, int):
+        return True
+    if isinstance(value, str):
+        try:
+            int(value)
+            return True
+        except ValueError:
+            return False
+    return False
+
+
+def _is_data_type(value) -> bool:
+    """zDataType: string | string[] | number."""
+    if isinstance(value, (str, int, float)):
+        return True
+    if isinstance(value, list):
+        return all(isinstance(v, str) for v in value)
+    return False
+
+
+def _is_vector2(value) -> bool:
+    """zVector2: [number, number] tuple or {0: number, 1: number} object."""
+    if isinstance(value, list) and len(value) == 2:
+        return all(isinstance(v, (int, float)) for v in value)
+    if isinstance(value, dict):
+        return isinstance(value.get(0), (int, float)) or isinstance(value.get('0'), (int, float))
+    return False
+
+
+def _validate_node_output(output: dict, path: str) -> List[str]:
+    errors = []
+    if not isinstance(output.get('name'), str):
+        errors.append(f"{path}.name: expected string, got {type(output.get('name')).__name__}")
+    if 'type' in output and not _is_data_type(output['type']):
+        errors.append(f"{path}.type: invalid data type value")
+    links = output.get('links')
+    if links is not None and not isinstance(links, list):
+        errors.append(f"{path}.links: expected array or null")
+    return errors
+
+
+def _validate_node_input(inp: dict, path: str) -> List[str]:
+    errors = []
+    if not isinstance(inp.get('name'), str):
+        errors.append(f"{path}.name: expected string")
+    if 'type' in inp and not _is_data_type(inp['type']):
+        errors.append(f"{path}.type: invalid data type value")
+    return errors
+
+
+def _validate_comfy_node(node: dict, path: str) -> List[str]:
+    errors = []
+
+    if not _is_node_id(node.get('id')):
+        errors.append(f"{path}.id: expected int or string, got {type(node.get('id')).__name__}")
+
+    if not isinstance(node.get('type'), str):
+        errors.append(f"{path}.type: expected string")
+
+    if 'pos' in node and not _is_vector2(node['pos']):
+        errors.append(f"{path}.pos: expected [number, number]")
+
+    if 'size' in node and not _is_vector2(node['size']):
+        errors.append(f"{path}.size: expected [number, number]")
+
+    if not isinstance(node.get('order'), (int, float)):
+        errors.append(f"{path}.order: expected number")
+
+    if not isinstance(node.get('mode'), (int, float)):
+        errors.append(f"{path}.mode: expected number")
+
+    inputs = node.get('inputs')
+    if inputs is not None:
+        if not isinstance(inputs, list):
+            errors.append(f"{path}.inputs: expected array")
+        else:
+            for i, inp in enumerate(inputs):
+                if isinstance(inp, dict):
+                    errors.extend(_validate_node_input(inp, f"{path}.inputs[{i}]"))
+
+    outputs = node.get('outputs')
+    if outputs is not None:
+        if not isinstance(outputs, list):
+            errors.append(f"{path}.outputs: expected array")
+        else:
+            for i, out in enumerate(outputs):
+                if isinstance(out, dict):
+                    errors.extend(_validate_node_output(out, f"{path}.outputs[{i}]"))
+
+    if 'properties' in node and not isinstance(node['properties'], dict):
+        errors.append(f"{path}.properties: expected object")
+
+    widgets_values = node.get('widgets_values')
+    if widgets_values is not None and not isinstance(widgets_values, (list, dict)):
+        errors.append(f"{path}.widgets_values: expected array or object")
+
+    return errors
+
+
+def _validate_comfy_link(link, path: str) -> List[str]:
+    """zComfyLink: [link_id, src_node, src_slot, dst_node, dst_slot, data_type]"""
+    errors = []
+    if not isinstance(link, list) or len(link) < 6:
+        errors.append(f"{path}: expected array of length >= 6, got {type(link).__name__}")
+        return errors
+    if not isinstance(link[0], (int, float)):
+        errors.append(f"{path}[0] (link_id): expected number")
+    if not _is_node_id(link[1]):
+        errors.append(f"{path}[1] (src_node_id): expected int or string")
+    if not _is_slot_index(link[2]):
+        errors.append(f"{path}[2] (src_slot): expected int or parseable string")
+    if not _is_node_id(link[3]):
+        errors.append(f"{path}[3] (dst_node_id): expected int or string")
+    if not _is_slot_index(link[4]):
+        errors.append(f"{path}[4] (dst_slot): expected int or parseable string")
+    if not _is_data_type(link[5]):
+        errors.append(f"{path}[5] (data_type): invalid data type")
+    return errors
+
+
+def _validate_groups(groups, path: str) -> List[str]:
+    """Validate a groups array (used at top-level and inside subgraphs)."""
+    errors = []
+    if not isinstance(groups, list):
+        errors.append(f"{path}.groups: must be an array")
+        return errors
+    for i, g in enumerate(groups):
+        gp = f"{path}.groups[{i}]"
+        if not isinstance(g, dict):
+            errors.append(f"{gp}: must be an object")
+            continue
+        if not isinstance(g.get('title'), str):
+            errors.append(f"{gp}.title: must be a string")
+        bounding = g.get('bounding')
+        if bounding is not None and not (isinstance(bounding, list) and len(bounding) == 4):
+            errors.append(f"{gp}.bounding: must be [n,n,n,n]")
+    return errors
+
+
+def _validate_workflow_04(data: dict, template_name: str) -> List[str]:
+    """
+    Validate a ComfyUI workflow JSON against the 0.4 schema (zComfyWorkflow).
+    Mirrors the Zod schema defined in:
+      ComfyUI_frontend/src/platform/workflow/validation/schemas/workflowSchema.ts
+    """
+    errors = []
+    p = template_name  # prefix for error messages
+
+    # Required top-level fields
+    last_node_id = data.get('last_node_id')
+    if not _is_node_id(last_node_id):
+        errors.append(f"{p}: last_node_id must be int or string, got {type(last_node_id).__name__}")
+
+    if not isinstance(data.get('last_link_id'), (int, float)):
+        errors.append(f"{p}: last_link_id must be a number")
+
+    if not isinstance(data.get('version'), (int, float)):
+        errors.append(f"{p}: version must be a number")
+
+    # nodes: required array
+    nodes = data.get('nodes')
+    if not isinstance(nodes, list):
+        errors.append(f"{p}: nodes must be an array")
+    else:
+        for i, node in enumerate(nodes):
+            if not isinstance(node, dict):
+                errors.append(f"{p}: nodes[{i}] must be an object")
+            else:
+                errors.extend(_validate_comfy_node(node, f"{p}: nodes[{i}]"))
+
+    # links: required array
+    links = data.get('links')
+    if not isinstance(links, list):
+        errors.append(f"{p}: links must be an array")
+    else:
+        for i, link in enumerate(links):
+            errors.extend(_validate_comfy_link(link, f"{p}: links[{i}]"))
+
+    # groups: optional — validate at top level and inside each subgraph
+    groups = data.get('groups')
+    if groups is not None:
+        errors.extend(_validate_groups(groups, p))
+
+    definitions = data.get('definitions') or {}
+    subgraphs = definitions.get('subgraphs') or []
+    for idx, sg in enumerate(subgraphs):
+        if not isinstance(sg, dict):
+            continue
+        sg_id = sg.get('id', f'subgraph-{idx}')
+        sg_groups = sg.get('groups')
+        if sg_groups is not None:
+            errors.extend(_validate_groups(sg_groups, f"{p}: definitions.subgraphs[{sg_id}]"))
+
+    return errors
+
+
+def check_workflow_schema(index_data: List[Dict], templates_dir: Path) -> Tuple[bool, List[str]]:
+    """
+    Validate each workflow JSON file against the ComfyUI 0.4 workflow schema.
+    Mirrors zComfyWorkflow from workflowSchema.ts in ComfyUI_frontend.
+    """
+    errors: List[str] = []
+
+    template_names: Set[str] = set()
+    for category in index_data:
+        for template in category.get('templates', []):
+            name = template.get('name', '')
+            if name:
+                template_names.add(name)
+
+    for name in sorted(template_names):
+        workflow_file = templates_dir / f"{name}.json"
+        if not workflow_file.exists():
+            continue
+
+        try:
+            data = json.loads(workflow_file.read_text(encoding='utf-8'))
+        except Exception as e:
+            errors.append(f"{name}.json: failed to parse JSON - {e}")
+            continue
+
+        version = data.get('version')
+        if version == 1:
+            # Version 1 schema uses a different structure (zComfyWorkflow1).
+            # Basic required-field check only — full validation is future work.
+            if not isinstance(data.get('nodes'), list):
+                errors.append(f"{name}.json: version 1 workflow missing nodes array")
+        else:
+            file_errors = _validate_workflow_04(data, f"{name}.json")
+            errors.extend(file_errors)
+
+    return len(errors) == 0, errors
+
+
 def main():
     """Main validation function."""
     # Check for GitHub Actions environment
@@ -466,7 +707,15 @@ def main():
     else:
         print("   ❌ Invalid logo references found")
         all_errors.extend(errors)
-    
+
+    print("\n7️⃣  Validating workflow JSON structure (ComfyUI 0.4 schema)...")
+    valid, errors = check_workflow_schema(main_index_data, templates_dir)
+    if valid:
+        print("   ✅ All workflow files pass schema validation")
+    else:
+        print("   ❌ Workflow schema validation failed")
+        all_errors.extend(errors)
+
     # Print warnings
     if all_warnings:
         print("\nWarnings:")
