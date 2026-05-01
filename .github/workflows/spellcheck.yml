@@ -60,63 +60,27 @@ jobs:
         pyspelling --config .github/.spellcheck-workflows.yml --name "Workflow Notes" --source /tmp/workflow_notes.txt 2>&1 | tee /tmp/workflows_errors.txt
         echo "result=$( [ ${PIPESTATUS[0]} -eq 0 ] && echo pass || echo fail )" >> "$GITHUB_OUTPUT"
 
-    - name: Post PR comment
+    - name: Save results for PR comment
       if: always() && github.event_name == 'pull_request'
-      uses: actions/github-script@v7
+      run: |
+        mkdir -p /tmp/spellcheck-results
+        cat > /tmp/spellcheck-results/results.json << EOF
+        {
+          "pr_number": ${{ github.event.pull_request.number }},
+          "index_result": "${{ steps.check_index.outputs.result || 'fail' }}",
+          "workflows_result": "${{ steps.check_workflows.outputs.result || 'fail' }}"
+        }
+        EOF
+        cp /tmp/index_errors.txt /tmp/spellcheck-results/index_errors.txt 2>/dev/null || touch /tmp/spellcheck-results/index_errors.txt
+        cp /tmp/workflows_errors.txt /tmp/spellcheck-results/workflows_errors.txt 2>/dev/null || touch /tmp/spellcheck-results/workflows_errors.txt
+
+    - name: Upload results artifact
+      if: always() && github.event_name == 'pull_request'
+      uses: actions/upload-artifact@v4
       with:
-        script: |
-          const fs = require('fs');
-          const readFile = p => { try { return fs.readFileSync(p, 'utf8').trim(); } catch { return ''; } };
-
-          const indexResult    = '${{ steps.check_index.outputs.result }}' || 'fail';
-          const workflowResult = '${{ steps.check_workflows.outputs.result }}' || 'fail';
-          const indexErrors    = readFile('/tmp/index_errors.txt');
-          const workflowErrors = readFile('/tmp/workflows_errors.txt');
-
-          const icon  = r => r === 'pass' ? '✅' : '❌';
-          const label = r => r === 'pass' ? 'No issues found' : 'Misspelled words detected';
-
-          let body = `## 🔤 Spellcheck Results\n\n`;
-          body += `| Check | Status |\n|---|---|\n`;
-          body += `| \`templates/index.json\` (titles & descriptions) | ${icon(indexResult)} ${label(indexResult)} |\n`;
-          body += `| Workflow JSON notes (MarkdownNote / Note nodes) | ${icon(workflowResult)} ${label(workflowResult)} |\n\n`;
-
-          if (indexResult !== 'pass' && indexErrors) {
-            body += `<details>\n<summary>❌ index.json errors</summary>\n\n\`\`\`\n${indexErrors}\n\`\`\`\n</details>\n\n`;
-          }
-          if (workflowResult !== 'pass' && workflowErrors) {
-            body += `<details>\n<summary>❌ Workflow notes errors</summary>\n\n\`\`\`\n${workflowErrors}\n\`\`\`\n</details>\n\n`;
-          }
-
-          const allPass = indexResult === 'pass' && workflowResult === 'pass';
-          body += allPass
-            ? '> All spellchecks passed! 🎉\n'
-            : '> Add legitimate technical terms to `.github/.wordlist.txt` to suppress false positives.\n';
-
-          const marker = '<!-- spellcheck-bot -->';
-          body = marker + '\n' + body;
-
-          const { data: comments } = await github.rest.issues.listComments({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            issue_number: context.issue.number,
-          });
-          const existing = comments.find(c => c.body.includes(marker));
-          if (existing) {
-            await github.rest.issues.updateComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              comment_id: existing.id,
-              body,
-            });
-          } else {
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body,
-            });
-          }
+        name: spellcheck-results
+        path: /tmp/spellcheck-results/
+        retention-days: 1
 
     - name: Fail if any spellcheck failed
       if: |

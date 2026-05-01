@@ -1,59 +1,205 @@
 {
-  "id": "14af6003-d4ee-4dee-8e3d-cbff2e5519b3",
+  "id": "ba12fba3-87d7-4910-8d49-b72be67b0936",
   "revision": 0,
-  "last_node_id": 35,
-  "last_link_id": 56,
+  "last_node_id": 12,
+  "last_link_id": 5,
   "nodes": [
     {
-      "id": 15,
-      "type": "SaveVideo",
+      "id": 1,
+      "type": "LoadImage",
       "pos": [
-        3079.9990596087237,
-        4779.9997389766295
+        -1569.9999989665353,
+        349.9991810267614
       ],
       "size": [
-        490,
-        590
+        370,
+        490
       ],
       "flags": {},
-      "order": 12,
+      "order": 0,
       "mode": 0,
-      "inputs": [
+      "inputs": [],
+      "outputs": [
         {
-          "name": "video",
-          "type": "VIDEO",
-          "link": 14
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
         }
       ],
-      "outputs": [],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
+        "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "video/Seedance2.0",
-        "auto",
-        "auto"
+        "real_human_demo.png",
+        "image"
       ]
     },
     {
-      "id": 14,
-      "type": "ByteDance2ReferenceNode",
+      "id": 2,
+      "type": "ByteDanceCreateImageAsset",
       "pos": [
-        2579.9991981224784,
-        4779.9997389766295
+        -1130,
+        350
       ],
       "size": [
-        460,
-        432.984375
+        350,
+        140
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "asset_id",
+          "type": "STRING",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "group_id",
+          "type": "STRING",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDanceCreateImageAsset"
+      },
+      "widgets_values": [
+        ""
+      ]
+    },
+    {
+      "id": 3,
+      "type": "MarkdownNote",
+      "pos": [
+        -1130,
+        550
+      ],
+      "size": [
+        350,
+        300
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: group_id",
+      "properties": {},
+      "widgets_values": [
+        "### Group ID Explanation  \n- **Purpose**: Groups same-person real-human assets for backend recognition.  \n- **Generation**: Auto-generated after the first verification via the \"ByteDance Create Image/Video Asset\" node.  \n- **Usage**: Save the Group ID. For future same-person assets, entering this ID skips verification."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 4,
+      "type": "PreviewAny",
+      "pos": [
+        -700,
+        410
+      ],
+      "size": [
+        330,
+        180
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "title": "Preview as Text (asset_id)",
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 5,
+      "type": "PreviewAny",
+      "pos": [
+        -700,
+        650
+      ],
+      "size": [
+        330,
+        190
       ],
       "flags": {},
       "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Preview as Text (group_id)",
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 6,
+      "type": "ByteDance2ReferenceNode",
+      "pos": [
+        -310,
+        360
+      ],
+      "size": [
+        400,
+        432.984375
+      ],
+      "flags": {},
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -82,7 +228,7 @@
           "name": "model.reference_assets.asset_1",
           "shape": 7,
           "type": "STRING",
-          "link": 55
+          "link": 4
         },
         {
           "label": "asset_2",
@@ -97,19 +243,12 @@
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
-            14
+            5
           ]
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "ByteDance2ReferenceNode",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
+        "Node name for S&R": "ByteDance2ReferenceNode"
       },
       "widgets_values": [
         "Seedance 2.0",
@@ -119,7 +258,7 @@
         7,
         true,
         false,
-        118383194,
+        0,
         "randomize",
         false
       ],
@@ -127,190 +266,94 @@
       "bgcolor": "#653"
     },
     {
-      "id": 9,
-      "type": "ByteDanceCreateImageAsset",
+      "id": 7,
+      "type": "SaveVideo",
       "pos": [
-        1699.9994621241058,
-        4799.999736805649
+        139.99994310354555,
+        359.9999803381777
       ],
       "size": [
-        390,
-        200
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 32
-        }
-      ],
-      "outputs": [
-        {
-          "name": "asset_id",
-          "type": "STRING",
-          "links": [
-            29,
-            30
-          ]
-        },
-        {
-          "name": "group_id",
-          "type": "STRING",
-          "links": [
-            10
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "ByteDanceCreateImageAsset",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        ""
-      ],
-      "color": "#322",
-      "bgcolor": "#533"
-    },
-    {
-      "id": 20,
-      "type": "LoadImage",
-      "pos": [
-        1249.9996373300332,
-        4799.999736805649
-      ],
-      "size": [
-        420,
-        550
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            32
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "title": "Load Image (Real Human)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "LoadImage",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "real_human_demo.png",
-        "image"
-      ]
-    },
-    {
-      "id": 12,
-      "type": "PreviewAny",
-      "pos": [
-        2149.9994553966726,
-        5119.999617830717
-      ],
-      "size": [
-        390,
-        200
+        500,
+        520
       ],
       "flags": {},
       "order": 9,
       "mode": 0,
       "inputs": [
         {
-          "name": "source",
-          "type": "*",
-          "link": 10
+          "name": "video",
+          "type": "VIDEO",
+          "link": 5
         }
       ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "title": "Preview as Text (group_id)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "PreviewAny",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
+      "outputs": [],
+      "properties": {},
       "widgets_values": [
-        null,
-        null,
-        null
+        "video/Seedance2.0",
+        "auto",
+        "auto"
       ]
     },
     {
-      "id": 27,
+      "id": 8,
+      "type": "MarkdownNote",
+      "pos": [
+        -2080.000013073681,
+        350.00001017389184
+      ],
+      "size": [
+        460,
+        565.765625
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### [How to Use Real-Human Assets for Seedance2.0](https://docs.comfy.org/tutorials/partner-nodes/bytedance/seedance-2-0-real-human)\n\nTo comply with the model provider’s legal requirements, real-human assets must be verified before use.  \n\n1. **First-Time Asset Upload & Verification**: Use \"Load Image\" to upload a real-human image. Run the workflow; the \"ByteDance Create Image Asset\" or \"ByteDance Create Video Asset\" node generates a verification link. Complete verification to obtain an Asset ID and a Group ID.  \n2. **Reuse the Same Person’s Assets**: Save the Group ID. For future uploads of the same person’s images/videos, enter the saved Group ID in the \"Create Image/Video Asset\" node to skip verification, since the person is already verified.  \n3. **Video Generation**: Use the Asset ID in the \"ByteDance Seedance 2.0\" node to generate a video with a real human as a reference.\n---\n- A Group ID verified by a single account is usable only by that account and does not support cross-account use.\n- Please ensure the image/video used to create assets contains only one character\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 11,
       "type": "ByteDanceCreateVideoAsset",
       "pos": [
-        1689.9994210899722,
-        5539.999572240131
+        -1130,
+        950
       ],
       "size": [
         380,
         150
       ],
       "flags": {},
-      "order": 6,
+      "order": 3,
       "mode": 4,
       "inputs": [
         {
           "name": "video",
           "type": "VIDEO",
-          "link": 41
+          "link": null
         }
       ],
       "outputs": [
         {
           "name": "asset_id",
           "type": "STRING",
-          "links": [
-            43
-          ]
+          "links": []
         },
         {
           "name": "group_id",
           "type": "STRING",
-          "links": [
-            44
-          ]
+          "links": []
         }
       ],
       "properties": {
+        "Node name for S&R": "ByteDanceCreateVideoAsset",
         "cnr_id": "comfy-core",
         "ver": "0.19.3",
-        "Node name for S&R": "ByteDanceCreateVideoAsset",
         "ue_properties": {
           "widget_ue_connectable": {},
           "version": "7.7",
@@ -324,268 +367,23 @@
       "bgcolor": "#533"
     },
     {
-      "id": 28,
-      "type": "LoadVideo",
-      "pos": [
-        1249.9996373300332,
-        5539.999572240131
-      ],
-      "size": [
-        410,
-        850
-      ],
-      "flags": {},
-      "order": 1,
-      "mode": 4,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            41
-          ]
-        }
-      ],
-      "title": "Load Video (Real Human)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "LoadVideo",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "real_human_demo.mp4",
-        "image"
-      ]
-    },
-    {
-      "id": 29,
+      "id": 12,
       "type": "MarkdownNote",
       "pos": [
-        600,
-        4800
+        -310,
+        900
       ],
       "size": [
-        600,
-        550
-      ],
-      "flags": {},
-      "order": 2,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Guide",
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "### [How to Use Real-Human Assets for Seedance2.0](https://docs.comfy.org/tutorials/partner-nodes/bytedance/seedance-2-0)\n\nTo comply with the model provider’s legal requirements, real-human assets must be verified before use.  \n\n1. **First-Time Asset Upload & Verification**: Use \"Load Image\" to upload a real-human image. Run the workflow; the \"ByteDance Create Image Asset\" or \"ByteDance Create Video Asset\" node generates a verification link. Complete verification to obtain an Asset ID and a Group ID.  \n2. **Reuse the Same Person’s Assets**: Save the Group ID. For future uploads of the same person’s images/videos, enter the saved Group ID in the \"Create Image/Video Asset\" node to skip verification, since the person is already verified.  \n3. **Video Generation**: Use the Asset ID in the \"ByteDance Seedance 2.0\" node to generate a video with a real human as a reference.\n---\n- A Group ID verified by a single account is usable only by that account and does not support cross-account use.\n- Please ensure the image/video used to create assets contains only one character\n"
-      ],
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
-      "id": 30,
-      "type": "PreviewAny",
-      "pos": [
-        2129.999373328406,
-        5789.999418744006
-      ],
-      "size": [
-        390,
-        200
-      ],
-      "flags": {},
-      "order": 11,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 44
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "title": "Preview as Text (group_id)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "PreviewAny",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        null,
-        null,
-        null
-      ]
-    },
-    {
-      "id": 31,
-      "type": "PreviewAny",
-      "pos": [
-        2129.999373328406,
-        5559.999485829903
-      ],
-      "size": [
-        380,
-        180
-      ],
-      "flags": {},
-      "order": 10,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 43
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": []
-        }
-      ],
-      "title": "Preview as Text (asset_id)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "PreviewAny",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        null,
-        null,
-        null
-      ]
-    },
-    {
-      "id": 32,
-      "type": "MarkdownNote",
-      "pos": [
-        1700,
-        5070
-      ],
-      "size": [
-        390,
-        280
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note: group_id",
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        "### Group ID Explanation  \n- **Purpose**: Groups same-person real-human assets for backend recognition.  \n- **Generation**: Auto-generated after the first verification via the \"ByteDance Create Image/Video Asset\" node.  \n- **Usage**: Save the Group ID. For future same-person assets, entering this ID skips verification."
-      ],
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
-      "id": 18,
-      "type": "PreviewAny",
-      "pos": [
-        2149.9994553966726,
-        4839.999732463689
-      ],
-      "size": [
-        380,
-        180
-      ],
-      "flags": {},
-      "order": 8,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 30
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": [
-            45,
-            55,
-            56
-          ]
-        }
-      ],
-      "title": "Preview as Text (asset_id)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.19.3",
-        "Node name for S&R": "PreviewAny",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": [
-        null,
-        null,
-        null
-      ]
-    },
-    {
-      "id": 35,
-      "type": "MarkdownNote",
-      "pos": [
-        2580,
-        5320
-      ],
-      "size": [
-        460,
-        250
+        400,
+        330
       ],
       "flags": {},
       "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Note: Input limit",
-      "properties": {
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "version": "7.7",
-          "input_ue_unconnectable": {}
-        }
-      },
+      "title": "Note: Input Limit",
+      "properties": {},
       "widgets_values": [
         "The `image` and `video` inputs do not support real humans.\nTo use real human images or videos, first generate an asset ID via **ByteDance Create Image/Video Asset**.\n\nAsset limits:\n- Images: up to 9\n- Videos: up to 3\n- Audio: up to 3"
       ],
@@ -595,129 +393,68 @@
   ],
   "links": [
     [
-      10,
-      9,
       1,
-      12,
+      1,
       0,
-      "STRING"
-    ],
-    [
-      14,
-      14,
-      0,
-      15,
-      0,
-      "VIDEO"
-    ],
-    [
-      29,
-      9,
-      0,
-      14,
-      9,
-      "STRING"
-    ],
-    [
-      30,
-      9,
-      0,
-      18,
-      0,
-      "STRING"
-    ],
-    [
-      32,
-      20,
-      0,
-      9,
+      2,
       0,
       "IMAGE"
     ],
     [
-      41,
-      28,
+      2,
+      2,
       0,
-      27,
-      0,
-      "VIDEO"
-    ],
-    [
-      43,
-      27,
-      0,
-      31,
+      4,
       0,
       "STRING"
     ],
     [
-      44,
-      27,
+      3,
+      2,
       1,
-      30,
+      5,
       0,
       "STRING"
     ],
     [
-      45,
-      18,
+      4,
+      4,
       0,
-      14,
-      17,
-      "STRING"
-    ],
-    [
-      55,
-      18,
-      0,
-      14,
+      6,
       3,
       "STRING"
     ],
     [
-      56,
-      18,
+      5,
+      6,
       0,
-      14,
-      10,
-      "STRING"
+      7,
+      0,
+      "VIDEO"
     ]
   ],
   "groups": [
     {
-      "id": 1,
+      "id": 9,
       "title": "Save IDs for future reuse",
       "bounding": [
-        2130,
-        4760,
-        420,
-        580
+        -720,
+        320,
+        370,
+        560
       ],
       "color": "#3f789e",
       "font_size": 24,
       "flags": {}
     },
     {
-      "id": 3,
-      "title": "Video Asset Creation Example (Select and Ctrl-B to Enable/Disable)",
+      "id": 10,
+      "title": "For Video",
       "bounding": [
-        1240,
-        5450,
-        1320,
-        960
-      ],
-      "color": "#3f789e",
-      "font_size": 24,
-      "flags": {}
-    },
-    {
-      "id": 2,
-      "title": "Save IDs for future reuse",
-      "bounding": [
-        2120,
-        5490,
-        410,
-        510
+        -1140,
+        880,
+        400,
+        233.6
       ],
       "color": "#3f789e",
       "font_size": 24,
@@ -727,19 +464,17 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.39849995170404284,
+      "scale": 0.5009377601015848,
       "offset": [
-        166.04658074938527,
-        -4020.444410832426
+        2724.9658642781737,
+        286.3811979219479
       ]
     },
-    "frontendVersion": "1.42.14",
-    "workflowRendererVersion": "LG",
+    "frontendVersion": "1.42.6",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true,
-    "ue_links": []
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }
