@@ -28,8 +28,8 @@ import type { TemplateInfo, SyncedTemplate } from './types';
  * Check whether a template name denotes a Comfy App.
  *
  * The convention is that app template names end with `.app` — for example
- * `templates_liveportrat.app`.  The corresponding workflow file on disk is
- * `{name}.json` (i.e. `templates_liveportrat.app.json`) and thumbnails
+ * `templates_liveportrait.app`.  The corresponding workflow file on disk is
+ * `{name}.json` (i.e. `templates_liveportrait.app.json`) and thumbnails
  * follow the same pattern (`{name}-1.webp`).
  */
 function isAppTemplate(name: string): boolean {
