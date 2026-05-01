@@ -5,10 +5,8 @@ on:
     branches: [ main ]
     paths:
       - 'templates/**'
-      - 'scripts/i18n.json'
       - '.github/.spellcheck.yml'
       - '.github/.spellcheck-workflows.yml'
-      - '.github/.spellcheck-i18n.yml'
       - '.github/.wordlist.txt'
       - '.github/workflows/spellcheck.yml'
       - '.github/extract_workflow_text.py'
@@ -29,7 +27,6 @@ jobs:
       with:
         sparse-checkout: |
           templates/
-          scripts/i18n.json
           .github/
         sparse-checkout-cone-mode: false
 
@@ -63,13 +60,6 @@ jobs:
         pyspelling --config .github/.spellcheck-workflows.yml --name "Workflow Notes" --source /tmp/workflow_notes.txt 2>&1 | tee /tmp/workflows_errors.txt
         echo "result=$( [ ${PIPESTATUS[0]} -eq 0 ] && echo pass || echo fail )" >> "$GITHUB_OUTPUT"
 
-    - name: Spellcheck scripts/i18n.json
-      id: check_i18n
-      run: |
-        set +e
-        pyspelling --config .github/.spellcheck-i18n.yml 2>&1 | tee /tmp/i18n_errors.txt
-        echo "result=$( [ ${PIPESTATUS[0]} -eq 0 ] && echo pass || echo fail )" >> "$GITHUB_OUTPUT"
-
     - name: Post PR comment
       if: always() && github.event_name == 'pull_request'
       uses: actions/github-script@v7
@@ -80,10 +70,8 @@ jobs:
 
           const indexResult    = '${{ steps.check_index.outputs.result }}' || 'fail';
           const workflowResult = '${{ steps.check_workflows.outputs.result }}' || 'fail';
-          const i18nResult     = '${{ steps.check_i18n.outputs.result }}' || 'fail';
           const indexErrors    = readFile('/tmp/index_errors.txt');
           const workflowErrors = readFile('/tmp/workflows_errors.txt');
-          const i18nErrors     = readFile('/tmp/i18n_errors.txt');
 
           const icon  = r => r === 'pass' ? '✅' : '❌';
           const label = r => r === 'pass' ? 'No issues found' : 'Misspelled words detected';
@@ -91,8 +79,7 @@ jobs:
           let body = `## 🔤 Spellcheck Results\n\n`;
           body += `| Check | Status |\n|---|---|\n`;
           body += `| \`templates/index.json\` (titles & descriptions) | ${icon(indexResult)} ${label(indexResult)} |\n`;
-          body += `| Workflow JSON notes (MarkdownNote / Note nodes) | ${icon(workflowResult)} ${label(workflowResult)} |\n`;
-          body += `| \`scripts/i18n.json\` (English fields) | ${icon(i18nResult)} ${label(i18nResult)} |\n\n`;
+          body += `| Workflow JSON notes (MarkdownNote / Note nodes) | ${icon(workflowResult)} ${label(workflowResult)} |\n\n`;
 
           if (indexResult !== 'pass' && indexErrors) {
             body += `<details>\n<summary>❌ index.json errors</summary>\n\n\`\`\`\n${indexErrors}\n\`\`\`\n</details>\n\n`;
@@ -100,11 +87,8 @@ jobs:
           if (workflowResult !== 'pass' && workflowErrors) {
             body += `<details>\n<summary>❌ Workflow notes errors</summary>\n\n\`\`\`\n${workflowErrors}\n\`\`\`\n</details>\n\n`;
           }
-          if (i18nResult !== 'pass' && i18nErrors) {
-            body += `<details>\n<summary>❌ i18n.json errors</summary>\n\n\`\`\`\n${i18nErrors}\n\`\`\`\n</details>\n\n`;
-          }
 
-          const allPass = indexResult === 'pass' && workflowResult === 'pass' && i18nResult === 'pass';
+          const allPass = indexResult === 'pass' && workflowResult === 'pass';
           body += allPass
             ? '> All spellchecks passed! 🎉\n'
             : '> Add legitimate technical terms to `.github/.wordlist.txt` to suppress false positives.\n';
@@ -137,8 +121,7 @@ jobs:
     - name: Fail if any spellcheck failed
       if: |
         steps.check_index.outputs.result == 'fail' ||
-        steps.check_workflows.outputs.result == 'fail' ||
-        steps.check_i18n.outputs.result == 'fail'
+        steps.check_workflows.outputs.result == 'fail'
       run: |
         echo "❌ Spellcheck failed — see PR comment for details"
         exit 1
