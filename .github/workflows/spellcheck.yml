@@ -13,6 +13,10 @@ on:
       - '.github/workflows/spellcheck.yml'
       - '.github/extract_workflow_text.py'
 
+concurrency:
+  group: spellcheck-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   spellcheck-index:
     name: Spellcheck (templates/index.json)
@@ -33,6 +37,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        cache: pip
 
     - name: Install pyspelling + aspell
       run: |
@@ -73,6 +78,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        cache: pip
 
     - name: Install pyspelling + aspell
       run: |
@@ -89,7 +95,7 @@ jobs:
       id: check
       run: |
         set +e
-        output=$(pyspelling --config .github/.spellcheck-workflows.yml --source /tmp/workflow_notes.txt 2>&1)
+        output=$(pyspelling --config .github/.spellcheck-workflows.yml --name "Workflow Notes" --source /tmp/workflow_notes.txt 2>&1)
         exit_code=$?
         set -e
         echo "result=$( [ $exit_code -eq 0 ] && echo 'pass' || echo 'fail' )" >> "$GITHUB_OUTPUT"
@@ -119,6 +125,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+        cache: pip
 
     - name: Install pyspelling + aspell
       run: |
