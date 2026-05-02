@@ -23,9 +23,11 @@ import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import type { MediaType } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { workflowDetailPath, workflowDetailSlug } from '@/lib/routes';
 
 export interface SearchTemplate {
   name: string;
+  shareId: string;
   title: string;
   description: string;
   mediaType: MediaType;
@@ -213,10 +215,13 @@ const displayedWorkflows = computed(() => {
   if (hasQuery.value && searchResults.value) {
     return searchResults.value.workflows;
   }
-  // Badge-only → show all filtered templates as workflow-like items
+  // Badge-only → show all filtered templates as workflow-like items.
+  // Populate `slug` so the click target is a real workflow URL, never
+  // `/workflows/undefined/` (FE-223 root cause was this field being absent).
   if (hasBadges.value) {
     return badgeOnlyResults.value.map((t) => ({
       id: t.name,
+      slug: workflowDetailSlug(t.name, t.shareId) ?? '',
       title: t.title,
       mediaType: t.mediaType,
       mediaTypeLabel: MEDIA_TYPE_LABELS[t.mediaType] || t.mediaType,
@@ -268,10 +273,14 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
 
 // ── Helpers ──
 
-function getTemplateUrl(name: string): string {
+// Build a workflow detail URL from a pre-computed slug (search-index `slug`
+// field). Returns null when the slug is empty/undefined so callers can avoid
+// rendering /workflows/undefined/ links when the search index is malformed.
+function getTemplateUrl(slug: string | null | undefined): string | null {
+  if (!slug) return null;
   return props.locale && props.locale !== 'en'
-    ? `/${props.locale}/workflows/${name}/`
-    : `/workflows/${name}/`;
+    ? `/${props.locale}/workflows/${slug}/`
+    : `/workflows/${slug}/`;
 }
 
 function getCreatorUrl(username: string): string {
@@ -289,7 +298,7 @@ watch(
   }
 );
 
-// Popular workflows — top 4 by usage
+// Popular workflows — top 4 by usage.
 const popularWorkflows = computed(() =>
   [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
 );
@@ -415,7 +424,8 @@ function activateItem(index: number) {
       if (creator) window.location.href = getCreatorUrl(creator.username);
     } else {
       const wf = displayedWorkflows.value[index - sugTotal - matchedCreators.value.length];
-      if (wf) window.location.href = getTemplateUrl(wf.slug);
+      const url = wf ? getTemplateUrl(wf.slug) : null;
+      if (url) window.location.href = url;
     }
   } else {
     const popCount = popularWorkflows.value.length;
@@ -424,7 +434,8 @@ function activateItem(index: number) {
 
     if (index < popCount) {
       const wf = popularWorkflows.value[index];
-      if (wf) window.location.href = getTemplateUrl(`${wf.name}-${wf.shareId}`);
+      const url = wf ? workflowDetailPath(wf.name, wf.shareId, props.locale) : null;
+      if (url) window.location.href = url;
     } else if (index < popCount + creatorCount) {
       const creator = topCreators.value[index - popCount];
       if (creator) window.location.href = getCreatorUrl(creator.username);
@@ -746,7 +757,7 @@ onUnmounted(() => {
                 <a
                   v-for="(wf, i) in popularWorkflows"
                   :key="wf.name"
-                  :href="getTemplateUrl(`${wf.name}-${wf.shareId}`)"
+                  :href="workflowDetailPath(wf.name, wf.shareId, props.locale) ?? '/workflows/'"
                   :data-nav-index="i"
                   class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-hub-surface transition-colors group"
                   :class="{ 'bg-hub-surface': activeIndex === i }"
@@ -1106,7 +1117,7 @@ onUnmounted(() => {
                 <a
                   v-for="(hit, i) in displayedWorkflows"
                   :key="hit.id"
-                  :href="getTemplateUrl(hit.slug)"
+                  :href="getTemplateUrl(hit.slug) ?? '/workflows/'"
                   :data-nav-index="activeWorkflowOffset + i"
                   class="flex items-center gap-3 px-2 py-2.5 -mx-2 rounded-lg hover:bg-hub-surface transition-colors group"
                   :class="{ 'bg-hub-surface': activeIndex === activeWorkflowOffset + i }"

@@ -57,9 +57,7 @@ async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   if (!apiUrl) return null;
 
   const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
-  const statuses = approvedOnly
-    ? 'approved'
-    : 'pending,approved,rejected,deprecated';
+  const statuses = approvedOnly ? 'approved' : 'pending,approved,rejected,deprecated';
   const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
 
   if (!res.ok) {
@@ -114,9 +112,9 @@ export async function buildSearchIndex(): Promise<void> {
       const models = data.models || [];
       const shareId = data.shareId || '';
       const name = data.name || shareId;
-      // Use shareId as the unique ID; name can be duplicated across users
+      // shareId is the unique key — only skip if neither field can identify the workflow.
+      if (!name) continue;
       const id = shareId || name;
-      // URL slug: "{name}-{shareId}" for hub entries, "{name}" for legacy
       const slug = shareId ? `${name}-${shareId}` : name;
 
       documents.push({
@@ -138,8 +136,12 @@ export async function buildSearchIndex(): Promise<void> {
     }
   } else {
     // No PUBLIC_HUB_API_URL — local/offline build, use content collection
-    const files = fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json') && !f.includes('/'));
-    logger.warn(`No hub API configured — building search index from content collection (${files.length} files)`);
+    const files = fs
+      .readdirSync(CONTENT_DIR)
+      .filter((f) => f.endsWith('.json') && !f.includes('/'));
+    logger.warn(
+      `No hub API configured — building search index from content collection (${files.length} files)`
+    );
 
     for (const file of files) {
       const filePath = path.join(CONTENT_DIR, file);
@@ -229,5 +231,7 @@ export async function buildSearchIndex(): Promise<void> {
 
   const sizeKB = (Buffer.byteLength(serialized) / 1024).toFixed(1);
   const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-  logger.info(`Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`);
+  logger.info(
+    `Search index written to public/workflows/search-index.json (${sizeKB} KB, ${duration}s)`
+  );
 }
