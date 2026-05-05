@@ -1,0 +1,1657 @@
+{
+  "id": "1a454a5b-c035-49ac-a433-24c630fb3363",
+  "revision": 0,
+  "last_node_id": 272,
+  "last_link_id": 576,
+  "nodes": [
+    {
+      "id": 226,
+      "type": "PreviewImage",
+      "pos": [
+        -2610.0005288584725,
+        259.99984747930534
+      ],
+      "size": [
+        500,
+        540
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 441
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 130,
+      "type": "LoadImage",
+      "pos": [
+        -3369.999945548338,
+        29.999790337271747
+      ],
+      "size": [
+        670,
+        770
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "label": "IMAGE",
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "slot_index": 0,
+          "links": [
+            435
+          ]
+        },
+        {
+          "label": "MASK",
+          "name": "MASK",
+          "type": "MASK",
+          "slot_index": 1,
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.3.39",
+        "enableTabs": false,
+        "hasSecondTab": false,
+        "secondTabOffset": 80,
+        "secondTabText": "Send Back",
+        "secondTabWidth": 65,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "widget_ue_connectable": {}
+      },
+      "widgets_values": [
+        "facing_the_dragon.png",
+        "image"
+      ]
+    },
+    {
+      "id": 224,
+      "type": "b26cc822-68bf-4fd0-b66f-bb3f99cd1443",
+      "pos": [
+        -2610.0005288584725,
+        29.99990345146057
+      ],
+      "size": [
+        500,
+        162.65625
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 435
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            441,
+            546,
+            550
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "191",
+            "aspect_ratio"
+          ],
+          [
+            "240",
+            "value"
+          ]
+        ]
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 252,
+      "type": "MarkdownNote",
+      "pos": [
+        -4049.9998700496258,
+        29.999790337271747
+      ],
+      "size": [
+        590,
+        770
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Outpaint Image to Any Aspect Ratio",
+      "properties": {},
+      "widgets_values": [
+        "Outpaint a **single image** into any target aspect ratio without cropping. The original pixels stay intact — the new canvas around them is outpainted by **Nano Banana Pro**\n\n## How It Works\n\n1. **Upload an image** (`LoadImage` node)\n2. **Select `Image Extender` node inputs**\n   - **Image Extender** — pads the original to the target aspect ratio, with you controlling **where** the image sits inside the new canvas (left↔right and top↔bottom percentages, both default to 50% = centered).\n      - **aspect_ratio** — pick from the dropdown.\n      - **top_or_left_outpaint_pct** — `0` = image hugs left/top, `50` = centered, `100` = hugs right/bottom. Use these to compose how the original sits in the new frame. \n\n3. **Nano Banana 2 outpaint** — replaces the green region with new image content that continues the input image naturally (sky, ground, walls, whatever fits). Tweak the prompt with specific details if necessary.\n\n## Tips\n\n- **Low contrast = bad inpaint.** If your subject contains a lot of green (plants, a green-screen setup), open the Image Extender subgraph and change the fill color to something that contrasts your subject.\n- **Match the subject scale.** If you go from `1:1` → `21:9`, you're asking the model to invent a *lot* of pixels; busy or simple backgrounds (skies, walls) outpaint more reliably than complex scenes."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 262,
+      "type": "ImageCompare",
+      "pos": [
+        -670.0010206434677,
+        29.999790337271747
+      ],
+      "size": [
+        710,
+        760
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 549
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 555
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 263,
+      "type": "GeminiImage2Node",
+      "pos": [
+        -2010.0005666766103,
+        29.999790337271747
+      ],
+      "size": [
+        460,
+        730
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 546
+        },
+        {
+          "name": "files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            549,
+            551,
+            563
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiImage2Node"
+      },
+      "widgets_values": [
+        "Outpaint/fill the green pixels. Retain composition of the visible images pixels. Analyze the original image content to understand what the outpainted region should be. \nDO NOT MODIFY the original images pixels. It must remain exactly as is. ONLY ALTER THE GREEN PIXELS.\nThe green outpainted pixels must seamlessly blend into the scene. DO NOT COPY/PASTE existing pixels into the target outpainted area.",
+        "gemini-3-pro-image-preview",
+        41439150623705,
+        "randomize",
+        "auto",
+        "4K",
+        "IMAGE+TEXT",
+        "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 264,
+      "type": "ImageResizeKJv2",
+      "pos": [
+        -1000,
+        -170
+      ],
+      "size": [
+        270,
+        480
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 550
+        },
+        {
+          "name": "mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 552
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 553
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            555
+          ]
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageResizeKJv2"
+      },
+      "widgets_values": [
+        512,
+        512,
+        "lanczos",
+        "stretch",
+        "0, 0, 0",
+        "center",
+        2,
+        "cpu"
+      ]
+    },
+    {
+      "id": 265,
+      "type": "GetImageSize",
+      "pos": [
+        -1460,
+        -170
+      ],
+      "size": [
+        230,
+        160
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 551
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            552
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            553
+          ]
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 266,
+      "type": "SaveImage",
+      "pos": [
+        -1460.0006956050602,
+        29.999790337271747
+      ],
+      "size": [
+        710,
+        760
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 563
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "ComfyUI-outpainted"
+      ]
+    }
+  ],
+  "links": [
+    [
+      435,
+      130,
+      0,
+      224,
+      0,
+      "IMAGE"
+    ],
+    [
+      441,
+      224,
+      0,
+      226,
+      0,
+      "IMAGE"
+    ],
+    [
+      546,
+      224,
+      0,
+      263,
+      0,
+      "IMAGE"
+    ],
+    [
+      549,
+      263,
+      0,
+      262,
+      0,
+      "IMAGE"
+    ],
+    [
+      550,
+      224,
+      0,
+      264,
+      0,
+      "IMAGE"
+    ],
+    [
+      551,
+      263,
+      0,
+      265,
+      0,
+      "IMAGE"
+    ],
+    [
+      552,
+      265,
+      0,
+      264,
+      2,
+      "INT"
+    ],
+    [
+      553,
+      265,
+      1,
+      264,
+      3,
+      "INT"
+    ],
+    [
+      555,
+      264,
+      0,
+      262,
+      1,
+      "IMAGE"
+    ],
+    [
+      563,
+      263,
+      0,
+      266,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "b26cc822-68bf-4fd0-b66f-bb3f99cd1443",
+        "version": 1,
+        "state": {
+          "lastGroupId": 4,
+          "lastNodeId": 272,
+          "lastLinkId": 576,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Image Extender",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -2390,
+            610,
+            120,
+            60
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            580,
+            370,
+            120,
+            80
+          ]
+        },
+        "inputs": [
+          {
+            "id": "190e929c-5f4a-4ae7-8294-b948fcc0806d",
+            "name": "image",
+            "type": "IMAGE",
+            "linkIds": [
+              501
+            ],
+            "localized_name": "image",
+            "pos": [
+              -2290,
+              630
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "df58d266-37ca-4c0a-a9bb-db0887941c34",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              521
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              600,
+              390
+            ]
+          },
+          {
+            "id": "844db080-9f93-4ca2-ab10-bb75acec9f2c",
+            "name": "MASK",
+            "type": "MASK",
+            "linkIds": [
+              522
+            ],
+            "pos": [
+              600,
+              410
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 228,
+            "type": "MarkdownNote",
+            "pos": [
+              -1960.000257577006,
+              649.9998790484699
+            ],
+            "size": [
+              260,
+              330.875
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [],
+            "title": "Position Control",
+            "properties": {},
+            "widgets_values": [
+              "## Position\n\n`top_or_left_whitespace_pct` (0–100) biases the input on the slack axis.\n\n- 0 = flush top/left\n- 50 = centered (default)\n- 100 = flush bottom/right\n\nThe active axis is whichever has slack after fitting the input into the target aspect ratio."
+            ],
+            "color": "#222",
+            "bgcolor": "#000"
+          },
+          {
+            "id": 191,
+            "type": "FluxResolutionNode",
+            "pos": [
+              -2100.0002726502757,
+              99.99996903164777
+            ],
+            "size": [
+              400,
+              320
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "links": [
+                  502,
+                  504,
+                  505
+                ]
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "links": [
+                  503,
+                  506,
+                  507
+                ]
+              },
+              {
+                "localized_name": "resolution",
+                "name": "resolution",
+                "type": "STRING",
+                "links": []
+              },
+              {
+                "localized_name": "preview",
+                "name": "preview",
+                "type": "IMAGE",
+                "links": []
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "FluxResolutionNode",
+              "cnr_id": "controlaltai-nodes",
+              "ver": "1.1.1",
+              "enableTabs": false,
+              "hasSecondTab": false,
+              "secondTabOffset": 80,
+              "secondTabText": "Send Back",
+              "secondTabWidth": 65,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "widget_ue_connectable": {}
+            },
+            "widgets_values": [
+              "2.1",
+              "32:9 (Extreme Ultrawide)",
+              "8",
+              false,
+              "1:1"
+            ]
+          },
+          {
+            "id": 240,
+            "type": "PrimitiveInt",
+            "pos": [
+              -2100.0002726502757,
+              489.999943203473
+            ],
+            "size": [
+              400,
+              104
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "top_or_left_outpaint_pct",
+                "localized_name": "value",
+                "name": "value",
+                "type": "INT",
+                "widget": {
+                  "name": "value"
+                },
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  512,
+                  513,
+                  514,
+                  515
+                ]
+              }
+            ],
+            "title": "top_or_left_outpaint_pct",
+            "properties": {
+              "Node name for S&R": "PrimitiveInt"
+            },
+            "widgets_values": [
+              50,
+              "fixed"
+            ]
+          },
+          {
+            "id": 241,
+            "type": "ImageResize+",
+            "pos": [
+              -1620.000275224892,
+              199.99995267107
+            ],
+            "size": [
+              320,
+              320
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 501
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 502
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 503
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  516
+                ]
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "links": [
+                  508,
+                  509
+                ]
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "links": [
+                  510,
+                  511
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageResize+",
+              "cnr_id": "comfyui_essentials"
+            },
+            "widgets_values": [
+              512,
+              512,
+              "lanczos",
+              "keep proportion",
+              "always",
+              0
+            ]
+          },
+          {
+            "id": 242,
+            "type": "ComfyMathExpression",
+            "pos": [
+              -1200.0003249502797,
+              9.99994577808934
+            ],
+            "size": [
+              320,
+              212
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "a",
+                "localized_name": "values.a",
+                "name": "values.a",
+                "type": "FLOAT,INT",
+                "link": 504
+              },
+              {
+                "label": "b",
+                "localized_name": "values.b",
+                "name": "values.b",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 508
+              },
+              {
+                "label": "c",
+                "localized_name": "values.c",
+                "name": "values.c",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 512
+              },
+              {
+                "label": "d",
+                "localized_name": "values.d",
+                "name": "values.d",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  517
+                ]
+              }
+            ],
+            "title": "pad_left",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              "floor((a - b) * (c / 100))"
+            ]
+          },
+          {
+            "id": 243,
+            "type": "ComfyMathExpression",
+            "pos": [
+              -1200.0003249502797,
+              259.999952349243
+            ],
+            "size": [
+              320,
+              212
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "a",
+                "localized_name": "values.a",
+                "name": "values.a",
+                "type": "FLOAT,INT",
+                "link": 505
+              },
+              {
+                "label": "b",
+                "localized_name": "values.b",
+                "name": "values.b",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 509
+              },
+              {
+                "label": "c",
+                "localized_name": "values.c",
+                "name": "values.c",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 513
+              },
+              {
+                "label": "d",
+                "localized_name": "values.d",
+                "name": "values.d",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  519
+                ]
+              }
+            ],
+            "title": "pad_right",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              "(a - b) - floor((a - b) * (c / 100))"
+            ]
+          },
+          {
+            "id": 244,
+            "type": "ComfyMathExpression",
+            "pos": [
+              -1200.0003249502797,
+              519.9998718336622
+            ],
+            "size": [
+              320,
+              212
+            ],
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "a",
+                "localized_name": "values.a",
+                "name": "values.a",
+                "type": "FLOAT,INT",
+                "link": 506
+              },
+              {
+                "label": "b",
+                "localized_name": "values.b",
+                "name": "values.b",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 510
+              },
+              {
+                "label": "c",
+                "localized_name": "values.c",
+                "name": "values.c",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 514
+              },
+              {
+                "label": "d",
+                "localized_name": "values.d",
+                "name": "values.d",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  518
+                ]
+              }
+            ],
+            "title": "pad_top",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              "floor((a - b) * (c / 100))"
+            ]
+          },
+          {
+            "id": 245,
+            "type": "ComfyMathExpression",
+            "pos": [
+              -1200.0003249502797,
+              769.999878404816
+            ],
+            "size": [
+              320,
+              212
+            ],
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "label": "a",
+                "localized_name": "values.a",
+                "name": "values.a",
+                "type": "FLOAT,INT",
+                "link": 507
+              },
+              {
+                "label": "b",
+                "localized_name": "values.b",
+                "name": "values.b",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 511
+              },
+              {
+                "label": "c",
+                "localized_name": "values.c",
+                "name": "values.c",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": 515
+              },
+              {
+                "label": "d",
+                "localized_name": "values.d",
+                "name": "values.d",
+                "shape": 7,
+                "type": "FLOAT,INT",
+                "link": null
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "FLOAT",
+                "name": "FLOAT",
+                "type": "FLOAT",
+                "links": []
+              },
+              {
+                "localized_name": "INT",
+                "name": "INT",
+                "type": "INT",
+                "links": [
+                  520
+                ]
+              }
+            ],
+            "title": "pad_bottom",
+            "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              "(a - b) - floor((a - b) * (c / 100))"
+            ]
+          },
+          {
+            "id": 246,
+            "type": "ImagePadForOutpaint",
+            "pos": [
+              -840.000421826438,
+              199.99995267107
+            ],
+            "size": [
+              320,
+              224
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 516
+              },
+              {
+                "localized_name": "left",
+                "name": "left",
+                "type": "INT",
+                "widget": {
+                  "name": "left"
+                },
+                "link": 517
+              },
+              {
+                "localized_name": "top",
+                "name": "top",
+                "type": "INT",
+                "widget": {
+                  "name": "top"
+                },
+                "link": 518
+              },
+              {
+                "localized_name": "right",
+                "name": "right",
+                "type": "INT",
+                "widget": {
+                  "name": "right"
+                },
+                "link": 519
+              },
+              {
+                "localized_name": "bottom",
+                "name": "bottom",
+                "type": "INT",
+                "widget": {
+                  "name": "bottom"
+                },
+                "link": 520
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  523,
+                  526
+                ]
+              },
+              {
+                "localized_name": "MASK",
+                "name": "MASK",
+                "type": "MASK",
+                "links": [
+                  522,
+                  528
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImagePadForOutpaint",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              0,
+              0,
+              0,
+              0,
+              0
+            ]
+          },
+          {
+            "id": 247,
+            "type": "GetImageSize",
+            "pos": [
+              -460.00050298567294,
+              449.99991176962556
+            ],
+            "size": [
+              230,
+              120
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "image",
+                "name": "image",
+                "type": "IMAGE",
+                "link": 523
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "links": [
+                  524
+                ]
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "links": [
+                  525
+                ]
+              },
+              {
+                "localized_name": "batch_size",
+                "name": "batch_size",
+                "type": "INT",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GetImageSize",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 248,
+            "type": "EmptyImage",
+            "pos": [
+              -150.00044926374812,
+              419.99988819424004
+            ],
+            "size": [
+              280,
+              200
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 524
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 525
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  527
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "EmptyImage",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              512,
+              512,
+              1,
+              65280
+            ]
+          },
+          {
+            "id": 249,
+            "type": "ImageCompositeMasked",
+            "pos": [
+              189.99943814316975,
+              239.9999366323193
+            ],
+            "size": [
+              260,
+              212
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "destination",
+                "name": "destination",
+                "type": "IMAGE",
+                "link": 526
+              },
+              {
+                "localized_name": "source",
+                "name": "source",
+                "type": "IMAGE",
+                "link": 527
+              },
+              {
+                "localized_name": "mask",
+                "name": "mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 528
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  521
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ImageCompositeMasked",
+              "cnr_id": "comfy-core"
+            },
+            "widgets_values": [
+              0,
+              0,
+              false
+            ]
+          },
+          {
+            "id": 254,
+            "type": "MarkdownNote",
+            "pos": [
+              -150,
+              680
+            ],
+            "size": [
+              280,
+              429.078125
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [],
+            "title": "EmptyImage Color",
+            "properties": {},
+            "widgets_values": [
+              "# `0xRRGGBB` packed as one int                                                                                                                            \n                                         \n  `65280` = `0x00FF00` = pure green. Same as HTML hex, just decimal.                                                                                                              \n                                                                                                                                                                                  \n  | Color | Hex | Int |                                                                                                                                                           \n  |---|---|---|                                             \n  | Black | `0x000000` | `0` |                                                                                                                                                    \n  | White | `0xFFFFFF` | `16777215` |                       \n  | Red   | `0xFF0000` | `16711680` |                                                                                                                                             \n  | Green | `0x00FF00` | `65280` |\n  | Blue  | `0x0000FF` | `255` |                                                                                                                                                  \n                                                                                                                                                                               "
+            ],
+            "color": "#222",
+            "bgcolor": "#000"
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 501,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 241,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 502,
+            "origin_id": 191,
+            "origin_slot": 0,
+            "target_id": 241,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 503,
+            "origin_id": 191,
+            "origin_slot": 1,
+            "target_id": 241,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 504,
+            "origin_id": 191,
+            "origin_slot": 0,
+            "target_id": 242,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 505,
+            "origin_id": 191,
+            "origin_slot": 0,
+            "target_id": 243,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 506,
+            "origin_id": 191,
+            "origin_slot": 1,
+            "target_id": 244,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 507,
+            "origin_id": 191,
+            "origin_slot": 1,
+            "target_id": 245,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 508,
+            "origin_id": 241,
+            "origin_slot": 1,
+            "target_id": 242,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 509,
+            "origin_id": 241,
+            "origin_slot": 1,
+            "target_id": 243,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 510,
+            "origin_id": 241,
+            "origin_slot": 2,
+            "target_id": 244,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 511,
+            "origin_id": 241,
+            "origin_slot": 2,
+            "target_id": 245,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 512,
+            "origin_id": 240,
+            "origin_slot": 0,
+            "target_id": 242,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 513,
+            "origin_id": 240,
+            "origin_slot": 0,
+            "target_id": 243,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 514,
+            "origin_id": 240,
+            "origin_slot": 0,
+            "target_id": 244,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 515,
+            "origin_id": 240,
+            "origin_slot": 0,
+            "target_id": 245,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 516,
+            "origin_id": 241,
+            "origin_slot": 0,
+            "target_id": 246,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 517,
+            "origin_id": 242,
+            "origin_slot": 1,
+            "target_id": 246,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 518,
+            "origin_id": 244,
+            "origin_slot": 1,
+            "target_id": 246,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 519,
+            "origin_id": 243,
+            "origin_slot": 1,
+            "target_id": 246,
+            "target_slot": 3,
+            "type": "INT"
+          },
+          {
+            "id": 520,
+            "origin_id": 245,
+            "origin_slot": 1,
+            "target_id": 246,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 521,
+            "origin_id": 249,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 522,
+            "origin_id": 246,
+            "origin_slot": 1,
+            "target_id": -20,
+            "target_slot": 1,
+            "type": "MASK"
+          },
+          {
+            "id": 523,
+            "origin_id": 246,
+            "origin_slot": 0,
+            "target_id": 247,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 524,
+            "origin_id": 247,
+            "origin_slot": 0,
+            "target_id": 248,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 525,
+            "origin_id": 247,
+            "origin_slot": 1,
+            "target_id": 248,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 526,
+            "origin_id": 246,
+            "origin_slot": 0,
+            "target_id": 249,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 527,
+            "origin_id": 248,
+            "origin_slot": 0,
+            "target_id": 249,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 528,
+            "origin_id": 246,
+            "origin_slot": 1,
+            "target_id": 249,
+            "target_slot": 2,
+            "type": "MASK"
+          }
+        ],
+        "extra": {
+          "workflowRendererVersion": "LG"
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.3240468526447993,
+      "offset": [
+        4645.011741576413,
+        1062.869176262204
+      ]
+    },
+    "frontendVersion": "1.42.6",
+    "workflowRendererVersion": "LG",
+    "linearMode": false,
+    "linearData": {
+      "inputs": [
+        [
+          "130",
+          "image"
+        ],
+        [
+          "191",
+          "aspect_ratio"
+        ],
+        [
+          "240",
+          "value"
+        ],
+        [
+          "263",
+          "prompt"
+        ],
+        [
+          "263",
+          "resolution"
+        ],
+        [
+          "263",
+          "seed"
+        ]
+      ],
+      "outputs": [
+        "226",
+        "266"
+      ]
+    },
+    "0246.VERSION": [
+      0,
+      0,
+      4
+    ],
+    "VHS_KeepIntermediate": true,
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "links_added_by_ue": [],
+    "ue_links": [],
+    "workspace_info": {
+      "cloudID": null,
+      "coverMediaPath": null,
+      "id": "sSr80zkRsolLQHBh3oFSe",
+      "saveLock": false
+    }
+  },
+  "version": 0.4
+}
