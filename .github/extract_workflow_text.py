@@ -4,6 +4,12 @@ Extract text content from workflow JSON files for spellchecking.
 Reads all workflow JSONs in a directory and outputs the combined text
 from MarkdownNote and Note nodes to a single file.
 
+Each note block is prefixed with a line:
+    <<<SPELLCHECK_WORKFLOW_JSON:templates/<file>.json>>>
+That line is skipped by spellcheck (see .github/.spellcheck-workflows.yml) but stays
+in the extracted file so pyspelling error output shows which workflow JSON the note
+came from.
+
 With --index, extracts English title/description/tag fields from index.json instead.
 """
 import argparse
@@ -125,19 +131,26 @@ def main() -> None:
         ]
 
     file_texts: list[tuple[str, list[str]]] = []
-    all_texts: list[str] = []
+    chunks: list[str] = []
+    workflows_with_notes = 0
     for wf_path in workflow_files:
         texts = extract_notes_from_workflow(wf_path)
         if texts:
+            workflows_with_notes += 1
             file_texts.append((wf_path.name, texts))
-            all_texts.extend(texts)
+            rel = f"templates/{wf_path.name}"
+            for text in texts:
+                chunks.append(f"<<<SPELLCHECK_WORKFLOW_JSON:{rel}>>>\n\n{text.strip()}")
 
-    if all_texts:
-        output.write_text("\n\n---\n\n".join(all_texts), encoding="utf-8")
-        print(f"Extracted {len(all_texts)} note(s) from {len(workflow_files)} workflow(s) → {output}")
+    if chunks:
+        output.write_text("\n\n---\n\n".join(chunks), encoding="utf-8")
+        print(
+            f"Extracted {len(chunks)} note(s) from {workflows_with_notes} workflow(s) "
+            f"(of {len(workflow_files)} JSON scanned) → {output}"
+        )
     else:
         output.write_text("", encoding="utf-8")
-        print(f"No notes found in {len(workflow_files)} workflow(s); wrote empty file → {output}")
+        print(f"No notes found in {len(workflow_files)} workflow JSON(s); wrote empty file → {output}")
 
     if args.source_map:
         token_map = build_token_source_map(file_texts)

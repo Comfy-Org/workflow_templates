@@ -6,15 +6,14 @@ on:
       - 'templates/**.json'
       - 'scripts/check_links.py'
       - '.github/workflows/link-checker.yml'
+      - '.github/workflows/link-check-comment.yml'
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pull-requests: write  # Allow commenting on PRs
 
 jobs:
   link-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -125,82 +124,22 @@ jobs:
           echo "Generating detailed link report for artifacts..."
           python3 scripts/check_links.py report > link_report_detailed.txt 2>&1 || true
 
-      - name: Comment on PR about link errors
-        if: github.event_name == 'pull_request' && steps.lychee.outputs.link_errors == 'true'
-        uses: actions/github-script@v7
+      # PR comments run in link-check-comment.yml via workflow_run (fork-safe token).
+      - name: Save results for PR comment
+        if: always() && github.event_name == 'pull_request'
+        run: |
+          mkdir -p /tmp/link-check-results
+          echo '{"pr_number":${{ github.event.pull_request.number }},"link_errors":"${{ steps.lychee.outputs.link_errors || 'false' }}"}' > /tmp/link-check-results/results.json
+          cp lychee-report.md /tmp/link-check-results/ 2>/dev/null || touch /tmp/link-check-results/lychee-report.md
+          cp excluded_links.txt /tmp/link-check-results/ 2>/dev/null || touch /tmp/link-check-results/excluded_links.txt
+
+      - name: Upload PR comment artifact
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-
-            // Read link checker report (only errors)
-            let lycheeReport = '';
-            try {
-              lycheeReport = fs.readFileSync('lychee-report.md', 'utf8');
-            } catch (error) {
-              lycheeReport = 'Unable to read lychee report';
-            }
-
-            // Keep only error rows (bullet or table), drop successful links/redirects
-            const lycheeLines = lycheeReport.split('\n');
-            const errors = [];
-            let inErrorBlock = false;
-
-            for (const line of lycheeLines) {
-              // End error block when hitting a new section
-              if (line.startsWith('##')) {
-                if (line.startsWith('### Errors in') || line.startsWith('🚫 Errors')) {
-                  inErrorBlock = true;
-                  continue;
-                } else {
-                  inErrorBlock = false;
-                  continue;
-                }
-              }
-
-              // Capture error lines
-              if (inErrorBlock) {
-                if (line.startsWith('* [') || line.startsWith('| [')) {
-                  errors.push(line);
-                }
-              }
-            }
-
-            const hasParsedErrors = errors.length > 0;
-            const lycheeErrorsOnly = hasParsedErrors ? errors.join('\n') : '';
-
-            // Read excluded links report
-            let excludedReport = '';
-            try {
-              excludedReport = fs.readFileSync('excluded_links.txt', 'utf8');
-            } catch (error) {
-              excludedReport = '';
-            }
-
-            // Truncate if too long (GitHub comment limit)
-            const maxLength = 60000;
-            if (hasParsedErrors) {
-              lycheeReport =
-                lycheeErrorsOnly.length > maxLength
-                  ? lycheeErrorsOnly.substring(0, maxLength) + '\n\n...(Report truncated due to length)'
-                  : lycheeErrorsOnly;
-            } else {
-              lycheeReport = 'Lychee reported an error (non-zero exit) but no broken-link rows were parsed. Please check artifacts for details.';
-            }
-
-            const comment = `## ❌ Broken Links Found
-
-            ${lycheeReport}
-
-            ${excludedReport ? '**Excluded:**\n' + excludedReport + '\n\n' : ''}
-            **Fix:** Update or remove broken URLs in workflow files. Check artifacts for full report.`;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+          name: link-check-results
+          path: /tmp/link-check-results/
+          retention-days: 1
 
       - name: Upload reports
         if: always()

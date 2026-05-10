@@ -1,3 +1,6 @@
+# Combined MarkdownNote/Note extract includes lines like:
+#   <<<SPELLCHECK_WORKFLOW_JSON:templates/foo.json>>>
+# so failures show which workflow JSON the note came from. Those lines are skipped below.
 matrix:
 - name: Workflow Notes
   sources:
@@ -9,6 +12,11 @@ matrix:
     - .github/.wordlist.txt
     encoding: utf-8
   pipeline:
+  - pyspelling.filters.context:
+      context_visible_first: true
+      delimiters:
+      - open: '(?m)^<<<SPELLCHECK_WORKFLOW_JSON:'
+        close: '>>>\\s*$'
   - pyspelling.filters.markdown:
       markdown_extensions:
       - pymdownx.superfences:
