@@ -11,6 +11,7 @@ Key Features:
 - Preserve language-specific translations (title, description)
 - Detect and track new tags for manual translation
 - Maintain consistent structure across all language files
+- Strip io inputs/outputs with empty filenames from master after workflow I/O generation (locales follow master)
 
 Translation Workflow:
 1. Tags are automatically translated from English to target language using i18n.json
@@ -71,6 +72,14 @@ try:
     import generate_workflow_io
 except ImportError:
     generate_workflow_io = None
+
+
+def _io_entry_has_nonempty_file(entry: Any) -> bool:
+    """True if entry is a dict with a non-empty string file field."""
+    if not isinstance(entry, dict):
+        return False
+    file_val = entry.get("file")
+    return isinstance(file_val, str) and bool(file_val.strip())
 
 
 class TemplateSyncer:
@@ -503,8 +512,45 @@ class TemplateSyncer:
         except Exception as e:
             self.logger.error(f"Failed to save {file_path}: {e}")
             raise
-            
-        
+
+    def cleanup_template_io_remove_entries_without_file(self, template: Dict[str, Any]) -> Tuple[bool, int]:
+        """
+        Drop io inputs/outputs whose file is missing, empty, or whitespace-only.
+        If nothing remains, remove the io object entirely (matches generate_workflow_io style).
+
+        Returns (whether template was modified, number of entries removed).
+        """
+        io = template.get("io")
+        if not isinstance(io, dict):
+            return False, 0
+
+        raw_in = io.get("inputs")
+        raw_out = io.get("outputs")
+        in_list = raw_in if isinstance(raw_in, list) else []
+        out_list = raw_out if isinstance(raw_out, list) else []
+
+        new_in = [e for e in in_list if _io_entry_has_nonempty_file(e)]
+        new_out = [e for e in out_list if _io_entry_has_nonempty_file(e)]
+        removed = (len(in_list) - len(new_in)) + (len(out_list) - len(new_out))
+
+        new_io: Dict[str, Any] = {}
+        if new_in:
+            new_io["inputs"] = new_in
+        if new_out:
+            new_io["outputs"] = new_out
+
+        if not new_io:
+            if "io" in template:
+                del template["io"]
+                return True, removed
+            return False, removed
+
+        if io != new_io:
+            template["io"] = new_io
+            return True, removed
+
+        return False, removed
+
     def build_template_index(self, data: List[Dict[str, Any]]) -> Dict[str, Tuple[int, int, Dict[str, Any]]]:
         """Build index of templates by name for quick lookup"""
         index = {}
@@ -1237,6 +1283,38 @@ class TemplateSyncManager:
             sys.argv = old_argv
         self.syncer.logger.info("  ✅ Workflow I/O extraction completed")
 
+    def cleanup_master_empty_io_file_entries(self) -> None:
+        """
+        Remove io inputs/outputs with empty filenames from master index.json.
+        Locale files receive the same io when synced from master in Step 2.
+        """
+        self.syncer.logger.info(
+            "\n📎 Step 0c: Removing io entries without filenames from master index.json..."
+        )
+        master_data = self.syncer.load_json_file(self.syncer.master_file)
+        changed_templates: List[str] = []
+        total_removed = 0
+
+        for category in master_data:
+            for template in category.get("templates", []):
+                name = template.get("name", "")
+                changed, removed = self.syncer.cleanup_template_io_remove_entries_without_file(template)
+                if removed:
+                    total_removed += removed
+                if changed:
+                    changed_templates.append(name)
+
+        if changed_templates:
+            self.syncer.save_json_file(self.syncer.master_file, master_data)
+            self.syncer.logger.info(
+                f"  💾 Stripped {total_removed} io entr(y/ies) without filenames "
+                f"in {len(changed_templates)} template(s)"
+            )
+            for tn in sorted(changed_templates):
+                self.syncer.logger.info(f"    - {tn}")
+        else:
+            self.syncer.logger.info("  ✅ No io entries without filenames to remove")
+
     def fix_master_vram_data(self):
         """
         Fix vram data in the master index.json file before synchronization
@@ -1428,6 +1506,7 @@ class TemplateSyncManager:
         Run complete synchronization process:
         0. Fix vram data in master index.json file
         0b. Generate workflow I/O (inputs/outputs) in master index.json
+        0c. Remove io entries with empty filenames from master (synced to locales in step 2)
         1. Collect translations for NEW templates only from language files
         2. Sync i18n.json translations to all language files
         3. Collect ALL translations from language files back to i18n.json
@@ -1459,6 +1538,9 @@ class TemplateSyncManager:
                 success = False
         else:
             self.syncer.logger.warning("\n⚠️  generate_workflow_io module not available, skipping workflow I/O generation")
+
+        # Step 0c: Drop io rows with no filename (outputs like SaveVideo/SaveImage placeholders)
+        self.cleanup_master_empty_io_file_entries()
 
         # Step 1: Sync English fields to i18n.json from master file
         self.syncer.logger.info("\n📥 Step 1: Syncing English fields to i18n.json...")
