@@ -1,9 +1,9 @@
-import rawFlags from './featureFlags.json' with { type: 'json' };
+import snapshot from '../data/feature-flags.snapshot.json' with { type: 'json' };
 
 interface FeatureFlags {
   readonly cloudFreeTier: boolean;
 }
 
-const { cloudFreeTier } = rawFlags;
-
-export const featureFlags: FeatureFlags = Object.freeze({ cloudFreeTier });
+export const featureFlags: FeatureFlags = Object.freeze({
+  cloudFreeTier: snapshot.flags.cloudFreeTier,
+});
