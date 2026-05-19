@@ -1,0 +1,2064 @@
+{
+  "id": "73611c02-cdf1-4ae8-a41a-d9c057e201ed",
+  "revision": 0,
+  "last_node_id": 657,
+  "last_link_id": 7610,
+  "nodes": [
+    {
+      "id": 143,
+      "type": "MarkdownNote",
+      "pos": [
+        9630,
+        1270
+      ],
+      "size": [
+        420,
+        310
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Workflow Settings",
+      "properties": {},
+      "widgets_values": [
+        "You can test and find the best settings yourself. The following table is for reference.\n\n| Parameters | Basic Diffusion | Inpainting |\n|--------|---------|------------|\n| KSampler: denoise | 1.0 | 0.5 - 1.0 |\n| ModelSampling: shift | 3.0 | 3.0 - 10.0 |"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 144,
+      "type": "MarkdownNote",
+      "pos": [
+        11140,
+        -1660
+      ],
+      "size": [
+        225,
+        8
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Hit run 👆",
+      "properties": {},
+      "widgets_values": [
+        ""
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 146,
+      "type": "MarkdownNote",
+      "pos": [
+        6670,
+        -1610
+      ],
+      "size": [
+        480,
+        1160
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "🔍 Core Concept",
+      "properties": {},
+      "widgets_values": [
+        "This workflow runs **image inpainting** on **Z-Image-Turbo**. The generation stack lives in the **Image Inpainting (Z-Image-Turbo & Fun Union Control)** **subgraph** (Step 2).\n\n## What is local inpainting?\n\n**Local inpainting** means changing **only part of a image** while keeping the rest unchanged.\n\n1. **Load a image** as the starting image.\n2. **Draw a mask** on the region to edit (painted area = regenerate, untouched area = keep).\n3. **Write a prompt** for what should appear inside the mask.\n4. The pipeline builds **inpainting conditioning** from image + mask + prompt — which pixels stay fixed vs. get redrawn.\n5. **Sampling** redraws mainly inside the mask; the rest stays aligned with the original and blends at the edges.\n\nInpainting is **conditional redraw on a masked region**, not full image generation from scratch.\n\n## Why a model patch?\n\n**Z-Image-Turbo** does not support mask-based inpainting on its own. This template uses the **[Fun ControlNet Union](https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union)** model patch (selected on the subgraph) to enable local edits.\n\n## On this canvas (what you see)\n\n| Step | Group | What to do |\n|------|-------|------------|\n| 1 | Step 1 — Load Images & Create Mask | Load image, draw and save mask |\n| 2 | Step 2 — Update Prompt Here | Set **prompt**, **denoise**, **shift**, and **patch_model** on the subgraph |\n| 3 | Result | Save or compare output |\n\n## Where are the other nodes?\n\n**Double-click** the subgraph in Step 2 to open **Image Inpainting (Z-Image-Turbo & Fun Union Control)**.\n\nNodes such as `InpaintModelConditioning` and `KSampler` are **inside the subgraph only** — they are **Z-Image-Turbo–specific wiring**, not generic inpainting steps. Read the **Inside the subgraph** note there for details."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 150,
+      "type": "MarkdownNote",
+      "pos": [
+        9230,
+        1260
+      ],
+      "size": [
+        330,
+        500
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Subgraph settings",
+      "properties": {},
+      "widgets_values": [
+        "## Controls on the main canvas\n\nYou only see the **subgraph** node here — not the internal sampler or conditioning nodes.\n\nAdjust these **exposed widgets** on the subgraph (Step 2):\n\n- **denoise** (0.5 – 1.0): inpainting strength — lower = subtler edits, higher = stronger redraw inside the mask\n- **shift**: ModelSampling shift (see Workflow Settings)\n- **patch_model**: Fun ControlNet Union weights\n\n## More detail\n\n**Double-click** the subgraph in Step 2 to open it. See **Inside the subgraph** for how this model wires inpainting (not a generic recipe)."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 145,
+      "type": "MarkdownNote",
+      "pos": [
+        7270,
+        -710
+      ],
+      "size": [
+        410,
+        380
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "How to create a Mask",
+      "properties": {},
+      "widgets_values": [
+        "Guide: [maskeditor](https://docs.comfy.org/interface/maskeditor)\n\n## Load Image\n\n1. Load the Image 🌠\n\n## Create Mask\n\n1. **Right-click** on the Load Image node\n\n2. Open in Mask Editor\n\n3. Draw mask over the eyes\n\n4. Save Mask\n\n5. **Hit Run**"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 647,
+      "type": "MaskPreview",
+      "pos": [
+        7320,
+        -1070
+      ],
+      "size": [
+        310,
+        290
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 7593
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "Node name for S&R": "MaskPreview"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 137,
+      "type": "LoadImage",
+      "pos": [
+        7330,
+        -1530
+      ],
+      "size": [
+        290,
+        380
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            7606,
+            7610
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            7593,
+            7605
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "Node name for S&R": "LoadImage",
+        "image": "clipspace/clipspace-painted-masked-1779201355109.png [input]"
+      },
+      "widgets_values": [
+        "old_school_style_girl.png",
+        "image"
+      ]
+    },
+    {
+      "id": 650,
+      "type": "MarkdownNote",
+      "pos": [
+        6130,
+        -1610
+      ],
+      "size": [
+        490,
+        1238.46875
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model Links",
+      "properties": {
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "Guide: [subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n[Z-Image-Turbo-Fun-Controlnet-Union](https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union) is used as a **model patch** inside the subgraph. The base model does not support inpainting by itself; this patch enables **local inpainting** (mask + prompt). The same Union family also supports other control types (Canny, HED, Depth, Pose, MLSD) in other workflows.\n\n## Open the subgraph\n\nOn the canvas, **double-click** **Image Inpainting (Z-Image-Turbo & Fun Union Control)** in **Step 2 — Update Prompt Here**. Internal loaders, inpaint nodes, and sampling live there. See the **Inside the subgraph** note for Z-Image-Turbo–specific node roles.\nGuide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links (for Local Users)\n\n**text_encoders**\n\n- [qwen_3_4b.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors)\n\n**diffusion_models**\n\n- [z_image_turbo_bf16.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors)\n\n**vae**\n\n- [ae.safetensors](https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors)\n\n**model_patches**\n\n- [Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors](https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 text_encoders/\n│   │   └── qwen_3_4b.safetensors\n│   ├── 📂 diffusion_models/\n│   │   └── z_image_turbo_bf16.safetensors\n│   ├── 📂 vae/\n│   │   └── ae.safetensors\n│   └── 📂 model_patches/\n│       └── Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 651,
+      "type": "SaveImage",
+      "pos": [
+        8410,
+        -1520
+      ],
+      "size": [
+        630,
+        580
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7600
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.64",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "Node name for S&R": "SaveImage",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": [
+        "z-image-turbo"
+      ]
+    },
+    {
+      "id": 652,
+      "type": "37679f14-cc8b-4c0c-a96c-e44ac71ef216",
+      "pos": [
+        7760,
+        -1520
+      ],
+      "size": [
+        520,
+        590
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "source_image",
+          "name": "image",
+          "type": "IMAGE",
+          "link": 7606
+        },
+        {
+          "label": "patch_model",
+          "name": "name",
+          "type": "COMBO",
+          "widget": {
+            "name": "name"
+          },
+          "link": null
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 7605
+        },
+        {
+          "label": "sampling_shift",
+          "name": "shift",
+          "type": "FLOAT",
+          "widget": {
+            "name": "shift"
+          },
+          "link": null
+        },
+        {
+          "label": "resize_input_image",
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            7600,
+            7604
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "45",
+            "text"
+          ],
+          [
+            "44",
+            "seed"
+          ],
+          [
+            "46",
+            "unet_name"
+          ],
+          [
+            "39",
+            "clip_name"
+          ],
+          [
+            "40",
+            "vae_name"
+          ],
+          [
+            "64",
+            "name"
+          ],
+          [
+            "44",
+            "denoise"
+          ],
+          [
+            "47",
+            "shift"
+          ],
+          [
+            "79",
+            "switch"
+          ],
+          [
+            "78",
+            "resize_type.longer_size"
+          ],
+          [
+            "44",
+            "control_after_generate"
+          ]
+        ],
+        "cnr_id": "comfy-core",
+        "ver": "0.18.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.7",
+          "input_ue_unconnectable": {}
+        }
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 653,
+      "type": "ImageCompare",
+      "pos": [
+        9120,
+        -1520
+      ],
+      "size": [
+        480,
+        580
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 7610
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 7604
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 654,
+      "type": "MarkdownNote",
+      "pos": [
+        7760,
+        -700
+      ],
+      "size": [
+        580,
+        240
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Workflow Settings",
+      "properties": {},
+      "widgets_values": [
+        "You can test and find the best settings yourself. The following table is for reference.\n\n| Parameters | Basic Diffusion | Inpainting |\n|--------|---------|------------|\n| KSampler: denoise | 1.0 | 0.5 - 1.0 |\n| ModelSampling: shift | 3.0 | 3.0 - 10.0 |"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 655,
+      "type": "MaskPreview",
+      "pos": [
+        8850,
+        -2930
+      ],
+      "size": [
+        230,
+        50
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "Node name for S&R": "MaskPreview"
+      },
+      "widgets_values": []
+    }
+  ],
+  "links": [
+    [
+      7593,
+      137,
+      1,
+      647,
+      0,
+      "MASK"
+    ],
+    [
+      7600,
+      652,
+      0,
+      651,
+      0,
+      "IMAGE"
+    ],
+    [
+      7604,
+      652,
+      0,
+      653,
+      1,
+      "IMAGE"
+    ],
+    [
+      7605,
+      137,
+      1,
+      652,
+      2,
+      "MASK"
+    ],
+    [
+      7606,
+      137,
+      0,
+      652,
+      0,
+      "IMAGE"
+    ],
+    [
+      7610,
+      137,
+      0,
+      653,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 19,
+      "title": "Step 1 - Load Images & Create Mask",
+      "bounding": [
+        7260,
+        -1640,
+        430,
+        880
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 23,
+      "title": "Step 2 - Update Prompt Here",
+      "bounding": [
+        7720,
+        -1640,
+        630,
+        880
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 24,
+      "title": "Result",
+      "bounding": [
+        8380,
+        -1640,
+        1240,
+        880
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "37679f14-cc8b-4c0c-a96c-e44ac71ef216",
+        "version": 1,
+        "state": {
+          "lastGroupId": 24,
+          "lastNodeId": 657,
+          "lastLinkId": 7610,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Image Inpainting (Z-Image-Turbo & Fun Union Control)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -1260,
+            530,
+            180.404296875,
+            288
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1500,
+            1090,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "fbbb968e-d3cf-40e4-b3ce-7abb074e5bd8",
+            "name": "image",
+            "type": "IMAGE",
+            "linkIds": [
+              110,
+              113
+            ],
+            "localized_name": "image",
+            "label": "source_image",
+            "pos": [
+              -1103.595703125,
+              554
+            ]
+          },
+          {
+            "id": "c1b19877-5417-4580-aea1-44439c70c1dd",
+            "name": "text",
+            "type": "STRING",
+            "linkIds": [
+              81
+            ],
+            "pos": [
+              -1103.595703125,
+              574
+            ]
+          },
+          {
+            "id": "b5671515-bc7a-4be5-b1e7-d4f0f68907d6",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [
+              83
+            ],
+            "pos": [
+              -1103.595703125,
+              594
+            ]
+          },
+          {
+            "id": "2838be23-8034-4f16-87a5-d29d790e8391",
+            "name": "unet_name",
+            "type": "COMBO",
+            "linkIds": [
+              84
+            ],
+            "pos": [
+              -1103.595703125,
+              614
+            ]
+          },
+          {
+            "id": "8a6643b5-8f78-41ff-bbc6-e87b95459706",
+            "name": "clip_name",
+            "type": "COMBO",
+            "linkIds": [
+              85
+            ],
+            "pos": [
+              -1103.595703125,
+              634
+            ]
+          },
+          {
+            "id": "b103dc94-8ca7-456b-a809-414d7e341a1b",
+            "name": "vae_name",
+            "type": "COMBO",
+            "linkIds": [
+              86
+            ],
+            "pos": [
+              -1103.595703125,
+              654
+            ]
+          },
+          {
+            "id": "4a7d65af-f0fd-4a5c-832a-bdc0d15b1f30",
+            "name": "name",
+            "type": "COMBO",
+            "linkIds": [
+              87
+            ],
+            "label": "patch_model",
+            "pos": [
+              -1103.595703125,
+              674
+            ]
+          },
+          {
+            "id": "e3913868-d6b3-4898-9dc9-6ad649ba7a86",
+            "name": "mask",
+            "type": "MASK",
+            "linkIds": [
+              103,
+              104
+            ],
+            "pos": [
+              -1103.595703125,
+              694
+            ]
+          },
+          {
+            "id": "3fe6398b-1dce-4070-9714-1badfbf24329",
+            "name": "denoise",
+            "type": "FLOAT",
+            "linkIds": [
+              108
+            ],
+            "pos": [
+              -1103.595703125,
+              714
+            ]
+          },
+          {
+            "id": "825bbf80-713e-4a57-ac22-a5510574b975",
+            "name": "shift",
+            "type": "FLOAT",
+            "linkIds": [
+              109
+            ],
+            "label": "sampling_shift",
+            "pos": [
+              -1103.595703125,
+              734
+            ]
+          },
+          {
+            "id": "46db6601-48b4-4513-9ef8-5eea4391a24f",
+            "name": "switch",
+            "type": "BOOLEAN",
+            "linkIds": [
+              115
+            ],
+            "label": "resize_input_image",
+            "pos": [
+              -1103.595703125,
+              754
+            ]
+          },
+          {
+            "id": "76490343-9b62-45f2-a1c2-474f448d0e34",
+            "name": "resize_type.longer_size",
+            "type": "INT",
+            "linkIds": [
+              116
+            ],
+            "pos": [
+              -1103.595703125,
+              774
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "ccb7fa39-4a3d-4eb2-8fd2-91d08fad9570",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              45
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              1524,
+              1114
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 39,
+            "type": "CLIPLoader",
+            "pos": [
+              -360,
+              520
+            ],
+            "size": [
+              270,
+              150
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip_name",
+                "name": "clip_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "clip_name"
+                },
+                "link": 85
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  44
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "CLIPLoader",
+              "models": [
+                {
+                  "name": "qwen_3_4b.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/text_encoders/qwen_3_4b.safetensors",
+                  "directory": "text_encoders"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "qwen_3_4b.safetensors",
+              "lumina2",
+              "default"
+            ]
+          },
+          {
+            "id": 46,
+            "type": "UNETLoader",
+            "pos": [
+              -360,
+              340
+            ],
+            "size": [
+              270,
+              120
+            ],
+            "flags": {},
+            "order": 7,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "unet_name",
+                "name": "unet_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "unet_name"
+                },
+                "link": 84
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "MODEL",
+                "name": "MODEL",
+                "type": "MODEL",
+                "links": [
+                  90
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "UNETLoader",
+              "models": [
+                {
+                  "name": "z_image_turbo_bf16.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/diffusion_models/z_image_turbo_bf16.safetensors",
+                  "directory": "diffusion_models"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "z_image_turbo_bf16.safetensors",
+              "default"
+            ]
+          },
+          {
+            "id": 40,
+            "type": "VAELoader",
+            "pos": [
+              -360,
+              730
+            ],
+            "size": [
+              270,
+              110
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "vae_name",
+                "name": "vae_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "vae_name"
+                },
+                "link": 86
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VAE",
+                "name": "VAE",
+                "type": "VAE",
+                "links": [
+                  39,
+                  92,
+                  98
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "VAELoader",
+              "models": [
+                {
+                  "name": "ae.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/z_image_turbo/resolve/main/split_files/vae/ae.safetensors",
+                  "directory": "vae"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "ae.safetensors"
+            ]
+          },
+          {
+            "id": 64,
+            "type": "ModelPatchLoader",
+            "pos": [
+              -360,
+              910
+            ],
+            "size": [
+              270,
+              110
+            ],
+            "flags": {},
+            "order": 9,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "name",
+                "name": "name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "name"
+                },
+                "link": 87
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "MODEL_PATCH",
+                "name": "MODEL_PATCH",
+                "type": "MODEL_PATCH",
+                "links": [
+                  91
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.51",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "ModelPatchLoader",
+              "models": [
+                {
+                  "name": "Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors",
+                  "url": "https://huggingface.co/alibaba-pai/Z-Image-Turbo-Fun-Controlnet-Union-2.1/resolve/main/Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors",
+                  "directory": "model_patches"
+                }
+              ],
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "Z-Image-Turbo-Fun-Controlnet-Union-2.1.safetensors"
+            ]
+          },
+          {
+            "id": 43,
+            "type": "VAEDecode",
+            "pos": [
+              1040,
+              1100
+            ],
+            "size": [
+              230,
+              100
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 38
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 39
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "slot_index": 0,
+                "links": [
+                  45
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "VAEDecode",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 47,
+            "type": "ModelSamplingAuraFlow",
+            "pos": [
+              990,
+              290
+            ],
+            "size": [
+              290,
+              110
+            ],
+            "flags": {},
+            "order": 8,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 94
+              },
+              {
+                "localized_name": "shift",
+                "name": "shift",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "shift"
+                },
+                "link": 109
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "MODEL",
+                "name": "MODEL",
+                "type": "MODEL",
+                "slot_index": 0,
+                "links": [
+                  40
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "ModelSamplingAuraFlow",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              3
+            ]
+          },
+          {
+            "id": 44,
+            "type": "KSampler",
+            "pos": [
+              990,
+              440
+            ],
+            "size": [
+              300,
+              570
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 40
+              },
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 100
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 101
+              },
+              {
+                "localized_name": "latent_image",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 102
+              },
+              {
+                "localized_name": "seed",
+                "name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": 83
+              },
+              {
+                "localized_name": "denoise",
+                "name": "denoise",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "denoise"
+                },
+                "link": 108
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "slot_index": 0,
+                "links": [
+                  38
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.64",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "KSampler",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              179304186588666,
+              "randomize",
+              8,
+              1,
+              "res_multistep",
+              "simple",
+              1
+            ]
+          },
+          {
+            "id": 42,
+            "type": "ConditioningZeroOut",
+            "pos": [
+              230,
+              850
+            ],
+            "size": [
+              230,
+              50
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "conditioning",
+                "name": "conditioning",
+                "type": "CONDITIONING",
+                "link": 36
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "links": [
+                  97
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "ConditioningZeroOut",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": []
+          },
+          {
+            "id": 45,
+            "type": "CLIPTextEncode",
+            "pos": [
+              50,
+              330
+            ],
+            "size": [
+              400,
+              440
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 44
+              },
+              {
+                "localized_name": "text",
+                "name": "text",
+                "type": "STRING",
+                "widget": {
+                  "name": "text"
+                },
+                "link": 81
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CONDITIONING",
+                "name": "CONDITIONING",
+                "type": "CONDITIONING",
+                "links": [
+                  36,
+                  96
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.3.73",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "CLIPTextEncode",
+              "ue_properties": {
+                "widget_ue_connectable": {},
+                "version": "7.7",
+                "input_ue_unconnectable": {}
+              }
+            },
+            "widgets_values": [
+              "sunglasses."
+            ],
+            "color": "#232",
+            "bgcolor": "#353"
+          },
+          {
+            "id": 73,
+            "type": "ZImageFunControlnet",
+            "pos": [
+              130,
+              960
+            ],
+            "size": [
+              270,
+              230
+            ],
+            "flags": {},
+            "order": 10,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 90
+              },
+              {
+                "localized_name": "model_patch",
+                "name": "model_patch",
+                "type": "MODEL_PATCH",
+                "link": 91
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 92
+              },
+              {
+                "localized_name": "image",
+                "name": "image",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "inpaint_image",
+                "name": "inpaint_image",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 111
+              },
+              {
+                "localized_name": "mask",
+                "name": "mask",
+                "shape": 7,
+                "type": "MASK",
+                "link": 104
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "MODEL",
+                "name": "MODEL",
+                "type": "MODEL",
+                "links": [
+                  94
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "ZImageFunControlnet"
+            },
+            "widgets_values": [
+              1
+            ]
+          },
+          {
+            "id": 74,
+            "type": "InpaintModelConditioning",
+            "pos": [
+              570,
+              350
+            ],
+            "size": [
+              270,
+              180
+            ],
+            "flags": {},
+            "order": 11,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 96
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 97
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 98
+              },
+              {
+                "localized_name": "pixels",
+                "name": "pixels",
+                "type": "IMAGE",
+                "link": 112
+              },
+              {
+                "localized_name": "mask",
+                "name": "mask",
+                "type": "MASK",
+                "link": 103
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "links": [
+                  100
+                ]
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "links": [
+                  101
+                ]
+              },
+              {
+                "localized_name": "latent",
+                "name": "latent",
+                "type": "LATENT",
+                "links": [
+                  102
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "InpaintModelConditioning"
+            },
+            "widgets_values": [
+              true
+            ]
+          },
+          {
+            "id": 78,
+            "type": "ResizeImageMaskNode",
+            "pos": [
+              -740,
+              1120
+            ],
+            "size": [
+              270,
+              110
+            ],
+            "flags": {},
+            "order": 12,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "input",
+                "name": "input",
+                "type": "IMAGE,MASK",
+                "link": 113
+              },
+              {
+                "localized_name": "resize_type.longer_size",
+                "name": "resize_type.longer_size",
+                "type": "INT",
+                "widget": {
+                  "name": "resize_type.longer_size"
+                },
+                "link": 116
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "resized",
+                "name": "resized",
+                "type": "IMAGE",
+                "links": [
+                  114
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "ResizeImageMaskNode"
+            },
+            "widgets_values": [
+              "scale longer dimension",
+              1024,
+              "lanczos"
+            ]
+          },
+          {
+            "id": 79,
+            "type": "ComfySwitchNode",
+            "pos": [
+              -360,
+              1130
+            ],
+            "size": [
+              270,
+              130
+            ],
+            "flags": {},
+            "order": 13,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "on_false",
+                "name": "on_false",
+                "type": "IMAGE",
+                "link": 110
+              },
+              {
+                "localized_name": "on_true",
+                "name": "on_true",
+                "type": "IMAGE",
+                "link": 114
+              },
+              {
+                "localized_name": "switch",
+                "name": "switch",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "switch"
+                },
+                "link": 115
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "IMAGE",
+                "links": [
+                  111,
+                  112
+                ]
+              }
+            ],
+            "properties": {
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65,
+              "Node name for S&R": "ComfySwitchNode"
+            },
+            "widgets_values": [
+              true
+            ]
+          },
+          {
+            "id": 657,
+            "type": "MarkdownNote",
+            "pos": [
+              -420,
+              1340
+            ],
+            "size": [
+              780,
+              900
+            ],
+            "flags": {
+              "collapsed": false
+            },
+            "order": 0,
+            "mode": 0,
+            "inputs": [],
+            "outputs": [],
+            "title": "Inside the subgraph",
+            "properties": {},
+            "widgets_values": [
+              "You are inside **Image Inpainting (Z-Image-Turbo & Fun Union Control)**.\n\nThis wiring is **specific to Z-Image-Turbo + Fun ControlNet Union** — not a universal inpainting template. On the main canvas you only see the subgraph; open this view via **double-click** on that node in **Step 2**.\n\n## Groups on this graph\n\n| Group | Role |\n|-------|------|\n| **Model** | Load Z-Image-Turbo, CLIP, VAE, and the Union **model patch** |\n| **Prompt** | CLIP encode your edit prompt |\n| **Fun ControlNet** | `ZImageFunControlnet` — applies the patch so the base model can run inpaint-aware diffusion |\n| *(right side)* | `InpaintModelConditioning` + `KSampler` + decode |\n\n## Key nodes (Z-Image-Turbo only)\n\n- **`InpaintModelConditioning`** — image + mask + prompt → inpaint conditioning (masked latent, positive/negative)\n- **`ZImageFunControlnet`** — connects base model, patch, VAE, inpaint image, and mask\n- **`ModelSamplingAuraFlow`** — **shift** (exposed on subgraph)\n- **`KSampler`** — denoising; **denoise** (exposed on subgraph) sets inpainting strength\n\n## Back to the main canvas\n\nPress `Esc` to back to main canvas\n\nClose the subgraph editor to return. Use **Step 1** for image/mask, **Step 2** widgets for prompt and settings, **Result** to save or compare."
+            ],
+            "color": "#222",
+            "bgcolor": "#000"
+          }
+        ],
+        "groups": [
+          {
+            "id": 3,
+            "title": "Prompt",
+            "bounding": [
+              30,
+              250,
+              440,
+              630
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 4,
+            "title": "Model",
+            "bounding": [
+              -430,
+              250,
+              430,
+              840
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 8,
+            "title": "Fun ControlNet",
+            "bounding": [
+              500,
+              250,
+              440,
+              330
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          }
+        ],
+        "links": [
+          {
+            "id": 38,
+            "origin_id": 44,
+            "origin_slot": 0,
+            "target_id": 43,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 39,
+            "origin_id": 40,
+            "origin_slot": 0,
+            "target_id": 43,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 40,
+            "origin_id": 47,
+            "origin_slot": 0,
+            "target_id": 44,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 36,
+            "origin_id": 45,
+            "origin_slot": 0,
+            "target_id": 42,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 44,
+            "origin_id": 39,
+            "origin_slot": 0,
+            "target_id": 45,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 45,
+            "origin_id": 43,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 81,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 45,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 83,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 44,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 84,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 46,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 85,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 39,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 86,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 40,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 87,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 64,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 90,
+            "origin_id": 46,
+            "origin_slot": 0,
+            "target_id": 73,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 91,
+            "origin_id": 64,
+            "origin_slot": 0,
+            "target_id": 73,
+            "target_slot": 1,
+            "type": "MODEL_PATCH"
+          },
+          {
+            "id": 92,
+            "origin_id": 40,
+            "origin_slot": 0,
+            "target_id": 73,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 94,
+            "origin_id": 73,
+            "origin_slot": 0,
+            "target_id": 47,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 96,
+            "origin_id": 45,
+            "origin_slot": 0,
+            "target_id": 74,
+            "target_slot": 0,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 97,
+            "origin_id": 42,
+            "origin_slot": 0,
+            "target_id": 74,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 98,
+            "origin_id": 40,
+            "origin_slot": 0,
+            "target_id": 74,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 100,
+            "origin_id": 74,
+            "origin_slot": 0,
+            "target_id": 44,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 101,
+            "origin_id": 74,
+            "origin_slot": 1,
+            "target_id": 44,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 102,
+            "origin_id": 74,
+            "origin_slot": 2,
+            "target_id": 44,
+            "target_slot": 3,
+            "type": "LATENT"
+          },
+          {
+            "id": 103,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 74,
+            "target_slot": 4,
+            "type": "MASK"
+          },
+          {
+            "id": 104,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 73,
+            "target_slot": 5,
+            "type": "MASK"
+          },
+          {
+            "id": 108,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 44,
+            "target_slot": 5,
+            "type": "FLOAT"
+          },
+          {
+            "id": 109,
+            "origin_id": -10,
+            "origin_slot": 9,
+            "target_id": 47,
+            "target_slot": 1,
+            "type": "FLOAT"
+          },
+          {
+            "id": 110,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 79,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 111,
+            "origin_id": 79,
+            "origin_slot": 0,
+            "target_id": 73,
+            "target_slot": 4,
+            "type": "IMAGE"
+          },
+          {
+            "id": 112,
+            "origin_id": 79,
+            "origin_slot": 0,
+            "target_id": 74,
+            "target_slot": 3,
+            "type": "IMAGE"
+          },
+          {
+            "id": 113,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 78,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 114,
+            "origin_id": 78,
+            "origin_slot": 0,
+            "target_id": 79,
+            "target_slot": 1,
+            "type": "IMAGE"
+          },
+          {
+            "id": 115,
+            "origin_id": -10,
+            "origin_slot": 10,
+            "target_id": 79,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 116,
+            "origin_id": -10,
+            "origin_slot": 11,
+            "target_id": 78,
+            "target_slot": 1,
+            "type": "INT"
+          }
+        ],
+        "extra": {
+          "workflowRendererVersion": "LG",
+          "ue_links": []
+        }
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.34508920905352786,
+      "offset": [
+        -4384.071313587917,
+        2379.93303326534
+      ]
+    },
+    "frontendVersion": "1.43.18",
+    "workflowRendererVersion": "LG",
+    "VHS_KeepIntermediate": true,
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0
+  },
+  "version": 0.4
+}
