@@ -1,0 +1,867 @@
+{
+  "id": "f002ee1a-4648-4bf4-aaa2-edc8adc2940d",
+  "revision": 0,
+  "last_node_id": 298,
+  "last_link_id": 429,
+  "nodes": [
+    {
+      "id": 18,
+      "type": "LoadVideo",
+      "pos": [
+        30,
+        950
+      ],
+      "size": [
+        360,
+        430
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "source_ref_video.mp4",
+        "image"
+      ]
+    },
+    {
+      "id": 22,
+      "type": "PreviewAny",
+      "pos": [
+        1420,
+        1320
+      ],
+      "size": [
+        420,
+        510
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 427
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            425
+          ]
+        }
+      ],
+      "title": "Preview Prompt",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 23,
+      "type": "Video Slice",
+      "pos": [
+        440,
+        1280
+      ],
+      "size": [
+        270,
+        140
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            27,
+            428
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "Video Slice"
+      },
+      "widgets_values": [
+        0,
+        15,
+        false
+      ]
+    },
+    {
+      "id": 26,
+      "type": "OpenAIGPTImageNodeV2",
+      "pos": [
+        980,
+        690
+      ],
+      "size": [
+        400,
+        338.625
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "image_1",
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "label": "image_2",
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 424
+        },
+        {
+          "label": "image_3",
+          "name": "model.images.image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "label": "mask",
+          "name": "model.mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            409,
+            420
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "OpenAIGPTImageNodeV2"
+      },
+      "widgets_values": [
+        "Swap the subject from @image_2 into @image_1. Maintain the outfit and pose of the character from @image_2 ",
+        "gpt-image-2",
+        "auto",
+        1024,
+        1024,
+        "auto",
+        "medium",
+        1,
+        374879428,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 27,
+      "type": "ImageFromBatch",
+      "pos": [
+        440,
+        950
+      ],
+      "size": [
+        270,
+        120
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "title": "Get Frame from Video",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "ImageFromBatch"
+      },
+      "widgets_values": [
+        0,
+        1
+      ]
+    },
+    {
+      "id": 28,
+      "type": "GetVideoComponents",
+      "pos": [
+        440,
+        1120
+      ],
+      "size": [
+        270,
+        110
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            28
+          ]
+        },
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        },
+        {
+          "name": "fps",
+          "type": "FLOAT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "GetVideoComponents"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 29,
+      "type": "LoadImage",
+      "pos": [
+        -330,
+        950
+      ],
+      "size": [
+        320,
+        430
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            421,
+            424,
+            429
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Load Character Image",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "virtual_character_ref.png",
+        "image"
+      ]
+    },
+    {
+      "id": 281,
+      "type": "ByteDance2ReferenceNode",
+      "pos": [
+        1860,
+        690
+      ],
+      "size": [
+        400,
+        344.96875
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "model.prompt"
+          },
+          "link": 426
+        },
+        {
+          "label": "image_1",
+          "name": "model.reference_images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 409
+        },
+        {
+          "label": "image_2",
+          "name": "model.reference_images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 421
+        },
+        {
+          "label": "image_3",
+          "name": "model.reference_images.image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "label": "video_1",
+          "name": "model.reference_videos.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "label": "audio_1",
+          "name": "model.reference_audios.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "label": "asset_1",
+          "name": "model.reference_assets.asset_1",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            412
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "ByteDance2ReferenceNode"
+      },
+      "widgets_values": [
+        "Seedance 2.0",
+        "",
+        "720p",
+        "16:9",
+        15,
+        true,
+        false,
+        333497048,
+        "randomize",
+        false
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 282,
+      "type": "SaveVideo",
+      "pos": [
+        2320,
+        690
+      ],
+      "size": [
+        460,
+        350
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 412
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 295,
+      "type": "SaveImage",
+      "pos": [
+        1430,
+        690
+      ],
+      "size": [
+        370,
+        270
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 420
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "gpt-image-2_character_swap"
+      ]
+    },
+    {
+      "id": 297,
+      "type": "StringConcatenate",
+      "pos": [
+        1870,
+        1320
+      ],
+      "size": [
+        300,
+        270
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 425
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            426
+          ]
+        }
+      ],
+      "title": "Create Prompt",
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "Use @image_1 as a start frame. Reference @image_2 for the full body shots of the character.",
+        "",
+        ". "
+      ]
+    },
+    {
+      "id": 298,
+      "type": "GeminiNode",
+      "pos": [
+        980,
+        1320
+      ],
+      "size": [
+        390,
+        430
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "images",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 429
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": 428
+        },
+        {
+          "name": "files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            427
+          ]
+        }
+      ],
+      "properties": {
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.5.1",
+        "Node name for S&R": "GeminiNode"
+      },
+      "widgets_values": [
+        "Follow the system instructions: The main subject is a rubberhose animation character from @image_1. Extra emphasis on the rubberhose animated movement of the character while playing soccer. The rest of the scene is grounded in realism.",
+        "gemini-3-1-pro",
+        308097637151821,
+        "randomize",
+        "SYSTEM PROMPT: HYPER-GRANULAR VIDEO ANALYSIS\nROLE:\nYou are an expert cinematographer, visual analyst, and motion-mechanics describer. Your job is to break down video clips into insanely detailed, hyper-granular, frame-by-frame text descriptions.\nOBJECTIVE:\nTranslate the provided video/sequence into a vivid, kinetic text breakdown. You must capture the exact physical mechanics, the pacing, the micro-expressions, the physics of momentum, the physical reality of the camera itself, and a complete transcription of all audio and dialogue.\nSTRICT RULES:\nComprehensive Audio & Dialogue Transcription: You MUST transcribe all audio cues. Write out exactly what characters are saying using quotation marks (e.g., \"Watch this!\"). If speech is muffled or overlapping, note that. Alongside dialogue, you must meticulously describe all sound effects (clangs, whooshes, impacts), vocalizations (gasps, laughs, screams), background noise, and music.\nNo Intellectual Property (IP) Names: Do not use character names, actor names, or franchise names. Describe them purely by their physical appearance, clothing, and build (e.g., \"the massively built man,\" \"the woman in the pink kimono\").\nCamera as a Character: You MUST describe the camera work as if the camera is a physical object. Note amateur smartphone micro-shakes, forced perspectives, sudden auto-focus adjustments, lens flares, motion blur, whip-pans, and the physical reactions of the cameraperson (e.g., \"The camera violently jerks downward as the cameraperson flinches\").\nKinetic Physics: Describe the transfer of weight, gravity, tension, and impact. Mention things like fabric whipping around legs, the flexing of muscles, the recoil of a strike, or the shattering of the environment.\nFORMATTING TEMPLATE:\nYou must chunk the video into chronological blocks using bold timestamp headers with a thematic title. Under each header, use bullet points to categorize the elements.\n[TIMESTAMP] - [TIMESTAMP]: [Phase Title]\nVisual Framing: [Describe the shot type, lighting, style (e.g., vertical smartphone, 2D animation, extreme close-up, harsh fluorescent light).]\nThe Subjects: [Describe the characters, their exact positioning, posture, clothing, and micro-expressions.]\nThe Action: [Frame-by-frame breakdown of the physical movements. Micro-movements, momentum, physics.]\nCamera Dynamics: [Describe the exact camera movement, zooms, blurs, shake, and panning.]\nAudio/Pacing: [Transcribe ALL spoken dialogue in quotes. Describe the speed/tension of the moment, and detail all audio cues like gasps, footsteps, environmental impacts, music, or background noise.]\nEXAMPLE OUTPUT\nUSER INPUT: [Video of a man trying to flip a pancake, but he throws it too hard, it hits the ceiling, and falls onto his face, causing the cameraperson to drop the phone.]\nAI RESPONSE:\n0:00 - 0:02: The Setup and The Wind-Up\nVisual Framing: The video is shot vertically on a smartphone. The lighting is a harsh, warm, overhead kitchen light. The camera has a constant, subtle micro-shake indicative of an amateur holding a phone single-handedly.\nThe Subjects: A man in a baggy grey hoodie stands in the center of the frame, holding a black Teflon frying pan. Inside the pan is a perfectly round, golden-brown pancake.\nThe Action: The man is grinning widely, looking directly into the camera lens with absolute, unearned confidence. He begins a rhythmic, circular motion with his wrist, swirling the pancake to ensure it is loose in the pan. He bends his knees slightly, lowering his center of gravity for leverage.\nCamera Dynamics: The cameraperson is standing roughly four feet away, holding a static mid-shot from the man's waist to just above his head.\nAudio/Pacing: The pacing is slow and anticipatory. A rhythmic, scraping shhhhk-shhhhk sound is heard as the pancake slides against the metal. The man speaks clearly and confidently: \"Alright, perfect flip in three... two... one...\"\n0:02 - 0:04: The Catastrophic Launch\nVisual Framing: The camera remains static, but the focus briefly hunts as the subject's arm moves rapidly.\nThe Subjects: The man's confident smile tightens into a grimace of exertion.\nThe Action: He rapidly drops his right shoulder and thrusts his arm violently upward in a massive, over-exaggerated jerk. He applies vastly too much kinetic force. The pancake immediately launches out of the pan, rocketing straight upward at high velocity, completely exiting the top boundary of the frame.\nCamera Dynamics: The camera abruptly tilts upward, attempting to track the airborne batter, but the movement is delayed and jerky.\nAudio/Pacing: The man lets out a short, strained grunt: \"Hup!\" The scraping sound is instantly replaced by a loud, wet THWACK from off-camera above, indicating the pancake has hit the ceiling.\n0:04 - 0:06: The Impact and Camera Chaos\nVisual Framing: The lighting is suddenly obscured by a shadow dropping from above.\nThe Action: A fraction of a second later, the heavy, half-cooked pancake plummets straight down, landing with a wet slap squarely onto the man's face, completely covering his eyes and nose. His body instantly recoils, his shoulders hunching up to his ears as he drops the frying pan.\nCamera Dynamics: The cameraperson's fight-or-flight response kicks in. The camera violently jerks downward and to the left as the cameraperson physically flinches. The image completely dissolves into a chaotic, smeared motion blur of the kitchen floor and cabinetry.\nAudio/Pacing: The heavy metallic CLANG of the dropped frying pan hitting the linoleum floor dominates the audio. The cameraperson gasps loudly and shouts, \"Oh my god, dude!\" followed instantly by the sharp clatter of the phone being dropped. The video ends abruptly on a tilted, blurry frame of the baseboards."
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      22,
+      18,
+      0,
+      23,
+      0,
+      "VIDEO"
+    ],
+    [
+      27,
+      23,
+      0,
+      28,
+      0,
+      "VIDEO"
+    ],
+    [
+      28,
+      28,
+      0,
+      27,
+      0,
+      "IMAGE"
+    ],
+    [
+      29,
+      27,
+      0,
+      26,
+      0,
+      "IMAGE"
+    ],
+    [
+      409,
+      26,
+      0,
+      281,
+      1,
+      "IMAGE"
+    ],
+    [
+      412,
+      281,
+      0,
+      282,
+      0,
+      "VIDEO"
+    ],
+    [
+      420,
+      26,
+      0,
+      295,
+      0,
+      "IMAGE"
+    ],
+    [
+      421,
+      29,
+      0,
+      281,
+      2,
+      "IMAGE"
+    ],
+    [
+      424,
+      29,
+      0,
+      26,
+      1,
+      "IMAGE"
+    ],
+    [
+      425,
+      22,
+      0,
+      297,
+      0,
+      "STRING"
+    ],
+    [
+      426,
+      297,
+      0,
+      281,
+      0,
+      "STRING"
+    ],
+    [
+      427,
+      298,
+      0,
+      22,
+      0,
+      "STRING"
+    ],
+    [
+      428,
+      23,
+      0,
+      298,
+      2,
+      "VIDEO"
+    ],
+    [
+      429,
+      29,
+      0,
+      298,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.4116808294037395,
+      "offset": [
+        736.2731849344269,
+        -75.9191525853916
+      ]
+    },
+    "frontendVersion": "1.43.18",
+    "linearData": {
+      "inputs": [
+        [
+          "29",
+          "image"
+        ],
+        [
+          "18",
+          "file"
+        ],
+        [
+          "20",
+          "prompt"
+        ],
+        [
+          "26",
+          "model"
+        ],
+        [
+          "26",
+          "seed"
+        ],
+        [
+          "281",
+          "model"
+        ],
+        [
+          "281",
+          "model.resolution"
+        ],
+        [
+          "281",
+          "model.ratio"
+        ],
+        [
+          "281",
+          "model.duration"
+        ],
+        [
+          "281",
+          "seed"
+        ]
+      ],
+      "outputs": [
+        "295",
+        "22",
+        "282"
+      ]
+    },
+    "VHS_KeepIntermediate": true,
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0
+  },
+  "version": 0.4
+}
