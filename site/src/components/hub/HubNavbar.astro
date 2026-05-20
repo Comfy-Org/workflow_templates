@@ -3,8 +3,15 @@ import { getCollection } from 'astro:content';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import SearchPopover from './SearchPopover.vue';
 import MobileFilterDrawer from './MobileFilterDrawer.vue';
-import { getProfileCache, serializeCollectionEntry, type SerializedTemplate } from '../../lib/hub-api';
+import {
+  getProfileCache,
+  serializeCollectionEntry,
+  type SerializedTemplate,
+} from '../../lib/hub-api';
 import { getCloudLandingUrl } from '../../lib/urls';
+import { featureFlags } from '../../config/featureFlags';
+
+const tryCloudCtaText = featureFlags.cloudFreeTier ? 'Try Comfy Cloud for free' : 'Try Comfy Cloud';
 
 interface Props {
   templates?: SerializedTemplate[];
@@ -67,7 +74,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
         class="run-cloud-btn inline-flex items-center justify-center h-10 px-5 rounded-full bg-brand text-page text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
         data-location="navbar"
       >
-        Try Comfy Cloud for free
+        {tryCloudCtaText}
       </a>
     </div>
 
