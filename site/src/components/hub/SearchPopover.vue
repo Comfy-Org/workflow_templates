@@ -345,7 +345,7 @@ const remainingModelCount = computed(() =>
 
 // Mode filter items for the discovery panel
 const modeItems = [
-  { name: 'Comfy Apps', value: 'app' },
+  { name: 'Apps', value: 'app' },
   { name: 'Node Graphs', value: 'nodeGraph' },
 ];
 
@@ -500,7 +500,7 @@ function getCreatorColor(index: number): string {
 }
 
 const MODE_LABELS: Record<string, string> = {
-  app: 'Comfy Apps',
+  app: 'Apps',
   nodeGraph: 'Node Graphs',
 };
 
@@ -923,7 +923,7 @@ onUnmounted(() => {
                   @click="addFilterBadge('mode', 'app')"
                 >
                   <IconApps class="size-3" />
-                  Comfy Apps
+                  Apps
                 </Badge>
               </div>
             </section>
