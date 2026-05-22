@@ -129,7 +129,7 @@ function selectSort(sort: 'popular' | 'newest') {
 
 const activeTabLabel = computed(() => {
   if (activeTab.value === 'nodeGraphs') return 'Node Graphs';
-  if (activeTab.value === 'comfyApps') return 'Comfy Apps';
+  if (activeTab.value === 'comfyApps') return 'Apps';
   return 'All';
 });
 
@@ -236,7 +236,7 @@ onUnmounted(() => {
             @click="selectTab('comfyApps')"
           >
             <IconApps class="size-4" />
-            Comfy Apps
+            Apps
           </button>
         </div>
       </div>
@@ -337,7 +337,7 @@ onUnmounted(() => {
           @click="activeTab = 'comfyApps'"
         >
           <IconApps />
-          Comfy Apps
+          Apps
         </Button>
       </div>
 
