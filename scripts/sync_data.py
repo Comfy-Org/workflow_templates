@@ -125,6 +125,7 @@ class TemplateSyncer:
             "ru": "index.ru.json",
             "tr": "index.tr.json",
             "ar": "index.ar.json",
+            "fa": "index.fa.json",
             "pt-BR": "index.pt-BR.json"
         }
         
