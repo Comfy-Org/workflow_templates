@@ -91,7 +91,7 @@ None are particularly well-designed. **We want to be significantly better.**
 
 ### 1. Header/Navigation
 
-- Logo linking to [comfy.org](https://www.comfy.org)
+- Logo linking to [comfy.org](https://comfy.org)
 - Simple nav (e.g., "Templates", "Try ComfyUI")
 
 ### 2. Hero Section
@@ -195,10 +195,10 @@ We'll share our complete brand kit after hiring:
 
 | Site          | URL                                                                  |
 | ------------- | -------------------------------------------------------------------- |
-| Main site     | [comfy.org](https://www.comfy.org)                                   |
+| Main site     | [comfy.org](https://comfy.org)                                   |
 | Cloud app     | [cloud.comfy.org](https://cloud.comfy.org)                           |
 | Documentation | [docs.comfy.org](https://docs.comfy.org)                             |
-| About page    | [comfy.org/about](https://www.comfy.org/about)                       |
+| About page    | [comfy.org/about](https://comfy.org/about)                       |
 | GitHub        | [github.com/Comfy-Org/ComfyUI](https://github.com/Comfy-Org/ComfyUI) |
 
 ---
@@ -268,7 +268,7 @@ We make tools for the artist of the future — a human equipped with AI who can 
 
 **Who we are:** The original team behind ComfyUI — engineers and artists from Stability AI and Google. Our work is used by millions of users worldwide.
 
-Learn more: [comfy.org/about](https://www.comfy.org/about)
+Learn more: [comfy.org/about](https://comfy.org/about)
 
 **Contact:** cbyrne@comfy.org or hello@comfy.org
 
