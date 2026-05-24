@@ -15,6 +15,12 @@ except ImportError:
     print("Error: jsonschema package not installed. Run: pip install jsonschema")
     sys.exit(1)
 
+_scripts_dir = Path(__file__).parent
+if str(_scripts_dir) not in sys.path:
+    sys.path.insert(0, str(_scripts_dir))
+
+from locale_index_files import TEMPLATES_NON_WORKFLOW_FILES
+
 
 def load_json(file_path: Path) -> Dict:
     """Load JSON file."""
@@ -85,15 +91,8 @@ def check_file_consistency(index_data: List[Dict], templates_dir: Path) -> Tuple
     # Find orphaned files (files that exist but aren't referenced)
     all_files = set(f.name for f in templates_dir.iterdir() if f.is_file())
     
-    # Exclude special files (includes .gitignore patterns like .DS_Store for validation)
-    special_files = {
-        'index.json', 'index.zh.json', 'index.zh-TW.json', 'index.ja.json',
-        'index.ko.json', 'index.es.json', 'index.fr.json', 'index.ru.json',
-        'index.tr.json', 'index.ar.json', 'index.pt-BR.json',  # Additional language files
-        'index.schema.json', 'index_logo.json', 'fuse_options.json',  # Auxiliary files
-        '.gitignore', 'README.md', '.DS_Store',  # System/editor files
-    }
-    all_files -= special_files
+    # Exclude index locales and auxiliary files (see locale_index_files.py)
+    all_files -= TEMPLATES_NON_WORKFLOW_FILES
     
     # Separate workflow and media files
     workflow_files = {f for f in all_files if f.endswith('.json')}

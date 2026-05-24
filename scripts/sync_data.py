@@ -73,6 +73,8 @@ try:
 except ImportError:
     generate_workflow_io = None
 
+from locale_index_files import LANGUAGE_FILES
+
 
 def _io_entry_has_nonempty_file(entry: Any) -> bool:
     """True if entry is a dict with a non-empty string file field."""
@@ -114,20 +116,8 @@ class TemplateSyncer:
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
         
-        # Language files mapping
-        self.language_files = {
-            "zh": "index.zh.json",
-            "zh-TW": "index.zh-TW.json", 
-            "ja": "index.ja.json",
-            "ko": "index.ko.json",
-            "es": "index.es.json",
-            "fr": "index.fr.json",
-            "ru": "index.ru.json",
-            "tr": "index.tr.json",
-            "ar": "index.ar.json",
-            "fa": "index.fa.json",
-            "pt-BR": "index.pt-BR.json"
-        }
+        # Language files mapping (see locale_index_files.py — keep in sync with validation)
+        self.language_files = dict(LANGUAGE_FILES)
         
         # Setup logging first
         self.setup_logging()
