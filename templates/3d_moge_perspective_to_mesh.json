@@ -1,8 +1,8 @@
 {
   "id": "b8855bb2-4ecb-4d67-94cc-c373b4db93dd",
   "revision": 0,
-  "last_node_id": 53,
-  "last_link_id": 83,
+  "last_node_id": 69,
+  "last_link_id": 91,
   "nodes": [
     {
       "id": 9,
@@ -24,7 +24,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            65
+            84
           ]
         },
         {
@@ -51,127 +51,6 @@
       ]
     },
     {
-      "id": 49,
-      "type": "ca1fac5f-abe5-4729-b7fe-2299f6630a65",
-      "pos": [
-        -3970,
-        5000
-      ],
-      "size": [
-        430,
-        446.65625
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "source_image",
-          "type": "IMAGE",
-          "link": 65
-        },
-        {
-          "label": "auto_resize_input",
-          "name": "switch",
-          "type": "BOOLEAN",
-          "widget": {
-            "name": "switch"
-          },
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "mesh",
-          "type": "MESH",
-          "links": [
-            66
-          ]
-        },
-        {
-          "name": "depth_colored",
-          "type": "IMAGE",
-          "links": [
-            67
-          ]
-        },
-        {
-          "name": "depth",
-          "type": "IMAGE",
-          "links": [
-            68
-          ]
-        },
-        {
-          "name": "normal_opengl",
-          "type": "IMAGE",
-          "links": [
-            69
-          ]
-        },
-        {
-          "name": "normal_directx",
-          "type": "IMAGE",
-          "links": [
-            70
-          ]
-        },
-        {
-          "name": "mask",
-          "type": "IMAGE",
-          "links": [
-            71
-          ]
-        }
-      ],
-      "properties": {
-        "proxyWidgets": [
-          [
-            "13",
-            "resolution_level"
-          ],
-          [
-            "13",
-            "batch_size"
-          ],
-          [
-            "22",
-            "batch_index"
-          ],
-          [
-            "22",
-            "decimation"
-          ],
-          [
-            "22",
-            "discontinuity_threshold"
-          ],
-          [
-            "22",
-            "texture"
-          ],
-          [
-            "32",
-            "model_name"
-          ],
-          [
-            "53",
-            "switch"
-          ]
-        ],
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1"
-      },
-      "widgets_values": []
-    },
-    {
       "id": 50,
       "type": "MarkdownNote",
       "pos": [
@@ -180,7 +59,7 @@
       ],
       "size": [
         490,
-        1000
+        1423.609375
       ],
       "flags": {},
       "order": 1,
@@ -189,21 +68,21 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## moge_image_to_mesh\n\n**Single perspective photo → textured GLB**\n\n`Load Image` → subgraph `source_image` → `Save GLB`\n\n### Subgraph inputs\n| Port | Meaning |\n|------|--------|\n| `source_image` | RGB photo (auto-downscales if width > 2048) |\n| `inference_resolution` | MoGe detail 0–9 (9 = best) |\n| `inference_batch_size` | Images per GPU forward for multi-frame input; use **1** for one photo |\n| `mesh_frame_index` | Which inferred frame to mesh (0 for one image) |\n| `mesh_decimation` | Vertex stride (1 = full res) |\n| `mesh_gap_threshold` | Drop faces across depth jumps (0 = off) |\n| `mesh_texture` | Bake source colors into GLB |\n| `moge_model` | Checkpoint — see **Model Link** note |\n\n### Preview outputs\nEach `Preview Image` node is labeled with its map type in parentheses."
+        "## moge_image_to_mesh\n\n**Single perspective photo -> textured GLB**\n\n`Load Image` -> `Geometry Estimation (MoGe)` -> `Save GLB`\n\n### Main flow\n- Runs MoGe inference on one source image\n- Converts the inferred geometry into a mesh\n- Exposes OpenGL and DirectX normal previews\n\n### Inputs\n| Control | Meaning |\n|--------|--------|\n| `source_image` | Input RGB image |\n| `inference_resolution` | MoGe detail level `0-9`; higher is slower but keeps more detail |\n| `inference_batch_size` | Passed to `MoGeInference` batch size; use `1` for a single still image |\n| `mesh_frame_index` | Batch/frame index used when converting geometry to mesh; use `0` for one image |\n| `mesh_decimation` | Mesh decimation step; `1` keeps the densest mesh |\n| `mesh_gap_threshold` | Removes faces across large depth discontinuities; `0` disables the filter |\n| `mesh_texture` | Bakes source image colors into the exported GLB |\n| `moge_model` | Model checkpoint loaded by `LoadMoGeModel`; see `Model Link` |\n| `auto_resize_input` | Enables pre-inference resize logic for large images |\n\n### Auto-resize logic\nWhen `auto_resize_input` is enabled, the subgraph checks image width first:\n- width `> 2048`: resize by longer edge to `2048` before inference\n- width `<= 2048`: keep the original image\n\nWhen `auto_resize_input` is disabled, the original image always goes into inference.\n\n### Outputs\n- `mesh`: mesh output for `Save GLB`\n- `normal_opengl`: preview rendered through `MoGeRender`\n- `normal_directx`: preview rendered through `MoGeRender`"
       ],
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 17,
+      "id": 46,
       "type": "PreviewImage",
       "pos": [
-        -3110,
+        -2950,
         5000
       ],
       "size": [
-        340,
-        440
+        350,
+        490
       ],
       "flags": {},
       "order": 5,
@@ -212,81 +91,7 @@
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 67
-        }
-      ],
-      "outputs": [],
-      "title": "Preview Image (depth_colored)",
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "PreviewImage (depth_colored)"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 48,
-      "type": "PreviewImage",
-      "pos": [
-        -2730,
-        5000
-      ],
-      "size": [
-        340,
-        440
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 71
-        }
-      ],
-      "outputs": [],
-      "title": "Preview Image (mask)",
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "PreviewImage (mask)"
-      },
-      "widgets_values": []
-    },
-    {
-      "id": 46,
-      "type": "PreviewImage",
-      "pos": [
-        -2350,
-        5000
-      ],
-      "size": [
-        340,
-        430
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 69
+          "link": 88
         }
       ],
       "outputs": [],
@@ -309,21 +114,21 @@
       "id": 47,
       "type": "PreviewImage",
       "pos": [
-        -1970,
+        -2570,
         5000
       ],
       "size": [
-        340,
-        440
+        350,
+        490
       ],
       "flags": {},
-      "order": 8,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 70
+          "link": 89
         }
       ],
       "outputs": [],
@@ -343,52 +148,15 @@
       "widgets_values": []
     },
     {
-      "id": 26,
-      "type": "PreviewImage",
-      "pos": [
-        -3490,
-        5000
-      ],
-      "size": [
-        340,
-        440
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 68
-        }
-      ],
-      "outputs": [],
-      "title": "Preview Image (depth)",
-      "properties": {
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "PreviewImage (depth)"
-      },
-      "widgets_values": []
-    },
-    {
       "id": 21,
       "type": "SaveGLB",
       "pos": [
-        -3490,
-        5510
+        -3470,
+        5000
       ],
       "size": [
-        1110,
-        710
+        490,
+        480
       ],
       "flags": {},
       "order": 4,
@@ -397,7 +165,7 @@
         {
           "name": "mesh",
           "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
-          "link": 66
+          "link": 87
         }
       ],
       "outputs": [],
@@ -423,26 +191,25 @@
           "fov": 35,
           "state": {
             "position": {
-              "x": 0.7548779348459637,
-              "y": 1.8187014042167358,
-              "z": 6.700163000673945
+              "x": 1.1000152510214236,
+              "y": 2.714650284264146,
+              "z": 6.958331752663242
             },
             "target": {
-              "x": 0,
-              "y": 1.5379915512792066,
-              "z": 0
+              "x": -0.16036242564092565,
+              "y": 1.3121342154705629,
+              "z": 0.06791863401947583
             },
             "zoom": 1,
             "cameraType": "perspective"
           }
         },
         "Light Config": {
-          "intensity": 3
+          "intensity": 2.4000000000000004
         },
         "Model Config": {
           "upDirection": "original",
-          "materialMode": "original",
-          "showSkeleton": false
+          "materialMode": "original"
         }
       },
       "widgets_values": [
@@ -459,7 +226,7 @@
       ],
       "size": [
         690,
-        1000
+        1010
       ],
       "flags": {},
       "order": 2,
@@ -473,62 +240,138 @@
       ],
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 67,
+      "type": "936dfaf2-575a-48b5-9e0c-df391319d11f",
+      "pos": [
+        -3950,
+        5000
+      ],
+      "size": [
+        430,
+        480
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source_image",
+          "type": "IMAGE",
+          "link": 84
+        },
+        {
+          "label": "auto_resize_input",
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "mesh",
+          "type": "MESH",
+          "links": [
+            87
+          ]
+        },
+        {
+          "name": "normal_opengl",
+          "type": "IMAGE",
+          "links": [
+            88
+          ]
+        },
+        {
+          "name": "normal_directx",
+          "type": "IMAGE",
+          "links": [
+            89
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "55",
+            "resolution_level"
+          ],
+          [
+            "55",
+            "batch_size"
+          ],
+          [
+            "54",
+            "batch_index"
+          ],
+          [
+            "54",
+            "decimation"
+          ],
+          [
+            "54",
+            "discontinuity_threshold"
+          ],
+          [
+            "54",
+            "texture"
+          ],
+          [
+            "58",
+            "model_name"
+          ],
+          [
+            "66",
+            "switch"
+          ]
+        ],
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1"
+      },
+      "widgets_values": []
     }
   ],
   "links": [
     [
-      65,
+      84,
       9,
       0,
-      49,
+      67,
       0,
       "IMAGE"
     ],
     [
-      66,
-      49,
+      87,
+      67,
       0,
       21,
       0,
       "MESH"
     ],
     [
+      88,
       67,
-      49,
       1,
-      17,
-      0,
-      "IMAGE"
-    ],
-    [
-      68,
-      49,
-      2,
-      26,
-      0,
-      "IMAGE"
-    ],
-    [
-      69,
-      49,
-      3,
       46,
       0,
       "IMAGE"
     ],
     [
-      70,
-      49,
-      4,
+      89,
+      67,
+      2,
       47,
-      0,
-      "IMAGE"
-    ],
-    [
-      71,
-      49,
-      5,
-      48,
       0,
       "IMAGE"
     ]
@@ -537,17 +380,17 @@
   "definitions": {
     "subgraphs": [
       {
-        "id": "ca1fac5f-abe5-4729-b7fe-2299f6630a65",
+        "id": "936dfaf2-575a-48b5-9e0c-df391319d11f",
         "version": 1,
         "state": {
           "lastGroupId": 1,
-          "lastNodeId": 53,
-          "lastLinkId": 83,
+          "lastNodeId": 69,
+          "lastLinkId": 91,
           "lastRerouteId": 0
         },
         "revision": 0,
         "config": {},
-        "name": "moge_image_to_mesh",
+        "name": "Geometry Estimation (MoGe)",
         "inputNode": {
           "id": -10,
           "bounding": [
@@ -563,7 +406,7 @@
             -3090,
             4966,
             131.51953125,
-            168
+            108
           ]
         },
         "inputs": [
@@ -703,32 +546,6 @@
             ]
           },
           {
-            "id": "59c37b52-074f-49fc-9731-483f899c12c4",
-            "name": "depth_colored",
-            "type": "IMAGE",
-            "linkIds": [
-              36
-            ],
-            "localized_name": "depth_colored",
-            "pos": [
-              -3066,
-              5010
-            ]
-          },
-          {
-            "id": "f583e936-da5c-4630-9901-391fa605c1f8",
-            "name": "depth",
-            "type": "IMAGE",
-            "linkIds": [
-              40
-            ],
-            "localized_name": "depth",
-            "pos": [
-              -3066,
-              5030
-            ]
-          },
-          {
             "id": "ff85a763-b7f7-4bcc-9b1d-a4eaf55ad2f9",
             "name": "normal_opengl",
             "type": "IMAGE",
@@ -738,7 +555,7 @@
             "localized_name": "normal_opengl",
             "pos": [
               -3066,
-              5050
+              5010
             ]
           },
           {
@@ -751,38 +568,25 @@
             "localized_name": "normal_directx",
             "pos": [
               -3066,
-              5070
-            ]
-          },
-          {
-            "id": "3b797fe1-77e5-4acf-b901-0cfb5ee57125",
-            "name": "mask",
-            "type": "IMAGE",
-            "linkIds": [
-              64
-            ],
-            "localized_name": "mask",
-            "pos": [
-              -3066,
-              5090
+              5030
             ]
           }
         ],
         "widgets": [],
         "nodes": [
           {
-            "id": 22,
+            "id": 54,
             "type": "MoGePointMapToMesh",
             "pos": [
               -3440,
-              5350
+              5220
             ],
             "size": [
               290,
-              180
+              200
             ],
             "flags": {},
-            "order": 2,
+            "order": 0,
             "mode": 0,
             "inputs": [
               {
@@ -858,7 +662,7 @@
             ]
           },
           {
-            "id": 13,
+            "id": 55,
             "type": "MoGeInference",
             "pos": [
               -3790,
@@ -910,11 +714,8 @@
                 "type": "MOGE_GEOMETRY",
                 "links": [
                   33,
-                  35,
-                  39,
                   59,
-                  60,
-                  61
+                  60
                 ]
               }
             ],
@@ -939,103 +740,7 @@
             ]
           },
           {
-            "id": 23,
-            "type": "MoGeRender",
-            "pos": [
-              -3430,
-              4740
-            ],
-            "size": [
-              270,
-              90
-            ],
-            "flags": {},
-            "order": 3,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "moge_geometry",
-                "name": "moge_geometry",
-                "type": "MOGE_GEOMETRY",
-                "link": 35
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "IMAGE",
-                "name": "IMAGE",
-                "type": "IMAGE",
-                "links": [
-                  36
-                ]
-              }
-            ],
-            "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGeRender"
-            },
-            "widgets_values": [
-              "depth_colored"
-            ]
-          },
-          {
-            "id": 25,
-            "type": "MoGeRender",
-            "pos": [
-              -3430,
-              4590
-            ],
-            "size": [
-              270,
-              90
-            ],
-            "flags": {},
-            "order": 4,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "moge_geometry",
-                "name": "moge_geometry",
-                "type": "MOGE_GEOMETRY",
-                "link": 39
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "IMAGE",
-                "name": "IMAGE",
-                "type": "IMAGE",
-                "links": [
-                  40
-                ]
-              }
-            ],
-            "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGeRender"
-            },
-            "widgets_values": [
-              "depth"
-            ]
-          },
-          {
-            "id": 32,
+            "id": 58,
             "type": "LoadMoGeModel",
             "pos": [
               -4180,
@@ -1043,10 +748,10 @@
             ],
             "size": [
               270,
-              90
+              140
             ],
             "flags": {},
-            "order": 5,
+            "order": 2,
             "mode": 0,
             "inputs": [
               {
@@ -1093,7 +798,7 @@
             ]
           },
           {
-            "id": 36,
+            "id": 59,
             "type": "ComfyMathExpression",
             "pos": [
               -4720,
@@ -1104,7 +809,7 @@
               200
             ],
             "flags": {},
-            "order": 6,
+            "order": 3,
             "mode": 0,
             "inputs": [
               {
@@ -1162,7 +867,7 @@
             ]
           },
           {
-            "id": 37,
+            "id": 60,
             "type": "GetImageSize",
             "pos": [
               -4980,
@@ -1173,7 +878,7 @@
               160
             ],
             "flags": {},
-            "order": 7,
+            "order": 4,
             "mode": 0,
             "inputs": [
               {
@@ -1220,7 +925,7 @@
             "widgets_values": []
           },
           {
-            "id": 40,
+            "id": 61,
             "type": "ResizeImagesByLongerEdge",
             "pos": [
               -4650,
@@ -1231,7 +936,7 @@
               110
             ],
             "flags": {},
-            "order": 8,
+            "order": 5,
             "mode": 0,
             "inputs": [
               {
@@ -1268,18 +973,18 @@
             ]
           },
           {
-            "id": 42,
+            "id": 62,
             "type": "ComfySwitchNode",
             "pos": [
               -4180,
-              5060
+              5120
             ],
             "size": [
               270,
               130
             ],
             "flags": {},
-            "order": 9,
+            "order": 6,
             "mode": 0,
             "inputs": [
               {
@@ -1331,7 +1036,7 @@
             ]
           },
           {
-            "id": 43,
+            "id": 63,
             "type": "MoGeRender",
             "pos": [
               -3430,
@@ -1339,10 +1044,10 @@
             ],
             "size": [
               270,
-              90
+              110
             ],
             "flags": {},
-            "order": 10,
+            "order": 7,
             "mode": 0,
             "inputs": [
               {
@@ -1379,7 +1084,7 @@
             ]
           },
           {
-            "id": 44,
+            "id": 64,
             "type": "MoGeRender",
             "pos": [
               -3430,
@@ -1387,10 +1092,10 @@
             ],
             "size": [
               270,
-              90
+              110
             ],
             "flags": {},
-            "order": 11,
+            "order": 8,
             "mode": 0,
             "inputs": [
               {
@@ -1427,55 +1132,7 @@
             ]
           },
           {
-            "id": 45,
-            "type": "MoGeRender",
-            "pos": [
-              -3430,
-              5200
-            ],
-            "size": [
-              270,
-              90
-            ],
-            "flags": {},
-            "order": 12,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "moge_geometry",
-                "name": "moge_geometry",
-                "type": "MOGE_GEOMETRY",
-                "link": 61
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "IMAGE",
-                "name": "IMAGE",
-                "type": "IMAGE",
-                "links": [
-                  64
-                ]
-              }
-            ],
-            "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGeRender"
-            },
-            "widgets_values": [
-              "mask"
-            ]
-          },
-          {
-            "id": 53,
+            "id": 66,
             "type": "ComfySwitchNode",
             "pos": [
               -4160,
@@ -1483,10 +1140,10 @@
             ],
             "size": [
               270,
-              124
+              130
             ],
             "flags": {},
-            "order": 0,
+            "order": 9,
             "mode": 0,
             "inputs": [
               {
@@ -1555,81 +1212,57 @@
         "links": [
           {
             "id": 33,
-            "origin_id": 13,
+            "origin_id": 55,
             "origin_slot": 0,
-            "target_id": 22,
+            "target_id": 54,
             "target_slot": 0,
             "type": "MOGE_GEOMETRY"
           },
           {
             "id": 58,
-            "origin_id": 32,
+            "origin_id": 58,
             "origin_slot": 0,
-            "target_id": 13,
+            "target_id": 55,
             "target_slot": 0,
             "type": "MOGE_MODEL"
           },
           {
-            "id": 35,
-            "origin_id": 13,
-            "origin_slot": 0,
-            "target_id": 23,
-            "target_slot": 0,
-            "type": "MOGE_GEOMETRY"
-          },
-          {
-            "id": 39,
-            "origin_id": 13,
-            "origin_slot": 0,
-            "target_id": 25,
-            "target_slot": 0,
-            "type": "MOGE_GEOMETRY"
-          },
-          {
             "id": 49,
-            "origin_id": 37,
+            "origin_id": 60,
             "origin_slot": 0,
-            "target_id": 36,
+            "target_id": 59,
             "target_slot": 0,
             "type": "INT"
           },
           {
             "id": 54,
-            "origin_id": 40,
+            "origin_id": 61,
             "origin_slot": 0,
-            "target_id": 42,
+            "target_id": 62,
             "target_slot": 1,
             "type": "IMAGE"
           },
           {
             "id": 53,
-            "origin_id": 36,
+            "origin_id": 59,
             "origin_slot": 2,
-            "target_id": 42,
+            "target_id": 62,
             "target_slot": 2,
             "type": "BOOLEAN"
           },
           {
             "id": 59,
-            "origin_id": 13,
+            "origin_id": 55,
             "origin_slot": 0,
-            "target_id": 43,
+            "target_id": 63,
             "target_slot": 0,
             "type": "MOGE_GEOMETRY"
           },
           {
             "id": 60,
-            "origin_id": 13,
+            "origin_id": 55,
             "origin_slot": 0,
-            "target_id": 44,
-            "target_slot": 0,
-            "type": "MOGE_GEOMETRY"
-          },
-          {
-            "id": 61,
-            "origin_id": 13,
-            "origin_slot": 0,
-            "target_id": 45,
+            "target_id": 64,
             "target_slot": 0,
             "type": "MOGE_GEOMETRY"
           },
@@ -1637,7 +1270,7 @@
             "id": 48,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 37,
+            "target_id": 60,
             "target_slot": 0,
             "type": "IMAGE"
           },
@@ -1645,7 +1278,7 @@
             "id": 55,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 40,
+            "target_id": 61,
             "target_slot": 0,
             "type": "IMAGE"
           },
@@ -1653,63 +1286,39 @@
             "id": 56,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 42,
+            "target_id": 62,
             "target_slot": 0,
             "type": "IMAGE"
           },
           {
             "id": 34,
-            "origin_id": 22,
+            "origin_id": 54,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 0,
             "type": "MESH"
           },
           {
-            "id": 36,
-            "origin_id": 23,
+            "id": 62,
+            "origin_id": 63,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 1,
             "type": "IMAGE"
           },
           {
-            "id": 40,
-            "origin_id": 25,
+            "id": 63,
+            "origin_id": 64,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 2,
             "type": "IMAGE"
           },
           {
-            "id": 62,
-            "origin_id": 43,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 3,
-            "type": "IMAGE"
-          },
-          {
-            "id": 63,
-            "origin_id": 44,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 4,
-            "type": "IMAGE"
-          },
-          {
-            "id": 64,
-            "origin_id": 45,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 5,
-            "type": "IMAGE"
-          },
-          {
             "id": 73,
             "origin_id": -10,
             "origin_slot": 1,
-            "target_id": 13,
+            "target_id": 55,
             "target_slot": 2,
             "type": "INT"
           },
@@ -1717,7 +1326,7 @@
             "id": 74,
             "origin_id": -10,
             "origin_slot": 2,
-            "target_id": 13,
+            "target_id": 55,
             "target_slot": 3,
             "type": "INT"
           },
@@ -1725,7 +1334,7 @@
             "id": 75,
             "origin_id": -10,
             "origin_slot": 3,
-            "target_id": 22,
+            "target_id": 54,
             "target_slot": 1,
             "type": "INT"
           },
@@ -1733,7 +1342,7 @@
             "id": 76,
             "origin_id": -10,
             "origin_slot": 4,
-            "target_id": 22,
+            "target_id": 54,
             "target_slot": 2,
             "type": "INT"
           },
@@ -1741,7 +1350,7 @@
             "id": 77,
             "origin_id": -10,
             "origin_slot": 5,
-            "target_id": 22,
+            "target_id": 54,
             "target_slot": 3,
             "type": "FLOAT"
           },
@@ -1749,7 +1358,7 @@
             "id": 78,
             "origin_id": -10,
             "origin_slot": 6,
-            "target_id": 22,
+            "target_id": 54,
             "target_slot": 4,
             "type": "BOOLEAN"
           },
@@ -1757,23 +1366,23 @@
             "id": 79,
             "origin_id": -10,
             "origin_slot": 7,
-            "target_id": 32,
+            "target_id": 58,
             "target_slot": 0,
             "type": "COMBO"
           },
           {
             "id": 80,
-            "origin_id": 42,
+            "origin_id": 62,
             "origin_slot": 0,
-            "target_id": 53,
+            "target_id": 66,
             "target_slot": 1,
             "type": "IMAGE"
           },
           {
             "id": 81,
-            "origin_id": 53,
+            "origin_id": 66,
             "origin_slot": 0,
-            "target_id": 13,
+            "target_id": 55,
             "target_slot": 1,
             "type": "IMAGE"
           },
@@ -1781,7 +1390,7 @@
             "id": 82,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 53,
+            "target_id": 66,
             "target_slot": 0,
             "type": "IMAGE"
           },
@@ -1789,7 +1398,7 @@
             "id": 83,
             "origin_id": -10,
             "origin_slot": 8,
-            "target_id": 53,
+            "target_id": 66,
             "target_slot": 2,
             "type": "BOOLEAN"
           }
@@ -1801,10 +1410,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.661133956646252,
+      "scale": 0.40164264177219744,
       "offset": [
-        5065.7197143271505,
-        -4621.40053921021
+        6097.938922222344,
+        -4238.718995644318
       ]
     },
     "frontendVersion": "1.43.18",
