@@ -1,14 +1,17 @@
 name: Version Check and Auto-bump
 
 # This workflow automatically bumps package versions when templates change.
-# 
+#
 # Process:
 #   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
 #   2. Validates bundles.json completeness
 #   3. Detects which packages have template changes (via git history)
 #   4. Bumps version numbers for affected packages (including core if manifest changed)
 #   5. Updates meta package dependencies (exact pinning)
-#   6. Commits changes back to PR branch
+#   6. When (and only when) the root pyproject.toml version is bumped, runs the
+#      PyPI quota check, refreshes the ComfyUI pins cache if stale, and regenerates
+#      the delete-candidates report.
+#   7. Commits version-bump + (optionally) cache + report changes back to the PR.
 #
 # Critical: sync_bundles.py validates that ALL templates are assigned to bundles
 # Note: Manifest sync must run BEFORE version detection so core package changes are detected
@@ -49,6 +52,9 @@ jobs:
             bundles.json
             blueprints_bundles.json
             scripts/
+            scripts/ci/check_pypi_quota.py
+            scripts/ci/comfyui_reference.py
+            .github/pypi-packages.json
             packages/
             pyproject.toml
           sparse-checkout-cone-mode: false
@@ -76,112 +82,72 @@ jobs:
           python scripts/sync_blueprints.py
           echo "✅ Blueprint manifest sync complete"
 
-      - name: Check package sizes
-        id: size_check
+      - name: Capture pre-bump root version
+        id: pre_bump
         run: |
-          echo "=== Checking package sizes against PyPI 100MB limit ==="
+          OLD_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
+          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Pre-bump root version: $OLD_VERSION"
 
-          # PyPI hard limit is 100MB per file. We warn at 85MB and error at 95MB.
-          WARN_MB=85
-          ERROR_MB=95
-          LIMIT_MB=100
+      - name: Auto-bump package versions if needed
+        run: |
+          echo "=== Analyzing template changes and bumping versions ==="
+          # This runs AFTER manifest sync so it can detect core package changes
+          python scripts/ci_version_manager.py
+          echo "✅ Version analysis complete"
 
-          WARN_BYTES=$((WARN_MB * 1024 * 1024))
-          ERROR_BYTES=$((ERROR_MB * 1024 * 1024))
-
-          PACKAGES=(
-            "media_api:packages/media_api/src/comfyui_workflow_templates_media_api"
-            "media_image:packages/media_image/src/comfyui_workflow_templates_media_image"
-            "media_video:packages/media_video/src/comfyui_workflow_templates_media_video"
-            "media_other:packages/media_other/src/comfyui_workflow_templates_media_other"
-          )
-
-          HAS_WARNING=false
-          HAS_ERROR=false
-          COMMENT_ROWS=""
-
-          for ENTRY in "${PACKAGES[@]}"; do
-            PKG_NAME="${ENTRY%%:*}"
-            PKG_DIR="${ENTRY##*:}"
-
-            if [ ! -d "$PKG_DIR" ]; then
-              echo "⚠️  Directory not found: $PKG_DIR (skipping)"
-              continue
-            fi
-
-            SIZE_BYTES=$(du -sb "$PKG_DIR" | cut -f1)
-            SIZE_MB=$(echo "scale=1; $SIZE_BYTES / 1048576" | bc)
-
-            if [ "$SIZE_BYTES" -ge "$ERROR_BYTES" ]; then
-              STATUS="🔴 CRITICAL"
-              HAS_ERROR=true
-            elif [ "$SIZE_BYTES" -ge "$WARN_BYTES" ]; then
-              STATUS="🟡 WARNING"
-              HAS_WARNING=true
-            else
-              STATUS="🟢 OK"
-            fi
-
-            echo "$STATUS  $PKG_NAME: ${SIZE_MB}MB / ${LIMIT_MB}MB limit"
-            COMMENT_ROWS="${COMMENT_ROWS}| \`comfyui-workflow-templates-${PKG_NAME/_/-}\` | ${SIZE_MB} MB | ${LIMIT_MB} MB | ${STATUS} |\n"
-          done
-
-          # Write outputs for the comment step
-          echo "has_warning=$HAS_WARNING" >> "$GITHUB_OUTPUT"
-          echo "has_error=$HAS_ERROR" >> "$GITHUB_OUTPUT"
-
-          # Build the full comment body and store it (multi-line via delimiter)
-          {
-            echo "COMMENT_BODY<<EOF"
-            if [ "$HAS_ERROR" = "true" ]; then
-              echo "## ⚠️ Package Size Warning — Approaching PyPI 100 MB Limit"
-              echo ""
-              echo "> **One or more packages are critically close to (≥${ERROR_MB} MB) the PyPI 100 MB per-file upload limit.**"
-              echo "> Publishing will likely fail unless templates are moved to a different bundle."
-            elif [ "$HAS_WARNING" = "true" ]; then
-              echo "## ⚠️ Package Size Warning — Approaching PyPI 100 MB Limit"
-              echo ""
-              echo "> One or more packages are approaching (≥${WARN_MB} MB) the PyPI 100 MB per-file upload limit."
-              echo "> Consider moving some templates to a different bundle before this reaches the limit."
-            else
-              echo "## ✅ Package Sizes OK"
-              echo ""
-              echo "> All packages are within safe limits."
-            fi
-            echo ""
-            echo "| Package | Estimated Size | Limit | Status |"
-            echo "|---------|---------------|-------|--------|"
-            printf "$COMMENT_ROWS"
-            echo ""
-            echo "<sub>Thresholds: 🟡 ≥${WARN_MB} MB (warning) · 🔴 ≥${ERROR_MB} MB (critical) · Limit: ${LIMIT_MB} MB</sub>"
-            echo ""
-            echo "<sub>_Sizes are measured from the synced package source directories. Actual sdist/wheel may differ slightly._</sub>"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-          if [ "$HAS_ERROR" = "true" ]; then
-            echo ""
-            echo "❌ One or more packages are critically close to the PyPI 100MB limit!"
-            echo "   Move templates to another bundle in bundles.json before publishing."
+      - name: Detect whether root version was bumped
+        id: bump_detect
+        run: |
+          NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
+          OLD_VERSION="${{ steps.pre_bump.outputs.old_version }}"
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
+            echo "bumped=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Root version unchanged ($NEW_VERSION) — skipping PyPI quota check"
+          else
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Root version bumped: $OLD_VERSION → $NEW_VERSION"
           fi
 
-      - name: Post package size comment on PR
-        if: always()
-        uses: actions/github-script@v7
+      - name: Check PyPI quota and surface delete-candidates in PR comment
+        if: steps.bump_detect.outputs.bumped == 'true'
+        id: quota
         env:
-          COMMENT_BODY: ${{ steps.size_check.outputs.COMMENT_BODY }}
+          # Use GITHUB_TOKEN to lift the unauthenticated GitHub API rate limit
+          # when scanning ComfyUI's requirements.txt commit history.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== PyPI project quota (~10 GB) and per-file size (~100 MB) ==="
+          # The script writes the PR comment body to pr-quota-comment.md, which
+          # includes the full delete-candidates listing (orphan PyPI versions
+          # safe to clean up). The pins cache file is regenerated on disk for
+          # the duration of this job but is git-ignored — nothing is committed.
+          python scripts/ci/check_pypi_quota.py \
+            --comfyui-ref \
+            --comment-file pr-quota-comment.md \
+            --title "PyPI quota check (version bump PR)"
+
+      - name: Post PyPI quota comment on PR
+        if: steps.bump_detect.outputs.bumped == 'true' && always()
+        uses: actions/github-script@v7
         with:
           script: |
-            const marker = '<!-- package-size-check -->';
-            const body = marker + '\n' + process.env.COMMENT_BODY;
-
+            const fs = require('fs');
+            const marker = '<!-- pypi-quota-check -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-quota-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No quota comment file');
+              return;
+            }
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: context.issue.number,
             });
-
-            const existing = comments.find(c => c.body.includes(marker));
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
             if (existing) {
               await github.rest.issues.updateComment({
                 owner: context.repo.owner,
@@ -198,20 +164,15 @@ jobs:
               });
             }
 
-      - name: Auto-bump package versions if needed
-        run: |
-          echo "=== Analyzing template changes and bumping versions ==="
-          # This runs AFTER manifest sync so it can detect core package changes
-          python scripts/ci_version_manager.py
-          echo "✅ Version analysis complete"
-
-      - name: Commit version bumps and manifest updates to PR
+      - name: Commit version bumps, manifest updates, and refreshed cache/report to PR
         run: |
           echo "=== Committing automated changes to PR ==="
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
 
-          # Stage all potential changes from version bumps and manifest sync
+          # Stage all potential changes from version bumps and manifest sync.
+          # The PyPI quota check writes its working cache under .github/cache/,
+          # which is git-ignored and never staged.
           git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json
 
           # Only commit when root pyproject.toml version was changed (i.e. auto-bump ran).
