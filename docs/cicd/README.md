@@ -28,8 +28,14 @@ Template Added → Version Check → Package Bump → Publish → PyPI + GitHub 
 
 ### 3. Publishing (`publish.yml`)
 - Triggers on `pyproject.toml` changes (main branch)
+- `pypi-quota-gate` runs first and blocks publish on CRITICAL/FAIL quota (see [pypi-quota-check.md](pypi-quota-check.md))
 - Builds packages in dependency order (subpackages → meta)
 - Recovery mode: publishes any packages newer than PyPI
+
+### 4. PyPI Quota Check (`scripts/ci/check_pypi_quota.py`)
+- Runs in `version-check.yml` when the root version is bumped, and in `publish.yml` as a pre-publish gate
+- Posts a single PR comment with per-package quota %, headroom, and the list of orphan PyPI versions safe to delete
+- See [pypi-quota-check.md](pypi-quota-check.md) for thresholds, caching, and how to act on the report
 
 ## Critical Files
 - `bundles.json` - Template→package mapping (REQUIRED for new templates)
@@ -51,6 +57,8 @@ Template Added → Version Check → Package Bump → Publish → PyPI + GitHub 
 - `scripts/ci/validate_bundles.sh` - Bundle assignment validation (shared)
 - `scripts/ci/get_pypi_version.sh` - Robust PyPI version fetching (shared)
 - `scripts/ci/get_version.sh` - Consistent pyproject.toml version extraction (shared)
+- `scripts/ci/check_pypi_quota.py` - PyPI quota + orphan-version report (see [pypi-quota-check.md](pypi-quota-check.md))
+- `scripts/ci/comfyui_reference.py` - Resolves ComfyUI `requirements.txt` pin chain (helper)
 
 ## Validation Rules
 - All templates in `templates/*.json` MUST be assigned in `bundles.json`
