@@ -4,20 +4,23 @@
 
 ### `version-check.yml` (PR Automation)
 **Triggers:** PR with template changes  
-**Purpose:** Auto-bump package versions, sync manifests
+**Purpose:** Auto-bump package versions, sync manifests, run PyPI quota check
 ```yaml
 templates/** → sync_bundles.py → ci_version_manager.py → bump versions → commit
+            ↘ (when root version bumps) → check_pypi_quota.py → PR comment
 ```
 **Validates:** bundles.json completeness, template→package mapping  
-**Commits:** Version bumps + updated manifests to PR branch
+**Commits:** Version bumps + updated manifests to PR branch  
+**PR comment:** Posts a quota + safe-to-delete report only when the root version is bumped (see [pypi-quota-check.md](pypi-quota-check.md))
 
 ### `publish.yml` (Package Publishing)  
 **Triggers:** Push to main with `pyproject.toml` changes  
 **Purpose:** Publish packages to PyPI + create GitHub release
 ```yaml
-version_check → determine_packages → build_packages → publish_pypi → github_release
+version_check → pypi-quota-gate → determine_packages → build_packages → publish_pypi → github_release
 ```
-**Recovery mode:** Checks PyPI vs local versions, publishes out-of-sync packages
+**Recovery mode:** Checks PyPI vs local versions, publishes out-of-sync packages  
+**Quota gate:** `pypi-quota-gate` runs on every version bump and blocks the publish job on CRITICAL/FAIL quota (see [pypi-quota-check.md](pypi-quota-check.md))
 
 ## Validation Workflows
 
