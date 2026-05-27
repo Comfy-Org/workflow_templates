@@ -14,7 +14,7 @@ to reclaim space, on every version-bump PR.
 
 | Trigger                                       | Where                            | What it does                                                                                                |
 | --------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| PR auto-bumps root `pyproject.toml`           | `version-check.yml`              | Posts/updates a single PR comment with the full report. **No comment if version is not bumped.**            |
+| PR changes root meta version vs **base branch** | `version-check.yml`              | Posts/updates a single PR comment with the full report after `ci_version_manager.py` (covers **manual** root bumps where only sub-packages change in-job). **No comment if meta version matches the PR base.** |
 | Push to `main` that bumps the root version    | `publish.yml` → `pypi-quota-gate`| Fails the publish job if any package is at **CRITICAL** (≥90%) or **FAIL** (≥95%) quota, before any upload. |
 | Manual `workflow_dispatch` of `publish.yml`   | `publish.yml` → `pypi-quota-gate`| Same gate behavior as above.                                                                                |
 

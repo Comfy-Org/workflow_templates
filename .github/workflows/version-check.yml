@@ -8,9 +8,10 @@ name: Version Check and Auto-bump
 #   3. Detects which packages have template changes (via git history)
 #   4. Bumps version numbers for affected packages (including core if manifest changed)
 #   5. Updates meta package dependencies (exact pinning)
-#   6. When (and only when) the root pyproject.toml version is bumped, runs the
-#      PyPI quota check, refreshes the ComfyUI pins cache if stale, and regenerates
-#      the delete-candidates report.
+#   6. When the root meta version differs from the PR base branch (e.g. manual
+#      version bump on the PR, or in-job bump), runs the PyPI quota check,
+#      refreshes the ComfyUI pins cache if stale, and regenerates the
+#      delete-candidates report (PR comment).
 #   7. Commits version-bump + (optionally) cache + report changes back to the PR.
 #
 # Critical: sync_bundles.py validates that ALL templates are assigned to bundles
@@ -96,22 +97,41 @@ jobs:
           python scripts/ci_version_manager.py
           echo "✅ Version analysis complete"
 
-      - name: Detect whether root version was bumped
-        id: bump_detect
+      - name: Ensure PR base commit is available for version compare
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Fetching base branch so ${BASE_SHA} is available for git show..."
+            git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
+          fi
+          git cat-file -e "${BASE_SHA}^{commit}"
+
+      - name: Detect release version vs base branch (PyPI comment gate)
+        id: release_detect
         run: |
           NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
           OLD_VERSION="${{ steps.pre_bump.outputs.old_version }}"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
-          if [ "$OLD_VERSION" = "$NEW_VERSION" ]; then
-            echo "bumped=false" >> "$GITHUB_OUTPUT"
-            echo "ℹ️  Root version unchanged ($NEW_VERSION) — skipping PyPI quota check"
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+            echo "root_bumped_in_job=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Root version changed in this job: $OLD_VERSION → $NEW_VERSION"
           else
-            echo "bumped=true" >> "$GITHUB_OUTPUT"
-            echo "📦 Root version bumped: $OLD_VERSION → $NEW_VERSION"
+            echo "root_bumped_in_job=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Root version unchanged in this job ($NEW_VERSION)"
+          fi
+          if [ "$NEW_VERSION" != "$BASE_VERSION" ]; then
+            echo "post_pypi_comment=true" >> "$GITHUB_OUTPUT"
+            echo "📣 Will post PyPI quota comment (meta $NEW_VERSION ≠ base $BASE_VERSION)"
+          else
+            echo "post_pypi_comment=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Skipping PyPI quota comment (meta version matches PR base branch)"
           fi
 
       - name: Check PyPI quota and surface delete-candidates in PR comment
-        if: steps.bump_detect.outputs.bumped == 'true'
+        if: steps.release_detect.outputs.post_pypi_comment == 'true'
         id: quota
         env:
           # Use GITHUB_TOKEN to lift the unauthenticated GitHub API rate limit
@@ -129,7 +149,7 @@ jobs:
             --title "PyPI quota check (version bump PR)"
 
       - name: Post PyPI quota comment on PR
-        if: steps.bump_detect.outputs.bumped == 'true' && always()
+        if: steps.release_detect.outputs.post_pypi_comment == 'true' && always()
         uses: actions/github-script@v7
         with:
           script: |
