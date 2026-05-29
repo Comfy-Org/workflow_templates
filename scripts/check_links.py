@@ -5,6 +5,7 @@ Extract and check links from ComfyUI workflow JSON files.
 This script extracts URLs from:
 1. properties.models[].url fields (model download links)
 2. MarkdownNote and Note node widgets_values (documentation links)
+3. tutorialUrl fields in templates/index.json
 """
 
 import json
@@ -184,6 +185,33 @@ def should_skip_url(url: str, skip_urls: Set[str]) -> bool:
     return False
 
 
+def extract_tutorial_urls_from_index() -> List[Tuple[str, str]]:
+    """Extract tutorialUrl fields from templates/index.json.
+
+    Returns:
+        List of tuples (url, context) for each tutorialUrl found.
+    """
+    index_path = Path('templates/index.json')
+    results = []
+    try:
+        with open(index_path, encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"Error reading {index_path}: {e}", file=sys.stderr)
+        return results
+
+    entries = data if isinstance(data, list) else data.get('templates', [])
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        url = entry.get('tutorialUrl')
+        if url and isinstance(url, str) and url.startswith('http'):
+            name = entry.get('name', 'unknown')
+            results.append((url, f"index.json tutorialUrl for '{name}'"))
+
+    return results
+
+
 def extract_all_links(filter_skip_urls: bool = False) -> Dict[str, Dict[str, List[Tuple[str, str]]]]:
     """
     Extract all links from all workflow JSON files.
@@ -243,6 +271,17 @@ def command_extract():
                 url_sources[url] = []
             url_sources[url].append(f"{file_path}: {context}")
 
+    # Add tutorialUrl entries from index.json
+    tutorial_urls = extract_tutorial_urls_from_index()
+    tutorial_count = 0
+    for url, context in tutorial_urls:
+        if not should_skip_url(url, skip_urls):
+            all_urls.add(url)
+            tutorial_count += 1
+        if url not in url_sources:
+            url_sources[url] = []
+        url_sources[url].append(f"templates/index.json: {context}")
+
     if skip_urls:
         print(f"\nSkipped URLs from whitelist skip_urls: {len(skip_urls)} patterns", file=sys.stderr)
     print(f"\nFound {len(all_urls)} unique URLs across {len(all_links)} files")
@@ -267,6 +306,7 @@ def command_extract():
     print(f"\nSummary:")
     print(f"  Model URLs: {total_model_urls}")
     print(f"  Markdown URLs: {total_markdown_urls}")
+    print(f"  Tutorial URLs (index.json): {tutorial_count}")
     print(f"  Unique URLs: {len(all_urls)}")
 
 
@@ -292,6 +332,14 @@ def command_report():
             for url, context in links['markdown_urls']:
                 print(f"    - {url}")
                 print(f"      ({context})")
+
+    tutorial_urls = extract_tutorial_urls_from_index()
+    if tutorial_urls:
+        print(f"\n📄 templates/index.json")
+        print(f"  Tutorial URLs ({len(tutorial_urls)}):")
+        for url, context in tutorial_urls:
+            print(f"    - {url}")
+            print(f"      ({context})")
 
 
 def command_report_excluded():
