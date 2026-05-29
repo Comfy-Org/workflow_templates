@@ -51,21 +51,34 @@ jobs:
               return;
             }
 
-            // Find PR associated with this merge commit
+            // Find PR associated with this merge commit.
+            // GitHub's API may not immediately index the commit→PR association after a
+            // merge, causing a race condition where the workflow starts before the index
+            // is ready. Retry up to 5 times with a 10-second delay between attempts.
             const commit = context.sha;
-            const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: commit,
-            });
+            let prNumber = '';
+            for (let attempt = 1; attempt <= 5; attempt++) {
+              const { data: prs } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                commit_sha: commit,
+              });
+              if (prs.length > 0) {
+                prNumber = String(prs[0].number);
+                console.log(`Found associated PR #${prNumber} (attempt ${attempt})`);
+                break;
+              }
+              if (attempt < 5) {
+                console.log(`No PR found yet (attempt ${attempt}/5), retrying in 10s...`);
+                await new Promise(r => setTimeout(r, 10000));
+              }
+            }
 
-            if (prs.length > 0) {
-              const pr = prs[0];
-              core.setOutput('number', pr.number);
-              console.log(`Found associated PR #${pr.number}`);
+            if (prNumber) {
+              core.setOutput('number', prNumber);
             } else {
               core.setOutput('number', '');
-              console.log('No associated PR found');
+              console.log('No associated PR found after 5 attempts');
             }
 
       - name: Check for release label
