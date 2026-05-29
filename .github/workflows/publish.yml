@@ -168,14 +168,20 @@ jobs:
             .github/pypi-packages.json
             pyproject.toml
             packages/
+            templates/
+            bundles.json
             scripts/ci/check_pypi_quota.py
             scripts/ci/comfyui_reference.py
+            scripts/sync_bundles.py
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
+
+      - name: Sync bundle assets before size measurement
+        run: python scripts/sync_bundles.py
 
       - name: Block publish when PyPI quota is critical
         env:
