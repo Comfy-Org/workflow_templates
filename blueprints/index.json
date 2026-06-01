@@ -47,6 +47,110 @@
     "title": "Audio",
     "blueprints": [
       {
+        "name": "audio_generation_stable_audio_3_medium",
+        "title": "Audio Generation (Stable Audio 3 Medium)",
+        "description": "Audio Generation (Stable Audio 3 Medium) blueprint",
+        "mediaType": "audio",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "user_input",
+            "type": "STRING"
+          },
+          {
+            "name": "duration",
+            "type": "FLOAT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "use_reprompt",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "category",
+            "type": "COMBO"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "sa_clip",
+            "type": "COMBO"
+          },
+          {
+            "name": "qwen_clip",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "AUDIO",
+            "type": "AUDIO"
+          }
+        ],
+        "models": [
+          "qwen3.5_2b_bf16.safetensors",
+          "stable_audio_3_medium.safetensors",
+          "t5gemma_b_b_ul2.safetensors"
+        ]
+      },
+      {
+        "name": "audio_generation_stable_audio_3_medium_base",
+        "title": "Audio Generation (Stable Audio 3 Medium Base)",
+        "description": "Audio Generation (Stable Audio 3 Medium Base) blueprint",
+        "mediaType": "audio",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "user_input",
+            "type": "STRING"
+          },
+          {
+            "name": "duration",
+            "type": "FLOAT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "use_reprompt",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "category",
+            "type": "COMBO"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "sa_clip",
+            "type": "COMBO"
+          },
+          {
+            "name": "qwen_clip",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "AUDIO",
+            "type": "AUDIO"
+          }
+        ],
+        "models": [
+          "qwen3.5_2b_bf16.safetensors",
+          "stable_audio_3_medium_base.safetensors",
+          "t5gemma_b_b_ul2.safetensors"
+        ]
+      },
+      {
         "name": "text_to_audio_ace_step_1_5",
         "title": "Text to Audio (ACE-Step 1.5)",
         "description": "Text to Audio (ACE-Step 1.5) blueprint",
@@ -414,6 +518,34 @@
         "models": []
       },
       {
+        "name": "image_captioning_gemini",
+        "title": "Image Captioning(Gemini)",
+        "description": "Image Captioning(Gemini) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "images",
+            "type": "IMAGE"
+          },
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "model",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "STRING",
+            "type": "STRING"
+          }
+        ],
+        "models": []
+      },
+      {
         "name": "image_channels",
         "title": "Image Channels",
         "description": "Image Channels blueprint",
@@ -466,6 +598,36 @@
         "models": []
       },
       {
+        "name": "remove_background_birefnet",
+        "title": "Remove Background (BiRefNet)",
+        "description": "Remove Background (BiRefNet) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "bg_removal_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "mask",
+            "type": "MASK"
+          }
+        ],
+        "models": [
+          "birefnet.safetensors"
+        ]
+      },
+      {
         "name": "sharpen",
         "title": "Sharpen",
         "description": "Sharpen blueprint",
@@ -480,6 +642,34 @@
         "outputs": [
           {
             "name": "IMAGE0",
+            "type": "IMAGE"
+          }
+        ],
+        "models": []
+      },
+      {
+        "name": "split_image_grid_to_tiles",
+        "title": "Split Image Grid to Tiles",
+        "description": "Split Image Grid to Tiles blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "source_image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "columns",
+            "type": "INT"
+          },
+          {
+            "name": "rows",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "tiles",
             "type": "IMAGE"
           }
         ],
@@ -869,6 +1059,63 @@
         ]
       },
       {
+        "name": "image_edit_qwen_2509",
+        "title": "Image Edit (Qwen 2509)",
+        "description": "Image Edit (Qwen 2509) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "image2",
+            "type": "IMAGE"
+          },
+          {
+            "name": "image3",
+            "type": "IMAGE"
+          },
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "value",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_image_vae.safetensors",
+          "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+          "qwen_image_edit_2509_fp8_e4m3fn.safetensors",
+          "Qwen-Image-Edit-2509-Lightning-4steps-V1.0-bf16.safetensors"
+        ]
+      },
+      {
         "name": "image_edit_qwen_2511",
         "title": "Image Edit (Qwen 2511)",
         "description": "Image Edit (Qwen 2511) blueprint",
@@ -1174,8 +1421,8 @@
       },
       {
         "name": "image_upscale_z_image_turbo",
-        "title": "Image Upscale(Z-image-Turbo)",
-        "description": "Image Upscale(Z-image-Turbo) blueprint",
+        "title": "Image Upscale (Z-image-Turbo)",
+        "description": "Image Upscale (Z-image-Turbo) blueprint",
         "mediaType": "image",
         "mediaSubtype": "webp",
         "inputs": [
@@ -1308,6 +1555,184 @@
           "qwen_3_4b.safetensors",
           "ae.safetensors",
           "z_image_turbo_bf16.safetensors"
+        ]
+      },
+      {
+        "name": "text_to_image_anima",
+        "title": "Text to Image (Anima)",
+        "description": "Text to Image (Anima) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "steps",
+            "type": "INT"
+          },
+          {
+            "name": "cfg",
+            "type": "FLOAT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "qwen_3_06b_base.safetensors",
+          "qwen_image_vae.safetensors",
+          "anima-base-v1.0.safetensors"
+        ]
+      },
+      {
+        "name": "text_to_image_ernie_image",
+        "title": "Text to Image (Ernie Image)",
+        "description": "Text to Image (Ernie Image) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "value",
+            "type": "STRING"
+          },
+          {
+            "name": "value_1",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "steps",
+            "type": "INT"
+          },
+          {
+            "name": "cfg",
+            "type": "FLOAT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "ernie-image.safetensors",
+          "ministral-3-3b.safetensors",
+          "flux2-vae.safetensors",
+          "ernie-image-prompt-enhancer.safetensors"
+        ]
+      },
+      {
+        "name": "text_to_image_ernie_image_turbo",
+        "title": "Text to Image (Ernie Image Turbo)",
+        "description": "Text to Image (Ernie Image Turbo) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "value",
+            "type": "STRING"
+          },
+          {
+            "name": "value_1",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "ernie-image-turbo.safetensors",
+          "ministral-3-3b.safetensors",
+          "flux2-vae.safetensors",
+          "ernie-image-prompt-enhancer.safetensors"
         ]
       },
       {
@@ -1626,6 +2051,62 @@
         ]
       },
       {
+        "name": "text_to_image_z_image_base",
+        "title": "Text to Image (Z-Image-Base)",
+        "description": "Text to Image (Z-Image-Base) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "width",
+            "type": "INT"
+          },
+          {
+            "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "steps",
+            "type": "INT"
+          },
+          {
+            "name": "cfg",
+            "type": "FLOAT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "ae.safetensors",
+          "qwen_3_4b.safetensors",
+          "z_image_bf16.safetensors"
+        ]
+      },
+      {
         "name": "text_to_image_z_image_turbo",
         "title": "Text to Image (Z-Image-Turbo)",
         "description": "Text to Image (Z-Image-Turbo) blueprint",
@@ -1642,6 +2123,14 @@
           },
           {
             "name": "height",
+            "type": "INT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "steps",
             "type": "INT"
           },
           {
@@ -2264,6 +2753,96 @@
         ]
       },
       {
+        "name": "video_inpaint_void",
+        "title": "Video Inpaint (VOID)",
+        "description": "Video Inpaint (VOID) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "source_video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "positive_prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "negative_prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "sam3_text_prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "start_frame_index",
+            "type": "INT"
+          },
+          {
+            "name": "duration_seconds",
+            "type": "INT"
+          },
+          {
+            "name": "latent_width",
+            "type": "INT"
+          },
+          {
+            "name": "latent_height",
+            "type": "INT"
+          },
+          {
+            "name": "skip_pass_2",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "noise_seed",
+            "type": "INT"
+          },
+          {
+            "name": "sam3_checkpoint",
+            "type": "COMBO"
+          },
+          {
+            "name": "void_unet_pass1",
+            "type": "COMBO"
+          },
+          {
+            "name": "void_unet_pass2",
+            "type": "COMBO"
+          },
+          {
+            "name": "optical_flow_model",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "pass_1_video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "final_pass_2_video",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "t5xxl_fp16.safetensors",
+          "cogvideox_vae.safetensors",
+          "raft_large_C_T_SKHT_V2-ff5fadd5.safetensors",
+          "void_pass2.safetensors",
+          "void_pass1.safetensors"
+        ]
+      },
+      {
         "name": "video_inpaint_wan2_1_vace",
         "title": "Video Inpaint(Wan2.1 VACE)",
         "description": "Video Inpaint(Wan2.1 VACE) blueprint",
@@ -2321,6 +2900,87 @@
         ]
       },
       {
+        "name": "video_inpainting_wan2_1_vace",
+        "title": "Video Inpainting (Wan2.1 VACE)",
+        "description": "Video Inpainting (Wan2.1 VACE) blueprint",
+        "mediaType": "video",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "reference_image_1",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "value",
+            "type": "INT"
+          },
+          {
+            "name": "value_1",
+            "type": "INT"
+          },
+          {
+            "name": "length",
+            "type": "INT"
+          },
+          {
+            "name": "seed",
+            "type": "INT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "clip_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "value_2",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "lora_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "text_1",
+            "type": "STRING"
+          },
+          {
+            "name": "expand",
+            "type": "INT"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "VIDEO",
+            "type": "VIDEO"
+          }
+        ],
+        "models": [
+          "Wan21_CausVid_14B_T2V_lora_rank32.safetensors",
+          "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+          "wan_2.1_vae.safetensors",
+          "wan2.1_vace_14B_fp16.safetensors"
+        ]
+      },
+      {
         "name": "video_upscale_gan_x4",
         "title": "Video Upscale(GAN x4)",
         "description": "Video Upscale(GAN x4) blueprint",
@@ -2350,56 +3010,106 @@
   },
   {
     "moduleName": "default",
-    "title": "Text generation",
+    "title": "Video Tools",
     "blueprints": [
       {
-        "name": "image_captioning_gemini",
-        "title": "Image Captioning(Gemini)",
-        "description": "Image Captioning(Gemini) blueprint",
+        "name": "frame_interpolation",
+        "title": "Frame Interpolation",
+        "description": "Frame Interpolation blueprint",
         "mediaType": "image",
         "mediaSubtype": "webp",
         "inputs": [
           {
-            "name": "images",
-            "type": "IMAGE"
+            "name": "video",
+            "type": "VIDEO"
           },
           {
-            "name": "prompt",
-            "type": "STRING"
+            "name": "value",
+            "type": "INT"
           },
           {
-            "name": "model",
+            "name": "value_1",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "model_name",
             "type": "COMBO"
           }
         ],
         "outputs": [
           {
-            "name": "STRING",
-            "type": "STRING"
+            "name": "VIDEO_1",
+            "type": "VIDEO"
+          },
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "film_net_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "get_any_video_frame",
+        "title": "Get Any Video Frame",
+        "description": "Get Any Video Frame blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "value",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
           }
         ],
         "models": []
       },
       {
-        "name": "prompt_enhance",
-        "title": "Prompt Enhance",
-        "description": "Prompt Enhance blueprint",
-        "mediaType": "image",
+        "name": "merge_videos",
+        "title": "Merge Videos",
+        "description": "Merge Videos blueprint",
+        "mediaType": "video",
         "mediaSubtype": "webp",
         "inputs": [
           {
-            "name": "prompt",
-            "type": "STRING"
+            "name": "clip_to_resize",
+            "type": "VIDEO"
           },
           {
-            "name": "images",
-            "type": "IMAGE"
+            "name": "base_video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "pad_second_video",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "interpolation",
+            "type": "COMBO"
+          },
+          {
+            "name": "padding_color",
+            "type": "COMBO"
+          },
+          {
+            "name": "drop_audio",
+            "type": "BOOLEAN"
           }
         ],
         "outputs": [
           {
-            "name": "STRING",
-            "type": "STRING"
+            "name": "merged_video",
+            "type": "VIDEO"
           }
         ],
         "models": []
@@ -2431,45 +3141,7 @@
           }
         ],
         "models": []
-      }
-    ]
-  },
-  {
-    "moduleName": "default",
-    "title": "3D",
-    "blueprints": [
-      {
-        "name": "image_to_model_hunyuan3d_2_1",
-        "title": "Image to Model (Hunyuan3d 2.1)",
-        "description": "Image to Model (Hunyuan3d 2.1) blueprint",
-        "mediaType": "image",
-        "mediaSubtype": "webp",
-        "inputs": [
-          {
-            "name": "image",
-            "type": "IMAGE"
-          },
-          {
-            "name": "ckpt_name",
-            "type": "COMBO"
-          }
-        ],
-        "outputs": [
-          {
-            "name": "MESH",
-            "type": "MESH"
-          }
-        ],
-        "models": [
-          "hunyuan_3d_v2.1.safetensors"
-        ]
-      }
-    ]
-  },
-  {
-    "moduleName": "default",
-    "title": "Video Tools",
-    "blueprints": [
+      },
       {
         "name": "video_stitch",
         "title": "Video Stitch",
@@ -2506,6 +3178,807 @@
           {
             "name": "VIDEO",
             "type": "VIDEO"
+          }
+        ],
+        "models": []
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
+    "title": "3D",
+    "blueprints": [
+      {
+        "name": "geometry_estimation_moge",
+        "title": "Geometry Estimation (MoGe)",
+        "description": "Geometry Estimation (MoGe) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "source_image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "inference_resolution",
+            "type": "INT"
+          },
+          {
+            "name": "inference_batch_size",
+            "type": "INT"
+          },
+          {
+            "name": "mesh_frame_index",
+            "type": "INT"
+          },
+          {
+            "name": "mesh_decimation",
+            "type": "INT"
+          },
+          {
+            "name": "mesh_gap_threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "mesh_texture",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "moge_model",
+            "type": "COMBO"
+          },
+          {
+            "name": "switch",
+            "type": "BOOLEAN"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "mesh",
+            "type": "MESH"
+          },
+          {
+            "name": "normal_opengl",
+            "type": "IMAGE"
+          },
+          {
+            "name": "normal_directx",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "moge_2_vitl_normal_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "image_to_model_hunyuan3d_2_1",
+        "title": "Image to 3D Model (Hunyuan3d 2.1)",
+        "description": "Image to 3D Model (Hunyuan3d 2.1) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "MESH",
+            "type": "MESH"
+          }
+        ],
+        "models": [
+          "hunyuan_3d_v2.1.safetensors"
+        ]
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
+    "title": "Conditioning & Preprocessors",
+    "blueprints": [
+      {
+        "name": "image_depth_estimation_lotus_depth",
+        "title": "Image Depth Estimation (Lotus Depth)",
+        "description": "Image Depth Estimation (Lotus Depth) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "pixels",
+            "type": "IMAGE"
+          },
+          {
+            "name": "sigma",
+            "type": "FLOAT"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "vae_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          }
+        ],
+        "models": [
+          "lotus-depth-d-v1-1.safetensors",
+          "vae-ft-mse-840000-ema-pruned.safetensors"
+        ]
+      },
+      {
+        "name": "image_depth_estimation_moge",
+        "title": "Image Depth Estimation (MoGe)",
+        "description": "Image Depth Estimation (MoGe) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "source_image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "inference_resolution",
+            "type": "INT"
+          },
+          {
+            "name": "inference_batch_size",
+            "type": "INT"
+          },
+          {
+            "name": "moge_model",
+            "type": "COMBO"
+          },
+          {
+            "name": "switch",
+            "type": "BOOLEAN"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "depth_colored",
+            "type": "IMAGE"
+          },
+          {
+            "name": "depth",
+            "type": "IMAGE"
+          },
+          {
+            "name": "MASK",
+            "type": "MASK"
+          }
+        ],
+        "models": [
+          "moge_2_vitl_normal_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "image_face_detection_mediapipe",
+        "title": "Image Face Detection (Mediapipe)",
+        "description": "Image Face Detection (Mediapipe) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "face_landmarker",
+            "type": "FACE_LANDMARKER"
+          },
+          {
+            "name": "detector_variant",
+            "type": "COMBO"
+          },
+          {
+            "name": "num_faces",
+            "type": "INT"
+          },
+          {
+            "name": "regions.face_oval",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.lips",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.left_eye",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.right_eye",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.irises",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "face_landmarks",
+            "type": "FACE_LANDMARKS"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          },
+          {
+            "name": "MASK_1",
+            "type": "MASK"
+          }
+        ],
+        "models": [
+          "mediapipe_face_fp32.safetensors"
+        ]
+      },
+      {
+        "name": "image_segmentation_sam3",
+        "title": "Image Segmentation (SAM3)",
+        "description": "Image Segmentation (SAM3) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "image",
+            "type": "IMAGE"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          },
+          {
+            "name": "positive_coords",
+            "type": "STRING"
+          },
+          {
+            "name": "negative_coords",
+            "type": "STRING"
+          },
+          {
+            "name": "threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "refine_iterations",
+            "type": "INT"
+          },
+          {
+            "name": "individual_masks",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "masks",
+            "type": "MASK"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          }
+        ],
+        "models": [
+          "sam3.1_multiplex_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "image_to_pose_map_sdpose_multi_person",
+        "title": "Image to Pose Map (SDPose Multi-Person)",
+        "description": "Image to Pose Map (SDPose Multi-Person) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "input",
+            "type": "IMAGE,MASK"
+          },
+          {
+            "name": "resize_type.longer_size",
+            "type": "INT"
+          },
+          {
+            "name": "scale_method",
+            "type": "COMBO"
+          },
+          {
+            "name": "draw_body",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_hands",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_face",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_feet",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "stick_width",
+            "type": "INT"
+          },
+          {
+            "name": "face_point_size",
+            "type": "INT"
+          },
+          {
+            "name": "score_threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "class_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "max_detections",
+            "type": "INT"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "keypoints",
+            "type": "POSE_KEYPOINT"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          }
+        ],
+        "models": [
+          "sdpose_wholebody_fp16.safetensors",
+          "rt_detr_v4-x-hgnet_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "image_to_pose_map_sdpose_ood",
+        "title": "Image to Pose Map (SDPose-OOD)",
+        "description": "Image to Pose Map (SDPose-OOD) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "input",
+            "type": "IMAGE,MASK"
+          },
+          {
+            "name": "resize_type.longer_size",
+            "type": "INT"
+          },
+          {
+            "name": "scale_method",
+            "type": "COMBO"
+          },
+          {
+            "name": "draw_body",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_hands",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_face",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_feet",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "stick_width",
+            "type": "INT"
+          },
+          {
+            "name": "face_point_size",
+            "type": "INT"
+          },
+          {
+            "name": "score_threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "keypoints",
+            "type": "POSE_KEYPOINT"
+          }
+        ],
+        "models": [
+          "sdpose_wholebody_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "video_depth_estimation_moge",
+        "title": "Video Depth Estimation (MoGe)",
+        "description": "Video Depth Estimation (MoGe) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "inference_resolution",
+            "type": "INT"
+          },
+          {
+            "name": "inference_batch_size",
+            "type": "INT"
+          },
+          {
+            "name": "moge_model",
+            "type": "COMBO"
+          },
+          {
+            "name": "switch",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "depth_colored",
+            "type": "IMAGE"
+          },
+          {
+            "name": "depth",
+            "type": "IMAGE"
+          },
+          {
+            "name": "MASK",
+            "type": "MASK"
+          }
+        ],
+        "models": [
+          "moge_2_vitl_normal_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "video_face_detection_mediapipe",
+        "title": "Video Face Detection (Mediapipe)",
+        "description": "Video Face Detection (Mediapipe) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "switch",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "start_time",
+            "type": "FLOAT"
+          },
+          {
+            "name": "duration",
+            "type": "FLOAT"
+          },
+          {
+            "name": "face_landmarker_1",
+            "type": "FACE_LANDMARKER"
+          },
+          {
+            "name": "detector_variant_1",
+            "type": "COMBO"
+          },
+          {
+            "name": "num_faces_1",
+            "type": "INT"
+          },
+          {
+            "name": "regions.face_oval",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.lips",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.left_eye",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.right_eye_1",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "regions.irises_1",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "model_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "MASK_1",
+            "type": "MASK"
+          },
+          {
+            "name": "bboxes_1",
+            "type": "BOUNDING_BOX"
+          },
+          {
+            "name": "face_landmarks",
+            "type": "FACE_LANDMARKS"
+          }
+        ],
+        "models": [
+          "mediapipe_face_fp32.safetensors"
+        ]
+      },
+      {
+        "name": "video_segmentation_sam3",
+        "title": "Video Segmentation (SAM3)",
+        "description": "Video Segmentation (SAM3) blueprint",
+        "mediaType": "audio",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "video",
+            "type": "VIDEO"
+          },
+          {
+            "name": "text",
+            "type": "STRING"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          },
+          {
+            "name": "positive_coords",
+            "type": "STRING"
+          },
+          {
+            "name": "negative_coords",
+            "type": "STRING"
+          },
+          {
+            "name": "threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "refine_iterations",
+            "type": "INT"
+          },
+          {
+            "name": "individual_masks",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "masks",
+            "type": "MASK"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          },
+          {
+            "name": "audio",
+            "type": "AUDIO"
+          },
+          {
+            "name": "fps",
+            "type": "FLOAT"
+          }
+        ],
+        "models": [
+          "sam3.1_multiplex_fp16.safetensors"
+        ]
+      },
+      {
+        "name": "video_to_pose_map_sdpose_multi_person",
+        "title": "Video to Pose Map (SDPose Multi-Person)",
+        "description": "Video to Pose Map (SDPose Multi-Person) blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "resize_type.longer_size",
+            "type": "INT"
+          },
+          {
+            "name": "scale_method",
+            "type": "COMBO"
+          },
+          {
+            "name": "draw_body",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_hands",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_face",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "draw_feet",
+            "type": "BOOLEAN"
+          },
+          {
+            "name": "stick_width",
+            "type": "INT"
+          },
+          {
+            "name": "face_point_size",
+            "type": "INT"
+          },
+          {
+            "name": "score_threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "threshold",
+            "type": "FLOAT"
+          },
+          {
+            "name": "class_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "max_detections",
+            "type": "INT"
+          },
+          {
+            "name": "ckpt_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "unet_name",
+            "type": "COMBO"
+          },
+          {
+            "name": "video",
+            "type": "VIDEO"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "IMAGE",
+            "type": "IMAGE"
+          },
+          {
+            "name": "keypoints",
+            "type": "POSE_KEYPOINT"
+          },
+          {
+            "name": "bboxes",
+            "type": "BOUNDING_BOX"
+          },
+          {
+            "name": "audio",
+            "type": "AUDIO"
+          },
+          {
+            "name": "fps",
+            "type": "FLOAT"
+          }
+        ],
+        "models": [
+          "sdpose_wholebody_fp16.safetensors",
+          "rt_detr_v4-x-hgnet_fp16.safetensors"
+        ]
+      }
+    ]
+  },
+  {
+    "moduleName": "default",
+    "title": "Text Tools",
+    "blueprints": [
+      {
+        "name": "prompt_enhance",
+        "title": "Prompt Enhance",
+        "description": "Prompt Enhance blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "prompt",
+            "type": "STRING"
+          },
+          {
+            "name": "images",
+            "type": "IMAGE"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "STRING",
+            "type": "STRING"
+          }
+        ],
+        "models": []
+      },
+      {
+        "name": "select_per_line_text_by_index",
+        "title": "Select Per-Line Text by Index",
+        "description": "Select Per-Line Text by Index blueprint",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "inputs": [
+          {
+            "name": "text_per_line",
+            "type": "STRING"
+          },
+          {
+            "name": "index",
+            "type": "INT"
+          }
+        ],
+        "outputs": [
+          {
+            "name": "selected_line",
+            "type": "STRING"
           }
         ],
         "models": []
