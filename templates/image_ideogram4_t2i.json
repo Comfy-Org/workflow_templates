@@ -241,8 +241,8 @@
         530
       ],
       "size": [
-        650,
-        1130
+        640,
+        980
       ],
       "flags": {},
       "order": 2,
@@ -252,7 +252,7 @@
       "title": "Note: Ideogram 4.0",
       "properties": {},
       "widgets_values": [
-        "## Ideogram 4.0\n\n### About the model\n\nIdeogram 4.0 is an open-weight text-to-image foundation model (~9.3B parameters). It uses a **single-stream Diffusion Transformer (DiT)**: text and image tokens are processed in one shared sequence (34 layers). A frozen **Qwen3-VL-8B** encoder supplies text features (13 intermediate layers concatenated). A frozen **KL VAE** decodes latents to pixels.\n\nThe model is trained on **structured JSON captions** (scene summary, style block, background, and optional per-object descriptions with bounding boxes and hex color palettes). Official inference validates prompts against that schema. Guidance uses **flow-matching** with **asymmetric classifier-free guidance** (the unconditional pass drops text tokens)—not a separate negative prompt string.\n\n**Practical strengths:** flexible resolution (about **256–2048 px per side**), layout via normalized bounding boxes `[y_min, x_min, y_max, x_max]` on a 0–1000 grid, palette control with hex colors, and strong in-image text rendering when described in JSON.\n\n**In this workflow:** the fp8 checkpoint is used with ComfyUI’s Ideogram 4 nodes. Default sampling is the turbo preset (**12 steps**). Connect your final prompt string to the subgraph **prompt** input.\n\n---\n\n### How to build prompts here\n\nThis template supports **three** ways to produce the JSON the model expects:\n\n**(a) Raw input**: Paste or type directly into the subgraph **CLIP Text Encode** prompt (or the exposed **prompt** widget). You may use plain natural language; ComfyUI can accept that, but **structured JSON** (as in the subgraph default) gives the most predictable layout and style control.\n\n**(b) Model-assisted (LLM)**: Enable the **LLM Prompt Builder** group (Gemma 4). Enter a short idea in **user_prompt**; the system prompt asks Gemma to emit schema-compliant JSON. Preview the result, then copy or route it to the image subgraph prompt.\n---\n\n### Node builder example (matches the default portrait prompt)\n\nThe manual builder is pre-filled for the surreal smoke portrait used in the main subgraph: icy blue background, black turtleneck, visible lower face with red lips, and a large smoke mass over the head. Adjust bbox and colors to match your canvas; bbox uses **0–1000** coordinates, origin top-left, order **`[y_min, x_min, y_max, x_max]`**.\n\nThree **Ideogram4Element** nodes are chained (background → foreground order). Style palette swatches feed **Ideogram4Caption**; each element has its own color inputs where connected."
+        "### About the model\n\nThe model is trained on **structured JSON captions** (scene summary, style block, background, and optional per-object descriptions with bounding boxes and hex color palettes). Official inference validates prompts against that schema. Guidance uses **flow-matching** with **asymmetric classifier-free guidance** (the unconditional pass drops text tokens)—not a separate negative prompt string.\n\n**Practical strengths:** flexible resolution (about **256–2048 px per side**), layout via normalized bounding boxes `[y_min, x_min, y_max, x_max]` on a 0–1000 grid, palette control with hex colors, and strong in-image text rendering when described in JSON.\n\n**NOTE: If you see \"Image blocked by safety filter\" it is because of safety training in the model itself, ComfyUI does not have any safety filter.**\n---\n\n### How to build prompts here\n\nThis template supports **three** ways to produce the JSON the model expects:\n\n**(a) Raw input**: Paste or type directly into the subgraph **CLIP Text Encode** prompt (or the exposed **prompt** widget). You may use plain natural language, but **structured JSON** (as in the subgraph default) gives the most predictable layout and style control.\n\n**(b) Model-assisted (LLM)**: Enable the **LLM Prompt Builder** group (Gemma 4). Enter a short idea in **user_prompt**; the system prompt asks Gemma to emit schema-compliant JSON. Preview the result, then copy or route it to the image subgraph prompt."
       ],
       "color": "#222",
       "bgcolor": "#000"
@@ -3007,10 +3007,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.2966531771224403,
+      "scale": 0.3957227445373635,
       "offset": [
-        -3888.0513725192986,
-        319.97695757620284
+        -4383.004388328134,
+        184.91757934658142
       ]
     },
     "frontendVersion": "1.44.19",
