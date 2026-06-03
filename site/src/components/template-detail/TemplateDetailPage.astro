@@ -10,6 +10,7 @@ import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
+import { isVideoFile } from '../../lib/media-utils';
 import { featureFlags } from '../../config/featureFlags';
 
 interface Props {
@@ -46,6 +47,10 @@ const authorProfileUrl = data.username
   ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
   : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
+const hasNaturalAspectMedia =
+  !!data.detailImages?.length ||
+  data.mediaType === 'video' ||
+  (thumbnails[0] ? isVideoFile(thumbnails[0]) : false);
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const cloudTemplateId = data.shareId || data.name;
 const downloadUrl = data.shareId
@@ -103,8 +108,8 @@ function formatRelativeDate(dateStr: string): string {
                 title={data.title || data.name}
                 variant={data.thumbnailVariant}
                 mediaSubtype={data.mediaSubtype}
-                class={data.detailImages?.length ? 'w-full' : 'w-full aspect-square'}
-                naturalAspect={!!data.detailImages?.length}
+                class={hasNaturalAspectMedia ? 'w-full' : 'w-full aspect-square'}
+                naturalAspect={hasNaturalAspectMedia}
                 loading="eager"
                 fetchpriority="high"
                 sizes="(min-width: 1024px) 60vw, 100vw"
