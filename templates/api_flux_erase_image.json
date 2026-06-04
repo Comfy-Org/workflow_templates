@@ -1,0 +1,251 @@
+{
+  "id": "437d157e-2504-4275-81c7-df5594af9af0",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 20,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "SaveImage",
+      "pos": [
+        480,
+        -60
+      ],
+      "size": [
+        400,
+        500
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 16
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Flux_erase_image"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "ImageCompare",
+      "pos": [
+        940,
+        -50
+      ],
+      "size": [
+        440,
+        480
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 20
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 17
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 7,
+      "type": "MarkdownNote",
+      "pos": [
+        -1070,
+        -120
+      ],
+      "size": [
+        600,
+        960
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Flux Erase Image",
+      "properties": {},
+      "widgets_values": [
+        "## FLUX Erase Image (BFL API)\n\nRemoves whatever you mask and reconstructs the background behind it. No prompt is required — only an image and a binary mask.\n\n---\n\n### Quick start in this graph\n\n1. **Load Image** — Click the widget, upload your photo (min **256×256**). The same node outputs **IMAGE** and **MASK**.\n2. **Paint the mask** — On **Load Image**, open the mask editor (right‑click the node → [mask editor](https://docs.comfy.org/interface/maskeditor)). Paint over everything you want removed (people, text, cables, logos, shadows you want gone).\n   - Alternative: use a separate black/white mask via **Load Image (as Mask)**, then wire that into **Flux Erase Image**.\n   - Convention matches the API: **white = erase**, **black = keep**. Mask is auto-resized to match the image.\n3. **Flux Erase Image** — `dilate_pixels` (default **10**, range **0–25**) expands the mask slightly so edges, hair, and soft boundaries are fully covered. Increase to **15–20** for fuzzy edges; lower if you are erasing near important detail.\n4. **Queue Prompt** \n5. **Save Image** \n---\n\n### Mask tips\n\n- Cover the **whole** object plus any shadow/reflection you want removed; a tight mask often leaves a halo — raise `dilate_pixels`.\n- Best quality is near **~1 MP** and aspect ratios between **1:2** and **2:1** (per BFL guidance); very unusual sizes may look worse.\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 8,
+      "type": "FluxEraseNode",
+      "pos": [
+        150,
+        -60
+      ],
+      "size": [
+        270,
+        192
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 18
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            16,
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FluxEraseNode"
+      },
+      "widgets_values": [
+        10
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 10,
+      "type": "LoadImage",
+      "pos": [
+        -310,
+        -60
+      ],
+      "size": [
+        320,
+        490
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            18,
+            20
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "image": "6391e828dbba3d840e66cce1031cb5c6aa4012153668b64d2a7a18296b2c6799.png [input]"
+      },
+      "widgets_values": [
+        "city_street_young_man.png",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      16,
+      8,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      17,
+      8,
+      0,
+      4,
+      1,
+      "IMAGE"
+    ],
+    [
+      18,
+      10,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      10,
+      1,
+      8,
+      1,
+      "MASK"
+    ],
+    [
+      20,
+      10,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Right-Click menu → Open in Mask Editor → Draw Mask",
+      "bounding": [
+        -420,
+        -140,
+        530,
+        590
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.46382567503535904,
+      "offset": [
+        1792.108198877168,
+        1097.545324408336
+      ]
+    },
+    "frontendVersion": "1.45.14",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
