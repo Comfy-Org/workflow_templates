@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-sync-mcp-index.py — 同步 index.json 的模板列表到 index.mcp.json
+sync-mcp-index.py — Synchronize template list from index.json to index.mcp.json
 
-功能:
-  - 新增模板 → 从 index.json 抄 description，自动推断 task/model/io
-  - 已删除模板 → 移除
-  - 已有模板 → 完全保留（不覆盖 description/io）
-  - 保持 index.json 的分组结构
+Features:
+  - New templates → copy description from index.json, auto-infer task/model/io
+  - Deleted templates → remove
+  - Existing templates → fully preserved (does not overwrite description/io)
+  - Preserves index.json group structure
 
-用法:
-  python3 scripts/sync-mcp-index.py              # 同步更新
-  python3 scripts/sync-mcp-index.py --check      # 只检查差异不写入
+Usage:
+  python3 scripts/sync-mcp-index.py              # sync and write
+  python3 scripts/sync-mcp-index.py --check      # dry-run, only print diff
 
-依赖:
-  - templates/index.json（源数据）
-  - templates/index.mcp.json（目标文件，不存在则从头生成）
-  - templates/*.json（工作流 JSON，用于节点类型扫描）
+Dependencies:
+  - templates/index.json (source data)
+  - templates/index.mcp.json (target file, created from scratch if absent)
+  - templates/*.json (workflow JSONs, scanned for node types)
 """
 
 import json, os, sys, time
@@ -27,7 +27,7 @@ TEMPLATES_DIR = WORKFLOW_DIR / "templates"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 OUTPUT_FILE = TEMPLATES_DIR / "index.mcp.json"
 
-# ── 模型名 → 模型特征描述 ──────────────────────────────────────
+# ── Model name → description mapping ──────────────────────────────────────
 MODEL_DESC_MAP: dict[str, str] = {
     "flux": "high-quality text-to-image generation model",
     "flux1": "high-quality text-to-image generation model",
@@ -98,7 +98,7 @@ MODEL_DESC_MAP: dict[str, str] = {
 
 
 def extract_model_name(name: str, index_models: list[str]) -> str:
-    """提取模型名"""
+    """Extract a recognized model name from template metadata or file name"""
     if index_models:
         return index_models[0]
     name_l = name.lower()
@@ -123,7 +123,7 @@ def get_model_desc(model: str) -> str:
     return "generation model"
 
 
-# ── Task / IO 推断（仅用于新增模板） ──────────────────────────
+# ── Task / IO inference (for new templates only) ──────────────────────────
 
 
 def scan_workflow_nodes(name: str) -> list[str]:
@@ -280,7 +280,7 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
 
 
 def auto_description(name: str, task: str, model: str, is_api: bool) -> str:
-    """为新增模板生成一个简单的占位 description（从 index.json 抄 + 兜底生成）"""
+    """Generate a simple placeholder description for new templates"""
     name_l = name.lower()
     model_desc = get_model_desc(model)
     model_phrase = f" using {model}" if model else ""
@@ -297,24 +297,24 @@ def auto_description(name: str, task: str, model: str, is_api: bool) -> str:
     return desc
 
 
-# ── 主同步逻辑 ────────────────────────────────────────────────
+# ── Main sync logic ────────────────────────────────────────────────
 
 
 def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
     """
-    同步 index.json → index.mcp.json
-    返回: (new_data, added, removed, warnings)
+    Sync index.json to index.mcp.json
+    Returns: (new_data, added, removed, warnings)
     """
     with open(INDEX_FILE) as f:
         index_data = json.load(f)
 
-    # 读当前 mcp.json
+    # Read current mcp.json
     current_data: list[dict] = []
     if OUTPUT_FILE.exists():
         with open(OUTPUT_FILE) as f:
             current_data = json.load(f)
 
-    # 构建现有模板 lookup: name → (group_index, template_data)
+    # Build existing template lookup: name → (group_index, template_data)
     existing: dict[str, dict] = {}
     for g in current_data:
         for t in g.get("templates", []):
@@ -325,19 +325,19 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
     removed: list[str] = []
     warnings: list[str] = []
 
-    # 构建 index.json 中所需模板名集合
+    # Build the set of all template names in index.json
     index_names: set[str] = set()
     for entry in index_data:
         for t in entry.get("templates", []):
             index_names.add(t["name"])
 
-    # 找到被删除的模板
+    # Find removed templates
     for g in current_data:
         for t in g.get("templates", []):
             if t["name"] not in index_names:
                 removed.append(t["name"])
 
-    # 遍历 index.json 分组构建输出
+    # Walk index.json groups to build output
     for entry in index_data:
         new_entry = {
             "moduleName": entry.get("moduleName", ""),
@@ -354,20 +354,20 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
         for tpl in entry.get("templates", []):
             name = tpl["name"]
             if name in existing:
-                # 复用已有数据
+                # Reuse existing entry
                 existing_entry = existing[name]
-                # 更新 metadata（usage/recommend/freshness 可能变了）
+                # Update metadata (usage/recommend/freshness may have changed)
                 existing_entry["usage"] = tpl.get("usage", 0)
                 existing_entry["recommend"] = tpl.get("recommend", 0)
                 existing_entry["freshness"] = tpl.get("freshness", "")
                 new_entry["templates"].append(existing_entry)
             else:
-                # 新增模板：从 index.json 抄 + 自动推断
+                # New template: copy from index.json + auto-infer
                 tags = tpl.get("tags", [])
                 models = tpl.get("models", [])
                 is_api = "API" in tags or (not tpl.get("openSource", True) and "API" in str(tpl.get("tags", "")))
 
-                # 优先使用 index.json 已有的 description
+                # Prefer existing index.json description
                 desc = tpl.get("description", "")
                 if not desc:
                     model = extract_model_name(name, models)
@@ -423,7 +423,7 @@ def main() -> None:
     with open(OUTPUT_FILE, "w") as f:
         json.dump(new_data, f, indent=2)
 
-    print(f"✅ {OUTPUT_FILE}")
+    print(f"Written: {OUTPUT_FILE}")
     print(f"   Total: {total} templates in {len(new_data)} groups")
     if added:
         print(f"   Added: {len(added)}")
