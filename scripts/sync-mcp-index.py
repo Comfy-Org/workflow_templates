@@ -27,6 +27,15 @@ TEMPLATES_DIR = WORKFLOW_DIR / "templates"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 OUTPUT_FILE = TEMPLATES_DIR / "index.mcp.json"
 
+# ── Models capabilities file ───────────────────────────────────────────────
+MODELS_CAP_FILE = WORKFLOW_DIR / "scripts" / "models_capabilities.json"
+
+try:
+    with open(MODELS_CAP_FILE) as f:
+        MODELS_CAP = json.load(f)
+except Exception:
+    MODELS_CAP = {}
+
 # ── Model name → description mapping ──────────────────────────────────────
 MODEL_DESC_MAP: dict[str, str] = {
     "flux": "high-quality text-to-image generation model",
@@ -97,8 +106,22 @@ MODEL_DESC_MAP: dict[str, str] = {
 }
 
 
+def resolve_model(name: str, index_models: list[str]) -> str:
+    """Resolve the canonical model name for a template, checking models_capabilities.json first."""
+    if index_models:
+        for m in index_models:
+            if m in MODELS_CAP:
+                return m
+        return index_models[0]
+    # Fallback: match by template name substring
+    name_l = name.lower()
+    candidates = [(len(k), k) for k in sorted(MODELS_CAP, reverse=True) if k.lower() in name_l]
+    if candidates:
+        return max(candidates, key=lambda x: x[0])[1]
+    return ""
+
+
 def extract_model_name(name: str, index_models: list[str]) -> str:
-    """Extract a recognized model name from template metadata or file name"""
     if index_models:
         return index_models[0]
     name_l = name.lower()
@@ -353,31 +376,33 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
         group_type = entry.get("type", "")
         for tpl in entry.get("templates", []):
             name = tpl["name"]
+            # Resolve model for both existing and new templates
+            tags = tpl.get("tags", [])
+            models = tpl.get("models", [])
+            is_api = "API" in tags or (not tpl.get("openSource", True) and "API" in str(tpl.get("tags", "")))
+            model = resolve_model(name, models) or extract_model_name(name, models)
+
+            # Get model capabilities from models_capabilities.json
+            model_info = MODELS_CAP.get(model) or MODELS_CAP.get(models[0]) if models else None
+            cap_tags = model_info.get("capabilities", []) if model_info else []
+
             if name in existing:
-                # Reuse existing entry
                 existing_entry = existing[name]
-                # Update metadata (usage/recommend/freshness may have changed)
+                # Update metadata
                 existing_entry["usage"] = tpl.get("usage", 0)
                 existing_entry["recommend"] = tpl.get("recommend", 0)
                 existing_entry["freshness"] = tpl.get("freshness", "")
+                existing_entry["model"] = model
+                if cap_tags:
+                    existing_entry["capabilities"] = cap_tags
                 new_entry["templates"].append(existing_entry)
             else:
                 # New template: copy from index.json + auto-infer
-                tags = tpl.get("tags", [])
-                models = tpl.get("models", [])
-                is_api = "API" in tags or (not tpl.get("openSource", True) and "API" in str(tpl.get("tags", "")))
-
-                # Prefer existing index.json description
-                desc = tpl.get("description", "")
-                if not desc:
-                    model = extract_model_name(name, models)
-                    task = infer_task(name, group_type)
-                    desc = auto_description(name, task, model, is_api)
+                desc = tpl.get("description", "") or auto_description(name, infer_task(name, group_type), model, is_api)
 
                 node_types = scan_workflow_nodes(name)
                 task = infer_task(name, group_type)
                 task_type = infer_task_type(name)
-                model = extract_model_name(name, models)
                 io_info = infer_io(task_type, node_types)
 
                 new_tpl = {
@@ -393,6 +418,8 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
                     "description": desc,
                     "io": io_info,
                 }
+                if cap_tags:
+                    new_tpl["capabilities"] = cap_tags
                 new_entry["templates"].append(new_tpl)
                 added.append(name)
 
