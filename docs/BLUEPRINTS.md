@@ -138,18 +138,9 @@ The `blueprints/index.json` file contains extracted metadata for UI display and 
       {
         "name": "text_to_image_flux_1_dev",
         "title": "Text to Image (Flux.1 Dev)",
-        "description": "Text to Image (Flux.1 Dev) blueprint",
+        "description": "Generates images from prompts using FLUX.1 [dev]...",
         "mediaType": "image",
-        "mediaSubtype": "webp",
-        "inputs": [
-          {"name": "text", "type": "STRING"},
-          {"name": "width", "type": "INT"},
-          {"name": "height", "type": "INT"}
-        ],
-        "outputs": [
-          {"name": "IMAGE", "type": "IMAGE"}
-        ],
-        "models": ["ae.safetensors", "flux1-dev.safetensors"]
+        "mediaSubtype": "webp"
       }
     ]
   }

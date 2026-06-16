@@ -44,33 +44,17 @@ def extract_metadata(blueprint_data: dict) -> dict:
     
     subgraph = subgraphs[0]
     name = subgraph.get("name", "Unknown")
-    
-    # Extract inputs
-    inputs = []
-    for inp in subgraph.get("inputs", []):
-        inputs.append({
-            "name": inp.get("name", ""),
-            "type": inp.get("type", ""),
-        })
-    
-    # Extract outputs
-    outputs = []
-    for out in subgraph.get("outputs", []):
-        outputs.append({
-            "name": out.get("name", ""),
-            "type": out.get("type", ""),
-        })
-    
-    # Determine media type from outputs
-    output_types = [o["type"] for o in outputs]
+    description = subgraph.get("description", "").strip()
+    if not description:
+        description = f"{name} blueprint"
+
+    # Infer media type from subgraph output slot types
+    output_types = [out.get("type", "") for out in subgraph.get("outputs", [])]
     if "IMAGE" in output_types:
         media_type = "image"
     elif "VIDEO" in output_types or "LATENT" in output_types:
         # Many video blueprints output latents
-        if "video" in name.lower():
-            media_type = "video"
-        else:
-            media_type = "image"
+        media_type = "video" if "video" in name.lower() else "image"
     elif "AUDIO" in output_types:
         media_type = "audio"
     else:
@@ -110,24 +94,12 @@ def extract_metadata(blueprint_data: dict) -> dict:
         else:
             category = "Other"
     
-    # Extract model info from nodes
-    models = []
-    for node in subgraph.get("nodes", []):
-        node_models = node.get("properties", {}).get("models", [])
-        for m in node_models:
-            model_name = m.get("name", "")
-            if model_name and model_name not in models:
-                models.append(model_name)
-    
     return {
         "title": name,
-        "description": f"{name} blueprint",
+        "description": description,
         "category": category,
         "mediaType": media_type,
         "mediaSubtype": "webp",
-        "inputs": inputs,
-        "outputs": outputs,
-        "models": models[:5],  # Limit to first 5 models
     }
 
 
