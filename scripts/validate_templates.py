@@ -613,7 +613,7 @@ def main():
     # Find all index*.json files (excluding schema and logo index)
     index_files = []
     for file_path in templates_dir.glob('index*.json'):
-        if file_path.name not in ('index.schema.json', 'index_logo.json'):
+        if file_path.name not in ('index.schema.json', 'index_logo.json', 'index.mcp.json'):
             index_files.append(file_path)
     
     if not index_files:
