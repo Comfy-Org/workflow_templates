@@ -44,33 +44,22 @@ def extract_metadata(blueprint_data: dict) -> dict:
     
     subgraph = subgraphs[0]
     name = subgraph.get("name", "Unknown")
-    
-    # Extract inputs
-    inputs = []
-    for inp in subgraph.get("inputs", []):
-        inputs.append({
-            "name": inp.get("name", ""),
-            "type": inp.get("type", ""),
-        })
-    
-    # Extract outputs
-    outputs = []
-    for out in subgraph.get("outputs", []):
-        outputs.append({
-            "name": out.get("name", ""),
-            "type": out.get("type", ""),
-        })
-    
-    # Determine media type from outputs
-    output_types = [o["type"] for o in outputs]
-    if "IMAGE" in output_types:
+    description_raw = subgraph.get("description")
+    description = description_raw.strip() if isinstance(description_raw, str) else ""
+    if not description:
+        description = f"{name} blueprint"
+
+    # Infer media type from subgraph slot types
+    output_types = {str(out.get("type", "")).upper() for out in subgraph.get("outputs", [])}
+    input_types = {str(inp.get("type", "")).upper() for inp in subgraph.get("inputs", [])}
+    name_lower = name.lower()
+
+    if "VIDEO" in output_types or "VIDEO" in input_types:
+        media_type = "video"
+    elif "LATENT" in output_types:
+        media_type = "video" if "video" in name_lower else "image"
+    elif "IMAGE" in output_types:
         media_type = "image"
-    elif "VIDEO" in output_types or "LATENT" in output_types:
-        # Many video blueprints output latents
-        if "video" in name.lower():
-            media_type = "video"
-        else:
-            media_type = "image"
     elif "AUDIO" in output_types:
         media_type = "audio"
     else:
@@ -110,24 +99,12 @@ def extract_metadata(blueprint_data: dict) -> dict:
         else:
             category = "Other"
     
-    # Extract model info from nodes
-    models = []
-    for node in subgraph.get("nodes", []):
-        node_models = node.get("properties", {}).get("models", [])
-        for m in node_models:
-            model_name = m.get("name", "")
-            if model_name and model_name not in models:
-                models.append(model_name)
-    
     return {
         "title": name,
-        "description": f"{name} blueprint",
+        "description": description,
         "category": category,
         "mediaType": media_type,
         "mediaSubtype": "webp",
-        "inputs": inputs,
-        "outputs": outputs,
-        "models": models[:5],  # Limit to first 5 models
     }
 
 
