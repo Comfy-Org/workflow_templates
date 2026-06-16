@@ -18,7 +18,10 @@ Dependencies:
   - templates/*.json (workflow JSONs, scanned for node types)
 """
 
-import json, os, sys, time
+import json
+import os
+import sys
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -31,10 +34,12 @@ OUTPUT_FILE = TEMPLATES_DIR / "index.mcp.json"
 MODELS_CAP_FILE = WORKFLOW_DIR / "scripts" / "models_capabilities.json"
 
 try:
-    with open(MODELS_CAP_FILE) as f:
+    with open(MODELS_CAP_FILE, encoding="utf-8") as f:
         MODELS_CAP = json.load(f)
-except Exception:
+except FileNotFoundError:
     MODELS_CAP = {}
+except json.JSONDecodeError as exc:
+    raise RuntimeError(f"Invalid JSON in {MODELS_CAP_FILE}: {exc}") from exc
 
 # ── Model name → description mapping ──────────────────────────────────────
 MODEL_DESC_MAP: dict[str, str] = {
@@ -304,7 +309,6 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
 
 def auto_description(name: str, task: str, model: str, is_api: bool) -> str:
     """Generate a simple placeholder description for new templates"""
-    name_l = name.lower()
     model_desc = get_model_desc(model)
     model_phrase = f" using {model}" if model else ""
     if model and model_desc:
@@ -383,7 +387,7 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
             model = resolve_model(name, models) or extract_model_name(name, models)
 
             # Get model capabilities from models_capabilities.json
-            model_info = MODELS_CAP.get(model) or MODELS_CAP.get(models[0]) if models else None
+            model_info = MODELS_CAP.get(model) or (MODELS_CAP.get(models[0]) if models else None)
             cap_tags = model_info.get("capabilities", []) if model_info else []
 
             if name in existing:
