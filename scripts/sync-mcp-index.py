@@ -7,6 +7,8 @@ Features:
   - Deleted templates → remove
   - Existing templates → fully preserved (does not overwrite description/io)
   - Preserves index.json group structure (minus excluded categories)
+  - Maps index.json group `title` → index.mcp.json `category` via INDEX_GROUP_TO_MCP_CATEGORY
+  - Ignores index.json group `category` (e.g. "GENERATION TYPE")
   - Skips instructional categories: Node Basics, LLM, Getting Started
 
 Usage:
@@ -30,6 +32,17 @@ WORKFLOW_DIR = Path(__file__).parent.parent.resolve()
 TEMPLATES_DIR = WORKFLOW_DIR / "templates"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 OUTPUT_FILE = TEMPLATES_DIR / "index.mcp.json"
+
+# index.json group `title` → index.mcp.json `category` (1:1).
+# index.json's group-level `category` field (e.g. "GENERATION TYPE") is UI metadata and ignored.
+INDEX_GROUP_TO_MCP_CATEGORY: dict[str, str] = {
+    "Use Cases": "Use Cases",
+    "Image": "Image",
+    "Video": "Video",
+    "Audio": "Audio",
+    "3D Model": "3D Model",
+    "Utility": "Utility",
+}
 
 # Categories excluded from MCP index export (instructional / demo-only groups).
 EXCLUDED_MCP_CATEGORIES = frozenset({
@@ -364,6 +377,21 @@ def auto_description(name: str, task: str, model: str, is_api: bool) -> str:
 # ── Main sync logic ────────────────────────────────────────────────
 
 
+def resolve_mcp_category(entry: dict) -> Optional[str]:
+    """
+    Resolve index.mcp.json category from an index.json group entry.
+
+    index.json uses `title` for the semantic category name (e.g. "Image").
+    index.json's `category` field (e.g. "GENERATION TYPE") is UI metadata and ignored.
+    """
+    group_title = entry.get("title", "")
+    if not group_title:
+        return None
+    if group_title in EXCLUDED_MCP_CATEGORIES:
+        return None
+    return INDEX_GROUP_TO_MCP_CATEGORY.get(group_title)
+
+
 def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
     """
     Sync index.json to index.mcp.json
@@ -396,8 +424,8 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
     # Build the set of template names from included index.json groups only.
     index_names: set[str] = set()
     for entry in index_data:
-        category = entry.get("title", "")
-        if category in EXCLUDED_MCP_CATEGORIES:
+        category = resolve_mcp_category(entry)
+        if category is None:
             continue
         for t in entry.get("templates", []):
             index_names.add(t["name"])
@@ -408,10 +436,16 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
             if t["name"] not in index_names:
                 removed.append(t["name"])
 
-    # Walk index.json groups to build output (skip excluded categories).
+    # Walk index.json groups to build output (skip unmapped / excluded categories).
     for entry in index_data:
-        category = entry.get("title", "")
-        if category in EXCLUDED_MCP_CATEGORIES:
+        category = resolve_mcp_category(entry)
+        if category is None:
+            group_title = entry.get("title", "")
+            if group_title and group_title not in EXCLUDED_MCP_CATEGORIES:
+                warnings.append(
+                    f"Skipping unmapped index.json group title '{group_title}' "
+                    "(not in INDEX_GROUP_TO_MCP_CATEGORY)"
+                )
             continue
 
         group_type = entry.get("type", "")
@@ -492,6 +526,9 @@ def main() -> None:
         if removed:
             for n in removed:
                 print(f"    - {n}")
+        if warnings:
+            for w in warnings:
+                print(f"    ! {w}")
         return
 
     with open(OUTPUT_FILE, "w") as f:
@@ -507,6 +544,10 @@ def main() -> None:
         print(f"   Removed: {len(removed)}")
         for n in removed:
             print(f"     - {n}")
+    if warnings:
+        print(f"   Warnings: {len(warnings)}")
+        for w in warnings:
+            print(f"     ! {w}")
     if not added and not removed:
         print("   No changes.")
 
