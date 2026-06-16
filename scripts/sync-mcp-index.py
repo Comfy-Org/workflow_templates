@@ -6,7 +6,8 @@ Features:
   - New templates → copy description from index.json, auto-infer task/model/io
   - Deleted templates → remove
   - Existing templates → fully preserved (does not overwrite description/io)
-  - Preserves index.json group structure
+  - Preserves index.json group structure (minus excluded categories)
+  - Skips instructional categories: Node Basics, LLM, Getting Started
 
 Usage:
   python3 scripts/sync-mcp-index.py              # sync and write
@@ -29,6 +30,42 @@ WORKFLOW_DIR = Path(__file__).parent.parent.resolve()
 TEMPLATES_DIR = WORKFLOW_DIR / "templates"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 OUTPUT_FILE = TEMPLATES_DIR / "index.mcp.json"
+
+# Categories excluded from MCP index export (instructional / demo-only groups).
+EXCLUDED_MCP_CATEGORIES = frozenset({
+    "Node Basics",
+    "LLM",
+    "Getting Started",
+})
+
+# Default English descriptions for included MCP categories.
+CATEGORY_DESCRIPTIONS: dict[str, str] = {
+    "Use Cases": (
+        "Concrete workflow examples that showcase specific applications, effects, and content. "
+        "These are purpose-built workflows for fixed use cases rather than general-purpose generation, "
+        "though they can be adapted with basic modifications."
+    ),
+    "Image": (
+        "General-purpose workflow templates for native image generation, including text-to-image, "
+        "image editing, inpainting, and other core image workflows supported out of the box."
+    ),
+    "Video": (
+        "General-purpose workflow templates for native video generation, including text-to-video, "
+        "image-to-video, and other core video workflows supported out of the box."
+    ),
+    "Audio": (
+        "General-purpose workflow templates for native audio generation, including text-to-audio "
+        "and other core audio workflows supported out of the box."
+    ),
+    "3D Model": (
+        "General-purpose workflow templates for native 3D model generation, including image-to-3D "
+        "and other core 3D workflows supported out of the box."
+    ),
+    "Utility": (
+        "Tooling and utility workflows for supporting tasks such as upscaling, background removal, "
+        "image preprocessing, and other image or video processing helpers."
+    ),
+}
 
 # ── Models capabilities file ───────────────────────────────────────────────
 MODELS_CAP_FILE = WORKFLOW_DIR / "scripts" / "models_capabilities.json"
@@ -341,9 +378,13 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
         with open(OUTPUT_FILE) as f:
             current_data = json.load(f)
 
-    # Build existing template lookup: name → (group_index, template_data)
+    # Build existing template lookup: name → template_data
     existing: dict[str, dict] = {}
+    existing_group_meta: dict[str, dict] = {}
     for g in current_data:
+        category = g.get("category") or g.get("title", "")
+        if category:
+            existing_group_meta[category] = g
         for t in g.get("templates", []):
             existing[t["name"]] = t
 
@@ -352,32 +393,35 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
     removed: list[str] = []
     warnings: list[str] = []
 
-    # Build the set of all template names in index.json
+    # Build the set of template names from included index.json groups only.
     index_names: set[str] = set()
     for entry in index_data:
+        category = entry.get("title", "")
+        if category in EXCLUDED_MCP_CATEGORIES:
+            continue
         for t in entry.get("templates", []):
             index_names.add(t["name"])
 
-    # Find removed templates
+    # Find removed templates (including those from excluded categories dropped from MCP).
     for g in current_data:
         for t in g.get("templates", []):
             if t["name"] not in index_names:
                 removed.append(t["name"])
 
-    # Walk index.json groups to build output
+    # Walk index.json groups to build output (skip excluded categories).
     for entry in index_data:
-        new_entry = {
-            "moduleName": entry.get("moduleName", ""),
-            "category": entry.get("category", ""),
-            "icon": entry.get("icon", ""),
-            "title": entry["title"],
-            "type": entry["type"],
-        }
-        if "isEssential" in entry:
-            new_entry["isEssential"] = entry["isEssential"]
-        new_entry["templates"] = []
+        category = entry.get("title", "")
+        if category in EXCLUDED_MCP_CATEGORIES:
+            continue
 
         group_type = entry.get("type", "")
+        preserved_group = existing_group_meta.get(category, {})
+        new_entry = {
+            "category": category,
+            "description": preserved_group.get("description")
+            or CATEGORY_DESCRIPTIONS.get(category, ""),
+            "templates": [],
+        }
         for tpl in entry.get("templates", []):
             name = tpl["name"]
             # Resolve model for both existing and new templates
@@ -412,7 +456,6 @@ def sync() -> tuple[list[dict], list[str], list[str], list[str]]:
                 new_tpl = {
                     "name": name,
                     "title": tpl.get("title", name),
-                    "category": group_type,
                     "task": task,
                     "model": model,
                     "tags": tags,
