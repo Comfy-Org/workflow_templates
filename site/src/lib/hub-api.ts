@@ -315,6 +315,34 @@ export function serializeIndexEntry(
 }
 
 /**
+ * "View all workflows" grid for a detail page: the full workflow index,
+ * minus the current template, serialized for the Vue grid island.
+ *
+ * Returns [] if the index is unavailable so the caller can render the detail
+ * page without the grid (it is supplementary, never required). Shared by both
+ * the default-locale and localized `/workflows/[slug]` routes so the fetch +
+ * filter + serialize lives in one place.
+ *
+ * @param currentName  `name` of the template to exclude from the grid.
+ * @param profiles     Pre-fetched profile cache to reuse; omit to fetch one.
+ */
+export async function listRelatedWorkflows(
+  currentName: string,
+  profiles?: Map<string, HubProfile>
+): Promise<SerializedTemplate[]> {
+  try {
+    const profileCache = profiles ?? (await getProfileCache());
+    const entries = await listWorkflowIndex();
+    return entries
+      .filter((e) => e.name !== currentName)
+      .map((e) => serializeIndexEntry(e, profileCache));
+  } catch {
+    // Index unavailable — caller renders the detail page without the grid.
+    return [];
+  }
+}
+
+/**
  * Convert a content collection entry to SerializedTemplate (fallback path).
  */
 export function serializeCollectionEntry(
