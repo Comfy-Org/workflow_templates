@@ -20,7 +20,12 @@ export const buttonVariants = cva(
         'pill-active': 'rounded-full bg-white text-page font-bold cursor-pointer',
         'pill-outline':
           'rounded-full border border-divider text-content font-normal hover:bg-hub-surface-hover cursor-pointer',
-        'hub-secondary': 'rounded-full bg-hub-surface text-content font-bold hover:bg-hub-surface-hover',
+        'hub-secondary':
+          'rounded-full bg-hub-surface text-content font-bold hover:bg-hub-surface-hover',
+        'brand-solid':
+          'rounded-2xl bg-brand text-page font-semibold tracking-wider hover:opacity-90',
+        'brand-outline':
+          'rounded-2xl border border-brand text-brand font-semibold tracking-wider hover:bg-brand hover:text-page',
       },
       size: {
         default: 'h-9 px-4 py-2 has-[>svg]:px-3',
@@ -31,6 +36,7 @@ export const buttonVariants = cva(
         'icon-lg': 'size-10',
         pill: 'h-8 px-4 py-2 text-xs',
         'pill-icon': 'h-8 pl-3 pr-4 py-2 text-xs gap-1.5',
+        nav: 'px-6 py-2.5 text-sm',
       },
     },
     defaultVariants: {
