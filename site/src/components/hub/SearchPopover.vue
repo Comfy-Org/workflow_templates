@@ -603,8 +603,8 @@ onUnmounted(() => {
     <div class="lg:relative min-w-0">
       <!-- Search Input with Badges -->
       <div
-        class="flex items-center gap-1.5 w-full min-h-10 px-3 rounded-full transition-colors"
-        :class="[isOpen ? 'bg-hub-surface ring-1 ring-brand' : 'bg-hub-surface']"
+        class="flex items-center gap-2 w-full h-12 px-4 rounded-2xl transition-colors"
+        :class="[isOpen ? 'bg-hub-surface-hover ring-1 ring-brand' : 'bg-hub-surface-hover']"
         @click="inputRef?.focus()"
       >
         <svg
@@ -661,7 +661,7 @@ onUnmounted(() => {
           v-model="searchQuery"
           type="text"
           :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
-          class="flex-1 min-w-0 bg-transparent text-content text-sm font-normal placeholder:text-hub-muted outline-none py-2"
+          class="flex-1 min-w-0 h-full bg-transparent text-content text-sm font-normal leading-none placeholder:text-hub-muted outline-none relative top-[0.09em]"
           @focus="handleFocus"
           @keydown="handleKeydown"
         />
