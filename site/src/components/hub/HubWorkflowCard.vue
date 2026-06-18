@@ -2,7 +2,8 @@
 /**
  * HubWorkflowCard - Unified workflow card component.
  * Used inside Vue islands (WorkflowGrid.vue) and SSR-rendered in Astro pages.
- * Visual structure: square thumbnail, logo overlay, title, author, tag pills.
+ * Visual structure: landscape thumbnail with the title and provider logo overlaid
+ * on it; creator line + CTA and tag pills beneath.
  */
 import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
@@ -13,6 +14,7 @@ import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { getLogoPath, providerName } from '@/lib/provider-logos';
+import { ChevronRight } from 'lucide-vue-next';
 
 interface Props {
   name: string;
@@ -177,12 +179,12 @@ function handleCardClick() {
 
 <template>
   <div
-    class="group transition-all duration-200 content-auto"
+    class="group flex flex-col gap-4 rounded-[2.5rem] bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 content-auto hover:bg-hub-surface-hover"
     :class="templateUrl ? 'cursor-pointer' : ''"
     @click="handleCardClick"
   >
     <!-- Thumbnail -->
-    <div class="aspect-square bg-hub-surface rounded-xl overflow-hidden relative">
+    <div class="aspect-4/3 bg-hub-surface rounded-4xl overflow-hidden relative">
       <!-- Compare slider -->
       <div
         v-if="showCompare"
@@ -255,7 +257,7 @@ function handleCardClick() {
 
       <div
         v-else-if="isAudioThumb"
-        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
+        class="w-full h-full flex items-center justify-center bg-linear-to-br from-white/5 to-white/10"
       >
         <svg
           class="w-16 h-16 text-content/20"
@@ -328,7 +330,7 @@ function handleCardClick() {
 
       <div
         v-else
-        class="w-full h-full flex items-center justify-center bg-gradient-to-br from-white/5 to-white/10"
+        class="w-full h-full flex items-center justify-center bg-linear-to-br from-white/5 to-white/10"
       >
         <svg
           class="w-10 h-10 text-content/20"
@@ -346,76 +348,109 @@ function handleCardClick() {
         </svg>
       </div>
 
-      <!-- Logo overlay -->
-      <div v-if="logoPath" class="absolute top-3 left-3 flex items-center gap-2 z-10">
-        <img
-          :src="logoPath"
-          :alt="provider || ''"
-          class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
-        />
-        <span class="text-content text-sm font-semibold drop-shadow-lg">
-          {{ provider }}
-        </span>
-      </div>
-    </div>
+      <!-- Bottom-up scrim so the title overlaid at the bottom stays legible on
+           bright thumbnails. pointer-events-none keeps the compare slider
+           draggable underneath. -->
+      <div
+        class="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none bg-linear-to-t from-black/70 via-black/30 to-transparent"
+        aria-hidden="true"
+      />
 
-    <!-- Title -->
-    <div class="pt-3 pb-1">
+      <!-- Title overlay (bottom) -->
       <h3
-        class="font-semibold text-content text-base leading-tight line-clamp-1 group-hover:text-brand group-has-[.creator-link:hover]:text-content group-has-[.tag-link:hover]:text-content transition-colors"
+        class="absolute bottom-5 left-5 right-5 z-10 font-medium text-content-bright text-base leading-[1.3] line-clamp-2 drop-shadow-md pointer-events-none sm:text-lg lg:text-xl"
       >
         {{ title }}
       </h3>
+
+      <!-- Logo tile (declared after the scrim so it stacks above it) -->
+      <div
+        v-if="logoPath"
+        class="absolute top-4 right-4 z-10 flex size-12 items-center justify-center rounded-2xl bg-black/10 p-2 backdrop-blur-xs"
+      >
+        <img
+          :src="logoPath"
+          :alt="provider || ''"
+          class="h-full w-full rounded-2xl object-contain"
+        />
+      </div>
     </div>
 
-    <!-- Author line -->
-    <a
-      v-if="!hideAuthor && creatorUrl"
-      :href="creatorUrl"
-      class="creator-link flex items-center gap-2 pt-2 w-fit text-content-muted hover:text-content transition-colors"
-      @click.stop
-    >
-      <img
-        v-if="creatorAvatarUrl"
-        :src="creatorAvatarUrl"
-        :alt="authorName"
-        class="size-5 rounded-full shrink-0 object-cover"
-      />
-      <div v-else class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand">
-        <span class="text-black text-[10px] font-bold leading-none">{{
-          authorName.charAt(0).toUpperCase()
-        }}</span>
-      </div>
-      <span class="text-sm truncate">{{ authorName }}</span>
-    </a>
-    <div v-else-if="!hideAuthor" class="flex items-center gap-2 pt-2">
-      <img
-        v-if="creatorAvatarUrl"
-        :src="creatorAvatarUrl"
-        :alt="authorName"
-        class="size-5 rounded-full shrink-0 object-cover"
-      />
-      <div v-else class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand">
-        <span class="text-black text-[10px] font-bold leading-none">{{
-          authorName.charAt(0).toUpperCase()
-        }}</span>
-      </div>
-      <span class="text-content-muted text-sm truncate">{{ authorName }}</span>
-    </div>
-
-    <!-- Tag pills -->
-    <div
-      data-testid="tag-pills"
-      class="flex items-center gap-1.5 pt-4 overflow-x-auto scrollbar-hide"
-    >
-      <a v-for="tag in displayTags" :key="tag" :href="getTagUrl(tag)" class="tag-link" @click.stop>
-        <Badge
-          variant="hub-pill"
-          class="hover:bg-hub-surface transition-colors shrink-0 whitespace-nowrap"
+    <!-- Content -->
+    <div class="flex flex-col gap-3 px-4">
+      <!-- Creator + CTA -->
+      <div class="flex items-center justify-between gap-2">
+        <a
+          v-if="!hideAuthor && creatorUrl"
+          :href="creatorUrl"
+          class="creator-link flex items-center gap-2 min-w-0 w-fit text-content-secondary hover:text-content transition-colors"
+          @click.stop
         >
-          {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
-        </Badge>
-      </a>
+          <img
+            v-if="creatorAvatarUrl"
+            :src="creatorAvatarUrl"
+            :alt="authorName"
+            class="size-5 rounded-full shrink-0 object-cover"
+          />
+          <div
+            v-else
+            class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
+          >
+            <span class="text-black text-[10px] font-bold leading-none">{{
+              authorName.charAt(0).toUpperCase()
+            }}</span>
+          </div>
+          <span class="text-base leading-none truncate">{{ authorName }}</span>
+        </a>
+        <div v-else-if="!hideAuthor" class="flex items-center gap-2 min-w-0">
+          <img
+            v-if="creatorAvatarUrl"
+            :src="creatorAvatarUrl"
+            :alt="authorName"
+            class="size-5 rounded-full shrink-0 object-cover"
+          />
+          <div
+            v-else
+            class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
+          >
+            <span class="text-black text-[10px] font-bold leading-none">{{
+              authorName.charAt(0).toUpperCase()
+            }}</span>
+          </div>
+          <span class="text-content-secondary text-base leading-none truncate">{{
+            authorName
+          }}</span>
+        </div>
+        <span v-else />
+
+        <button
+          v-if="templateUrl"
+          type="button"
+          class="size-8 shrink-0 rounded-xl bg-brand text-page flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
+          :aria-label="title"
+          @click.stop="handleCardClick"
+        >
+          <ChevronRight class="size-5" aria-hidden="true" />
+        </button>
+      </div>
+
+      <!-- Tag pills -->
+      <div data-testid="tag-pills" class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+        <a
+          v-for="tag in displayTags"
+          :key="tag"
+          :href="getTagUrl(tag)"
+          class="tag-link"
+          @click.stop
+        >
+          <Badge
+            variant="hub-pill"
+            class="hover:bg-hub-surface-hover transition-colors shrink-0 whitespace-nowrap"
+          >
+            {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
+          </Badge>
+        </a>
+      </div>
     </div>
   </div>
 </template>
