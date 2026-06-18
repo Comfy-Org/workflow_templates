@@ -41,7 +41,7 @@ const emit = defineEmits<{
   close: [];
 }>();
 
-const menuRef = ref<HTMLElement | undefined>();
+const menuRef = ref<HTMLElement | null>(null);
 const activeSection = ref<string | null>(null);
 
 const activeSectionItems = computed(
@@ -75,10 +75,16 @@ function trapFocus(e: KeyboardEvent) {
 
 watch(
   () => open,
-  async (isOpen) => {
+  async (isOpen, _prev, onCleanup) => {
+    let canceled = false;
+    onCleanup(() => {
+      canceled = true;
+    });
+
     if (isOpen) {
       lockScroll();
       await nextTick();
+      if (canceled || !open) return;
       const menu = menuRef.value;
       const firstFocusable = menu?.querySelector<HTMLElement>(FOCUSABLE);
       firstFocusable?.focus();

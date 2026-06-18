@@ -29,6 +29,20 @@ const emit = defineEmits<{
   (e: 'close'): void;
   (e: 'toggle', label: string): void;
 }>();
+
+function normalizePath(value?: string): string {
+  if (!value) return '';
+  const pathname = new URL(value, 'https://comfy.org').pathname;
+  return pathname.replace(/\/+$/, '') || '/';
+}
+
+function isActive(href?: string): boolean {
+  return normalizePath(currentPath) === normalizePath(href);
+}
+
+function isDropdownActive(items?: NavDropdownItem[]): boolean {
+  return !!items?.some((item) => isActive(item.href));
+}
 </script>
 
 <template>
@@ -45,9 +59,7 @@ const emit = defineEmits<{
       :class="
         cn(
           'group flex cursor-pointer items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors',
-          link.items.some((item) => currentPath === item.href)
-            ? 'text-brand'
-            : 'text-nav-fg hover:text-nav-fg-hover'
+          isDropdownActive(link.items) ? 'text-brand' : 'text-nav-fg hover:text-nav-fg-hover'
         )
       "
       aria-haspopup="true"
@@ -63,7 +75,7 @@ const emit = defineEmits<{
         :class="
           cn(
             'h-[5px] w-2.5 transition-colors',
-            link.items.some((item) => currentPath === item.href)
+            isDropdownActive(link.items)
               ? 'text-brand'
               : 'text-nav-fg group-hover:text-nav-fg-hover'
           )
@@ -76,11 +88,11 @@ const emit = defineEmits<{
     <a
       v-else
       :href="link.href"
-      :aria-current="currentPath === link.href ? 'page' : undefined"
+      :aria-current="isActive(link.href) ? 'page' : undefined"
       :class="
         cn(
           'flex items-center gap-1.5 py-3 text-sm font-bold tracking-wide uppercase transition-colors',
-          currentPath === link.href ? 'text-brand' : 'text-nav-fg hover:text-nav-fg-hover'
+          isActive(link.href) ? 'text-brand' : 'text-nav-fg hover:text-nav-fg-hover'
         )
       "
     >
@@ -98,11 +110,11 @@ const emit = defineEmits<{
           v-for="item in link.items"
           :key="item.href"
           :href="item.href"
-          :aria-current="currentPath === item.href ? 'page' : undefined"
+          :aria-current="isActive(item.href) ? 'page' : undefined"
           :class="
             cn(
               'flex items-center gap-2 rounded-sm p-2 text-xs font-medium tracking-wide transition-colors',
-              currentPath === item.href
+              isActive(item.href)
                 ? 'text-brand'
                 : 'text-nav-fg hover:bg-hub-surface hover:text-white'
             )

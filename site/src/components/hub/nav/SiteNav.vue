@@ -109,11 +109,14 @@ const currentPath = ref('');
 const openDesktopDropdown = ref<string | null>(null);
 const mobileMenuOpen = ref(false);
 const isNavigating = ref(false);
-const hamburgerRef = ref<HTMLButtonElement | undefined>();
+const hamburgerRef = ref<HTMLButtonElement | null>(null);
 
-function closeMobileMenu() {
+function closeMobileMenu({ restoreFocus = true }: { restoreFocus?: boolean } = {}) {
+  const wasOpen = mobileMenuOpen.value;
   mobileMenuOpen.value = false;
-  hamburgerRef.value?.focus();
+  if (restoreFocus && wasOpen) {
+    hamburgerRef.value?.focus();
+  }
 }
 
 function toggleDesktopDropdown(label: string) {
@@ -129,7 +132,7 @@ function onKeydown(e: KeyboardEvent) {
 
 async function onNavigate() {
   isNavigating.value = true;
-  closeMobileMenu();
+  closeMobileMenu({ restoreFocus: false });
   openDesktopDropdown.value = null;
   currentPath.value = window.location.pathname;
   await nextTick();
