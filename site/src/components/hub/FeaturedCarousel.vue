@@ -116,7 +116,7 @@ onUnmounted(() => {
 <template>
   <section
     v-if="slides.length"
-    class="relative h-[clamp(300px,60vw,520px)] rounded-2xl border-[1.5px] border-border-strong bg-page"
+    class="relative h-[clamp(300px,60vw,520px)] rounded-2xl border-[1.5px] border-border-strong bg-page mt-3"
     :aria-roledescription="'carousel'"
     :aria-label="featuredLabel"
   >

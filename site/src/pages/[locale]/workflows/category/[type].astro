@@ -18,7 +18,12 @@ import { localizeUrl } from '../../../../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../../config/site';
 import { categoryPath } from '../../../../lib/routes';
 import { badgeVariants } from '../../../../components/ui/badge';
-import { loadSerializedTemplates, type SerializedTemplate, type MediaType } from '../../../../lib/hub-api';
+import {
+  loadSerializedTemplates,
+  type SerializedTemplate,
+  type MediaType,
+} from '../../../../lib/hub-api';
+import { buildToolbarLabels } from '../../../../lib/toolbar';
 
 const validTypes: MediaType[] = ['image', 'video', 'audio', '3d'];
 
@@ -119,6 +124,7 @@ const serialized = templates;
           client:load
           templates={serialized}
           locale={typedLocale}
+          toolbarLabels={buildToolbarLabels(typedLocale)}
           gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         />
       ) : (

@@ -29,6 +29,7 @@ import {
   type SerializedTemplate,
 } from '../../../lib/hub-api';
 import { workflowOgUrl, creatorOgUrl } from '../../../lib/og-url';
+import { buildToolbarLabels } from '../../../lib/toolbar';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
@@ -291,6 +292,7 @@ const structuredData = !isDetailPage
             client:load
             templates={serialized}
             locale={typedLocale}
+            toolbarLabels={buildToolbarLabels(typedLocale)}
             gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             hideAuthor
           />

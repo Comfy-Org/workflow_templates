@@ -3,8 +3,6 @@ import { getCollection } from 'astro:content';
 import { getLocaleFromPath } from '../../i18n/utils';
 import SearchPopover from './SearchPopover.vue';
 import SiteNav from './nav/SiteNav.vue';
-// TODO: filters move to the page body; re-enable or remove this later.
-// import MobileFilterDrawer from './MobileFilterDrawer.vue';
 import {
   getProfileCache,
   serializeCollectionEntry,
@@ -44,10 +42,11 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
 }
 ---
 
-<header class="w-full bg-page sticky top-0 z-50">
+<header
+  class="w-full bg-page sticky top-0 z-50 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-linear-to-b after:from-page after:to-transparent"
+>
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
-    <!-- Row 1: Marketing nav (logo + menus + CTAs + mobile hamburger).
-         SiteNav renders its own <nav aria-label="Main navigation">. -->
+    <!-- Row 1: Marketing nav (logo + menus + CTAs + mobile hamburger).-->
     <div class="pt-4 lg:pt-8 pb-6 lg:pb-12">
       <SiteNav client:load locale={locale} creators={creatorsList} githubStars={githubStars} />
     </div>
@@ -58,10 +57,3 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
     </div>
   </div>
 </header>
-
-<!--
-  TODO: Hub filters are moving to the page body. The mobile filter drawer
-  (MobileFilterDrawer) is temporarily disabled — mobile now uses the marketing
-  hamburger in SiteNav. Re-enable its import + mount, or delete, once the new
-  filter placement lands.
--->

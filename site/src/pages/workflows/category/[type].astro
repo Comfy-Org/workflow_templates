@@ -10,8 +10,13 @@ import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { categoryPath } from '../../../lib/routes';
+import { buildToolbarLabels } from '../../../lib/toolbar';
 import { badgeVariants } from '../../../components/ui/badge';
-import { loadSerializedTemplates, type SerializedTemplate, type MediaType } from '../../../lib/hub-api';
+import {
+  loadSerializedTemplates,
+  type SerializedTemplate,
+  type MediaType,
+} from '../../../lib/hub-api';
 
 const categoryTranslationKeys: Record<MediaType, string> = {
   image: 'category.image',
@@ -211,6 +216,7 @@ const serialized = templates;
           client:load
           templates={serialized}
           locale={locale}
+          toolbarLabels={buildToolbarLabels(locale)}
           gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
         />
       ) : (

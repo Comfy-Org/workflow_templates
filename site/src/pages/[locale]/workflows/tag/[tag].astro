@@ -19,6 +19,7 @@ import { tagSlug, tagDisplayName } from '../../../../lib/tag-aliases';
 import { SITE_ORIGIN, absoluteUrl } from '../../../../config/site';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates, type SerializedTemplate } from '../../../../lib/hub-api';
+import { buildToolbarLabels } from '../../../../lib/toolbar';
 
 const { locale, tag } = Astro.params;
 
@@ -41,9 +42,8 @@ if (matchingTemplates.length === 0) {
 }
 
 // Get display name from the first matching tag
-const firstMatchingTag = matchingTemplates[0].tags?.find(
-  (t: string) => tagSlug(t) === tag
-) || tag || '';
+const firstMatchingTag =
+  matchingTemplates[0].tags?.find((t: string) => tagSlug(t) === tag) || tag || '';
 const tagName = tagDisplayName(firstMatchingTag);
 
 const basePath = `/workflows/tag/${tag}/`;
@@ -121,6 +121,7 @@ const serialized = matchingTemplates;
       client:load
       templates={serialized}
       locale={typedLocale}
+      toolbarLabels={buildToolbarLabels(typedLocale)}
       gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
     />
   </div>
