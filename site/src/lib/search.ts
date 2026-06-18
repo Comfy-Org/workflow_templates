@@ -3,6 +3,13 @@
  * The index is lazy-loaded from /search-index.json on first query.
  */
 import MiniSearch, { type SearchResult } from 'minisearch';
+import {
+  SEARCH_FIELDS,
+  STORE_FIELDS,
+  tokenize,
+  expandQuery,
+  searchWithFallback,
+} from './search-config';
 
 export interface WorkflowHit {
   id: string;
@@ -33,21 +40,6 @@ export interface SearchResults {
 // Module-level cache — shared across all consumers
 let indexPromise: Promise<MiniSearch> | null = null;
 
-// Must match the tokenizer used at index build time (build-index.ts)
-function tokenize(text: string): string[] {
-  const tokens: string[] = [];
-  const words = text.toLowerCase().split(/\s+/).filter(Boolean);
-  for (const word of words) {
-    tokens.push(word);
-    if (word.includes('-')) {
-      for (const part of word.split('-')) {
-        if (part) tokens.push(part);
-      }
-    }
-  }
-  return tokens;
-}
-
 async function loadIndex(): Promise<MiniSearch> {
   const response = await fetch('/workflows/search-index.json');
   if (!response.ok) {
@@ -55,19 +47,8 @@ async function loadIndex(): Promise<MiniSearch> {
   }
   const json = await response.text();
   return MiniSearch.loadJSON(json, {
-    fields: ['title', 'description', 'tags', 'models', 'mediaType', 'creatorName'],
-    storeFields: [
-      'title',
-      'mediaType',
-      'mediaTypeLabel',
-      'name',
-      'slug',
-      'thumbnail',
-      'username',
-      'creatorName',
-      'usage',
-      'tagsArray',
-    ],
+    fields: [...SEARCH_FIELDS],
+    storeFields: [...STORE_FIELDS],
     tokenize,
   });
 }
@@ -138,11 +119,8 @@ export async function search(
   }
 
   const index = await ensureIndex();
-  const results = index.search(trimmed, {
-    prefix: true,
-    fuzzy: 0.2,
-    tokenize,
-  });
+  const expanded = expandQuery(trimmed);
+  const results = searchWithFallback<SearchResult>(index, expanded);
 
   let workflows = results.map(mapResult);
 
