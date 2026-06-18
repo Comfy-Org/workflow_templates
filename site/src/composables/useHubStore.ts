@@ -11,15 +11,31 @@ export interface FilterBadge {
   value: string;
 }
 
+export type HubTab = 'all' | 'nodeGraphs' | 'comfyApps';
+export type HubSort = 'popular' | 'newest';
+
 const mobileDrawerOpen = ref(false);
 const searchFocusTrigger = ref(0);
 const filterBadges = ref<FilterBadge[]>([]);
+
+const activeTab = ref<HubTab>('all');
+const sortBy = ref<HubSort>('popular');
 
 export function useHubStore() {
   return {
     mobileDrawerOpen,
     searchFocusTrigger,
     filterBadges,
+    activeTab,
+    sortBy,
+
+    setTab(tab: HubTab) {
+      activeTab.value = tab;
+    },
+
+    cycleSort() {
+      sortBy.value = sortBy.value === 'popular' ? 'newest' : 'popular';
+    },
 
     toggleMobileDrawer() {
       mobileDrawerOpen.value = !mobileDrawerOpen.value;
