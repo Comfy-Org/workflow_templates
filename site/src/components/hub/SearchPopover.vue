@@ -264,6 +264,15 @@ const matchedCreators = computed(() => {
     .slice(0, 5);
 });
 
+// Screen-reader announcement for the live result count while searching.
+const resultAnnouncement = computed(() => {
+  if (!isOpen.value || !hasQuery.value) return '';
+  if (isSearching.value) return 'Searching…';
+  if (!hasSearched.value) return '';
+  const count = displayedWorkflows.value.length + matchedCreators.value.length;
+  return count === 0 ? 'No results found' : `${count} result${count === 1 ? '' : 's'} found`;
+});
+
 const MEDIA_TYPE_LABELS: Record<string, string> = {
   image: 'Image',
   video: 'Video',
@@ -481,6 +490,17 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
+// Native form submit (Enter). Activate the highlighted item, else the first
+// result if one exists. `@submit.prevent` stops the default page reload.
+function onSubmit() {
+  if (!isOpen.value) return;
+  if (activeIndex.value >= 0) {
+    activateItem(activeIndex.value);
+  } else if (totalNavigable.value > 0) {
+    activateItem(0);
+  }
+}
+
 function clearSearch() {
   searchQuery.value = '';
   inputRef.value?.focus();
@@ -599,13 +619,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full min-w-0">
+  <div ref="containerRef" role="search" class="w-full min-w-0">
     <div class="lg:relative min-w-0">
       <!-- Search Input with Badges -->
-      <div
-        class="flex items-center gap-2 w-full h-12 px-4 rounded-2xl transition-colors"
+      <form
+        class="flex items-center gap-2 w-full h-12 px-4 rounded-2xl transition-colors focus-within:ring-1 focus-within:ring-brand"
         :class="[isOpen ? 'bg-hub-surface-hover ring-1 ring-brand' : 'bg-hub-surface-hover']"
+        role="search"
         @click="inputRef?.focus()"
+        @submit.prevent="onSubmit"
       >
         <svg
           class="size-4 shrink-0 text-hub-muted"
@@ -659,9 +681,10 @@ onUnmounted(() => {
         <input
           ref="inputRef"
           v-model="searchQuery"
-          type="text"
+          type="search"
+          aria-label="Search workflows, models, and creators"
           :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
-          class="flex-1 min-w-0 h-full bg-transparent text-content text-sm font-normal leading-none placeholder:text-hub-muted outline-none relative top-[0.09em]"
+          class="flex-1 min-w-0 h-full bg-transparent text-content text-sm font-normal leading-none placeholder:text-hub-muted outline-none relative top-[0.09em] [&::-webkit-search-cancel-button]:hidden"
           @focus="handleFocus"
           @keydown="handleKeydown"
         />
@@ -697,7 +720,10 @@ onUnmounted(() => {
           aria-hidden="true"
           >/</kbd
         >
-      </div>
+      </form>
+
+      <!-- Live region: announces result counts to screen readers -->
+      <p class="sr-only" aria-live="polite" role="status">{{ resultAnnouncement }}</p>
 
       <!-- Discovery Panel (no badges, no text query) -->
       <Transition

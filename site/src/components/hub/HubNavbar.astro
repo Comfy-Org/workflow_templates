@@ -44,19 +44,20 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
 }
 ---
 
-<nav class="w-full bg-page sticky top-0 z-50">
+<header class="w-full bg-page sticky top-0 z-50">
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
-    <!-- Row 1: Marketing nav (logo + menus + CTAs + mobile hamburger) -->
+    <!-- Row 1: Marketing nav (logo + menus + CTAs + mobile hamburger).
+         SiteNav renders its own <nav aria-label="Main navigation">. -->
     <div class="pt-4 lg:pt-8 pb-6 lg:pb-12">
       <SiteNav client:load locale={locale} creators={creatorsList} githubStars={githubStars} />
     </div>
 
-    <!-- Row 2: Full-width search -->
+    <!-- Row 2: Full-width search (sibling of nav; search is not navigation) -->
     <div class="w-full min-w-0 pb-3 lg:pb-4">
       <SearchPopover client:load templates={templates} creators={creatorsList} locale={locale} />
     </div>
   </div>
-</nav>
+</header>
 
 <!--
   TODO: Hub filters are moving to the page body. The mobile filter drawer
