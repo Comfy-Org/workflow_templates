@@ -1,0 +1,42 @@
+import { describe, expect, it } from 'vitest';
+import { getLogoPath, providerName } from '../../src/lib/provider-logos';
+
+describe('getLogoPath', () => {
+  it('resolves an exact provider name to its logo asset', () => {
+    expect(getLogoPath('OpenAI')).toBe('/logos/openai.png');
+  });
+
+  it('maps aliased names to a shared slug', () => {
+    // Stability / Stable Diffusion / SDXL all share the "stability" logo.
+    expect(getLogoPath('Stable Diffusion')).toBe('/logos/stability.png');
+    expect(getLogoPath('SDXL')).toBe('/logos/stability.png');
+  });
+
+  it('falls back to a case-insensitive substring match', () => {
+    expect(getLogoPath('Flux.1 [dev]')).toBe('/logos/bfl.png');
+    expect(getLogoPath('google gemini')).toBe('/logos/google.png');
+  });
+
+  it('returns null for an unknown provider', () => {
+    expect(getLogoPath('Totally Unknown Co')).toBeNull();
+  });
+});
+
+describe('providerName', () => {
+  it('returns the single provider string', () => {
+    expect(providerName([{ provider: 'OpenAI' }])).toBe('OpenAI');
+  });
+
+  it('returns the first entry of a multi-provider array', () => {
+    expect(providerName([{ provider: ['Flux', 'Google'] }])).toBe('Flux');
+  });
+
+  it('returns null when logos is missing or empty', () => {
+    expect(providerName(undefined)).toBeNull();
+    expect(providerName([])).toBeNull();
+  });
+
+  it('returns null when the first entry has an empty provider array', () => {
+    expect(providerName([{ provider: [] }])).toBeNull();
+  });
+});

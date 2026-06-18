@@ -6,45 +6,13 @@
  */
 import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import { tagSlug, tagDisplayName } from '@/lib/tag-aliases';
-import { slugify } from '@/lib/slugify';
+import { tagDisplayName } from '@/lib/tag-aliases';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
-import { workflowDetailPath } from '@/lib/routes';
-
-const MODEL_TO_LOGO: Record<string, string> = {
-  Grok: 'grok',
-  OpenAI: 'openai',
-  Stability: 'stability',
-  'Stable Diffusion': 'stability',
-  SDXL: 'stability',
-  Wan: 'wan',
-  Flux: 'bfl',
-  Google: 'google',
-  Runway: 'runway',
-  Luma: 'luma',
-  Kling: 'kling',
-  Hunyuan: 'hunyuan',
-  ByteDance: 'bytedance',
-  HitPaw: 'hitpaw',
-  Recraft: 'recraft',
-  Topaz: 'topaz',
-  Vidu: 'vidu',
-  WaveSpeed: 'wavespeed',
-  Mochi: 'mochi',
-  Pika: 'pika',
-  Sora: 'sora',
-  Minimax: 'minimax',
-  Lightricks: 'lightricks',
-  Ideogram: 'ideogram',
-  Magnific: 'magnific',
-  Rodin: 'rodin',
-  Tripo: 'tripo',
-  PixVerse: 'pixverse',
-  Bria: 'bria',
-};
+import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
+import { getLogoPath, providerName } from '@/lib/provider-logos';
 
 interface Props {
   name: string;
@@ -76,22 +44,9 @@ const props = withDefaults(defineProps<Props>(), {
   mediaSubtype: '',
 });
 
-function getLogoPath(name: string): string | null {
-  const slug = MODEL_TO_LOGO[name];
-  if (slug) return `/logos/${slug}.png`;
-  const lower = name.toLowerCase();
-  for (const [key, val] of Object.entries(MODEL_TO_LOGO)) {
-    if (lower.includes(key.toLowerCase())) return `/logos/${val}.png`;
-  }
-  return null;
-}
+const provider = computed(() => providerName(props.logos));
 
-const providerName = computed(() => {
-  const p = props.logos?.[0]?.provider;
-  return Array.isArray(p) ? p[0] : p || null;
-});
-
-const logoPath = computed(() => (providerName.value ? getLogoPath(providerName.value) : null));
+const logoPath = computed(() => (provider.value ? getLogoPath(provider.value) : null));
 
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
@@ -112,9 +67,7 @@ const isVideoPrimary = computed(() => {
 
 const videoUrl = computed(() => {
   if (!isVideoPrimary.value) return null;
-  const f = primaryFile.value!;
-  if (f.startsWith('http://') || f.startsWith('https://')) return f;
-  return `/workflows/thumbnails/${f}`;
+  return thumbnailPath(primaryFile.value!);
 });
 
 const posterUrl = computed(() => {
@@ -130,12 +83,8 @@ function onVideoError() {
 
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
-  if (!f) return null;
-  if (isMediaFile(f)) {
-    return null;
-  }
-  if (f.startsWith('http://') || f.startsWith('https://')) return f;
-  return `/workflows/thumbnails/${f}`;
+  if (!f || isMediaFile(f)) return null;
+  return thumbnailPath(f);
 });
 
 const hasSecondImage = computed(() => {
@@ -149,9 +98,7 @@ const hasSecondImage = computed(() => {
 
 const secondaryUrl = computed(() => {
   if (!hasSecondImage.value || !secondaryFile.value) return null;
-  const f = secondaryFile.value;
-  if (f.startsWith('http://') || f.startsWith('https://')) return f;
-  return `/workflows/thumbnails/${f}`;
+  return thumbnailPath(secondaryFile.value);
 });
 
 const showCompare = computed(
@@ -215,15 +162,12 @@ onUnmounted(() => {
 const displayTags = computed(() => props.tags.slice(0, 3));
 
 function getTagUrl(tag: string): string {
-  const base = `/workflows/tag/${tagSlug(tag)}/`;
-  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
+  return tagPath(tag, props.locale);
 }
 
-const creatorUrl = computed(() => {
-  if (!props.username) return null;
-  const base = `/workflows/${slugify(props.username)}/`;
-  return props.locale && props.locale !== 'en' ? `/${props.locale}${base}` : base;
-});
+const creatorUrl = computed(() =>
+  props.username ? creatorPath(props.username, props.locale) : null
+);
 
 function handleCardClick() {
   if (!templateUrl.value) return;
@@ -406,11 +350,11 @@ function handleCardClick() {
       <div v-if="logoPath" class="absolute top-3 left-3 flex items-center gap-2 z-10">
         <img
           :src="logoPath"
-          :alt="providerName || ''"
+          :alt="provider || ''"
           class="size-7 rounded-full object-contain bg-black/40 backdrop-blur-sm p-0.5"
         />
         <span class="text-content text-sm font-semibold drop-shadow-lg">
-          {{ providerName }}
+          {{ provider }}
         </span>
       </div>
     </div>

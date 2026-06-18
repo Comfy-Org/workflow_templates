@@ -23,7 +23,7 @@ import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import type { MediaType } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
-import { workflowDetailPath, workflowDetailSlug } from '@/lib/routes';
+import { workflowDetailPath, workflowDetailSlug, thumbnailPath } from '@/lib/routes';
 
 export interface SearchTemplate {
   name: string;
@@ -537,11 +537,6 @@ function formatUsage(usage: number): string {
   return String(usage);
 }
 
-function resolveThumbUrl(file: string): string {
-  if (file.startsWith('http://') || file.startsWith('https://')) return file;
-  return `/workflows/thumbnails/${file}`;
-}
-
 /**
  * Returns an <img> src for image thumbnails, or a Cloudflare poster-frame URL
  * for CDN-hosted videos. Returns null when the file has no static preview
@@ -551,8 +546,8 @@ function resolveThumbUrl(file: string): string {
 function getImageThumb(file: string | undefined | null): string | null {
   if (!file) return null;
   if (isAudioFile(file)) return null;
-  if (isVideoFile(file)) return getVideoFrameUrl(resolveThumbUrl(file));
-  return resolveThumbUrl(file);
+  if (isVideoFile(file)) return getVideoFrameUrl(thumbnailPath(file));
+  return thumbnailPath(file);
 }
 
 /**
@@ -562,7 +557,7 @@ function getImageThumb(file: string | undefined | null): string | null {
  */
 function videoThumbUrl(file: string | undefined | null): string | null {
   if (!file || !isVideoFile(file)) return null;
-  return resolveThumbUrl(file);
+  return thumbnailPath(file);
 }
 
 function handleFocus() {
