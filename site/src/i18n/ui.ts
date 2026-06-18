@@ -5,6 +5,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   en: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': "Discover the World's Top Creators and Workflows",
+    'hub.featured.label': 'FEATURED · STAFF PICK',
+    'hub.featured.prev': 'Previous featured template',
+    'hub.featured.next': 'Next featured template',
     'hub.filters': 'FILTERS',
     'hub.models': 'MODELS',
     'hub.showMore': 'Show more...',
@@ -86,6 +89,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   zh: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': '发现全球顶级创作者',
+    'hub.featured.label': '精选 · 编辑推荐',
+    'hub.featured.prev': '上一个精选模板',
+    'hub.featured.next': '下一个精选模板',
     'hub.filters': '筛选',
     'hub.models': '模型',
     'hub.showMore': '查看更多...',
@@ -166,6 +172,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   'zh-TW': {
     'hub.title': 'ComfyHub',
     'hub.subtitle': '探索全球頂級創作者',
+    'hub.featured.label': '精選 · 編輯推薦',
+    'hub.featured.prev': '上一個精選範本',
+    'hub.featured.next': '下一個精選範本',
     'hub.filters': '篩選',
     'hub.models': '模型',
     'hub.showMore': '查看更多...',
@@ -246,6 +255,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   ja: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': '世界のトップクリエイターを発見',
+    'hub.featured.label': '注目 · スタッフのおすすめ',
+    'hub.featured.prev': '前の注目テンプレート',
+    'hub.featured.next': '次の注目テンプレート',
     'hub.filters': 'フィルター',
     'hub.models': 'モデル',
     'hub.showMore': 'もっと見る...',
@@ -327,6 +339,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   ko: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': '세계 최고의 크리에이터를 만나보세요',
+    'hub.featured.label': '추천 · 스태프 픽',
+    'hub.featured.prev': '이전 추천 템플릿',
+    'hub.featured.next': '다음 추천 템플릿',
     'hub.filters': '필터',
     'hub.models': '모델',
     'hub.showMore': '더 보기...',
@@ -408,6 +423,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   es: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': 'Descubre a los Mejores Creadores del Mundo',
+    'hub.featured.label': 'DESTACADO · SELECCIÓN DEL EQUIPO',
+    'hub.featured.prev': 'Plantilla destacada anterior',
+    'hub.featured.next': 'Siguiente plantilla destacada',
     'hub.filters': 'FILTROS',
     'hub.models': 'MODELOS',
     'hub.showMore': 'Ver más...',
@@ -489,6 +507,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   fr: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': 'Découvrez les Meilleurs Créateurs du Monde',
+    'hub.featured.label': 'À LA UNE · CHOIX DE LA RÉDACTION',
+    'hub.featured.prev': 'Modèle à la une précédent',
+    'hub.featured.next': 'Modèle à la une suivant',
     'hub.filters': 'FILTRES',
     'hub.models': 'MODÈLES',
     'hub.showMore': 'Voir plus...',
@@ -570,6 +591,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   ru: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': 'Откройте для себя лучших создателей мира',
+    'hub.featured.label': 'РЕКОМЕНДУЕМ · ВЫБОР РЕДАКЦИИ',
+    'hub.featured.prev': 'Предыдущий рекомендуемый шаблон',
+    'hub.featured.next': 'Следующий рекомендуемый шаблон',
     'hub.filters': 'ФИЛЬТРЫ',
     'hub.models': 'МОДЕЛИ',
     'hub.showMore': 'Показать ещё...',
@@ -651,6 +675,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   tr: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': 'Dünyanın En İyi Yaratıcılarını Keşfedin',
+    'hub.featured.label': 'ÖNE ÇIKAN · EDİTÖR SEÇİMİ',
+    'hub.featured.prev': 'Önceki öne çıkan şablon',
+    'hub.featured.next': 'Sonraki öne çıkan şablon',
     'hub.filters': 'FİLTRELER',
     'hub.models': 'MODELLER',
     'hub.showMore': 'Daha fazla...',
@@ -732,6 +759,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   ar: {
     'hub.title': 'ComfyHub',
     'hub.subtitle': 'اكتشف أفضل المبدعين في العالم',
+    'hub.featured.label': 'مميّز · اختيار الفريق',
+    'hub.featured.prev': 'القالب المميّز السابق',
+    'hub.featured.next': 'القالب المميّز التالي',
     'hub.filters': 'التصفية',
     'hub.models': 'النماذج',
     'hub.showMore': 'عرض المزيد...',
@@ -813,6 +843,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   'pt-BR': {
     'hub.title': 'ComfyHub',
     'hub.subtitle': 'Descubra os Melhores Criadores do Mundo',
+    'hub.featured.label': 'DESTAQUE · ESCOLHA DA EQUIPE',
+    'hub.featured.prev': 'Modelo em destaque anterior',
+    'hub.featured.next': 'Próximo modelo em destaque',
     'hub.filters': 'FILTROS',
     'hub.models': 'MODELOS',
     'hub.showMore': 'Ver mais...',
