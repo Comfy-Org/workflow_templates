@@ -18,7 +18,9 @@ export async function fetchGitHubStars(
   const cached = inflight.get(key);
   if (cached) return cached;
 
-  const request = doFetch(owner, repo, fetchImpl);
+  const request = doFetch(owner, repo, fetchImpl).finally(() => {
+    inflight.delete(key);
+  });
   inflight.set(key, request);
   return request;
 }

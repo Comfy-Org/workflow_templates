@@ -20,6 +20,11 @@ describe('getLogoPath', () => {
   it('returns null for an unknown provider', () => {
     expect(getLogoPath('Totally Unknown Co')).toBeNull();
   });
+
+  it('does not match a key as a partial substring inside an unrelated word', () => {
+    expect(getLogoPath('Swan AI')).toBeNull();
+    expect(getLogoPath('Conflux Labs')).toBeNull();
+  });
 });
 
 describe('providerName', () => {

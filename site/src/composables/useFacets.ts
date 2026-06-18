@@ -50,7 +50,7 @@ function buildFacet(
   const { field, display } = FACET_SOURCES[type];
   const counts = new Map<string, number>();
   for (const t of templates) {
-    for (const v of field(t)) {
+    for (const v of new Set(field(t))) {
       counts.set(v, (counts.get(v) || 0) + 1);
     }
   }

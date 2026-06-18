@@ -35,13 +35,19 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Bria: 'bria',
 };
 
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 /** Resolve a provider/model name to a logo path under `/logos/`, or null if unknown. */
 export function getLogoPath(name: string): string | null {
-  const slug = MODEL_TO_LOGO[name];
+  const normalized = name.trim();
+  const slug = MODEL_TO_LOGO[normalized];
   if (slug) return `/logos/${slug}.png`;
-  const lower = name.toLowerCase();
+  const lower = normalized.toLowerCase();
   for (const [key, val] of Object.entries(MODEL_TO_LOGO)) {
-    if (lower.includes(key.toLowerCase())) return `/logos/${val}.png`;
+    const pattern = new RegExp(`(?:^|[^a-z0-9])${escapeRegex(key.toLowerCase())}(?:$|[^a-z0-9])`);
+    if (pattern.test(lower)) return `/logos/${val}.png`;
   }
   return null;
 }

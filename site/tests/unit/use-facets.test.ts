@@ -12,7 +12,7 @@ import { useHubStore } from '../../src/composables/useHubStore';
 
 function makeTemplates(): FacetTemplate[] {
   return [
-    { models: ['Flux', 'SDXL'], tags: ['API', 'image'] },
+    { models: ['Flux', 'SDXL'], tags: ['API', 'image', 'image'] },
     { models: ['Flux'], tags: ['image', 'video'] },
     { models: ['Flux', 'Wan'], tags: ['image'] },
     { models: ['SDXL'], tags: ['video'] },
