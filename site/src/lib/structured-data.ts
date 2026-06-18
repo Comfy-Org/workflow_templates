@@ -16,9 +16,15 @@ export interface FaqItem {
  * `set:html`. Escapes `<`, `>`, `&`, and the U+2028/U+2029 line separators so
  * user-supplied text (FAQ questions/answers, titles) containing `</script>`
  * cannot break out of the script block and inject markup.
+ *
+ * `JSON.stringify` returns `undefined` for `undefined`/functions/symbols; we
+ * coerce that to the literal `null` so the function always returns a valid,
+ * inert JSON string instead of throwing on `.replace`.
  */
 export function serializeJsonLdForScript(value: unknown): string {
-  return JSON.stringify(value)
+  const json = JSON.stringify(value);
+  if (json === undefined) return 'null';
+  return json
     .replace(/</g, '\\u003c')
     .replace(/>/g, '\\u003e')
     .replace(/&/g, '\\u0026')
