@@ -44,6 +44,7 @@ interface IndexEntry {
   username?: string;
   thumbnailUrl?: string;
   shareId?: string;
+  usage?: number;
 }
 
 const MEDIA_TYPE_LABELS: Record<string, string> = {
@@ -136,7 +137,7 @@ export async function buildSearchIndex(): Promise<void> {
         name,
         slug,
         thumbnail: data.thumbnailUrl || '',
-        usage: 0,
+        usage: data.usage || 0,
         tagsArray: tags.map(tagDisplayName),
       });
     }
