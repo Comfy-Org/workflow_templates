@@ -23,7 +23,7 @@ import {
   type SerializedTemplate,
 } from '../../lib/hub-api';
 import { workflowOgUrl } from '../../lib/og-url';
-import { buildFaqJsonLd } from '../../lib/structured-data';
+import { buildFaqJsonLd, serializeJsonLdForScript } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
 import { localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
@@ -209,18 +209,22 @@ const toolbarLabels = buildToolbarLabels(locale);
 
   {
     faqStructuredData && (
-      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
     )
   }
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(softwareAppStructuredData)}
+    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
   />
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbStructuredData)}
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
   />
 
   <Fragment slot="footer">
