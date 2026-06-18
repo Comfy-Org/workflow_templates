@@ -11,11 +11,13 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import HubHero from '../../../components/hub/HubHero.astro';
 import HubBrowse from '../../../components/hub/HubBrowse.vue';
+import FeaturedCarousel from '../../../components/hub/FeaturedCarousel.vue';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { t } from '../../../i18n/ui';
 import { absoluteUrl } from '../../../config/site';
 import { loadSerializedTemplates } from '../../../lib/hub-api';
+import { getFeatured, featuredPreloadImage } from '../../../lib/featured';
 
 const { locale } = Astro.params;
 
@@ -27,6 +29,9 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 const typedLocale = locale as Locale;
 
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
+
+const featured = getFeatured(serialized);
+const featuredLcpImage = featuredPreloadImage(featured);
 
 const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
 
@@ -53,9 +58,25 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
   theme="dark"
   hideDefaultFooter
 >
+  {
+    featuredLcpImage && (
+      <link slot="head" rel="preload" as="image" href={featuredLcpImage} fetchpriority="high" />
+    )
+  }
+
   <HubNavbar templates={serialized} />
 
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16">
+    <!-- Featured hero carousel (Vue island) -->
+    <FeaturedCarousel
+      client:load
+      templates={featured}
+      locale={typedLocale}
+      featuredLabel={t('hub.featured.label', typedLocale)}
+      prevLabel={t('hub.featured.prev', typedLocale)}
+      nextLabel={t('hub.featured.next', typedLocale)}
+    />
+
     <HubHero />
 
     <!-- Interactive browse (Vue island) -->

@@ -4,15 +4,20 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import HubHero from '../../components/hub/HubHero.astro';
 import HubBrowse from '../../components/hub/HubBrowse.vue';
+import FeaturedCarousel from '../../components/hub/FeaturedCarousel.vue';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 import { absoluteUrl } from '../../config/site';
 import { loadSerializedTemplates } from '../../lib/hub-api';
+import { getFeatured, featuredPreloadImage } from '../../lib/featured';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
+
+const featured = getFeatured(serialized);
+const featuredLcpImage = featuredPreloadImage(featured);
 
 const canonicalUrl = absoluteUrl(localizeUrl('/workflows/', locale));
 
@@ -36,9 +41,25 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
   theme="dark"
   hideDefaultFooter
 >
+  {
+    featuredLcpImage && (
+      <link slot="head" rel="preload" as="image" href={featuredLcpImage} fetchpriority="high" />
+    )
+  }
+
   <HubNavbar templates={serialized} />
 
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16">
+  <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
+    <!-- Featured hero carousel (Vue island) -->
+    <FeaturedCarousel
+      client:load
+      templates={featured}
+      locale={locale}
+      featuredLabel={t('hub.featured.label', locale)}
+      prevLabel={t('hub.featured.prev', locale)}
+      nextLabel={t('hub.featured.next', locale)}
+    />
+
     <HubHero />
 
     <!-- Interactive browse (Vue island) -->
