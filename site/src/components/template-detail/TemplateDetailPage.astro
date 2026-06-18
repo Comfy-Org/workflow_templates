@@ -1,8 +1,10 @@
 ---
 import ThumbnailDisplay from '../ThumbnailDisplay.astro';
-import BackButton from '../BackButton.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
 import SidebarSection from './SidebarSection.astro';
 import CollapsibleBadgeList from './CollapsibleBadgeList.vue';
+import FaqAccordion from './FaqAccordion.vue';
+import ExpandableText from './ExpandableText.vue';
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
@@ -10,7 +12,6 @@ import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
-import { isVideoFile } from '../../lib/media-utils';
 import { featureFlags } from '../../config/featureFlags';
 
 interface Props {
@@ -31,6 +32,7 @@ interface Props {
       models?: string[];
       username?: string;
       date?: string;
+      faqItems?: { question: string; answer: string }[];
     };
   };
   locale: Locale;
@@ -47,10 +49,6 @@ const authorProfileUrl = data.username
   ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
   : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
-const hasNaturalAspectMedia =
-  !!data.detailImages?.length ||
-  data.mediaType === 'video' ||
-  (thumbnails[0] ? isVideoFile(thumbnails[0]) : false);
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const cloudTemplateId = data.shareId || data.name;
 const downloadUrl = data.shareId
@@ -88,59 +86,18 @@ function formatRelativeDate(dateStr: string): string {
   data-media-type={data.mediaType}
   data-author={data.username || ''}
 >
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-16 pb-32">
-    <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 justify-between w-full">
-      <div class="w-[140px]">
-        {/* Back button */}
-        <BackButton
-          locale={locale}
-          class="self-start lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2"
-        />
-      </div>
+  <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)] pt-4 lg:pt-8 pb-32">
+    {/* Breadcrumbs (replaces the old back button) */}
+    <Breadcrumbs locale={locale} title={data.title || data.name} class="mb-6 lg:mb-8" />
 
-      <div class="flex-1 min-w-0">
-        {/* Thumbnail */}
-        {
-          thumbnails.length > 0 && (
-            <div class="rounded-lg overflow-hidden">
-              <ThumbnailDisplay
-                thumbnails={thumbnails}
-                title={data.title || data.name}
-                variant={data.thumbnailVariant}
-                mediaSubtype={data.mediaSubtype}
-                class={hasNaturalAspectMedia ? 'w-full' : 'w-full aspect-square'}
-                naturalAspect={hasNaturalAspectMedia}
-                loading="eager"
-                fetchpriority="high"
-                sizes="(min-width: 1024px) 60vw, 100vw"
-              />
-            </div>
-          )
-        }
-
-        {/* Full description */}
-        <div class="flex flex-col gap-6 lg:mt-12 scroll-mt-8" id="description">
-          <hr class="border-0 border-t border-divider lg:hidden" />
-          {
-            data.extendedDescription && (
-              <div class="flex flex-col gap-4">
-                {data.extendedDescription
-                  .split('\n\n')
-                  .filter(Boolean)
-                  .map((paragraph: string) => (
-                    <p class="text-base leading-relaxed text-content-secondary">
-                      {paragraph.trim()}
-                    </p>
-                  ))}
-              </div>
-            )
-          }
-        </div>
-      </div>
-
-      {/* Sidebar */}
-      <aside class="flex flex-col lg:min-w-93.75 lg:max-w-93.75">
-        <div class="flex flex-col gap-6 lg:sticky lg:top-24">
+    {
+      /* Top section: info column (left ~30%) + landscape image (right ~70%).
+        On mobile the image shows first (flex-col-reverse), info below. */
+    }
+    <div class="flex flex-col-reverse lg:flex-row gap-8 lg:gap-16 w-full lg:items-stretch">
+      {/* Info column */}
+      <aside class="flex flex-col w-full lg:w-90 lg:shrink-0">
+        <div class="flex flex-col gap-6 lg:sticky lg:top-8">
           {/* Workflow */}
           <SidebarSection title="Workflow">
             <div class="min-w-0">
@@ -160,50 +117,6 @@ function formatRelativeDate(dateStr: string): string {
                   </div>
                 )
               }
-            </div>
-          </SidebarSection>
-
-          {/* Creator */}
-          <SidebarSection title={t('labels.createdBy', locale)}>
-            <div class="flex items-center gap-3">
-              <div class="size-8 shrink-0 rounded-full overflow-hidden">
-                {
-                  authorAvatarUrl ? (
-                    <img
-                      src={authorAvatarUrl}
-                      alt={authorName}
-                      class="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-black">
-                      {authorName.charAt(0).toUpperCase()}
-                    </div>
-                  )
-                }
-              </div>
-              <div class="flex flex-col">
-                {
-                  authorProfileUrl ? (
-                    <a
-                      href={authorProfileUrl}
-                      class="font-semibold text-base text-content hover:opacity-80 transition-opacity"
-                      data-astro-prefetch
-                    >
-                      {authorName}
-                    </a>
-                  ) : (
-                    <span class="font-semibold text-base text-content">{authorName}</span>
-                  )
-                }
-                {
-                  data.date && (
-                    <span class="text-base text-content-secondary">
-                      {formatRelativeDate(data.date)}
-                    </span>
-                  )
-                }
-              </div>
             </div>
           </SidebarSection>
 
@@ -273,9 +186,101 @@ function formatRelativeDate(dateStr: string): string {
               </SidebarSection>
             )
           }
+
+          {/* Creator — last in the info column */}
+          <SidebarSection title={t('labels.createdBy', locale)}>
+            <div class="flex items-center gap-3">
+              <div class="size-8 shrink-0 rounded-full overflow-hidden">
+                {
+                  authorAvatarUrl ? (
+                    <img
+                      src={authorAvatarUrl}
+                      alt={authorName}
+                      class="w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-black">
+                      {authorName.charAt(0).toUpperCase()}
+                    </div>
+                  )
+                }
+              </div>
+              <div class="flex flex-col">
+                {
+                  authorProfileUrl ? (
+                    <a
+                      href={authorProfileUrl}
+                      class="font-semibold text-base text-content hover:opacity-80 transition-opacity"
+                      data-astro-prefetch
+                    >
+                      {authorName}
+                    </a>
+                  ) : (
+                    <span class="font-semibold text-base text-content">{authorName}</span>
+                  )
+                }
+                {
+                  data.date && (
+                    <span class="text-base text-content-secondary">
+                      {formatRelativeDate(data.date)}
+                    </span>
+                  )
+                }
+              </div>
+            </div>
+          </SidebarSection>
         </div>
       </aside>
+
+      <div class="flex min-w-0 flex-1 justify-center lg:min-h-0">
+        {
+          thumbnails.length > 0 && (
+            <div class="media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg lg:h-full lg:w-auto">
+              <ThumbnailDisplay
+                thumbnails={thumbnails}
+                title={data.title || data.name}
+                variant={data.thumbnailVariant}
+                mediaSubtype={data.mediaSubtype}
+                class="absolute inset-0 h-full w-full"
+                loading="eager"
+                fetchpriority="high"
+                sizes="(min-width: 1024px) 65vw, 100vw"
+              />
+            </div>
+          )
+        }
+      </div>
     </div>
+
+    {/* Full-width extended description, capped with Read more */}
+    {
+      data.extendedDescription && (
+        <section class="mt-10 lg:mt-16 scroll-mt-8" id="description">
+          <ExpandableText
+            client:visible
+            paragraphs={data.extendedDescription
+              .split('\n\n')
+              .map((p: string) => p.trim())
+              .filter(Boolean)}
+            moreLabel={t('template.readMore', locale)}
+            lessLabel={t('template.readLess', locale)}
+          />
+        </section>
+      )
+    }
+
+    {/* FAQ (renders nothing when there are no items) */}
+    {
+      data.faqItems && data.faqItems.length > 0 && (
+        <div class="mt-16 lg:mt-24">
+          <FaqAccordion client:visible items={data.faqItems} heading={t('template.faq', locale)} />
+        </div>
+      )
+    }
+
+    {/* View All Workflows — injected by the route page */}
+    <slot name="related" />
   </div>
 </article>
 
@@ -367,3 +372,17 @@ function formatRelativeDate(dateStr: string): string {
     });
   }
 </script>
+
+<style>
+  .media-frame :global(.video-thumb),
+  .media-frame :global(.video-fallback-wrapper) {
+    width: 100%;
+    height: 100%;
+  }
+  .media-frame :global(img),
+  .media-frame :global(video) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>
