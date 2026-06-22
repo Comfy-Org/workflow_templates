@@ -28,10 +28,11 @@ workflow_templates/
 │   ├── sync/               # sync_data, sync_bundles, sync_blueprints, etc.
 │   ├── validate/           # validate_templates, check_links, analyze_models, etc.
 │   ├── ci/                 # ci_version_manager, PyPI quota, version helpers
-│   ├── data/               # i18n.json, whitelist.json
+│   ├── data/               # i18n.json, whitelist.json, models_capabilities.json
 │   ├── lib/                # Shared modules (locale_index_files, paths)
 │   ├── maintenance/        # archive_templates, local-only tools
-│   └── blueprints/         # import_blueprints
+│   ├── blueprints/         # import_blueprints
+│   └── docs/               # Script-specific markdown (whitelist.md, etc.)
 ├── site/                   # INDEPENDENT Astro 5 project (see "Site" section below)
 ├── docs/                   # Specs, i18n guide, publishing guide
 ├── .claude/skills/         # 6 Claude skill definitions
@@ -72,9 +73,67 @@ templates/index.json + *.json + *.webp
 ### Root (template management)
 
 ```bash
-npm run sync              # Sync bundle manifests + assets to packages
-python scripts/validate/validate_templates.py   # Validate template JSON
-python scripts/sync/sync_data.py --templates-dir templates  # Sync i18n translations
+npm run sync                    # Sync bundle manifests + assets to packages
+npm run sync:bundles            # Same as above (explicit)
+npm run sync:templates          # Full i18n sync pipeline
+npm run validate:templates      # Validate template JSON
+npm run validate:manifests      # Validate package manifests
+
+python scripts/validate/validate_templates.py
+python scripts/sync/sync_data.py --templates-dir templates   # Sync i18n translations
+python scripts/sync/sync_bundles.py
+```
+
+### Root `scripts/` (Python maintenance)
+
+**Do not confuse with `site/scripts/`** — that is TypeScript for the Astro site. Site CI never uses root `scripts/`.
+
+| Directory | Put here | Examples |
+|-----------|----------|----------|
+| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py`, `sync_mcp_index.py` |
+| `scripts/validate/` | Validation & analysis (CI) | `validate_templates.py`, `check_links.py`, `analyze_models.py` |
+| `scripts/blueprints/` | Blueprint import | `import_blueprints.py` |
+| `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_pypi_quota.py` |
+| `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `models_capabilities.json` |
+| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py` |
+| `scripts/maintenance/` | Local-only / one-off tools | `archive_templates.py`, `check_templates.sh` |
+| `scripts/docs/` | Script-specific markdown | `whitelist.md`, `check_input_assets.md` |
+
+**Path migration (old → new):**
+
+| Old path | New path |
+|----------|----------|
+| `scripts/sync_bundles.py` | `scripts/sync/sync_bundles.py` |
+| `scripts/sync_data.py` | `scripts/sync/sync_data.py` |
+| `scripts/validate_templates.py` | `scripts/validate/validate_templates.py` |
+| `scripts/i18n.json` | `scripts/data/i18n.json` |
+| `scripts/whitelist.json` | `scripts/data/whitelist.json` |
+| `scripts/locale_index_files.py` | `scripts/lib/locale_index_files.py` |
+| `scripts/ci_version_manager.py` | `scripts/ci/ci_version_manager.py` |
+| `scripts/sync-mcp-index.py` | `scripts/sync/sync_mcp_index.py` |
+
+Full index and CI mapping: [`scripts/README.md`](scripts/README.md). Agent quick reference: [`AGENTS.md`](AGENTS.md).
+
+**Conventions when adding files:**
+
+1. **New Python CLI** — place in the correct subdirectory (`sync/`, `validate/`, etc.), use `snake_case.py`, import paths from `scripts/lib/paths.py` (never hardcode `scripts/i18n.json` or use `Path(__file__).parents[1]` for repo root).
+2. **New config JSON** — `scripts/data/`; add a constant to `paths.py` if other scripts need it.
+3. **New shared module** — `scripts/lib/` (import-only, not a CLI).
+4. **Generated output** — `scripts/.output/` (gitignored) or repo-root reports; never commit generated files into `scripts/data/`.
+5. **CI workflows** — if sparse-checkout is used and the script imports `paths.py`, checkout the script **and** `scripts/lib/paths.py` (and any `scripts/data/*` it reads). Update `on.*.paths` triggers to the new file location.
+6. **Cross-repo updates** — also update `.github/workflows/`, `.claude/skills/`, `docs/`, `packages/core/tests/` (importlib paths), `tools/project.json`, and root `package.json`.
+
+Import pattern for `scripts/lib/`:
+
+```python
+import sys
+from pathlib import Path
+
+_lib_dir = Path(__file__).resolve().parent.parent / "lib"
+if str(_lib_dir) not in sys.path:
+    sys.path.insert(0, str(_lib_dir))
+
+from paths import REPO_ROOT, TEMPLATES_DIR, I18N_FILE, WHITELIST_FILE  # noqa: E402
 ```
 
 ### Site (in site/ directory)
@@ -298,4 +357,6 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - `site/docs/PRD.md` — Product requirements for the site
 - `site/docs/TDD.md` — Technical design document
 - `site/docs/design-integration-guide.md` — REQUIRED when implementing Figma designs
+- `scripts/README.md` — Scripts directory index, CI mapping, commands
+- `AGENTS.md` — Agent quick reference (commands, scripts layout, file conventions)
 
