@@ -20,7 +20,7 @@ try:
 except ImportError:
     HAS_JSONSCHEMA = False
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 BLUEPRINTS_DIR = ROOT / "blueprints"
 BUNDLES_CONFIG = ROOT / "blueprints_bundles.json"
 
@@ -181,7 +181,7 @@ def main():
         print("\n❌ Validation failed with errors:")
         for err in all_errors:
             print(f"  - {err}")
-        print("\nRun: python scripts/import_blueprints.py")
+        print("\nRun: python scripts/blueprints/import_blueprints.py")
         sys.exit(1)
     else:
         print("\n✅ All validations passed")

@@ -7,7 +7,7 @@ on:
     paths:
       - 'input/**'
       - 'templates/index.json'
-      - 'scripts/check_input_assets.py'
+      - 'scripts/validate/check_input_assets.py'
   workflow_dispatch:
 
 permissions:
@@ -30,7 +30,7 @@ jobs:
           sparse-checkout: |
             templates/index.json
             input/
-            scripts/check_input_assets.py
+            scripts/validate/check_input_assets.py
             workflow_template_input_files.json
           sparse-checkout-cone-mode: false
 
@@ -42,7 +42,7 @@ jobs:
       - name: Validate input assets and generate upload JSON
         id: validate
         run: |
-          python scripts/check_input_assets.py --generate-upload-json 2>&1 | tee validation_output.txt
+          python scripts/validate/check_input_assets.py --generate-upload-json 2>&1 | tee validation_output.txt
           echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
       
       - name: Check if JSON was generated

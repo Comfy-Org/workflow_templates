@@ -21,9 +21,9 @@ Translation Workflow:
 5. Re-run sync to apply translations to all language files
 
 Usage:
-    python sync_templates.py --templates-dir ./templates
-    python sync_templates.py --templates-dir ./templates --dry-run
-    python sync_templates.py --templates-dir ./templates --force-sync-language-fields
+    python scripts/sync/sync_data.py --templates-dir ./templates
+    python scripts/sync/sync_data.py --templates-dir ./templates --dry-run
+    python scripts/sync/sync_data.py --templates-dir ./templates --force-sync-language-fields
 
 Author: Claude Code
 Date: 2025-11-27
@@ -42,11 +42,12 @@ from typing import Dict, List, Any, Optional, Tuple
 from datetime import datetime
 from pathlib import Path
 
-# Import sync_bundles module
-# Add scripts directory to path to ensure we can import sync_bundles
-_scripts_dir = Path(__file__).parent
-if str(_scripts_dir) not in sys.path:
-    sys.path.insert(0, str(_scripts_dir))
+# Add script subpackages to path for cross-module imports
+_scripts_root = Path(__file__).resolve().parent.parent
+for _subdir in ("sync", "validate", "lib"):
+    _path = str(_scripts_root / _subdir)
+    if _path not in sys.path:
+        sys.path.insert(0, _path)
 
 try:
     import sync_bundles
@@ -73,7 +74,8 @@ try:
 except ImportError:
     generate_workflow_io = None
 
-from locale_index_files import LANGUAGE_FILES
+from locale_index_files import LANGUAGE_FILES  # noqa: E402
+from paths import I18N_FILE  # noqa: E402
 
 
 def _io_entry_has_nonempty_file(entry: Any) -> bool:
@@ -92,8 +94,7 @@ class TemplateSyncer:
         self.dry_run = dry_run
         self.master_file = self.templates_dir / "index.json"
         # i18n file is in the scripts directory (sibling to templates)
-        scripts_dir = self.templates_dir.parent / "scripts"
-        self.i18n_file = scripts_dir / "i18n.json"
+        self.i18n_file = I18N_FILE
         
         # Configuration for field handling
         self.auto_sync_fields = {
@@ -1724,13 +1725,13 @@ def main():
         epilog="""
 Examples:
   # Normal sync with tag translation
-  python sync_templates.py --templates-dir ./templates
+  python scripts/sync/sync_data.py --templates-dir ./templates
   
   # Dry run to see what would change
-  python sync_templates.py --templates-dir ./templates --dry-run
+  python scripts/sync/sync_data.py --templates-dir ./templates --dry-run
   
   # Force sync language fields (overwrite existing translations)
-  python sync_templates.py --templates-dir ./templates --force-sync-language-fields
+  python scripts/sync/sync_data.py --templates-dir ./templates --force-sync-language-fields
 
 Translation System:
   Translations are stored in i18n.json with the following structure:

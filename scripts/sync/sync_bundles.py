@@ -28,7 +28,7 @@ from typing import Optional
 # and contains none of these values.
 LOCAL_DISTRIBUTIONS = {"local", "desktop", "mac", "windows"}
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = ROOT / "templates"
 CORE_MANIFEST = (
     ROOT

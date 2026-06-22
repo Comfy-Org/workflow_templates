@@ -12,8 +12,8 @@ Features:
   - Skips instructional categories: Node Basics, LLM, Getting Started
 
 Usage:
-  python3 scripts/sync-mcp-index.py              # sync and write
-  python3 scripts/sync-mcp-index.py --check      # dry-run, only print diff
+  python3 scripts/sync/sync_mcp_index.py              # sync and write
+  python3 scripts/sync/sync_mcp_index.py --check      # dry-run, only print diff
 
 Dependencies:
   - templates/index.json (source data)
@@ -28,7 +28,13 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-WORKFLOW_DIR = Path(__file__).parent.parent.resolve()
+_lib_dir = Path(__file__).resolve().parent.parent / "lib"
+if str(_lib_dir) not in sys.path:
+    sys.path.insert(0, str(_lib_dir))
+
+from paths import MODELS_CAPABILITIES_FILE, REPO_ROOT  # noqa: E402
+
+WORKFLOW_DIR = REPO_ROOT
 TEMPLATES_DIR = WORKFLOW_DIR / "templates"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 OUTPUT_FILE = TEMPLATES_DIR / "index.mcp.json"
@@ -81,7 +87,7 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
 }
 
 # ── Models capabilities file ───────────────────────────────────────────────
-MODELS_CAP_FILE = WORKFLOW_DIR / "scripts" / "models_capabilities.json"
+MODELS_CAP_FILE = MODELS_CAPABILITIES_FILE
 
 try:
     with open(MODELS_CAP_FILE, encoding="utf-8") as f:

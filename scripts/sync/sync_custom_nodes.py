@@ -23,6 +23,12 @@ from typing import Dict, List, Set, Any, Optional
 from pathlib import Path
 import re
 
+_lib_dir = Path(__file__).resolve().parent.parent / "lib"
+if str(_lib_dir) not in sys.path:
+    sys.path.insert(0, str(_lib_dir))
+
+from paths import WHITELIST_FILE  # noqa: E402
+
 
 class CustomNodesSyncer:
     """Main class for syncing custom nodes requirements"""
@@ -30,7 +36,7 @@ class CustomNodesSyncer:
     def __init__(self, templates_dir: str, dry_run: bool = False, whitelist_file: Optional[str] = None):
         self.templates_dir = Path(templates_dir).resolve()
         self.dry_run = dry_run
-        self.whitelist_file = Path(whitelist_file).resolve() if whitelist_file else Path(__file__).with_name("whitelist.json")
+        self.whitelist_file = Path(whitelist_file).resolve() if whitelist_file else WHITELIST_FILE
         
         # Setup logging
         self.setup_logging()
@@ -327,7 +333,7 @@ Examples:
     parser.add_argument('--dry-run', action='store_true', 
                        help='Show what would be done without making changes')
     parser.add_argument('--whitelist-file', default=None,
-                       help='Path to whitelist.json (default: scripts/whitelist.json)')
+                       help=f'Path to whitelist.json (default: {WHITELIST_FILE})')
     
     args = parser.parse_args()
     

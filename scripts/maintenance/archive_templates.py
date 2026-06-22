@@ -6,6 +6,11 @@ This script:
 1. RESTORES templates with "status": "active" in archived/index.json (runs first)
 2. ARCHIVES templates with "status": "archived" in templates/index.json (runs after restore)
 
+Restore and archive templates with `scripts/maintenance/archive_templates.py` (the sole entry point for both operations):
+
+- Set `status: "active"` in `archived/index.json` to restore
+- Set `status: "archived"` in `templates/index.json` to archive
+
 Restore process:
 1. Finds all templates with "status": "active" in archived/index.json
 2. Moves template JSON files and thumbnails back to templates/ folder
@@ -28,15 +33,15 @@ import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
-# Base paths (script is at scripts/archive_templates.py, so parent.parent = repo root)
-BASE_DIR = Path(__file__).parent.parent
+# Base paths (script is at scripts/maintenance/archive_templates.py, so parent.parent.parent = repo root)
+BASE_DIR = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = BASE_DIR / "templates"
 ARCHIVED_DIR = BASE_DIR / "archived"
 SCRIPTS_DIR = BASE_DIR / "scripts"
 BUNDLES_FILE = BASE_DIR / "bundles.json"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 ARCHIVED_INDEX_FILE = ARCHIVED_DIR / "index.json"
-I18N_FILE = SCRIPTS_DIR / "i18n.json"
+I18N_FILE = SCRIPTS_DIR / "data" / "i18n.json"
 ARCHIVED_I18N_FILE = ARCHIVED_DIR / "archived_i18n.json"
 
 # Locale files pattern

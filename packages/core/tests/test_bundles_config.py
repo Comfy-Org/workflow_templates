@@ -24,7 +24,7 @@ import comfyui_workflow_templates_core.loader as loader  # noqa: E402
 # Load get_pip_excluded_template_names from sync_bundles.py without adding the
 # scripts/ directory permanently to sys.path.
 _spec = importlib.util.spec_from_file_location(
-    "sync_bundles", REPO_ROOT / "scripts" / "sync_bundles.py"
+    "sync_bundles", REPO_ROOT / "scripts" / "sync" / "sync_bundles.py"
 )
 _sync_bundles = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_sync_bundles)

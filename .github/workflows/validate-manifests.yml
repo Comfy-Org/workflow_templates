@@ -8,9 +8,9 @@ on:
       - 'blueprints/**'
       - 'packages/*/src/*/manifest.json'
       - 'packages/*/src/*/*.json'
-      - 'scripts/validate_manifests.py'
-      - 'scripts/sync_bundles.py'
-      - 'scripts/sync_blueprints.py'
+      - 'scripts/validate/validate_manifests.py'
+      - 'scripts/sync/sync_bundles.py'
+      - 'scripts/sync/sync_blueprints.py'
   push:
     branches: [main]
     paths:
@@ -43,18 +43,18 @@ jobs:
       
       - name: Sync manifests first
         run: |
-          python scripts/sync_bundles.py
-          python scripts/sync_blueprints.py
+          python scripts/sync/sync_bundles.py
+          python scripts/sync/sync_blueprints.py
           
       - name: Validate manifest entries
         run: |
           cd ${{ github.workspace }}
-          python scripts/validate_manifests.py
+          python scripts/validate/validate_manifests.py
       
       - name: Check for orphaned templates
         run: |
           echo "🔍 Checking for templates without manifest entries..."
-          excluded=$(python3 scripts/list_pip_excluded.py)
+          excluded=$(python3 scripts/validate/list_pip_excluded.py)
           cd templates
           orphaned=0
           for json_file in *.json; do

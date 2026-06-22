@@ -15,11 +15,11 @@ except ImportError:
     print("Error: jsonschema package not installed. Run: pip install jsonschema")
     sys.exit(1)
 
-_scripts_dir = Path(__file__).parent
-if str(_scripts_dir) not in sys.path:
-    sys.path.insert(0, str(_scripts_dir))
+_lib_dir = Path(__file__).resolve().parent.parent / "lib"
+if str(_lib_dir) not in sys.path:
+    sys.path.insert(0, str(_lib_dir))
 
-from locale_index_files import TEMPLATES_NON_WORKFLOW_FILES
+from locale_index_files import TEMPLATES_NON_WORKFLOW_FILES  # noqa: E402
 
 
 def load_json(file_path: Path) -> Dict:
@@ -598,7 +598,7 @@ def main():
     
     # Determine paths
     script_dir = Path(__file__).parent
-    repo_root = script_dir.parent
+    repo_root = script_dir.parent.parent
     templates_dir = repo_root / 'templates'
     schema_path = templates_dir / 'index.schema.json'
     

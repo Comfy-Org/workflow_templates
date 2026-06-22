@@ -20,8 +20,9 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           sparse-checkout: |
             templates/*.json
-            scripts/analyze_models.py
-            scripts/whitelist.json
+            scripts/validate/analyze_models.py
+            scripts/lib/paths.py
+            scripts/data/whitelist.json
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -33,7 +34,7 @@ jobs:
         id: model_analysis
         run: |
           echo "Running model analysis..."
-          python scripts/analyze_models.py > model_analysis_report.txt 2>&1 || echo "model_analysis_failed=true" >> $GITHUB_OUTPUT
+          python scripts/validate/analyze_models.py > model_analysis_report.txt 2>&1 || echo "model_analysis_failed=true" >> $GITHUB_OUTPUT
           cat model_analysis_report.txt
           
           # Check if analysis failed

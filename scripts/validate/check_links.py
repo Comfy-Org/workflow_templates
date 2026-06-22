@@ -14,6 +14,12 @@ import sys
 from pathlib import Path
 from typing import Set, List, Dict, Tuple, Optional
 
+_lib_dir = Path(__file__).resolve().parent.parent / "lib"
+if str(_lib_dir) not in sys.path:
+    sys.path.insert(0, str(_lib_dir))
+
+from paths import WHITELIST_FILE  # noqa: E402
+
 
 def extract_url_with_balanced_parens(text: str, start_pos: int) -> Tuple[str, int]:
     """
@@ -141,7 +147,7 @@ def extract_links_from_workflow(file_path: Path) -> Dict[str, List[Tuple[str, st
 
 def load_whitelist_skip_urls() -> Set[str]:
     """Load skip_urls from whitelist.json."""
-    whitelist_path = Path('scripts/whitelist.json')
+    whitelist_path = WHITELIST_FILE
     skip_urls = set()
     
     try:

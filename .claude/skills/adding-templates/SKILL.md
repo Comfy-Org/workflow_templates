@@ -13,8 +13,8 @@ ComfyUI workflow_templates repository.
 - **Never** modify scripts, build tooling, or CI configuration.
 - **Always** validate after changes (see Step 7).
 - Template file names **must** be `snake_case` — no spaces, dots, or special characters.
-- **Always** run `python scripts/sync_bundles.py` after editing `bundles.json`.
-- **Always** run `python scripts/sync_data.py --templates-dir templates` after editing `templates/index.json`.
+- **Always** run `python scripts/sync/sync_bundles.py` after editing `bundles.json`.
+- **Always** run `python scripts/sync/sync_data.py --templates-dir templates` after editing `templates/index.json`.
 - Bump the version in the root `pyproject.toml` before finalising.
 - Use double-quotes `"` in all JSON files (never single-quotes).
 - Ensure model download URLs produce filenames that **exactly** match the `widgets_values` entries in the workflow JSON.
@@ -128,7 +128,7 @@ Open `bundles.json` and add the template name string to the correct bundle array
 Then sync:
 
 ```bash
-python scripts/sync_bundles.py
+python scripts/sync/sync_bundles.py
 ```
 
 ---
@@ -188,9 +188,9 @@ and `ver` to the node's `"properties"`:
 ## Step 7 — Run Sync and Validation
 
 ```bash
-python scripts/sync_bundles.py
-python scripts/validate_templates.py
-python scripts/validate_thumbnails.py
+python scripts/sync/sync_bundles.py
+python scripts/validate/validate_templates.py
+python scripts/validate/validate_thumbnails.py
 ```
 
 Fix any errors before continuing. CI will fail if bundles/manifests are out of
@@ -201,13 +201,13 @@ sync.
 ## Step 8 — Sync Translations (i18n)
 
 ```bash
-python scripts/sync_data.py --templates-dir templates
+python scripts/sync/sync_data.py --templates-dir templates
 ```
 
 This propagates the new template to all locale index files (`index.zh.json`,
-`index.ja.json`, etc.) and updates `scripts/i18n.json` for translation tracking.
+`index.ja.json`, etc.) and updates `scripts/data/i18n.json` for translation tracking.
 
-Optionally, add translations directly in `scripts/i18n.json`:
+Optionally, add translations directly in `scripts/data/i18n.json`:
 
 ```json
 {
@@ -226,7 +226,7 @@ Optionally, add translations directly in `scripts/i18n.json`:
 }
 ```
 
-Then re-run `python scripts/sync_data.py --templates-dir templates` to apply.
+Then re-run `python scripts/sync/sync_data.py --templates-dir templates` to apply.
 
 ---
 
@@ -262,8 +262,8 @@ detect which subpackages changed and publishes only affected packages to PyPI.
 | `templates/index.json` | Master template manifest (English) |
 | `bundles.json` | Maps template names → media-type bundles |
 | `pyproject.toml` | Root package version (bump before PR) |
-| `scripts/sync_bundles.py` | Regenerate manifest + copy assets to packages |
-| `scripts/validate_templates.py` | Validate template JSON structure |
-| `scripts/validate_thumbnails.py` | Validate thumbnail files |
-| `scripts/sync_data.py` | Sync translations to all locale index files |
-| `scripts/i18n.json` | Translation strings for template titles/descriptions |
+| `scripts/sync/sync_bundles.py` | Regenerate manifest + copy assets to packages |
+| `scripts/validate/validate_templates.py` | Validate template JSON structure |
+| `scripts/validate/validate_thumbnails.py` | Validate thumbnail files |
+| `scripts/sync/sync_data.py` | Sync translations to all locale index files |
+| `scripts/data/i18n.json` | Translation strings for template titles/descriptions |

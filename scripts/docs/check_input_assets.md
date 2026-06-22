@@ -19,7 +19,7 @@ A comprehensive script that validates input assets referenced in workflow JSON f
 Run asset validation without generating upload JSON:
 
 ```bash
-python scripts/check_input_assets.py
+python scripts/validate/check_input_assets.py
 ```
 
 This will:
@@ -34,7 +34,7 @@ This will:
 Generate the upload JSON file for asset deployment:
 
 ```bash
-python3 scripts/check_input_assets.py --generate-upload-json
+python3 scripts/validate/check_input_assets.py --generate-upload-json
 ```
 
 This will:
@@ -49,7 +49,7 @@ This will:
 Use a custom base URL for the generated asset URLs:
 
 ```bash
-python scripts/check_input_assets.py --generate-upload-json --base-url "https://example.com/assets/"
+python scripts/validate/check_input_assets.py --generate-upload-json --base-url "https://example.com/assets/"
 ```
 
 ### Input File Naming Convention
@@ -165,7 +165,7 @@ cp my_image.png input/flux_dev_checkpoint_example_sample_input.png
 # Edit templates/flux_dev_checkpoint_example.json
 
 # 3. Validate locally
-python scripts/check_input_assets.py --generate-upload-json
+python scripts/validate/check_input_assets.py --generate-upload-json
 
 # 4. Review generated JSON
 cat workflow_template_input_files.json

@@ -93,7 +93,7 @@ gh workflow run "Publish to PyPI"  # Triggers recovery mode
 
 ### Re-sync Manifests
 ```bash
-python scripts/sync_bundles.py
+python scripts/sync/sync_bundles.py
 ```
 
 ### Check Package Versions vs PyPI
