@@ -22,6 +22,7 @@ TEMPLATES_NON_WORKFLOW_FILES: frozenset[str] = frozenset(
         *LANGUAGE_FILES.values(),
         "index.schema.json",
         "index_logo.json",
+        "index.mcp.json",
         "fuse_options.json",
         ".gitignore",
         "README.md",
