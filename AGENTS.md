@@ -2,15 +2,15 @@
 
 ## Build & Run Commands
 - `npm run sync` — Sync template bundles (run after editing templates/ or bundles.json)
-- `python scripts/validate_templates.py` — Validate template JSON files
-- `python scripts/sync_bundles.py` — Regenerate manifest and copy assets to packages
+- `python scripts/validate/validate_templates.py` — Validate template JSON files
+- `python scripts/sync/sync_bundles.py` — Regenerate manifest and copy assets to packages
 
 ## Architecture
 - **Monorepo** with Nx, Python packages, and Astro site
 - `templates/` — Source workflow JSON files and thumbnails (index.json is the manifest)
 - `packages/` — Python packages: core (loader), media_* (templates by type: api, image, video, other)
 - `site/` — Astro static site (independently managed; see below)
-- `scripts/` — Python validation/sync scripts for CI and local dev
+- `scripts/` — Python validation/sync scripts for CI and local dev (see `scripts/README.md`)
 
 ## Template Site
 The `site/` directory is an independent Astro 5 project with Vue 3 interactive islands.

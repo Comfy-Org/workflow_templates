@@ -24,7 +24,14 @@ workflow_templates/
 │   ├── media_other/        # Audio, 3D, utilities
 │   ├── meta/               # Meta package aggregating all above
 │   └── blueprints/         # Subgraph blueprints package
-├── scripts/                # Python: validation, sync, i18n
+├── scripts/                # Python: validation, sync, i18n (see scripts/README.md)
+│   ├── sync/               # sync_data, sync_bundles, sync_blueprints, etc.
+│   ├── validate/           # validate_templates, check_links, analyze_models, etc.
+│   ├── ci/                 # ci_version_manager, PyPI quota, version helpers
+│   ├── data/               # i18n.json, whitelist.json
+│   ├── lib/                # Shared modules (locale_index_files, paths)
+│   ├── maintenance/        # archive_templates, local-only tools
+│   └── blueprints/         # import_blueprints
 ├── site/                   # INDEPENDENT Astro 5 project (see "Site" section below)
 ├── docs/                   # Specs, i18n guide, publishing guide
 ├── .claude/skills/         # 6 Claude skill definitions
@@ -39,7 +46,7 @@ workflow_templates/
 ### System 1: Template Packages (Python/PyPI)
 
 - Templates are grouped into 4 media bundles via `bundles.json`
-- `scripts/sync_bundles.py` copies templates + thumbnails into package directories
+- `scripts/sync/sync_bundles.py` copies templates + thumbnails into package directories
 - Published to PyPI as `comfyui-workflow-templates-*` packages
 - Version lives in root `pyproject.toml` (currently 0.8.43)
 
@@ -54,7 +61,7 @@ workflow_templates/
 
 ```
 templates/index.json + *.json + *.webp
-  ├──→ scripts/sync_bundles.py ──→ packages/media_*/
+  ├──→ scripts/sync/sync_bundles.py ──→ packages/media_*/
   └──→ site/scripts/sync-templates.ts ──→ site/src/content/templates/
        └──→ site/scripts/generate-ai.ts ──→ AI-enriched content
             └──→ astro build ──→ templates.comfy.org (Vercel)
@@ -66,8 +73,8 @@ templates/index.json + *.json + *.webp
 
 ```bash
 npm run sync              # Sync bundle manifests + assets to packages
-python scripts/validate_templates.py   # Validate template JSON
-python scripts/sync_data.py --templates-dir templates  # Sync i18n translations
+python scripts/validate/validate_templates.py   # Validate template JSON
+python scripts/sync/sync_data.py --templates-dir templates  # Sync i18n translations
 ```
 
 ### Site (in site/ directory)
@@ -134,8 +141,8 @@ en (default), zh, zh-TW, ja, ko, es, fr, ru, tr, ar, pt-BR
 
 - Master: `templates/index.json` (English)
 - Locales: `templates/index.{locale}.json`
-- Translation tracking: `scripts/i18n.json`
-- Sync: `python scripts/sync_data.py --templates-dir templates`
+- Translation tracking: `scripts/data/i18n.json`
+- Sync: `python scripts/sync/sync_data.py --templates-dir templates`
 
 ### Site i18n
 

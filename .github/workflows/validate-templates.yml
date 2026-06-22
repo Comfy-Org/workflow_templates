@@ -8,9 +8,9 @@ on:
     branches: [ main ]
     paths:
       - 'templates/**'
-      - 'scripts/validate_templates.py'
-      - 'scripts/locale_index_files.py'
-      - 'scripts/validate_thumbnails.py'
+      - 'scripts/validate/validate_templates.py'
+      - 'scripts/lib/locale_index_files.py'
+      - 'scripts/validate/validate_thumbnails.py'
       - '.github/workflows/validate-templates.yml'
       - 'templates/index.schema.json'
 
@@ -24,10 +24,10 @@ jobs:
       with:
         sparse-checkout: |
           templates/
-          scripts/validate_templates.py
-          scripts/locale_index_files.py
-          scripts/validate_thumbnails.py
-          scripts/list_pip_excluded.py
+          scripts/validate/validate_templates.py
+          scripts/lib/locale_index_files.py
+          scripts/validate/validate_thumbnails.py
+          scripts/validate/list_pip_excluded.py
         sparse-checkout-cone-mode: false
 
     - name: Set up Python
@@ -49,7 +49,7 @@ jobs:
     - name: Run validation script
       id: validation
       run: |
-        python scripts/validate_templates.py 2>&1 | tee validation_output.txt
+        python scripts/validate/validate_templates.py 2>&1 | tee validation_output.txt
         echo "exit_code=${PIPESTATUS[0]}" >> $GITHUB_OUTPUT
       continue-on-error: true
 
@@ -110,7 +110,7 @@ jobs:
       id: thumbnail_check
       run: |
         echo "Validating template thumbnails..."
-        python3 scripts/validate_thumbnails.py > thumbnail_report.txt 2>&1 || echo "thumbnail_issues=true" >> $GITHUB_OUTPUT
+        python3 scripts/validate/validate_thumbnails.py > thumbnail_report.txt 2>&1 || echo "thumbnail_issues=true" >> $GITHUB_OUTPUT
         cat thumbnail_report.txt
         
         # Check if thumbnail validation failed

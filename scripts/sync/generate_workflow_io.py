@@ -393,7 +393,7 @@ def main():
     args = parser.parse_args()
 
     # Get repository root
-    repo_root = Path(__file__).parent.parent
+    repo_root = Path(__file__).resolve().parents[2]
     templates_dir = repo_root / "templates"
     input_dir = repo_root / "input"
     index_path = templates_dir / "index.json"

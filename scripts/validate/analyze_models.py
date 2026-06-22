@@ -7,8 +7,16 @@ import json
 import os
 import re
 import sys
+from collections import defaultdict
 from typing import Dict, List, Set, Tuple
- 
+
+_lib_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib")
+if _lib_dir not in sys.path:
+    sys.path.insert(0, _lib_dir)
+
+from paths import WHITELIST_FILE  # noqa: E402
+
+
 def load_whitelist_config(whitelist_path: str = None) -> Dict:
     """Load whitelist configuration for model link checks.
 
@@ -20,9 +28,7 @@ def load_whitelist_config(whitelist_path: str = None) -> Dict:
     }
     """
     if whitelist_path is None:
-        # Default to scripts/whitelist.json relative to this file
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        whitelist_path = os.path.join(script_dir, 'whitelist.json')
+        whitelist_path = str(WHITELIST_FILE)
 
     if not os.path.exists(whitelist_path):
         # Fallback to empty whitelist if file missing
@@ -45,7 +51,6 @@ def is_node_ignored_for_model_check(node_type: str, whitelist_config: Dict) -> b
     ignore_types = set(wl.get('model_check_ignore_node_types', []))
     # Case-insensitive match for convenience
     return node_type in ignore_types or node_type.lower() in {t.lower() for t in ignore_types}
-from collections import defaultdict
 
 
 def is_subgraph_node(node_type: str) -> bool:
@@ -407,7 +412,7 @@ def main():
 
     parser = argparse.ArgumentParser(description='Analyze model references in ComfyUI templates')
     parser.add_argument('--templates-dir', default='./templates', help='Templates directory (default: ./templates)')
-    parser.add_argument('--whitelist', help='Path to whitelist configuration JSON (default: ./scripts/whitelist.json)')
+    parser.add_argument('--whitelist', help=f'Path to whitelist configuration JSON (default: {WHITELIST_FILE})')
     parser.add_argument('--report', default='./model_analysis_report.md', help='Output report path')
     args = parser.parse_args()
 

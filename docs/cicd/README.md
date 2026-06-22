@@ -46,12 +46,12 @@ Template Added → Version Check → Package Bump → Publish → PyPI + GitHub 
 ## Key Scripts
 
 ### Core Logic
-- `scripts/ci_version_manager.py` - Version detection/bumping logic
-- `scripts/sync_bundles.py` - Template validation + manifest generation
-- `scripts/validate_manifests.py` - SHA256 + file consistency checks
-- `scripts/sync_custom_nodes.py` - Auto-populate requiresCustomNodes from workflow JSON
-- `scripts/validate_thumbnails.py` - Thumbnail presence and variant validation
-- `scripts/check_input_assets.py` - Input asset validation
+- `scripts/ci/ci_version_manager.py` - Version detection/bumping logic
+- `scripts/sync/sync_bundles.py` - Template validation + manifest generation
+- `scripts/validate/validate_manifests.py` - SHA256 + file consistency checks
+- `scripts/sync/sync_custom_nodes.py` - Auto-populate requiresCustomNodes from workflow JSON
+- `scripts/validate/validate_thumbnails.py` - Thumbnail presence and variant validation
+- `scripts/validate/check_input_assets.py` - Input asset validation
 
 ### CI Utilities  
 - `scripts/ci/validate_bundles.sh` - Bundle assignment validation (shared)

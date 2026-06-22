@@ -6,9 +6,9 @@ on:
     paths:
       - 'blueprints/**'
       - 'blueprints_bundles.json'
-      - 'scripts/sync_blueprints.py'
-      - 'scripts/import_blueprints.py'
-      - 'scripts/validate_blueprints.py'
+      - 'scripts/sync/sync_blueprints.py'
+      - 'scripts/blueprints/import_blueprints.py'
+      - 'scripts/validate/validate_blueprints.py'
       - '.github/workflows/validate-blueprints.yml'
   pull_request:
     types: [opened, synchronize]
@@ -16,9 +16,9 @@ on:
     paths:
       - 'blueprints/**'
       - 'blueprints_bundles.json'
-      - 'scripts/sync_blueprints.py'
-      - 'scripts/import_blueprints.py'
-      - 'scripts/validate_blueprints.py'
+      - 'scripts/sync/sync_blueprints.py'
+      - 'scripts/blueprints/import_blueprints.py'
+      - 'scripts/validate/validate_blueprints.py'
       - '.github/workflows/validate-blueprints.yml'
 
 jobs:
@@ -49,26 +49,26 @@ jobs:
           pip install jsonschema
 
       - name: Validate blueprints
-        run: python scripts/validate_blueprints.py
+        run: python scripts/validate/validate_blueprints.py
 
       - name: Verify import_blueprints.py was run
         run: |
-          python scripts/import_blueprints.py
+          python scripts/blueprints/import_blueprints.py
           if git diff --quiet blueprints/index.json blueprints_bundles.json; then
             echo "✅ index.json and blueprints_bundles.json are up to date"
           else
-            echo "❌ import_blueprints.py produced changes. Run: python scripts/import_blueprints.py"
+            echo "❌ import_blueprints.py produced changes. Run: python scripts/blueprints/import_blueprints.py"
             git diff blueprints/index.json blueprints_bundles.json
             exit 1
           fi
 
       - name: Verify sync_blueprints.py was run
         run: |
-          python scripts/sync_blueprints.py
+          python scripts/sync/sync_blueprints.py
           if git diff --quiet packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json packages/blueprints/; then
             echo "✅ Manifest and assets are up to date"
           else
-            echo "❌ sync_blueprints.py produced changes. Run: python scripts/sync_blueprints.py"
+            echo "❌ sync_blueprints.py produced changes. Run: python scripts/sync/sync_blueprints.py"
             git diff --name-only packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json packages/blueprints/
             exit 1
           fi
@@ -86,9 +86,9 @@ jobs:
               body: `## ❌ Blueprint Validation Failed
 
             Please ensure:
-            1. Run \`python scripts/validate_blueprints.py\` to check for errors
-            2. Run \`python scripts/import_blueprints.py\` to update index.json and bundles
-            3. Run \`python scripts/sync_blueprints.py\` to sync manifest and assets
+            1. Run \`python scripts/validate/validate_blueprints.py\` to check for errors
+            2. Run \`python scripts/blueprints/import_blueprints.py\` to update index.json and bundles
+            3. Run \`python scripts/sync/sync_blueprints.py\` to sync manifest and assets
 
             See the workflow logs for details.`
             });

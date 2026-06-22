@@ -125,7 +125,7 @@ Each workflow file must include:
 Run validation before submitting PRs:
 
 ```bash
-python scripts/validate_templates.py
+python scripts/validate/validate_templates.py
 ```
 
 This validates:

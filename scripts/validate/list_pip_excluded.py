@@ -6,7 +6,7 @@ Used by CI to skip these templates in the orphaned-template check.
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 LOCAL = {"local", "desktop", "mac", "windows"}
 
 cats = json.loads((ROOT / "templates" / "index.json").read_text(encoding="utf-8"))

@@ -307,7 +307,7 @@ def main():
     else:
         # Default to templates directory relative to script location
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        templates_dir = os.path.join(os.path.dirname(script_dir), "templates")
+        templates_dir = os.path.join(os.path.dirname(os.path.dirname(script_dir)), "templates")
     
     if not os.path.exists(templates_dir):
         print(f"Error: Templates directory not found: {templates_dir}")

@@ -15,7 +15,7 @@ import re
 import shutil
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 BLUEPRINTS_DIR = ROOT / "blueprints"
 BUNDLES_CONFIG = ROOT / "blueprints_bundles.json"
 
@@ -286,7 +286,7 @@ def main():
     print("=== Import Complete ===")
     print(f"\nNext steps:")
     print(f"  1. Review blueprints/index.json")
-    print(f"  2. Run: python scripts/sync_blueprints.py")
+    print(f"  2. Run: python scripts/sync/sync_blueprints.py")
 
 
 if __name__ == "__main__":

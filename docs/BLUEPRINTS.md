@@ -127,7 +127,7 @@ Same as standard ComfyUI workflow nodes, with embedded model metadata:
 
 ## Index Metadata
 
-The `blueprints/index.json` file contains extracted metadata for UI display and search. This is **generated** from the blueprint JSON files using `scripts/import_blueprints.py`.
+The `blueprints/index.json` file contains extracted metadata for UI display and search. This is **generated** from the blueprint JSON files using `scripts/blueprints/import_blueprints.py`.
 
 ```json
 [
@@ -154,7 +154,7 @@ The `blueprints/index.json` file contains extracted metadata for UI display and 
 1. Clone/download blueprints to `blueprints/` directory
 2. Run the import script:
   ```bash
-   python scripts/import_blueprints.py
+   python scripts/blueprints/import_blueprints.py
   ```
 3. This will:
   - Rename files to snake_case
@@ -162,7 +162,7 @@ The `blueprints/index.json` file contains extracted metadata for UI display and 
   - Update `blueprints_bundles.json`
 4. Sync to packages:
   ```bash
-   python scripts/sync_blueprints.py
+   python scripts/sync/sync_blueprints.py
   ```
 
 ### Option 2: Create in ComfyUI
@@ -227,8 +227,8 @@ with open(path) as f:
 
 | Script                         | Purpose                                               |
 | ------------------------------ | ----------------------------------------------------- |
-| `scripts/import_blueprints.py` | Normalize filenames, generate index.json and bundles  |
-| `scripts/sync_blueprints.py`   | Generate manifest, copy assets to package directories |
+| `scripts/blueprints/import_blueprints.py` | Normalize filenames, generate index.json and bundles  |
+| `scripts/sync/sync_blueprints.py`   | Generate manifest, copy assets to package directories |
 
 
 ## Validation

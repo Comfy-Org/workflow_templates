@@ -58,7 +58,7 @@ Edit the template's entry in `templates/index.json` and set or change the `thumb
 Run the validation script to check for issues:
 
 ```bash
-python scripts/validate_thumbnails.py
+python scripts/validate/validate_thumbnails.py
 ```
 
 This checks for:
@@ -81,14 +81,14 @@ These are **separate** from template thumbnails — they are auto-generated visu
 After adding, replacing, or modifying thumbnails, always validate:
 
 ```bash
-python scripts/validate_thumbnails.py
-python scripts/validate_templates.py
+python scripts/validate/validate_thumbnails.py
+python scripts/validate/validate_templates.py
 ```
 
 Then sync to packages:
 
 ```bash
-python scripts/sync_bundles.py
+python scripts/sync/sync_bundles.py
 ```
 
 ## Rules
@@ -98,4 +98,4 @@ python scripts/sync_bundles.py
 - Thumbnails should ideally show the output produced by the workflow.
 - If the template uses `compareSlider` or `hoverDissolve`, **both** `-1` and `-2` files are required.
 - Never put thumbnails in `site/` — they belong in `templates/`.
-- After adding or changing thumbnails, run `python scripts/sync_bundles.py` to sync to packages.
+- After adding or changing thumbnails, run `python scripts/sync/sync_bundles.py` to sync to packages.

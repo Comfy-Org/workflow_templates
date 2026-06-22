@@ -1,8 +1,14 @@
-# ComfyUI Workflow Template Third-Party Node Check Tool - Whitelist Feature
+# Whitelist configuration
+
+`scripts/data/whitelist.json` is shared by several validation and sync scripts:
+
+- **`validate/analyze_models.py`** — model link checks and model reference analysis (CI: `model-analysis.yml`)
+- **`validate/check_links.py`** — URL extraction skip list (CI: `link-checker.yml`)
+- **`sync/sync_custom_nodes.py`** — templates to skip when syncing `requiresCustomNodes`
 
 ## Overview
 
-This script checks whether ComfyUI workflow templates use third-party nodes. Using the whitelist feature, you can maintain a list of allowed custom nodes that will be ignored and not reported as third-party nodes.
+Using the whitelist, you can maintain lists of allowed custom nodes, skipped URLs, and ignored node types so they are not reported as errors.
 
 ## Whitelist Configuration File
 
@@ -42,25 +48,26 @@ The whitelist configuration file `whitelist.json` supports the following configu
 
 ## Usage
 
-### Basic Usage
+### Model analysis (CI)
 
 ```bash
-# Check templates with default configuration
-python3 scripts/check_third_party_nodes.py
-
-# Specify template directory
-python3 scripts/check_third_party_nodes.py --templates-dir ./my_templates
-
-# Specify whitelist configuration file
-python3 scripts/check_third_party_nodes.py --whitelist ./my_whitelist.json
+python scripts/validate/analyze_models.py --templates-dir ./templates
+python scripts/validate/analyze_models.py --whitelist ./my_whitelist.json
 ```
 
-### Command Line Arguments
+### Custom nodes sync
 
-- `--templates-dir`: Template file directory (default: ./templates)
-- `--whitelist`: Whitelist configuration file path (default: ./scripts/whitelist.json)
-- `--verbose, -v`: Show detailed information about whitelisted nodes
-- `--help, -h`: Show help information
+```bash
+python scripts/sync/sync_custom_nodes.py --templates-dir ./templates
+python scripts/sync/sync_custom_nodes.py --whitelist-file ./my_whitelist.json
+```
+
+### Link checker
+
+```bash
+python3 scripts/validate/check_links.py extract
+python3 scripts/validate/check_links.py report
+```
 
 ## Adding Custom Nodes to Whitelist
 

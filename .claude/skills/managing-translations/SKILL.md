@@ -28,7 +28,7 @@ The repo supports 11 languages. The English master file is `templates/index.json
 Run the sync script to propagate changes from English master to all locale files:
 
 ```bash
-python3 scripts/sync_data.py --templates-dir templates
+python3 scripts/sync/sync_data.py --templates-dir templates
 ```
 
 ### What sync does
@@ -36,7 +36,7 @@ python3 scripts/sync_data.py --templates-dir templates
 - **Technical fields** (models, date, size, vram, tags, etc.) are auto-copied from English master to all locales.
 - **Translatable fields** (`title`, `description`) are preserved if already translated — they are NOT overwritten.
 - **New templates** get English fallback text until translated.
-- **Tags** are auto-translated using mappings defined in `scripts/i18n.json`.
+- **Tags** are auto-translated using mappings defined in `scripts/data/i18n.json`.
 
 ### Useful flags
 
@@ -45,7 +45,7 @@ python3 scripts/sync_data.py --templates-dir templates
 
 ## Translation Tracking
 
-`scripts/i18n.json` stores:
+`scripts/data/i18n.json` stores:
 
 - Translation status for each template (per language).
 - Tag translation mappings (English → each language).
@@ -53,16 +53,16 @@ python3 scripts/sync_data.py --templates-dir templates
 
 ## Adding Translations for a Template
 
-1. Edit `scripts/i18n.json` to add translations under the template's name.
+1. Edit `scripts/data/i18n.json` to add translations under the template's name.
 2. Run the sync script:
    ```bash
-   python3 scripts/sync_data.py --templates-dir templates
+   python3 scripts/sync/sync_data.py --templates-dir templates
    ```
 3. Verify the locale files were updated correctly.
 
 ## Checking Translation Coverage
 
-- Look at `scripts/missing_translations_report.json` for untranslated entries.
+- Look at `scripts/.output/missing_translations_report.json` for untranslated entries.
 - Or manually compare a locale file against `index.json` to find templates with English-only text.
 
 ## Site-Level i18n (Separate System)
@@ -77,8 +77,8 @@ The template site (`site/`) has its own i18n system for UI strings — this is s
 ## After Changes, Always Run
 
 ```bash
-python3 scripts/sync_data.py --templates-dir templates
-python scripts/validate_templates.py
+python3 scripts/sync/sync_data.py --templates-dir templates
+python scripts/validate/validate_templates.py
 ```
 
 ## Rules
@@ -87,4 +87,4 @@ python scripts/validate_templates.py
 - Never manually edit locale files for technical fields — use the sync script.
 - Translatable fields (`title`, `description`) CAN be manually edited in locale files.
 - After adding a new template to `index.json`, always run sync to propagate to all locales.
-- Tag translations go in `scripts/i18n.json`, not in the locale files directly.
+- Tag translations go in `scripts/data/i18n.json`, not in the locale files directly.
