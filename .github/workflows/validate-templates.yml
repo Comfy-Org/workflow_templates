@@ -26,6 +26,7 @@ jobs:
           templates/
           scripts/validate/validate_templates.py
           scripts/lib/locale_index_files.py
+          scripts/lib/paths.py
           scripts/validate/validate_thumbnails.py
           scripts/validate/list_pip_excluded.py
         sparse-checkout-cone-mode: false
@@ -110,16 +111,18 @@ jobs:
       id: thumbnail_check
       run: |
         echo "Validating template thumbnails..."
-        python3 scripts/validate/validate_thumbnails.py > thumbnail_report.txt 2>&1 || echo "thumbnail_issues=true" >> $GITHUB_OUTPUT
+        thumbnail_issues=false
+        if ! python3 scripts/validate/validate_thumbnails.py > thumbnail_report.txt 2>&1; then
+          thumbnail_issues=true
+        fi
         cat thumbnail_report.txt
-        
+
         # Check if thumbnail validation failed
         if grep -q "Thumbnail validation failed" thumbnail_report.txt; then
-          echo "thumbnail_issues=true" >> $GITHUB_OUTPUT
+          thumbnail_issues=true
           echo "::error::Thumbnail validation failed. Please check thumbnail files and configurations."
-        else
-          echo "thumbnail_issues=false" >> $GITHUB_OUTPUT
         fi
+        echo "thumbnail_issues=$thumbnail_issues" >> $GITHUB_OUTPUT
       continue-on-error: true
     
     - name: Comment on PR about thumbnail issues

@@ -153,17 +153,22 @@ The `blueprints/index.json` file contains extracted metadata for UI display and 
 
 1. Clone/download blueprints to `blueprints/` directory
 2. Run the import script:
-  ```bash
+
+   ```bash
    python scripts/blueprints/import_blueprints.py
-  ```
+   ```
+
 3. This will:
-  - Rename files to snake_case
-  - Generate `index.json` with extracted metadata
-  - Update `blueprints_bundles.json`
+
+   - Rename files to snake_case
+   - Generate `index.json` with extracted metadata
+   - Update `blueprints_bundles.json`
+
 4. Sync to packages:
-  ```bash
+
+   ```bash
    python scripts/sync/sync_blueprints.py
-  ```
+   ```
 
 ### Option 2: Create in ComfyUI
 

@@ -494,10 +494,13 @@ For detailed documentation, see [docs/BLUEPRINTS.md](docs/BLUEPRINTS.md).
 
 1. Copy blueprint JSON files to `blueprints/` directory
 2. Run the import script to normalize names and generate metadata:
+
    ```bash
    python scripts/blueprints/import_blueprints.py
    ```
+
 3. Sync to packages:
+
    ```bash
    python scripts/sync/sync_blueprints.py
    ```

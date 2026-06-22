@@ -55,9 +55,11 @@ python3 scripts/sync/sync_data.py --templates-dir templates
 
 1. Edit `scripts/data/i18n.json` to add translations under the template's name.
 2. Run the sync script:
+
    ```bash
    python3 scripts/sync/sync_data.py --templates-dir templates
    ```
+
 3. Verify the locale files were updated correctly.
 
 ## Checking Translation Coverage

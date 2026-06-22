@@ -20,7 +20,7 @@ _lib_dir = Path(__file__).resolve().parent.parent / "lib"
 if str(_lib_dir) not in sys.path:
     sys.path.insert(0, str(_lib_dir))
 
-from paths import REPO_ROOT  # noqa: E402
+from paths import TEMPLATES_DIR  # noqa: E402
 
 def load_index_json(file_path: str) -> Dict:
     """Load and parse the index.json file"""
@@ -167,7 +167,7 @@ def generate_report(results: Dict) -> str:
     return '\n'.join(report)
 
 def main():
-    templates_dir = str(REPO_ROOT / 'templates')
+    templates_dir = str(TEMPLATES_DIR)
     index_file = os.path.join(templates_dir, 'index.json')
     
     if not os.path.exists(templates_dir):
