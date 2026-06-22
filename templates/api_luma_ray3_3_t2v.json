@@ -1,0 +1,288 @@
+{
+  "id": "b277498e-2a80-4514-9bd6-3695ea8c1bbb",
+  "revision": 0,
+  "last_node_id": 9,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "LumaRay32TextToVideoNode",
+      "pos": [
+        780,
+        320
+      ],
+      "size": [
+        400,
+        390
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            3
+          ]
+        },
+        {
+          "name": "generation_id",
+          "type": "STRING",
+          "links": [
+            2,
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LumaRay32TextToVideoNode"
+      },
+      "widgets_values": [
+        "Cinematic tracking shot of a fierce young woman in battle-worn chrome armor riding a massive white tiger with glowing blue neural stripes, galloping across a scorched futuristic battlefield, shattered mechs and burning wreckage behind them, dust and embers in the air, heroic and defiant, epic sci-fi fantasy, golden hour light, 4K, shallow depth of field",
+        "1:1",
+        "720p",
+        "5s",
+        false,
+        953364548931126,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "LumaRay32ExtendVideoNode",
+      "pos": [
+        2390,
+        370
+      ],
+      "size": [
+        400,
+        324
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "source_generation_id",
+          "type": "STRING",
+          "widget": {
+            "name": "source_generation_id"
+          },
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            5
+          ]
+        },
+        {
+          "name": "generation_id",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LumaRay32ExtendVideoNode"
+      },
+      "widgets_values": [
+        "",
+        "Forward (continue after)",
+        false,
+        "",
+        "720p",
+        228455742302302,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 6,
+      "type": "SaveVideo",
+      "pos": [
+        1280,
+        320
+      ],
+      "size": [
+        580,
+        770
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 3
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "video/Luma_Ray_3.2_T2V",
+        "auto",
+        "auto"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "MarkdownNote",
+      "pos": [
+        2400,
+        790
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Extend Video",
+      "properties": {},
+      "widgets_values": [
+        "This section extends videos and needs a `generation_id` from the upstream Luma Ray 3.2 node.\n\n1. By default, `source_generation_id` is wired automatically. To extend from a previous run instead, disconnect that input and paste the `generation_id` shown in **Preview as Text (generation_id)**.\n2. Select this section and press **Ctrl+B** to enable it when you want to extend the video."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 8,
+      "type": "PreviewAny",
+      "pos": [
+        1950,
+        330
+      ],
+      "size": [
+        340,
+        310
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "title": "Preview as Text (generation_id)",
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "id": 9,
+      "type": "SaveVideo",
+      "pos": [
+        2820,
+        370
+      ],
+      "size": [
+        450,
+        320
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 5
+        }
+      ],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "video/Luma_Ray_3.2_T2V",
+        "auto",
+        "auto"
+      ]
+    }
+  ],
+  "links": [
+    [
+      2,
+      3,
+      1,
+      4,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      3,
+      0,
+      6,
+      0,
+      "VIDEO"
+    ],
+    [
+      4,
+      3,
+      1,
+      8,
+      0,
+      "STRING"
+    ],
+    [
+      5,
+      4,
+      0,
+      9,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Select and Ctrl-B to enable",
+      "bounding": [
+        2380,
+        300,
+        1240,
+        750
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.2834565837654233,
+      "offset": [
+        486.80166711356514,
+        1021.7089900980933
+      ]
+    },
+    "frontendVersion": "1.47.2"
+  },
+  "version": 0.4
+}
