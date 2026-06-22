@@ -26,10 +26,11 @@ workflow_templates/
 │   └── blueprints/         # Subgraph blueprints package
 ├── scripts/                # Python: validation, sync, i18n (see scripts/README.md)
 │   ├── sync/               # sync_data, sync_bundles, sync_blueprints, etc.
+│   ├── mcp/                # MCP index pipeline (index.mcp.json)
 │   ├── validate/           # validate_templates, check_links, analyze_models, etc.
 │   ├── ci/                 # ci_version_manager, PyPI quota, version helpers
 │   ├── data/               # i18n.json, whitelist.json, models_capabilities.json
-│   ├── lib/                # Shared modules (locale_index_files, paths)
+│   ├── lib/                # Shared modules (paths, locale_index_files, ai/)
 │   ├── maintenance/        # archive_templates, local-only tools
 │   ├── blueprints/         # import_blueprints
 │   └── docs/               # Script-specific markdown (whitelist.md, etc.)
@@ -90,12 +91,13 @@ python scripts/sync/sync_bundles.py
 
 | Directory | Put here | Examples |
 |-----------|----------|----------|
-| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py`, `sync_mcp_index.py` |
+| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py` |
+| `scripts/mcp/` | MCP index pipeline | `sync_index.py`, `enhance_descriptions.py` |
 | `scripts/validate/` | Validation & analysis (CI) | `validate_templates.py`, `check_links.py`, `analyze_models.py` |
 | `scripts/blueprints/` | Blueprint import | `import_blueprints.py` |
 | `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_pypi_quota.py` |
 | `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `models_capabilities.json` |
-| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py` |
+| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py`, `ai/` |
 | `scripts/maintenance/` | Local-only / one-off tools | `archive_templates.py`, `check_templates.sh` |
 | `scripts/docs/` | Script-specific markdown | `whitelist.md`, `check_input_assets.md` |
 
@@ -110,7 +112,7 @@ python scripts/sync/sync_bundles.py
 | `scripts/whitelist.json` | `scripts/data/whitelist.json` |
 | `scripts/locale_index_files.py` | `scripts/lib/locale_index_files.py` |
 | `scripts/ci_version_manager.py` | `scripts/ci/ci_version_manager.py` |
-| `scripts/sync-mcp-index.py` | `scripts/sync/sync_mcp_index.py` |
+| `scripts/sync-mcp-index.py` | `scripts/mcp/sync_index.py` |
 
 Full index and CI mapping: [`scripts/README.md`](scripts/README.md). Agent quick reference: [`AGENTS.md`](AGENTS.md).
 

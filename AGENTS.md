@@ -24,12 +24,13 @@ Root `scripts/` is organized by role:
 
 | Directory | Put here | Examples |
 |-----------|----------|----------|
-| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py`, `sync_mcp_index.py` |
+| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py` |
+| `scripts/mcp/` | MCP index pipeline | `sync_index.py`, `enhance_descriptions.py` |
 | `scripts/validate/` | Validation & analysis (CI) | `validate_templates.py`, `check_links.py`, `analyze_models.py` |
 | `scripts/blueprints/` | Blueprint-specific import | `import_blueprints.py` |
 | `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_pypi_quota.py` |
 | `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `models_capabilities.json` |
-| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py` |
+| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py`, `ai/` |
 | `scripts/maintenance/` | Local-only / one-off tools | `archive_templates.py`, `check_templates.sh` |
 | `scripts/docs/` | Script-specific markdown docs | `whitelist.md`, `check_input_assets.md` |
 
@@ -44,7 +45,7 @@ Root `scripts/` is organized by role:
 | `scripts/whitelist.json` | `scripts/data/whitelist.json` |
 | `scripts/locale_index_files.py` | `scripts/lib/locale_index_files.py` |
 | `scripts/ci_version_manager.py` | `scripts/ci/ci_version_manager.py` |
-| `scripts/sync-mcp-index.py` | `scripts/sync/sync_mcp_index.py` |
+| `scripts/sync-mcp-index.py` | `scripts/mcp/sync_index.py` |
 
 Full index and CI mapping: [`scripts/README.md`](scripts/README.md).
 
