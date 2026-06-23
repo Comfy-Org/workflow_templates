@@ -113,12 +113,12 @@ onUnmounted(() => {
 <template>
   <section
     v-if="slides.length"
-    class="relative h-[clamp(300px,60vw,520px)] rounded-2xl border-[1.5px] border-border-strong bg-page mt-3"
+    class="relative h-[clamp(300px,60vw,520px)] rounded-[2.5rem] border-[1.5px] border-border-strong bg-page mt-3"
     :aria-roledescription="'carousel'"
     :aria-label="featuredLabel"
   >
     <!-- Embla viewport: only the media slides; the bordered frame above stays static. -->
-    <div ref="emblaRef" class="absolute inset-[3px] overflow-hidden rounded-[calc(1rem-3px)]">
+    <div ref="emblaRef" class="absolute inset-[3px] overflow-hidden rounded-[calc(2.5rem-4px)]">
       <div class="flex h-full">
         <div
           v-for="(slide, index) in slides"

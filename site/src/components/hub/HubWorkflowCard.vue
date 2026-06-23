@@ -172,11 +172,11 @@ function handleCardClick() {
 
 <template>
   <div
-    class="group flex flex-col gap-4 rounded-[2.5rem] bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 content-auto hover:bg-hub-surface-hover"
+    class="group flex flex-col gap-4 rounded-4xl bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 content-auto hover:bg-hub-surface-hover"
     :class="templateUrl ? 'cursor-pointer' : ''"
     @click="handleCardClick"
   >
-    <div class="aspect-4/3 bg-hub-surface rounded-4xl overflow-hidden relative">
+    <div class="aspect-4/3 bg-hub-surface rounded-[1.75rem] overflow-hidden relative">
       <div
         v-if="showCompare"
         ref="compareRoot"
