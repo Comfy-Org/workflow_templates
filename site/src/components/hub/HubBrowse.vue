@@ -83,7 +83,7 @@ const filteredTemplates = computed(() => {
       :facets-config="facetsConfig"
       :toolbar-labels="toolbarLabels"
       :locale="locale"
-      grid-class="grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      grid-class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
     />
   </div>
 </template>

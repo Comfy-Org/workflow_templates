@@ -55,7 +55,7 @@ const props = withDefaults(
     facetTemplates?: WorkflowTemplate[];
   }>(),
   {
-    gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4',
+    gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
     hideAuthor: false,
     toolbarLabels: undefined,
     facetsConfig: undefined,
