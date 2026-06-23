@@ -192,6 +192,9 @@ watchDebounced(
         allowedNames: badgeFilteredNames.value ?? undefined,
       });
       trackSearchPerformed(trimmed);
+    } catch (err) {
+      console.error('Search failed:', err);
+      searchResults.value = { workflows: [], creators: [] };
     } finally {
       isSearching.value = false;
       hasSearched.value = true;

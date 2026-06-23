@@ -57,7 +57,10 @@ async function loadIndex(): Promise<MiniSearch> {
 
 function ensureIndex(): Promise<MiniSearch> {
   if (!indexPromise) {
-    indexPromise = loadIndex();
+    indexPromise = loadIndex().catch((err) => {
+      indexPromise = null;
+      throw err;
+    });
   }
   return indexPromise;
 }
