@@ -14,18 +14,23 @@
  *
  * Labels are resolved in Astro and passed as props — islands don't import i18n.
  */
-import { ref, computed, onMounted, onUnmounted, useTemplateRef } from 'vue';
+import { ref, computed, onMounted, onUnmounted, useId, useTemplateRef } from 'vue';
 
-const props = defineProps<{
-  paragraphs: string[];
-  moreLabel: string;
-  lessLabel: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    paragraphs: string[];
+    moreLabel: string;
+    lessLabel: string;
+    collapsedMax?: number;
+  }>(),
+  { collapsedMax: 320 }
+);
 
 /** Collapsed height cap, in px. */
-const COLLAPSED_MAX = 320;
+const COLLAPSED_MAX = props.collapsedMax;
 
 const contentRef = useTemplateRef<HTMLElement>('content');
+const contentId = useId();
 const expanded = ref(false);
 const overflows = ref(false);
 
@@ -99,6 +104,7 @@ onUnmounted(() => {
 <template>
   <div>
     <div
+      :id="contentId"
       ref="content"
       class="ext-desc relative flex flex-col gap-4 overflow-hidden motion-safe:transition-[max-height] motion-safe:duration-300 motion-safe:ease-out"
       :style="containerStyle"
@@ -120,8 +126,9 @@ onUnmounted(() => {
     <button
       v-if="overflows"
       type="button"
-      class="mt-3 text-sm font-medium text-content transition-opacity hover:opacity-80"
+      class="mt-3 rounded-sm text-sm font-medium text-content transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :aria-expanded="expanded"
+      :aria-controls="contentId"
       @click="toggle"
     >
       {{ toggleLabel }}

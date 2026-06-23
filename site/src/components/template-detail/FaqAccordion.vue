@@ -14,13 +14,17 @@ import {
 
 defineProps<{
   items: { question: string; answer: string }[];
-  heading: string;
+  heading?: string;
 }>();
 </script>
 
 <template>
-  <section v-if="items.length > 0" aria-labelledby="faq-heading">
-    <h2 id="faq-heading" class="text-2xl lg:text-3xl font-semibold text-content mb-6 lg:mb-8">
+  <section v-if="items.length > 0" :aria-labelledby="heading ? 'faq-heading' : undefined">
+    <h2
+      v-if="heading"
+      id="faq-heading"
+      class="text-2xl lg:text-3xl font-semibold text-content mb-6 lg:mb-8"
+    >
       {{ heading }}
     </h2>
     <AccordionRoot

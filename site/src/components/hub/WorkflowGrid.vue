@@ -106,8 +106,7 @@ function loadMore() {
 
 <template>
   <div class="flex-1 w-full min-w-0">
-    <!-- Shared toolbar (tabs + sort, plus filter on the hub). Sticky under the navbar. -->
-    <div v-if="toolbarLabels" class="sticky top-16 z-40 bg-page py-6 lg:py-8">
+    <div v-if="toolbarLabels" class="sticky top-16 z-40 py-6 lg:py-8 [background:inherit]">
       <BrowseToolbar
         :templates="facetSource"
         :facets-config="facetsConfig"
