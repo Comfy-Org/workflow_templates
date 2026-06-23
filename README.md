@@ -64,9 +64,9 @@ PR opened/updated
 
 | Task | Commands |
 |------|----------|
-| Add a workflow template | Edit `templates/`, `bundles.json`, then `python scripts/sync_bundles.py` |
-| Add a subgraph blueprint | Edit `blueprints/`, `blueprints_bundles.json`, then `python scripts/sync_blueprints.py` |
-| Import external blueprints | Copy JSONs to `blueprints/`, then `python scripts/import_blueprints.py` |
+| Add a workflow template | Edit `templates/`, `bundles.json`, then `python scripts/sync/sync_bundles.py` |
+| Add a subgraph blueprint | Edit `blueprints/`, `blueprints_bundles.json`, then `python scripts/sync/sync_blueprints.py` |
+| Import external blueprints | Copy JSONs to `blueprints/`, then `python scripts/blueprints/import_blueprints.py` |
 
 ---
 
@@ -161,7 +161,7 @@ After editing `templates/` or `bundles.json`, regenerate the manifest and copy a
 the package directories:
 
 ```bash
-python scripts/sync_bundles.py
+python scripts/sync/sync_bundles.py
 # or via Nx  
 npm run sync
 ```
@@ -427,16 +427,16 @@ Before creating your PR, sync your template to all language versions using the t
 
 1. Run the translation sync script:
    ```bash
-   python3 scripts/sync_data.py --templates-dir templates
+   python3 scripts/sync/sync_data.py --templates-dir templates
    ```
 
 2. The script will:
    - Auto-sync technical fields (models, date, size, etc.) to all language files
    - Detect untranslated title/description fields
-   - Add your template to `scripts/i18n.json` for translation tracking
+   - Add your template to `scripts/data/i18n.json` for translation tracking
    - Generate language-specific template files (index.zh.json, index.ja.json, etc.)
 
-3. (Optional) Add translations in `scripts/i18n.json`:
+3. (Optional) Add translations in `scripts/data/i18n.json`:
    ```json
    {
      "templates": {
@@ -494,12 +494,15 @@ For detailed documentation, see [docs/BLUEPRINTS.md](docs/BLUEPRINTS.md).
 
 1. Copy blueprint JSON files to `blueprints/` directory
 2. Run the import script to normalize names and generate metadata:
+
    ```bash
-   python scripts/import_blueprints.py
+   python scripts/blueprints/import_blueprints.py
    ```
+
 3. Sync to packages:
+
    ```bash
-   python scripts/sync_blueprints.py
+   python scripts/sync/sync_blueprints.py
    ```
 
 #### Option 2: Create in ComfyUI
@@ -551,16 +554,16 @@ Blueprints use the native ComfyUI subgraph format with `definitions.subgraphs`:
 
 ```bash
 # Import and normalize external blueprints
-python scripts/import_blueprints.py
+python scripts/blueprints/import_blueprints.py
 
 # Generate manifest and sync to packages
-python scripts/sync_blueprints.py
+python scripts/sync/sync_blueprints.py
 ```
 
 ### Create PR
 
 1. Test the blueprint in ComfyUI
-2. Ensure `python scripts/sync_blueprints.py` produces no changes
+2. Ensure `python scripts/sync/sync_blueprints.py` produces no changes
 3. Bump version in root `pyproject.toml`
 4. Create PR
 
@@ -580,6 +583,6 @@ CI automatically validates:
 
 Run locally before committing:
 ```bash
-python scripts/sync_bundles.py      # Templates
-python scripts/sync_blueprints.py   # Blueprints
+python scripts/sync/sync_bundles.py      # Templates
+python scripts/sync/sync_blueprints.py   # Blueprints
 ```

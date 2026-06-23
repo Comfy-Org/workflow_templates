@@ -74,13 +74,13 @@ jobs:
           #
           # Pip exclusion filter (cloud-only + requiresCustomNodes templates) is ON by default.
           # To temporarily disable it and ship all templates, add --no-filter:
-          #   python scripts/sync_bundles.py --no-filter
-          python scripts/sync_bundles.py
+          #   python scripts/sync/sync_bundles.py --no-filter
+          python scripts/sync/sync_bundles.py
           echo "✅ Template manifest sync complete"
 
           echo "=== Syncing blueprints manifests ==="
           # Sync blueprints from blueprints/ to packages/blueprints/
-          python scripts/sync_blueprints.py
+          python scripts/sync/sync_blueprints.py
           echo "✅ Blueprint manifest sync complete"
 
       - name: Capture pre-bump root version
@@ -94,7 +94,7 @@ jobs:
         run: |
           echo "=== Analyzing template changes and bumping versions ==="
           # This runs AFTER manifest sync so it can detect core package changes
-          python scripts/ci_version_manager.py
+          python scripts/ci/ci_version_manager.py
           echo "✅ Version analysis complete"
 
       - name: Ensure PR base commit is available for version compare

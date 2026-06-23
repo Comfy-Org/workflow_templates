@@ -66,7 +66,7 @@ Version bumping is **automatic** via the `version-check.yml` workflow:
 
 1. When templates change in a PR, versions are auto-bumped
 2. Only the root `pyproject.toml` version is bumped
-3. Sub-package versions are synced automatically by `scripts/sync_bundles.py`
+3. Sub-package versions are synced automatically by `scripts/sync/sync_bundles.py`
 4. **Never manually edit package versions** unless necessary
 
 ## Label Management

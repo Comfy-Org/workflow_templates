@@ -23,7 +23,7 @@ Two sources:
 
 **Option A — Import from an external directory:**
 ```bash
-python scripts/import_blueprints.py --source /path/to/external/blueprints/
+python scripts/blueprints/import_blueprints.py --source /path/to/external/blueprints/
 ```
 The script copies all `*.json` files (skipping `index*.json`) into `blueprints/`, renames them to `snake_case`, regenerates `blueprints/index.json`, and updates `blueprints_bundles.json`.
 
@@ -32,7 +32,7 @@ The script copies all `*.json` files (skipping `index*.json`) into `blueprints/`
 2. Copy the `.json` file to `blueprints/` with a `snake_case` name, e.g. `my_blueprint.json`.
 3. Run the import script (no `--source` needed) to normalize and regenerate index + bundles:
    ```bash
-   python scripts/import_blueprints.py
+   python scripts/blueprints/import_blueprints.py
    ```
 
 ### Required blueprint JSON structure
@@ -92,7 +92,7 @@ The `name` field **must exactly match** the corresponding `widgets_values` entry
 After `import_blueprints.py` succeeds, push assets into the package directory and regenerate the manifest:
 
 ```bash
-python scripts/sync_blueprints.py
+python scripts/sync/sync_blueprints.py
 ```
 
 This writes `packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json` and copies all blueprint files into `packages/blueprints/src/comfyui_subgraph_blueprints/blueprints/`.
@@ -102,7 +102,7 @@ This writes `packages/core/src/comfyui_workflow_templates_core/blueprints_manife
 ## Step 5 — Validate
 
 ```bash
-python scripts/validate_blueprints.py
+python scripts/validate/validate_blueprints.py
 ```
 
 Checks:
@@ -143,9 +143,9 @@ Increment the `version` field in the root `pyproject.toml`. CI uses this to dete
 | `blueprints/index.json` | Generated metadata index (do not edit manually) |
 | `blueprints/index.schema.json` | JSON schema for index validation |
 | `blueprints_bundles.json` | Generated list of all blueprint IDs |
-| `scripts/import_blueprints.py` | Normalize filenames, generate index.json and bundles |
-| `scripts/sync_blueprints.py` | Generate manifest, copy assets to package directories |
-| `scripts/validate_blueprints.py` | Validate all blueprints and consistency checks |
+| `scripts/blueprints/import_blueprints.py` | Normalize filenames, generate index.json and bundles |
+| `scripts/sync/sync_blueprints.py` | Generate manifest, copy assets to package directories |
+| `scripts/validate/validate_blueprints.py` | Validate all blueprints and consistency checks |
 | `pyproject.toml` | Root package version (bump before PR) |
 | `packages/blueprints/` | `comfyui-subgraph-blueprints` package (generated assets) |
 | `packages/core/.../blueprints_manifest.json` | Generated manifest consumed by the Python API |

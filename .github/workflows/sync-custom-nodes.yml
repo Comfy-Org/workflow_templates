@@ -40,7 +40,8 @@ jobs:
           fetch-depth: 0
           sparse-checkout: |
             templates/*.json
-            scripts/sync_custom_nodes.py
+            scripts/sync/sync_custom_nodes.py
+            scripts/lib/paths.py
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -52,7 +53,7 @@ jobs:
         id: sync
         run: |
           echo "=== Syncing custom nodes requirements ==="
-          python scripts/sync_custom_nodes.py --templates-dir ./templates
+          python scripts/sync/sync_custom_nodes.py --templates-dir ./templates
           echo "✅ Custom nodes sync complete"
 
       - name: Commit custom nodes updates to PR

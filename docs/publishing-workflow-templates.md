@@ -41,10 +41,10 @@ git pull
 
 This script regenerates the manifest, rebuilds all wheels into `./dist/`, runs lint/tests, and performs `twine check`.
 
-Version bumping is handled automatically by CI via `scripts/ci_version_manager.py`, which runs in the `version-check.yml` workflow on every PR that touches templates or `bundles.json`. If you need to manually inspect or trigger version bumps locally, you can run:
+Version bumping is handled automatically by CI via `scripts/ci/ci_version_manager.py`, which runs in the `version-check.yml` workflow on every PR that touches templates or `bundles.json`. If you need to manually inspect or trigger version bumps locally, you can run:
 
 ```bash
-python scripts/ci_version_manager.py
+python scripts/ci/ci_version_manager.py
 ```
 
 This will detect which packages have changed since their last version bump and apply patch-level bumps to the affected subpackages.
@@ -102,7 +102,7 @@ Publishing to PyPI is automated via `.github/workflows/publish.yml`. This workfl
 4. **Creates a GitHub Release** with auto-generated release notes.
 5. **Includes recovery mode**: on manual dispatch, it checks all packages against PyPI and publishes any that are out of sync.
 
-Version bumping on PRs is handled separately by `.github/workflows/version-check.yml`, which runs `scripts/ci_version_manager.py` to auto-bump affected packages and commit the changes back to the PR branch.
+Version bumping on PRs is handled separately by `.github/workflows/version-check.yml`, which runs `scripts/ci/ci_version_manager.py` to auto-bump affected packages and commit the changes back to the PR branch.
 
 ## Recovery & Troubleshooting
 

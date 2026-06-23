@@ -5,7 +5,7 @@ on:
     paths:
       - 'templates/**/*.json'
       - 'input/**'
-      - 'scripts/check_input_assets.py'
+      - 'scripts/validate/check_input_assets.py'
       - '.github/workflows/check_input_assets.yml'
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
           sparse-checkout: |
             templates/*.json
             input/
-            scripts/check_input_assets.py
+            scripts/validate/check_input_assets.py
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -36,7 +36,7 @@ jobs:
         id: validation
         run: |
           # Run validation and capture exit code
-          if python scripts/check_input_assets.py; then
+          if python scripts/validate/check_input_assets.py; then
             echo "validation_failed=false" >> $GITHUB_OUTPUT
           else
             echo "validation_failed=true" >> $GITHUB_OUTPUT

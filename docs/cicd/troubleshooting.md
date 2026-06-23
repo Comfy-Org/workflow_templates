@@ -66,7 +66,7 @@ done
 
 ### Force Rebuild Manifests
 ```bash
-python scripts/sync_bundles.py
+python scripts/sync/sync_bundles.py
 git add packages/*/src/*/manifest.json
 git commit -m "Rebuild manifests"
 ```
@@ -76,7 +76,7 @@ git commit -m "Rebuild manifests"
 # Bump specific package
 sed -i 's/version = "0.3.5"/version = "0.3.6"/' packages/core/pyproject.toml
 # Update meta dependencies  
-python scripts/ci_version_manager.py
+python scripts/ci/ci_version_manager.py
 ```
 
 ## Validation Flow

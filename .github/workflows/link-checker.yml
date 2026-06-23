@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - 'templates/**.json'
-      - 'scripts/check_links.py'
+      - 'scripts/validate/check_links.py'
       - '.github/workflows/link-checker.yml'
       - '.github/workflows/link-check-comment.yml'
   workflow_dispatch:
@@ -20,8 +20,9 @@ jobs:
         with:
           sparse-checkout: |
             templates/*.json
-            scripts/check_links.py
-            scripts/whitelist.json
+            scripts/validate/check_links.py
+            scripts/lib/paths.py
+            scripts/data/whitelist.json
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -39,7 +40,7 @@ jobs:
         id: extract_links
         run: |
           echo "Extracting links from JSON workflow files..."
-          python3 scripts/check_links.py extract > extracted_links.txt 2>&1 || echo "extract_failed=true" >> $GITHUB_OUTPUT
+          python3 scripts/validate/check_links.py extract > extracted_links.txt 2>&1 || echo "extract_failed=true" >> $GITHUB_OUTPUT
           cat extracted_links.txt
 
           # Check if extraction succeeded
@@ -113,7 +114,7 @@ jobs:
         if: steps.extract_links.outputs.extract_failed == 'false'
         run: |
           echo "Generating excluded links report..."
-          python3 scripts/check_links.py report-excluded > excluded_links.txt 2>&1 || true
+          python3 scripts/validate/check_links.py report-excluded > excluded_links.txt 2>&1 || true
           if [ -f "excluded_links.txt" ]; then
             cat excluded_links.txt
           fi
@@ -122,7 +123,7 @@ jobs:
         if: steps.extract_links.outputs.extract_failed == 'false'
         run: |
           echo "Generating detailed link report for artifacts..."
-          python3 scripts/check_links.py report > link_report_detailed.txt 2>&1 || true
+          python3 scripts/validate/check_links.py report > link_report_detailed.txt 2>&1 || true
 
       # PR comments run in link-check-comment.yml via workflow_run (fork-safe token).
       - name: Save results for PR comment

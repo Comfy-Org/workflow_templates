@@ -58,7 +58,7 @@ Separate file at the repo root for subgraph blueprints. Same concept as `bundles
 1. Open `bundles.json`.
 2. Find the template name string in its current bundle array.
 3. Move it to the target bundle array (e.g., from `media-image` to `media-video`).
-4. Run `python scripts/sync_bundles.py` to regenerate package manifests.
+4. Run `python scripts/sync/sync_bundles.py` to regenerate package manifests.
 5. Run validation (see below).
 
 ### Reorder templates within a category
@@ -93,14 +93,14 @@ Change the `title` field of the category object in `templates/index.json`.
 Always run these commands to validate and sync:
 
 ```bash
-python scripts/sync_bundles.py
-python scripts/validate_templates.py
+python scripts/sync/sync_bundles.py
+python scripts/validate/validate_templates.py
 ```
 
 If category structure changes (new categories, renamed categories, restructured groupings), also run i18n sync:
 
 ```bash
-python3 scripts/sync_data.py --templates-dir templates
+python3 scripts/sync/sync_data.py --templates-dir templates
 ```
 
 ## Rules
