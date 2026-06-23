@@ -4,7 +4,7 @@
  * Auto-rotates the most-used templates, pauses on hover, loops, and is fully
  * click-through to each template's workflow page. Renders one hero card per view.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onUnmounted, ref } from 'vue';
 import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
 import { usePreferredReducedMotion } from '@vueuse/core';
@@ -14,6 +14,7 @@ import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/r
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { cn } from '@/lib/utils';
 
 interface Props {
   templates: SerializedTemplate[];
@@ -104,10 +105,6 @@ function onVideoError(key: string) {
   videoFailed.value[key] = true;
 }
 
-onMounted(() => {
-  // embla initializes from the ref; nothing extra needed here.
-});
-
 onUnmounted(() => {
   emblaApi.value?.destroy();
 });
@@ -128,7 +125,6 @@ onUnmounted(() => {
           :key="slide.key"
           class="relative h-full min-w-0 flex-[0_0_100%]"
         >
-          <!-- Media -->
           <video
             v-if="slide.videoUrl && !videoFailed[slide.key]"
             :src="slide.videoUrl"
@@ -159,7 +155,6 @@ onUnmounted(() => {
             :fetchpriority="index === 0 ? 'high' : 'auto'"
             decoding="async"
           />
-          <!-- Bottom gradient for text legibility -->
           <div
             class="pointer-events-none absolute inset-0 bg-linear-to-b from-transparent to-black/70"
             aria-hidden="true"
@@ -173,7 +168,6 @@ onUnmounted(() => {
             class="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand"
           />
 
-          <!-- Featured pill (top-left) -->
           <div
             class="absolute left-2 top-2 z-20 rounded-lg bg-black/10 px-2.5 py-1 backdrop-blur-xs sm:left-3 sm:top-3 sm:rounded-[12px] sm:px-3.5 sm:py-1.5"
           >
@@ -182,7 +176,6 @@ onUnmounted(() => {
             }}</span>
           </div>
 
-          <!-- Provider badge (top-right) -->
           <div
             v-if="slide.logoPath"
             class="absolute right-2 top-2 z-20 flex size-10 items-center justify-center rounded-xl bg-black/10 p-2 backdrop-blur-xs sm:right-3 sm:top-3 sm:size-12 sm:rounded-2xl"
@@ -241,11 +234,13 @@ onUnmounted(() => {
                 v-for="(tag, tagIndex) in slide.tags"
                 :key="tag.href"
                 :href="tag.href"
-                class="relative z-20 inline-flex h-6 shrink-0 items-center rounded-full bg-hub-surface px-3 text-xs text-content transition-colors hover:bg-hub-surface-hover sm:px-4"
-                :class="[
-                  tagIndex >= 1 && 'hidden sm:inline-flex',
-                  tagIndex >= 2 && 'lg:inline-flex',
-                ]"
+                :class="
+                  cn(
+                    'relative z-20 inline-flex h-6 shrink-0 items-center rounded-full bg-hub-surface px-3 text-xs text-content transition-colors hover:bg-hub-surface-hover sm:px-4',
+                    tagIndex >= 1 && 'hidden sm:inline-flex',
+                    tagIndex >= 2 && 'lg:inline-flex'
+                  )
+                "
                 @click.stop
               >
                 {{ tag.label }}

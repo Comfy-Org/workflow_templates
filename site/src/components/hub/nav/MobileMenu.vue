@@ -125,7 +125,6 @@ onUnmounted(() => {
       </button>
     </div>
 
-    <!-- Main list -->
     <template v-if="!activeSection">
       <div class="flex flex-1 flex-col gap-6 overflow-y-auto">
         <template v-for="link in links" :key="link.label">
@@ -155,7 +154,6 @@ onUnmounted(() => {
           </a>
         </template>
 
-        <!-- Top Creators section -->
         <div v-if="creators.length" class="flex flex-col gap-4">
           <a
             :href="creatorsHref"
@@ -207,7 +205,6 @@ onUnmounted(() => {
       </div>
     </template>
 
-    <!-- Drill-down sub-menu -->
     <template v-else>
       <div class="flex flex-1 flex-col overflow-y-auto">
         <button

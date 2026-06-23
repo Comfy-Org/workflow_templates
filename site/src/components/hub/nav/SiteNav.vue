@@ -187,7 +187,6 @@ onMounted(() => {
       </div>
     </a>
 
-    <!-- Desktop nav links -->
     <div
       data-testid="desktop-nav-links"
       class="hidden items-center gap-[clamp(1rem,2.5vw,2.5rem)] lg:flex"
@@ -204,7 +203,6 @@ onMounted(() => {
       />
     </div>
 
-    <!-- Desktop CTA buttons -->
     <div data-testid="desktop-nav-cta" class="hidden shrink-0 items-center gap-2 lg:flex">
       <GitHubStarBadge v-if="githubStars" :stars="githubStars" />
       <Button
@@ -231,7 +229,6 @@ onMounted(() => {
       </Button>
     </div>
 
-    <!-- Mobile hamburger -->
     <button
       ref="hamburgerRef"
       :class="

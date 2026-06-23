@@ -114,7 +114,6 @@ function loadMore() {
       />
     </div>
 
-    <!-- Card grid -->
     <div class="grid gap-5 relative z-10" :class="gridClass">
       <HubWorkflowCard
         v-for="tmpl in displayedTemplates"
@@ -136,18 +135,15 @@ function loadMore() {
       />
     </div>
 
-    <!-- Empty state -->
     <div v-if="displayedTemplates.length === 0" class="text-center py-20 text-content-muted">
       <p class="text-lg">No templates match your filters</p>
       <p class="text-sm mt-2">Try removing some filters</p>
     </div>
 
-    <!-- Load more -->
     <div v-if="hasMore" class="flex justify-center pt-10 pb-4">
       <Button variant="pill" size="pill" @click="loadMore">Load more</Button>
     </div>
 
-    <!-- Count indicator -->
     <div class="text-center text-hub-muted text-sm pb-4 pt-2">
       Showing {{ displayedTemplates.length }} of {{ sortedTemplates.length }} templates
     </div>

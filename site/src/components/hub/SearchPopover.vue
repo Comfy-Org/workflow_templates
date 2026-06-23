@@ -24,6 +24,7 @@ import type { MediaType } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { workflowDetailPath, workflowDetailSlug, thumbnailPath } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 
 export interface SearchTemplate {
   name: string;
@@ -64,7 +65,6 @@ const searchQuery = ref('');
 const containerRef = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 
-// Search state
 const searchResults = ref<SearchResults | null>(null);
 const isSearching = ref(false);
 const hasSearched = ref(false);
@@ -79,8 +79,6 @@ const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MA
 const overflowCountDesktop = computed(() =>
   Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP)
 );
-
-// ── All tags and models with counts (for filter suggestions) ──
 
 const allTags = computed(() => {
   const counts = new Map<string, number>();
@@ -105,8 +103,6 @@ const allModels = computed(() => {
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
 });
-
-// ── Filter suggestions (shown while typing) ──
 
 const filterSuggestions = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
@@ -138,8 +134,6 @@ const filterSuggestions = computed(() => {
 const hasFilterSuggestions = computed(() => {
   return filterSuggestions.value.tags.length > 0 || filterSuggestions.value.models.length > 0;
 });
-
-// ── Badge-filtered templates ──
 
 const badgeFilteredTemplates = computed(() => {
   if (!hasBadges.value) return props.templates;
@@ -183,8 +177,6 @@ const badgeOnlyResults = computed(() => {
   return [...badgeFilteredTemplates.value].sort((a, b) => b.usage - a.usage);
 });
 
-// ── Search with debounce ──
-
 watchDebounced(
   [searchQuery, () => store.filterBadges.value],
   async ([query]) => {
@@ -207,8 +199,6 @@ watchDebounced(
   },
   { debounce: 200 }
 );
-
-// ── Displayed results (combines badge-only and text search) ──
 
 const displayedWorkflows = computed(() => {
   // Text query active → show search results
@@ -280,8 +270,6 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
   '3d': '3D',
 };
 
-// ── Helpers ──
-
 // Build a workflow detail URL from a pre-computed slug (search-index `slug`
 // field). Returns null when the slug is empty/undefined so callers can avoid
 // rendering /workflows/undefined/ links when the search index is malformed.
@@ -307,7 +295,6 @@ watch(
   }
 );
 
-// Popular workflows — top 4 by usage.
 const popularWorkflows = computed(() =>
   [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
 );
@@ -352,13 +339,10 @@ const remainingModelCount = computed(() =>
   Math.max(0, allModels.value.length - DISCOVERY_PREVIEW_COUNT)
 );
 
-// Mode filter items for the discovery panel
 const modeItems = [
   { name: 'Apps', value: 'app' },
   { name: 'Node Graphs', value: 'nodeGraph' },
 ];
-
-// ── Badge actions ──
 
 function addFilterBadge(type: 'tag' | 'model' | 'mode', value: string) {
   store.addBadge({ type, value });
@@ -374,9 +358,6 @@ function removeLastBadge() {
   }
 }
 
-// ── Keyboard navigation ──
-
-// Discovery panel offsets
 const discCreatorOffset = computed(() => popularWorkflows.value.length);
 const discTagOffset = computed(() => discCreatorOffset.value + topCreators.value.length);
 const discModelOffset = computed(() => discTagOffset.value + previewTags.value.length);
@@ -512,7 +493,6 @@ function clearAll() {
   inputRef.value?.focus();
 }
 
-// Creator color palette
 const CREATOR_COLORS = ['#f2ff59', '#ff4444', '#ff4444'];
 
 function getCreatorColor(index: number): string {
@@ -586,12 +566,10 @@ function handleGlobalSlash(e: KeyboardEvent) {
   inputRef.value?.focus();
 }
 
-// Reset active index when context changes
 watch([searchQuery, () => store.filterBadges.value.length, isOpen, searchResults], () => {
   activeIndex.value = -1;
 });
 
-// Scroll active item into view
 watch(activeIndex, (idx) => {
   if (idx < 0) return;
   nextTick(() => {
@@ -616,10 +594,13 @@ onUnmounted(() => {
 <template>
   <div ref="containerRef" role="search" class="w-full min-w-0">
     <div class="lg:relative min-w-0">
-      <!-- Search Input with Badges -->
       <form
-        class="flex items-center gap-2 w-full h-12 px-4 rounded-2xl transition-colors focus-within:ring-1 focus-within:ring-brand"
-        :class="[isOpen ? 'bg-hub-surface-hover ring-1 ring-brand' : 'bg-hub-surface-hover']"
+        :class="
+          cn(
+            'flex items-center gap-2 w-full h-12 px-4 rounded-2xl bg-hub-surface-hover transition-colors focus-within:ring-1 focus-within:ring-brand',
+            isOpen && 'ring-1 ring-brand'
+          )
+        "
         role="search"
         @click="inputRef?.focus()"
         @submit.prevent="onSubmit"
@@ -684,7 +665,6 @@ onUnmounted(() => {
           @keydown="handleKeydown"
         />
 
-        <!-- Clear button -->
         <button
           v-if="hasQuery || hasBadges"
           type="button"
@@ -708,7 +688,6 @@ onUnmounted(() => {
           </svg>
         </button>
 
-        <!-- Slash shortcut hint -->
         <kbd
           v-if="!isOpen && !hasQuery && !hasBadges"
           class="hidden lg:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-hub-surface text-content/30 text-xs font-mono leading-none"
@@ -733,7 +712,6 @@ onUnmounted(() => {
           v-if="isOpen && !hasActiveFilters"
           class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-page shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
-          <!-- Pinned mobile badge row -->
           <div
             v-if="hasBadges"
             class="lg:hidden flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-1"
@@ -766,7 +744,6 @@ onUnmounted(() => {
           </div>
 
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
-            <!-- Popular Workflows -->
             <section>
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Popular Workflows
@@ -833,7 +810,6 @@ onUnmounted(() => {
               </div>
             </section>
 
-            <!-- Top Creators -->
             <section>
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Top Creators
@@ -856,7 +832,7 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-brand"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-page bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
@@ -965,7 +941,6 @@ onUnmounted(() => {
           v-if="isOpen && hasActiveFilters"
           class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-page shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
-          <!-- Pinned mobile badge row -->
           <div
             v-if="hasBadges"
             class="lg:hidden flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-1"
@@ -997,7 +972,6 @@ onUnmounted(() => {
             </Badge>
           </div>
 
-          <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">
             <div class="flex items-center gap-3 text-content-muted">
               <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -1019,7 +993,6 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Results -->
           <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
@@ -1058,7 +1031,6 @@ onUnmounted(() => {
               </div>
             </section>
 
-            <!-- Divider between suggestions and results -->
             <div
               v-if="hasQuery && hasFilterSuggestions && displayedWorkflows.length > 0"
               class="border-t border-white/5"
@@ -1086,7 +1058,7 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-brand"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-page bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
@@ -1096,7 +1068,6 @@ onUnmounted(() => {
               </div>
             </section>
 
-            <!-- No results -->
             <div
               v-if="
                 hasQuery &&
@@ -1117,7 +1088,6 @@ onUnmounted(() => {
               </p>
             </div>
 
-            <!-- No badge results -->
             <div
               v-else-if="!hasQuery && hasBadges && badgeOnlyResults.length === 0"
               class="text-center py-4"
@@ -1126,7 +1096,6 @@ onUnmounted(() => {
               <p class="text-xs text-content/30 mt-1">Try removing a filter</p>
             </div>
 
-            <!-- Workflow results -->
             <section v-if="displayedWorkflows.length > 0">
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Workflows
@@ -1197,7 +1166,6 @@ onUnmounted(() => {
             </section>
           </div>
 
-          <!-- Footer -->
           <div class="shrink-0 border-t border-white/10 px-6 py-3">
             <p class="text-xs text-content/30 text-center">
               <template v-if="hasBadges && !hasQuery">

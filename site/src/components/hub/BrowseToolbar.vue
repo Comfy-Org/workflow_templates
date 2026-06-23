@@ -49,14 +49,12 @@ const { facetsByType, isBadgeActive, activeCountForType } = useFacets(facetInput
 /** Show the search-within input only when a group has more values than this. */
 const SEARCH_THRESHOLD = 12;
 
-// ── Tabs (left) ──────────────────────────────────────────────────────────
 const TABS: { key: HubTab; labelKey: keyof ToolbarLabels; icon: Component }[] = [
   { key: 'all', labelKey: 'all', icon: LayoutGrid },
   { key: 'nodeGraphs', labelKey: 'nodeGraphs', icon: IconWorkflow },
   { key: 'comfyApps', labelKey: 'comfyApps', icon: IconApps },
 ];
 
-// ── Filter popover (right) ───────────────────────────────────────────────
 const filterOpen = ref(false);
 const activeFacetTab = ref(facetsConfig[0]?.key ?? '');
 const facetSearch = ref<Record<string, string>>({});
@@ -83,7 +81,6 @@ function toggleValue(type: FilterBadge['type'], value: string) {
   trackFilterApplied(type, value);
 }
 
-// ── Sort (right) ─────────────────────────────────────────────────────────
 const sortLabel = computed(() =>
   store.sortBy.value === 'popular' ? labels.sortPopular : labels.sortNewest
 );

@@ -183,9 +183,7 @@ function handleCardClick() {
     :class="templateUrl ? 'cursor-pointer' : ''"
     @click="handleCardClick"
   >
-    <!-- Thumbnail -->
     <div class="aspect-4/3 bg-hub-surface rounded-4xl overflow-hidden relative">
-      <!-- Compare slider -->
       <div
         v-if="showCompare"
         ref="compareRoot"
@@ -235,7 +233,6 @@ function handleCardClick() {
         </div>
       </div>
 
-      <!-- Hover crossfade -->
       <div v-else-if="showHoverDissolve" class="group/thumb relative h-full w-full overflow-hidden">
         <img
           :src="primaryUrl || ''"
@@ -356,7 +353,6 @@ function handleCardClick() {
         aria-hidden="true"
       />
 
-      <!-- Title overlay (bottom) -->
       <h3
         class="absolute bottom-5 left-5 right-5 z-10 font-medium text-content-bright text-base leading-[1.3] line-clamp-2 drop-shadow-md pointer-events-none sm:text-lg lg:text-xl"
       >
@@ -376,9 +372,7 @@ function handleCardClick() {
       </div>
     </div>
 
-    <!-- Content -->
     <div class="flex flex-col gap-3 px-4">
-      <!-- Creator + CTA -->
       <div class="flex items-center justify-between gap-2">
         <a
           v-if="!hideAuthor && creatorUrl"
@@ -396,7 +390,7 @@ function handleCardClick() {
             v-else
             class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
           >
-            <span class="text-black text-[10px] font-bold leading-none">{{
+            <span class="text-page text-[10px] font-bold leading-none">{{
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
@@ -413,7 +407,7 @@ function handleCardClick() {
             v-else
             class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
           >
-            <span class="text-black text-[10px] font-bold leading-none">{{
+            <span class="text-page text-[10px] font-bold leading-none">{{
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
@@ -434,7 +428,6 @@ function handleCardClick() {
         </button>
       </div>
 
-      <!-- Tag pills -->
       <div data-testid="tag-pills" class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
         <a
           v-for="tag in displayTags"
