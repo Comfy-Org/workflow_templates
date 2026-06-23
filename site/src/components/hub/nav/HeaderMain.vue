@@ -43,11 +43,14 @@ const ctaButtons = [
 </script>
 
 <template>
-  <nav class="flex items-center justify-between gap-4 lg:gap-4" aria-label="Main navigation">
+  <nav
+    class="flex items-center justify-between gap-4 lg:gap-4"
+    :aria-label="t('nav.mainNavigation', locale)"
+  >
     <a
       :href="navRoutes.home"
       class="inline-grid h-10 shrink-0 grid-cols-1 grid-rows-1 transition-[width]"
-      aria-label="Comfy home"
+      :aria-label="t('nav.home', locale)"
     >
       <img src="/icons/logomark.svg" alt="Comfy" class="col-span-full row-span-full h-8" />
       <div

@@ -6,10 +6,15 @@ import { Badge } from '@/components/ui/badge';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { tagPath } from '@/lib/routes';
 
-defineProps<{
-  tags: string[];
-  locale: string;
-}>();
+withDefaults(
+  defineProps<{
+    tags: string[];
+    locale: string;
+    prevLabel?: string;
+    nextLabel?: string;
+  }>(),
+  { prevLabel: 'Scroll tags left', nextLabel: 'Scroll tags right' }
+);
 
 const scroller = useTemplateRef<HTMLElement>('scroller');
 const canPrev = ref(false);
@@ -41,7 +46,7 @@ const tagLabel = (tag: string) => tagDisplayName(tag).toLowerCase().replace(/\s+
       v-if="canPrev"
       type="button"
       class="flex size-6 shrink-0 items-center justify-center rounded-full border border-divider bg-page text-content-secondary transition-colors hover:text-content focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      aria-label="Scroll tags left"
+      :aria-label="prevLabel"
       @click.stop="scroll(-1)"
     >
       <ChevronLeft class="size-4" aria-hidden="true" />
@@ -72,7 +77,7 @@ const tagLabel = (tag: string) => tagDisplayName(tag).toLowerCase().replace(/\s+
       v-if="canNext"
       type="button"
       class="flex size-6 shrink-0 items-center justify-center rounded-full border border-divider bg-page text-content-secondary transition-colors hover:text-content focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      aria-label="Scroll tags right"
+      :aria-label="nextLabel"
       @click.stop="scroll(1)"
     >
       <ChevronRight class="size-4" aria-hidden="true" />

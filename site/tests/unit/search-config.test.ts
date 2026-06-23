@@ -150,11 +150,15 @@ describe('search integration (real index + shared options)', () => {
     // "Image to Video" / "Text to Image" (title) should outrank "Upscale Photo"
     // which only mentions image in its description.
     const ids = results.map((r) => r.id);
-    expect(ids).toContain('1');
-    expect(ids).toContain('2');
-    // Title matches (1, 2) must outrank the description-only match (3).
-    expect(ids.indexOf('3')).toBeGreaterThan(ids.indexOf('1'));
-    expect(ids.indexOf('3')).toBeGreaterThan(ids.indexOf('2'));
+    const [i1, i2, i3] = ['1', '2', '3'].map((id) => ids.indexOf(id));
+
+    // All three must be present, then the title matches (1, 2) must outrank the
+    // description-only match (3) — guard presence so a missing id can't pass as -1.
+    expect(i1).toBeGreaterThanOrEqual(0);
+    expect(i2).toBeGreaterThanOrEqual(0);
+    expect(i3).toBeGreaterThanOrEqual(0);
+    expect(i3).toBeGreaterThan(i1);
+    expect(i3).toBeGreaterThan(i2);
   });
 
   it('requires every term to match (AND combine)', () => {

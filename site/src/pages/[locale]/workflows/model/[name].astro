@@ -13,7 +13,6 @@ import WorkflowGrid from '../../../../components/hub/WorkflowGrid.vue';
 import HreflangTags from '../../../../components/HreflangTags.astro';
 import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
-import { t } from '../../../../i18n/ui';
 import { localizeUrl } from '../../../../i18n/utils';
 import { slugify } from '../../../../lib/slugify';
 import { absoluteUrl } from '../../../../config/site';
@@ -62,14 +61,7 @@ const structuredData = {
   inLanguage: locale,
 };
 
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(
-  typedLocale,
-  { name: modelName },
-  {
-    name: t('labels.models', typedLocale),
-    item: absoluteUrl(localizeUrl('/workflows/model/', typedLocale)),
-  }
-);
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(typedLocale, { name: modelName });
 
 // matchingTemplates are already SerializedTemplate[] with profile data
 const serialized = matchingTemplates;

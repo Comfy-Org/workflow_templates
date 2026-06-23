@@ -16,7 +16,18 @@ const PLATFORMS: { match: string[]; label: string }[] = [
 
 /** Resolve a creator's social URL to a display label, defaulting to "Website". */
 export function getSocialDisplay(social: string): SocialLink {
-  const url = /^https?:\/\//.test(social) ? social : `https://${social}`;
-  const platform = PLATFORMS.find((p) => p.match.some((host) => social.includes(host)));
+  const trimmed = social.trim();
+  const url = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+
+  let hostname = '';
+  try {
+    hostname = new URL(url).hostname.toLowerCase();
+  } catch {
+    return { label: 'Website', url };
+  }
+
+  const platform = PLATFORMS.find((p) =>
+    p.match.some((host) => hostname === host || hostname.endsWith(`.${host}`))
+  );
   return { label: platform?.label ?? 'Website', url };
 }

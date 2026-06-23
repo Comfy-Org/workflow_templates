@@ -73,7 +73,7 @@ onUnmounted(() => {
           class="focus-visible:border-primary-comfy-yellow focus-visible:ring-primary-comfy-yellow/50 inline-flex w-auto shrink-0 focus-visible:ring-3"
         >
           <img src="/icons/logomark.svg" alt="" class="h-11 w-auto" />
-          <span class="sr-only">Comfy</span>
+          <span class="sr-only">{{ t('nav.home', locale) }}</span>
         </a>
 
         <div class="relative mt-4 flex-1 overflow-hidden">
