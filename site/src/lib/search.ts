@@ -41,7 +41,9 @@ export interface SearchResults {
 let indexPromise: Promise<MiniSearch> | null = null;
 
 async function loadIndex(): Promise<MiniSearch> {
-  const response = await fetch('/workflows/search-index.json');
+  const response = await fetch('/workflows/search-index.json', {
+    signal: AbortSignal.timeout(8000),
+  });
   if (!response.ok) {
     throw new Error(`Failed to load search index: ${response.status}`);
   }

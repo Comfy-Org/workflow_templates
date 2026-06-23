@@ -65,7 +65,9 @@ async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
 
   const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
   const statuses = approvedOnly ? 'approved' : 'pending,approved,rejected,deprecated';
-  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
+  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`, {
+    signal: AbortSignal.timeout(10000),
+  });
 
   if (!res.ok) {
     throw new Error(`Hub API returned ${res.status}: ${res.statusText}`);
@@ -81,7 +83,9 @@ async function fetchProfileDisplayName(username: string): Promise<string> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
   if (!apiUrl) return username;
   try {
-    const res = await fetch(`${apiUrl}/api/hub/profiles/${encodeURIComponent(username)}`);
+    const res = await fetch(`${apiUrl}/api/hub/profiles/${encodeURIComponent(username)}`, {
+      signal: AbortSignal.timeout(10000),
+    });
     if (!res.ok) return username;
     const profile = (await res.json()) as { display_name?: string };
     return profile.display_name || username;
