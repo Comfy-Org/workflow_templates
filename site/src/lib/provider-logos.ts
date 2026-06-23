@@ -39,14 +39,19 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Word-boundary matchers built once; `getLogoPath` runs per card per render.
+const LOGO_MATCHERS: [RegExp, string][] = Object.entries(MODEL_TO_LOGO).map(([key, slug]) => [
+  new RegExp(`(?:^|[^a-z0-9])${escapeRegex(key.toLowerCase())}(?:$|[^a-z0-9])`),
+  slug,
+]);
+
 /** Resolve a provider/model name to a logo path under `/logos/`, or null if unknown. */
 export function getLogoPath(name: string): string | null {
   const normalized = name.trim();
   const slug = MODEL_TO_LOGO[normalized];
   if (slug) return `/logos/${slug}.png`;
   const lower = normalized.toLowerCase();
-  for (const [key, val] of Object.entries(MODEL_TO_LOGO)) {
-    const pattern = new RegExp(`(?:^|[^a-z0-9])${escapeRegex(key.toLowerCase())}(?:$|[^a-z0-9])`);
+  for (const [pattern, val] of LOGO_MATCHERS) {
     if (pattern.test(lower)) return `/logos/${val}.png`;
   }
   return null;
