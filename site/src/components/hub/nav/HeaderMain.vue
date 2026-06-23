@@ -54,12 +54,12 @@ const ctaButtons = [
     >
       <img src="/icons/logomark.svg" alt="Comfy" class="col-span-full row-span-full h-8" />
       <div
-        class="relative col-span-full row-span-full h-10 w-0 overflow-clip transition-[width] xl:w-36"
+        class="relative col-span-full row-span-full h-10 w-0 overflow-clip transition-[width] xl:w-44"
       >
         <img
-          src="/brand/comfy-wordmark-yellow.svg"
-          alt="Comfy"
-          class="absolute top-0 left-0 h-10 w-36 max-w-none object-contain object-left"
+          src="/brand/comfy-hub-logo.svg"
+          alt="ComfyHub"
+          class="absolute top-0 left-0 h-10 w-44 max-w-none object-contain object-left"
         />
       </div>
     </a>
