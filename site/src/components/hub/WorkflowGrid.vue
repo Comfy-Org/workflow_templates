@@ -141,7 +141,9 @@ function loadMore() {
     </div>
 
     <div v-if="hasMore" class="flex justify-center pt-10 pb-4">
-      <Button variant="pill" size="pill" @click="loadMore">Load more</Button>
+      <Button variant="brand-outline" size="nav" class="px-12 uppercase" @click="loadMore">
+        Load more
+      </Button>
     </div>
 
     <div class="text-center text-hub-muted text-sm pb-4 pt-2">
