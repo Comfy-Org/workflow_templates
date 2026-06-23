@@ -1,8 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import { getLocaleFromPath } from '../../i18n/utils';
+import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import SearchPopover from './SearchPopover.vue';
-import SiteNav from './nav/SiteNav.vue';
+import HeaderMain from './nav/HeaderMain.vue';
 import {
   getProfileCache,
   serializeCollectionEntry,
@@ -20,13 +20,19 @@ interface Props {
 const profiles = await getProfileCache();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
-// Derive creators list from profile cache (hub API)
 const creatorsList = Array.from(profiles.entries()).map(([username, profile]) => ({
   username,
   displayName: profile.display_name || username,
   summary: profile.description || '',
   social: profile.website_urls || '',
   avatarUrl: profile.avatar_url || '',
+}));
+
+// Top creators for the mobile menu (locale-aware profile links).
+const creatorLinks = creatorsList.slice(0, 5).map((c) => ({
+  username: c.username,
+  displayName: c.displayName,
+  href: localizeUrl(`/workflows/creators/${c.username}/`, locale),
 }));
 
 // Use provided templates or fetch and serialize them
@@ -48,7 +54,7 @@ if (Astro.props.templates && Astro.props.templates.length > 0) {
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
     <!-- Row 1: Marketing nav (logo + menus + CTAs + mobile hamburger).-->
     <div class="pt-4 lg:pt-8 pb-6 lg:pb-12">
-      <SiteNav client:load locale={locale} creators={creatorsList} githubStars={githubStars} />
+      <HeaderMain client:load locale={locale} creators={creatorLinks} githubStars={githubStars} />
     </div>
 
     <!-- Row 2: Full-width search (sibling of nav; search is not navigation) -->
