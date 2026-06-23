@@ -5,10 +5,54 @@
  * routes emit byte-identical schema.org shapes — Google compares the visible
  * content against this markup, so the two routes must not drift.
  */
+import { t } from '../i18n/ui';
+import type { Locale } from '../i18n/config';
+import { localizeUrl } from '../i18n/utils';
+import { SITE_ORIGIN, absoluteUrl } from '../config/site';
 
 export interface FaqItem {
   question: string;
   answer: string;
+}
+
+export interface BreadcrumbItem {
+  name: string;
+  /** Omit on the current page — schema.org allows a trailing item without a URL. */
+  item?: string;
+}
+
+/** schema.org `BreadcrumbList` JSON-LD from an ordered list of crumbs. */
+export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map(({ name, item }, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name,
+      ...(item ? { item } : {}),
+    })),
+  };
+}
+
+/**
+ * BreadcrumbList for a workflows sub-page: Home → a section crumb → the current
+ * page. `section` defaults to the `/workflows/` listing; pass an override for
+ * pages nested under a different parent (e.g. the models index).
+ */
+export function buildWorkflowBreadcrumb(
+  locale: Locale,
+  leaf: BreadcrumbItem,
+  section: BreadcrumbItem = {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  }
+) {
+  return buildBreadcrumbJsonLd([
+    { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
+    section,
+    leaf,
+  ]);
 }
 
 /**
