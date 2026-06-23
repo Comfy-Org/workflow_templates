@@ -5,14 +5,13 @@
  * Visual structure: landscape thumbnail with the title and provider logo overlaid
  * on it; creator line + CTA and tag pills beneath.
  */
-import { Badge } from '@/components/ui/badge';
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import { tagDisplayName } from '@/lib/tag-aliases';
+import TagScroller from '@/components/hub/TagScroller.vue';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
-import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
+import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { getLogoPath, providerName } from '@/lib/provider-logos';
 import { ChevronRight } from 'lucide-vue-next';
 
@@ -160,12 +159,6 @@ onMounted(() => {
 onUnmounted(() => {
   removeCompareListeners?.();
 });
-
-const displayTags = computed(() => props.tags.slice(0, 3));
-
-function getTagUrl(tag: string): string {
-  return tagPath(tag, props.locale);
-}
 
 const creatorUrl = computed(() =>
   props.username ? creatorPath(props.username, props.locale) : null
@@ -372,7 +365,7 @@ function handleCardClick() {
       </div>
     </div>
 
-    <div class="flex flex-col gap-3 px-4">
+    <div class="flex flex-col gap-4 px-4">
       <div class="flex items-center justify-between gap-2">
         <a
           v-if="!hideAuthor && creatorUrl"
@@ -394,7 +387,7 @@ function handleCardClick() {
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
-          <span class="text-base leading-none truncate">{{ authorName }}</span>
+          <span class="text-base truncate">{{ authorName }}</span>
         </a>
         <div v-else-if="!hideAuthor" class="flex items-center gap-2 min-w-0">
           <img
@@ -411,9 +404,7 @@ function handleCardClick() {
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
-          <span class="text-content-secondary text-base leading-none truncate">{{
-            authorName
-          }}</span>
+          <span class="text-content-secondary text-base truncate">{{ authorName }}</span>
         </div>
         <span v-else />
 
@@ -428,22 +419,7 @@ function handleCardClick() {
         </button>
       </div>
 
-      <div data-testid="tag-pills" class="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
-        <a
-          v-for="tag in displayTags"
-          :key="tag"
-          :href="getTagUrl(tag)"
-          class="tag-link"
-          @click.stop
-        >
-          <Badge
-            variant="hub-pill"
-            class="hover:bg-hub-surface-hover transition-colors shrink-0 whitespace-nowrap"
-          >
-            {{ tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-') }}
-          </Badge>
-        </a>
-      </div>
+      <TagScroller v-if="tags.length" :tags="tags" :locale="locale" />
     </div>
   </div>
 </template>
