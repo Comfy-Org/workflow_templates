@@ -104,16 +104,15 @@ function formatRelativeDate(dateStr: string): string {
               <h1 class="text-base font-semibold text-content">{data.title || data.name}</h1>
               {
                 data.description && (
-                  <div class="workflow-description-wrap mt-2">
-                    <p class="text-sm text-hub-muted line-clamp-3 workflow-description-text">
-                      {data.description}
-                    </p>
-                    <button
-                      type="button"
-                      class="workflow-show-more hidden text-xs text-content-secondary hover:text-content transition-colors mt-1"
-                    >
-                      Show more
-                    </button>
+                  <div class="mt-2">
+                    <ExpandableText
+                      client:visible
+                      paragraphs={[data.description]}
+                      textClass="text-sm text-hub-muted"
+                      collapsedMax={60}
+                      moreLabel={t('template.readMore', locale)}
+                      lessLabel={t('template.readLess', locale)}
+                    />
                   </div>
                 )
               }
@@ -347,27 +346,6 @@ function formatRelativeDate(dateStr: string): string {
           // silent fail
         }
         document.body.removeChild(textarea);
-      }
-    });
-  }
-
-  // Accordion for workflow description
-  const descText = document.querySelector('.workflow-description-text');
-  const showMoreBtn = document.querySelector('.workflow-show-more');
-  if (descText && showMoreBtn) {
-    // Check if text is clamped (overflowing)
-    if (descText.scrollHeight > descText.clientHeight) {
-      showMoreBtn.classList.remove('hidden');
-    }
-    let expanded = false;
-    showMoreBtn.addEventListener('click', () => {
-      expanded = !expanded;
-      if (expanded) {
-        descText.classList.remove('line-clamp-3');
-        showMoreBtn.textContent = 'Show less';
-      } else {
-        descText.classList.add('line-clamp-3');
-        showMoreBtn.textContent = 'Show more';
       }
     });
   }

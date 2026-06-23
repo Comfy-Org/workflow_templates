@@ -22,8 +22,9 @@ const props = withDefaults(
     moreLabel: string;
     lessLabel: string;
     collapsedMax?: number;
+    textClass?: string;
   }>(),
-  { collapsedMax: 320 }
+  { collapsedMax: 320, textClass: 'text-base leading-relaxed text-content-secondary' }
 );
 
 /** Collapsed height cap, in px. */
@@ -109,11 +110,7 @@ onUnmounted(() => {
       class="ext-desc relative flex flex-col gap-4 overflow-hidden motion-safe:transition-[max-height] motion-safe:duration-300 motion-safe:ease-out"
       :style="containerStyle"
     >
-      <p
-        v-for="(paragraph, i) in paragraphs"
-        :key="i"
-        class="text-base leading-relaxed text-content-secondary"
-      >
+      <p v-for="(paragraph, i) in paragraphs" :key="i" :class="textClass">
         {{ paragraph }}
       </p>
       <!-- Fade only while collapsed and overflowing -->
