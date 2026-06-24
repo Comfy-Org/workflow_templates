@@ -7,6 +7,7 @@ import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
 import HreflangTags from '../../../components/HreflangTags.astro';
 import BackButton from '../../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
 import { slugify } from '../../../lib/slugify';
 import { absoluteUrl } from '../../../config/site';
 import { modelPath } from '../../../lib/routes';
@@ -66,7 +67,14 @@ const structuredData = {
   url: canonicalUrl,
 };
 
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: modelName });
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(
+  locale,
+  { name: modelName },
+  {
+    name: t('labels.models', locale),
+    item: absoluteUrl(localizeUrl('/workflows/model/', locale)),
+  }
+);
 
 // Templates are already serialized from getStaticPaths
 const serialized = templates;
