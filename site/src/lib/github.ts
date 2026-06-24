@@ -67,7 +67,13 @@ function readGitHubStarsOverride(): number | undefined {
 
   const count = Number(rawCount);
   if (!Number.isSafeInteger(count) || count < 0) {
-    throw new Error('WEBSITE_GITHUB_STARS_OVERRIDE must be a non-negative integer');
+    // Honor the file's graceful-degradation contract: a bad override must not
+    // throw (the only caller is un-guarded and renders on every route, so a
+    // throw fails the whole build). Warn and fall through to the live fetch.
+    console.warn(
+      `Ignoring invalid WEBSITE_GITHUB_STARS_OVERRIDE=${rawCount}; expected a non-negative integer`
+    );
+    return undefined;
   }
 
   return count;
