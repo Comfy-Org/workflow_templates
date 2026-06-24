@@ -36,7 +36,7 @@ const {
     :disabled="disabled"
     :class="cn(buttonPillVariants({ variant, size, iconPosition }), className)"
   >
-    <span class="ppformula-optical-center relative leading-none transition-all duration-500">
+    <span class="ppformula-text-center relative leading-none transition-all duration-500">
       <slot />
     </span>
     <span :class="buttonPillBadgeVariants({ variant, size, iconPosition })" aria-hidden="true">

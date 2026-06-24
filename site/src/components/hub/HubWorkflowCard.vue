@@ -383,7 +383,7 @@ function handleCardClick() {
             v-else
             class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
           >
-            <span class="text-page text-[10px] font-bold leading-none">{{
+            <span class="text-page text-2xs font-bold leading-none">{{
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
@@ -400,7 +400,7 @@ function handleCardClick() {
             v-else
             class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
           >
-            <span class="text-page text-[10px] font-bold leading-none">{{
+            <span class="text-page text-2xs font-bold leading-none">{{
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>

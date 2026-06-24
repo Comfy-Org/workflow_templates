@@ -109,7 +109,7 @@ const sortLabel = computed(() =>
           <!-- Mobile: only the active tab shows its label (inactive = icon-only).
                sm+: every tab shows its label. -->
           <span
-            class="ppformula-optical-center-sm max-sm:hidden max-sm:group-data-[state=active]:inline-block"
+            class="ppformula-text-center-sm max-sm:hidden max-sm:group-data-[state=active]:inline-block"
             >{{ labels[tab.labelKey] }}</span
           >
         </TabsTrigger>
@@ -130,10 +130,10 @@ const sortLabel = computed(() =>
           :aria-label="labels.filter"
         >
           <SlidersHorizontal class="size-3.5 shrink-0" aria-hidden="true" />
-          <span class="ppformula-optical-center-sm max-sm:hidden">{{ labels.filter }}</span>
+          <span class="ppformula-text-center-sm max-sm:hidden">{{ labels.filter }}</span>
           <span
             v-if="totalActiveFilters > 0"
-            class="ml-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-page/15 px-1 text-[10px] font-bold tabular-nums"
+            class="ml-0.5 inline-flex min-w-4 items-center justify-center rounded-full bg-page/15 px-1 text-2xs font-bold tabular-nums"
           >
             {{ totalActiveFilters }}
           </span>
@@ -148,7 +148,7 @@ const sortLabel = computed(() =>
           <PopoverContent
             align="end"
             :side-offset="8"
-            class="z-50 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-white/10 bg-nav-dropdown shadow-2xl shadow-black/50 outline-none"
+            class="z-50 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-white/10 bg-site-dropdown shadow-2xl shadow-black/50 outline-none"
           >
             <TabsRoot v-model="activeFacetTab" class="flex flex-col">
               <!-- Inner facet tabs (Models | Categories) -->
@@ -162,7 +162,7 @@ const sortLabel = computed(() =>
                   {{ group.label }}
                   <span
                     v-if="activeCountForType(group.type) > 0"
-                    class="inline-flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-[10px] font-bold text-page tabular-nums"
+                    class="inline-flex min-w-4 items-center justify-center rounded-full bg-brand px-1 text-2xs font-bold text-page tabular-nums"
                   >
                     {{ activeCountForType(group.type) }}
                   </span>
@@ -252,7 +252,7 @@ const sortLabel = computed(() =>
         @click="store.cycleSort()"
       >
         <ArrowUpDown class="size-3.5 shrink-0" aria-hidden="true" />
-        <span class="ppformula-optical-center-sm max-sm:hidden">{{ sortLabel }}</span>
+        <span class="ppformula-text-center-sm max-sm:hidden">{{ sortLabel }}</span>
       </button>
     </div>
   </div>

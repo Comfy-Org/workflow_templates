@@ -835,7 +835,7 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-page bg-brand"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-2xs font-bold text-page bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
@@ -1000,7 +1000,7 @@ onUnmounted(() => {
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
               <h3
-                class="text-[11px] font-semibold uppercase tracking-wide text-content-muted mb-2.5"
+                class="text-2xs font-semibold uppercase tracking-wide text-content-muted mb-2.5"
               >
                 Narrow by
               </h3>
@@ -1016,7 +1016,7 @@ onUnmounted(() => {
                   @click="addFilterBadge('tag', tag.name)"
                 >
                   {{ tagDisplayName(tag.name) }}
-                  <span class="text-content/30 text-[10px]">{{ tag.count }}</span>
+                  <span class="text-content/30 text-2xs">{{ tag.count }}</span>
                 </Badge>
                 <Badge
                   v-for="(model, i) in filterSuggestions.models"
@@ -1029,7 +1029,7 @@ onUnmounted(() => {
                   @click="addFilterBadge('model', model.name)"
                 >
                   {{ model.name }}
-                  <span class="text-content/30 text-[10px]">{{ model.count }}</span>
+                  <span class="text-content/30 text-2xs">{{ model.count }}</span>
                 </Badge>
               </div>
             </section>
@@ -1061,7 +1061,7 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-page bg-brand"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-2xs font-bold text-page bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
@@ -1161,7 +1161,7 @@ onUnmounted(() => {
                       {{ hit.creatorName }} · {{ formatUsage(hit.usage) }} runs
                     </p>
                   </div>
-                  <span class="text-[10px] uppercase tracking-wide text-content/30 shrink-0">
+                  <span class="text-2xs uppercase tracking-wide text-content/30 shrink-0">
                     {{ hit.mediaTypeLabel }}
                   </span>
                 </a>

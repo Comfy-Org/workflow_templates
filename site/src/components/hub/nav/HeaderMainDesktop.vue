@@ -36,7 +36,7 @@ const mainNavigation = getMainNavigation(locale);
           </NavigationMenuContent>
         </template>
         <NavigationMenuLink v-else as-child :class="navigationMenuTriggerStyle()">
-          <a :href="navItem.href" class="ppformula-optical-center">{{ navItem.label }}</a>
+          <a :href="navItem.href" class="ppformula-text-center">{{ navItem.label }}</a>
         </NavigationMenuLink>
       </NavigationMenuItem>
     </NavigationMenuList>

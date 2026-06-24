@@ -82,7 +82,7 @@ const ctaButtons = [
         :data-location="cta.primary ? 'navbar' : undefined"
         :class="cta.primary ? 'run-cloud-btn' : undefined"
       >
-        <span class="ppformula-optical-center">
+        <span class="ppformula-text-center">
           <span class="hidden xl:inline-block">{{ cta.prefix }}&nbsp;</span>{{ cta.core }}
         </span>
       </Button>

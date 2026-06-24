@@ -171,7 +171,7 @@ onUnmounted(() => {
           <div
             class="absolute left-2 top-2 z-20 rounded-lg bg-black/10 px-2.5 py-1 backdrop-blur-xs sm:left-3 sm:top-3 sm:rounded-[12px] sm:px-3.5 sm:py-1.5"
           >
-            <span class="text-[10px] font-extrabold tracking-wide text-white sm:text-xs">{{
+            <span class="text-2xs font-extrabold tracking-wide text-white sm:text-xs">{{
               featuredLabel
             }}</span>
           </div>
@@ -212,7 +212,7 @@ onUnmounted(() => {
                 />
                 <span
                   v-else
-                  class="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-[10px] font-bold leading-none text-page sm:size-6"
+                  class="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-2xs font-bold leading-none text-page sm:size-6"
                   aria-hidden="true"
                 >
                   {{ slide.creatorName.charAt(0).toUpperCase() }}
@@ -221,7 +221,7 @@ onUnmounted(() => {
               </a>
               <div v-else class="flex min-w-0 items-center gap-2 text-white/95">
                 <span
-                  class="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-[10px] font-bold leading-none text-page sm:size-6"
+                  class="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-2xs font-bold leading-none text-page sm:size-6"
                   aria-hidden="true"
                 >
                   {{ slide.creatorName.charAt(0).toUpperCase() }}

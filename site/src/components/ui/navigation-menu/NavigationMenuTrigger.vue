@@ -28,7 +28,7 @@ const forwardedProps = useForwardProps(computed(() => ({ ...restProps })));
     :data-active="active ? '' : undefined"
     :class="cn(navigationMenuTriggerStyle(), 'group', className)"
   >
-    <span class="ppformula-optical-center">
+    <span class="ppformula-text-center">
       <slot />
     </span>
     <ChevronDown
