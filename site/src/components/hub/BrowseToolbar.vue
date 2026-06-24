@@ -102,6 +102,7 @@ const sortLabel = computed(() =>
           v-for="tab in TABS"
           :key="tab.key"
           :value="tab.key"
+          :aria-label="labels[tab.labelKey]"
           class="group inline-flex h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold whitespace-nowrap text-content-secondary transition-colors outline-none hover:bg-white/8 hover:text-content data-[state=active]:bg-brand data-[state=active]:text-page data-[state=active]:hover:bg-brand focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-1 focus-visible:ring-offset-page sm:px-3.5"
         >
           <component :is="tab.icon" class="size-3.5 shrink-0" aria-hidden="true" />
