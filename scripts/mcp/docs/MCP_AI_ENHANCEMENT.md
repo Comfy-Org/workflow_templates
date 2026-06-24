@@ -210,6 +210,22 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 | ≥ 50 | `low` |
 | &lt; 50 | `not_recommended` |
 
+**Category floor:** templates in **Use Cases** never sync below `low` (no `not_recommended`).
+
+**Manual override:** `scripts/data/mcp/template_overrides.json`
+
+```json
+{
+  "schema_version": 1,
+  "templates": {
+    "image_krea2_turbo_t2i": { "recommend": "high" },
+    "template_3x3_contact_sheet": { "recommend": "top", "freshness": "current" }
+  }
+}
+```
+
+Overrides win over usage tiers but still respect the Use Cases floor (cannot set `not_recommended` there).
+
 ## API contract
 
 - Protocol: OpenAI Chat Completions (`POST {AI_BASE_URL}/chat/completions`)

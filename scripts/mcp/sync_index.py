@@ -11,6 +11,7 @@ Step 1 of the MCP pipeline (deterministic sync):
   - Templates with 2+ API model nodes → skip model_options (logged to scripts/.output/sync_index.log)
   - freshness → semantic label derived from index.json `date`; see freshness_score.py
   - recommend → semantic label derived from usage; see recommend_score.py
+    Manual overrides in template_overrides.json; Use Cases never below `low`
   - Skips instructional categories: Node Basics, LLM, Getting Started
 
 Step 2 (separate): AI reads models_registry.json to polish descriptions.
@@ -25,7 +26,7 @@ Dependencies:
   - templates/index.mcp.json (target file)
   - scripts/data/mcp/template_cache.json (AI template description/io; merged when source_hash matches)
   - scripts/data/mcp/models_registry.json (model name resolution only)
-  - scripts/data/mcp/api_node_model_options.json (from scan_api_nodes.py; verbatim node dropdowns)
+  - scripts/data/mcp/template_overrides.json (manual recommend/freshness overrides)
 """
 
 from __future__ import annotations
@@ -49,7 +50,6 @@ from comfyui_paths import resolve_comfy_api_nodes_dir  # noqa: E402
 from json_format import dumps_compact_arrays  # noqa: E402
 from paths import API_NODE_OPTIONS_FILE, MODELS_REGISTRY_FILE, REPO_ROOT, SCRIPTS_ROOT  # noqa: E402
 from freshness_score import freshness_from_date  # noqa: E402
-from recommend_score import recommend_from_usage  # noqa: E402
 from scan_api_node_models import (  # noqa: E402
     model_options_for_workflow,
     scan_api_nodes_dir,
@@ -60,6 +60,7 @@ from template_cache import (  # noqa: E402
     cache_matches_workflow,
     load_template_cache,
 )
+from template_overrides import load_template_overrides, resolve_recommend  # noqa: E402
 
 TEMPLATES_DIR = REPO_ROOT / "templates"
 INDEX_FILE = TEMPLATES_DIR / "index.json"
@@ -596,6 +597,9 @@ def build_template_entry(
     node_index: dict[str, dict[str, Any]],
     multi_api_skips: list[tuple[str, list[str]]],
     template_cache: dict[str, Any] | None = None,
+    *,
+    mcp_category: str | None = None,
+    metadata_overrides: dict[str, Any] | None = None,
 ) -> dict:
     name = tpl["name"]
     tags = tpl.get("tags", [])
@@ -617,14 +621,23 @@ def build_template_entry(
     io_info = infer_io(task_type, node_types)
     desc = tpl.get("description") or auto_description(name, task, model, is_api)
 
+    override_row = (metadata_overrides or {}).get("templates", {}).get(name) or {}
+    freshness = freshness_from_date(tpl.get("date"))
+    if override_row.get("freshness"):
+        freshness = override_row["freshness"]
+
     entry = {
         "name": name,
         "title": tpl.get("title", name),
         "task": task,
         "model": model,
-        "freshness": freshness_from_date(tpl.get("date")),
+        "freshness": freshness,
         "usage": usage,
-        "recommend": recommend_from_usage(usage),
+        "recommend": resolve_recommend(
+            usage,
+            mcp_category=mcp_category,
+            override=override_row.get("recommend"),
+        ),
         "description": desc,
         "io": io_info,
     }
@@ -659,6 +672,7 @@ def sync(
 
     template_cache = load_template_cache()
     templates_cache = template_cache.get("templates", {})
+    metadata_overrides = load_template_overrides()
 
     new_data: list[dict] = []
     added: list[str] = []
@@ -713,6 +727,8 @@ def sync(
                 node_index,
                 multi_api_skips,
                 templates_cache.get(name),
+                mcp_category=category,
+                metadata_overrides=metadata_overrides,
             )
             new_entry["templates"].append(built)
             if name not in existing:

@@ -18,3 +18,5 @@ MODELS_CAPABILITIES_FILE = MODELS_REGISTRY_FILE
 API_NODE_OPTIONS_FILE = MCP_DATA_DIR / "api_node_model_options.json"
 TEMPLATE_CACHE_FILE = MCP_DATA_DIR / "template_cache.json"
 TEMPLATE_CACHE_EXAMPLE = MCP_DATA_DIR / "template_cache.example.json"
+TEMPLATE_OVERRIDES_FILE = MCP_DATA_DIR / "template_overrides.json"
+TEMPLATE_OVERRIDES_EXAMPLE = MCP_DATA_DIR / "template_overrides.example.json"

@@ -24,6 +24,8 @@ scripts/lib/ai/              # Shared OpenAI-compatible client (reusable outside
 
 MCP data files live in [`../data/mcp/`](../data/mcp/) — see [`../data/mcp/README.md`](../data/mcp/README.md).
 
+Manual `recommend` / `freshness` pins: [`../data/mcp/template_overrides.json`](../data/mcp/template_overrides.json) (see example file).
+
 ## Quick start
 
 ```bash
