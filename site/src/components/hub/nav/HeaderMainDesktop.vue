@@ -6,23 +6,13 @@ import NavigationMenuLink from '@/components/ui/navigation-menu/NavigationMenuLi
 import NavigationMenuList from '@/components/ui/navigation-menu/NavigationMenuList.vue';
 import NavigationMenuTrigger from '@/components/ui/navigation-menu/NavigationMenuTrigger.vue';
 import { navigationMenuTriggerStyle } from '@/components/ui/navigation-menu/navigationMenuTriggerStyle';
-import { isHrefActive, useCurrentPath } from '@/composables/useCurrentPath';
-import { getMainNavigation, type NavItem } from '@/config/main-navigation';
+import { getMainNavigation } from '@/config/main-navigation';
 import type { Locale } from '@/i18n/config';
 import NavColumn from './NavColumn.vue';
 import NavFeaturedCard from './NavFeaturedCard.vue';
 
 const { locale = 'en' } = defineProps<{ locale?: Locale }>();
 const mainNavigation = getMainNavigation(locale);
-const currentPath = useCurrentPath();
-
-function isNavItemActive(navItem: NavItem, path: string): boolean {
-  if (navItem.href) return isHrefActive(navItem.href, path);
-  return (
-    navItem.columns?.some((column) => column.items.some((item) => isHrefActive(item.href, path))) ??
-    false
-  );
-}
 </script>
 
 <template>
@@ -30,7 +20,7 @@ function isNavItemActive(navItem: NavItem, path: string): boolean {
     <NavigationMenuList>
       <NavigationMenuItem v-for="navItem in mainNavigation" :key="navItem.label">
         <template v-if="navItem.columns?.length">
-          <NavigationMenuTrigger :active="isNavItemActive(navItem, currentPath)">
+          <NavigationMenuTrigger>
             {{ navItem.label }}
           </NavigationMenuTrigger>
           <NavigationMenuContent class="w-auto" data-testid="nav-dropdown">
@@ -41,17 +31,11 @@ function isNavItemActive(navItem: NavItem, path: string): boolean {
                 :key="column.header"
                 :column="column"
                 :locale="locale"
-                :current-path="currentPath"
               />
             </ul>
           </NavigationMenuContent>
         </template>
-        <NavigationMenuLink
-          v-else
-          as-child
-          :active="isNavItemActive(navItem, currentPath)"
-          :class="navigationMenuTriggerStyle()"
-        >
+        <NavigationMenuLink v-else as-child :class="navigationMenuTriggerStyle()">
           <a :href="navItem.href" class="ppformula-optical-center">{{ navItem.label }}</a>
         </NavigationMenuLink>
       </NavigationMenuItem>

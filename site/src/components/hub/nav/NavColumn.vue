@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import NavigationMenuLink from '@/components/ui/navigation-menu/NavigationMenuLink.vue';
-import { isHrefActive } from '@/composables/useCurrentPath';
 import type { Locale } from '@/i18n/config';
 import type { NavColumn } from '@/config/main-navigation';
 import NavLinkContent from './NavLinkContent.vue';
 
-defineProps<{ column: NavColumn; locale: Locale; currentPath: string }>();
+defineProps<{ column: NavColumn; locale: Locale }>();
 </script>
 
 <template>
@@ -15,11 +14,7 @@ defineProps<{ column: NavColumn; locale: Locale; currentPath: string }>();
     </p>
     <ul class="flex flex-col">
       <li v-for="item in column.items" :key="item.label">
-        <NavigationMenuLink
-          as-child
-          :active="isHrefActive(item.href, currentPath)"
-          class="hover:bg-transparency-white-t4"
-        >
+        <NavigationMenuLink as-child class="hover:bg-transparency-white-t4">
           <a
             :href="item.href"
             :target="item.external ? '_blank' : undefined"
