@@ -197,7 +197,7 @@ export async function buildSearchIndex(): Promise<void> {
     fields: [...SEARCH_FIELDS],
     storeFields: [...STORE_FIELDS],
     tokenize,
-    searchOptions: searchOptions('') as Record<string, unknown>,
+    searchOptions: searchOptions() as Record<string, unknown>,
   });
 
   miniSearch.addAll(documents);

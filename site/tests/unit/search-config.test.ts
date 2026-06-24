@@ -4,9 +4,11 @@ import {
   SEARCH_FIELDS,
   STORE_FIELDS,
   tokenize,
+  termFuzziness,
   searchOptions,
+  expandAbbreviation,
   expandQuery,
-  searchWithFallback,
+  searchWorkflows,
 } from '../../src/lib/search-config';
 
 describe('tokenize', () => {
@@ -19,70 +21,124 @@ describe('tokenize', () => {
   });
 
   it('keeps a snake_case term AND emits its sub-parts', () => {
-    expect(tokenize('flux_dev_example')).toEqual(['flux_dev_example', 'flux', 'dev', 'example']);
-  });
-
-  it('handles mixed hyphen + underscore', () => {
-    expect(tokenize('flux_image-to-video')).toEqual([
-      'flux_image-to-video',
-      'flux',
-      'image',
-      'to',
-      'video',
-    ]);
+    expect(tokenize('video_ltx2_3_t2v')).toEqual(['video_ltx2_3_t2v', 'video', 'ltx2', '3', 't2v']);
   });
 
   it('drops empty tokens from collapsed separators', () => {
+    expect(tokenize('a--b')).toEqual(['a--b', 'a', 'b']);
     expect(tokenize('a__b')).toEqual(['a__b', 'a', 'b']);
+  });
+
+  it('returns an empty array for empty / whitespace-only input', () => {
+    expect(tokenize('')).toEqual([]);
+    expect(tokenize('   ')).toEqual([]);
+  });
+
+  it('collapses runs of whitespace', () => {
+    expect(tokenize('a   b\t c')).toEqual(['a', 'b', 'c']);
+  });
+
+  it('splits a name+version so "wan 2.1" and "wan2.1" match alike', () => {
+    expect(tokenize('Wan2.1')).toEqual(['wan2.1', 'wan', '2.1']);
+    expect(tokenize('LTX-2.3')).toEqual(['ltx-2.3', 'ltx', '2.3']);
+  });
+
+  it('leaves a mid-digit abbreviation (t2v) whole', () => {
+    expect(tokenize('t2v')).toEqual(['t2v']);
   });
 });
 
-describe('expandQuery', () => {
-  it('augments an abbreviation — keeps the literal AND adds the expansion', () => {
-    expect(expandQuery('txt2img')).toBe('txt2img text to image');
-    expect(expandQuery('i2v')).toBe('i2v image to video');
-    expect(expandQuery('t2i')).toBe('t2i text to image');
+describe('termFuzziness', () => {
+  it('disables fuzzy for ≤3-char terms (noise)', () => {
+    expect(termFuzziness('ab')).toBe(false);
+    expect(termFuzziness('abc')).toBe(false);
   });
 
-  it('is case-insensitive on the abbreviation (literal kept verbatim)', () => {
-    expect(expandQuery('TXT2IMG')).toBe('TXT2IMG text to image');
+  it('disables fuzzy for any term with a digit (so "2.5" never matches "3.5")', () => {
+    expect(termFuzziness('2.5')).toBe(false);
+    expect(termFuzziness('wan2.7')).toBe(false);
   });
 
-  it('only expands whole tokens, not substrings', () => {
-    expect(expandQuery('myi2vthing')).toBe('myi2vthing');
-  });
-
-  it('leaves unknown queries untouched', () => {
-    expect(expandQuery('flux upscale')).toBe('flux upscale');
-  });
-
-  it('augments per-token within a multi-word query', () => {
-    expect(expandQuery('fast i2v')).toBe('fast i2v image to video');
+  it('enables fuzzy 0.3 for longer alphabetic terms', () => {
+    expect(termFuzziness('abcd')).toBe(0.3);
+    expect(termFuzziness('controlnet')).toBe(0.3);
   });
 });
 
 describe('searchOptions', () => {
-  it('disables fuzzy for very short terms (avoids noise)', () => {
-    expect(searchOptions('ab').fuzzy).toBe(false);
-    expect(searchOptions('abc').fuzzy).toBe(false);
+  it('enables prefix matching and per-term fuzziness', () => {
+    const opts = searchOptions();
+    expect(opts.prefix).toBe(true);
+    expect(opts.fuzzy('controlnet')).toBe(0.3);
+    expect(opts.fuzzy('wan2.7')).toBe(false);
   });
 
-  it('enables increasing fuzziness for longer terms', () => {
-    expect(searchOptions('abcd').fuzzy).toBe(0.2);
-    expect(searchOptions('abcdefg').fuzzy).toBe(0.3);
+  it('defaults to AND combine, and honours an explicit OR', () => {
+    expect(searchOptions().combineWith).toBe('AND');
+    expect(searchOptions('OR').combineWith).toBe('OR');
   });
 
-  it('combines terms with AND so every term must match', () => {
-    expect(searchOptions('image video').combineWith).toBe('AND');
-  });
-
-  it('boosts title above description', () => {
-    const { boost } = searchOptions('anything');
-    expect(boost.title).toBeGreaterThan(boost.description);
+  it('shares the index tokenizer so query terms split the same way', () => {
+    expect(searchOptions().tokenize).toBe(tokenize);
   });
 });
 
-// ── Integration: exercise the real index + real query options end to end ──
+describe('expandAbbreviation', () => {
+  // Every spelling users type, mapped to its modality words (no connecting "to").
+  const CASES: [string, string][] = [
+    ['t2i', 'text image'],
+    ['txt2img', 'text image'],
+    ['txt2image', 'text image'],
+    ['text2image', 'text image'],
+    ['text2img', 'text image'],
+    ['i2i', 'image image'],
+    ['img2img', 'image image'],
+    ['t2v', 'text video'],
+    ['txt2vid', 'text video'],
+    ['text2video', 'text video'],
+    ['txt2video', 'text video'],
+    ['i2v', 'image video'],
+    ['img2vid', 'image video'],
+    ['img2video', 'image video'],
+    ['v2v', 'video video'],
+    ['s2v', 'audio video'],
+    ['t2a', 'text audio'],
+    ['t2m', 'text music'],
+    ['cn', 'controlnet'],
+  ];
+
+  it.each(CASES)('expands "%s" → "%s"', (input, expected) => {
+    expect(expandAbbreviation(input)).toBe(expected);
+  });
+
+  it('is case-insensitive and trims', () => {
+    expect(expandAbbreviation('  T2V ')).toBe('text video');
+    expect(expandAbbreviation('TXT2IMG')).toBe('text image');
+  });
+
+  it('returns null for non-shorthand tokens', () => {
+    for (const token of ['flux', 'upscale', 'x2y', 'myt2ithing', '']) {
+      expect(expandAbbreviation(token)).toBeNull();
+    }
+  });
+});
+
+describe('expandQuery', () => {
+  it('expands a shorthand token, dropping the connecting "to"', () => {
+    expect(expandQuery('txt2img')).toBe('text image');
+  });
+
+  it('expands each shorthand token within a multi-word query', () => {
+    expect(expandQuery('wan i2v')).toBe('wan image video');
+  });
+
+  it('returns null when nothing expands (caller skips the extra search)', () => {
+    expect(expandQuery('flux upscale')).toBeNull();
+    expect(expandQuery('')).toBeNull();
+  });
+});
+
+// ── Integration: exercise the real index + the query end to end ──
 
 interface Doc {
   id: string;
@@ -95,6 +151,8 @@ interface Doc {
   name: string;
 }
 
+// Fixture spanning every media type, the concept each abbreviation resolves to,
+// an accented creator, and a literal-vs-expansion pair (docs 11/12) for ranking.
 const DOCS: Doc[] = [
   {
     id: '1',
@@ -127,17 +185,96 @@ const DOCS: Doc[] = [
     name: 'upscale_photo',
   },
   {
-    // Mirrors real data: prose title ("Text to Video") + the `t2v` abbreviation
-    // living ONLY in the snake_case name. Since `name` is indexed, both the
-    // literal `t2v` query and the expanded "text to video" must find this doc.
     id: '4',
+    title: 'Image to Image Restyle',
+    description: 'Re-render an image in a new style',
+    tags: 'restyle',
+    models: 'flux',
+    mediaType: 'image',
+    creatorName: 'Studio',
+    name: 'image_to_image_restyle',
+  },
+  {
+    id: '5',
     title: 'LTX-2.3: Text to Video',
     description: 'Cinematic generation',
     tags: 'cinematic',
-    models: 'ltx',
+    models: 'ltx lightricks',
+    mediaType: 'video',
+    creatorName: 'José Núñez',
+    name: 'video_ltx2_3_t2v',
+  },
+  {
+    id: '6',
+    title: 'Stable Audio: Text to Music',
+    description: 'Generate music from a text prompt',
+    tags: 'audio music',
+    models: 'stable-audio',
+    mediaType: 'audio',
+    creatorName: 'ComfyUI',
+    name: 'stable_audio_t2a',
+  },
+  {
+    id: '7',
+    title: 'Flux ControlNet Canny',
+    description: 'Guided generation with a control image',
+    tags: 'controlnet control',
+    models: 'flux',
+    mediaType: 'image',
+    creatorName: 'ComfyUI',
+    name: 'flux_controlnet_canny',
+  },
+  {
+    id: '8',
+    title: 'Wan VACE Video to Video',
+    description: 'Restyle an existing clip',
+    tags: 'restyle',
+    models: 'wan vace',
     mediaType: 'video',
     creatorName: 'ComfyUI',
-    name: 'video_ltx2_3_t2v',
+    name: 'video_wan_vace_14B_v2v',
+  },
+  {
+    id: '9',
+    title: 'Wan2.2 Audio to Video',
+    description: 'Audio-driven video generation',
+    tags: 'audio driven',
+    models: 'wan',
+    mediaType: 'video',
+    creatorName: 'ComfyUI',
+    name: 'video_wan2_2_14B_s2v',
+  },
+  {
+    id: '10',
+    title: 'Sonilo Text to Music',
+    description: 'Generate a track from a prompt',
+    tags: 'music',
+    models: 'sonilo',
+    mediaType: 'audio',
+    creatorName: 'ComfyUI',
+    name: 'api_sonilo_t2m',
+  },
+  {
+    // Literal "t2v" — ranks above expansion-only doc 12.
+    id: '11',
+    title: 'Wan2.1 Alpha T2V',
+    description: 'Fast text-to-video',
+    tags: 'video',
+    models: 'wan',
+    mediaType: 'video',
+    creatorName: 'ComfyUI',
+    name: 'wan21_alpha_t2v',
+  },
+  {
+    // "Text to Video" prose, no literal "t2v" — expansion-only.
+    id: '12',
+    title: 'Mochi Text to Video',
+    description: 'Generate video from a text prompt',
+    tags: 'generation',
+    models: 'mochi',
+    mediaType: 'video',
+    creatorName: 'Genmo',
+    name: 'mochi_text_to_video',
   },
 ];
 
@@ -151,86 +288,115 @@ function buildIndex(): MiniSearch<Doc> {
   return ms;
 }
 
-function runQuery(ms: MiniSearch<Doc>, raw: string) {
-  const q = expandQuery(raw);
-  return ms.search(q, searchOptions(q));
+function ids(ms: MiniSearch<Doc>, raw: string): string[] {
+  return searchWorkflows<{ id: string }>(ms, raw).map((r) => r.id);
 }
 
-describe('search integration (real index + shared options)', () => {
-  it('ranks a title match above a description-only match (boost works)', () => {
-    const ms = buildIndex();
-    const results = runQuery(ms, 'image');
-    // "Image to Video" / "Text to Image" (title) should outrank "Upscale Photo"
-    // which only mentions image in its description.
-    const ids = results.map((r) => r.id);
-    const [i1, i2, i3] = ['1', '2', '3'].map((id) => ids.indexOf(id));
-
-    // All three must be present, then the title matches (1, 2) must outrank the
-    // description-only match (3) — guard presence so a missing id can't pass as -1.
-    expect(i1).toBeGreaterThanOrEqual(0);
-    expect(i2).toBeGreaterThanOrEqual(0);
-    expect(i3).toBeGreaterThanOrEqual(0);
-    expect(i3).toBeGreaterThan(i1);
-    expect(i3).toBeGreaterThan(i2);
+describe('search — single term (field coverage)', () => {
+  it('matches across title and description', () => {
+    expect(ids(buildIndex(), 'image')).toEqual(expect.arrayContaining(['1', '2', '3']));
   });
 
-  it('requires every term to match (AND combine)', () => {
-    const ms = buildIndex();
-    const results = runQuery(ms, 'image video');
-    // Only doc 1 contains both "image" and "video".
-    expect(results.map((r) => r.id)).toEqual(['1']);
+  it('matches on tags, models, mediaType and creatorName', () => {
+    expect(ids(buildIndex(), 'cinematic')).toContain('5'); // tags
+    expect(ids(buildIndex(), 'esrgan')).toContain('3'); // models
+    expect(ids(buildIndex(), 'audio')).toContain('6'); // mediaType + tags
+    expect(ids(buildIndex(), 'Topaz')).toContain('3'); // creatorName
   });
 
-  it('matches snake_case names via sub-token splitting', () => {
-    const ms = buildIndex();
-    // "upscale" appears in the title; ensure it resolves to doc 3.
-    expect(runQuery(ms, 'upscale').map((r) => r.id)).toContain('3');
+  it('is case-insensitive and trims whitespace', () => {
+    expect(ids(buildIndex(), '  IMAGE ')).toEqual(ids(buildIndex(), 'image'));
   });
 
-  it('resolves abbreviations via the real AND→OR path', () => {
-    const ms = buildIndex();
-    // "i2v" → "i2v image to video"; doc 1 ("Image to Video") matches on the words.
-    expect(searchWithFallback<Doc>(ms, expandQuery('i2v')).map((r) => r.id)).toContain('1');
-    // "txt2img" → "txt2img text to image"; doc 2 ("Text to Image") matches.
-    expect(searchWithFallback<Doc>(ms, expandQuery('txt2img')).map((r) => r.id)).toContain('2');
-  });
-
-  it('finds a literal abbreviation that lives only in the snake_case name', () => {
-    const ms = buildIndex();
-    // "t2v" → "t2v text to video". Doc 4 carries `t2v` only in its name
-    // (video_ltx2_3_t2v); indexing `name` makes the literal directly matchable,
-    // and the expansion ("text to video") also matches its prose title.
-    const ids = searchWithFallback<Doc>(ms, expandQuery('t2v')).map((r) => r.id);
-    expect(ids).toContain('4');
-    // The bare prefix "t2" also reaches it via the indexed `t2v` token.
-    expect(searchWithFallback<Doc>(ms, expandQuery('t2')).map((r) => r.id)).toContain('4');
-  });
-
-  it('tolerates a typo on a longer term (fuzzy)', () => {
-    const ms = buildIndex();
-    // "animaton" → should still find the animation workflow (doc 1).
-    expect(runQuery(ms, 'animaton').map((r) => r.id)).toContain('1');
+  it('matches an accented creator name', () => {
+    expect(ids(buildIndex(), 'Núñez')).toContain('5');
   });
 });
 
-describe('searchWithFallback', () => {
-  it('returns the precise AND result when every term matches', () => {
-    const ms = buildIndex();
-    // Only doc 1 has both image + video → AND succeeds, no OR fallback needed.
-    expect(searchWithFallback<{ id: string }>(ms, 'image video').map((r) => r.id)).toEqual(['1']);
+describe('search — typo tolerance (length-aware fuzzy)', () => {
+  it('forgives a transposition on a longer term (conrtol → control)', () => {
+    expect(ids(buildIndex(), 'conrtol')).toContain('7');
   });
 
-  it('falls back to OR when AND yields nothing', () => {
-    const ms = buildIndex();
-    // No doc has BOTH "upscale" and "video"; AND = 0 results, so OR kicks in and
-    // returns the docs matching either term (upscale → 3, video → 1).
-    const ids = searchWithFallback<{ id: string }>(ms, 'upscale video').map((r) => r.id);
-    expect(ids).toContain('3');
-    expect(ids.length).toBeGreaterThan(0);
+  it('forgives a single-character typo', () => {
+    expect(ids(buildIndex(), 'animaton')).toContain('1');
+    expect(ids(buildIndex(), 'upscalr')).toContain('3');
   });
 
-  it('returns empty when no term matches at all', () => {
-    const ms = buildIndex();
-    expect(searchWithFallback<{ id: string }>(ms, 'zzzznomatch')).toEqual([]);
+  it('does not fuzzy-match very short noise terms', () => {
+    expect(ids(buildIndex(), 'xz')).toEqual([]);
+  });
+});
+
+describe('search — multi-word (AND precise, OR fallback)', () => {
+  it('requires all words when several match (only doc 7 has both)', () => {
+    expect(ids(buildIndex(), 'flux controlnet')).toEqual(['7']);
+  });
+
+  it('does not flood with docs matching only one word', () => {
+    expect(ids(buildIndex(), 'flux controlnet')).not.toContain('2');
+  });
+
+  it('falls back to OR when AND matches nothing', () => {
+    // No doc has both; OR returns each: upscale (3), audio (6).
+    const r = ids(buildIndex(), 'upscale audio');
+    expect(r).toContain('3');
+    expect(r).toContain('6');
+  });
+
+  it('still prefix-matches a partial single term', () => {
+    expect(ids(buildIndex(), 'anim')).toContain('1');
+  });
+});
+
+describe('search — abbreviations (literal first, expansion below)', () => {
+  it('ranks literal matches (11, 5) above the expansion-only match (12)', () => {
+    const r = ids(buildIndex(), 't2v');
+    expect(r).toEqual(expect.arrayContaining(['11', '5', '12']));
+    expect(r.indexOf('11')).toBeLessThan(r.indexOf('12'));
+    expect(r.indexOf('5')).toBeLessThan(r.indexOf('12'));
+  });
+
+  it('resolves shorthand and spelling variants to the concept', () => {
+    expect(ids(buildIndex(), 'txt2img')).toContain('2'); // Text to Image
+    expect(ids(buildIndex(), 'txt2image')).toContain('2');
+    expect(ids(buildIndex(), 'i2v')).toContain('1'); // Image to Video
+    expect(ids(buildIndex(), 'i2i')).toContain('4'); // Image to Image
+  });
+
+  it('resolves the name-driven abbreviations (v2v, s2v, t2m)', () => {
+    expect(ids(buildIndex(), 'v2v')).toContain('8'); // Video to Video
+    expect(ids(buildIndex(), 's2v')).toContain('9'); // Audio to Video
+    expect(ids(buildIndex(), 't2m')).toContain('10'); // Text to Music
+  });
+
+  it('falls back to the expansion when no literal exists (cn → controlnet)', () => {
+    expect(ids(buildIndex(), 'cn')).toContain('7');
+  });
+
+  it('returns a deduplicated result set', () => {
+    const r = ids(buildIndex(), 't2v');
+    expect(r.length).toBe(new Set(r).size);
+  });
+});
+
+describe('search — edge cases', () => {
+  it('returns nothing for a term that matches no document', () => {
+    expect(ids(buildIndex(), 'zzzznomatch')).toEqual([]);
+  });
+
+  it('returns nothing for empty / whitespace input', () => {
+    expect(ids(buildIndex(), '')).toEqual([]);
+    expect(ids(buildIndex(), '   ')).toEqual([]);
+  });
+
+  it('does not throw on punctuation-only input', () => {
+    expect(() => ids(buildIndex(), '!!!')).not.toThrow();
+  });
+
+  it('does not throw on a very long query and still finds the match', () => {
+    const longQuery = 'image '.repeat(200).trim();
+    expect(() => ids(buildIndex(), longQuery)).not.toThrow();
+    expect(ids(buildIndex(), longQuery)).toContain('1');
   });
 });

@@ -3,13 +3,7 @@
  * The index is lazy-loaded from /search-index.json on first query.
  */
 import MiniSearch, { type SearchResult } from 'minisearch';
-import {
-  SEARCH_FIELDS,
-  STORE_FIELDS,
-  tokenize,
-  expandQuery,
-  searchWithFallback,
-} from './search-config';
+import { SEARCH_FIELDS, STORE_FIELDS, tokenize, searchWorkflows } from './search-config';
 
 export interface WorkflowHit {
   id: string;
@@ -124,8 +118,7 @@ export async function search(
   }
 
   const index = await ensureIndex();
-  const expanded = expandQuery(trimmed);
-  const results = searchWithFallback<SearchResult>(index, expanded);
+  const results = searchWorkflows<SearchResult>(index, trimmed);
 
   let workflows = results.map(mapResult);
 
