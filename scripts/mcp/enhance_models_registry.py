@@ -3,7 +3,7 @@
 Step 2a — AI-assisted enrichment of scripts/data/mcp/models_registry.json.
 
 Model profiles (summary, strengths, capabilities) are written directly to
-models_registry.json — NOT template_cache.json (templates only).
+models_registry.json after each successful model — NOT template_cache.json.
 
 Prerequisites:
   cp .env.example .env   # AI_API_KEY, AI_BASE_URL, AI_MODEL
@@ -204,12 +204,12 @@ def main() -> int:
 
         if new_profile != profile:
             registry[name] = new_profile
+            REGISTRY_FILE.write_text(dumps_compact_arrays(registry), encoding="utf-8")
             updated += 1
             print(f"  updated: {name}")
 
     if updated:
-        REGISTRY_FILE.write_text(dumps_compact_arrays(registry), encoding="utf-8")
-        print(f"\nWritten: {REGISTRY_FILE} ({updated} models updated)")
+        print(f"\nDone: {updated} models → {REGISTRY_FILE}")
     else:
         print("\nNo changes.")
 

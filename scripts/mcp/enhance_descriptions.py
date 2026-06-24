@@ -2,8 +2,8 @@
 """
 Step 2b — AI-assisted per-template descriptions (scripts/data/mcp/template_cache.json).
 
-Each call generates copy for one template. Re-runs when the workflow JSON hash changes.
-Model context comes from models_registry.json (read-only).
+Each successful template is written to template_cache.json and index.mcp.json immediately
+(so interrupted runs keep progress).
 
 Prerequisites:
   cp .env.example .env   # AI_API_KEY, AI_BASE_URL, AI_MODEL
@@ -137,6 +137,13 @@ def select_targets(
     return targets
 
 
+def persist_template_enhancement(cache: dict[str, Any], mcp_data: list[dict[str, Any]]) -> None:
+    """Write cache + merge into index.mcp.json (called after each successful template)."""
+    save_template_cache(cache)
+    apply_template_cache_to_mcp(mcp_data, cache)
+    MCP_FILE.write_text(dumps_compact_arrays(mcp_data), encoding="utf-8")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="AI-enhance template descriptions into template_cache.json")
     parser.add_argument("--check", action="store_true", help="Validate config and list targets only")
@@ -218,15 +225,12 @@ def main() -> int:
             io=cached_io,
             source_hash=digest,
         )
+        persist_template_enhancement(cache, mcp_data)
         updated += 1
         print(f"  cached: [{category}] {name}")
 
     if updated:
-        save_template_cache(cache)
-        apply_template_cache_to_mcp(mcp_data, cache)
-        MCP_FILE.write_text(dumps_compact_arrays(mcp_data), encoding="utf-8")
-        print(f"\nWritten: {TEMPLATE_CACHE_FILE} ({updated} templates)")
-        print(f"Merged: {MCP_FILE}")
+        print(f"\nDone: {updated} templates → {TEMPLATE_CACHE_FILE} + {MCP_FILE}")
     else:
         print("\nNo changes.")
 
