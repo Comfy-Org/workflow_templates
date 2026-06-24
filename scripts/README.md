@@ -66,7 +66,14 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `maintenance/report_bundle_sizes.py` | Print bundle disk usage report |
 | `maintenance/sync_registry_from_krea.py` | **One-off** — seed `models_registry.json` from Krea snapshots (temporary; remove with `krea_*` data files when done) |
 
-MCP index pipeline (separate folder): see [`mcp/README.md`](mcp/README.md).
+MCP index pipeline (separate folder): see [`mcp/README.md`](mcp/README.md). Agent skill: [`.claude/skills/managing-mcp-index/SKILL.md`](../.claude/skills/managing-mcp-index/SKILL.md).
+
+```bash
+npm run mcp          # sync index.mcp.json
+npm run mcp:check    # dry-run
+npm run mcp:ai       # AI template descriptions (stale)
+npm run mcp:models   # AI model registry
+```
 
 ## Configuration files
 

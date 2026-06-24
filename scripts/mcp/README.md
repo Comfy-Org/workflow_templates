@@ -32,14 +32,15 @@ Manual `recommend` / `freshness` pins: [`../data/mcp/template_overrides.json`](.
 cp .env.example .env
 # Set AI_API_KEY, AI_BASE_URL, AI_MODEL in .env
 
-python3 scripts/mcp/sync_index.py --check   # scan API nodes + dry-run
-python3 scripts/mcp/import_template_cache.py   # one-time seed
-python3 scripts/mcp/sync_index.py           # scan + write index.mcp.json (merges valid cache)
-python3 scripts/mcp/enhance_models_registry.py --check
-python3 scripts/mcp/enhance_models_registry.py
-python3 scripts/mcp/enhance_descriptions.py --check
-python3 scripts/mcp/enhance_descriptions.py --category "Use Cases"
+npm run mcp:check
+npm run mcp
+npm run mcp:models    # optional: model profiles first
+npm run mcp:ai        # stale templates only
 ```
+
+Or via Python: `python3 scripts/mcp/sync_index.py`, etc. Full guide: [`docs/MCP_AI_ENHANCEMENT.md`](docs/MCP_AI_ENHANCEMENT.md).
+
+Agent skill: [`.claude/skills/managing-mcp-index/SKILL.md`](../../.claude/skills/managing-mcp-index/SKILL.md).
 
 ## Environment
 

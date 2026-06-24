@@ -36,7 +36,7 @@ workflow_templates/
 │   └── docs/               # Script-specific markdown (whitelist.md, etc.)
 ├── site/                   # INDEPENDENT Astro 5 project (see "Site" section below)
 ├── docs/                   # Specs, i18n guide, publishing guide
-├── .claude/skills/         # 6 Claude skill definitions
+├── .claude/skills/         # Claude skill definitions (incl. managing-mcp-index)
 ├── .github/workflows/      # CI/CD (validation, deploy, lint, tests)
 ├── pyproject.toml          # Python project version & config
 ├── package.json            # Nx monorepo root (npm run sync, etc.)
@@ -137,6 +137,21 @@ if str(_lib_dir) not in sys.path:
 
 from paths import REPO_ROOT, TEMPLATES_DIR, I18N_FILE, WHITELIST_FILE  # noqa: E402
 ```
+
+### Root (template + MCP index)
+
+```bash
+npm run sync              # Bundle sync (Nx)
+npm run sync:bundles      # Copy templates into Python packages
+npm run i18n              # Hub translations index.json → index.{locale}.json
+npm run mcp               # MCP index: index.json → index.mcp.json
+npm run mcp:check         # MCP sync dry-run
+npm run mcp:ai            # AI English MCP template descriptions (stale only)
+npm run mcp:models        # AI model profiles → models_registry.json
+npm run validate:templates
+```
+
+MCP pipeline details: [`scripts/mcp/docs/MCP_AI_ENHANCEMENT.md`](scripts/mcp/docs/MCP_AI_ENHANCEMENT.md). Agent skill: `/managing-mcp-index`.
 
 ### Site (in site/ directory)
 
@@ -347,6 +362,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - `/adding-templates` — Add new workflow templates (full workflow)
 - `/managing-bundles` — Move templates between bundles, reorder
 - `/managing-thumbnails` — Add/replace/audit thumbnails
+- `/managing-mcp-index` — Sync and AI-enhance `index.mcp.json` for MCP tools
 - `/managing-translations` — Sync/check translations across 11 languages
 - `/editing-site-content` — Edit site page content with overrides
 - `/regenerating-ai-content` — Regenerate AI descriptions, manage cache
@@ -359,6 +375,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - `site/docs/PRD.md` — Product requirements for the site
 - `site/docs/TDD.md` — Technical design document
 - `site/docs/design-integration-guide.md` — REQUIRED when implementing Figma designs
+- `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md` — MCP index sync + AI enhancement workflow
 - `scripts/README.md` — Scripts directory index, CI mapping, commands
 - `AGENTS.md` — Agent quick reference (commands, scripts layout, file conventions)
 
