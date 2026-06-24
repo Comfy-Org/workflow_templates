@@ -20,18 +20,21 @@ const scroller = useTemplateRef<HTMLElement>('scroller');
 const canPrev = ref(false);
 const canNext = ref(false);
 
+// In RTL, scrollLeft starts at 0 and runs negative, so normalize to a 0..max
+// "distance from start" before the edge math — keeps prev/next correct either way.
 function syncEdges() {
   const el = scroller.value;
   if (!el) return;
-  canPrev.value = el.scrollLeft > 1;
-  canNext.value = el.scrollLeft < el.scrollWidth - el.clientWidth - 1;
+  const start = Math.abs(el.scrollLeft);
+  canPrev.value = start > 1;
+  canNext.value = start < el.scrollWidth - el.clientWidth - 1;
 }
 
 function scroll(direction: 1 | -1) {
-  scroller.value?.scrollBy({
-    left: direction * scroller.value.clientWidth * 0.8,
-    behavior: 'smooth',
-  });
+  const el = scroller.value;
+  if (!el) return;
+  const sign = getComputedStyle(el).direction === 'rtl' ? -1 : 1;
+  el.scrollBy({ left: sign * direction * el.clientWidth * 0.8, behavior: 'smooth' });
 }
 
 useEventListener(scroller, 'scroll', syncEdges, { passive: true });

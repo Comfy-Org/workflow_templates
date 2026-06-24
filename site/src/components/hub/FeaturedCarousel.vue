@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 interface Props {
   templates: SerializedTemplate[];
   locale: string;
+  isRtl: boolean;
   featuredLabel: string;
   prevLabel: string;
   nextLabel: string;
@@ -26,6 +27,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   locale: 'en',
+  isRtl: false,
 });
 
 const AUTOPLAY_DELAY = 5000;
@@ -40,7 +42,7 @@ const [emblaRef, emblaApi] = emblaCarouselVue(
   {
     loop: true,
     align: 'center',
-    direction: props.locale === 'ar' ? 'rtl' : 'ltr',
+    direction: props.isRtl ? 'rtl' : 'ltr',
   },
   autoplayEnabled
     ? [Autoplay({ delay: AUTOPLAY_DELAY, stopOnMouseEnter: true, stopOnInteraction: false })]
@@ -131,7 +133,7 @@ onUnmounted(() => {
             :poster="slide.posterUrl || undefined"
             class="h-full w-full object-cover"
             :preload="index === 0 ? 'auto' : 'metadata'"
-            autoplay
+            :autoplay="autoplayEnabled"
             muted
             loop
             playsinline
@@ -262,7 +264,7 @@ onUnmounted(() => {
         @click="scrollPrev"
       >
         <svg
-          class="size-5 sm:size-6"
+          class="size-5 rtl:-scale-x-100 sm:size-6"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -281,7 +283,7 @@ onUnmounted(() => {
         @click="scrollNext"
       >
         <svg
-          class="size-5 sm:size-6"
+          class="size-5 rtl:-scale-x-100 sm:size-6"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
