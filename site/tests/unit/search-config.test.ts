@@ -126,6 +126,18 @@ const DOCS: Doc[] = [
     creatorName: 'Topaz',
     name: 'upscale_photo',
   },
+  {
+    // Carries the abbreviation verbatim in its title and NONE of the expanded
+    // words ("text"/"to"/"video") — only the raw-query fallback can find it.
+    id: '4',
+    title: 'Wan2.1 Alpha T2V',
+    description: 'Cinematic generation',
+    tags: 'cinematic',
+    models: 'wan',
+    mediaType: 'video',
+    creatorName: 'ComfyUI',
+    name: 'wan21_alpha_t2v',
+  },
 ];
 
 function buildIndex(): MiniSearch<Doc> {
@@ -206,5 +218,15 @@ describe('searchWithFallback', () => {
   it('returns empty when no term matches at all', () => {
     const ms = buildIndex();
     expect(searchWithFallback<{ id: string }>(ms, 'zzzznomatch')).toEqual([]);
+  });
+
+  it('falls back to the raw query so a literal-abbreviation title stays findable', () => {
+    const ms = buildIndex();
+    // Mirrors the real call site: expand first, but pass the raw token too.
+    // "t2v" → "text to video" matches nothing (doc 4 has none of those words),
+    // so the raw "t2v" tier must rescue the verbatim-titled "Wan2.1 Alpha T2V".
+    const expanded = expandQuery('t2v');
+    const ids = searchWithFallback<{ id: string }>(ms, expanded, 't2v').map((r) => r.id);
+    expect(ids).toContain('4');
   });
 });

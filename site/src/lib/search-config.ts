@@ -109,12 +109,18 @@ interface Searchable {
 }
 
 /**
- * Search AND-first (every term must match → precise), and only if that returns
- * nothing, retry OR (any term → forgiving). Keeps multi-word queries tight
- * without ever dead-ending on "0 results" when partial matches exist.
+ * Search AND-first (every term must match → precise), then OR (any term →
+ * forgiving), then — if both miss — the un-expanded `raw` query. The raw tier
+ * rescues documents whose title carries an abbreviation verbatim (e.g. "Wan2.1
+ * Alpha T2V"): `expandQuery` rewrites `t2v` → `text to video`, which those docs
+ * don't contain, so without this fallback they'd be unfindable. Keeps multi-word
+ * queries tight without ever dead-ending on "0 results" when a literal match exists.
  */
-export function searchWithFallback<T>(index: Searchable, query: string): T[] {
+export function searchWithFallback<T>(index: Searchable, query: string, raw = query): T[] {
   const and = index.search(query, searchOptions(query, 'AND')) as T[];
   if (and.length > 0) return and;
-  return index.search(query, searchOptions(query, 'OR')) as T[];
+  const or = index.search(query, searchOptions(query, 'OR')) as T[];
+  if (or.length > 0) return or;
+  if (raw === query) return or;
+  return index.search(raw, searchOptions(raw, 'OR')) as T[];
 }
