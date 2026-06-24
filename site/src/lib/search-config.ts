@@ -45,7 +45,7 @@ export function tokenize(text: string): string[] {
     }
     const version = word.match(/^([a-z][a-z.]*?)(\d+(?:\.\d+)*)$/);
     if (version) {
-      parts.add(version[1]);
+      parts.add(version[1].replace(/\.$/, ''));
       parts.add(version[2]);
     }
     parts.delete(word);
@@ -60,9 +60,13 @@ export function termFuzziness(term: string): number | false {
   return term.length <= 3 || /\d/.test(term) ? false : 0.3;
 }
 
-/** Prefix matching + per-term fuzziness; AND by default so multi-word stays precise. */
+/** Prefix matching + per-term fuzziness; AND by default so multi-word stays precise.
+ *  `boost` tiers fields by signal: title > curated metadata (models/tags) >
+ *  creator > mediaType, with description demoted below default so an incidental
+ *  prose mention never outranks a real title/model match. */
 export function searchOptions(combineWith: 'AND' | 'OR' = 'AND') {
   return {
+    boost: { title: 3, models: 2, tags: 2, creatorName: 1.5, mediaType: 1, description: 0.5 },
     prefix: true,
     fuzzy: (term: string) => termFuzziness(term),
     combineWith,

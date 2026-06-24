@@ -276,6 +276,28 @@ const DOCS: Doc[] = [
     creatorName: 'Genmo',
     name: 'mochi_text_to_video',
   },
+  {
+    // Boost pair (13/14): "nebula" in a long title vs. a one-word description.
+    // Without the title boost, BM25 length-norm ranks 14 first; with it, 13 wins.
+    id: '13',
+    title: 'Nebula Quantum Cinematic Render Studio Pipeline Kit',
+    description: 'staged walkthrough',
+    tags: 'walkthrough',
+    models: 'quantum',
+    mediaType: 'image',
+    creatorName: 'Aurora',
+    name: 'q13',
+  },
+  {
+    id: '14',
+    title: 'Helios',
+    description: 'nebula',
+    tags: 'composite',
+    models: 'helios',
+    mediaType: 'image',
+    creatorName: 'Orion',
+    name: 'q14',
+  },
 ];
 
 function buildIndex(): MiniSearch<Doc> {
@@ -377,6 +399,14 @@ describe('search — abbreviations (literal first, expansion below)', () => {
   it('returns a deduplicated result set', () => {
     const r = ids(buildIndex(), 't2v');
     expect(r.length).toBe(new Set(r).size);
+  });
+});
+
+describe('search — field boost (title outranks incidental mention)', () => {
+  it('ranks a title match above a description mention despite a longer title', () => {
+    const r = ids(buildIndex(), 'nebula');
+    expect(r).toEqual(expect.arrayContaining(['13', '14']));
+    expect(r.indexOf('13')).toBeLessThan(r.indexOf('14'));
   });
 });
 
