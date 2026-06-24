@@ -9,14 +9,14 @@
       "type": "SaveImage",
       "pos": [
         910,
-        -80
+        -120
       ],
       "size": [
         880,
         1020
       ],
       "flags": {},
-      "order": 7,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -46,14 +46,14 @@
       "type": "b0e5ca93-2731-42b9-8e0a-d28ea851ff81",
       "pos": [
         290,
-        -80
+        -120
       ],
       "size": [
         560,
         1010
       ],
       "flags": {},
-      "order": 6,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -115,7 +115,7 @@
           "widget": {
             "name": "string_b"
           },
-          "link": 67
+          "link": null
         }
       ],
       "outputs": [
@@ -188,116 +188,18 @@
       "widgets_values": []
     },
     {
-      "id": 42,
-      "type": "CustomCombo",
-      "pos": [
-        -420,
-        500
-      ],
-      "size": [
-        320,
-        340
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "INDEX",
-          "type": "INT",
-          "links": [
-            66
-          ]
-        }
-      ],
-      "title": "CustomCombo (Select LoRA Name)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.25.0",
-        "Node name for S&R": "CustomCombo"
-      },
-      "widgets_values": [
-        "krea2_warmpastel",
-        3,
-        "krea2_coolblue",
-        "krea2_darkbrush",
-        "krea2_plasmoid",
-        "krea2_warmpastel",
-        ""
-      ]
-    },
-    {
-      "id": 45,
-      "type": "460e1a4e-4b3b-455a-8ab0-e7581839db23",
-      "pos": [
-        -60,
-        500
-      ],
-      "size": [
-        280,
-        360
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "index",
-          "type": "INT",
-          "widget": {
-            "name": "index"
-          },
-          "link": 66
-        }
-      ],
-      "outputs": [
-        {
-          "name": "selected_line",
-          "type": "STRING",
-          "links": [
-            67
-          ]
-        }
-      ],
-      "properties": {
-        "proxyWidgets": [
-          [
-            "2",
-            "string"
-          ],
-          [
-            "43",
-            "value"
-          ]
-        ],
-        "cnr_id": "comfy-core",
-        "ver": "0.19.0",
-        "ue_properties": {
-          "widget_ue_connectable": {},
-          "input_ue_unconnectable": {}
-        }
-      },
-      "widgets_values": []
-    },
-    {
       "id": 47,
       "type": "MarkdownNote",
       "pos": [
-        -420,
-        970
+        -380,
+        560
       ],
       "size": [
-        640,
-        310
+        630,
+        330
       ],
       "flags": {},
-      "order": 1,
+      "order": 0,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -321,7 +223,7 @@
         990
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -334,11 +236,35 @@
       "bgcolor": "#000"
     },
     {
+      "id": 50,
+      "type": "MarkdownNote",
+      "pos": [
+        -1200,
+        -90
+      ],
+      "size": [
+        700,
+        990
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Krea-2",
+      "properties": {},
+      "widgets_values": [
+        "This workflow generates images with **Krea-2 Turbo**, a fast distilled text-to-image model. The workflow is organized into a few parts: each handles a different step so you can generate quickly without digging through every node.\n\n## Text to Image (Krea-2 Turbo) Subgraph\n\nDouble-click this node to open the full pipeline. Inside, the canvas is grouped into several areas:\n\n**Models**: Loads the diffusion model, text encoder, VAE, and optional style LoRA (`LoraLoaderModelOnly`).\n\n**Prompt**: Enter your image description in **Text String (User Prompt)**.\n\n**Prompt Enhancement**: Expands your prompt before generation. Enabled by default (`prompt_enhance`). You can turn it off to use your prompt as-is, or replace the built-in module with **OpenAI** or **Gemini** API nodes.\n\n**Feature Switch**: Quick toggles on the left side of the subgraph:\n- `prompt_enhance`: enable or disable prompt expansion\n- `enable_lora?`: enable or disable the style LoRA\n\n**Image Generation**: Handles latent sizing, sampling (8 steps), and VAE decode to produce the final image.\n\nWhen using a LoRA, set `enable_lora?` to true, select the matching file in **LoraLoaderModelOnly**, and adjust `lora_strength` as needed.\n\n## LoRA & Trigger Word (CustomCombo)\n\nOn the main canvas, the **CustomCombo** node is where you choose which style LoRA you are using (e.g. `krea2_coolblue`, `krea2_darkbrush`). The workflow uses your selection to automatically append the correct **trigger word** to your prompt.\n\n- Download LoRA files from [Comfy-Org/Krea-2/loras](https://huggingface.co/Comfy-Org/Krea-2/tree/main/loras) and place them in `ComfyUI/models/loras/`\n- Select the LoRA name that matches the file loaded inside the subgraph\n- The trigger word is applied for you: no need to type it manually\n- For trigger words and recommended strength values, see the **LoRA Trigger Words and Settings** note beside this workflow\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
       "id": 49,
       "type": "ResolutionSelector",
       "pos": [
-        -50,
-        220
+        -40,
+        250
       ],
       "size": [
         270,
@@ -374,30 +300,6 @@
         1,
         8
       ]
-    },
-    {
-      "id": 50,
-      "type": "MarkdownNote",
-      "pos": [
-        -1200,
-        -90
-      ],
-      "size": [
-        700,
-        990
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note: Krea-2",
-      "properties": {},
-      "widgets_values": [
-        "This workflow generates images with **Krea-2 Turbo**, a fast distilled text-to-image model. The workflow is organized into a few parts: each handles a different step so you can generate quickly without digging through every node.\n\n## Text to Image (Krea-2 Turbo) Subgraph\n\nDouble-click this node to open the full pipeline. Inside, the canvas is grouped into several areas:\n\n**Models**: Loads the diffusion model, text encoder, VAE, and optional style LoRA (`LoraLoaderModelOnly`).\n\n**Prompt**: Enter your image description in **Text String (User Prompt)**.\n\n**Prompt Enhancement**: Expands your prompt before generation. Enabled by default (`prompt_enhance`). You can turn it off to use your prompt as-is, or replace the built-in module with **OpenAI** or **Gemini** API nodes.\n\n**Feature Switch**: Quick toggles on the left side of the subgraph:\n- `prompt_enhance`: enable or disable prompt expansion\n- `enable_lora?`: enable or disable the style LoRA\n\n**Image Generation**: Handles latent sizing, sampling (8 steps), and VAE decode to produce the final image.\n\nWhen using a LoRA, set `enable_lora?` to true, select the matching file in **LoraLoaderModelOnly**, and adjust `lora_strength` as needed.\n\n## LoRA & Trigger Word (CustomCombo)\n\nOn the main canvas, the **CustomCombo** node is where you choose which style LoRA you are using (e.g. `krea2_coolblue`, `krea2_darkbrush`). The workflow uses your selection to automatically append the correct **trigger word** to your prompt.\n\n- Download LoRA files from [Comfy-Org/Krea-2/loras](https://huggingface.co/Comfy-Org/Krea-2/tree/main/loras) and place them in `ComfyUI/models/loras/`\n- Select the LoRA name that matches the file loaded inside the subgraph\n- The trigger word is applied for you: no need to type it manually\n- For trigger words and recommended strength values, see the **LoRA Trigger Words and Settings** note beside this workflow\n"
-      ],
-      "color": "#222",
-      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -408,22 +310,6 @@
       29,
       0,
       "IMAGE"
-    ],
-    [
-      66,
-      42,
-      1,
-      45,
-      0,
-      "INT"
-    ],
-    [
-      67,
-      45,
-      0,
-      30,
-      6,
-      "STRING"
     ],
     [
       69,
@@ -442,20 +328,7 @@
       "INT"
     ]
   ],
-  "groups": [
-    {
-      "id": 10,
-      "title": "LoRA & Trigger Word (CustomCombo)",
-      "bounding": [
-        -430,
-        430,
-        670,
-        470
-      ],
-      "color": "#3f789e",
-      "flags": {}
-    }
-  ],
+  "groups": [],
   "definitions": {
     "subgraphs": [
       {
@@ -1067,8 +940,8 @@
               220
             ],
             "size": [
-              225,
-              8
+              230,
+              30
             ],
             "flags": {
               "collapsed": true
@@ -1176,7 +1049,7 @@
             ],
             "size": [
               400,
-              556
+              420
             ],
             "flags": {},
             "order": 10,
@@ -1266,8 +1139,8 @@
               1310
             ],
             "size": [
-              225,
-              8
+              230,
+              40
             ],
             "flags": {
               "collapsed": true
@@ -1702,7 +1575,7 @@
             },
             "widgets_values": [
               "",
-              "monochrome ink wash style",
+              "muted minimalist sketch style",
               ", "
             ]
           },
@@ -2164,367 +2037,23 @@
           }
         ],
         "extra": {}
-      },
-      {
-        "id": "460e1a4e-4b3b-455a-8ab0-e7581839db23",
-        "version": 1,
-        "state": {
-          "lastGroupId": 10,
-          "lastNodeId": 50,
-          "lastLinkId": 71,
-          "lastRerouteId": 0
-        },
-        "revision": 0,
-        "config": {},
-        "name": "Select Per-Line Text by Index",
-        "description": "Selects one line from multiline text by zero-based index for batch or list-driven prompt workflows.",
-        "inputNode": {
-          "id": -10,
-          "bounding": [
-            -990,
-            8595,
-            128,
-            88
-          ]
-        },
-        "outputNode": {
-          "id": -20,
-          "bounding": [
-            710,
-            8585,
-            128,
-            68
-          ]
-        },
-        "inputs": [
-          {
-            "id": "75417d82-a934-4ac9-b667-d8dcd5a3bfb3",
-            "name": "text_per_line",
-            "type": "STRING",
-            "linkIds": [
-              13
-            ],
-            "localized_name": "text_per_line",
-            "pos": [
-              -886,
-              8619
-            ]
-          },
-          {
-            "id": "46e69a73-1804-4ca6-9175-31445bf0be96",
-            "name": "index",
-            "type": "INT",
-            "linkIds": [
-              14
-            ],
-            "localized_name": "index",
-            "pos": [
-              -886,
-              8639
-            ]
-          }
-        ],
-        "outputs": [
-          {
-            "id": "e34e8ad1-84d2-4bd2-a460-eb7de6067c10",
-            "name": "selected_line",
-            "type": "STRING",
-            "linkIds": [
-              10
-            ],
-            "localized_name": "selected_line",
-            "pos": [
-              734,
-              8609
-            ]
-          }
-        ],
-        "widgets": [],
-        "nodes": [
-          {
-            "id": 1,
-            "type": "PreviewAny",
-            "pos": [
-              -500,
-              8400
-            ],
-            "size": [
-              230,
-              180
-            ],
-            "flags": {},
-            "order": 0,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "source",
-                "name": "source",
-                "type": "*",
-                "link": 1
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "STRING",
-                "name": "STRING",
-                "type": "STRING",
-                "links": [
-                  6
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.19.0",
-              "Node name for S&R": "PreviewAny",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              null,
-              null,
-              null
-            ]
-          },
-          {
-            "id": 2,
-            "type": "RegexExtract",
-            "pos": [
-              -240,
-              8740
-            ],
-            "size": [
-              470,
-              460
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "showAdvanced": false,
-            "inputs": [
-              {
-                "localized_name": "string",
-                "name": "string",
-                "type": "STRING",
-                "widget": {
-                  "name": "string"
-                },
-                "link": 13
-              },
-              {
-                "localized_name": "regex_pattern",
-                "name": "regex_pattern",
-                "type": "STRING",
-                "widget": {
-                  "name": "regex_pattern"
-                },
-                "link": 9
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "STRING",
-                "name": "STRING",
-                "type": "STRING",
-                "links": [
-                  10
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.19.0",
-              "Node name for S&R": "RegexExtract",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              "Teal watercolor illustration style\nMonochrome ink wash style\nEthereal shimmering light style\nMuted minimalist sketch style",
-              "",
-              "First Group",
-              false,
-              false,
-              false,
-              1
-            ]
-          },
-          {
-            "id": 43,
-            "type": "PrimitiveInt",
-            "pos": [
-              -810,
-              8400
-            ],
-            "size": [
-              270,
-              110
-            ],
-            "flags": {},
-            "order": 2,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "value",
-                "name": "value",
-                "type": "INT",
-                "widget": {
-                  "name": "value"
-                },
-                "link": 14
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "INT",
-                "name": "INT",
-                "type": "INT",
-                "links": [
-                  1
-                ]
-              }
-            ],
-            "title": "Int (line index)",
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.19.0",
-              "Node name for S&R": "Int (line index)",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              0,
-              "fixed"
-            ]
-          },
-          {
-            "id": 44,
-            "type": "StringReplace",
-            "pos": [
-              -240,
-              8400
-            ],
-            "size": [
-              400,
-              280
-            ],
-            "flags": {},
-            "order": 3,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "replace",
-                "name": "replace",
-                "type": "STRING",
-                "widget": {
-                  "name": "replace"
-                },
-                "link": 6
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "STRING",
-                "name": "STRING",
-                "type": "STRING",
-                "links": [
-                  9
-                ]
-              }
-            ],
-            "properties": {
-              "cnr_id": "comfy-core",
-              "ver": "0.19.0",
-              "Node name for S&R": "StringReplace",
-              "ue_properties": {
-                "widget_ue_connectable": {},
-                "input_ue_unconnectable": {}
-              }
-            },
-            "widgets_values": [
-              "^(?:[^\\n]*\\n){index}([^\\n]*)(?:\\n|$)",
-              "index",
-              ""
-            ]
-          }
-        ],
-        "groups": [],
-        "links": [
-          {
-            "id": 1,
-            "origin_id": 43,
-            "origin_slot": 0,
-            "target_id": 1,
-            "target_slot": 0,
-            "type": "INT"
-          },
-          {
-            "id": 9,
-            "origin_id": 44,
-            "origin_slot": 0,
-            "target_id": 2,
-            "target_slot": 1,
-            "type": "STRING"
-          },
-          {
-            "id": 6,
-            "origin_id": 1,
-            "origin_slot": 0,
-            "target_id": 44,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 10,
-            "origin_id": 2,
-            "origin_slot": 0,
-            "target_id": -20,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 13,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 2,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 14,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 43,
-            "target_slot": 0,
-            "type": "INT"
-          }
-        ],
-        "extra": {
-          "ue_links": [],
-          "links_added_by_ue": []
-        }
       }
     ]
   },
   "config": {},
   "extra": {
+    "ds": {
+      "scale": 0.3141818181818186,
+      "offset": [
+        2585.860980067895,
+        1549.4395741180817
+      ]
+    },
     "frontendVersion": "1.45.19",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
-    "VHS_KeepIntermediate": true,
-    "ds": {
-      "scale": 0.5188502981719103,
-      "offset": [
-        1361.7659978013533,
-        398.2812966722645
-      ]
-    }
+    "VHS_KeepIntermediate": true
   },
   "version": 0.4
 }
