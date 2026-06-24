@@ -53,6 +53,19 @@ from template_cache import (  # noqa: E402
 
 USE_CASES_CATEGORY = "Use Cases"
 
+# Shared instruction fragments for build_prompt
+_REGISTRY_AUTHORITY = (
+    "model_profile comes from models_registry.json and is authoritative for the model: "
+    "use its summary, strengths, and capabilities when describing what the model does. "
+    "Do not contradict model_profile. Template fields below are for workflow-specific "
+    "task, inputs/outputs, and API behavior only."
+)
+_OUTPUT_LENGTH = (
+    "Output plain text only — 2 to 4 short sentences (about 40–70 words). "
+    "No bullet lists, no headings, no filler."
+)
+_NO_HALLUCINATION = "Do not invent features not supported by model_profile or template metadata."
+
 
 def build_prompt(
     template: dict[str, Any],
@@ -71,28 +84,27 @@ def build_prompt(
 
     if is_use_case:
         system = (
-            "You write concise, accurate ComfyUI workflow template descriptions for an MCP tool index. "
-            "This template is in the **Use Cases** category: a concrete, purpose-built example that "
-            "demonstrates a specific effect, technique, or content type — not a general-purpose baseline workflow. "
-            "Explain what the user can achieve, what they need to provide (see io), and which model drives it. "
-            "Mention third-party API execution when capabilities.workflow includes api. "
-            "Output plain text only — one or two short paragraphs. "
-            "Do not invent features not supported by the provided metadata."
+            "You write brief ComfyUI workflow template descriptions for an MCP tool index. "
+            "This template is in the **Use Cases** category: a concrete demo of a specific "
+            "effect or technique — not a general-purpose baseline. "
+            f"{_REGISTRY_AUTHORITY} "
+            "Explain what the user achieves, required inputs (see io), and how the model applies. "
+            "Mention third-party API execution only when capabilities.workflow includes api. "
+            f"{_OUTPUT_LENGTH} {_NO_HALLUCINATION}"
         )
     else:
         system = (
-            "You write concise, accurate ComfyUI workflow template descriptions for an MCP tool index. "
-            f"This template is in the **{category}** category: {category_description} "
-            "Describe the workflow's primary task, inputs/outputs, and model. "
-            "Mention third-party API execution when capabilities.workflow includes api. "
-            "Output plain text only — one or two short paragraphs. "
-            "Do not invent features not supported by the provided metadata."
+            "You write brief ComfyUI workflow template descriptions for an MCP tool index. "
+            f"Category: **{category}** — {category_description} "
+            f"{_REGISTRY_AUTHORITY} "
+            "Describe the workflow task, key inputs/outputs, and model role. "
+            "Mention third-party API execution only when capabilities.workflow includes api. "
+            f"{_OUTPUT_LENGTH} {_NO_HALLUCINATION}"
         )
 
     user = json.dumps(
         {
-            "category": category,
-            "category_description": category_description,
+            "model_profile": model_info or None,
             "template": {
                 "name": template.get("name"),
                 "title": template.get("title"),
@@ -100,10 +112,11 @@ def build_prompt(
                 "model": model_name,
                 "capabilities": template.get("capabilities"),
                 "io": template.get("io"),
-                "current_description": template.get("description", ""),
             },
-            "index_json_description": index_description,
-            "model_profile": model_info,
+            "reference_only": {
+                "hub_description": index_description or None,
+                "current_description": template.get("description") or None,
+            },
         },
         indent=2,
         ensure_ascii=False,
