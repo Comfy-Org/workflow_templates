@@ -38,6 +38,7 @@ from ai_context import (  # noqa: E402
     load_index_templates,
     load_json,
     load_mcp_data,
+    lookup_registry_profile,
 )
 from json_format import dumps_compact_arrays  # noqa: E402
 from paths import TEMPLATE_CACHE_FILE  # noqa: E402
@@ -64,7 +65,7 @@ def build_prompt(
     import json
 
     model_name = template.get("model", "")
-    model_info = registry.get(model_name, {})
+    model_info = lookup_registry_profile(model_name, registry)
     index_description = (index_entry or {}).get("description", "")
     is_use_case = category == USE_CASES_CATEGORY
 

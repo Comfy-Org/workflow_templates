@@ -3,6 +3,7 @@
 | File | Purpose |
 |------|---------|
 | `models_registry.json` | Model profiles — source of truth for model copy |
+| `registry_aliases.json` | Alternate model names → canonical registry keys (e.g. `HappyHorse` → `HappyHorse 1.0`) |
 | `api_node_model_options.json` | Scanned API node `model` dropdown options |
 | `template_cache.json` | Per-template AI `description` + `io`, versioned by workflow JSON `source_hash` |
 | `template_cache.example.json` | Cache schema example |

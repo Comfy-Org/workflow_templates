@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from paths import MODELS_REGISTRY_FILE, TEMPLATES_DIR
+from paths import MODELS_REGISTRY_FILE, REGISTRY_ALIASES_FILE, TEMPLATES_DIR
 
 INDEX_FILE = TEMPLATES_DIR / "index.json"
 MCP_FILE = TEMPLATES_DIR / "index.mcp.json"
@@ -21,6 +21,33 @@ PENDING_SUMMARY_MARKERS = (
     "provider placeholder",
     "placeholder for utility",
 )
+
+
+def load_registry_aliases() -> dict[str, str]:
+    """Map alternate model names → canonical models_registry.json keys."""
+    if not REGISTRY_ALIASES_FILE.is_file():
+        return {}
+    data = load_json(REGISTRY_ALIASES_FILE)
+    if not isinstance(data, dict):
+        return {}
+    return {str(k): str(v) for k, v in data.items() if v}
+
+
+def lookup_registry_profile(model_name: str, registry: dict[str, Any]) -> dict[str, Any]:
+    """Resolve model_profile for AI prompts (exact key, alias, then case-insensitive)."""
+    if not model_name:
+        return {}
+    if model_name in registry:
+        return registry[model_name]
+    aliases = load_registry_aliases()
+    canonical = aliases.get(model_name)
+    if canonical and canonical in registry:
+        return registry[canonical]
+    lower = model_name.lower()
+    for key, profile in registry.items():
+        if key.lower() == lower:
+            return profile
+    return {}
 
 
 def load_json(path: Path) -> Any:
