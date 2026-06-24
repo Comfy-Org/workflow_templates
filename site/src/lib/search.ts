@@ -125,7 +125,7 @@ export async function search(
 
   const index = await ensureIndex();
   const expanded = expandQuery(trimmed);
-  const results = searchWithFallback<SearchResult>(index, expanded, trimmed);
+  const results = searchWithFallback<SearchResult>(index, expanded);
 
   let workflows = results.map(mapResult);
 

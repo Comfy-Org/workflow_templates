@@ -38,14 +38,14 @@ describe('tokenize', () => {
 });
 
 describe('expandQuery', () => {
-  it('expands known abbreviations to their words', () => {
-    expect(expandQuery('txt2img')).toBe('text to image');
-    expect(expandQuery('i2v')).toBe('image to video');
-    expect(expandQuery('t2i')).toBe('text to image');
+  it('augments an abbreviation — keeps the literal AND adds the expansion', () => {
+    expect(expandQuery('txt2img')).toBe('txt2img text to image');
+    expect(expandQuery('i2v')).toBe('i2v image to video');
+    expect(expandQuery('t2i')).toBe('t2i text to image');
   });
 
-  it('is case-insensitive on the abbreviation', () => {
-    expect(expandQuery('TXT2IMG')).toBe('text to image');
+  it('is case-insensitive on the abbreviation (literal kept verbatim)', () => {
+    expect(expandQuery('TXT2IMG')).toBe('TXT2IMG text to image');
   });
 
   it('only expands whole tokens, not substrings', () => {
@@ -56,8 +56,8 @@ describe('expandQuery', () => {
     expect(expandQuery('flux upscale')).toBe('flux upscale');
   });
 
-  it('expands per-token within a multi-word query', () => {
-    expect(expandQuery('fast i2v')).toBe('fast image to video');
+  it('augments per-token within a multi-word query', () => {
+    expect(expandQuery('fast i2v')).toBe('fast i2v image to video');
   });
 });
 
@@ -127,16 +127,17 @@ const DOCS: Doc[] = [
     name: 'upscale_photo',
   },
   {
-    // Carries the abbreviation verbatim in its title and NONE of the expanded
-    // words ("text"/"to"/"video") — only the raw-query fallback can find it.
+    // Mirrors real data: prose title ("Text to Video") + the `t2v` abbreviation
+    // living ONLY in the snake_case name. Since `name` is indexed, both the
+    // literal `t2v` query and the expanded "text to video" must find this doc.
     id: '4',
-    title: 'Wan2.1 Alpha T2V',
+    title: 'LTX-2.3: Text to Video',
     description: 'Cinematic generation',
     tags: 'cinematic',
-    models: 'wan',
+    models: 'ltx',
     mediaType: 'video',
     creatorName: 'ComfyUI',
-    name: 'wan21_alpha_t2v',
+    name: 'video_ltx2_3_t2v',
   },
 ];
 
@@ -186,10 +187,23 @@ describe('search integration (real index + shared options)', () => {
     expect(runQuery(ms, 'upscale').map((r) => r.id)).toContain('3');
   });
 
-  it('resolves abbreviations to the right workflow', () => {
+  it('resolves abbreviations via the real AND→OR path', () => {
     const ms = buildIndex();
-    expect(runQuery(ms, 'i2v').map((r) => r.id)).toEqual(['1']);
-    expect(runQuery(ms, 'txt2img').map((r) => r.id)).toEqual(['2']);
+    // "i2v" → "i2v image to video"; doc 1 ("Image to Video") matches on the words.
+    expect(searchWithFallback<Doc>(ms, expandQuery('i2v')).map((r) => r.id)).toContain('1');
+    // "txt2img" → "txt2img text to image"; doc 2 ("Text to Image") matches.
+    expect(searchWithFallback<Doc>(ms, expandQuery('txt2img')).map((r) => r.id)).toContain('2');
+  });
+
+  it('finds a literal abbreviation that lives only in the snake_case name', () => {
+    const ms = buildIndex();
+    // "t2v" → "t2v text to video". Doc 4 carries `t2v` only in its name
+    // (video_ltx2_3_t2v); indexing `name` makes the literal directly matchable,
+    // and the expansion ("text to video") also matches its prose title.
+    const ids = searchWithFallback<Doc>(ms, expandQuery('t2v')).map((r) => r.id);
+    expect(ids).toContain('4');
+    // The bare prefix "t2" also reaches it via the indexed `t2v` token.
+    expect(searchWithFallback<Doc>(ms, expandQuery('t2')).map((r) => r.id)).toContain('4');
   });
 
   it('tolerates a typo on a longer term (fuzzy)', () => {
@@ -218,15 +232,5 @@ describe('searchWithFallback', () => {
   it('returns empty when no term matches at all', () => {
     const ms = buildIndex();
     expect(searchWithFallback<{ id: string }>(ms, 'zzzznomatch')).toEqual([]);
-  });
-
-  it('falls back to the raw query so a literal-abbreviation title stays findable', () => {
-    const ms = buildIndex();
-    // Mirrors the real call site: expand first, but pass the raw token too.
-    // "t2v" → "text to video" matches nothing (doc 4 has none of those words),
-    // so the raw "t2v" tier must rescue the verbatim-titled "Wan2.1 Alpha T2V".
-    const expanded = expandQuery('t2v');
-    const ids = searchWithFallback<{ id: string }>(ms, expanded, 't2v').map((r) => r.id);
-    expect(ids).toContain('4');
   });
 });

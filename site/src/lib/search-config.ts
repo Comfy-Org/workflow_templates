@@ -10,7 +10,12 @@
  * query options never drift apart.
  */
 
-/** Fields that are tokenized and searched. */
+/**
+ * Fields that are tokenized and searched. `name` is the snake_case workflow id
+ * (e.g. `video_ltx2_3_t2v`); the tokenizer splits it on `_` so its sub-parts —
+ * including literal abbreviations like `t2v`/`i2v` that don't appear in the
+ * prose title — become directly matchable.
+ */
 export const SEARCH_FIELDS = [
   'title',
   'description',
@@ -18,6 +23,7 @@ export const SEARCH_FIELDS = [
   'models',
   'mediaType',
   'creatorName',
+  'name',
 ] as const;
 
 /** Fields stored verbatim for display (not searched). */
@@ -54,14 +60,19 @@ const QUERY_SYNONYMS: Record<string, string> = {
 };
 
 /**
- * Expand known abbreviations in a raw query before searching. Whole-token
- * matches only (so "i2v" expands but "vi2vid" doesn't). Returns the original
- * query when nothing matches.
+ * Augment a raw query with synonym expansions before searching — the literal
+ * token is ALWAYS kept, the expansion is ADDED, never substituted. So "t2v"
+ * becomes "t2v text to video": it matches both the verbatim `t2v` token (from a
+ * workflow's snake_case name) AND prose titles like "Text to Video". Whole-token
+ * matches only ("i2v" expands, "vi2vid" doesn't). Unknown queries pass through.
  */
 export function expandQuery(query: string): string {
   return query
     .split(/\s+/)
-    .map((word) => QUERY_SYNONYMS[word.toLowerCase()] ?? word)
+    .flatMap((word) => {
+      const expansion = QUERY_SYNONYMS[word.toLowerCase()];
+      return expansion ? [word, expansion] : [word];
+    })
     .join(' ');
 }
 
@@ -109,18 +120,14 @@ interface Searchable {
 }
 
 /**
- * Search AND-first (every term must match → precise), then OR (any term →
- * forgiving), then — if both miss — the un-expanded `raw` query. The raw tier
- * rescues documents whose title carries an abbreviation verbatim (e.g. "Wan2.1
- * Alpha T2V"): `expandQuery` rewrites `t2v` → `text to video`, which those docs
- * don't contain, so without this fallback they'd be unfindable. Keeps multi-word
- * queries tight without ever dead-ending on "0 results" when a literal match exists.
+ * Search AND-first (every term must match → precise), and only if that returns
+ * nothing, retry OR (any term → forgiving). Keeps multi-word queries tight
+ * without ever dead-ending on "0 results" when partial matches exist. Literal
+ * abbreviations are kept findable upstream by `expandQuery` (augments, never
+ * substitutes) and by `name` being indexed — so no raw-query tier is needed.
  */
-export function searchWithFallback<T>(index: Searchable, query: string, raw = query): T[] {
+export function searchWithFallback<T>(index: Searchable, query: string): T[] {
   const and = index.search(query, searchOptions(query, 'AND')) as T[];
   if (and.length > 0) return and;
-  const or = index.search(query, searchOptions(query, 'OR')) as T[];
-  if (or.length > 0) return or;
-  if (raw === query) return or;
-  return index.search(raw, searchOptions(raw, 'OR')) as T[];
+  return index.search(query, searchOptions(query, 'OR')) as T[];
 }
