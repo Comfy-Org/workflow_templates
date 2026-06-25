@@ -153,9 +153,7 @@ test.describe('Search Filter "+X more" Expansion', () => {
    */
   async function openDiscoveryPanel(page: import('@playwright/test').Page) {
     await page.goto('/workflows/');
-    const searchInput = page.locator(
-      'input[placeholder*="Search workflows"]'
-    );
+    const searchInput = page.locator('input[placeholder*="Search workflows"]');
     await expect(searchInput).toBeAttached({ timeout: 10000 });
     await searchInput.click();
     return searchInput;
@@ -216,48 +214,35 @@ test.describe('Search Filter "+X more" Expansion', () => {
   });
 });
 
-test.describe('Tag Pills Scrollability', () => {
-  test('overflowed tag can be scrolled into view and clicked', async ({ page }) => {
-    // Use a narrow viewport to increase the chance of tag overflow
+test.describe('Card Tag Row', () => {
+  test('visible tags are whole (not clipped) and navigate to the tag page', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/workflows/');
-    const firstCard = templateCardLink(page);
-    await expect(firstCard).toBeAttached({ timeout: 10000 });
+    await expect(templateCardLink(page)).toBeAttached({ timeout: 10000 });
 
-    // Find a tag container that actually overflows
-    const tagContainers = page.locator('[data-testid="tag-pills"]');
-    const containerCount = await tagContainers.count();
-
-    let overflowingContainer = null;
-    for (let i = 0; i < containerCount; i++) {
-      const container = tagContainers.nth(i);
-      const overflows = await container.evaluate(
-        (el) => el.scrollWidth > el.clientWidth
-      );
-      if (overflows) {
-        overflowingContainer = container;
-        break;
-      }
+    // Rows fit whole tags then a "+N" chip — no row should clip its own content.
+    const rows = page.locator('[data-testid="tag-row"]');
+    const rowCount = await rows.count();
+    expect(rowCount).toBeGreaterThan(0);
+    for (let i = 0; i < Math.min(rowCount, 10); i++) {
+      const clips = await rows.nth(i).evaluate((el) => el.scrollWidth > el.clientWidth + 1);
+      expect(clips).toBe(false);
     }
 
-    // Skip if no container overflows at this viewport width
-    test.skip(!overflowingContainer, 'No tag container overflows at 375px width');
-
-    // Get the last tag link — it should be partially or fully clipped
-    const lastTag = overflowingContainer!.locator('a').last();
-    await expect(lastTag).toBeAttached();
-
-    // Scroll the tag into view and click it
-    await lastTag.evaluate((el) =>
-      el.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' })
-    );
-    await Promise.all([
-      page.waitForNavigation(),
-      lastTag.click(),
-    ]);
-
-    // Assert navigation went to the tag filter page
+    const firstTag = rows.locator('a.tag-link').first();
+    test.skip((await firstTag.count()) === 0, 'No card has tags at this viewport');
+    await Promise.all([page.waitForNavigation(), firstTag.click()]);
     expect(page.url()).toMatch(/\/workflows\/tag\/.+\//);
+  });
+
+  test('a "+N" overflow chip appears when tags exceed the row width', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/workflows/');
+    await expect(templateCardLink(page)).toBeAttached({ timeout: 10000 });
+
+    const overflow = page.locator('[data-testid="tag-overflow"]').first();
+    test.skip((await overflow.count()) === 0, 'No card overflows its tag row at this width');
+    await expect(overflow).toHaveText(/^\+\d+$/);
   });
 });
 

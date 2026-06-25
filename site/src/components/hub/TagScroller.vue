@@ -1,89 +1,112 @@
 <script setup lang="ts">
-import { ref, useTemplateRef } from 'vue';
-import { useResizeObserver, useEventListener } from '@vueuse/core';
-import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
+/** Card tag row: as many whole tags as fit, then a "+N" chip (tooltip lists the rest). Falls back to one neutral chip when empty so cards stay equal. */
+import { computed, ref, watch, nextTick } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { Badge } from '@/components/ui/badge';
+import { Tooltip } from '@/components/ui/tooltip';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { tagPath } from '@/lib/routes';
 
-withDefaults(
-  defineProps<{
-    tags: string[];
-    locale: string;
-    prevLabel?: string;
-    nextLabel?: string;
-  }>(),
-  { prevLabel: 'Scroll tags left', nextLabel: 'Scroll tags right' }
+const props = withDefaults(
+  defineProps<{ tags: string[]; locale: string; fallbackLabel?: string }>(),
+  { fallbackLabel: '' }
 );
 
-const scroller = useTemplateRef<HTMLElement>('scroller');
-const canPrev = ref(false);
-const canNext = ref(false);
+const allTags = computed(() =>
+  props.tags.map((tag) => ({
+    key: tag,
+    label: tagDisplayName(tag),
+    href: tagPath(tag, props.locale),
+  }))
+);
 
-// In RTL, scrollLeft starts at 0 and runs negative, so normalize to a 0..max
-// "distance from start" before the edge math — keeps prev/next correct either way.
-function syncEdges() {
-  const el = scroller.value;
-  if (!el) return;
-  const start = Math.abs(el.scrollLeft);
-  canPrev.value = start > 1;
-  canNext.value = start < el.scrollWidth - el.clientWidth - 1;
+const row = ref<HTMLElement | null>(null);
+const measure = ref<HTMLElement | null>(null);
+const visibleCount = ref(allTags.value.length);
+
+const OVERFLOW_RESERVE = 52;
+const GAP = 6;
+
+function recompute() {
+  const available = row.value?.clientWidth ?? 0;
+  const chips = Array.from(measure.value?.children ?? []) as HTMLElement[];
+  if (!available || !chips.length) return;
+
+  const total = chips.reduce((sum, c, i) => sum + c.offsetWidth + (i ? GAP : 0), 0);
+  if (total <= available) {
+    visibleCount.value = chips.length;
+    return;
+  }
+
+  let used = 0;
+  let count = 0;
+  for (let i = 0; i < chips.length; i++) {
+    const w = chips[i].offsetWidth + (i ? GAP : 0);
+    if (used + w + GAP + OVERFLOW_RESERVE > available) break;
+    used += w;
+    count++;
+  }
+  visibleCount.value = Math.max(1, count);
 }
 
-function scroll(direction: 1 | -1) {
-  const el = scroller.value;
-  if (!el) return;
-  const sign = getComputedStyle(el).direction === 'rtl' ? -1 : 1;
-  el.scrollBy({ left: sign * direction * el.clientWidth * 0.8, behavior: 'smooth' });
-}
+useResizeObserver(row, recompute);
+watch(allTags, () => nextTick(recompute), { immediate: true });
 
-useEventListener(scroller, 'scroll', syncEdges, { passive: true });
-useResizeObserver(scroller, syncEdges);
-
-const tagLabel = (tag: string) => tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-');
+const visibleTags = computed(() => allTags.value.slice(0, visibleCount.value));
+const hiddenTags = computed(() => allTags.value.slice(visibleCount.value));
+const overflowText = computed(() => hiddenTags.value.map((t) => t.label).join(', '));
 </script>
 
 <template>
-  <div class="flex items-center gap-1.5">
-    <button
-      v-if="canPrev"
-      type="button"
-      class="flex size-6 shrink-0 items-center justify-center rounded-full border border-divider bg-page text-content-secondary transition-colors hover:text-content focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      :aria-label="prevLabel"
-      @click.stop="scroll(-1)"
-    >
-      <ChevronLeft class="size-4" aria-hidden="true" />
-    </button>
+  <div
+    ref="row"
+    data-testid="tag-row"
+    class="relative flex h-6 min-w-0 items-center gap-1.5 overflow-hidden"
+  >
+    <Badge v-if="!allTags.length && fallbackLabel" variant="hub-pill" class="whitespace-nowrap">
+      {{ fallbackLabel }}
+    </Badge>
 
-    <div
-      ref="scroller"
-      data-testid="tag-pills"
-      class="flex min-w-0 flex-1 snap-x snap-proximity items-center gap-1.5 overflow-x-auto scrollbar-hide scroll-smooth"
-    >
+    <template v-else>
       <a
-        v-for="tag in tags"
-        :key="tag"
-        :href="tagPath(tag, locale)"
-        class="tag-link shrink-0 snap-start"
+        v-for="tag in visibleTags"
+        :key="tag.key"
+        :href="tag.href"
+        class="tag-link shrink-0"
         @click.stop
       >
         <Badge
           variant="hub-pill"
           class="whitespace-nowrap transition-colors hover:bg-hub-surface-hover"
         >
-          {{ tagLabel(tag) }}
+          {{ tag.label }}
         </Badge>
       </a>
-    </div>
 
-    <button
-      v-if="canNext"
-      type="button"
-      class="flex size-6 shrink-0 items-center justify-center rounded-full border border-divider bg-page text-content-secondary transition-colors hover:text-content focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
-      :aria-label="nextLabel"
-      @click.stop="scroll(1)"
+      <Tooltip v-if="hiddenTags.length" :text="overflowText">
+        <Badge
+          variant="hub-pill"
+          data-testid="tag-overflow"
+          class="shrink-0 whitespace-nowrap tabular-nums"
+        >
+          +{{ hiddenTags.length }}
+        </Badge>
+      </Tooltip>
+    </template>
+
+    <div
+      ref="measure"
+      aria-hidden="true"
+      class="pointer-events-none invisible absolute flex items-center gap-1.5"
     >
-      <ChevronRight class="size-4" aria-hidden="true" />
-    </button>
+      <Badge
+        v-for="tag in allTags"
+        :key="`m:${tag.key}`"
+        variant="hub-pill"
+        class="whitespace-nowrap"
+      >
+        {{ tag.label }}
+      </Badge>
+    </div>
   </div>
 </template>
