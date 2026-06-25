@@ -94,7 +94,7 @@ const slides = computed<FeaturedSlide[]>(() =>
       creatorAvatarUrl: t.creatorAvatarUrl,
       creatorUrl: t.username ? creatorPath(t.username, props.locale) : null,
       tags: t.tags.slice(0, 3).map((tag) => ({
-        label: tagDisplayName(tag).toLowerCase().replace(/\s+/g, '-'),
+        label: tagDisplayName(tag),
         href: tagPath(tag, props.locale),
       })),
     };
@@ -189,10 +189,8 @@ onUnmounted(() => {
             />
           </div>
 
-          <!-- Bottom content (title + creator + tags). Right padding reserves room
-               for the control cluster so nothing overlaps it on small screens. -->
           <div
-            class="absolute inset-x-0 bottom-0 z-20 flex flex-col gap-2 p-4 pr-24 sm:gap-3 sm:p-6 sm:pr-32 lg:p-8 lg:pr-40"
+            class="pointer-events-none absolute inset-x-0 bottom-0 z-20 flex flex-col gap-2 p-4 pr-24 sm:gap-3 sm:p-6 sm:pr-32 lg:p-8 lg:pr-40"
           >
             <h2
               class="max-w-3xl text-[clamp(1.25rem,5vw,3rem)] font-normal leading-tight tracking-[-0.03em] text-white"
@@ -203,7 +201,7 @@ onUnmounted(() => {
               <a
                 v-if="slide.creatorUrl"
                 :href="slide.creatorUrl"
-                class="relative z-20 flex min-w-0 items-center gap-2 text-white/95 transition-colors hover:text-white"
+                class="pointer-events-auto relative z-20 flex min-w-0 items-center gap-2 text-white/95 transition-colors hover:text-white"
                 @click.stop
               >
                 <img
@@ -219,7 +217,9 @@ onUnmounted(() => {
                 >
                   {{ slide.creatorName.charAt(0).toUpperCase() }}
                 </span>
-                <span class="truncate text-sm sm:text-base">{{ slide.creatorName }}</span>
+                <span class="ppformula-text-center-sm truncate text-sm sm:text-base">{{
+                  slide.creatorName
+                }}</span>
               </a>
               <div v-else class="flex min-w-0 items-center gap-2 text-white/95">
                 <span
@@ -228,7 +228,9 @@ onUnmounted(() => {
                 >
                   {{ slide.creatorName.charAt(0).toUpperCase() }}
                 </span>
-                <span class="truncate text-sm sm:text-base">{{ slide.creatorName }}</span>
+                <span class="ppformula-text-center-sm truncate text-sm sm:text-base">{{
+                  slide.creatorName
+                }}</span>
               </div>
 
               <!-- Tags: only the first shows on the smallest screens; more reveal as width grows. -->
@@ -238,7 +240,7 @@ onUnmounted(() => {
                 :href="tag.href"
                 :class="
                   cn(
-                    'relative z-20 inline-flex h-6 shrink-0 items-center rounded-full bg-hub-surface px-3 text-xs text-content transition-colors hover:bg-hub-surface-hover sm:px-4',
+                    'pointer-events-auto relative z-20 inline-flex h-6 shrink-0 items-center rounded-full bg-hub-surface px-3 text-xs text-content transition-colors hover:bg-hub-surface-hover sm:px-4',
                     tagIndex >= 1 && 'hidden sm:inline-flex',
                     tagIndex >= 2 && 'lg:inline-flex'
                   )
