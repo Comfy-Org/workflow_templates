@@ -18,10 +18,14 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-_CI_DIR = Path(__file__).resolve().parent
-ROOT = _CI_DIR.parents[1]
-if str(_CI_DIR) not in sys.path:
-    sys.path.insert(0, str(_CI_DIR))
+_SCRIPT_DIR = Path(__file__).resolve().parent
+_LIB_DIR = _SCRIPT_DIR.parent / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+
+from paths import REPO_ROOT  # noqa: E402
+
+ROOT = REPO_ROOT
 
 _sync_dir = ROOT / "scripts" / "sync"
 if str(_sync_dir) not in sys.path:
@@ -110,7 +114,7 @@ def changed_template_names(base_ref: str) -> set[str]:
         if path.name.startswith("index"):
             continue
         if path.suffix == ".json":
-            names.add(path.stem.split("-")[0])
+            names.add(path.stem)
         elif path.suffix == ".webp":
             names.add(path.name.rsplit("-", 1)[0])
     return names
