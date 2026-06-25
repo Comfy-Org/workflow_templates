@@ -18,6 +18,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | Directory | Purpose |
 |-----------|---------|
 | [`sync/`](sync/) | Data synchronization and generation |
+| [`mcp/`](mcp/) | MCP index pipeline (`index.mcp.json`) |
 | [`validate/`](validate/) | Validation and analysis (most run in CI) |
 | [`blueprints/`](blueprints/) | Subgraph blueprint import |
 | [`ci/`](ci/) | Release pipeline helpers (version, PyPI quota) |
@@ -63,12 +64,24 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `maintenance/fix_subgraph_bypass_modes.py` | Fix subgraph bypass modes in workflow JSONs |
 | `maintenance/update_index_with_sizes.py` | Fetch HuggingFace model sizes into `index.json` |
 | `maintenance/report_bundle_sizes.py` | Print bundle disk usage report |
-| `sync/sync_mcp_index.py` | Sync `index.json` → `index.mcp.json` for MCP |
+| `maintenance/sync_registry_from_krea.py` | **One-off** — seed `models_registry.json` from Krea snapshots (temporary; remove with `krea_*` data files when done) |
+
+MCP index pipeline (separate folder): see [`mcp/README.md`](mcp/README.md). Agent skill: [`.claude/skills/managing-mcp-index/SKILL.md`](../.claude/skills/managing-mcp-index/SKILL.md).
+
+```bash
+npm run mcp          # sync index.mcp.json
+npm run mcp:check    # dry-run
+npm run mcp:ai       # AI template descriptions (stale)
+npm run mcp:models   # AI model registry
+```
 
 ## Configuration files
 
 - **`data/i18n.json`** — Translation strings and pending-translation tracking. See [`docs/I18N_GUIDE.md`](../docs/I18N_GUIDE.md).
 - **`data/whitelist.json`** — URL skip list, model-check ignores, custom-node allowlist. See [`docs/whitelist.md`](docs/whitelist.md).
-- **`data/models_capabilities.json`** — Model capability metadata for MCP index sync.
+- **`data/mcp/api_node_model_options.json`** — Generated cache of API node `model` dropdown options (from ComfyUI source).
+- **`data/mcp/models_registry.json`** — Model profiles (summary, strengths, capabilities) for AI description generation.
+- **`data/mcp/template_cache.json`** — Per-template AI copy, versioned by workflow JSON hash.
+- **`data/krea_registry_aliases.json`**, **`data/krea_*_models.json`** — Temporary Krea snapshots for one-off registry seeding (delete when seeding is complete).
 
 Generated output goes to `scripts/.output/` (gitignored) or repo root (`model_analysis_report.md`, `asset_validation_report.md`).

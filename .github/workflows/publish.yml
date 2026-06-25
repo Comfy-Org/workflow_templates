@@ -153,12 +153,12 @@ jobs:
           fi
 
   pypi-quota-gate:
-    # Runs on every version bump (and every workflow_dispatch) regardless of
-    # whether the PR carried the `release` label. The PR-label decides whether
-    # we actually publish to PyPI, but the quota check itself is always relevant
-    # because storage pressure builds up across all releases on PyPI.
-    needs: [check-version-change]
-    if: needs.check-version-change.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch'
+    # Only gate PyPI uploads. Version bumps without the `release` label still
+    # create a GitHub Release and must not be blocked by quota pressure.
+    needs: [check-version-change, check-pr-label]
+    if: |
+      (needs.check-version-change.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch')
+      && needs.check-pr-label.outputs.should-publish == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -193,7 +193,7 @@ jobs:
     if: |
       always()
       && (needs.check-version-change.outputs.version-changed == 'true' || github.event_name == 'workflow_dispatch')
-      && needs.pypi-quota-gate.result == 'success'
+      && (needs.check-pr-label.outputs.should-publish != 'true' || needs.pypi-quota-gate.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
