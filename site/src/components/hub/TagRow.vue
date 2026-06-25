@@ -46,7 +46,8 @@ function recompute() {
     used += w;
     count++;
   }
-  visibleCount.value = Math.max(1, count);
+  // 0 allowed: a too-wide first tag collapses to just "+N", never a clipped chip.
+  visibleCount.value = count;
 }
 
 useResizeObserver(row, recompute);
@@ -55,6 +56,9 @@ watch(allTags, () => nextTick(recompute), { immediate: true });
 const visibleTags = computed(() => allTags.value.slice(0, visibleCount.value));
 const hiddenTags = computed(() => allTags.value.slice(visibleCount.value));
 const overflowText = computed(() => hiddenTags.value.map((t) => t.label).join(', '));
+const overflowAriaLabel = computed(
+  () => `Show ${hiddenTags.value.length} more tags: ${overflowText.value}`
+);
 </script>
 
 <template>
@@ -85,9 +89,13 @@ const overflowText = computed(() => hiddenTags.value.map((t) => t.label).join(',
 
       <Tooltip v-if="hiddenTags.length" :text="overflowText">
         <Badge
+          as="button"
+          type="button"
           variant="hub-pill"
           data-testid="tag-overflow"
-          class="shrink-0 whitespace-nowrap tabular-nums"
+          :aria-label="overflowAriaLabel"
+          class="shrink-0 whitespace-nowrap tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+          @click.stop
         >
           +{{ hiddenTags.length }}
         </Badge>

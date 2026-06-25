@@ -6,7 +6,7 @@
  * on it; creator line + CTA and tag pills beneath.
  */
 import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
-import TagScroller from '@/components/hub/TagScroller.vue';
+import TagRow from '@/components/hub/TagRow.vue';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
@@ -422,7 +422,7 @@ function handleCardClick() {
         </ButtonPill>
       </div>
 
-      <TagScroller :tags="tags" :locale="locale" :fallback-label="tagFallbackLabel" />
+      <TagRow :tags="tags" :locale="locale" :fallback-label="tagFallbackLabel" />
     </div>
   </div>
 </template>
