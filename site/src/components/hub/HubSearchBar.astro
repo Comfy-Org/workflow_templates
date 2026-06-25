@@ -1,0 +1,17 @@
+---
+/** Search section for the hub page: pins to the top once scrolled past (CSS sticky). */
+import SearchPopover from './SearchPopover.vue';
+import { getProfileCache, getCreatorsList, type SerializedTemplate } from '../../lib/hub-api';
+
+interface Props {
+  templates: SerializedTemplate[];
+  locale: string;
+}
+
+const { templates, locale } = Astro.props;
+const creators = getCreatorsList(await getProfileCache());
+---
+
+<div class="sticky top-0 z-30 -mx-1 rounded-2xl bg-page px-1 pt-0.5">
+  <SearchPopover client:load templates={templates} creators={creators} locale={locale} />
+</div>

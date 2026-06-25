@@ -1,65 +1,63 @@
 ---
 import { getCollection } from 'astro:content';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
-import SearchPopover from './SearchPopover.vue';
 import HeaderMain from './nav/HeaderMain.vue';
+import SearchPopover from './SearchPopover.vue';
 import {
   getProfileCache,
-  serializeCollectionEntry,
+  getCreatorsList,
+  loadSerializedTemplates,
   type SerializedTemplate,
 } from '../../lib/hub-api';
 import { fetchGitHubStars, formatStarCount } from '../../lib/github';
 
+interface Props {
+  /** Render the sticky search bar in the header. Index pages set false (they render it in-body). */
+  showSearch?: boolean;
+}
+
+const { showSearch = true } = Astro.props;
+
 const rawStars = await fetchGitHubStars('Comfy-Org', 'ComfyUI');
 const githubStars = rawStars ? formatStarCount(rawStars) : '';
-
-interface Props {
-  templates?: SerializedTemplate[];
-}
 
 const profiles = await getProfileCache();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
-const creatorsList = Array.from(profiles.entries()).map(([username, profile]) => ({
-  username,
-  displayName: profile.display_name || username,
-  summary: profile.description || '',
-  social: profile.website_urls || '',
-  avatarUrl: profile.avatar_url || '',
-}));
-
 // Top creators for the mobile menu (locale-aware profile links).
-const creatorLinks = creatorsList.slice(0, 5).map((c) => ({
-  username: c.username,
-  displayName: c.displayName,
-  href: localizeUrl(`/workflows/creators/${c.username}/`, locale),
-}));
+const creatorLinks = Array.from(profiles.entries())
+  .slice(0, 5)
+  .map(([username, profile]) => ({
+    username,
+    displayName: profile.display_name || username,
+    href: localizeUrl(`/workflows/creators/${username}/`, locale),
+  }));
 
-// Use provided templates or fetch and serialize them
-let templates: SerializedTemplate[];
-if (Astro.props.templates && Astro.props.templates.length > 0) {
-  templates = Astro.props.templates;
-} else {
-  const allTemplates = (await getCollection('templates'))
-    .filter((tmpl) => !tmpl.id.includes('/'))
-    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
-
-  templates = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
+// Fetch search data only when the header renders the search bar.
+let searchTemplates: SerializedTemplate[] = [];
+const searchCreators = showSearch ? getCreatorsList(profiles) : [];
+if (showSearch) {
+  searchTemplates = await loadSerializedTemplates(() => getCollection('templates'));
 }
 ---
 
-<header
-  class="w-full bg-page sticky top-0 z-50 after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-5 after:bg-linear-to-b after:from-page after:to-transparent"
->
+<header class:list={['w-full bg-page', showSearch && 'sticky top-0 z-50']}>
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
-    <!-- Row 1: Marketing nav (logo + menus + CTAs + mobile hamburger).-->
-    <div class="pt-4 lg:pt-8 pb-6 lg:pb-12">
+    <div class="pt-4 lg:pt-8 pb-6 lg:pb-8">
       <HeaderMain client:load locale={locale} creators={creatorLinks} githubStars={githubStars} />
     </div>
 
-    <!-- Row 2: Full-width search (sibling of nav; search is not navigation) -->
-    <div class="w-full min-w-0 pb-3 lg:pb-4">
-      <SearchPopover client:load templates={templates} creators={creatorsList} locale={locale} />
-    </div>
+    {
+      showSearch && (
+        <div class="w-full min-w-0">
+          <SearchPopover
+            client:load
+            templates={searchTemplates}
+            creators={searchCreators}
+            locale={locale}
+          />
+        </div>
+      )
+    }
   </div>
 </header>

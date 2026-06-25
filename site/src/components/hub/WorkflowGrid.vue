@@ -28,6 +28,7 @@ export interface WorkflowTemplate {
   creatorAvatarUrl?: string;
   isApp?: boolean;
   thumbnailVariant?: HubThumbnailVariant;
+  mediaType?: string;
   mediaSubtype?: string;
 }
 
@@ -106,7 +107,7 @@ function loadMore() {
 
 <template>
   <div class="flex-1 w-full min-w-0">
-    <div v-if="toolbarLabels" class="sticky top-16 z-40 py-6 lg:py-8 [background:inherit]">
+    <div v-if="toolbarLabels" class="bg-page py-4">
       <BrowseToolbar
         :templates="facetSource"
         :facets-config="facetsConfig"
@@ -131,6 +132,7 @@ function loadMore() {
         :is-app="tmpl.isApp"
         :hide-author="hideAuthor"
         :thumbnail-variant="tmpl.thumbnailVariant"
+        :media-type="tmpl.mediaType"
         :media-subtype="tmpl.mediaSubtype"
       />
     </div>

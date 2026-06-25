@@ -7,8 +7,10 @@
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
-const HUB_API_BASE =
-  (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(/\/$/, '');
+const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(
+  /\/$/,
+  ''
+);
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
@@ -202,9 +204,7 @@ export async function listWorkflows(
   if (params.status?.length) qs.set('status', params.status.join(','));
 
   const query = qs.toString();
-  return hubFetch<HubWorkflowListResponse>(
-    `/api/hub/workflows${query ? `?${query}` : ''}`
-  );
+  return hubFetch<HubWorkflowListResponse>(`/api/hub/workflows${query ? `?${query}` : ''}`);
 }
 
 /**
@@ -276,6 +276,25 @@ export async function getProfileCache(): Promise<Map<string, HubProfile>> {
     // Index fetch failed — return empty cache, pages will use fallback display names
   }
   return profileCache;
+}
+
+export interface CreatorEntry {
+  username: string;
+  displayName: string;
+  summary?: string;
+  social?: string | string[];
+  avatarUrl?: string;
+}
+
+/** Creator list for the search island, derived from the profile cache. */
+export function getCreatorsList(profiles: Map<string, HubProfile>): CreatorEntry[] {
+  return Array.from(profiles.entries()).map(([username, profile]) => ({
+    username,
+    displayName: profile.display_name || username,
+    summary: profile.description || '',
+    social: profile.website_urls || '',
+    avatarUrl: profile.avatar_url || '',
+  }));
 }
 
 // ---------------------------------------------------------------------------
@@ -495,7 +514,9 @@ export function extractShareId(urlSegment: string): string | null {
  * In local builds (no PUBLIC_HUB_API_URL), falls back to content collection.
  */
 export async function loadSerializedTemplates(
-  getCollection: () => Promise<{ id: string; data: Parameters<typeof serializeCollectionEntry>[0] }[]>
+  getCollection: () => Promise<
+    { id: string; data: Parameters<typeof serializeCollectionEntry>[0] }[]
+  >
 ): Promise<SerializedTemplate[]> {
   const profiles = await getProfileCache();
   try {
@@ -514,9 +535,7 @@ export async function loadSerializedTemplates(
   }
 }
 
-function mapThumbnailVariant(
-  type?: string
-): ThumbnailVariant | undefined {
+function mapThumbnailVariant(type?: string): ThumbnailVariant | undefined {
   if (type === 'image_comparison') return 'compareSlider';
   return undefined;
 }

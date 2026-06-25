@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import HubHero from '../../components/hub/HubHero.astro';
+import HubSearchBar from '../../components/hub/HubSearchBar.astro';
 import HubBrowse from '../../components/hub/HubBrowse.vue';
 import FeaturedCarousel from '../../components/hub/FeaturedCarousel.vue';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
@@ -57,7 +58,7 @@ const facetsConfig = buildFacetsConfig(locale);
     )
   }
 
-  <HubNavbar templates={serialized} />
+  <HubNavbar showSearch={false} />
 
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
     <!-- Featured hero carousel (Vue island) -->
@@ -72,6 +73,9 @@ const facetsConfig = buildFacetsConfig(locale);
     />
 
     <HubHero count={serialized.length} />
+
+    <!-- Full-width search — sticks to the top once scrolled past -->
+    <HubSearchBar templates={serialized} locale={locale} />
 
     <!-- Interactive browse (Vue island) -->
     <HubBrowse
