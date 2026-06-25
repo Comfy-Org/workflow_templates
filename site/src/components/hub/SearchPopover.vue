@@ -20,7 +20,7 @@ import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
-import type { MediaType } from '@/lib/hub-api';
+import type { MediaType, CreatorEntry } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { workflowDetailPath, workflowDetailSlug, thumbnailPath } from '@/lib/routes';
@@ -42,14 +42,6 @@ export interface SearchTemplate {
   creatorDisplayName: string;
   creatorAvatarUrl: string;
   isApp: boolean;
-}
-
-export interface CreatorEntry {
-  username: string;
-  displayName: string;
-  summary?: string;
-  social?: string | string[];
-  avatarUrl?: string;
 }
 
 const props = defineProps<{
@@ -635,7 +627,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badgeLabel(badge) }}
+              <span class="ppformula-text-center-sm">{{ badgeLabel(badge) }}</span>
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -728,7 +720,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badgeLabel(badge) }}
+              <span class="ppformula-text-center-sm">{{ badgeLabel(badge) }}</span>
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -839,7 +831,7 @@ onUnmounted(() => {
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
-                  {{ creator.displayName }}
+                  <span class="ppformula-text-center-sm">{{ creator.displayName }}</span>
                 </a>
               </div>
             </section>
@@ -863,7 +855,7 @@ onUnmounted(() => {
                   :data-nav-index="discTagOffset + i"
                   @click="addFilterBadge('tag', tag.name)"
                 >
-                  {{ tagDisplayName(tag.name) }}
+                  <span class="ppformula-text-center-sm">{{ tagDisplayName(tag.name) }}</span>
                 </Badge>
                 <button
                   v-if="!showAllTags && remainingTagCount > 0"
@@ -888,7 +880,7 @@ onUnmounted(() => {
                   :data-nav-index="discModelOffset + i"
                   @click="addFilterBadge('model', model.name)"
                 >
-                  {{ model.name }}
+                  <span class="ppformula-text-center-sm">{{ model.name }}</span>
                 </Badge>
                 <button
                   v-if="!showAllModels && remainingModelCount > 0"
@@ -957,7 +949,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badgeLabel(badge) }}
+              <span class="ppformula-text-center-sm">{{ badgeLabel(badge) }}</span>
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -999,9 +991,7 @@ onUnmounted(() => {
           <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
-              <h3
-                class="text-2xs font-semibold uppercase tracking-wide text-content-muted mb-2.5"
-              >
+              <h3 class="text-2xs font-semibold uppercase tracking-wide text-content-muted mb-2.5">
                 Narrow by
               </h3>
               <div class="flex flex-wrap gap-1.5">
@@ -1015,7 +1005,7 @@ onUnmounted(() => {
                   :data-nav-index="i"
                   @click="addFilterBadge('tag', tag.name)"
                 >
-                  {{ tagDisplayName(tag.name) }}
+                  <span class="ppformula-text-center-sm">{{ tagDisplayName(tag.name) }}</span>
                   <span class="text-content/30 text-2xs">{{ tag.count }}</span>
                 </Badge>
                 <Badge
@@ -1028,7 +1018,7 @@ onUnmounted(() => {
                   :data-nav-index="activeSugModelOffset + i"
                   @click="addFilterBadge('model', model.name)"
                 >
-                  {{ model.name }}
+                  <span class="ppformula-text-center-sm">{{ model.name }}</span>
                   <span class="text-content/30 text-2xs">{{ model.count }}</span>
                 </Badge>
               </div>
@@ -1065,7 +1055,7 @@ onUnmounted(() => {
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
-                  {{ creator.displayName }}
+                  <span class="ppformula-text-center-sm">{{ creator.displayName }}</span>
                   <span class="text-content/30 text-xs">{{ creator.workflowCount }}</span>
                 </a>
               </div>
