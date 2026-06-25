@@ -2,12 +2,18 @@
 
 ## Build & Run Commands
 - `npm run sync` — Sync template bundles (run after editing templates/ or bundles.json)
-- `npm run sync:templates` — Full i18n sync pipeline (`scripts/sync/sync_data.py`)
+- `npm run sync:templates` / `npm run i18n` — Hub i18n: `index.json` → `index.{locale}.json` (NOT MCP)
 - `npm run sync:bundles` — Regenerate manifest and copy assets to packages
+- `npm run mcp` — Sync `index.json` → `index.mcp.json` (MCP tool index)
+- `npm run mcp:check` — MCP sync dry-run
+- `npm run mcp:ai` — AI English descriptions for stale MCP templates
+- `npm run mcp:models` — AI model profiles in `models_registry.json`
 - `npm run validate:templates` — Validate template JSON files
 - `npm run validate:manifests` — Validate package manifests
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
+
+**MCP index pipeline:** see skill `.claude/skills/managing-mcp-index/SKILL.md` and `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md`. Do not confuse with hub i18n (`i18n`) or site AI (`site/scripts/generate-ai.ts`).
 
 ## Architecture
 - **Monorepo** with Nx, Python packages, and Astro site
@@ -24,12 +30,13 @@ Root `scripts/` is organized by role:
 
 | Directory | Put here | Examples |
 |-----------|----------|----------|
-| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py`, `sync_mcp_index.py` |
+| `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py` |
+| `scripts/mcp/` | MCP index pipeline | `sync_index.py`, `enhance_descriptions.py` |
 | `scripts/validate/` | Validation & analysis (CI) | `validate_templates.py`, `check_links.py`, `analyze_models.py` |
 | `scripts/blueprints/` | Blueprint-specific import | `import_blueprints.py` |
 | `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_pypi_quota.py` |
-| `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `models_capabilities.json` |
-| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py` |
+| `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `mcp/models_registry.json`, `mcp/template_cache.json` |
+| `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py`, `ai/` |
 | `scripts/maintenance/` | Local-only / one-off tools | `archive_templates.py`, `check_templates.sh` |
 | `scripts/docs/` | Script-specific markdown docs | `whitelist.md`, `check_input_assets.md` |
 
@@ -44,7 +51,7 @@ Root `scripts/` is organized by role:
 | `scripts/whitelist.json` | `scripts/data/whitelist.json` |
 | `scripts/locale_index_files.py` | `scripts/lib/locale_index_files.py` |
 | `scripts/ci_version_manager.py` | `scripts/ci/ci_version_manager.py` |
-| `scripts/sync-mcp-index.py` | `scripts/sync/sync_mcp_index.py` |
+| `scripts/sync-mcp-index.py` | `scripts/mcp/sync_index.py` |
 
 Full index and CI mapping: [`scripts/README.md`](scripts/README.md).
 
