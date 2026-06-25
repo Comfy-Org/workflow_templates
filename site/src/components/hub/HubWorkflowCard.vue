@@ -12,8 +12,8 @@ import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
-import { getLogoPath, providerName } from '@/lib/provider-logos';
-import { ChevronRight } from 'lucide-vue-next';
+import { providerLogos } from '@/lib/provider-logos';
+import { ButtonPill } from '@/components/ui/button-pill';
 
 interface Props {
   name: string;
@@ -29,6 +29,7 @@ interface Props {
   isApp?: boolean;
   hideAuthor?: boolean;
   thumbnailVariant?: ThumbnailVariant;
+  mediaType?: string;
   mediaSubtype?: string;
 }
 
@@ -42,12 +43,20 @@ const props = withDefaults(defineProps<Props>(), {
   creatorAvatarUrl: '',
   isApp: false,
   hideAuthor: false,
+  mediaType: '',
   mediaSubtype: '',
 });
 
-const provider = computed(() => providerName(props.logos));
+/** Neutral fallback chip when a card has no tags, derived from media type. */
+const MEDIA_TYPE_LABELS: Record<string, string> = {
+  image: 'Image',
+  video: 'Video',
+  audio: 'Audio',
+  '3d': '3D',
+};
+const tagFallbackLabel = computed(() => MEDIA_TYPE_LABELS[props.mediaType] ?? '');
 
-const logoPath = computed(() => (provider.value ? getLogoPath(provider.value) : null));
+const modelLogos = computed(() => providerLogos(props.logos).slice(0, 3));
 
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
@@ -172,7 +181,7 @@ function handleCardClick() {
 
 <template>
   <div
-    class="group flex flex-col gap-4 rounded-4xl bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 content-auto hover:bg-hub-surface-hover"
+    class="group/pill-trigger group flex flex-col gap-4 rounded-4xl bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 content-auto hover:bg-hub-surface-hover"
     :class="templateUrl ? 'cursor-pointer' : ''"
     @click="handleCardClick"
   >
@@ -208,22 +217,7 @@ function handleCardClick() {
           class="compare-handle absolute top-0 bottom-0 w-1 bg-white shadow-lg cursor-ew-resize"
           style="left: 50%"
           aria-hidden="true"
-        >
-          <div
-            class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center"
-          >
-            <svg
-              class="w-4 h-4 text-gray-600"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              aria-hidden="true"
-            >
-              <path d="M8 12H16M8 12L11 9M8 12L11 15M16 12L13 9M16 12L13 15" />
-            </svg>
-          </div>
-        </div>
+        />
       </div>
 
       <div v-else-if="showHoverDissolve" class="group/thumb relative h-full w-full overflow-hidden">
@@ -352,16 +346,20 @@ function handleCardClick() {
         {{ title }}
       </h3>
 
-      <!-- Logo tile (declared after the scrim so it stacks above it) -->
-      <div
-        v-if="logoPath"
-        class="absolute top-4 right-4 z-10 flex size-12 items-center justify-center rounded-2xl bg-black/10 p-2 backdrop-blur-xs"
-      >
-        <img
-          :src="logoPath"
-          :alt="provider || ''"
-          class="h-full w-full rounded-2xl object-contain"
-        />
+      <div v-if="modelLogos.length" class="absolute top-4 right-4 z-10 flex flex-row-reverse">
+        <div
+          v-for="(logo, i) in modelLogos"
+          :key="logo.name"
+          class="relative flex size-12 items-center justify-center rounded-2xl bg-black/10 p-2 backdrop-blur-xs hover:z-20"
+          :class="i > 0 ? '-mr-4' : ''"
+          :title="logo.name"
+        >
+          <img
+            :src="logo.logoPath"
+            :alt="logo.name"
+            class="h-full w-full rounded-2xl object-contain"
+          />
+        </div>
       </div>
     </div>
 
@@ -387,7 +385,7 @@ function handleCardClick() {
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
-          <span class="text-base truncate">{{ authorName }}</span>
+          <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
         </a>
         <div v-else-if="!hideAuthor" class="flex items-center gap-2 min-w-0">
           <img
@@ -404,22 +402,27 @@ function handleCardClick() {
               authorName.charAt(0).toUpperCase()
             }}</span>
           </div>
-          <span class="text-content-secondary text-base truncate">{{ authorName }}</span>
+          <span class="ppformula-text-center-sm text-content-secondary text-base truncate">{{
+            authorName
+          }}</span>
         </div>
         <span v-else />
 
-        <button
+        <ButtonPill
           v-if="templateUrl"
+          as="button"
           type="button"
-          class="size-8 shrink-0 rounded-xl bg-brand text-page flex items-center justify-center hover:opacity-90 transition-opacity cursor-pointer"
+          variant="solid"
+          reveal
+          class="shrink-0"
           :aria-label="title"
           @click.stop="handleCardClick"
         >
-          <ChevronRight class="size-5" aria-hidden="true" />
-        </button>
+          Try now
+        </ButtonPill>
       </div>
 
-      <TagScroller v-if="tags.length" :tags="tags" :locale="locale" />
+      <TagScroller :tags="tags" :locale="locale" :fallback-label="tagFallbackLabel" />
     </div>
   </div>
 </template>

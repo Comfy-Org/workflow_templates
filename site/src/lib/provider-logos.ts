@@ -66,3 +66,21 @@ export function providerName(logos?: { provider: string | string[] }[]): string 
   const p = logos?.[0]?.provider;
   return Array.isArray(p) ? (p[0] ?? null) : (p ?? null);
 }
+
+/** All distinct, logo-resolvable providers from `logos`, in order (deduped). */
+export function providerLogos(
+  logos?: { provider: string | string[] }[]
+): { name: string; logoPath: string }[] {
+  const names = (logos ?? []).flatMap((l) =>
+    Array.isArray(l.provider) ? l.provider : [l.provider]
+  );
+  const seen = new Set<string>();
+  const out: { name: string; logoPath: string }[] = [];
+  for (const name of names) {
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    const logoPath = getLogoPath(name);
+    if (logoPath) out.push({ name, logoPath });
+  }
+  return out;
+}

@@ -5,12 +5,14 @@ import type { PrimitiveProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 import { cn } from '@/lib/utils';
 import type { ButtonPillVariants } from '.';
-import { buttonPillBadgeVariants, buttonPillVariants } from '.';
+import { buttonPillBadgeVariants, buttonPillLabelVariants, buttonPillVariants } from '.';
 
 interface Props extends PrimitiveProps {
   variant?: ButtonPillVariants['variant'];
   size?: ButtonPillVariants['size'];
   iconPosition?: ButtonPillVariants['iconPosition'];
+  /** Hide the label at rest; reveal it on hover (of the pill or a parent group/pill-trigger). */
+  reveal?: boolean;
   class?: HTMLAttributes['class'];
   disabled?: boolean;
 }
@@ -20,10 +22,14 @@ const {
   asChild,
   variant,
   size,
-  iconPosition,
+  iconPosition = 'right',
+  reveal = false,
   class: className,
   disabled,
 } = defineProps<Props>();
+
+// Reveal always pins the icon to the start, so it implies a left icon position.
+const resolvedIconPosition = reveal ? 'left' : iconPosition;
 </script>
 
 <template>
@@ -34,12 +40,29 @@ const {
     :as="as"
     :as-child="asChild"
     :disabled="disabled"
-    :class="cn(buttonPillVariants({ variant, size, iconPosition }), className)"
+    :class="
+      cn(
+        buttonPillVariants({ variant, size, iconPosition: resolvedIconPosition, reveal }),
+        className
+      )
+    "
   >
-    <span class="ppformula-text-center relative leading-none transition-all duration-500">
+    <span v-if="reveal" :class="buttonPillLabelVariants()">
+      <span class="overflow-hidden">
+        <span class="ppformula-text-center relative leading-none">
+          <slot />
+        </span>
+      </span>
+    </span>
+    <span v-else class="ppformula-text-center relative leading-none transition-all duration-500">
       <slot />
     </span>
-    <span :class="buttonPillBadgeVariants({ variant, size, iconPosition })" aria-hidden="true">
+    <span
+      :class="
+        buttonPillBadgeVariants({ variant, size, iconPosition: resolvedIconPosition, reveal })
+      "
+      aria-hidden="true"
+    >
       <span class="inline-flex transition-transform duration-500">
         <slot name="icon">
           <ChevronRight class="size-4" :stroke-width="2" />

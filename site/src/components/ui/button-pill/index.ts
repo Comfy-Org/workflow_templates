@@ -19,40 +19,72 @@ export const buttonPillVariants = cva(
         right: '',
         left: '',
       },
+      reveal: { true: '', false: '' },
     },
     compoundVariants: [
       {
+        reveal: false,
         size: 'default',
         iconPosition: 'right',
         class:
           'ps-6 pe-14 group-hover/pill-trigger:ps-14 group-hover/pill-trigger:pe-6 hover:ps-14 hover:pe-6',
       },
       {
+        reveal: false,
         size: 'lg',
         iconPosition: 'right',
         class:
           'ps-8 pe-16 group-hover/pill-trigger:ps-16 group-hover/pill-trigger:pe-8 hover:ps-16 hover:pe-8',
       },
       {
+        reveal: false,
         size: 'default',
         iconPosition: 'left',
         class:
           'ps-14 pe-6 group-hover/pill-trigger:ps-6 group-hover/pill-trigger:pe-14 hover:ps-6 hover:pe-14',
       },
       {
+        reveal: false,
         size: 'lg',
         iconPosition: 'left',
         class:
           'ps-16 pe-8 group-hover/pill-trigger:ps-8 group-hover/pill-trigger:pe-16 hover:ps-8 hover:pe-16',
+      },
+      {
+        reveal: true,
+        size: 'default',
+        class: 'ps-10 pe-0 group-hover/button-pill:pe-5 group-hover/pill-trigger:pe-5',
+      },
+      {
+        reveal: true,
+        size: 'lg',
+        class: 'ps-14 pe-0 group-hover/button-pill:pe-7 group-hover/pill-trigger:pe-7',
       },
     ],
     defaultVariants: {
       variant: 'solid',
       size: 'default',
       iconPosition: 'right',
+      reveal: false,
     },
   }
 );
+
+/**
+ * Reveal label: animates a grid column 0fr→1fr on hover (pill or ancestor
+ * `group/pill-trigger`). Grid, not max-width, so the label's box height — and
+ * thus its baseline/glyphs — is never clipped. Only rendered for reveal pills.
+ */
+export const buttonPillLabelVariants = cva('grid transition-[grid-template-columns] duration-500', {
+  variants: {
+    open: {
+      true: 'grid-cols-[1fr]',
+      false:
+        'grid-cols-[0fr] group-hover/button-pill:grid-cols-[1fr] group-hover/pill-trigger:grid-cols-[1fr]',
+    },
+  },
+  defaultVariants: { open: false },
+});
 
 export const buttonPillBadgeVariants = cva(
   'absolute z-10 flex items-center justify-center rounded-xl transition-all duration-500',
@@ -70,37 +102,45 @@ export const buttonPillBadgeVariants = cva(
         right: '',
         left: '',
       },
+      reveal: { true: '', false: '' },
     },
     compoundVariants: [
       {
+        reveal: false,
         size: 'default',
         iconPosition: 'right',
         class:
           'right-1 group-hover/button-pill:right-[calc(100%-36px)] group-hover/pill-trigger:right-[calc(100%-36px)]',
       },
       {
+        reveal: false,
         size: 'lg',
         iconPosition: 'right',
         class:
           'right-1 group-hover/button-pill:right-[calc(100%-52px)] group-hover/pill-trigger:right-[calc(100%-52px)]',
       },
       {
+        reveal: false,
         size: 'default',
         iconPosition: 'left',
         class:
           'left-1 group-hover/button-pill:left-[calc(100%-36px)] group-hover/pill-trigger:left-[calc(100%-36px)]',
       },
       {
+        reveal: false,
         size: 'lg',
         iconPosition: 'left',
         class:
           'left-1 group-hover/button-pill:left-[calc(100%-52px)] group-hover/pill-trigger:left-[calc(100%-52px)]',
       },
+
+      { reveal: true, class: 'left-1 top-1/2 -translate-y-1/2' },
     ],
     defaultVariants: {
       variant: 'solid',
       size: 'default',
       iconPosition: 'right',
+      reveal: false,
     },
   }
 );

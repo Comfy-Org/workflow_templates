@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getLogoPath, providerName } from '../../src/lib/provider-logos';
+import { getLogoPath, providerLogos, providerName } from '../../src/lib/provider-logos';
 
 describe('getLogoPath', () => {
   it('resolves an exact provider name to its logo asset', () => {
@@ -43,5 +43,33 @@ describe('providerName', () => {
 
   it('returns null when the first entry has an empty provider array', () => {
     expect(providerName([{ provider: [] }])).toBeNull();
+  });
+});
+
+describe('providerLogos', () => {
+  it('resolves each distinct provider to its logo, preserving order', () => {
+    expect(providerLogos([{ provider: 'OpenAI' }, { provider: 'Google' }])).toEqual([
+      { name: 'OpenAI', logoPath: '/logos/openai.png' },
+      { name: 'Google', logoPath: '/logos/google.png' },
+    ]);
+  });
+
+  it('flattens provider arrays and dedupes repeats', () => {
+    expect(providerLogos([{ provider: ['Flux', 'Google'] }, { provider: 'Flux' }])).toEqual([
+      { name: 'Flux', logoPath: '/logos/bfl.png' },
+      { name: 'Google', logoPath: '/logos/google.png' },
+    ]);
+  });
+
+  it('drops providers with no resolvable logo', () => {
+    expect(providerLogos([{ provider: 'Google' }, { provider: 'Totally Unknown Co' }])).toEqual([
+      { name: 'Google', logoPath: '/logos/google.png' },
+    ]);
+  });
+
+  it('returns an empty array for missing or empty input', () => {
+    expect(providerLogos(undefined)).toEqual([]);
+    expect(providerLogos([])).toEqual([]);
+    expect(providerLogos([{ provider: [] }])).toEqual([]);
   });
 });
