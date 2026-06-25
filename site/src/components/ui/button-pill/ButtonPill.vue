@@ -5,7 +5,7 @@ import type { PrimitiveProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 import { cn } from '@/lib/utils';
 import type { ButtonPillVariants } from '.';
-import { buttonPillBadgeVariants, buttonPillLabelVariants, buttonPillVariants } from '.';
+import { buttonPillBadgeVariants, buttonPillVariants } from '.';
 
 interface Props extends PrimitiveProps {
   variant?: ButtonPillVariants['variant'];
@@ -47,7 +47,10 @@ const resolvedIconPosition = reveal ? 'left' : iconPosition;
       )
     "
   >
-    <span v-if="reveal" :class="buttonPillLabelVariants()">
+    <span
+      v-if="reveal"
+      class="grid grid-cols-[0fr] transition-[grid-template-columns] duration-500 group-hover/button-pill:grid-cols-[1fr] group-hover/pill-trigger:grid-cols-[1fr]"
+    >
       <span class="overflow-hidden">
         <span class="ppformula-text-center relative leading-none">
           <slot />

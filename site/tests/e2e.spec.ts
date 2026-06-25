@@ -231,7 +231,7 @@ test.describe('Card Tag Row', () => {
 
     const firstTag = rows.locator('a.tag-link').first();
     test.skip((await firstTag.count()) === 0, 'No card has tags at this viewport');
-    await Promise.all([page.waitForNavigation(), firstTag.click()]);
+    await Promise.all([page.waitForURL(/\/workflows\/tag\/.+\//), firstTag.click()]);
     expect(page.url()).toMatch(/\/workflows\/tag\/.+\//);
   });
 

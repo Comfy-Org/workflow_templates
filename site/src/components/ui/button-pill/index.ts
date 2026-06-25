@@ -70,22 +70,6 @@ export const buttonPillVariants = cva(
   }
 );
 
-/**
- * Reveal label: animates a grid column 0fr→1fr on hover (pill or ancestor
- * `group/pill-trigger`). Grid, not max-width, so the label's box height — and
- * thus its baseline/glyphs — is never clipped. Only rendered for reveal pills.
- */
-export const buttonPillLabelVariants = cva('grid transition-[grid-template-columns] duration-500', {
-  variants: {
-    open: {
-      true: 'grid-cols-[1fr]',
-      false:
-        'grid-cols-[0fr] group-hover/button-pill:grid-cols-[1fr] group-hover/pill-trigger:grid-cols-[1fr]',
-    },
-  },
-  defaultVariants: { open: false },
-});
-
 export const buttonPillBadgeVariants = cva(
   'absolute z-10 flex items-center justify-center rounded-xl transition-all duration-500',
   {
