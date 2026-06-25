@@ -10,6 +10,7 @@ name: Version Check and Auto-bump
 #   5. Updates meta package dependencies (exact pinning)
 #   6. When the root meta version differs from the PR base branch (e.g. manual
 #      version bump on the PR, or in-job bump), runs the PyPI quota check,
+#      posts a release distribution summary (pip vs cloud vs custom-nodes),
 #      refreshes the ComfyUI pins cache if stale, and regenerates the
 #      delete-candidates report (PR comment).
 #   7. Commits version-bump + (optionally) cache + report changes back to the PR.
@@ -160,6 +161,52 @@ jobs:
               body = fs.readFileSync('pr-quota-comment.md', 'utf8');
             } catch (e) {
               core.info('No quota comment file');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Build release distribution summary (pip vs cloud)
+        if: steps.release_detect.outputs.post_pypi_comment == 'true'
+        run: |
+          python scripts/ci/release_distribution_report.py \
+            --new-version "${{ steps.release_detect.outputs.new_version }}" \
+            --base-version "${{ steps.release_detect.outputs.base_version }}" \
+            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --comment-file pr-distribution-comment.md \
+            --title "Release distribution summary (version bump PR)"
+
+      - name: Post release distribution comment on PR
+        if: steps.release_detect.outputs.post_pypi_comment == 'true' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- release-distribution-report -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-distribution-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No distribution comment file');
               return;
             }
             const { data: comments } = await github.rest.issues.listComments({
