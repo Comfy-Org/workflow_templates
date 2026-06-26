@@ -27,7 +27,14 @@ export function initPostHog(): void {
  * - past tense verbs
  * - e.g. hub:run_button_clicked, hub:template_viewed
  */
-type EventProperties = Record<string, string | number | boolean | undefined>;
+type EventPropertyValue = string | number | boolean | string[] | undefined;
+type EventProperties = Record<string, EventPropertyValue>;
+
+export interface SearchPerformedProperties {
+  query: string;
+  resultCount: number;
+  filtersApplied: string[];
+}
 
 export function capture(eventName: string, properties?: EventProperties): void {
   if (typeof window === 'undefined' || !initialized) return;
@@ -74,9 +81,19 @@ export function trackTemplateViewed(
   });
 }
 
-export function trackSearchPerformed(query: string): void {
+export function trackSearchPerformed({
+  query,
+  resultCount,
+  filtersApplied,
+}: SearchPerformedProperties): void {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return;
+
   capture('hub:search_performed', {
-    query,
+    query: trimmedQuery,
+    result_count: resultCount,
+    surface: 'workflows',
+    filters_applied: filtersApplied,
   });
 }
 

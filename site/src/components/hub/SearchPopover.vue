@@ -79,6 +79,9 @@ const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MA
 const overflowCountDesktop = computed(() =>
   Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP)
 );
+const activeFilters = computed(() =>
+  store.filterBadges.value.map((badge) => `${badge.type}:${badge.value}`)
+);
 
 // ── All tags and models with counts (for filter suggestions) ──
 
@@ -186,7 +189,7 @@ const badgeOnlyResults = computed(() => {
 // ── Search with debounce ──
 
 watchDebounced(
-  [searchQuery, () => store.filterBadges.value],
+  [searchQuery, activeFilters],
   async ([query]) => {
     const trimmed = (query as string).trim();
     if (!trimmed) {
@@ -195,11 +198,18 @@ watchDebounced(
       return;
     }
     isSearching.value = true;
+    const filtersApplied = [...activeFilters.value];
     try {
-      searchResults.value = await searchIndex(trimmed, {
+      const results = await searchIndex(trimmed, {
         allowedNames: badgeFilteredNames.value ?? undefined,
       });
-      trackSearchPerformed(trimmed);
+      searchResults.value = results;
+      const resultCount = results.workflows.length + matchedCreators.value.length;
+      trackSearchPerformed({
+        query: trimmed,
+        resultCount,
+        filtersApplied,
+      });
     } finally {
       isSearching.value = false;
       hasSearched.value = true;
