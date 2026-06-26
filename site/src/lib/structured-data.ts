@@ -76,10 +76,6 @@ export function serializeJsonLdForScript(value: unknown): string {
     .replace(/\u2029/g, '\\u2029');
 }
 
-/**
- * schema.org `FAQPage` JSON-LD for a workflow's FAQ section, or `null` when
- * there are no items (so the caller can skip emitting an empty graph).
- */
 export function buildFaqJsonLd(faqItems: FaqItem[] | undefined) {
   if (!faqItems?.length) return null;
   return {
@@ -89,6 +85,37 @@ export function buildFaqJsonLd(faqItems: FaqItem[] | undefined) {
       '@type': 'Question',
       name: item.question,
       acceptedAnswer: { '@type': 'Answer', text: item.answer },
+    })),
+  };
+}
+
+export function buildCollectionPageJsonLd(params: {
+  name: string;
+  description: string;
+  url: string;
+  inLanguage?: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: params.name,
+    description: params.description,
+    url: params.url,
+    ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
+  };
+}
+
+
+
+export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((crumb, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: crumb.name,
+      ...(crumb.item ? { item: crumb.item } : {}),
     })),
   };
 }

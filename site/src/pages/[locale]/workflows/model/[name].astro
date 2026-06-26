@@ -10,7 +10,6 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
 import WorkflowGrid from '../../../../components/hub/WorkflowGrid.vue';
-import HreflangTags from '../../../../components/HreflangTags.astro';
 import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { localizeUrl } from '../../../../i18n/utils';
@@ -21,7 +20,11 @@ import { modelPath } from '../../../../lib/routes';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
-import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../lib/structured-data';
+import {
+  buildCollectionPageJsonLd,
+  buildWorkflowBreadcrumb,
+  serializeJsonLdForScript,
+} from '../../../../lib/structured-data';
 
 const { locale, name } = Astro.params;
 
@@ -53,14 +56,12 @@ const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
 const title = `${modelName} ComfyUI Workflows - Free Templates`;
 const description = `Browse ${matchingTemplates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
 
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
+const structuredData = buildCollectionPageJsonLd({
   name: `${modelName} ComfyUI Workflows`,
   description,
   url: canonicalUrl,
   inLanguage: locale,
-};
+});
 
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(
   typedLocale,
@@ -86,7 +87,6 @@ const serialized = matchingTemplates;
   theme="dark"
   hideDefaultFooter
 >
-  <HreflangTags slot="head" basePath={basePath} />
   <HubNavbar />
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
     <!-- Back -->
@@ -96,12 +96,13 @@ const serialized = matchingTemplates;
 
     <!-- Header -->
     <div class="mb-12">
-      <span class={badgeVariants({ variant: 'hub-pill' })}>Model</span>
+      <span class={badgeVariants({ variant: 'hub-pill' })}>{t('labels.models', typedLocale)}</span>
       <h1 class="text-3xl font-bold text-content mt-3">
-        {modelName} Workflows
+        {modelName} ComfyUI Workflows
       </h1>
-      <p class="text-hub-muted text-base mt-2">
-        {matchingTemplates.length} workflow{matchingTemplates.length !== 1 ? 's' : ''}
+      <p class="text-content-muted text-base mt-2">
+        {matchingTemplates.length}
+        {t('template.count', typedLocale)}
       </p>
     </div>
 

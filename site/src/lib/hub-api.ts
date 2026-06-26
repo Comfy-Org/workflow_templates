@@ -535,6 +535,30 @@ export async function loadSerializedTemplates(
   }
 }
 
+let serializedIndexCache: Promise<SerializedTemplate[]> | null = null;
+
+/**
+ * The full serialized workflow index, serialized exactly ONCE per build and
+ * returned by the same array reference on every call. Use this (over
+ * `listRelatedWorkflows`, which re-serializes per call) when many pages need the
+ * whole catalog — e.g. the use-case membership index keyed on catalog identity.
+ * Returns `[]` if the index is unavailable.
+ */
+export function getSerializedIndex(): Promise<SerializedTemplate[]> {
+  if (!serializedIndexCache) {
+    serializedIndexCache = (async () => {
+      try {
+        const profiles = await getProfileCache();
+        const entries = await listWorkflowIndex();
+        return entries.map((e) => serializeIndexEntry(e, profiles));
+      } catch {
+        return [];
+      }
+    })();
+  }
+  return serializedIndexCache;
+}
+
 function mapThumbnailVariant(type?: string): ThumbnailVariant | undefined {
   if (type === 'image_comparison') return 'compareSlider';
   return undefined;

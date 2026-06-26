@@ -3,10 +3,8 @@
  * Workflow detail page — pre-rendered at build time.
  * URL: /workflows/{name}-{share_id}/
  *
- * Also handles legacy redirects: /workflows/{old-slug}/ (no share_id)
- * redirects to the new URL format with 301.
- *
- * Data source: listWorkflowIndex() → fallback: content collection.
+ * Legacy URLs without a share_id 301-redirect to the canonical format.
+ * Data source: listWorkflowIndex(), falling back to the content collection.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
@@ -19,6 +17,7 @@ import { absoluteUrl } from '../../config/site';
 import {
   listWorkflowIndex,
   listRelatedWorkflows,
+  getSerializedIndex,
   type HubWorkflowTemplateEntry,
   type SerializedTemplate,
 } from '../../lib/hub-api';
@@ -29,6 +28,8 @@ import {
   buildWorkflowBreadcrumb,
 } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
+import { useCasePagesFeaturingTemplate } from '../../lib/seo/use-case-resolver';
+import { useCasePath } from '../../lib/routes';
 import { localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 
@@ -37,13 +38,12 @@ export async function getStaticPaths() {
   try {
     entries = await listWorkflowIndex();
   } catch {
-    // Fallback to content collection
     const templates = await getTemplatesForLocale(DEFAULT_LOCALE);
     return templates
-      .filter((t) => Boolean(t.data.name))
-      .map((t) => ({
-        params: { slug: t.data.name },
-        props: { entry: null, legacySlug: t.data.name, legacyShareId: null },
+      .filter((tmpl) => Boolean(tmpl.data.name))
+      .map((tmpl) => ({
+        params: { slug: tmpl.data.name },
+        props: { entry: null, legacySlug: tmpl.data.name, legacyShareId: null },
       }));
   }
 
@@ -52,23 +52,21 @@ export async function getStaticPaths() {
   for (const entry of entries) {
     const shareId = entry.shareId || '';
     const name = entry.name || shareId;
-    // Need at least one of name or shareId to form any slug.
     if (!name) continue;
 
     if (shareId) {
-      // Canonical: /workflows/{name}-{shareId}/
       paths.push({
         params: { slug: `${name}-${shareId}` },
         props: { entry, legacySlug: null, legacyShareId: null },
       });
-      // Legacy redirect: /workflows/{name}/ → /workflows/{name}-{shareId}/
-      // Also handles UGC where name == shareId (card links use /workflows/{name}/).
+      // Legacy /workflows/{name}/ redirects to the canonical slug. Also covers
+      // UGC where name == shareId (card links point at /workflows/{name}/).
       paths.push({
         params: { slug: name },
         props: { entry: null, legacySlug: name, legacyShareId: shareId },
       });
     } else {
-      // Legacy entry without shareId — render directly, no redirect needed.
+      // No shareId — render directly, no redirect needed.
       paths.push({
         params: { slug: name },
         props: { entry, legacySlug: null, legacyShareId: null },
@@ -87,7 +85,6 @@ interface Props {
 
 const { entry, legacySlug, legacyShareId } = Astro.props;
 
-// Legacy redirect: old URL without share_id
 if (!entry && legacySlug) {
   if (legacyShareId) {
     return Astro.redirect(`/workflows/${legacySlug}-${legacyShareId}/`, 301);
@@ -95,7 +92,6 @@ if (!entry && legacySlug) {
   return Astro.redirect('/workflows/');
 }
 
-// No data — shouldn't happen for pre-rendered pages
 if (!entry) {
   return Astro.redirect('/workflows/');
 }
@@ -162,9 +158,17 @@ const softwareAppStructuredData = {
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 };
 
-// "View all workflows" grid — full index minus the current template.
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
 const toolbarLabels = buildToolbarLabels(locale);
+
+// Reverse internal links: SEO use-case pages whose cluster includes this
+// workflow. Built from the once-serialized index (stable reference), so the
+// membership map is computed a single time across all detail pages.
+const catalog = await getSerializedIndex();
+const relatedUseCases = useCasePagesFeaturingTemplate(data.name, catalog).map((def) => ({
+  label: def.h1,
+  href: localizeUrl(useCasePath(def.slug), locale),
+}));
 ---
 
 <BaseLayout
@@ -179,7 +183,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   hideDefaultFooter
 >
   <HubNavbar />
-  <TemplateDetailPage template={{ data }} locale={locale}>
+  <TemplateDetailPage template={{ data }} locale={locale} relatedUseCases={relatedUseCases}>
     {
       relatedTemplates.length > 0 && (
         <section slot="related" class="mt-16 lg:mt-24">
