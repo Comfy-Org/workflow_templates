@@ -1,100 +1,65 @@
 ---
 import { getCollection } from 'astro:content';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import HeaderMain from './nav/HeaderMain.vue';
 import SearchPopover from './SearchPopover.vue';
-import MobileFilterDrawer from './MobileFilterDrawer.vue';
 import {
   getProfileCache,
-  serializeCollectionEntry,
+  getCreatorsList,
+  loadSerializedTemplates,
   type SerializedTemplate,
 } from '../../lib/hub-api';
-import { getCloudLandingUrl } from '../../lib/urls';
-import { featureFlags } from '../../config/featureFlags';
-
-const tryCloudCtaText = featureFlags.cloudFreeTier ? 'Try Comfy Cloud for free' : 'Try Comfy Cloud';
+import { fetchGitHubStars, formatStarCount } from '../../lib/github';
 
 interface Props {
-  templates?: SerializedTemplate[];
+  /** Render the search bar in the header. Index pages set false (render it in-body). */
+  showSearch?: boolean;
+  /** Pin the header to the top. Defaults to showSearch so existing callers are unchanged. */
+  sticky?: boolean;
 }
+
+const { showSearch = true, sticky = showSearch } = Astro.props;
+
+const rawStars = await fetchGitHubStars('Comfy-Org', 'ComfyUI');
+const githubStars = rawStars ? formatStarCount(rawStars) : '';
 
 const profiles = await getProfileCache();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
-// Derive creators list from profile cache (hub API)
-const creatorsList = Array.from(profiles.entries()).map(([username, profile]) => ({
-  username,
-  displayName: profile.display_name || username,
-  summary: profile.description || '',
-  social: profile.website_urls || '',
-  avatarUrl: profile.avatar_url || '',
-}));
+// Top creators for the mobile menu (locale-aware profile links).
+const creatorLinks = Array.from(profiles.entries())
+  .slice(0, 5)
+  .map(([username, profile]) => ({
+    username,
+    displayName: profile.display_name || username,
+    href: localizeUrl(`/workflows/creators/${username}/`, locale),
+  }));
 
-// Use provided templates or fetch and serialize them
-let templates: SerializedTemplate[];
-if (Astro.props.templates && Astro.props.templates.length > 0) {
-  templates = Astro.props.templates;
-} else {
-  const allTemplates = (await getCollection('templates'))
-    .filter((tmpl) => !tmpl.id.includes('/'))
-    .sort((a, b) => (b.data.usage || 0) - (a.data.usage || 0));
-
-  templates = allTemplates.map((tmpl) => serializeCollectionEntry(tmpl.data, profiles));
+// Fetch search data only when the header renders the search bar.
+let searchTemplates: SerializedTemplate[] = [];
+const searchCreators = showSearch ? getCreatorsList(profiles) : [];
+if (showSearch) {
+  searchTemplates = await loadSerializedTemplates(() => getCollection('templates'));
 }
 ---
 
-<nav class="w-full bg-page sticky top-0 z-50">
-  <div class="max-w-400 mx-auto h-16 lg:h-20 px-4 sm:px-6 lg:px-16 flex items-center">
-    <!-- Left: Logo -->
-    <div
-      class="w-14 lg:min-w-[var(--hub-sidebar-width)] lg:max-w-[var(--hub-sidebar-width)] flex items-center justify-start"
-    >
-      <a href={localizeUrl('/workflows/', locale)} class="shrink-0">
-        <img src="/brand/comfy-c-yellow.svg" alt="Comfy" class="h-8 w-12 lg:hidden" />
-        <img src="/brand/comfy-hub-logo.svg" alt="Comfy" class="hidden lg:block h-8 w-auto" />
-      </a>
+<header class:list={['w-full bg-page', sticky && 'sticky top-0 z-50']}>
+  <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
+    <div class="pt-4 lg:pt-8 pb-6 lg:pb-8">
+      <HeaderMain client:load locale={locale} creators={creatorLinks} githubStars={githubStars} />
     </div>
 
-    <div class="w-full min-w-0 px-4 lg:pr-8 lg:pl-0 pt-0.5">
-      <!-- Center: Search Popover (Vue island) -->
-      <SearchPopover client:load templates={templates} creators={creatorsList} locale={locale} />
-    </div>
-    <!-- Right: Actions (desktop) -->
-    <div class="hidden lg:flex items-center gap-4 shrink-0">
-      <a
-        href="https://links.comfy.org/hubearlyaccess"
-        class="inline-flex items-center justify-center h-10 px-5 rounded-full border border-white/20 text-content-secondary text-sm font-bold hover:bg-hub-surface transition-colors whitespace-nowrap"
-        target="_blank"
-      >
-        Apply to Join
-      </a>
-      <a
-        href={getCloudLandingUrl('site_button')}
-        target="_blank"
-        rel="noopener noreferrer"
-        class="run-cloud-btn inline-flex items-center justify-center h-10 px-5 rounded-full bg-brand text-page text-sm font-bold hover:opacity-90 transition-opacity whitespace-nowrap"
-        data-location="navbar"
-      >
-        {tryCloudCtaText}
-      </a>
-    </div>
-
-    <!-- Right: Hamburger (mobile) -->
-    <button
-      id="mobile-filter-toggle"
-      type="button"
-      class="lg:hidden shrink-0 flex items-center justify-center size-10 rounded-full text-content-muted hover:text-content hover:bg-hub-surface active:bg-hub-surface transition-colors"
-      aria-label="Open filters"
-    >
-      <svg class="size-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="1.5"
-          d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"></path>
-      </svg>
-    </button>
+    {
+      showSearch && (
+        <div class="w-full min-w-0 pb-6 lg:pb-8">
+          <SearchPopover
+            client:load
+            templates={searchTemplates}
+            creators={searchCreators}
+            locale={locale}
+          />
+        </div>
+      )
+    }
   </div>
-</nav>
-
-<!-- Mobile filter drawer (available on every page) -->
-<MobileFilterDrawer client:load templates={templates} />
+</header>

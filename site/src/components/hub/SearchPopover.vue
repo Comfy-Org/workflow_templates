@@ -20,10 +20,11 @@ import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
-import type { MediaType } from '@/lib/hub-api';
+import type { MediaType, CreatorEntry } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
-import { workflowDetailPath, workflowDetailSlug } from '@/lib/routes';
+import { workflowDetailPath, workflowDetailSlug, thumbnailPath } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 
 export interface SearchTemplate {
   name: string;
@@ -43,14 +44,6 @@ export interface SearchTemplate {
   isApp: boolean;
 }
 
-export interface CreatorEntry {
-  username: string;
-  displayName: string;
-  summary?: string;
-  social?: string | string[];
-  avatarUrl?: string;
-}
-
 const props = defineProps<{
   templates: SearchTemplate[];
   creators: CreatorEntry[];
@@ -64,7 +57,6 @@ const searchQuery = ref('');
 const containerRef = ref<HTMLElement | null>(null);
 const inputRef = ref<HTMLInputElement | null>(null);
 
-// Search state
 const searchResults = ref<SearchResults | null>(null);
 const isSearching = ref(false);
 const hasSearched = ref(false);
@@ -79,8 +71,6 @@ const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MA
 const overflowCountDesktop = computed(() =>
   Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP)
 );
-
-// ── All tags and models with counts (for filter suggestions) ──
 
 const allTags = computed(() => {
   const counts = new Map<string, number>();
@@ -105,8 +95,6 @@ const allModels = computed(() => {
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
 });
-
-// ── Filter suggestions (shown while typing) ──
 
 const filterSuggestions = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
@@ -138,8 +126,6 @@ const filterSuggestions = computed(() => {
 const hasFilterSuggestions = computed(() => {
   return filterSuggestions.value.tags.length > 0 || filterSuggestions.value.models.length > 0;
 });
-
-// ── Badge-filtered templates ──
 
 const badgeFilteredTemplates = computed(() => {
   if (!hasBadges.value) return props.templates;
@@ -183,8 +169,6 @@ const badgeOnlyResults = computed(() => {
   return [...badgeFilteredTemplates.value].sort((a, b) => b.usage - a.usage);
 });
 
-// ── Search with debounce ──
-
 watchDebounced(
   [searchQuery, () => store.filterBadges.value],
   async ([query]) => {
@@ -200,6 +184,9 @@ watchDebounced(
         allowedNames: badgeFilteredNames.value ?? undefined,
       });
       trackSearchPerformed(trimmed);
+    } catch (err) {
+      console.error('Search failed:', err);
+      searchResults.value = { workflows: [], creators: [] };
     } finally {
       isSearching.value = false;
       hasSearched.value = true;
@@ -207,8 +194,6 @@ watchDebounced(
   },
   { debounce: 200 }
 );
-
-// ── Displayed results (combines badge-only and text search) ──
 
 const displayedWorkflows = computed(() => {
   // Text query active → show search results
@@ -264,14 +249,21 @@ const matchedCreators = computed(() => {
     .slice(0, 5);
 });
 
+// Screen-reader announcement for the live result count while searching.
+const resultAnnouncement = computed(() => {
+  if (!isOpen.value || !hasQuery.value) return '';
+  if (isSearching.value) return 'Searching…';
+  if (!hasSearched.value) return '';
+  const count = displayedWorkflows.value.length + matchedCreators.value.length;
+  return count === 0 ? 'No results found' : `${count} result${count === 1 ? '' : 's'} found`;
+});
+
 const MEDIA_TYPE_LABELS: Record<string, string> = {
   image: 'Image',
   video: 'Video',
   audio: 'Audio',
   '3d': '3D',
 };
-
-// ── Helpers ──
 
 // Build a workflow detail URL from a pre-computed slug (search-index `slug`
 // field). Returns null when the slug is empty/undefined so callers can avoid
@@ -298,7 +290,6 @@ watch(
   }
 );
 
-// Popular workflows — top 4 by usage.
 const popularWorkflows = computed(() =>
   [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
 );
@@ -343,13 +334,10 @@ const remainingModelCount = computed(() =>
   Math.max(0, allModels.value.length - DISCOVERY_PREVIEW_COUNT)
 );
 
-// Mode filter items for the discovery panel
 const modeItems = [
   { name: 'Apps', value: 'app' },
   { name: 'Node Graphs', value: 'nodeGraph' },
 ];
-
-// ── Badge actions ──
 
 function addFilterBadge(type: 'tag' | 'model' | 'mode', value: string) {
   store.addBadge({ type, value });
@@ -365,9 +353,6 @@ function removeLastBadge() {
   }
 }
 
-// ── Keyboard navigation ──
-
-// Discovery panel offsets
 const discCreatorOffset = computed(() => popularWorkflows.value.length);
 const discTagOffset = computed(() => discCreatorOffset.value + topCreators.value.length);
 const discModelOffset = computed(() => discTagOffset.value + previewTags.value.length);
@@ -481,6 +466,17 @@ function handleKeydown(e: KeyboardEvent) {
   }
 }
 
+// Native form submit (Enter). Activate the highlighted item, else the first
+// result if one exists. `@submit.prevent` stops the default page reload.
+function onSubmit() {
+  if (!isOpen.value) return;
+  if (activeIndex.value >= 0) {
+    activateItem(activeIndex.value);
+  } else if (totalNavigable.value > 0) {
+    activateItem(0);
+  }
+}
+
 function clearSearch() {
   searchQuery.value = '';
   inputRef.value?.focus();
@@ -492,7 +488,6 @@ function clearAll() {
   inputRef.value?.focus();
 }
 
-// Creator color palette
 const CREATOR_COLORS = ['#f2ff59', '#ff4444', '#ff4444'];
 
 function getCreatorColor(index: number): string {
@@ -517,11 +512,6 @@ function formatUsage(usage: number): string {
   return String(usage);
 }
 
-function resolveThumbUrl(file: string): string {
-  if (file.startsWith('http://') || file.startsWith('https://')) return file;
-  return `/workflows/thumbnails/${file}`;
-}
-
 /**
  * Returns an <img> src for image thumbnails, or a Cloudflare poster-frame URL
  * for CDN-hosted videos. Returns null when the file has no static preview
@@ -531,8 +521,8 @@ function resolveThumbUrl(file: string): string {
 function getImageThumb(file: string | undefined | null): string | null {
   if (!file) return null;
   if (isAudioFile(file)) return null;
-  if (isVideoFile(file)) return getVideoFrameUrl(resolveThumbUrl(file));
-  return resolveThumbUrl(file);
+  if (isVideoFile(file)) return getVideoFrameUrl(thumbnailPath(file));
+  return thumbnailPath(file);
 }
 
 /**
@@ -542,7 +532,7 @@ function getImageThumb(file: string | undefined | null): string | null {
  */
 function videoThumbUrl(file: string | undefined | null): string | null {
   if (!file || !isVideoFile(file)) return null;
-  return resolveThumbUrl(file);
+  return thumbnailPath(file);
 }
 
 function handleFocus() {
@@ -571,12 +561,10 @@ function handleGlobalSlash(e: KeyboardEvent) {
   inputRef.value?.focus();
 }
 
-// Reset active index when context changes
 watch([searchQuery, () => store.filterBadges.value.length, isOpen, searchResults], () => {
   activeIndex.value = -1;
 });
 
-// Scroll active item into view
 watch(activeIndex, (idx) => {
   if (idx < 0) return;
   nextTick(() => {
@@ -599,13 +587,18 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="containerRef" class="w-full min-w-0">
+  <div ref="containerRef" role="search" class="w-full min-w-0">
     <div class="lg:relative min-w-0">
-      <!-- Search Input with Badges -->
-      <div
-        class="flex items-center gap-1.5 w-full min-h-10 px-3 rounded-full transition-colors"
-        :class="[isOpen ? 'bg-hub-surface ring-1 ring-brand' : 'bg-hub-surface']"
+      <form
+        :class="
+          cn(
+            'flex items-center gap-2 w-full h-12 px-4 rounded-2xl bg-hub-surface-hover transition-colors focus-within:ring-1 focus-within:ring-brand',
+            isOpen && 'ring-1 ring-brand'
+          )
+        "
+        role="search"
         @click="inputRef?.focus()"
+        @submit.prevent="onSubmit"
       >
         <svg
           class="size-4 shrink-0 text-hub-muted"
@@ -634,7 +627,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badgeLabel(badge) }}
+              <span class="ppformula-text-center-sm">{{ badgeLabel(badge) }}</span>
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -659,14 +652,14 @@ onUnmounted(() => {
         <input
           ref="inputRef"
           v-model="searchQuery"
-          type="text"
+          type="search"
+          aria-label="Search workflows, models, and creators"
           :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
-          class="flex-1 min-w-0 bg-transparent text-content text-sm font-normal placeholder:text-hub-muted outline-none py-2"
+          class="flex-1 min-w-0 h-full bg-transparent text-content text-sm font-normal leading-none placeholder:text-hub-muted outline-none relative top-[0.09em] [&::-webkit-search-cancel-button]:hidden"
           @focus="handleFocus"
           @keydown="handleKeydown"
         />
 
-        <!-- Clear button -->
         <button
           v-if="hasQuery || hasBadges"
           type="button"
@@ -690,14 +683,16 @@ onUnmounted(() => {
           </svg>
         </button>
 
-        <!-- Slash shortcut hint -->
         <kbd
           v-if="!isOpen && !hasQuery && !hasBadges"
           class="hidden lg:inline-flex items-center justify-center shrink-0 size-6 rounded-full bg-hub-surface text-content/30 text-xs font-mono leading-none"
           aria-hidden="true"
           >/</kbd
         >
-      </div>
+      </form>
+
+      <!-- Live region: announces result counts to screen readers -->
+      <p class="sr-only" aria-live="polite" role="status">{{ resultAnnouncement }}</p>
 
       <!-- Discovery Panel (no badges, no text query) -->
       <Transition
@@ -712,7 +707,6 @@ onUnmounted(() => {
           v-if="isOpen && !hasActiveFilters"
           class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-page shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
-          <!-- Pinned mobile badge row -->
           <div
             v-if="hasBadges"
             class="lg:hidden flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-1"
@@ -726,7 +720,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badgeLabel(badge) }}
+              <span class="ppformula-text-center-sm">{{ badgeLabel(badge) }}</span>
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -745,7 +739,6 @@ onUnmounted(() => {
           </div>
 
           <div class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-6">
-            <!-- Popular Workflows -->
             <section>
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Popular Workflows
@@ -812,7 +805,6 @@ onUnmounted(() => {
               </div>
             </section>
 
-            <!-- Top Creators -->
             <section>
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Top Creators
@@ -835,11 +827,11 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-brand"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-2xs font-bold text-page bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
-                  {{ creator.displayName }}
+                  <span class="ppformula-text-center-sm">{{ creator.displayName }}</span>
                 </a>
               </div>
             </section>
@@ -863,7 +855,7 @@ onUnmounted(() => {
                   :data-nav-index="discTagOffset + i"
                   @click="addFilterBadge('tag', tag.name)"
                 >
-                  {{ tagDisplayName(tag.name) }}
+                  <span class="ppformula-text-center-sm">{{ tagDisplayName(tag.name) }}</span>
                 </Badge>
                 <button
                   v-if="!showAllTags && remainingTagCount > 0"
@@ -888,7 +880,7 @@ onUnmounted(() => {
                   :data-nav-index="discModelOffset + i"
                   @click="addFilterBadge('model', model.name)"
                 >
-                  {{ model.name }}
+                  <span class="ppformula-text-center-sm">{{ model.name }}</span>
                 </Badge>
                 <button
                   v-if="!showAllModels && remainingModelCount > 0"
@@ -944,7 +936,6 @@ onUnmounted(() => {
           v-if="isOpen && hasActiveFilters"
           class="absolute left-4 right-4 lg:left-0 lg:right-0 z-50 top-full mt-2 rounded-lg lg:rounded-xl border border-white/10 bg-page shadow-2xl flex flex-col max-h-[70vh] lg:max-h-[700px] lg:min-w-[600px]"
         >
-          <!-- Pinned mobile badge row -->
           <div
             v-if="hasBadges"
             class="lg:hidden flex flex-wrap items-center gap-1.5 px-4 pt-3 pb-1"
@@ -958,7 +949,7 @@ onUnmounted(() => {
               class="h-6 px-2.5 text-xs gap-1"
               @click.stop="store.removeBadge(badge)"
             >
-              {{ badgeLabel(badge) }}
+              <span class="ppformula-text-center-sm">{{ badgeLabel(badge) }}</span>
               <svg
                 class="size-3 opacity-60"
                 fill="none"
@@ -976,7 +967,6 @@ onUnmounted(() => {
             </Badge>
           </div>
 
-          <!-- Loading state -->
           <div v-if="isSearching && !searchResults && hasQuery" class="p-6">
             <div class="flex items-center gap-3 text-content-muted">
               <svg class="size-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -998,13 +988,10 @@ onUnmounted(() => {
             </div>
           </div>
 
-          <!-- Results -->
           <div v-else class="flex-1 overflow-y-auto min-h-0 scrollbar-thin p-6 space-y-5">
             <!-- Filter suggestions (shown while typing) -->
             <section v-if="hasQuery && hasFilterSuggestions">
-              <h3
-                class="text-[11px] font-semibold uppercase tracking-wide text-content-muted mb-2.5"
-              >
+              <h3 class="text-2xs font-semibold uppercase tracking-wide text-content-muted mb-2.5">
                 Narrow by
               </h3>
               <div class="flex flex-wrap gap-1.5">
@@ -1018,8 +1005,8 @@ onUnmounted(() => {
                   :data-nav-index="i"
                   @click="addFilterBadge('tag', tag.name)"
                 >
-                  {{ tagDisplayName(tag.name) }}
-                  <span class="text-content/30 text-[10px]">{{ tag.count }}</span>
+                  <span class="ppformula-text-center-sm">{{ tagDisplayName(tag.name) }}</span>
+                  <span class="text-content/30 text-2xs">{{ tag.count }}</span>
                 </Badge>
                 <Badge
                   v-for="(model, i) in filterSuggestions.models"
@@ -1031,13 +1018,12 @@ onUnmounted(() => {
                   :data-nav-index="activeSugModelOffset + i"
                   @click="addFilterBadge('model', model.name)"
                 >
-                  {{ model.name }}
-                  <span class="text-content/30 text-[10px]">{{ model.count }}</span>
+                  <span class="ppformula-text-center-sm">{{ model.name }}</span>
+                  <span class="text-content/30 text-2xs">{{ model.count }}</span>
                 </Badge>
               </div>
             </section>
 
-            <!-- Divider between suggestions and results -->
             <div
               v-if="hasQuery && hasFilterSuggestions && displayedWorkflows.length > 0"
               class="border-t border-white/5"
@@ -1065,17 +1051,16 @@ onUnmounted(() => {
                   />
                   <span
                     v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black bg-brand"
+                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-2xs font-bold text-page bg-brand"
                   >
                     {{ creator.displayName.charAt(0).toUpperCase() }}
                   </span>
-                  {{ creator.displayName }}
+                  <span class="ppformula-text-center-sm">{{ creator.displayName }}</span>
                   <span class="text-content/30 text-xs">{{ creator.workflowCount }}</span>
                 </a>
               </div>
             </section>
 
-            <!-- No results -->
             <div
               v-if="
                 hasQuery &&
@@ -1096,7 +1081,6 @@ onUnmounted(() => {
               </p>
             </div>
 
-            <!-- No badge results -->
             <div
               v-else-if="!hasQuery && hasBadges && badgeOnlyResults.length === 0"
               class="text-center py-4"
@@ -1105,7 +1089,6 @@ onUnmounted(() => {
               <p class="text-xs text-content/30 mt-1">Try removing a filter</p>
             </div>
 
-            <!-- Workflow results -->
             <section v-if="displayedWorkflows.length > 0">
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Workflows
@@ -1168,7 +1151,7 @@ onUnmounted(() => {
                       {{ hit.creatorName }} · {{ formatUsage(hit.usage) }} runs
                     </p>
                   </div>
-                  <span class="text-[10px] uppercase tracking-wide text-content/30 shrink-0">
+                  <span class="text-2xs uppercase tracking-wide text-content/30 shrink-0">
                     {{ hit.mediaTypeLabel }}
                   </span>
                 </a>
@@ -1176,7 +1159,6 @@ onUnmounted(() => {
             </section>
           </div>
 
-          <!-- Footer -->
           <div class="shrink-0 border-t border-white/10 px-6 py-3">
             <p class="text-xs text-content/30 text-center">
               <template v-if="hasBadges && !hasQuery">

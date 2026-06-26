@@ -9,9 +9,11 @@ import BackButton from '../../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { tagSlug, tagDisplayName } from '../../../lib/tag-aliases';
-import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { absoluteUrl } from '../../../config/site';
 import { badgeVariants } from '../../../components/ui/badge';
 import { loadSerializedTemplates, type SerializedTemplate } from '../../../lib/hub-api';
+import { buildToolbarLabels } from '../../../lib/toolbar';
+import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../lib/structured-data';
 
 export async function getStaticPaths() {
   const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
@@ -62,20 +64,7 @@ const structuredData = {
   url: canonicalUrl,
 };
 
-const breadcrumbStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: t('nav.templates', locale),
-      item: absoluteUrl(localizeUrl('/workflows/', locale)),
-    },
-    { '@type': 'ListItem', position: 3, name: tagName },
-  ],
-};
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: tagName });
 
 // Templates are already serialized from getStaticPaths
 const serialized = templates;
@@ -91,7 +80,11 @@ const serialized = templates;
   hideDefaultFooter
 >
   <HreflangTags basePath={basePath} slot="head" />
-  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbStructuredData)} />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+  />
 
   <HubNavbar />
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
@@ -116,7 +109,8 @@ const serialized = templates;
       client:load
       templates={serialized}
       locale={locale}
-      gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      toolbarLabels={buildToolbarLabels(locale)}
+      gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
     />
   </div>
 

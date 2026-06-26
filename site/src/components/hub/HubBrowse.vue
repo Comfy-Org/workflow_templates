@@ -1,19 +1,17 @@
 <script setup lang="ts">
 /**
  * HubBrowse - Main interactive Vue island for the hub page.
- * Owns desktop sidebar filters (media type, tags, models) and delegates
- * tab/sort/grid rendering to WorkflowGrid.
+ * Owns the browse toolbar (tabs + filter + sort) and delegates the
+ * grid rendering to WorkflowGrid.
  *
- * Filter state is shared via useHubStore (filterBadges) so that
- * SearchPopover, MobileFilterDrawer, and HubBrowse sidebar stay in sync.
+ * Filter/tab/sort state is shared via useHubStore so that the toolbar,
+ * the navbar SearchPopover, and the grid stay in sync.
  */
 import { computed } from 'vue';
-import { Button } from '@/components/ui/button';
 import WorkflowGrid from './WorkflowGrid.vue';
 import { useHubStore } from '@/composables/useHubStore';
-import { tagDisplayName } from '@/lib/tag-aliases';
-import { trackFilterApplied } from '@/lib/posthog';
 import type { MediaType, ThumbnailVariant } from '@/lib/hub-api';
+import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 
 export interface SerializedTemplate {
   name: string;
@@ -37,60 +35,11 @@ const props = defineProps<{
   templates: SerializedTemplate[];
   locale: string;
   mediaTypes: string[];
+  facetsConfig: FacetGroupConfig[];
+  toolbarLabels: ToolbarLabels;
 }>();
 
 const store = useHubStore();
-
-// Data-driven top tags (by template count)
-const topTags = computed(() => {
-  const counts = new Map<string, number>();
-  for (const t of props.templates) {
-    for (const tag of t.tags) {
-      counts.set(tag, (counts.get(tag) || 0) + 1);
-    }
-  }
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => name);
-});
-
-// Derive top models from template data (ranked by total usage)
-const topModels = computed(() => {
-  const usageTotals = new Map<string, number>();
-  for (const t of props.templates) {
-    for (const m of t.models) {
-      usageTotals.set(m, (usageTotals.get(m) || 0) + (t.usage || 0));
-    }
-  }
-  return Array.from(usageTotals.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 5)
-    .map(([name]) => name);
-});
-
-// Toggle helpers using shared store badges
-function toggleTagFilter(tag: string) {
-  store.toggleBadge({ type: 'tag', value: tag });
-  trackFilterApplied('tag', tag);
-}
-
-function toggleModelFilter(model: string) {
-  store.toggleBadge({ type: 'model', value: model });
-  trackFilterApplied('model', model);
-}
-
-function isTagActive(tag: string): boolean {
-  return store.filterBadges.value.some((b) => b.type === 'tag' && b.value === tag);
-}
-
-function isModelActive(model: string): boolean {
-  return store.filterBadges.value.some((b) => b.type === 'model' && b.value === model);
-}
-
-function clearAllFilters() {
-  store.clearBadges();
-}
 
 // Filtered templates using shared store badges (sorting handled by WorkflowGrid)
 const filteredTemplates = computed(() => {
@@ -121,86 +70,20 @@ const filteredTemplates = computed(() => {
 
   return result;
 });
-
-const activeFilterCount = computed(() => store.filterBadges.value.length);
 </script>
 
 <template>
   <div class="pb-32">
-    <!-- Sidebar + Grid -->
-    <div class="flex items-start justify-between">
-      <!-- Desktop Sidebar -->
-
-      <aside
-        class="hidden lg:flex flex-col pt-24 top-0 gap-8 shrink-0 sticky bg-page max-h-[calc(100vh-6rem)] overflow-y-auto overflow-x-hidden scrollbar-thin"
-        style="width: var(--hub-sidebar-width)"
-      >
-        <!-- Top Creators link -->
-        <div>
-          <a href="/workflows/creators/">
-            <Button variant="pill-outline" size="pill" class="justify-center">
-              Top Creators
-              <svg
-                class="size-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </Button>
-          </a>
-        </div>
-
-        <!-- CATEGORIES section -->
-        <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">POPULAR CATEGORIES</p>
-          <div class="flex flex-col gap-3">
-            <Button
-              v-for="tag in topTags"
-              :key="tag"
-              :variant="isTagActive(tag) ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="toggleTagFilter(tag)"
-            >
-              {{ tagDisplayName(tag) }}
-            </Button>
-          </div>
-        </div>
-
-        <!-- POPULAR MODELS section -->
-        <div class="flex flex-col gap-3">
-          <p class="text-hub-muted text-xs font-semibold uppercase">POPULAR MODELS</p>
-          <div class="flex flex-col gap-3">
-            <Button
-              v-for="model in topModels"
-              :key="model"
-              :variant="isModelActive(model) ? 'pill-active' : 'pill'"
-              size="pill"
-              class="w-fit"
-              @click="toggleModelFilter(model)"
-            >
-              {{ model }}
-            </Button>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Grid (delegated to WorkflowGrid) -->
-      <WorkflowGrid
-        :templates="filteredTemplates"
-        :locale="locale"
-        grid-class="grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-        :sticky-toolbar="true"
-      />
-    </div>
-
+    <!-- WorkflowGrid mounts the shared toolbar (tabs + filter + sort). It renders
+         the badge-filtered set, but facet counts read the full `templates` so
+         they stay stable as filters are applied. -->
+    <WorkflowGrid
+      :templates="filteredTemplates"
+      :facet-templates="templates"
+      :facets-config="facetsConfig"
+      :toolbar-labels="toolbarLabels"
+      :locale="locale"
+      grid-class="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+    />
   </div>
 </template>

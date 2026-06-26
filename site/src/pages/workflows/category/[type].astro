@@ -8,10 +8,12 @@ import HreflangTags from '../../../components/HreflangTags.astro';
 import BackButton from '../../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { absoluteUrl } from '../../../config/site';
 import { categoryPath } from '../../../lib/routes';
+import { buildToolbarLabels } from '../../../lib/toolbar';
 import { badgeVariants } from '../../../components/ui/badge';
-import { loadSerializedTemplates, type SerializedTemplate, type MediaType } from '../../../lib/hub-api';
+import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../lib/structured-data';
+import { loadSerializedTemplates, type MediaType } from '../../../lib/hub-api';
 
 const categoryTranslationKeys: Record<MediaType, string> = {
   image: 'category.image',
@@ -49,20 +51,7 @@ const structuredData = {
   url: canonicalUrl,
 };
 
-const breadcrumbStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: t('nav.templates', locale),
-      item: absoluteUrl(localizeUrl('/workflows/', locale)),
-    },
-    { '@type': 'ListItem', position: 3, name: categoryName },
-  ],
-};
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: categoryName });
 
 const categoryFaqs: Record<MediaType, Array<{ question: string; answer: string }>> = {
   image: [
@@ -211,7 +200,8 @@ const serialized = templates;
           client:load
           templates={serialized}
           locale={locale}
-          gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          toolbarLabels={buildToolbarLabels(locale)}
+          gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
         />
       ) : (
         <div class="text-center py-16">
@@ -231,11 +221,15 @@ const serialized = templates;
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbStructuredData)}
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
   />
   {
     faqStructuredData && (
-      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
     )
   }
 

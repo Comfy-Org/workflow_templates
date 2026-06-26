@@ -1,8 +1,10 @@
 ---
 import ThumbnailDisplay from '../ThumbnailDisplay.astro';
-import BackButton from '../BackButton.astro';
+import Breadcrumbs from './Breadcrumbs.astro';
 import SidebarSection from './SidebarSection.astro';
 import CollapsibleBadgeList from './CollapsibleBadgeList.vue';
+import FaqAccordion from './FaqAccordion.vue';
+import ExpandableText from './ExpandableText.vue';
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
@@ -10,8 +12,9 @@ import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
-import { isVideoFile } from '../../lib/media-utils';
 import { featureFlags } from '../../config/featureFlags';
+import { buttonVariants } from '../ui/button';
+import { cn } from '../../lib/utils';
 
 interface Props {
   template: {
@@ -31,6 +34,7 @@ interface Props {
       models?: string[];
       username?: string;
       date?: string;
+      faqItems?: { question: string; answer: string }[];
     };
   };
   locale: Locale;
@@ -47,10 +51,6 @@ const authorProfileUrl = data.username
   ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
   : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
-const hasNaturalAspectMedia =
-  !!data.detailImages?.length ||
-  data.mediaType === 'video' ||
-  (thumbnails[0] ? isVideoFile(thumbnails[0]) : false);
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const cloudTemplateId = data.shareId || data.name;
 const downloadUrl = data.shareId
@@ -88,82 +88,106 @@ function formatRelativeDate(dateStr: string): string {
   data-media-type={data.mediaType}
   data-author={data.username || ''}
 >
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-16 pb-32">
-    <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 justify-between w-full">
-      <div class="w-[140px]">
-        {/* Back button */}
-        <BackButton
-          locale={locale}
-          class="self-start lg:sticky lg:top-24 lg:col-start-1 lg:row-start-1 lg:row-span-2"
-        />
-      </div>
+  <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)] pt-4 lg:pt-8 pb-32">
+    <Breadcrumbs locale={locale} title={data.title || data.name} class="mb-6 lg:mb-8" />
 
-      <div class="flex-1 min-w-0">
-        {/* Thumbnail */}
-        {
-          thumbnails.length > 0 && (
-            <div class="rounded-lg overflow-hidden">
-              <ThumbnailDisplay
-                thumbnails={thumbnails}
-                title={data.title || data.name}
-                variant={data.thumbnailVariant}
-                mediaSubtype={data.mediaSubtype}
-                class={hasNaturalAspectMedia ? 'w-full' : 'w-full aspect-square'}
-                naturalAspect={hasNaturalAspectMedia}
-                loading="eager"
-                fetchpriority="high"
-                sizes="(min-width: 1024px) 60vw, 100vw"
-              />
-            </div>
-          )
-        }
-
-        {/* Full description */}
-        <div class="flex flex-col gap-6 lg:mt-12 scroll-mt-8" id="description">
-          <hr class="border-0 border-t border-divider lg:hidden" />
-          {
-            data.extendedDescription && (
-              <div class="flex flex-col gap-4">
-                {data.extendedDescription
-                  .split('\n\n')
-                  .filter(Boolean)
-                  .map((paragraph: string) => (
-                    <p class="text-base leading-relaxed text-content-secondary">
-                      {paragraph.trim()}
-                    </p>
-                  ))}
-              </div>
-            )
-          }
-        </div>
-      </div>
-
-      {/* Sidebar */}
-      <aside class="flex flex-col lg:min-w-93.75 lg:max-w-93.75">
-        <div class="flex flex-col gap-6 lg:sticky lg:top-24">
-          {/* Workflow */}
+    <div
+      class="flex flex-col lg:grid lg:grid-cols-[22.5rem_1fr] gap-8 lg:gap-16 w-full lg:items-start"
+    >
+      <aside
+        class="order-2 lg:order-1 lg:col-start-1 lg:row-start-1 lg:row-span-2 w-full lg:self-start lg:sticky lg:top-48"
+      >
+        <div class="flex flex-col gap-6">
           <SidebarSection title="Workflow">
             <div class="min-w-0">
               <h1 class="text-base font-semibold text-content">{data.title || data.name}</h1>
               {
                 data.description && (
-                  <div class="workflow-description-wrap mt-2">
-                    <p class="text-sm text-hub-muted line-clamp-3 workflow-description-text">
-                      {data.description}
-                    </p>
-                    <button
-                      type="button"
-                      class="workflow-show-more hidden text-xs text-content-secondary hover:text-content transition-colors mt-1"
-                    >
-                      Show more
-                    </button>
+                  <div class="mt-2">
+                    <ExpandableText
+                      client:load
+                      paragraphs={[data.description]}
+                      textClass="text-sm text-hub-muted"
+                      collapsedMax={60}
+                      moreLabel={t('template.readMore', locale)}
+                      lessLabel={t('template.readLess', locale)}
+                    />
                   </div>
                 )
               }
             </div>
           </SidebarSection>
 
-          {/* Creator */}
+          <div class="flex flex-col gap-3">
+            {
+              showCloudCta && (
+                <a
+                  href={getCloudCtaUrl(cloudTemplateId, 'hero')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class={cn(
+                    buttonVariants({ variant: 'brand-solid' }),
+                    'run-cloud-btn flex h-auto flex-col py-2 transition-opacity'
+                  )}
+                  data-template={data.name}
+                  data-author={data.username || ''}
+                  data-location="hero"
+                >
+                  <span class="font-bold">{t('cta.tryCloud', locale)}</span>
+                  {featureFlags.cloudFreeTier && (
+                    <span class="font-normal text-xs">{t('cta.tryCloudSubline', locale)}</span>
+                  )}
+                </a>
+              )
+            }
+            <a
+              href={downloadUrl}
+              download
+              class={cn(
+                buttonVariants({ variant: 'pill-outline' }),
+                'download-json-btn h-10 rounded-2xl transition-colors'
+              )}
+              data-template={data.name}
+              data-author={data.username || ''}
+            >
+              {t('cta.downloadJson', locale)}
+            </a>
+          </div>
+
+          {
+            data.tags && data.tags.length > 0 && (
+              <SidebarSection title={t('labels.categories', locale)}>
+                <CollapsibleBadgeList
+                  client:load
+                  items={[
+                    {
+                      label: mediaTypeLabels[data.mediaType],
+                      href: localizeUrl(`/workflows/category/${data.mediaType}/`, locale),
+                    },
+                    ...data.tags.map((tag: string) => ({
+                      label: tagDisplayName(tag),
+                      href: localizeUrl(`/workflows/tag/${tagSlug(tag)}/`, locale),
+                    })),
+                  ]}
+                />
+              </SidebarSection>
+            )
+          }
+
+          {
+            data.models && data.models.length > 0 && (
+              <SidebarSection title={t('labels.models', locale)}>
+                <CollapsibleBadgeList
+                  client:load
+                  items={data.models.map((model: string) => ({
+                    label: model,
+                    href: localizeUrl(`/workflows/model/${slugify(model)}/`, locale),
+                  }))}
+                />
+              </SidebarSection>
+            )
+          }
+
           <SidebarSection title={t('labels.createdBy', locale)}>
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">
@@ -176,7 +200,7 @@ function formatRelativeDate(dateStr: string): string {
                       loading="lazy"
                     />
                   ) : (
-                    <div class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-black">
+                    <div class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page">
                       {authorName.charAt(0).toUpperCase()}
                     </div>
                   )
@@ -198,7 +222,7 @@ function formatRelativeDate(dateStr: string): string {
                 }
                 {
                   data.date && (
-                    <span class="text-base text-content-secondary">
+                    <span class="text-xs text-content-secondary">
                       {formatRelativeDate(data.date)}
                     </span>
                   )
@@ -206,76 +230,54 @@ function formatRelativeDate(dateStr: string): string {
               </div>
             </div>
           </SidebarSection>
-
-          {/* Action buttons */}
-          <div class="flex flex-col gap-3">
-            {
-              showCloudCta && (
-                <a
-                  href={getCloudCtaUrl(cloudTemplateId, 'hero')}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="run-cloud-btn flex flex-col items-center justify-center py-2 bg-brand rounded-full text-sm text-page hover:opacity-90 transition-opacity"
-                  data-template={data.name}
-                  data-author={data.username || ''}
-                  data-location="hero"
-                >
-                  <span class="font-bold">{t('cta.tryCloud', locale)}</span>
-                  {featureFlags.cloudFreeTier && (
-                    <span class="font-normal text-xs">{t('cta.tryCloudSubline', locale)}</span>
-                  )}
-                </a>
-              )
-            }
-            <a
-              href={downloadUrl}
-              download
-              class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-white/60 transition-colors"
-              data-template={data.name}
-              data-author={data.username || ''}
-            >
-              {t('cta.downloadJson', locale)}
-            </a>
-          </div>
-
-          {/* Categories */}
-          {
-            data.tags && data.tags.length > 0 && (
-              <SidebarSection title={t('labels.categories', locale)}>
-                <CollapsibleBadgeList
-                  client:load
-                  items={[
-                    {
-                      label: mediaTypeLabels[data.mediaType],
-                      href: localizeUrl(`/workflows/category/${data.mediaType}/`, locale),
-                    },
-                    ...data.tags.map((tag: string) => ({
-                      label: tagDisplayName(tag),
-                      href: localizeUrl(`/workflows/tag/${tagSlug(tag)}/`, locale),
-                    })),
-                  ]}
-                />
-              </SidebarSection>
-            )
-          }
-
-          {/* Models */}
-          {
-            data.models && data.models.length > 0 && (
-              <SidebarSection title={t('labels.models', locale)}>
-                <CollapsibleBadgeList
-                  client:load
-                  items={data.models.map((model: string) => ({
-                    label: model,
-                    href: localizeUrl(`/workflows/model/${slugify(model)}/`, locale),
-                  }))}
-                />
-              </SidebarSection>
-            )
-          }
         </div>
       </aside>
+
+      {
+        thumbnails.length > 0 && (
+          <div class="order-1 lg:order-2 lg:col-start-2 media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg">
+            <ThumbnailDisplay
+              thumbnails={thumbnails}
+              title={data.title || data.name}
+              variant={data.thumbnailVariant}
+              mediaSubtype={data.mediaSubtype}
+              class="absolute inset-0 h-full w-full"
+              loading="eager"
+              fetchpriority="high"
+              sizes="(min-width: 1024px) 65vw, 100vw"
+            />
+          </div>
+        )
+      }
+
+      {
+        data.extendedDescription && (
+          <section id="description" class="order-3 min-w-0 scroll-mt-8 lg:col-start-2">
+            <ExpandableText
+              client:load
+              paragraphs={data.extendedDescription
+                .split('\n\n')
+                .map((p: string) => p.trim())
+                .filter(Boolean)}
+              moreLabel={t('template.readMore', locale)}
+              lessLabel={t('template.readLess', locale)}
+            />
+          </section>
+        )
+      }
     </div>
+
+    {/* FAQ (renders nothing when there are no items) */}
+    {
+      data.faqItems && data.faqItems.length > 0 && (
+        <div class="mt-16 lg:mt-24">
+          <FaqAccordion client:load items={data.faqItems} heading={t('template.faq', locale)} />
+        </div>
+      )
+    }
+
+    {/* View All Workflows — injected by the route page */}
+    <slot name="related" />
   </div>
 </article>
 
@@ -345,25 +347,18 @@ function formatRelativeDate(dateStr: string): string {
       }
     });
   }
-
-  // Accordion for workflow description
-  const descText = document.querySelector('.workflow-description-text');
-  const showMoreBtn = document.querySelector('.workflow-show-more');
-  if (descText && showMoreBtn) {
-    // Check if text is clamped (overflowing)
-    if (descText.scrollHeight > descText.clientHeight) {
-      showMoreBtn.classList.remove('hidden');
-    }
-    let expanded = false;
-    showMoreBtn.addEventListener('click', () => {
-      expanded = !expanded;
-      if (expanded) {
-        descText.classList.remove('line-clamp-3');
-        showMoreBtn.textContent = 'Show less';
-      } else {
-        descText.classList.add('line-clamp-3');
-        showMoreBtn.textContent = 'Show more';
-      }
-    });
-  }
 </script>
+
+<style>
+  .media-frame :global(.video-thumb),
+  .media-frame :global(.video-fallback-wrapper) {
+    width: 100%;
+    height: 100%;
+  }
+  .media-frame :global(img),
+  .media-frame :global(video) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

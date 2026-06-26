@@ -8,6 +8,12 @@ import MiniSearch from 'minisearch';
 import { CONTENT_DIR, SITE_DIR } from '../paths';
 import { logger } from '../logger';
 import { tagDisplayName, tagSearchText } from '../../../src/lib/tag-aliases';
+import {
+  SEARCH_FIELDS,
+  STORE_FIELDS,
+  tokenize,
+  searchOptions,
+} from '../../../src/lib/search-config';
 
 interface SearchDocument {
   id: string;
@@ -38,6 +44,7 @@ interface IndexEntry {
   username?: string;
   thumbnailUrl?: string;
   shareId?: string;
+  usage?: number;
 }
 
 const MEDIA_TYPE_LABELS: Record<string, string> = {
@@ -58,7 +65,9 @@ async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
 
   const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
   const statuses = approvedOnly ? 'approved' : 'pending,approved,rejected,deprecated';
-  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`);
+  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`, {
+    signal: AbortSignal.timeout(10000),
+  });
 
   if (!res.ok) {
     throw new Error(`Hub API returned ${res.status}: ${res.statusText}`);
@@ -74,7 +83,9 @@ async function fetchProfileDisplayName(username: string): Promise<string> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
   if (!apiUrl) return username;
   try {
-    const res = await fetch(`${apiUrl}/api/hub/profiles/${encodeURIComponent(username)}`);
+    const res = await fetch(`${apiUrl}/api/hub/profiles/${encodeURIComponent(username)}`, {
+      signal: AbortSignal.timeout(10000),
+    });
     if (!res.ok) return username;
     const profile = (await res.json()) as { display_name?: string };
     return profile.display_name || username;
@@ -130,7 +141,7 @@ export async function buildSearchIndex(): Promise<void> {
         name,
         slug,
         thumbnail: data.thumbnailUrl || '',
-        usage: 0,
+        usage: data.usage || 0,
         tagsArray: tags.map(tagDisplayName),
       });
     }
@@ -178,44 +189,15 @@ export async function buildSearchIndex(): Promise<void> {
 
   logger.info(`Indexing ${documents.length} templates...`);
 
-  // Custom tokenizer: keep hyphenated terms as single tokens AND emit sub-parts.
-  // e.g. "flux-image-to-video" → ["flux-image-to-video", "flux", "image", "to", "video"]
-  // This lets "z-image" match as a prefix against "z-image-to-video" style titles.
-  const tokenize = (text: string): string[] => {
-    const tokens: string[] = [];
-    const words = text.toLowerCase().split(/\s+/).filter(Boolean);
-    for (const word of words) {
-      tokens.push(word);
-      if (word.includes('-')) {
-        for (const part of word.split('-')) {
-          if (part) tokens.push(part);
-        }
-      }
-    }
-    return tokens;
-  };
-
+  // Field config + tokenizer come from the SHARED search-config so the index and
+  // the client query layer never drift. (searchOptions is NOT serialized by
+  // MiniSearch — the client re-specifies it at query time; we set sensible
+  // defaults here only for any in-process searches.)
   const miniSearch = new MiniSearch<SearchDocument>({
-    fields: ['title', 'description', 'tags', 'models', 'mediaType', 'creatorName'],
-    storeFields: [
-      'title',
-      'mediaType',
-      'mediaTypeLabel',
-      'name',
-      'slug',
-      'thumbnail',
-      'username',
-      'creatorName',
-      'usage',
-      'tagsArray',
-    ],
+    fields: [...SEARCH_FIELDS],
+    storeFields: [...STORE_FIELDS],
     tokenize,
-    searchOptions: {
-      boost: { title: 3, models: 2, tags: 2, creatorName: 1.5, mediaType: 1, description: 0.5 },
-      prefix: true,
-      fuzzy: 0.2,
-      tokenize,
-    },
+    searchOptions: searchOptions() as Record<string, unknown>,
   });
 
   miniSearch.addAll(documents);

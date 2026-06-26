@@ -1,8 +1,21 @@
 import { tagSlug } from './tag-aliases';
+import { slugify } from './slugify';
+
+/**
+ * Prefix a root-relative path with the locale segment, matching the site's
+ * routing (`prefixDefaultLocale: false` — English stays unprefixed). Mirrors
+ * `localizeUrl` but takes a plain `string` locale so route helpers stay usable
+ * from both Astro pages and Vue islands without importing the `Locale` type.
+ */
+const localize = (path: string, locale?: string) =>
+  locale && locale !== 'en' ? `/${locale}${path}` : path;
 
 export const categoryPath = (type: string) => `/workflows/category/${type}/`;
 export const modelPath = (name: string) => `/workflows/model/${name}/`;
-export const tagPath = (tag: string) => `/workflows/tag/${tagSlug(tag)}/`;
+export const tagPath = (tag: string, locale?: string) =>
+  localize(`/workflows/tag/${tagSlug(tag)}/`, locale);
+export const creatorPath = (username: string, locale?: string) =>
+  localize(`/workflows/${slugify(username)}/`, locale);
 export const thumbnailPath = (asset: string) =>
   asset.startsWith('http://') || asset.startsWith('https://')
     ? asset

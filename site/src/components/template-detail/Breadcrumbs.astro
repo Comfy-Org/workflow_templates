@@ -1,0 +1,64 @@
+---
+/**
+ * Visual breadcrumb trail for the workflow detail page.
+ *
+ * The rendered trail (Home → Workflows → {title}) MUST mirror the
+ * BreadcrumbList JSON-LD emitted by the route pages exactly — same labels,
+ * same order — so the visible navigation matches the structured data Google
+ * relies on. See `breadcrumbStructuredData` in the [slug] route files.
+ *
+ * "Home" points at the comfy.org root (SITE_ORIGIN) — the real marketing
+ * homepage, served by a separate frontend repo. This hub app's own `/` only
+ * redirects to `/workflows/`, so linking there would be redundant. SITE_ORIGIN
+ * also matches the `item` of the Home crumb in the BreadcrumbList JSON-LD.
+ */
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import { localizeUrl } from '../../i18n/utils';
+import { SITE_ORIGIN } from '../../config/site';
+
+interface Props {
+  locale: Locale;
+  /** Title of the current page (rendered as the non-linked trailing crumb). */
+  title: string;
+  class?: string;
+}
+
+const { locale, title, class: className } = Astro.props;
+
+const crumbs = [
+  { label: t('breadcrumb.home', locale), href: SITE_ORIGIN },
+  { label: t('breadcrumb.workflows', locale), href: localizeUrl('/workflows/', locale) },
+];
+---
+
+<nav aria-label="Breadcrumb" class:list={['text-sm', className]}>
+  <ol class="flex items-center gap-2 text-content-muted min-w-0">
+    {
+      crumbs.map((crumb) => (
+        <li class="flex items-center gap-2 shrink-0">
+          <a href={crumb.href} class="hover:text-content transition-colors" data-astro-prefetch>
+            {crumb.label}
+          </a>
+          <svg
+            class="size-3.5 text-content-muted/50 shrink-0"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M9 6l6 6-6 6"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </li>
+      ))
+    }
+    <li class="min-w-0">
+      <span class="text-content line-clamp-1" aria-current="page">{title}</span>
+    </li>
+  </ol>
+</nav>

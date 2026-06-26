@@ -19,6 +19,12 @@ export const badgeVariants = cva(
           'border-transparent bg-hub-surface text-content font-normal h-6 px-4 py-1 [a&]:hover:bg-hub-surface-hover transition-colors',
         'hub-filter':
           'rounded-full border-white/10 bg-hub-surface text-content font-normal cursor-pointer hover:bg-hub-surface-hover transition-colors',
+        accent:
+          'relative isolate overflow-visible rounded-none border-transparent bg-transparent font-bold tracking-wide text-primary-comfy-ink uppercase before:absolute before:inset-0 before:-z-10 before:-skew-x-12 before:rounded-sm before:bg-primary-comfy-yellow',
+      },
+      size: {
+        md: 'px-4 py-1 text-xs',
+        xs: 'px-2 py-0.5 text-3xs',
       },
     },
     defaultVariants: {
