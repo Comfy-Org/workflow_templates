@@ -12,11 +12,13 @@ import {
 import { fetchGitHubStars, formatStarCount } from '../../lib/github';
 
 interface Props {
-  /** Render the sticky search bar in the header. Index pages set false (they render it in-body). */
+  /** Render the search bar in the header. Index pages set false (render it in-body). */
   showSearch?: boolean;
+  /** Pin the header to the top. Defaults to showSearch so existing callers are unchanged. */
+  sticky?: boolean;
 }
 
-const { showSearch = true } = Astro.props;
+const { showSearch = true, sticky = showSearch } = Astro.props;
 
 const rawStars = await fetchGitHubStars('Comfy-Org', 'ComfyUI');
 const githubStars = rawStars ? formatStarCount(rawStars) : '';
@@ -41,7 +43,7 @@ if (showSearch) {
 }
 ---
 
-<header class:list={['w-full bg-page', showSearch && 'sticky top-0 z-50']}>
+<header class:list={['w-full bg-page', sticky && 'sticky top-0 z-50']}>
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
     <div class="pt-4 lg:pt-8 pb-6 lg:pb-8">
       <HeaderMain client:load locale={locale} creators={creatorLinks} githubStars={githubStars} />
