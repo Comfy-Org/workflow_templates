@@ -67,6 +67,7 @@ PR opened/updated
 | Add a workflow template | Edit `templates/`, `bundles.json`, then `python scripts/sync/sync_bundles.py` |
 | Add a subgraph blueprint | Edit `blueprints/`, `blueprints_bundles.json`, then `python scripts/sync/sync_blueprints.py` |
 | Import external blueprints | Copy JSONs to `blueprints/`, then `python scripts/blueprints/import_blueprints.py` |
+| Check node compatibility | `npm run validate:comfyui-nodes` (local ComfyUI) or see [`scripts/README.md`](scripts/README.md#comfyui-node-compatibility-check) |
 
 ---
 
@@ -580,9 +581,13 @@ CI automatically validates:
 | Bundle consistency | ✅ | ✅ |
 | Manifest sync | ✅ | ✅ |
 | Thumbnails | ✅ | ❌ (optional) |
+| ComfyUI node compatibility | ✅ (informational PR comment) | ❌ |
 
 Run locally before committing:
 ```bash
 python scripts/sync/sync_bundles.py      # Templates
 python scripts/sync/sync_blueprints.py   # Blueprints
+npm run validate:comfyui-nodes           # Optional: node baseline vs templates (needs running ComfyUI)
 ```
+
+See [`scripts/README.md`](scripts/README.md#comfyui-node-compatibility-check) for local vs static scan modes and log output.

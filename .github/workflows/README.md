@@ -54,3 +54,33 @@ Validates template JSON structure, thumbnails, and checks for third-party nodes.
 ### 4. Publish (`publish.yml`)
 
 Publishes approved templates to the registry.
+
+### 5. ComfyUI Node Compatibility Report (`report-comfyui-node-compat.yml`)
+
+Informational check — **never blocks PR merges**. Compares changed `templates/*.json` against ComfyUI `master` via static source scan (no torch, no running server).
+
+**What it checks (static mode):**
+- Deprecated nodes (display name contains `DEPRECATED`)
+
+**When it runs:**
+- On pull requests that change files under `templates/` only
+- Manual dispatch
+
+**How it works:**
+1. Sparse-checkout template JSON + compat scripts only
+2. Shallow-clone `Comfy-Org/ComfyUI` and run `scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui`
+3. Post or update a single PR comment with the Markdown report
+4. Upload `compat_report.md` / `.json` as a workflow artifact
+
+**Local testing (full coverage — needs running ComfyUI):**
+```bash
+npm run validate:comfyui-nodes
+# Reports: comfyui-node-compat.latest.log, comfyui-node-compat.log (gitignored)
+```
+
+**Local testing (CI-style static scan):**
+```bash
+python3 scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail
+```
+
+See [`scripts/README.md`](../scripts/README.md#comfyui-node-compatibility-check) for issue types, log tiers, and flags.
