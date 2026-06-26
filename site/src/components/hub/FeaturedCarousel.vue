@@ -255,14 +255,13 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Prev / Next controls (bottom-right). next = solid yellow, prev = glass. -->
     <div
       class="absolute bottom-3 right-3 z-30 flex gap-2 sm:bottom-4 sm:right-4 lg:bottom-6 lg:right-6"
     >
       <button
         type="button"
         :aria-label="prevLabel"
-        class="flex size-10 items-center justify-center rounded-lg bg-white/8 text-content backdrop-blur-xs transition-colors hover:bg-white/12 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:size-12 sm:rounded-[12px]"
+        class="flex size-10 items-center justify-center rounded-lg bg-white/8 text-content backdrop-blur-xs transition-colors hover:bg-brand hover:text-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:size-12 sm:rounded-[12px]"
         @click="scrollPrev"
       >
         <svg
@@ -281,7 +280,7 @@ onUnmounted(() => {
       <button
         type="button"
         :aria-label="nextLabel"
-        class="flex size-10 items-center justify-center rounded-lg bg-brand text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page sm:size-12 sm:rounded-[12px]"
+        class="flex size-10 items-center justify-center rounded-lg bg-white/8 text-content backdrop-blur-xs transition-colors hover:bg-brand hover:text-page focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand sm:size-12 sm:rounded-[12px]"
         @click="scrollNext"
       >
         <svg

@@ -57,8 +57,9 @@ export const buttonPillVariants = cva(
       },
       {
         reveal: true,
-        size: 'lg',
-        class: 'ps-14 pe-0 group-hover/button-pill:pe-7 group-hover/pill-trigger:pe-7',
+        variant: 'solid',
+        class:
+          'bg-transparent text-content group-hover/button-pill:bg-primary-comfy-yellow group-hover/button-pill:text-primary-comfy-ink group-hover/pill-trigger:bg-primary-comfy-yellow group-hover/pill-trigger:text-primary-comfy-ink',
       },
     ],
     defaultVariants: {
@@ -75,7 +76,8 @@ export const buttonPillBadgeVariants = cva(
   {
     variants: {
       variant: {
-        solid: 'text-primary-comfy-yellow bg-primary-comfy-ink',
+        solid:
+          'bg-white/20 text-white group-hover/button-pill:bg-primary-comfy-yellow group-hover/button-pill:text-primary-comfy-ink group-hover/pill-trigger:bg-primary-comfy-yellow group-hover/pill-trigger:text-primary-comfy-ink',
         ghost: 'bg-primary-comfy-yellow text-primary-comfy-ink',
       },
       size: {
