@@ -17,6 +17,24 @@
 
 **MCP index pipeline:** see skill `.claude/skills/managing-mcp-index/SKILL.md` and `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md`. Do not confuse with hub i18n (`i18n`) or site AI (`site/scripts/generate-ai.ts`).
 
+## Archiving templates
+
+Sole entry point: `scripts/maintenance/archive_templates.py` (full docstring in that file; also listed in `scripts/README.md`).
+
+**Archive** a template:
+
+1. Add `"status": "archived"` to the template entry in `templates/index.json`
+2. Run `python3 scripts/maintenance/archive_templates.py`
+
+The script moves the workflow JSON and thumbnails to `archived/`, removes the entry from `bundles.json` and all `templates/index*.json` files, moves i18n to `archived/archived_i18n.json`, and adds entries to `archived/index*.json` (including MCP).
+
+**Restore** a template:
+
+1. Set `"status": "active"` on the template in `archived/index.json`
+2. Run the same script (restore runs first, then any pending archives)
+
+**After archive or restore:** bump `pyproject.toml` version and run `npm run sync:bundles` (or `python3 scripts/sync/sync_bundles.py`).
+
 ## Architecture
 - **Monorepo** with Nx, Python packages, and Astro site
 - `templates/` — Source workflow JSON files and thumbnails (index.json is the manifest)
