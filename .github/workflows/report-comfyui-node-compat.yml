@@ -29,8 +29,7 @@ jobs:
           sparse-checkout: |
             templates/*.json
             scripts/comfyui_node_compat/
-            scripts/lib/paths.py
-            scripts/lib/locale_index_files.py
+            scripts/lib/
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -42,6 +41,7 @@ jobs:
         id: compat_check
         continue-on-error: true
         run: |
+          set -o pipefail
           python3 scripts/comfyui_node_compat/check.py \
             --static-scan \
             --clone-comfyui \
@@ -49,11 +49,20 @@ jobs:
             --markdown-output compat_report.md \
             --json-output compat_report.json \
             --no-log-file \
-            --no-fail | tee compat_check.log
+            --no-fail 2>&1 | tee compat_check.log
+
+      - name: Detect missing compatibility report
+        id: report_check
+        if: always()
+        run: |
+          if [ ! -s compat_report.md ]; then
+            echo "missing=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Write workflow failure report
-        if: steps.compat_check.outcome != 'success'
+        if: steps.compat_check.outcome != 'success' || steps.report_check.outputs.missing == 'true'
         run: |
+          log_excerpt="$(head -c 8000 compat_check.log 2>/dev/null || true)"
           cat > compat_report.md <<EOF
           ## ComfyUI Node Compatibility Report
 
@@ -62,8 +71,13 @@ jobs:
           _Informational only — this check does not block merging._
 
           ### Setup failure
-          - Static compatibility script exited with an error (see workflow logs).
+          - Static compatibility script exited with an error or produced no report (see workflow logs).
           - Expected mode: \`--static-scan --clone-comfyui\` against \`${COMFYUI_GITHUB_REPO}\` (\`${COMFYUI_REF}\`).
+
+          ### Log excerpt
+          \`\`\`
+          ${log_excerpt:-See workflow logs for details.}
+          \`\`\`
 
           ### Next steps
           - Open the workflow run logs for details.
