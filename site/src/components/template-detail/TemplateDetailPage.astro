@@ -13,6 +13,8 @@ import { slugify } from '../../lib/slugify';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
 import { featureFlags } from '../../config/featureFlags';
+import { buttonVariants } from '../ui/button';
+import { cn } from '../../lib/utils';
 
 interface Props {
   template: {
@@ -87,18 +89,15 @@ function formatRelativeDate(dateStr: string): string {
   data-author={data.username || ''}
 >
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)] pt-4 lg:pt-8 pb-32">
-    {/* Breadcrumbs (replaces the old back button) */}
     <Breadcrumbs locale={locale} title={data.title || data.name} class="mb-6 lg:mb-8" />
 
-    {
-      /* Top section: info column (left ~30%) + landscape image (right ~70%).
-        On mobile the image shows first (flex-col-reverse), info below. */
-    }
-    <div class="flex flex-col-reverse lg:flex-row gap-8 lg:gap-16 w-full lg:items-stretch">
-      {/* Info column */}
-      <aside class="flex flex-col w-full lg:w-90 lg:shrink-0">
-        <div class="flex flex-col gap-6 lg:sticky lg:top-8">
-          {/* Workflow */}
+    <div
+      class="flex flex-col lg:grid lg:grid-cols-[22.5rem_1fr] gap-8 lg:gap-16 w-full lg:items-start"
+    >
+      <aside
+        class="order-2 lg:order-1 lg:col-start-1 lg:row-start-1 lg:row-span-2 w-full lg:self-start lg:sticky lg:top-48"
+      >
+        <div class="flex flex-col gap-6">
           <SidebarSection title="Workflow">
             <div class="min-w-0">
               <h1 class="text-base font-semibold text-content">{data.title || data.name}</h1>
@@ -119,7 +118,6 @@ function formatRelativeDate(dateStr: string): string {
             </div>
           </SidebarSection>
 
-          {/* Action buttons */}
           <div class="flex flex-col gap-3">
             {
               showCloudCta && (
@@ -127,7 +125,10 @@ function formatRelativeDate(dateStr: string): string {
                   href={getCloudCtaUrl(cloudTemplateId, 'hero')}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="run-cloud-btn flex flex-col items-center justify-center py-2 bg-brand rounded-full text-sm text-page hover:opacity-90 transition-opacity"
+                  class={cn(
+                    buttonVariants({ variant: 'brand-solid' }),
+                    'run-cloud-btn flex flex-col py-2 transition-opacity'
+                  )}
                   data-template={data.name}
                   data-author={data.username || ''}
                   data-location="hero"
@@ -142,7 +143,10 @@ function formatRelativeDate(dateStr: string): string {
             <a
               href={downloadUrl}
               download
-              class="download-json-btn flex items-center justify-center h-10 border border-divider rounded-full text-sm text-content hover:border-border-strong transition-colors"
+              class={cn(
+                buttonVariants({ variant: 'pill-outline' }),
+                'download-json-btn h-10 rounded-2xl transition-colors'
+              )}
               data-template={data.name}
               data-author={data.username || ''}
             >
@@ -150,7 +154,6 @@ function formatRelativeDate(dateStr: string): string {
             </a>
           </div>
 
-          {/* Categories */}
           {
             data.tags && data.tags.length > 0 && (
               <SidebarSection title={t('labels.categories', locale)}>
@@ -171,7 +174,6 @@ function formatRelativeDate(dateStr: string): string {
             )
           }
 
-          {/* Models */}
           {
             data.models && data.models.length > 0 && (
               <SidebarSection title={t('labels.models', locale)}>
@@ -186,7 +188,6 @@ function formatRelativeDate(dateStr: string): string {
             )
           }
 
-          {/* Creator — last in the info column */}
           <SidebarSection title={t('labels.createdBy', locale)}>
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">
@@ -221,7 +222,7 @@ function formatRelativeDate(dateStr: string): string {
                 }
                 {
                   data.date && (
-                    <span class="text-base text-content-secondary">
+                    <span class="text-xs text-content-secondary">
                       {formatRelativeDate(data.date)}
                     </span>
                   )
@@ -232,42 +233,39 @@ function formatRelativeDate(dateStr: string): string {
         </div>
       </aside>
 
-      <div class="flex min-w-0 flex-1 justify-center lg:min-h-0">
-        {
-          thumbnails.length > 0 && (
-            <div class="media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg lg:h-full lg:w-auto">
-              <ThumbnailDisplay
-                thumbnails={thumbnails}
-                title={data.title || data.name}
-                variant={data.thumbnailVariant}
-                mediaSubtype={data.mediaSubtype}
-                class="absolute inset-0 h-full w-full"
-                loading="eager"
-                fetchpriority="high"
-                sizes="(min-width: 1024px) 65vw, 100vw"
-              />
-            </div>
-          )
-        }
-      </div>
-    </div>
+      {
+        thumbnails.length > 0 && (
+          <div class="order-1 lg:order-2 lg:col-start-2 media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg">
+            <ThumbnailDisplay
+              thumbnails={thumbnails}
+              title={data.title || data.name}
+              variant={data.thumbnailVariant}
+              mediaSubtype={data.mediaSubtype}
+              class="absolute inset-0 h-full w-full"
+              loading="eager"
+              fetchpriority="high"
+              sizes="(min-width: 1024px) 65vw, 100vw"
+            />
+          </div>
+        )
+      }
 
-    {/* Full-width extended description, capped with Read more */}
-    {
-      data.extendedDescription && (
-        <section class="mt-10 lg:mt-16 scroll-mt-8" id="description">
-          <ExpandableText
-            client:load
-            paragraphs={data.extendedDescription
-              .split('\n\n')
-              .map((p: string) => p.trim())
-              .filter(Boolean)}
-            moreLabel={t('template.readMore', locale)}
-            lessLabel={t('template.readLess', locale)}
-          />
-        </section>
-      )
-    }
+      {
+        data.extendedDescription && (
+          <section id="description" class="order-3 min-w-0 scroll-mt-8 lg:col-start-2">
+            <ExpandableText
+              client:load
+              paragraphs={data.extendedDescription
+                .split('\n\n')
+                .map((p: string) => p.trim())
+                .filter(Boolean)}
+              moreLabel={t('template.readMore', locale)}
+              lessLabel={t('template.readLess', locale)}
+            />
+          </section>
+        )
+      }
+    </div>
 
     {/* FAQ (renders nothing when there are no items) */}
     {
