@@ -109,6 +109,146 @@ def group_issues_by_workflow(issues: list[Issue]) -> dict[str, list[Issue]]:
     return grouped
 
 
+def _table_cell(text: str) -> str:
+    return str(text).replace("|", "\\|").replace("\n", " ").strip()
+
+
+def _workflow_link(workflow: str) -> str:
+    return f"[`{workflow}`](templates/{workflow})"
+
+
+
+def _tier_stats(tiers: dict[str, list[str]], by_workflow: dict[str, list[Issue]]) -> dict[str, dict[str, int]]:
+    stats: dict[str, dict[str, int]] = {}
+    for tier, workflows in tiers.items():
+        tier_issues = [issue for workflow in workflows for issue in by_workflow[workflow]]
+        stats[tier] = {
+            "templates": len(workflows),
+            "findings": len(tier_issues),
+            "errors": sum(1 for issue in tier_issues if issue.severity == "error"),
+            "warnings": sum(1 for issue in tier_issues if issue.severity == "warning"),
+        }
+    return stats
+
+
+_TIER_PRESENTATION: dict[str, dict[str, str | bool]] = {
+    "critical": {
+        "emoji": "🔴",
+        "label": "Critical",
+        "hint": "Fix first — likely wrong inputs or execution failure",
+    },
+    "errors": {
+        "emoji": "🟠",
+        "label": "Errors",
+        "hint": "Invalid nodes, inputs, or dropdown values",
+    },
+    "warnings": {
+        "emoji": "🟡",
+        "label": "Warnings",
+        "hint": "Deprecated nodes — migrate when convenient",
+    },
+}
+
+
+def _append_issue_node_table(lines: list[str], workflow_issues: list[Issue]) -> None:
+    lines.extend(
+        [
+            "| Node | Type | Issue | Details |",
+            "| ---: | --- | --- | --- |",
+        ]
+    )
+    for issue in sort_issues_by_priority(workflow_issues):
+        lines.append(
+            f"| `{issue.node_id}` | `{_table_cell(issue.node_type)}` | "
+            f"{_table_cell(issue_kind_label(issue.kind))} | {_table_cell(issue.message)} |"
+        )
+
+
+def _append_critical_section(
+    lines: list[str],
+    workflows: list[str],
+    by_workflow: dict[str, list[Issue]],
+) -> None:
+    if not workflows:
+        return
+
+    presentation = _TIER_PRESENTATION["critical"]
+    critical_issues = [
+        issue
+        for workflow in workflows
+        for issue in by_workflow[workflow]
+        if issue.kind in CRITICAL_ISSUE_KINDS
+    ]
+
+    lines.extend(
+        [
+            "",
+            f"### {presentation['emoji']} {presentation['label']} — fix first",
+            "",
+            f"_{presentation['hint']}_",
+            "",
+            "| Template | Node | Type | Issue | Details |",
+            "| --- | ---: | --- | --- | --- |",
+        ]
+    )
+    for issue in sort_issues_by_priority(critical_issues):
+        lines.append(
+            f"| {_workflow_link(issue.workflow)} | `{issue.node_id}` | "
+            f"`{_table_cell(issue.node_type)}` | {_table_cell(issue_kind_label(issue.kind))} | "
+            f"{_table_cell(issue.message)} |"
+        )
+
+
+def _append_collapsible_tier_section(
+    lines: list[str],
+    tier: str,
+    workflows: list[str],
+    by_workflow: dict[str, list[Issue]],
+    *,
+    include_node_details: bool,
+) -> None:
+    if not workflows:
+        return
+
+    presentation = _TIER_PRESENTATION[tier]
+    emoji = presentation["emoji"]
+    label = presentation["label"]
+    hint = presentation["hint"]
+    tier_issues = [issue for workflow in workflows for issue in by_workflow[workflow]]
+
+    lines.extend(
+        [
+            "<details>",
+            f"<summary><strong>{emoji} {label}</strong> — {len(workflows)} template(s), "
+            f"{len(tier_issues)} finding(s). {hint}</summary>",
+            "",
+            "| Template | Findings |",
+            "| --- | ---: |",
+        ]
+    )
+
+    for workflow in workflows:
+        workflow_issues = by_workflow[workflow]
+        lines.append(f"| {_workflow_link(workflow)} | {len(workflow_issues)} |")
+
+    if include_node_details:
+        lines.append("")
+        for workflow in workflows:
+            workflow_issues = by_workflow[workflow]
+            lines.extend(
+                [
+                    "<details>",
+                    f"<summary><code>{_table_cell(workflow)}</code> — "
+                    f"{len(workflow_issues)} finding(s)</summary>",
+                    "",
+                ]
+            )
+            _append_issue_node_table(lines, workflow_issues)
+            lines.extend(["", "</details>", ""])
+
+    lines.extend(["", "</details>", ""])
+
+
 def format_markdown_report(
     issues: list[Issue],
     warnings: list[str],
@@ -151,12 +291,12 @@ def format_markdown_report(
     lines.extend(
         [
             "",
-            f"- Checked workflows: **{total_workflows}** (`templates/*.json`, "
-            "excluding index files)",
-            f"- Clean workflows: **{clean_templates}**",
-            f"- Templates with findings: **{affected_templates}**",
-            f"- Total findings: **{len(issues)}** ({error_count} error(s), "
-            f"{warning_count} warning(s))",
+            "| Metric | Count |",
+            "| --- | ---: |",
+            f"| Checked workflows | {total_workflows} |",
+            f"| Clean | {clean_templates} |",
+            f"| With findings | {affected_templates} |",
+            f"| Total findings | {len(issues)} ({error_count} error(s), {warning_count} warning(s)) |",
         ]
     )
 
@@ -172,7 +312,7 @@ def format_markdown_report(
     if meta.get("source_url"):
         baseline_bits.append(f"source `{meta['source_url']}`")
     if baseline_bits:
-        lines.extend(["", f"- Baseline: {', '.join(baseline_bits)}"])
+        lines.extend(["", f"_Baseline: {', '.join(baseline_bits)}_"])
 
     if warnings:
         lines.extend(["", "### Scan warnings", ""])
@@ -188,40 +328,71 @@ def format_markdown_report(
         return "\n".join(lines)
 
     kind_counts = summarize_issues_by_kind(issues)
-    lines.extend(["", "### What may need updating (by priority)", ""])
-    for kind in sorted(kind_counts, key=issue_kind_rank):
-        lines.append(
-            f"- **{issue_kind_label(kind)}** ({kind_counts[kind]}): {ISSUE_KIND_HELP.get(kind, '')}"
-        )
-
     by_workflow = group_issues_by_workflow(issues)
     tiers = group_workflows_by_tier(issues)
-    for tier in ("critical", "errors", "warnings"):
-        workflows = tiers[tier]
-        if not workflows:
-            continue
-        lines.extend(["", f"### {ISSUE_TIER_LABELS[tier]}", ""])
-        for workflow in workflows:
-            workflow_issues = by_workflow[workflow]
-            wf_errors = sum(1 for issue in workflow_issues if issue.severity == "error")
-            wf_warnings = sum(1 for issue in workflow_issues if issue.severity == "warning")
-            lines.append(f"- `{workflow}` ({wf_errors} error(s), {wf_warnings} warning(s))")
+    tier_stats = _tier_stats(tiers, by_workflow)
 
-    lines.extend(["", "### Detailed findings (by priority)", ""])
+    lines.extend(["", "### At a glance", ""])
+    lines.extend(
+        [
+            "| Severity | Templates | Findings |",
+            "| --- | ---: | ---: |",
+        ]
+    )
     for tier in ("critical", "errors", "warnings"):
-        tier_list = _issues_by_tier(issues)[tier]
-        if not tier_list:
+        stats = tier_stats[tier]
+        if not stats["templates"]:
             continue
-        lines.extend(["", f"#### {ISSUE_TIER_LABELS[tier]}", ""])
-        current_workflow = ""
-        for issue in sort_issues_by_priority(tier_list):
-            if issue.workflow != current_workflow:
-                current_workflow = issue.workflow
-                lines.extend([f"**`{current_workflow}`**", ""])
-            lines.append(
-                f"- **[{issue.severity}]** {issue_kind_label(issue.kind)} (`{issue.kind}`) — "
-                f"node `{issue.node_id}` (`{issue.node_type}`): {issue.message}"
-            )
+        presentation = _TIER_PRESENTATION[tier]
+        lines.append(
+            f"| {presentation['emoji']} **{presentation['label']}** | "
+            f"{stats['templates']} | {stats['findings']} |"
+        )
+
+    lines.extend(["", "### Issue types", "", "| Type | Count |", "| --- | ---: |"])
+    for kind in sorted(kind_counts, key=issue_kind_rank):
+        lines.append(f"| {_table_cell(issue_kind_label(kind))} | {kind_counts[kind]} |")
+
+    lines.extend(
+        [
+            "",
+            "<details>",
+            "<summary>What each issue type means</summary>",
+            "",
+            "| Type | Guidance |",
+            "| --- | --- |",
+        ]
+    )
+    for kind in sorted(kind_counts, key=issue_kind_rank):
+        lines.append(
+            f"| {_table_cell(issue_kind_label(kind))} | "
+            f"{_table_cell(ISSUE_KIND_HELP.get(kind, ''))} |"
+        )
+    lines.extend(["", "</details>", ""])
+
+    if tiers["critical"]:
+        _append_critical_section(lines, tiers["critical"], by_workflow)
+
+    if tiers["errors"]:
+        lines.extend(["", "### Details", ""])
+        _append_collapsible_tier_section(
+            lines,
+            "errors",
+            tiers["errors"],
+            by_workflow,
+            include_node_details=True,
+        )
+
+    if tiers["warnings"]:
+        if not tiers["errors"]:
+            lines.extend(["", "### Details", ""])
+        _append_collapsible_tier_section(
+            lines,
+            "warnings",
+            tiers["warnings"],
+            by_workflow,
+            include_node_details=False,
+        )
 
     return "\n".join(lines).rstrip() + "\n"
 
