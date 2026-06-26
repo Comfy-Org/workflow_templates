@@ -63,7 +63,7 @@ Informational check — **never blocks PR merges**. Compares changed `templates/
 - Deprecated nodes (display name contains `DEPRECATED`)
 
 **When it runs:**
-- On pull requests that change `templates/**.json`, `scripts/comfyui_node_compat/**`, or the workflow file itself
+- On pull requests that change files under `templates/` only
 - Manual dispatch
 
 **How it works:**

@@ -91,7 +91,7 @@ Generated output goes to `scripts/.output/` (gitignored) or repo root (`model_an
 
 ## ComfyUI node compatibility check
 
-Compares `templates/*.json` workflows against a ComfyUI node baseline. **Informational only** — does not block PR merges. On PRs, [`report-comfyui-node-compat.yml`](../.github/workflows/report-comfyui-node-compat.yml) posts/updates a comment with findings.
+Compares `templates/*.json` workflows against a ComfyUI node baseline. **Informational only** — does not block PR merges. On PRs that change `templates/`, [`report-comfyui-node-compat.yml`](../.github/workflows/report-comfyui-node-compat.yml) posts/updates a comment with findings.
 
 ### Local (recommended for full coverage)
 
