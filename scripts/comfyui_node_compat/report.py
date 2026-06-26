@@ -10,6 +10,7 @@ from models import (
     ISSUE_KIND_PRIORITY,
     ISSUE_TIER_LABELS,
     ERROR_ISSUE_KINDS,
+    CRITICAL_ISSUE_KINDS,
     Issue,
     issue_kind_label,
 )
@@ -31,7 +32,7 @@ def sort_issues_by_priority(issues: list[Issue]) -> list[Issue]:
 
 def workflow_tier(workflow_issues: list[Issue]) -> str:
     kinds = {issue.kind for issue in workflow_issues}
-    if "invalid_api_model" in kinds:
+    if kinds & CRITICAL_ISSUE_KINDS:
         return "critical"
     if kinds & ERROR_ISSUE_KINDS:
         return "errors"
@@ -59,11 +60,19 @@ def _workflow_issue_summary(workflow: str, workflow_issues: list[Issue]) -> str:
     kind_counts: dict[str, int] = {}
     for issue in workflow_issues:
         kind_counts[issue.kind] = kind_counts.get(issue.kind, 0) + 1
-    parts = [f"{count} {issue_kind_label(kind).lower()}" for kind, count in sorted(kind_counts.items(), key=lambda item: issue_kind_rank(item[0]))]
+    parts = [
+        f"{count} {issue_kind_label(kind).lower()}"
+        for kind, count in sorted(kind_counts.items(), key=lambda item: issue_kind_rank(item[0]))
+    ]
     return f"templates/{workflow}  ({', '.join(parts)})"
 
 
-def _append_tier_template_section(lines: list[str], tier: str, workflows: list[str], by_workflow: dict[str, list[Issue]]) -> None:
+def _append_tier_template_section(
+    lines: list[str],
+    tier: str,
+    workflows: list[str],
+    by_workflow: dict[str, list[Issue]],
+) -> None:
     if not workflows:
         return
     lines.extend(["", ISSUE_TIER_LABELS[tier], ""])
@@ -123,7 +132,8 @@ def format_markdown_report(
     scan_mode = meta.get("scan_mode")
     if scan_mode == "static":
         lines.append(
-            "_Baseline: static scan of ComfyUI source — reports removed/deprecated core nodes only._"
+            "_Baseline: static scan of ComfyUI source — reports removed/deprecated core "
+            "nodes only._"
         )
     elif scan_mode == "runtime":
         lines.append("_Baseline: live ComfyUI /object_info (full accuracy)._")
@@ -141,10 +151,12 @@ def format_markdown_report(
     lines.extend(
         [
             "",
-            f"- Checked workflows: **{total_workflows}** (`templates/*.json`, excluding index files)",
+            f"- Checked workflows: **{total_workflows}** (`templates/*.json`, "
+            "excluding index files)",
             f"- Clean workflows: **{clean_templates}**",
             f"- Templates with findings: **{affected_templates}**",
-            f"- Total findings: **{len(issues)}** ({error_count} error(s), {warning_count} warning(s))",
+            f"- Total findings: **{len(issues)}** ({error_count} error(s), "
+            f"{warning_count} warning(s))",
         ]
     )
 
@@ -170,7 +182,9 @@ def format_markdown_report(
             lines.append(f"- ... {len(warnings) - 10} more")
 
     if not issues:
-        lines.extend(["", "No compatibility findings for comfy-core nodes, inputs, or combo values."])
+        lines.extend(
+            ["", "No compatibility findings for comfy-core nodes, inputs, or combo values."]
+        )
         return "\n".join(lines)
 
     kind_counts = summarize_issues_by_kind(issues)
@@ -214,11 +228,11 @@ def format_markdown_report(
 
 def _issues_by_tier(issues: list[Issue]) -> dict[str, list[Issue]]:
     return {
-        "critical": [issue for issue in issues if issue.kind == "invalid_api_model"],
+        "critical": [issue for issue in issues if issue.kind in CRITICAL_ISSUE_KINDS],
         "errors": [
             issue
             for issue in issues
-            if issue.kind in ERROR_ISSUE_KINDS and issue.kind != "invalid_api_model"
+            if issue.kind in ERROR_ISSUE_KINDS and issue.kind not in CRITICAL_ISSUE_KINDS
         ],
         "warnings": [issue for issue in issues if issue.kind not in ERROR_ISSUE_KINDS],
     }
@@ -275,7 +289,10 @@ def format_log_report(
     kind_counts = summarize_issues_by_kind(issues)
     lines.append("Findings by type (most urgent first):")
     for kind in sorted(kind_counts, key=issue_kind_rank):
-        lines.append(f"  - {issue_kind_label(kind)} ({kind_counts[kind]}): {ISSUE_KIND_HELP.get(kind, '')}")
+        lines.append(
+            f"  - {issue_kind_label(kind)} ({kind_counts[kind]}): "
+            f"{ISSUE_KIND_HELP.get(kind, '')}"
+        )
     lines.append("")
 
     tiers = group_workflows_by_tier(issues)
@@ -322,14 +339,14 @@ def print_summary(
     error_count = sum(1 for issue in issues if issue.severity == "error")
     warning_count = sum(1 for issue in issues if issue.severity == "warning")
     affected_templates = len(group_issues_by_workflow(issues))
-    api_model_count = sum(1 for issue in issues if issue.kind == "invalid_api_model")
+    critical_count = sum(1 for issue in issues if issue.kind in CRITICAL_ISSUE_KINDS)
 
     print("ComfyUI node compatibility check")
     print(f"Checked workflows: {total_workflows}")
     print(f"Templates with findings: {affected_templates}")
     print(f"Issues found: {len(issues)} ({error_count} error(s), {warning_count} warning(s))")
-    if api_model_count:
-        print(f"Critical API model issues: {api_model_count} (see top of log file)")
+    if critical_count:
+        print(f"Critical compatibility issues: {critical_count} (see top of log file)")
     print(f"Scan warnings: {len(warnings)}")
 
     if latest_log:

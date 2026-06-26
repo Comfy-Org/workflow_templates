@@ -130,14 +130,18 @@ python3 scripts/comfyui_node_compat/check.py --static-scan --no-fail
 | Issue kind | Severity | Local | Static |
 |------------|----------|-------|--------|
 | `invalid_api_model` | error | ✅ | — |
+| `widget_slot_mismatch` | error | ✅ (API nodes) | — |
+| `invalid_widget_value` | error | ✅ (API nodes) | — |
 | `missing_node` | error | ✅ | — |
 | `invalid_combo_value` | error | ✅ | — |
 | `missing_input` | error | ✅ | — |
 | `deprecated_node` | warning | ✅ | ✅ |
 
+Runtime checks map save-format `widgets_values[]` to field names via `/object_info` `input_order` (skipping linked sockets and non-widget types like IMAGE/AUDIO, while preserving linked rows that are still widget-backed). Filesystem-backed dropdowns such as model, upload, and 3D asset pickers are treated as local-install dependent. This catches API workflows whose widget slots drifted after a node schema change (e.g. a new `resolution` field inserted mid-list) without turning every local missing model into a template error.
+
 Log and PR reports group findings by priority:
 
-1. **Critical** — API model slug no longer available (`invalid_api_model`)
+1. **Critical** — workflow will likely fail or run with wrong inputs (`invalid_api_model`, `widget_slot_mismatch`)
 2. **Errors** — removed nodes, invalid inputs, stale combo values
 3. **Warnings** — deprecated nodes and other review items
 
@@ -174,4 +178,3 @@ See [`.env.example`](../.env.example).
 | `comfyui_node_compat/workflow.py` | Scan template JSON + subgraphs |
 | `comfyui_node_compat/report.py` | Log/Markdown formatting |
 | `comfyui_node_compat/clone.py` | Clone/resolve ComfyUI checkout |
-
