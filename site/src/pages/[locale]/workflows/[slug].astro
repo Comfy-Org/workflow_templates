@@ -35,6 +35,13 @@ Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while
 
 const { locale, slug } = Astro.params;
 
+if (Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
 // Validate locale
 if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
   return Astro.redirect('/workflows/');
@@ -60,8 +67,18 @@ if (detailShareId) {
     const is404 = err instanceof Error && err.message.includes('404');
     if (!is404) {
       console.error('Hub API error on ISR detail:', err);
+      return new Response(null, {
+        status: 502,
+        statusText: 'Bad Gateway',
+        headers: {
+          'CDN-Cache-Control': 'no-store',
+        },
+      });
     }
-    return Astro.redirect(`/${locale}/workflows/`);
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not Found',
+    });
   }
 }
 
@@ -116,21 +133,34 @@ try {
 // Fetch workflows for this creator from index
 const profiles = await getProfileCache();
 let serialized: SerializedTemplate[] = [];
+let indexFetchFailed = false;
 
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
   serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
 } catch (err) {
+  indexFetchFailed = true;
   console.error('Hub API failed for creator grid:', err);
-  // Index API failed — show empty grid
 }
 
 // Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
 // link): no profile and no workflows — redirect instead of rendering a page
 // that would title itself "<slug> (@<slug>)" and get indexed by Google.
 if (!isDetailPage && !profileFound && serialized.length === 0) {
-  return Astro.redirect(`/${locale}/workflows/`);
+  if (indexFetchFailed) {
+    return new Response(null, {
+      status: 502,
+      statusText: 'Bad Gateway',
+      headers: {
+        'CDN-Cache-Control': 'no-store',
+      },
+    });
+  }
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);

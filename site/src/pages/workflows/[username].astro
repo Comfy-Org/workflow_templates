@@ -31,6 +31,13 @@ Astro.response.headers.set(
 const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
 
+if (Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
 if (!slugParam) {
   return Astro.redirect('/workflows/');
 }
@@ -49,8 +56,18 @@ if (detailShareId) {
     const is404 = err instanceof Error && err.message.includes('404');
     if (!is404) {
       console.error('Hub API error on ISR detail:', err);
+      return new Response(null, {
+        status: 502,
+        statusText: 'Bad Gateway',
+        headers: {
+          'CDN-Cache-Control': 'no-store',
+        },
+      });
     }
-    return Astro.redirect('/workflows/');
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not Found',
+    });
   }
 }
 
@@ -83,13 +100,15 @@ try {
 // Fetch workflows for this creator from index
 const profiles = await getProfileCache();
 let serialized: SerializedTemplate[] = [];
+let indexFetchFailed = false;
 
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
   serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
-} catch {
-  // Index API failed — show empty grid
+} catch (err) {
+  indexFetchFailed = true;
+  console.error('Hub API failed for creator grid:', err);
 }
 
 // Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
@@ -97,7 +116,19 @@ try {
 // of rendering a page that would title itself "<slug> (@<slug>)" and get
 // indexed by Google.
 if (!isDetailPage && !profileFound && serialized.length === 0) {
-  return Astro.redirect('/workflows/');
+  if (indexFetchFailed) {
+    return new Response(null, {
+      status: 502,
+      statusText: 'Bad Gateway',
+      headers: {
+        'CDN-Cache-Control': 'no-store',
+      },
+    });
+  }
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
