@@ -179,6 +179,12 @@ def _append_critical_section(
         for issue in by_workflow[workflow]
         if issue.kind in CRITICAL_ISSUE_KINDS
     ]
+    remaining_issues = [
+        issue
+        for workflow in workflows
+        for issue in by_workflow[workflow]
+        if issue.kind not in CRITICAL_ISSUE_KINDS
+    ]
 
     lines.extend(
         [
@@ -197,6 +203,18 @@ def _append_critical_section(
             f"`{_table_cell(issue.node_type)}` | {_table_cell(issue_kind_label(issue.kind))} | "
             f"{_table_cell(issue.message)} |"
         )
+
+    if remaining_issues:
+        lines.extend(
+            [
+                "",
+                "<details>",
+                "<summary>Other findings in critical templates</summary>",
+                "",
+            ]
+        )
+        _append_issue_node_table(lines, remaining_issues)
+        lines.extend(["", "</details>"])
 
 
 def _append_collapsible_tier_section(

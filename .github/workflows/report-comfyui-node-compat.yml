@@ -62,7 +62,7 @@ jobs:
       - name: Write workflow failure report
         if: steps.compat_check.outcome != 'success' || steps.report_check.outputs.missing == 'true'
         run: |
-          log_excerpt="$(head -c 8000 compat_check.log 2>/dev/null || true)"
+          log_excerpt="$(tail -c 8000 compat_check.log 2>/dev/null || true)"
           cat > compat_report.md <<EOF
           ## ComfyUI Node Compatibility Report
 
