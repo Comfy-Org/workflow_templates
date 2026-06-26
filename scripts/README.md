@@ -11,6 +11,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | Sync blueprints | `python scripts/sync/sync_blueprints.py` |
 | Validate templates | `python scripts/validate/validate_templates.py` |
 | Validate manifests | `python scripts/validate/validate_manifests.py` |
+| ComfyUI node compatibility | `npm run validate:comfyui-nodes` |
 | Maintainer smoke check | `./scripts/maintenance/check_templates.sh` |
 
 ## Directory layout
@@ -20,6 +21,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | [`sync/`](sync/) | Data synchronization and generation |
 | [`mcp/`](mcp/) | MCP index pipeline (`index.mcp.json`) |
 | [`validate/`](validate/) | Validation and analysis (most run in CI) |
+| [`comfyui_node_compat/`](comfyui_node_compat/) | ComfyUI node baseline vs template workflows (informational) |
 | [`blueprints/`](blueprints/) | Subgraph blueprint import |
 | [`ci/`](ci/) | Release pipeline helpers (version, PyPI quota) |
 | [`maintenance/`](maintenance/) | Local-only tools (archive, one-off fixes) |
@@ -51,6 +53,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
 | `model-analysis.yml` | `validate/analyze_models.py`, `data/whitelist.json` |
+| `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py` (static scan; PR comment only) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
 | `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `sync/sync_bundles.py`, `ci/*` |
@@ -84,4 +87,91 @@ npm run mcp:models   # AI model registry
 - **`data/mcp/template_cache.json`** — Per-template AI copy, versioned by workflow JSON hash.
 - **`data/krea_registry_aliases.json`**, **`data/krea_*_models.json`** — Temporary Krea snapshots for one-off registry seeding (delete when seeding is complete).
 
-Generated output goes to `scripts/.output/` (gitignored) or repo root (`model_analysis_report.md`, `asset_validation_report.md`).
+Generated output goes to `scripts/.output/` (gitignored) or repo root (`model_analysis_report.md`, `asset_validation_report.md`, `comfyui-node-compat.log`, `comfyui-node-compat.latest.log`).
+
+## ComfyUI node compatibility check
+
+Compares `templates/*.json` workflows against a ComfyUI node baseline. **Informational only** — does not block PR merges. On PRs, [`report-comfyui-node-compat.yml`](../.github/workflows/report-comfyui-node-compat.yml) posts/updates a comment with findings.
+
+### Local (recommended for full coverage)
+
+Requires a running ComfyUI instance. Reads live `/object_info` (full combo lists, API nodes, inputs):
+
+```bash
+npm run validate:comfyui-nodes
+# same as:
+python3 scripts/comfyui_node_compat/check.py
+```
+
+If ComfyUI is not reachable, the script exits with a hint to start the server or use `--static-scan`.
+
+Reports are written to repo root (gitignored):
+
+- `comfyui-node-compat.latest.log` — latest run (overwrite)
+- `comfyui-node-compat.log` — append-only history
+
+### CI / static scan (no server, no torch)
+
+Clones `Comfy-Org/ComfyUI` and AST-scans Python sources. Faster and dependency-free, but only reports **deprecated nodes** (skips missing-node / combo noise from incomplete static parsing):
+
+```bash
+python3 scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail
+```
+
+Use an existing checkout instead of cloning:
+
+```bash
+export COMFYUI_REPO_PATH=/path/to/ComfyUI
+python3 scripts/comfyui_node_compat/check.py --static-scan --no-fail
+```
+
+### What it detects
+
+| Issue kind | Severity | Local | Static |
+|------------|----------|-------|--------|
+| `invalid_api_model` | error | ✅ | — |
+| `missing_node` | error | ✅ | — |
+| `invalid_combo_value` | error | ✅ | — |
+| `missing_input` | error | ✅ | — |
+| `deprecated_node` | warning | ✅ | ✅ |
+
+Log and PR reports group findings by priority:
+
+1. **Critical** — API model slug no longer available (`invalid_api_model`)
+2. **Errors** — removed nodes, invalid inputs, stale combo values
+3. **Warnings** — deprecated nodes and other review items
+
+### Useful flags
+
+| Flag | Purpose |
+|------|---------|
+| `--static-scan` | Source scan without running ComfyUI |
+| `--clone-comfyui` | Shallow-clone ComfyUI master for static scan |
+| `--comfyui-dir PATH` | ComfyUI checkout for static scan |
+| `--object-info-url URL` | Override live endpoint (default `http://127.0.0.1:8188/object_info`) |
+| `--object-info-json PATH` | Debug with a saved `/object_info` JSON |
+| `--strict-unknown` | Warn on unknown non-core custom nodes |
+| `--no-log-file` | Skip writing log files (CI default) |
+| `--no-fail` | Exit 0 even when errors are found |
+| `--markdown-output PATH` | Write Markdown report (PR comments) |
+| `--json-output PATH` | Write machine-readable JSON report |
+
+### Environment variables
+
+- `COMFYUI_REPO_PATH` — local ComfyUI checkout for `--static-scan`
+- `COMFYUI_OBJECT_INFO_URL` — override live `/object_info` URL
+
+See [`.env.example`](../.env.example).
+
+### Layout
+
+| File | Role |
+|------|------|
+| `comfyui_node_compat/check.py` | CLI entry point |
+| `comfyui_node_compat/models.py` | Issue types, priority tiers |
+| `comfyui_node_compat/registry.py` | Parse live `/object_info` |
+| `comfyui_node_compat/static_registry.py` | AST scan of ComfyUI `.py` sources |
+| `comfyui_node_compat/workflow.py` | Scan template JSON + subgraphs |
+| `comfyui_node_compat/report.py` | Log/Markdown formatting |
+| `comfyui_node_compat/clone.py` | Clone/resolve ComfyUI checkout |
+
