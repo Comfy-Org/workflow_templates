@@ -10,8 +10,10 @@
 - `npm run mcp:models` — AI model profiles in `models_registry.json`
 - `npm run validate:templates` — Validate template JSON files
 - `npm run validate:manifests` — Validate package manifests
+- `npm run validate:comfyui-nodes` — Compare templates to ComfyUI node baseline (local: live `/object_info`)
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
+- `python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail` — CI-style static compat scan
 
 **MCP index pipeline:** see skill `.claude/skills/managing-mcp-index/SKILL.md` and `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md`. Do not confuse with hub i18n (`i18n`) or site AI (`site/scripts/generate-ai.ts`).
 
@@ -33,6 +35,7 @@ Root `scripts/` is organized by role:
 | `scripts/sync/` | Sync / generate data | `sync_data.py`, `sync_bundles.py` |
 | `scripts/mcp/` | MCP index pipeline | `sync_index.py`, `enhance_descriptions.py` |
 | `scripts/validate/` | Validation & analysis (CI) | `validate_templates.py`, `check_links.py`, `analyze_models.py` |
+| `scripts/comfyui_node_compat/` | ComfyUI node baseline vs templates | `check.py` |
 | `scripts/blueprints/` | Blueprint-specific import | `import_blueprints.py` |
 | `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_pypi_quota.py` |
 | `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `mcp/models_registry.json`, `mcp/template_cache.json` |

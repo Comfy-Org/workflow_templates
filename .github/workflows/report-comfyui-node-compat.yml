@@ -1,0 +1,145 @@
+name: ComfyUI Node Compatibility Report
+
+# Informational report only — never blocks PR merges.
+# Statically scans ComfyUI master source + templates/*.json (no torch, no running server).
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'templates/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+env:
+  COMFYUI_GITHUB_REPO: Comfy-Org/ComfyUI
+  COMFYUI_REF: master
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow templates (JSON only)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          sparse-checkout: |
+            templates/*.json
+            scripts/comfyui_node_compat/
+            scripts/lib/paths.py
+            scripts/lib/locale_index_files.py
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run static ComfyUI node compatibility check
+        id: compat_check
+        continue-on-error: true
+        run: |
+          python3 scripts/comfyui_node_compat/check.py \
+            --static-scan \
+            --clone-comfyui \
+            --templates-dir templates \
+            --markdown-output compat_report.md \
+            --json-output compat_report.json \
+            --no-log-file \
+            --no-fail | tee compat_check.log
+
+      - name: Write workflow failure report
+        if: steps.compat_check.outcome != 'success'
+        run: |
+          cat > compat_report.md <<EOF
+          ## ComfyUI Node Compatibility Report
+
+          **Status: check could not complete** — no template compatibility results were produced.
+
+          _Informational only — this check does not block merging._
+
+          ### Setup failure
+          - Static compatibility script exited with an error (see workflow logs).
+          - Expected mode: \`--static-scan --clone-comfyui\` against \`${COMFYUI_GITHUB_REPO}\` (\`${COMFYUI_REF}\`).
+
+          ### Next steps
+          - Open the workflow run logs for details.
+          - Re-run locally after starting ComfyUI: \`npm run validate:comfyui-nodes\`
+          - Or run CI-style static scan locally:
+            \`python3 scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui\`
+          EOF
+
+      - name: Comment compatibility report on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+
+            const readFile = (path) => {
+              try {
+                return fs.readFileSync(path, 'utf8');
+              } catch {
+                return '';
+              }
+            };
+
+            let report = readFile('compat_report.md').trim();
+            if (!report) {
+              report = [
+                '## ComfyUI Node Compatibility Report',
+                '',
+                '**Status: no report generated.**',
+                '',
+                '_Informational only — this check does not block merging._',
+                '',
+                readFile('compat_check.log').trim() || 'See workflow logs for details.',
+              ].join('\n');
+            }
+
+            const marker = '<!-- comfyui-node-compat-report -->';
+            const maxLength = 60000;
+            if (report.length > maxLength) {
+              report = report.slice(0, maxLength) + '\n\n...(Report truncated due to length. Download the workflow artifact for the full report.)';
+            }
+
+            const body = `${marker}\n${report}\n\n---\n*This comment is automatically updated by the ComfyUI Node Compatibility Report workflow.*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find((comment) => comment.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Upload compatibility report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: comfyui-node-compat-report
+          path: |
+            compat_report.md
+            compat_report.json
+            compat_check.log
+          if-no-files-found: ignore
+          retention-days: 14
