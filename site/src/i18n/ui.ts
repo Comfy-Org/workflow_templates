@@ -11,7 +11,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'hub.browse.eyebrow': 'Browse Workflows',
     'hub.browse.title.suffix': '+ workflows across every model and category',
     'hub.tab.all': 'ALL',
-    'hub.tab.nodeGraphs': 'Node graphs',
+    'hub.tab.nodeGraphs': 'Node Graphs',
     'hub.tab.comfyApps': 'Comfy Apps',
     'hub.filter': 'Filter',
     'hub.sort.popular': 'Most Popular',
