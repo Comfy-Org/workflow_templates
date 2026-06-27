@@ -8,7 +8,7 @@ import json
 import re
 import subprocess
 from pathlib import Path
-from typing import Set, List
+from typing import Set, List, Optional
 
 ROOT = Path.cwd()
 
@@ -37,11 +37,26 @@ def _is_media_template_path(file: str) -> bool:
     return suffix in MEDIA_ASSET_EXTENSIONS or file.startswith("templates/logo/")
 
 
-def _template_id_from_path(file: str) -> str:
+_THUMBNAIL_SUFFIX = re.compile(r"-\d+$")
+
+
+def _template_id_from_path(file: str, bundles: Optional[dict] = None) -> str:
+    """Extract template id from a template asset path."""
     name = Path(file).name
     if name.endswith(".json"):
         return Path(name).stem
-    return Path(name).stem.split("-")[0]
+
+    stem = Path(name).stem
+    candidate = _THUMBNAIL_SUFFIX.sub("", stem)
+
+    if bundles:
+        all_ids = {tid for ids in bundles.values() for tid in ids}
+        if candidate in all_ids:
+            return candidate
+        if stem in all_ids:
+            return stem
+
+    return candidate
 
 
 def _json_asset_fingerprints(manifest: dict) -> dict[str, str]:
@@ -237,7 +252,7 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                     continue
                 if not _is_media_template_path(file):
                     continue
-                template_name = _template_id_from_path(file)
+                template_name = _template_id_from_path(file, bundles)
                 if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
                     filtered_files.append(file)
             # manifest.json changes: JSON sha -> json; media sha -> bundle package
