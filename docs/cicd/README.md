@@ -3,11 +3,13 @@
 ## Package Architecture
 ```
 comfyui-workflow-templates/           # Meta package (depends on all others)
-├── comfyui-workflow-templates-core   # Manifest + core logic
-├── comfyui-workflow-templates-media-api     # API templates
-├── comfyui-workflow-templates-media-video   # Video templates  
-├── comfyui-workflow-templates-media-image   # Image templates
-├── comfyui-workflow-templates-media-other   # Other templates
+├── comfyui-workflow-templates-core   # Manifest + loader
+├── comfyui-workflow-templates-json   # All workflow/index JSON
+├── comfyui-workflow-templates-media-api     # Legacy API assets (frozen)
+├── comfyui-workflow-templates-media-video   # Legacy video assets (frozen)
+├── comfyui-workflow-templates-media-image   # Legacy image assets (frozen)
+├── comfyui-workflow-templates-media-other   # Legacy other assets (frozen)
+├── comfyui-workflow-templates-media-assets-01  # New template assets
 └── comfyui-subgraph-blueprints              # Subgraph blueprints
 ```
 

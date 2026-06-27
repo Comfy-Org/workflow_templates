@@ -8,9 +8,77 @@ import json
 import re
 import subprocess
 from pathlib import Path
-from typing import Set, List, Dict
+from typing import Set, List
 
 ROOT = Path.cwd()
+
+MEDIA_ASSET_EXTENSIONS = {
+    ".webp", ".png", ".jpg", ".jpeg", ".gif", ".mp4", ".webm",
+    ".mp3", ".wav", ".ogg", ".flac", ".m4a",
+}
+
+BUNDLE_PACKAGE_MAP = {
+    "media-api": "media_api",
+    "media-video": "media_video",
+    "media-image": "media_image",
+    "media-other": "media_other",
+    "media-assets-01": "media_assets_01",
+}
+
+
+def _is_json_template_path(file: str) -> bool:
+    return file.startswith("templates/") and file.endswith(".json")
+
+
+def _is_media_template_path(file: str) -> bool:
+    if not file.startswith("templates/"):
+        return False
+    suffix = Path(file).suffix.lower()
+    return suffix in MEDIA_ASSET_EXTENSIONS or file.startswith("templates/logo/")
+
+
+def _template_id_from_path(file: str) -> str:
+    name = Path(file).name
+    if name.endswith(".json"):
+        return Path(name).stem
+    return Path(name).stem.split("-")[0]
+
+
+def _json_asset_fingerprints(manifest: dict) -> dict[str, str]:
+    fingerprints: dict[str, str] = {}
+    for entry in manifest.get("templates", []):
+        for asset in entry.get("assets", []):
+            filename = asset.get("filename", "")
+            if filename.endswith(".json"):
+                fingerprints[filename] = asset.get("sha256", "")
+    return fingerprints
+
+
+def _media_asset_fingerprints(manifest: dict, bundle: str) -> dict[str, str]:
+    fingerprints: dict[str, str] = {}
+    for entry in manifest.get("templates", []):
+        if entry.get("bundle") != bundle:
+            continue
+        for asset in entry.get("assets", []):
+            filename = asset.get("filename", "")
+            if not filename.endswith(".json"):
+                fingerprints[filename] = asset.get("sha256", "")
+    return fingerprints
+
+
+def _manifest_json_assets_changed(old_manifest: dict, cur_manifest: dict) -> bool:
+    return _json_asset_fingerprints(old_manifest) != _json_asset_fingerprints(cur_manifest)
+
+
+def _manifest_media_assets_changed(old_manifest: dict, cur_manifest: dict, bundle: str) -> bool:
+    old_ids = {e["id"] for e in old_manifest.get("templates", []) if e.get("bundle") == bundle}
+    cur_ids = {e["id"] for e in cur_manifest.get("templates", []) if e.get("bundle") == bundle}
+    if old_ids != cur_ids:
+        return True
+    return _media_asset_fingerprints(old_manifest, bundle) != _media_asset_fingerprints(
+        cur_manifest, bundle
+    )
+
 
 def run_git(args: List[str]) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT).decode().strip()
@@ -135,16 +203,10 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
         filtered_files = []
         
         bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
-        bundle_mapping = {
-            "media-api": "media_api",
-            "media-video": "media_video", 
-            "media-image": "media_image",
-            "media-other": "media_other"
-        }
-        
-        # Find which bundle this package corresponds to
+
+        # Find which bundle this package corresponds to (media bundles only)
         pkg_bundle = None
-        for bundle_name, bundle_pkg in bundle_mapping.items():
+        for bundle_name, bundle_pkg in BUNDLE_PACKAGE_MAP.items():
             if bundle_pkg == pkg:
                 pkg_bundle = bundle_name
                 break
@@ -166,23 +228,38 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                     filtered_files.append(file)
                 elif file == "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json":
                     filtered_files.append(file)
-            # Template files affecting this package's bundle
+            # JSON package: any workflow/index JSON change
+            elif pkg == "json" and _is_json_template_path(file):
+                filtered_files.append(file)
+            # Media asset packages: non-JSON template assets for this bundle
             elif pkg_bundle and file.startswith("templates/"):
-                template_name = Path(file).stem.split('-')[0]
+                if _is_json_template_path(file):
+                    continue
+                if not _is_media_template_path(file):
+                    continue
+                template_name = _template_id_from_path(file)
                 if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
                     filtered_files.append(file)
-            # manifest.json changes: check if this bundle's template set actually changed
+            # manifest.json changes: JSON sha -> json; media sha -> bundle package
+            elif pkg == "json" and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
+                try:
+                    old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
+                    cur_manifest = json.loads(Path(file).read_text())
+                    if _manifest_json_assets_changed(old_manifest, cur_manifest):
+                        filtered_files.append(file)
+                except Exception:
+                    filtered_files.append(file)
             elif pkg_bundle and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
                 try:
                     old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
-                    old_ids = {e["id"] for e in old_manifest.get("templates", []) if e.get("bundle") == pkg_bundle}
                     cur_manifest = json.loads(Path(file).read_text())
-                    cur_ids = {e["id"] for e in cur_manifest.get("templates", []) if e.get("bundle") == pkg_bundle}
-                    if old_ids != cur_ids:
+                    if _manifest_media_assets_changed(old_manifest, cur_manifest, pkg_bundle):
                         filtered_files.append(file)
                 except Exception:
                     filtered_files.append(file)
             # bundles.json changes affecting this package's bundle
+            elif pkg == "json" and file == "bundles.json":
+                filtered_files.append(file)
             elif pkg_bundle and file == "bundles.json":
                 try:
                     # First check if bundles.json existed in the old commit
@@ -204,7 +281,17 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
 def get_changed_packages() -> Set[str]:
     """Determine which packages need version bumps based on changes since their last version bump"""
     try:
-        packages = ["core", "media_api", "media_video", "media_image", "media_other", "blueprints", "meta"]
+        packages = [
+            "core",
+            "json",
+            "media_api",
+            "media_video",
+            "media_image",
+            "media_other",
+            "media_assets_01",
+            "blueprints",
+            "meta",
+        ]
         affected = set()
 
         for pkg in packages:
@@ -229,7 +316,16 @@ def get_changed_packages() -> Set[str]:
         return affected
     except Exception as e:
         print(f"Error in change detection: {e}")
-        return {"core", "media_api", "media_video", "media_image", "media_other", "meta"}
+        return {
+            "core",
+            "json",
+            "media_api",
+            "media_video",
+            "media_image",
+            "media_other",
+            "media_assets_01",
+            "meta",
+        }
 
 def bump_versions(packages: Set[str]) -> None:
     # Auto-bump individual packages (core, media-api, etc.) but not the root meta package
@@ -269,10 +365,12 @@ def update_dependencies() -> None:
     
     pyprojects = {
         "core": "packages/core/pyproject.toml",
-        "media_api": "packages/media_api/pyproject.toml", 
+        "json": "packages/json/pyproject.toml",
+        "media_api": "packages/media_api/pyproject.toml",
         "media_video": "packages/media_video/pyproject.toml",
         "media_image": "packages/media_image/pyproject.toml",
         "media_other": "packages/media_other/pyproject.toml",
+        "media_assets_01": "packages/media_assets_01/pyproject.toml",
     }
     
     # Get versions for packages that were auto-bumped

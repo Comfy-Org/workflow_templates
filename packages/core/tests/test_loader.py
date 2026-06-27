@@ -7,10 +7,12 @@ import pytest
 PACKAGE_ROOTS = [
     "packages/core/src",
     "packages/meta/src",
+    "packages/json/src",
     "packages/media_api/src",
     "packages/media_video/src",
     "packages/media_image/src",
     "packages/media_other/src",
+    "packages/media_assets_01/src",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -49,8 +51,19 @@ def test_missing_template_raises():
 
 def test_missing_bundle_resolves(monkeypatch):
     entries = list(loader.iter_templates())
-    sample = entries[0]
+    sample = next(
+        e for e in entries if any(not a.filename.endswith(".json") for a in e.assets)
+    )
+    media_asset = next(a for a in sample.assets if not a.filename.endswith(".json"))
     monkeypatch.setitem(loader.BUNDLE_PACKAGE_MAP, sample.bundle, "_does_not_exist")
     with pytest.raises(FileNotFoundError):
-        loader.get_asset_path(sample.template_id, sample.assets[0].filename)
+        loader.get_asset_path(sample.template_id, media_asset.filename)
     reload(loader)
+
+
+def test_json_assets_use_json_package():
+    entry = next(e for e in loader.iter_templates() if e.bundle == "media-api")
+    json_name = f"{entry.template_id}.json"
+    assert loader._asset_package(entry, json_name) == loader.JSON_PACKAGE
+    webp_name = next(a.filename for a in entry.assets if a.filename.endswith(".webp"))
+    assert loader._asset_package(entry, webp_name) == loader.BUNDLE_PACKAGE_MAP[entry.bundle]
