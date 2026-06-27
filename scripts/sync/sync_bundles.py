@@ -40,6 +40,15 @@ CORE_MANIFEST = (
 )
 SAMPLE_MANIFEST = ROOT / "prd" / "phase1-manifest-sample.json"
 
+JSON_TARGET = (
+    ROOT
+    / "packages"
+    / "json"
+    / "src"
+    / "comfyui_workflow_templates_json"
+    / "templates"
+)
+
 BUNDLE_TARGETS = {
     "media-api": ROOT
     / "packages"
@@ -64,6 +73,12 @@ BUNDLE_TARGETS = {
     / "media_other"
     / "src"
     / "comfyui_workflow_templates_media_other"
+    / "templates",
+    "media-assets-01": ROOT
+    / "packages"
+    / "media_assets_01"
+    / "src"
+    / "comfyui_workflow_templates_media_assets_01"
     / "templates",
 }
 BUNDLES_CONFIG = ROOT / "bundles.json"
@@ -259,6 +274,7 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
             "media-video": {"version": "0.0.0"},
             "media-image": {"version": "0.0.0"},
             "media-other": {"version": "0.0.0"},
+            "media-assets-01": {"version": "0.0.0"},
         },
         "templates": templates,
     }
@@ -292,6 +308,10 @@ def sync_bundle_directories(
         if p.name != "index.schema.json":
             index_data_filenames.add(p.name)
 
+    if JSON_TARGET.exists():
+        shutil.rmtree(JSON_TARGET)
+    JSON_TARGET.mkdir(parents=True, exist_ok=True)
+
     for target in BUNDLE_TARGETS.values():
         if target.exists():
             shutil.rmtree(target)
@@ -307,15 +327,19 @@ def sync_bundle_directories(
                 # Some optional assets (e.g., preview) may not exist; skip silently.
                 continue
 
-            dest = target_root / asset["filename"]
-            dest.parent.mkdir(parents=True, exist_ok=True)
+            filename = asset["filename"]
+            if filename.endswith(".json"):
+                dest = JSON_TARGET / Path(filename).name
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                if Path(filename).name in index_data_filenames:
+                    dest.write_bytes(filter_index_for_pip(src.read_bytes(), excluded_names))
+                else:
+                    shutil.copy2(src, dest)
+                continue
 
-            # Index data JSON files are filtered rather than copied verbatim so that
-            # cloud-only template entries are removed from the distributed package.
-            if Path(asset["filename"]).name in index_data_filenames:
-                dest.write_bytes(filter_index_for_pip(src.read_bytes(), excluded_names))
-            else:
-                shutil.copy2(src, dest)
+            dest = target_root / filename
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dest)
 
 
 def write_manifest(manifest: dict, dry_run: bool = False) -> None:
@@ -357,7 +381,7 @@ def main():
     target = CORE_MANIFEST if not args.dry_run else SAMPLE_MANIFEST
     print(f"Wrote manifest to {target}")
     if not args.dry_run:
-        print("Synced media assets into package directories.")
+        print("Synced JSON into json package and media assets into bundle directories.")
 
 
 if __name__ == "__main__":

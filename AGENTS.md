@@ -38,7 +38,7 @@ The script moves the workflow JSON and thumbnails to `archived/`, removes the en
 ## Architecture
 - **Monorepo** with Nx, Python packages, and Astro site
 - `templates/` — Source workflow JSON files and thumbnails (index.json is the manifest)
-- `packages/` — Python packages: core (loader), media_* (templates by type: api, image, video, other)
+- `packages/` — Python packages: core (loader + manifest), json (all workflow JSON), media_* (legacy frozen assets), media_assets_* (new assets)
 - `site/` — Astro static site (independently managed; see below)
 - `scripts/` — Python validation/sync scripts for CI and local dev (see `scripts/README.md`)
 
