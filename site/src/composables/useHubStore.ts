@@ -38,7 +38,7 @@ export function useHubStore() {
         (b) => b.type === badge.type && b.value === badge.value
       );
       if (!exists) {
-        filterBadges.value.push(badge);
+        filterBadges.value = [...filterBadges.value, badge];
       }
     },
 
@@ -57,7 +57,7 @@ export function useHubStore() {
           (b) => !(b.type === badge.type && b.value === badge.value)
         );
       } else {
-        filterBadges.value.push(badge);
+        filterBadges.value = [...filterBadges.value, badge];
       }
     },
 

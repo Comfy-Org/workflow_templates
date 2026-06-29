@@ -13,7 +13,7 @@
  */
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
-import { useHubStore } from '@/composables/useHubStore';
+import { useHubStore, type FilterBadge } from '@/composables/useHubStore';
 import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
@@ -79,9 +79,10 @@ const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MA
 const overflowCountDesktop = computed(() =>
   Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP)
 );
-const activeFilters = computed(() =>
-  store.filterBadges.value.map((badge) => `${badge.type}:${badge.value}`)
-);
+
+function serializeFilters(badges: FilterBadge[]): string[] {
+  return badges.map((badge) => `${badge.type}:${badge.value}`);
+}
 
 // ── All tags and models with counts (for filter suggestions) ──
 
@@ -189,7 +190,7 @@ const badgeOnlyResults = computed(() => {
 // ── Search with debounce ──
 
 watchDebounced(
-  [searchQuery, activeFilters],
+  [searchQuery, () => store.filterBadges.value],
   async ([query]) => {
     const trimmed = (query as string).trim();
     if (!trimmed) {
@@ -198,16 +199,17 @@ watchDebounced(
       return;
     }
     isSearching.value = true;
-    const filtersApplied = [...activeFilters.value];
+    const filtersApplied = serializeFilters(store.filterBadges.value);
+    const creatorResultCount = matchedCreators.value.length;
     try {
       const results = await searchIndex(trimmed, {
         allowedNames: badgeFilteredNames.value ?? undefined,
       });
       searchResults.value = results;
-      const resultCount = results.workflows.length + matchedCreators.value.length;
       trackSearchPerformed({
         query: trimmed,
-        resultCount,
+        workflowResultCount: results.workflows.length,
+        creatorResultCount,
         filtersApplied,
       });
     } finally {

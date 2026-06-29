@@ -31,13 +31,15 @@ describe('trackSearchPerformed', () => {
     initPostHog();
     trackSearchPerformed({
       query: ' flux ',
-      resultCount: 12,
+      workflowResultCount: 10,
+      creatorResultCount: 2,
       filtersApplied: ['model:Flux', 'mode:app'],
     });
 
     expect(posthogMock.capture).toHaveBeenCalledWith('hub:search_performed', {
       query: 'flux',
-      result_count: 12,
+      workflow_result_count: 10,
+      creator_result_count: 2,
       surface: 'workflows',
       filters_applied: ['model:Flux', 'mode:app'],
     });
@@ -49,13 +51,15 @@ describe('trackSearchPerformed', () => {
     initPostHog();
     trackSearchPerformed({
       query: 'nonexistent workflow',
-      resultCount: 0,
+      workflowResultCount: 0,
+      creatorResultCount: 0,
       filtersApplied: [],
     });
 
     expect(posthogMock.capture).toHaveBeenCalledWith('hub:search_performed', {
       query: 'nonexistent workflow',
-      result_count: 0,
+      workflow_result_count: 0,
+      creator_result_count: 0,
       surface: 'workflows',
       filters_applied: [],
     });
@@ -67,7 +71,8 @@ describe('trackSearchPerformed', () => {
     initPostHog();
     trackSearchPerformed({
       query: '   ',
-      resultCount: 1,
+      workflowResultCount: 1,
+      creatorResultCount: 0,
       filtersApplied: ['tag:image'],
     });
 

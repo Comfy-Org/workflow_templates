@@ -30,9 +30,10 @@ export function initPostHog(): void {
 type EventPropertyValue = string | number | boolean | string[] | undefined;
 type EventProperties = Record<string, EventPropertyValue>;
 
-export interface SearchPerformedProperties {
+interface SearchPerformedProperties {
   query: string;
-  resultCount: number;
+  workflowResultCount: number;
+  creatorResultCount: number;
   filtersApplied: string[];
 }
 
@@ -83,7 +84,8 @@ export function trackTemplateViewed(
 
 export function trackSearchPerformed({
   query,
-  resultCount,
+  workflowResultCount,
+  creatorResultCount,
   filtersApplied,
 }: SearchPerformedProperties): void {
   const trimmedQuery = query.trim();
@@ -91,7 +93,8 @@ export function trackSearchPerformed({
 
   capture('hub:search_performed', {
     query: trimmedQuery,
-    result_count: resultCount,
+    workflow_result_count: workflowResultCount,
+    creator_result_count: creatorResultCount,
     surface: 'workflows',
     filters_applied: filtersApplied,
   });
