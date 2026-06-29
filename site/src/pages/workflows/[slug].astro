@@ -12,11 +12,25 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
+import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { getTemplatesForLocale } from '../../lib/templates';
-import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, type HubWorkflowTemplateEntry } from '../../lib/hub-api';
+import { absoluteUrl } from '../../config/site';
+import {
+  listWorkflowIndex,
+  listRelatedWorkflows,
+  type HubWorkflowTemplateEntry,
+  type SerializedTemplate,
+} from '../../lib/hub-api';
 import { workflowOgUrl } from '../../lib/og-url';
+import {
+  buildFaqJsonLd,
+  serializeJsonLdForScript,
+  buildWorkflowBreadcrumb,
+} from '../../lib/structured-data';
+import { buildToolbarLabels } from '../../lib/toolbar';
+import { localizeUrl } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
 
 export async function getStaticPaths() {
   let entries: HubWorkflowTemplateEntry[] = [];
@@ -131,27 +145,12 @@ const structuredData = {
   inLanguage: 'en',
 };
 
-const faqStructuredData = data.faqItems?.length
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: data.faqItems.map((item) => ({
-        '@type': 'Question',
-        name: item.question,
-        acceptedAnswer: { '@type': 'Answer', text: item.answer },
-      })),
-    }
-  : null;
+const faqStructuredData = buildFaqJsonLd(data.faqItems);
 
-const breadcrumbStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-    { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
-    { '@type': 'ListItem', position: 3, name: data.title, item: canonicalUrl },
-  ],
-};
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
+  name: data.title,
+  item: canonicalUrl,
+});
 
 const softwareAppStructuredData = {
   '@context': 'https://schema.org',
@@ -162,6 +161,10 @@ const softwareAppStructuredData = {
   description: data.metaDescription || data.description,
   offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
 };
+
+// "View all workflows" grid — full index minus the current template.
+const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
+const toolbarLabels = buildToolbarLabels(locale);
 ---
 
 <BaseLayout
@@ -176,22 +179,46 @@ const softwareAppStructuredData = {
   hideDefaultFooter
 >
   <HubNavbar />
-  <TemplateDetailPage template={{ data }} locale={locale} />
+  <TemplateDetailPage template={{ data }} locale={locale}>
+    {
+      relatedTemplates.length > 0 && (
+        <section slot="related" class="mt-16 lg:mt-24">
+          <a
+            href={localizeUrl('/workflows/', locale)}
+            class="inline-block text-2xl lg:text-3xl font-semibold text-content hover:opacity-80 transition-opacity mb-6 lg:mb-8"
+          >
+            {t('template.viewAllWorkflows', locale)}
+          </a>
+          <WorkflowGrid
+            client:visible
+            templates={relatedTemplates}
+            locale={locale}
+            toolbarLabels={toolbarLabels}
+            gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          />
+        </section>
+      )
+    }
+  </TemplateDetailPage>
 
   {
     faqStructuredData && (
-      <script is:inline type="application/ld+json" set:html={JSON.stringify(faqStructuredData)} />
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
     )
   }
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(softwareAppStructuredData)}
+    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
   />
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbStructuredData)}
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
   />
 
   <Fragment slot="footer">

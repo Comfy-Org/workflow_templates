@@ -6,10 +6,12 @@ from pathlib import Path
 PACKAGE_ROOTS = [
     "packages/core/src",
     "packages/meta/src",
+    "packages/json/src",
     "packages/media_api/src",
     "packages/media_video/src",
     "packages/media_image/src",
     "packages/media_other/src",
+    "packages/media_assets_01/src",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]

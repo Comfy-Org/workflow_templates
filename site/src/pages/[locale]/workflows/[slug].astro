@@ -17,9 +17,10 @@ import TemplateDetailPage from '../../../components/template-detail/TemplateDeta
 import BackButton from '../../../components/BackButton.astro';
 import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
-import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { absoluteUrl } from '../../../config/site';
 import {
   listWorkflowIndex,
+  listRelatedWorkflows,
   getProfile,
   getWorkflow,
   toTemplateData,
@@ -29,6 +30,15 @@ import {
   type SerializedTemplate,
 } from '../../../lib/hub-api';
 import { workflowOgUrl, creatorOgUrl } from '../../../lib/og-url';
+import {
+  buildFaqJsonLd,
+  serializeJsonLdForScript,
+  buildWorkflowBreadcrumb,
+} from '../../../lib/structured-data';
+import { buildToolbarLabels } from '../../../lib/toolbar';
+import { getSocialDisplay } from '../../../lib/social-links';
+import { localizeUrl } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
@@ -135,24 +145,6 @@ if (!isDetailPage && !profileFound && serialized.length === 0) {
 
 const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
 
-// Parse social links from website_urls
-function getSocialDisplay(social: string): { label: string; url: string } {
-  const url =
-    social.startsWith('http://') || social.startsWith('https://') ? social : `https://${social}`;
-
-  if (social.includes('x.com') || social.includes('twitter.com')) return { label: 'X', url };
-  if (social.includes('instagram.com')) return { label: 'Instagram', url };
-  if (social.includes('youtube.com') || social.includes('youtu.be'))
-    return { label: 'YouTube', url };
-  if (social.includes('tiktok.com')) return { label: 'TikTok', url };
-  if (social.includes('linkedin.com')) return { label: 'LinkedIn', url };
-  if (social.includes('github.com')) return { label: 'GitHub', url };
-  if (social.includes('facebook.com')) return { label: 'Facebook', url };
-  if (social.includes('threads.net') || social.includes('threads.com'))
-    return { label: 'Threads', url };
-  return { label: 'Website', url };
-}
-
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
 // Detail page variables (only used when isDetailPage is true)
@@ -179,21 +171,12 @@ const detailStructuredData = detailData
     }
   : null;
 const detailBreadcrumb = detailData
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-        { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: detailData.title || detailData.name,
-          item: detailCanonicalUrl,
-        },
-      ],
-    }
+  ? buildWorkflowBreadcrumb(typedLocale, {
+      name: detailData.title || detailData.name,
+      item: detailCanonicalUrl,
+    })
   : null;
+const detailFaq = buildFaqJsonLd(detailData?.faqItems);
 
 const structuredData = !isDetailPage
   ? {
@@ -205,6 +188,10 @@ const structuredData = !isDetailPage
       inLanguage: locale,
     }
   : null;
+
+// "View all workflows" grid for the detail page — full index minus current.
+const detailRelated: SerializedTemplate[] =
+  isDetailPage && detailData ? await listRelatedWorkflows(detailData.name, profiles) : [];
 ---
 
 {
@@ -222,8 +209,37 @@ const structuredData = !isDetailPage
       hideDefaultFooter
     >
       <HubNavbar />
-      <TemplateDetailPage template={{ data: detailData }} locale={typedLocale} />
-      <script is:inline type="application/ld+json" set:html={JSON.stringify(detailBreadcrumb)} />
+      <TemplateDetailPage template={{ data: detailData }} locale={typedLocale}>
+        {detailRelated.length > 0 && (
+          <section slot="related" class="mt-16 lg:mt-24">
+            <a
+              href={localizeUrl('/workflows/', typedLocale)}
+              class="inline-block text-2xl lg:text-3xl font-semibold text-content hover:opacity-80 transition-opacity mb-6 lg:mb-8"
+            >
+              {t('template.viewAllWorkflows', typedLocale)}
+            </a>
+            <WorkflowGrid
+              client:visible
+              templates={detailRelated}
+              locale={typedLocale}
+              toolbarLabels={buildToolbarLabels(typedLocale)}
+              gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+            />
+          </section>
+        )}
+      </TemplateDetailPage>
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(detailBreadcrumb)}
+      />
+      {detailFaq && (
+        <script
+          is:inline
+          type="application/ld+json"
+          set:html={serializeJsonLdForScript(detailFaq)}
+        />
+      )}
       <Fragment slot="footer">
         <SiteFooter />
       </Fragment>
@@ -291,6 +307,7 @@ const structuredData = !isDetailPage
             client:load
             templates={serialized}
             locale={typedLocale}
+            toolbarLabels={buildToolbarLabels(typedLocale)}
             gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
             hideAuthor
           />

@@ -15,10 +15,12 @@ import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { t } from '../../../../i18n/ui';
 import { localizeUrl } from '../../../../i18n/utils';
-import { SITE_ORIGIN, absoluteUrl } from '../../../../config/site';
+import { absoluteUrl } from '../../../../config/site';
 import { categoryPath } from '../../../../lib/routes';
 import { badgeVariants } from '../../../../components/ui/badge';
-import { loadSerializedTemplates, type SerializedTemplate, type MediaType } from '../../../../lib/hub-api';
+import { loadSerializedTemplates, type MediaType } from '../../../../lib/hub-api';
+import { buildToolbarLabels } from '../../../../lib/toolbar';
+import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../lib/structured-data';
 
 const validTypes: MediaType[] = ['image', 'video', 'audio', '3d'];
 
@@ -63,20 +65,7 @@ const structuredData = {
   inLanguage: locale,
 };
 
-const breadcrumbStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: t('nav.templates', typedLocale),
-      item: absoluteUrl(localizeUrl('/workflows/', typedLocale)),
-    },
-    { '@type': 'ListItem', position: 3, name: categoryName },
-  ],
-};
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(typedLocale, { name: categoryName });
 
 // templates are already SerializedTemplate[] with profile data
 const serialized = templates;
@@ -119,7 +108,8 @@ const serialized = templates;
           client:load
           templates={serialized}
           locale={typedLocale}
-          gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+          toolbarLabels={buildToolbarLabels(typedLocale)}
+          gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
         />
       ) : (
         <div class="text-center py-16">
@@ -139,7 +129,7 @@ const serialized = templates;
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(breadcrumbStructuredData)}
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
   />
 
   <Fragment slot="footer">

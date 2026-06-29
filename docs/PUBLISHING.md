@@ -105,6 +105,16 @@ gh pr edit <PR-NUMBER> --add-label release
 - `.github/workflows/version-check.yml` - Auto-bump versions on PR
 - `.github/workflows/publish.yml` - Publish to PyPI and create GitHub releases
 
+## Package layout (split bundles)
+
+| PyPI package | Contents | Status |
+|--------------|----------|--------|
+| `comfyui-workflow-templates-json` | All workflow + index JSON | Active |
+| `comfyui-workflow-templates-media-assets-01` | New template thumbnails/media | Active |
+| `comfyui-workflow-templates-media-{api,image,video,other}` | Legacy assets only (JSON stripped) | Frozen |
+
+JSON fixes bump only the `json` package (~28MB). New templates assign assets via `bundles.json` → `media-assets-01`.
+
 ## Package Size Considerations
 
 PyPI has a 100MB per-file upload limit. Our current package sizes:

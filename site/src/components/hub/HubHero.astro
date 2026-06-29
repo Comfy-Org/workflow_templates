@@ -1,19 +1,29 @@
 ---
 /**
- * HubHero - Centered hero section for the hub page
- * Matches Figma: "ComfyHub" in yellow italic + muted subtitle
+ * HubHero - Centered hero/section heading for the hub library grid.
+ * Browse-oriented, SEO-friendly copy with a live workflow count.
  */
 import { getLocaleFromPath } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 
+interface Props {
+  /** Total number of templates, rendered into the title. */
+  count: number;
+}
+
+const { count } = Astro.props;
 const locale = getLocaleFromPath(Astro.url.pathname);
 ---
 
-<section class="flex flex-col items-center gap-4 text-center pt-16 pb-12">
-  <h1 class="text-brand text-3xl font-black italic">
-    {t('hub.title', locale)}
-  </h1>
-  <p class="text-hub-muted text-xl font-normal">
-    {t('hub.subtitle', locale)}
+<section
+  class="flex flex-col items-center gap-2 text-center mt-8 pt-10 pb-8 sm:gap-3 sm:pt-16 sm:pb-12"
+>
+  <p class="text-brand text-[0.625rem] font-bold tracking-[0.18em] uppercase sm:text-xs">
+    {t('hub.browse.eyebrow', locale)}
   </p>
+  <h1
+    class="text-content text-2xl leading-[1.1] font-normal tracking-[-0.02em] text-balance sm:text-3xl lg:text-4xl"
+  >
+    {count.toLocaleString(locale)}{t('hub.browse.title.suffix', locale)}
+  </h1>
 </section>

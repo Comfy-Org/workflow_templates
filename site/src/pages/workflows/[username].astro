@@ -16,11 +16,14 @@ import SidebarSection from '../../components/template-detail/SidebarSection.astr
 import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
 import BackButton from '../../components/BackButton.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
+import { buildToolbarLabels } from '../../lib/toolbar';
 import { getLocaleFromPath } from '../../i18n/utils';
-import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
+import { absoluteUrl } from '../../config/site';
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
+import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../lib/structured-data';
+import { getSocialDisplay } from '../../lib/social-links';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -102,22 +105,6 @@ if (!isDetailPage && !profileFound && serialized.length === 0) {
 
 const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
 
-// Parse social links from website_urls
-function getSocialDisplay(social: string): { label: string; url: string } {
-  const url =
-    social.startsWith('http://') || social.startsWith('https://') ? social : `https://${social}`;
-
-  if (social.includes('x.com') || social.includes('twitter.com')) return { label: 'X', url };
-  if (social.includes('instagram.com')) return { label: 'Instagram', url };
-  if (social.includes('youtube.com') || social.includes('youtu.be')) return { label: 'YouTube', url };
-  if (social.includes('tiktok.com')) return { label: 'TikTok', url };
-  if (social.includes('linkedin.com')) return { label: 'LinkedIn', url };
-  if (social.includes('github.com')) return { label: 'GitHub', url };
-  if (social.includes('facebook.com')) return { label: 'Facebook', url };
-  if (social.includes('threads.net') || social.includes('threads.com')) return { label: 'Threads', url };
-  return { label: 'Website', url };
-}
-
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
 // Detail page variables (only used when isDetailPage is true)
@@ -139,15 +126,12 @@ const detailStructuredData = detailData ? {
   datePublished: detailData.date,
   inLanguage: 'en',
 } : null;
-const detailBreadcrumb = detailData ? {
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_ORIGIN },
-    { '@type': 'ListItem', position: 2, name: 'Workflows', item: absoluteUrl('/workflows/') },
-    { '@type': 'ListItem', position: 3, name: detailData.title || detailData.name, item: detailCanonicalUrl },
-  ],
-} : null;
+const detailBreadcrumb = detailData
+  ? buildWorkflowBreadcrumb(locale, {
+      name: detailData.title || detailData.name,
+      item: detailCanonicalUrl,
+    })
+  : null;
 ---
 
 {isDetailPage && detailData ? (
@@ -167,7 +151,7 @@ const detailBreadcrumb = detailData ? {
   <script
     is:inline
     type="application/ld+json"
-    set:html={JSON.stringify(detailBreadcrumb)}
+    set:html={serializeJsonLdForScript(detailBreadcrumb)}
   />
   <Fragment slot="footer">
     <SiteFooter />
@@ -247,6 +231,7 @@ const detailBreadcrumb = detailData ? {
         client:load
         templates={serialized}
         locale={locale}
+        toolbarLabels={buildToolbarLabels(locale)}
         gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
         hideAuthor
       />

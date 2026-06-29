@@ -49,18 +49,29 @@
 
   /* Brand design tokens → semantic Tailwind utilities */
   --color-page: var(--color-bg-page);
-  --color-nav: var(--color-bg-nav);
   --color-brand: var(--color-accent);
   --color-content: var(--color-text-primary);
+  --color-content-bright: var(--color-primary-warm-white);
   --color-content-secondary: var(--color-text-secondary);
   --color-content-muted: var(--color-text-muted);
   --color-divider: var(--color-border);
   --color-divider-subtle: var(--color-border-subtle);
+  --color-border-strong: var(--color-primary-warm-gray);
 
   /* Hub design tokens */
   --color-hub-surface: var(--color-transparency-white-t4);
   --color-hub-surface-hover: var(--color-transparency-white-t8);
   --color-hub-muted: var(--hub-muted-fg);
+
+  /* Dropdown surface (BrowseToolbar filter popover)*/
+  --color-site-dropdown: #332b38;
+
+  --font-formula: var(--font-family);
+}
+
+/* Navbar height → `top-hub-nav` for the inline search bar to dock beneath. */
+@theme {
+  --spacing-hub-nav: calc(1rem + 2.5rem + 1.5rem); /* pt-4 + h-10 + pb-6 = 5rem */
 }
 
 :root {
@@ -96,6 +107,13 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+}
+
+/* lg: padding grows to pt-8/pb-8 and nav-link triggers (py-3 + text-sm) are 44px. */
+@media (min-width: 1024px) {
+  :root {
+    --spacing-hub-nav: calc(2rem + 2.75rem + 2rem); /* lg:pt-8 + 44px + lg:pb-8 = 6.75rem */
+  }
 }
 
 .dark {
@@ -174,5 +192,16 @@
       background: var(--hub-bg-secondary);
       border-radius: 9999px;
     }
+  }
+
+  .ppformula-text-center {
+    display: inline-block;
+    position: relative;
+    top: 0.19em;
+  }
+
+  .ppformula-text-center-sm {
+    position: relative;
+    top: 0.12em;
   }
 }

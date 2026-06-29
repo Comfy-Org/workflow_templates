@@ -10,12 +10,17 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import HubHero from '../../../components/hub/HubHero.astro';
+import HubSearchBar from '../../../components/hub/HubSearchBar.astro';
 import HubBrowse from '../../../components/hub/HubBrowse.vue';
+import FeaturedCarousel from '../../../components/hub/FeaturedCarousel.vue';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { isRTL } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { absoluteUrl } from '../../../config/site';
 import { loadSerializedTemplates } from '../../../lib/hub-api';
+import { getFeatured, featuredPreloadImage } from '../../../lib/featured';
+import { buildToolbarLabels, buildFacetsConfig } from '../../../lib/toolbar';
 
 const { locale } = Astro.params;
 
@@ -28,6 +33,9 @@ const typedLocale = locale as Locale;
 
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
 
+const featured = getFeatured(serialized);
+const featuredLcpImage = featuredPreloadImage(featured);
+
 const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
 
 const structuredData = {
@@ -37,9 +45,18 @@ const structuredData = {
   description: t('meta.description', typedLocale),
   url: canonicalUrl,
   inLanguage: locale,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: serialized.length,
+  },
 };
 
 const mediaTypes = ['image', 'video', 'audio', '3d'];
+
+// Toolbar labels + filter facets, resolved once here (Vue islands never import
+// i18n). Shared builders keep these identical across every page that mounts a grid.
+const toolbarLabels = buildToolbarLabels(typedLocale);
+const facetsConfig = buildFacetsConfig(typedLocale);
 ---
 
 <BaseLayout
@@ -53,13 +70,41 @@ const mediaTypes = ['image', 'video', 'audio', '3d'];
   theme="dark"
   hideDefaultFooter
 >
-  <HubNavbar templates={serialized} />
+  {
+    featuredLcpImage && (
+      <link slot="head" rel="preload" as="image" href={featuredLcpImage} fetchpriority="high" />
+    )
+  }
 
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16">
-    <HubHero />
+  <!-- Sticky navbar (matches other pages); the inline search docks beneath it on scroll. -->
+  <HubNavbar showSearch={false} sticky />
+
+  <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
+    <!-- Featured hero carousel (Vue island) -->
+    <FeaturedCarousel
+      client:load
+      templates={featured}
+      locale={typedLocale}
+      isRtl={isRTL(typedLocale)}
+      featuredLabel={t('hub.featured.label', typedLocale)}
+      prevLabel={t('hub.featured.prev', typedLocale)}
+      nextLabel={t('hub.featured.next', typedLocale)}
+    />
+
+    <HubHero count={serialized.length} />
+
+    <!-- Inline search — shows among the filters, docks flush below the navbar once scrolled past. -->
+    <HubSearchBar templates={serialized} locale={typedLocale} />
 
     <!-- Interactive browse (Vue island) -->
-    <HubBrowse client:load templates={serialized} locale={typedLocale} mediaTypes={mediaTypes} />
+    <HubBrowse
+      client:load
+      templates={serialized}
+      locale={typedLocale}
+      mediaTypes={mediaTypes}
+      facetsConfig={facetsConfig}
+      toolbarLabels={toolbarLabels}
+    />
   </div>
 
   <!-- Custom Footer -->

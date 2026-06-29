@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { workflowDetailPath, workflowDetailSlug } from '../../src/lib/routes';
+import { workflowDetailPath, workflowDetailSlug, tagPath, creatorPath } from '../../src/lib/routes';
 
 describe('workflowDetailPath', () => {
   it('builds a {name}-{shareId} URL when both are present', () => {
@@ -57,5 +57,28 @@ describe('workflowDetailSlug', () => {
     expect(workflowDetailSlug(undefined)).toBeNull();
     expect(workflowDetailSlug(null, null)).toBeNull();
     expect(workflowDetailSlug('', '')).toBeNull();
+  });
+});
+
+describe('tagPath', () => {
+  it('builds a slugified tag URL', () => {
+    expect(tagPath('upscaling')).toBe('/workflows/tag/upscaling/');
+  });
+
+  it('prefixes non-default locales but not the default', () => {
+    expect(tagPath('upscaling', 'ja')).toBe('/ja/workflows/tag/upscaling/');
+    expect(tagPath('upscaling', 'en')).toBe('/workflows/tag/upscaling/');
+    expect(tagPath('upscaling', undefined)).toBe('/workflows/tag/upscaling/');
+  });
+});
+
+describe('creatorPath', () => {
+  it('slugifies the username', () => {
+    expect(creatorPath('Comfy Org')).toBe('/workflows/comfy-org/');
+  });
+
+  it('prefixes non-default locales but not the default', () => {
+    expect(creatorPath('topaz', 'ar')).toBe('/ar/workflows/topaz/');
+    expect(creatorPath('topaz', 'en')).toBe('/workflows/topaz/');
   });
 });

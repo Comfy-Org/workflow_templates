@@ -1,0 +1,30 @@
+<script setup lang="ts">
+import NavigationMenuLink from '@/components/ui/navigation-menu/NavigationMenuLink.vue';
+import type { Locale } from '@/i18n/config';
+import type { NavColumn } from '@/config/main-navigation';
+import NavLinkContent from './NavLinkContent.vue';
+
+defineProps<{ column: NavColumn; locale: Locale }>();
+</script>
+
+<template>
+  <li class="flex flex-col space-y-4">
+    <p class="font-formula text-primary-warm-gray pl-2 text-sm font-medium">
+      {{ column.header }}
+    </p>
+    <ul class="flex flex-col">
+      <li v-for="item in column.items" :key="item.label">
+        <NavigationMenuLink as-child class="hover:bg-transparency-white-t4">
+          <a
+            :href="item.href"
+            :target="item.external ? '_blank' : undefined"
+            :rel="item.external ? 'noopener noreferrer' : undefined"
+            class="whitespace-nowrap"
+          >
+            <NavLinkContent :item="item" :locale="locale" />
+          </a>
+        </NavigationMenuLink>
+      </li>
+    </ul>
+  </li>
+</template>
