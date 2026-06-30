@@ -1,0 +1,56 @@
+---
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import { inner, sectionPad, eyebrow, heading, body } from './seo-styles';
+
+interface Props {
+  locale: Locale;
+  headingLabel: string;
+  steps: string[];
+}
+
+const { locale, headingLabel, steps } = Astro.props;
+---
+
+<section aria-labelledby="seo-how-heading" class={`bg-page ${sectionPad}`}>
+  <div class={inner}>
+    <p class={eyebrow}>{t('useCase.workflow', locale)}</p>
+    <h2 id="seo-how-heading" class={`${heading} mb-10 lg:mb-14 max-w-3xl text-balance`}>
+      {headingLabel}
+    </h2>
+
+    <ol class="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      {
+        steps.map((step, index) => (
+          <li class="relative flex gap-4 sm:flex-col sm:gap-0">
+            <div class="relative flex shrink-0 items-start sm:mb-5 sm:block">
+              <span class="relative z-10 flex size-11 items-center justify-center rounded-full border border-brand/30 bg-brand/12 font-display text-sm font-bold text-brand tabular-nums">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              {index < steps.length - 1 && (
+                <>
+                  {/* mobile: vertical connector to next stacked step */}
+                  <span
+                    class="absolute left-1/2 top-11 h-[calc(100%-1.25rem)] w-px -translate-x-1/2 bg-linear-to-b from-brand/30 to-transparent sm:hidden"
+                    aria-hidden="true"
+                  />
+                  {/*
+                    desktop: horizontal connector to the next card, hidden at row ends
+                    via :nth-child (2 cols sm, 3 lg). Geometry tied to siblings — keep in
+                    sync: 2.75rem = size-11 badge; 2rem = gap-x-8 column gap; 0.5rem = badge→line offset.
+                  */}
+                  <span
+                    class="absolute top-1/2 hidden h-px -translate-y-1/2 bg-linear-to-r from-brand/30 to-transparent sm:block sm:[:nth-child(2n)>div>&]:hidden lg:[:nth-child(2n)>div>&]:block lg:[:nth-child(3n)>div>&]:hidden"
+                    style="left: calc(2.75rem + 0.5rem); width: calc(100% + 2rem - 2.75rem);"
+                    aria-hidden="true"
+                  />
+                </>
+              )}
+            </div>
+            <p class={`${body} pt-2 text-base leading-relaxed sm:pt-0`}>{step}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

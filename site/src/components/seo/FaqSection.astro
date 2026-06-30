@@ -1,0 +1,35 @@
+---
+/** FAQ — sticky left heading with the accordion on the right (List-Side). */
+import FaqAccordion from '../template-detail/FaqAccordion.vue';
+import type { Locale } from '../../i18n/config';
+import type { FaqItem } from '../../lib/seo/schema';
+import { t } from '../../i18n/ui';
+import { inner, sectionPad, eyebrow } from './seo-styles';
+
+interface Props {
+  locale: Locale;
+  headingLabel: string;
+  items: FaqItem[];
+}
+
+const { locale, headingLabel, items } = Astro.props;
+---
+
+<section aria-labelledby="seo-faq-heading" class={`bg-page ${sectionPad}`}>
+  <div class={`${inner} flex flex-col gap-12 lg:flex-row lg:gap-16`}>
+    <!-- Sticky heading; offset clears the 188px sticky navbar + search bar. -->
+    <div class="lg:sticky lg:top-52 lg:h-fit lg:w-md lg:shrink-0">
+      <p class={eyebrow}>{t('template.faq', locale)}</p>
+      <h2
+        id="seo-faq-heading"
+        class="mt-3 font-display text-4xl font-light leading-[1.1] tracking-[-0.03em] text-content sm:text-5xl"
+      >
+        {headingLabel}
+      </h2>
+    </div>
+
+    <div class="flex-1">
+      <FaqAccordion client:visible items={items} />
+    </div>
+  </div>
+</section>

@@ -6,17 +6,17 @@ import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
 import Breadcrumbs from '../../../components/template-detail/Breadcrumbs.astro';
 import SeoPageBody from '../../../components/seo/SeoPageBody.astro';
-import HeroCollage from '../../../components/seo/HeroCollage.astro';
+import HeroSection from '../../../components/seo/HeroSection.astro';
+import RelatedRail from '../../../components/seo/RelatedRail.astro';
 import { inner, eyebrow, heading } from '../../../components/seo/seo-styles';
-import { ICON_PATHS } from '../../../components/seo/seo-icons';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
+import { isMediaFile } from '../../../lib/media-utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { modelPath, useCasePath } from '../../../lib/routes';
+import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
-import { badgeVariants } from '../../../components/ui/badge';
-import { loadSerializedTemplates } from '../../../lib/hub-api';
+import { loadSerializedTemplates, type SerializedTemplate } from '../../../lib/hub-api';
 import { deriveModelGroups, type ModelGroup } from '../../../lib/seo/model-groups';
 import { loadModelContent } from '../../../lib/seo/content-loaders';
 import { useCasesFeaturingModel } from '../../../lib/seo/use-case-resolver';
@@ -32,18 +32,37 @@ import {
 export async function getStaticPaths() {
   const catalog = await loadSerializedTemplates(() => getCollection('templates'));
   const groups = deriveModelGroups(catalog);
+  // Image fallback pool: every template that has a still, so a section can draw
+  // a content-matched image from the whole dataset before any image repeats.
+  // Trimmed to the fields the matcher reads, to keep the page payload lean.
+  const fallbackPool = catalog
+    .filter((t) => t.thumbnails?.some((thumb) => !/\.(mp4|mov|mp3|webm)(\?|#|$)/i.test(thumb)))
+    .map((t) => ({
+      name: t.name,
+      title: t.title,
+      description: t.description,
+      tags: t.tags,
+      models: t.models,
+      usage: t.usage,
+      thumbnails: t.thumbnails,
+    })) as SerializedTemplate[];
   const paths: {
     params: { name: string };
-    props: { group: ModelGroup; relatedUseCases: SeoPageDef[]; redirectTo?: string };
+    props: {
+      group: ModelGroup;
+      relatedUseCases: SeoPageDef[];
+      fallbackPool: SerializedTemplate[];
+      redirectTo?: string;
+    };
   }[] = [];
 
   for (const group of groups) {
     const relatedUseCases = useCasesFeaturingModel(group.slug, catalog);
-    paths.push({ params: { name: group.slug }, props: { group, relatedUseCases } });
+    paths.push({ params: { name: group.slug }, props: { group, relatedUseCases, fallbackPool } });
     for (const variant of group.redirectFrom) {
       paths.push({
         params: { name: variant },
-        props: { group, relatedUseCases, redirectTo: group.slug },
+        props: { group, relatedUseCases, fallbackPool, redirectTo: group.slug },
       });
     }
   }
@@ -53,10 +72,12 @@ export async function getStaticPaths() {
 const {
   group,
   relatedUseCases: relatedUseCaseDefs,
+  fallbackPool,
   redirectTo,
 } = Astro.props as {
   group: ModelGroup;
   relatedUseCases: SeoPageDef[];
+  fallbackPool: SerializedTemplate[];
   redirectTo?: string;
 };
 const locale = getLocaleFromPath(Astro.url.pathname);
@@ -111,26 +132,28 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
 ]);
 const faqStructuredData = isRich ? buildFaqJsonLd(content!.faqItems) : null;
 
-// Use-cases featuring this model family, derived from grid overlap.
-const relatedUseCases = isRich
-  ? relatedUseCaseDefs.map((def) => ({
-      label: def.h1,
+// The template whose still becomes the hero image — reserved so no section reuses it.
+const heroTemplateName = group.templates.find((tpl) =>
+  tpl.thumbnails?.some((thumb) => !isMediaFile(thumb))
+)?.name;
+
+// "Keep exploring" image cards: use-cases featuring this model family (derived
+// from grid overlap), each borrowing a still from this page's own grid.
+const useCasePoolStills = group.templates
+  .flatMap((tpl) => tpl.thumbnails ?? [])
+  .filter((thumb) => !isMediaFile(thumb));
+
+const relatedCards = isRich
+  ? relatedUseCaseDefs.slice(0, 6).map((def, i) => ({
+      title: def.h1,
+      eyebrow: t('template.useCases', locale),
       href: localizeUrl(useCasePath(def.slug), locale),
+      logo: null,
+      image: useCasePoolStills[i]
+        ? { src: thumbnailPath(useCasePoolStills[i]), alt: def.h1 }
+        : null,
     }))
   : [];
-
-const topTags = [...new Set(templates.flatMap((template) => template.tags))].slice(0, 3);
-const atAGlance = isRich
-  ? [
-      { label: t('useCase.glanceWorkflows', locale), value: String(templates.length) },
-      ...(topTags.length ? [{ label: t('labels.tags', locale), value: topTags.join(', ') }] : []),
-      { label: t('useCase.glanceSetup', locale), value: t('useCase.glanceNoSetup', locale) },
-    ]
-  : undefined;
-
-const hasHeroCollage = templates.some((template) => template.thumbnails?.length);
-
-const pillClass = badgeVariants({ variant: 'hub-pill' });
 ---
 
 <BaseLayout
@@ -148,107 +171,20 @@ const pillClass = badgeVariants({ variant: 'hub-pill' });
   <HubNavbar />
 
   <article class="bg-page min-h-screen text-content scroll-smooth hyphens-none wrap-normal">
-    <header class="bg-page pt-4 lg:pt-6">
-      <div class={inner}>
-        <Breadcrumbs locale={locale} title={h1} trail={breadcrumbTrail} />
-      </div>
-      <div
-        class:list={[
-          inner,
-          'pt-12 pb-16 lg:pt-16 lg:pb-24',
-          hasHeroCollage
-            ? 'grid items-center gap-12 lg:grid-cols-2 lg:gap-16'
-            : 'flex flex-col items-center text-center',
-        ]}
-      >
-        <div
-          class:list={['flex flex-col', hasHeroCollage ? 'items-start text-left' : 'items-center']}
-        >
-          <span class={pillClass}>{t('labels.models', locale)}</span>
-          <h1
-            class="mt-4 max-w-4xl text-balance font-display text-4xl font-bold leading-[1.1] tracking-tight text-content-bright sm:text-5xl lg:text-6xl"
-          >
-            {h1}
-          </h1>
-          <p
-            class="font-body mt-6 max-w-xl text-pretty text-base leading-relaxed text-content-secondary sm:text-lg"
-          >
-            {subheading}
-          </p>
+    <div class:list={[inner, 'pt-4 lg:pt-6']}>
+      <Breadcrumbs locale={locale} title={h1} trail={breadcrumbTrail} />
+    </div>
+    <HeroSection
+      eyebrow={t('labels.models', locale)}
+      title={h1}
+      description={subheading}
+      meta={`${group.templates.length} ${t('useCase.workflowsCount', locale)}`}
+      primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
+      secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
+      templates={group.templates}
+    />
 
-          <div
-            class:list={[
-              'mt-9 flex flex-wrap items-center gap-3',
-              !hasHeroCollage && 'justify-center',
-            ]}
-          >
-            <a
-              href={heroCtaUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-flex items-center justify-center rounded-full bg-brand px-7 py-3 text-sm font-bold text-page transition-opacity hover:opacity-90"
-            >
-              {t('cta.tryCloud', locale)}
-            </a>
-            <a
-              href="#workflows"
-              class="inline-flex items-center justify-center rounded-full border border-divider px-7 py-3 text-sm font-medium text-content transition-colors hover:border-border-strong"
-            >
-              {t('template.viewAllWorkflows', locale)}
-            </a>
-          </div>
-
-          <ul
-            class:list={[
-              'font-body mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-content-muted',
-              !hasHeroCollage && 'justify-center',
-            ]}
-          >
-            <li class="flex items-center gap-1.5">
-              <svg class="size-4 text-brand" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d={ICON_PATHS.layers}
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-              {templates.length}
-              {t('template.count', locale)}
-            </li>
-            <li class="flex items-center gap-1.5">
-              <svg class="size-4 text-brand" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d={ICON_PATHS.zap}
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-              {t('useCase.noSetupShort', locale)}
-            </li>
-            <li class="flex items-center gap-1.5">
-              <svg class="size-4 text-brand" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d={ICON_PATHS.badge}
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"></path>
-              </svg>
-              {t('useCase.fullyEditable', locale)}
-            </li>
-          </ul>
-        </div>
-
-        {hasHeroCollage && <HeroCollage templates={templates} class="w-full max-lg:hidden" />}
-      </div>
-    </header>
-
-    <section
-      id="workflows"
-      class="scroll-mt-8 border-t border-divider bg-hub-surface py-20 lg:py-28"
-    >
+    <section id="workflows" class="scroll-mt-8 bg-page pt-20 pb-10 lg:pt-28 lg:pb-12">
       <div class={inner}>
         <p class={eyebrow}>{t('useCase.theWorkflows', locale)}</p>
         <h2 class={`${heading} mb-8 lg:mb-10`}>
@@ -272,61 +208,40 @@ const pillClass = badgeVariants({ variant: 'hub-pill' });
           kind="model"
           keyword={keywords.primary}
           intro={content!.extendedDescription}
-          atAGlance={atAGlance}
           modelSpec={content!.modelSpec}
           specName={label}
-          howToUse={content!.howToUse}
-          comparison={content!.comparison}
+          capabilitiesIntro={content!.capabilitiesIntro}
+          whyComfy={content!.whyComfy}
+          applicationsIntro={content!.applicationsIntro}
           suggestedUseCases={content!.suggestedUseCases}
           faqItems={content!.faqItems}
+          templates={group.templates}
+          catalog={fallbackPool}
+          reservedTemplates={heroTemplateName ? [heroTemplateName] : []}
+          ctaLabel={t('useCase.tryWorkflow', locale)}
+          ctaHref={(tpl) =>
+            tpl.shareId
+              ? getCloudCtaUrl(tpl.shareId, `model_${group.slug}_capability`)
+              : getCloudLandingUrl(`model_${group.slug}_capability`)
+          }
+          banner={{
+            title: t('useCase.bannerTitle', locale),
+            body: t('useCase.bannerBody', locale),
+            kicker: t('useCase.bannerKicker', locale),
+            cta: {
+              label: t('useCase.bannerCta', locale),
+              href: getCloudLandingUrl(`model_${group.slug}_banner`),
+            },
+          }}
         />
       )
     }
 
-    {
-      relatedUseCases.length > 0 && (
-        <section aria-labelledby="related-heading" class="bg-page py-20 lg:py-24">
-          <div class={`${inner} flex flex-col gap-8`}>
-            <div>
-              <p class={eyebrow}>{t('useCase.explore', locale)}</p>
-              <h2 id="related-heading" class={heading}>
-                {t('useCase.relatedUseCases', locale)}
-              </h2>
-            </div>
-            <ul class="flex flex-wrap gap-3">
-              {relatedUseCases.map((uc) => (
-                <li>
-                  <a
-                    href={uc.href}
-                    class="group inline-flex items-center gap-2 rounded-full border border-divider bg-hub-surface py-2 pl-4 pr-3.5 font-body text-sm text-content transition-colors hover:border-brand/40 hover:bg-hub-surface-hover"
-                  >
-                    {uc.label}
-                    <svg
-                      class="size-3.5 shrink-0 text-content-muted transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M5 12h14M12 5l7 7-7 7"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </section>
-      )
-    }
+    {relatedCards.length > 0 && <RelatedRail locale={locale} cards={relatedCards} />}
 
     {
       isRich && (
-        <section class="border-t border-divider bg-hub-surface py-20 lg:py-28">
+        <section class="bg-page py-20 lg:py-28">
           <div class={`${inner} flex flex-col items-center text-center`}>
             <h2 class="font-display text-3xl lg:text-4xl font-semibold tracking-tight text-content-bright">
               {t('template.ready', locale)}
