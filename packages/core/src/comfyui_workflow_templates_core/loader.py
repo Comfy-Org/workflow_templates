@@ -24,7 +24,10 @@ BUNDLE_PACKAGE_MAP = {
     "media-video": "comfyui_workflow_templates_media_video",
     "media-image": "comfyui_workflow_templates_media_image",
     "media-other": "comfyui_workflow_templates_media_other",
+    "media-assets-01": "comfyui_workflow_templates_media_assets_01",
 }
+
+JSON_PACKAGE = "comfyui_workflow_templates_json"
 
 BLUEPRINT_BUNDLE_PACKAGE_MAP = {
     "blueprints": "comfyui_subgraph_blueprints",
@@ -100,6 +103,12 @@ def _bundle_package(bundle_name: str) -> str:
         raise KeyError(f"No package mapping defined for bundle '{bundle_name}'") from exc
 
 
+def _asset_package(entry: TemplateEntry, filename: str) -> str:
+    if filename.endswith(".json"):
+        return JSON_PACKAGE
+    return _bundle_package(entry.bundle)
+
+
 def get_asset_path(template_id: str, filename: str) -> str:
     """
     Resolve the absolute path for an asset belonging to `template_id`.
@@ -108,12 +117,13 @@ def get_asset_path(template_id: str, filename: str) -> str:
         FileNotFoundError: if the bundle package or asset is missing.
     """
     entry = get_template_entry(template_id)
-    package_name = _bundle_package(entry.bundle)
+    package_name = _asset_package(entry, filename)
     try:
         package_files = resources.files(package_name)
     except ModuleNotFoundError as exc:
         raise FileNotFoundError(
-            f"Media package '{package_name}' is not installed for bundle '{entry.bundle}'"
+            f"Package '{package_name}' is not installed for asset '{filename}' "
+            f"(template '{template_id}', bundle '{entry.bundle}')"
         ) from exc
     asset = package_files / "templates" / filename
     if not asset.exists():

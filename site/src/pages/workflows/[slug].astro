@@ -28,8 +28,7 @@ import {
   buildWorkflowBreadcrumb,
 } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
-import { useCasePagesFeaturingTemplate } from '../../lib/seo/use-case-resolver';
-import { useCasePath } from '../../lib/routes';
+
 import { localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
 
@@ -165,10 +164,10 @@ const toolbarLabels = buildToolbarLabels(locale);
 // workflow. Built from the once-serialized index (stable reference), so the
 // membership map is computed a single time across all detail pages.
 const catalog = await getSerializedIndex();
-const relatedUseCases = useCasePagesFeaturingTemplate(data.name, catalog).map((def) => ({
-  label: def.h1,
-  href: localizeUrl(useCasePath(def.slug), locale),
-}));
+// const relatedUseCases = useCasePagesFeaturingTemplate(data.name, catalog).map((def) => ({
+//   label: def.h1,
+//   href: localizeUrl(useCasePath(def.slug), locale),
+// }));
 ---
 
 <BaseLayout
@@ -183,7 +182,7 @@ const relatedUseCases = useCasePagesFeaturingTemplate(data.name, catalog).map((d
   hideDefaultFooter
 >
   <HubNavbar />
-  <TemplateDetailPage template={{ data }} locale={locale} relatedUseCases={relatedUseCases}>
+  <TemplateDetailPage template={{ data }} locale={locale}>
     {
       relatedTemplates.length > 0 && (
         <section slot="related" class="mt-16 lg:mt-24">

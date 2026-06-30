@@ -1,5 +1,6 @@
 ---
-/** Search section for the hub page: pins to the top once scrolled past (CSS sticky). */
+/** Inline search: sits among the filters, then docks flush below the sticky navbar
+ *  (top-hub-nav) once scrolled past. SearchPopover keeps its own pill shape. */
 import SearchPopover from './SearchPopover.vue';
 import { getProfileCache, getCreatorsList, type SerializedTemplate } from '../../lib/hub-api';
 
@@ -12,6 +13,6 @@ const { templates, locale } = Astro.props;
 const creators = getCreatorsList(await getProfileCache());
 ---
 
-<div class="sticky top-0 z-30 -mx-1 rounded-2xl bg-page pt-0.5">
+<div class="sticky top-hub-nav z-40 bg-page pt-2 pb-6 lg:pb-8">
   <SearchPopover client:load templates={templates} creators={creators} locale={locale} />
 </div>

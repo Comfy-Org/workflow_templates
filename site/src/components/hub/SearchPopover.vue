@@ -13,7 +13,7 @@
  */
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
-import { useHubStore } from '@/composables/useHubStore';
+import { useHubStore, type FilterBadge } from '@/composables/useHubStore';
 import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
@@ -71,6 +71,10 @@ const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MA
 const overflowCountDesktop = computed(() =>
   Math.max(0, store.filterBadges.value.length - MAX_BADGES_DESKTOP)
 );
+
+function serializeFilters(badges: FilterBadge[]): string[] {
+  return badges.map((badge) => `${badge.type}:${badge.value}`);
+}
 
 const allTags = computed(() => {
   const counts = new Map<string, number>();
@@ -179,11 +183,19 @@ watchDebounced(
       return;
     }
     isSearching.value = true;
+    const filtersApplied = serializeFilters(store.filterBadges.value);
+    const creatorResultCount = matchedCreators.value.length;
     try {
-      searchResults.value = await searchIndex(trimmed, {
+      const results = await searchIndex(trimmed, {
         allowedNames: badgeFilteredNames.value ?? undefined,
       });
-      trackSearchPerformed(trimmed);
+      searchResults.value = results;
+      trackSearchPerformed({
+        query: trimmed,
+        workflowResultCount: results.workflows.length,
+        creatorResultCount,
+        filtersApplied,
+      });
     } catch (err) {
       console.error('Search failed:', err);
       searchResults.value = { workflows: [], creators: [] };
