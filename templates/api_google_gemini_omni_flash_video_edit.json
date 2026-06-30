@@ -1,8 +1,8 @@
 {
   "id": "5d4ec020-c06c-424e-af17-d6bfd877cd42",
   "revision": 0,
-  "last_node_id": 8,
-  "last_link_id": 10,
+  "last_node_id": 17,
+  "last_link_id": 28,
   "nodes": [
     {
       "id": 2,
@@ -12,11 +12,11 @@
         150
       ],
       "size": [
-        540,
-        430
+        760,
+        600
       ],
       "flags": {},
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -43,15 +43,15 @@
       "id": 3,
       "type": "PreviewAny",
       "pos": [
-        1080,
-        150
+        1300,
+        160
       ],
       "size": [
-        410,
-        420
+        520,
+        270
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -80,12 +80,12 @@
       "id": 4,
       "type": "MarkdownNote",
       "pos": [
-        -770,
-        150
+        60,
+        800
       ],
       "size": [
-        450,
-        160
+        400,
+        180
       ],
       "flags": {},
       "order": 0,
@@ -95,7 +95,7 @@
       "title": "Note: Duration and Aspect Ratio",
       "properties": {},
       "widgets_values": [
-        "Please specify the `duration` and `aspect ratio` in the prompt"
+        "The Google Gemini Omni Video requires you to specify the `duration` and `aspect ratio` in the prompt. The `Prompt Constructor` subgraph  helps you quickly construct the prompt with `duration` and `aspect ratio`.\n"
       ],
       "color": "#222",
       "bgcolor": "#000"
@@ -109,12 +109,20 @@
       ],
       "size": [
         400,
-        344
+        280
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
+        {
+          "name": "model.prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "model.prompt"
+          },
+          "link": 20
+        },
         {
           "label": "image_1",
           "name": "model.images.image_1",
@@ -127,7 +135,7 @@
           "name": "model.videos.video_1",
           "shape": 7,
           "type": "VIDEO",
-          "link": 9
+          "link": 28
         },
         {
           "label": "video_2",
@@ -158,10 +166,10 @@
       },
       "widgets_values": [
         "Omni Flash",
-        "Duration: 5 seconds. Aspect ratio: 16:9\n\nKeep the character and all objects unchanged, convert the style to paper-cut animation.",
+        "",
         1,
         0.95,
-        1492532796,
+        125633706,
         "randomize"
       ],
       "color": "#432",
@@ -171,12 +179,12 @@
       "id": 8,
       "type": "LoadVideo",
       "pos": [
-        -270,
+        -550,
         150
       ],
       "size": [
-        290,
-        340
+        560,
+        550
       ],
       "flags": {},
       "order": 1,
@@ -187,7 +195,7 @@
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
-            9
+            28
           ]
         }
       ],
@@ -197,6 +205,69 @@
       "widgets_values": [
         "space_horse_rider.mp4",
         "image"
+      ]
+    },
+    {
+      "id": 17,
+      "type": "331103d2-d660-4a88-abf0-1117dc46b2df",
+      "pos": [
+        60,
+        490
+      ],
+      "size": [
+        400,
+        250
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "prompt",
+          "name": "value",
+          "type": "STRING",
+          "widget": {
+            "name": "value"
+          },
+          "link": null
+        },
+        {
+          "label": "aspect_ratio:",
+          "name": "choice",
+          "type": "COMBO",
+          "widget": {
+            "name": "choice"
+          },
+          "link": null
+        },
+        {
+          "label": "duration",
+          "name": "choice_1",
+          "type": "COMBO",
+          "widget": {
+            "name": "choice_1"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "label": "prompt",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "title": "Prompt Constructor",
+      "properties": {
+        "previewExposures": []
+      },
+      "widgets_values": [
+        "Keep the character and all objects unchanged, convert the style to paper-cut animation.",
+        "16:9",
+        "3s "
       ]
     }
   ],
@@ -218,22 +289,556 @@
       "STRING"
     ],
     [
-      9,
+      20,
+      17,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      28,
       8,
       0,
       7,
-      1,
+      2,
       "VIDEO"
     ]
   ],
   "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "331103d2-d660-4a88-abf0-1117dc46b2df",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 17,
+          "lastLinkId": 28,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Prompt Constructor",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -598,
+            1298,
+            128,
+            108
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            990,
+            1288,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "0ec4f3ba-e84d-4c2a-a3b8-539300814e88",
+            "name": "value",
+            "type": "STRING",
+            "linkIds": [
+              25
+            ],
+            "label": "prompt",
+            "pos": [
+              -494,
+              1322
+            ]
+          },
+          {
+            "id": "bcf0aec9-9f80-4d88-90b7-29cea450de68",
+            "name": "choice",
+            "type": "COMBO",
+            "linkIds": [
+              26
+            ],
+            "label": "aspect_ratio:",
+            "pos": [
+              -494,
+              1342
+            ]
+          },
+          {
+            "id": "7296344d-6193-44bf-a059-9b18b61aa528",
+            "name": "choice_1",
+            "type": "COMBO",
+            "linkIds": [
+              27
+            ],
+            "label": "duration",
+            "pos": [
+              -494,
+              1362
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "f5ae177f-4339-4791-a762-e77fe647f25e",
+            "name": "STRING",
+            "type": "STRING",
+            "linkIds": [
+              19
+            ],
+            "localized_name": "STRING",
+            "label": "prompt",
+            "pos": [
+              1014,
+              1312
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 9,
+            "type": "CustomCombo",
+            "pos": [
+              -400,
+              1040
+            ],
+            "size": [
+              270,
+              240
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "choice",
+                "name": "choice",
+                "type": "COMBO",
+                "widget": {
+                  "name": "choice"
+                },
+                "link": 26
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  11
+                ]
+              },
+              {
+                "localized_name": "INDEX",
+                "name": "INDEX",
+                "type": "INT",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CustomCombo"
+            },
+            "widgets_values": [
+              "9:16",
+              1,
+              "16:9",
+              "9:16",
+              ""
+            ]
+          },
+          {
+            "id": 10,
+            "type": "CustomCombo",
+            "pos": [
+              -410,
+              1380
+            ],
+            "size": [
+              270,
+              460
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "choice",
+                "name": "choice",
+                "type": "COMBO",
+                "widget": {
+                  "name": "choice"
+                },
+                "link": 27
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  12
+                ]
+              },
+              {
+                "localized_name": "INDEX",
+                "name": "INDEX",
+                "type": "INT",
+                "links": null
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CustomCombo"
+            },
+            "widgets_values": [
+              "3s ",
+              0,
+              "3s ",
+              "4s ",
+              "5s ",
+              "6s ",
+              "7s ",
+              "8s ",
+              "9s ",
+              "10s ",
+              ""
+            ]
+          },
+          {
+            "id": 11,
+            "type": "StringConcatenate",
+            "pos": [
+              -90,
+              1050
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 11
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  15
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "Aspect Ratio: ",
+              "9:16",
+              ""
+            ]
+          },
+          {
+            "id": 12,
+            "type": "StringConcatenate",
+            "pos": [
+              -90,
+              1360
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 12
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  16
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "Duration: ",
+              "3s ",
+              ""
+            ]
+          },
+          {
+            "id": 13,
+            "type": "StringConcatenate",
+            "pos": [
+              -90,
+              1670
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_a",
+                "name": "string_a",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_a"
+                },
+                "link": 15
+              },
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 16
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  17
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "",
+              "",
+              ";"
+            ]
+          },
+          {
+            "id": 15,
+            "type": "PrimitiveStringMultiline",
+            "pos": [
+              -90,
+              770
+            ],
+            "size": [
+              400,
+              200
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "value",
+                "name": "value",
+                "type": "STRING",
+                "widget": {
+                  "name": "value"
+                },
+                "link": 25
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  18
+                ]
+              }
+            ],
+            "title": "Input Text (User Prompt)",
+            "properties": {
+              "Node name for S&R": "PrimitiveStringMultiline"
+            },
+            "widgets_values": [
+              ""
+            ]
+          },
+          {
+            "id": 16,
+            "type": "StringConcatenate",
+            "pos": [
+              530,
+              1020
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 6,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_a",
+                "name": "string_a",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_a"
+                },
+                "link": 18
+              },
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 17
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  19
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "",
+              "",
+              ""
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 11,
+            "origin_id": 9,
+            "origin_slot": 0,
+            "target_id": 11,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 12,
+            "origin_id": 10,
+            "origin_slot": 0,
+            "target_id": 12,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 15,
+            "origin_id": 11,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 16,
+            "origin_id": 12,
+            "origin_slot": 0,
+            "target_id": 13,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 18,
+            "origin_id": 15,
+            "origin_slot": 0,
+            "target_id": 16,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 17,
+            "origin_id": 13,
+            "origin_slot": 0,
+            "target_id": 16,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 19,
+            "origin_id": 16,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 25,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 15,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 26,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 9,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 27,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 10,
+            "target_slot": 0,
+            "type": "COMBO"
+          }
+        ],
+        "extra": {}
+      }
+    ]
+  },
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.970305305857463,
+      "scale": 0.6161524613611354,
       "offset": [
-        1137.413743735783,
-        99.45696552170702
+        893.9409140015287,
+        325.7813173214101
       ]
     },
     "frontendVersion": "1.47.6"
