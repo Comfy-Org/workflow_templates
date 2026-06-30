@@ -17,8 +17,11 @@ interface Props {
   structuredData?: object;
   locale?: Locale;
   hreflangBasePath?: string;
+  /** Whether localized variants of this route exist (controls hreflang alternates). */
+  hreflangLocalized?: boolean;
   theme?: 'light' | 'dark';
   hideDefaultFooter?: boolean;
+  noindex?: boolean;
 }
 
 const {
@@ -30,8 +33,10 @@ const {
   structuredData,
   locale: propLocale,
   hreflangBasePath,
+  hreflangLocalized = true,
   theme = 'light',
   hideDefaultFooter = false,
+  noindex = false,
 } = Astro.props;
 
 const hasCustomFooter = Astro.slots.has('footer');
@@ -72,6 +77,8 @@ const bodyClasses = isDark
       structuredData={structuredData}
       locale={locale}
       hreflangBasePath={hreflangBasePath}
+      hreflangLocalized={hreflangLocalized}
+      noindex={noindex}
     />
     <slot name="head" />
   </head>

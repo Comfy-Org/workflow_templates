@@ -1,4 +1,5 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 // Base schema for template data
 const templateSchema = z.object({
@@ -101,9 +102,62 @@ const templates = defineCollection({
   schema: templateSchema,
 });
 
-// Localized content is stored in subdirectories (templates/zh/, templates/ja/, etc.)
-// and is handled automatically by the main templates collection.
+// SEO page editorial copy. Use-case and model SEO pages share one content shape
+// (the only structural difference is `styles` vs `modelSpec`), so both
+// collections validate against the same schema. Authored by hand under
+// src/content/seo/{use-cases,models}/<slug>.json; rendered by the SEO routes.
+const seoContentSchema = z.object({
+  /** Hero subheading under the H1. */
+  subheading: z.string().optional(),
+  /** Intro; paragraphs separated by blank lines. */
+  extendedDescription: z.string(),
+  /** "What you can create" capability cards (use-case pages). */
+  styles: z.array(z.object({ title: z.string(), description: z.string() })).optional(),
+  /** "What is <model>" block (model pages). */
+  modelSpec: z.object({ summary: z.string(), highlights: z.array(z.string()) }).optional(),
+  howToUse: z.array(z.string()),
+  /** Subheading for the "What you can create" capabilities section. */
+  capabilitiesIntro: z.string().optional(),
+  /** "Why ComfyUI" reason rows (title + supporting sentence). */
+  whyComfy: z
+    .array(
+      z.object({
+        title: z.string(),
+        description: z.string(),
+        cloudOnly: z.boolean().optional(),
+      })
+    )
+    .optional(),
+  /** Subheading for the "What people use it for" section. */
+  applicationsIntro: z.string().optional(),
+  suggestedUseCases: z
+    .array(z.union([z.string(), z.object({ title: z.string(), subtitle: z.string() })]))
+    .optional(),
+  /** 150-160 chars; excluded from body word counts. */
+  metaDescription: z.string(),
+  /** Drives FAQPage JSON-LD. */
+  faqItems: z.array(z.object({ question: z.string(), answer: z.string() })),
+  /** True for hand-authored copy (vs generated). */
+  humanEdited: z.boolean().optional(),
+  /** Set by the generator when content could not pass the quality contract. */
+  qualityFailed: z.boolean().optional(),
+  /** Set when generated rather than hand-authored. */
+  lastAIGeneration: z.string().optional(),
+});
+
+// Nested under src/content/seo/, so each needs an explicit glob loader (entry
+// `id` is the file's base name, e.g. "ai-headshot-generator" / "wan").
+const seoUseCases = defineCollection({
+  loader: glob({ pattern: '*.json', base: './src/content/seo/use-cases' }),
+  schema: seoContentSchema,
+});
+const seoModels = defineCollection({
+  loader: glob({ pattern: '*.json', base: './src/content/seo/models' }),
+  schema: seoContentSchema,
+});
 
 export const collections = {
   templates,
+  seoUseCases,
+  seoModels,
 };

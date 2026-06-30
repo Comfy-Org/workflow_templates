@@ -1,0 +1,63 @@
+---
+/** "What people use it for" — up to 5 image cards: 3 on top, 2 (wider) below. */
+import type { Locale } from '../../i18n/config';
+import type { CardImage } from '../../lib/seo/card-images';
+import { t } from '../../i18n/ui';
+import { inner, sectionPad } from './seo-styles';
+import SectionHeader from './SectionHeader.astro';
+import AppCard from './AppCard.astro';
+
+export interface ApplicationItem {
+  title: string;
+  subtitle?: string;
+  image?: CardImage | null;
+  logo?: string | null;
+  href?: string | null;
+}
+
+interface Props {
+  locale: Locale;
+  items: ApplicationItem[];
+  /** Optional subheading under the section heading. */
+  summary?: string;
+}
+
+const { locale, items, summary } = Astro.props;
+
+// Cap at five: a 3-up row, then a 2-up row of wider cards (6-col grid).
+const cards = items.slice(0, 5);
+---
+
+<section aria-labelledby="seo-usecases-heading" class={`bg-page ${sectionPad}`}>
+  <div class={inner}>
+    <SectionHeader
+      id="seo-usecases-heading"
+      eyebrowLabel={t('useCase.applications', locale)}
+      headingLabel={t('useCase.popularUses', locale)}
+      summary={summary}
+    />
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
+      {
+        cards.map((card, i) => (
+          <div
+            class:list={[
+              // Top three span 2 of 6 cols; the last two span 3 each for a wider row.
+              i < 3 ? 'lg:col-span-2' : 'lg:col-span-3',
+              // A lone final card on the bottom row stretches full width.
+              cards.length === 4 && i === 3 && 'lg:col-span-6',
+            ]}
+          >
+            <AppCard
+              title={card.title}
+              subtitle={card.subtitle}
+              image={card.image}
+              logo={card.logo}
+              href={card.href}
+            />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

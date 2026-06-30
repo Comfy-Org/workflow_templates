@@ -1,0 +1,61 @@
+---
+import type { SerializedTemplate } from '../../lib/hub-api';
+import { isMediaFile } from '../../lib/media-utils';
+import { thumbnailPath } from '../../lib/routes';
+import { COMFY_GLYPH } from './seo-icons';
+
+interface Props {
+  templates: SerializedTemplate[];
+  class?: string;
+}
+
+const { templates, class: className = '' } = Astro.props;
+
+const tiles = templates
+  .map((tpl) => {
+    const still = tpl.thumbnails?.find((thumb) => !isMediaFile(thumb));
+    return still ? { src: thumbnailPath(still) } : null;
+  })
+  .filter((tile): tile is { src: string } => tile !== null)
+  .slice(0, 4);
+
+const hasCollage = tiles.length > 0;
+const offsets = ['', 'sm:translate-y-6', '', 'sm:translate-y-6'];
+---
+
+{
+  hasCollage && (
+    <div class:list={['grid grid-cols-2 gap-4', className]}>
+      {tiles.map((tile, i) => (
+        <div
+          class:list={[
+            'relative aspect-4/3 overflow-hidden rounded-3xl border border-divider bg-hub-surface',
+            tiles.length > 2 && offsets[i],
+            // A single tile spans both columns so it isn't tiny.
+            tiles.length === 1 && 'col-span-2',
+          ]}
+        >
+          <img
+            src={tile.src}
+            alt=""
+            class="size-full object-cover transition-transform duration-500 hover:scale-105"
+            loading={i === 0 ? 'eager' : 'lazy'}
+            fetchpriority={i === 0 ? 'high' : 'auto'}
+            decoding="async"
+            sizes="(max-width: 1024px) 50vw, 320px"
+            onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+          />
+          <span
+            hidden
+            class="absolute inset-0 flex items-center justify-center bg-hub-surface"
+            aria-hidden="true"
+          >
+            <svg class="h-1/3 w-1/3 text-content/15" viewBox="0 0 520 520" fill="currentColor">
+              <path d={COMFY_GLYPH} />
+            </svg>
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}

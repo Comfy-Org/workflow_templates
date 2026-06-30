@@ -92,3 +92,23 @@ export function buildFaqJsonLd(faqItems: FaqItem[] | undefined) {
     })),
   };
 }
+
+export function buildCollectionPageJsonLd(params: {
+  name: string;
+  description: string;
+  url: string;
+  inLanguage?: string;
+}) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: params.name,
+    description: params.description,
+    url: params.url,
+    ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
+  };
+}
+
+
+
+

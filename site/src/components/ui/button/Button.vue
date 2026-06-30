@@ -10,6 +10,10 @@ interface Props extends PrimitiveProps {
   variant?: ButtonVariants['variant'];
   size?: ButtonVariants['size'];
   class?: HTMLAttributes['class'];
+  href?: string;
+  target?: string;
+  rel?: string;
+  [attr: `data-${string}`]: unknown;
 }
 
 const props = withDefaults(defineProps<Props>(), {
