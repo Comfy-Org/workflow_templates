@@ -1,0 +1,105 @@
+{
+  "humanEdited": true,
+  "subheading": "Run Alibaba's Qwen-Image-Edit model in ComfyUI: instruction-based image editing, relighting, and style transfer, on Comfy Cloud or your own GPU.",
+  "extendedDescription": "Where the base model generates, Qwen-Image-Edit comfyui workflows change an image you already have. Qwen-Image-Edit is Alibaba Tongyi Lab's open editing model from the Qwen family, built on the 20B Qwen-Image transformer and released under Apache 2.0, so the weights are open and you can run the edits on your own hardware instead of uploading to a closed service. The workflows on this page are the ready-made graphs for that: load your image, describe the change in plain language, and the model applies it, with the node graph already wired.\n\nThe editing is instruction-driven, so you tell it what to change rather than masking by hand: swap an object, alter a background, adjust wording on a sign, or restyle a scene. The current build, Qwen-Image-Edit-2511, took over from the 2509 release and improves character consistency, reduces image drift across edits, and accepts up to three reference images at once for jobs like fusing two people into one group shot. Beyond straight edits, the workflows here cover relighting, which re-lights a subject as if shot under different conditions, and style transfer, which carries the look of one image onto another.\n\nBecause the graph is open, you control the strength of the edit, the conditioning, and any LoRA, and you can re-run to dial in how much changes versus how much of the original is preserved. The 2511 build also folds several popular community LoRAs straight into the base model, and you can still stack your own on top when you want a specific learned style across edits. That control is the difference between a one-shot filter and a workflow you can tune until the edit looks deliberate rather than pasted on.\n\nEverything here is open and editable. Open a Qwen-Image-Edit workflow on Comfy Cloud with nothing to install, or download it and run it locally if you have a capable GPU. An FP8 build edits in about 16GB of VRAM and a quantized GGUF version goes lower, while the full BF16 weights want roughly 40GB. You can chain edits, add a LoRA, adjust the parameters, and there is no watermark on the result.",
+  "modelSpec": {
+    "summary": "Qwen-Image-Edit is Alibaba Tongyi Lab's open instruction-based image-editing model from the Qwen family, built on the 20B Qwen-Image transformer under Apache 2.0 and covering text-driven edits, relighting, and style transfer.",
+    "highlights": [
+      "Open Apache 2.0 weights built on the 20B Qwen-Image model, runnable locally or on Comfy Cloud",
+      "Current Qwen-Image-Edit-2511 build improves character consistency and cuts image drift versus 2509",
+      "Instruction-based editing: describe the change instead of masking by hand",
+      "Accepts up to three reference images for multi-image edits like fusing two people into one shot",
+      "Relighting, style transfer, and integrated community LoRAs in one editing family",
+      "FP8 runs in about 16GB of VRAM, with quantized GGUF builds lower and no watermark on output"
+    ]
+  },
+  "howToUse": [
+    "Pick a Qwen-Image-Edit workflow: instruction edit, relight, or style transfer.",
+    "Open it on Comfy Cloud with no install, or load it in your local ComfyUI.",
+    "Upload the image you want to change.",
+    "Describe the edit in plain language, or add a reference for style transfer.",
+    "Set the edit strength and run, then compare the result against the original.",
+    "Re-run with adjusted strength or a LoRA, then download the edited image."
+  ],
+  "whyComfy": [
+    {
+      "title": "Edit by instruction, not by mask",
+      "description": "Describe the change in plain language and the graph applies it, no hand-masking, with relighting and style transfer in the same family."
+    },
+    {
+      "title": "Pick your variant and settings",
+      "description": "Run the Qwen-Image-Edit-2511 build, load up to three reference images, and tune edit strength, conditioning, and LoRA from the same graph.",
+      "cloudOnly": true
+    },
+    {
+      "title": "Open weights you can run anywhere",
+      "description": "The Apache 2.0 weights run locally on your own GPU or on Comfy Cloud, with FP8 editing in about 16GB of VRAM and GGUF builds lower."
+    },
+    {
+      "title": "Consistent edits, no watermark",
+      "description": "The 2511 build holds character identity across edits and folds in community LoRAs, and the images you export carry no watermark."
+    }
+  ],
+  "metaDescription": "Run Qwen-Image-Edit with ComfyUI workflows: open instruction-based image editing, relighting, and style transfer, on Comfy Cloud or your own GPU.",
+  "applicationsIntro": "The edits people run on existing images with Qwen-Image-Edit.",
+  "suggestedUseCases": [
+    {
+      "title": "Object and background",
+      "subtitle": "Change an object or background with a qwen-image-edit image edit instruction"
+    },
+    {
+      "title": "Relighting",
+      "subtitle": "Re-light a subject for a new mood with a qwen-image-edit relight workflow"
+    },
+    {
+      "title": "Style transfer",
+      "subtitle": "Carry the look of one image onto another with style transfer"
+    },
+    {
+      "title": "LoRA styles",
+      "subtitle": "Apply a consistent learned style across edits with a qwen-image-edit lora"
+    },
+    {
+      "title": "Edit in-image text",
+      "subtitle": "Adjust wording on a sign or label without hand-masking"
+    }
+  ],
+  "faqItems": [
+    {
+      "question": "What are Qwen-Image-Edit ComfyUI workflows?",
+      "answer": "They are ready-made ComfyUI graphs that run Qwen-Image-Edit, Alibaba's open image-editing model. Each wires up a task like an instruction edit, a relight, or style transfer, so you upload an image and describe the change without building the graph yourself."
+    },
+    {
+      "question": "How is Qwen-Image-Edit different from Qwen-Image?",
+      "answer": "Qwen-Image generates a new image from a prompt, while Qwen-Image-Edit changes an image you already have. You give it a source image and an instruction, and it applies the edit, which is a different job from text-to-image generation."
+    },
+    {
+      "question": "Do I need to mask the area I want to edit?",
+      "answer": "No. The editing is instruction-driven, so you describe the change in plain language rather than masking by hand. Because the graph is open, you can still tune the edit strength to control how much of the original is preserved."
+    },
+    {
+      "question": "Can Qwen-Image-Edit relight an image?",
+      "answer": "Yes. The relight workflows re-light a subject as if it were shot under different conditions, changing the mood and direction of the light. That lets you adjust lighting after the fact without re-shooting or regenerating from scratch."
+    },
+    {
+      "question": "Is Qwen-Image-Edit open source?",
+      "answer": "Yes. Qwen-Image-Edit ships with open weights from Alibaba's Qwen family, so you can run the edits on your own hardware. The workflows run it locally or on Comfy Cloud with no setup and no watermark."
+    },
+    {
+      "question": "Can I run Qwen-Image-Edit without a powerful GPU?",
+      "answer": "Yes. Run any Qwen-Image-Edit workflow on Comfy Cloud in the browser with nothing to install. If you have a capable GPU, download the workflow and run the editing model locally for full control."
+    },
+    {
+      "question": "What VRAM do I need to run Qwen-Image-Edit locally?",
+      "answer": "The full BF16 weights want roughly 40GB of VRAM, but an FP8 build edits in about 16GB and a quantized GGUF version drops lower still on a smaller card. Paired with a Lightning LoRA, some quantized setups run in around 8GB with enough system RAM, while the unquantized model is happiest at 24GB or more."
+    },
+    {
+      "question": "Do I need to install anything to use these workflows?",
+      "answer": "Not on Comfy Cloud, where the editing workflow runs in the browser with no install and no local setup. To run it on your own machine you install ComfyUI and download the Qwen-Image-Edit weights once, then open the same graph locally."
+    },
+    {
+      "question": "Does Qwen-Image-Edit run locally or only on Comfy Cloud?",
+      "answer": "Both. The weights are open under Apache 2.0, so you can download them and edit on your own GPU, or open the workflow on Comfy Cloud when you do not have the VRAM. The node graph is the same either way, so you can move between local and cloud without rebuilding it."
+    }
+  ]
+}

@@ -38,9 +38,10 @@ interface Props {
     };
   };
   locale: Locale;
+  relatedUseCases?: { label: string; href: string }[];
 }
 
-const { template, locale } = Astro.props;
+const { template, locale, relatedUseCases = [] } = Astro.props;
 const { data } = template;
 
 const profiles = await getProfileCache();
@@ -188,6 +189,15 @@ function formatRelativeDate(dateStr: string): string {
             )
           }
 
+          {
+            relatedUseCases.length > 0 && (
+              <SidebarSection title={t('template.useCases', locale)}>
+                <CollapsibleBadgeList client:load items={relatedUseCases} />
+              </SidebarSection>
+            )
+          }
+
+          {/* Creator — last in the info column */}
           <SidebarSection title={t('labels.createdBy', locale)}>
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">

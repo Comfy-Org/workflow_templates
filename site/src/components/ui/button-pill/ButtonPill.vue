@@ -11,10 +11,12 @@ interface Props extends PrimitiveProps {
   variant?: ButtonPillVariants['variant'];
   size?: ButtonPillVariants['size'];
   iconPosition?: ButtonPillVariants['iconPosition'];
-  /** Hide the label at rest; reveal it on hover (of the pill or a parent group/pill-trigger). */
   reveal?: boolean;
   class?: HTMLAttributes['class'];
   disabled?: boolean;
+  href?: string;
+  target?: string;
+  rel?: string;
 }
 
 const {

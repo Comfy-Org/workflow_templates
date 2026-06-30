@@ -56,8 +56,11 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
 
 /**
  * Fetch workflow index entries from the hub API.
- * Returns `null` when no API URL is configured (local dev).
- * Throws when the API is configured but returns an error or empty response.
+ * Returns `null` when no API URL is configured (local dev) or when the API is
+ * unreachable / forbidden / empty — the caller then falls back to the synced
+ * content collection rather than failing the build. The hub API is only an
+ * optional enrichment source for the search index, so a 403 on a preview deploy
+ * (or a timeout) must not abort the whole build.
  */
 async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
   const apiUrl = (process.env.PUBLIC_HUB_API_URL || '').replace(/\/$/, '');
@@ -65,18 +68,28 @@ async function fetchIndexEntries(): Promise<IndexEntry[] | null> {
 
   const approvedOnly = process.env.PUBLIC_APPROVED_ONLY === 'true';
   const statuses = approvedOnly ? 'approved' : 'pending,approved,rejected,deprecated';
-  const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`, {
-    signal: AbortSignal.timeout(10000),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Hub API returned ${res.status}: ${res.statusText}`);
+  try {
+    const res = await fetch(`${apiUrl}/api/hub/workflows/index?status=${statuses}`, {
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!res.ok) {
+      logger.warn(
+        `Hub API returned ${res.status}: ${res.statusText} — falling back to content collection`
+      );
+      return null;
+    }
+    const entries = (await res.json()) as IndexEntry[];
+    if (entries.length === 0) {
+      logger.warn('Hub API returned empty index — falling back to content collection');
+      return null;
+    }
+    return entries;
+  } catch (err) {
+    logger.warn(
+      `Hub API request failed (${err instanceof Error ? err.message : String(err)}) — falling back to content collection`
+    );
+    return null;
   }
-  const entries = (await res.json()) as IndexEntry[];
-  if (entries.length === 0) {
-    throw new Error('Hub API returned empty index');
-  }
-  return entries;
 }
 
 async function fetchProfileDisplayName(username: string): Promise<string> {

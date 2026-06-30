@@ -35,11 +35,11 @@ defineProps<{
       <AccordionItem v-for="(item, i) in items" :key="i" :value="`faq-${i}`" class="faq-item">
         <AccordionHeader>
           <AccordionTrigger
-            class="group flex w-full items-center justify-between gap-4 py-5 text-left text-base font-medium text-content"
+            class="group flex w-full items-center justify-between gap-4 py-5 text-left text-base font-medium text-content transition-colors data-[state=open]:text-brand"
           >
             <span>{{ item.question }}</span>
             <svg
-              class="size-5 shrink-0 text-content-secondary transition-transform duration-200 group-data-[state=open]:rotate-180"
+              class="size-5 shrink-0 text-content-secondary transition-transform duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:text-brand"
               viewBox="0 0 24 24"
               fill="none"
               aria-hidden="true"

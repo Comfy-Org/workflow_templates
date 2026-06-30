@@ -11,9 +11,16 @@ const localize = (path: string, locale?: string) =>
   locale && locale !== 'en' ? `/${locale}${path}` : path;
 
 export const categoryPath = (type: string) => `/workflows/category/${type}/`;
-export const modelPath = (name: string) => `/workflows/model/${name}/`;
+const MODEL_BASE = '/workflows/model/';
+export const modelsIndexPath = (locale?: string) => localize(MODEL_BASE, locale);
+export const modelPath = (name: string, locale?: string) =>
+  localize(`${MODEL_BASE}${name}/`, locale);
 export const tagPath = (tag: string, locale?: string) =>
   localize(`/workflows/tag/${tagSlug(tag)}/`, locale);
+const USE_CASES_BASE = '/workflows/use-cases/';
+export const useCasesIndexPath = (locale?: string) => localize(USE_CASES_BASE, locale);
+export const useCasePath = (slug: string, locale?: string) =>
+  localize(`${USE_CASES_BASE}${slug}/`, locale);
 export const creatorPath = (username: string, locale?: string) =>
   localize(`/workflows/${slugify(username)}/`, locale);
 export const thumbnailPath = (asset: string) =>

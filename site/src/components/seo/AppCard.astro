@@ -1,0 +1,62 @@
+---
+/** Application card: an image with the title overlaid top-left (over a scrim)
+ *  and the caption below the image on the card base. Whole card links out. */
+import type { CardImage } from '../../lib/seo/card-images';
+import ThumbImage from './ThumbImage.astro';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  image?: CardImage | null;
+  logo?: string | null;
+  href?: string | null;
+}
+
+const { title, subtitle, image, logo, href } = Astro.props;
+const Tag = href ? 'a' : 'div';
+---
+
+<Tag
+  {...href ? { href, target: '_blank', rel: 'noopener noreferrer' } : {}}
+  class="group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover"
+>
+  <div class="relative aspect-video w-full overflow-hidden rounded-3xl">
+    {
+      image && (
+        <ThumbImage
+          src={image.src}
+          alt={image.alt}
+          class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+      )
+    }
+    <!-- Top scrim keeps the overlaid title legible over any image. -->
+    <div
+      class="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/45 to-transparent"
+      aria-hidden="true"
+    >
+    </div>
+
+    <h3
+      class="absolute left-5 right-16 top-5 font-display text-lg font-medium leading-tight text-white lg:text-2xl"
+    >
+      {title}
+    </h3>
+
+    {
+      logo && (
+        <span class="absolute right-4 top-4 flex h-9 items-center rounded-full bg-page/70 px-2.5 backdrop-blur">
+          <img src={logo} alt="" class="size-5 rounded-full object-contain" loading="lazy" />
+        </span>
+      )
+    }
+  </div>
+
+  {
+    subtitle && (
+      <p class="px-4 pb-2 font-display text-sm font-light leading-snug text-content-secondary">
+        {subtitle}
+      </p>
+    )
+  }
+</Tag>

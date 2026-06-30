@@ -1,0 +1,29 @@
+---
+/** Yellow highlight banner: title + body + kicker on the left, CTA button right. */
+interface Props {
+  title: string;
+  body: string;
+  kicker?: string;
+  cta: { label: string; href: string };
+}
+
+const { title, body, kicker, cta } = Astro.props;
+---
+
+<div class="flex flex-wrap items-end gap-8 rounded-[2.5rem] bg-brand p-8 text-page">
+  <div class="flex min-w-[min(360px,100%)] flex-1 flex-col gap-12">
+    <p class="font-display text-2xl font-medium leading-[1.35] sm:text-3xl">{title}</p>
+    <div class="flex flex-col gap-8 font-display text-[1.0625rem] leading-[1.6]">
+      <p class="font-light">{body}</p>
+      {kicker && <p class="font-semibold">{kicker}</p>}
+    </div>
+  </div>
+  <a
+    href={cta.href}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="inline-flex h-12 shrink-0 items-center justify-center rounded-2xl bg-page px-5 font-display text-sm font-extrabold uppercase tracking-[0.05em] text-brand transition-opacity hover:opacity-90"
+  >
+    {cta.label}
+  </a>
+</div>
