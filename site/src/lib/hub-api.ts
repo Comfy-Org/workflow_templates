@@ -508,10 +508,11 @@ export function extractShareId(urlSegment: string): string | null {
 }
 
 /**
- * Load serialized templates from hub API.
- * In production/preview builds (PUBLIC_HUB_API_URL set), hub API failure throws
- * to fail the build — no silent fallback to stale content collection data.
- * In local builds (no PUBLIC_HUB_API_URL), falls back to content collection.
+ * Load serialized templates from hub API, falling back to the synced content
+ * collection whenever the hub API is unreachable (403 on a preview deploy, a
+ * timeout, an empty response, etc.). The content collection is synced at prebuild
+ * time, so the fallback is current rather than stale, and an unauthorized build
+ * environment degrades to the local catalog instead of aborting the whole build.
  */
 export async function loadSerializedTemplates(
   getCollection: () => Promise<
@@ -523,9 +524,6 @@ export async function loadSerializedTemplates(
     const entries = await listWorkflowIndex();
     return entries.map((e) => serializeIndexEntry(e, profiles));
   } catch (err) {
-    if (import.meta.env.PUBLIC_HUB_API_URL) {
-      throw new Error(`Hub API failed during build: ${err}`);
-    }
     console.warn('Hub API error, falling back to content collection:', err);
     const templates = await getCollection();
     return templates
