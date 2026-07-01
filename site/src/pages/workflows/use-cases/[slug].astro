@@ -1,0 +1,266 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
+import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
+import Breadcrumbs from '../../../components/template-detail/Breadcrumbs.astro';
+import LandingPageBody from '../../../components/workflow-pages/LandingPageBody.astro';
+import LandingHero from '../../../components/workflow-pages/LandingHero.astro';
+import RelatedRail from '../../../components/workflow-pages/sections/RelatedRail.astro';
+import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
+import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
+import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
+import { getModelLogoPath } from '../../../lib/model-logos';
+import { isMediaFile } from '../../../lib/media-utils';
+import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
+import { getCloudCtaUrl, getCloudLandingUrl } from '../../../lib/urls';
+import { buildToolbarLabels } from '../../../lib/toolbar';
+import {
+  loadSerializedTemplates,
+  type SerializedTemplate,
+  type MatcherTemplate,
+} from '../../../lib/hub-api';
+import { SEO_PAGES, type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
+import {
+  resolveUseCasePageTemplates,
+  relatedModelsForUseCase,
+  type RelatedModel,
+} from '../../../lib/workflow-pages/use-case-resolver';
+import { loadUseCaseContent } from '../../../lib/workflow-pages/content-loaders';
+import { isIndexable } from '../../../lib/workflow-pages/governance';
+import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import {
+  buildCollectionPageJsonLd,
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  serializeJsonLdForScript,
+} from '../../../lib/structured-data';
+
+export async function getStaticPaths() {
+  const catalog = await loadSerializedTemplates(() => getCollection('templates'));
+  const fallbackPool = buildFallbackPool(catalog);
+  // Skip use-cases whose cluster resolves to nothing: an empty page would be
+  // noindex yet still land in the sitemap. Related models are derived from the
+  // grid here (where the catalog lives), so the rail can never drift from it.
+  return SEO_PAGES.map((def) => ({
+    def,
+    templates: resolveUseCasePageTemplates(def, catalog),
+    related: relatedModelsForUseCase(def, catalog),
+  }))
+    .filter(({ templates }) => templates.length > 0)
+    .map(({ def, templates, related }) => ({
+      params: { slug: def.slug },
+      props: { def, templates, related, fallbackPool },
+    }));
+}
+
+const { def, templates, related, fallbackPool } = Astro.props as {
+  def: SeoPageDef;
+  templates: SerializedTemplate[];
+  related: RelatedModel[];
+  fallbackPool: MatcherTemplate[];
+};
+
+const locale = getLocaleFromPath(Astro.url.pathname);
+const keyword = def.keywords.primary;
+const basePath = useCasePath(def.slug);
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+const content = await loadUseCaseContent(def.slug);
+
+const description =
+  content?.metaDescription ||
+  `Browse ${templates.length} ready-to-use ComfyUI workflow templates for ${keyword}. No setup required on Comfy Cloud.`;
+const subheading =
+  content?.subheading ||
+  `Ready-to-run ComfyUI workflows for ${keyword}, fully editable and runnable on Comfy Cloud with no setup.`;
+
+const noindex = !isIndexable({
+  clusterSize: templates.length,
+  humanEdited: true,
+  qualityPassed: !content?.qualityFailed,
+});
+
+// The template whose still becomes the hero image — reserved so no section reuses it.
+const heroTemplateName = templates.find((tpl) =>
+  tpl.thumbnails?.some((thumb) => !isMediaFile(thumb))
+)?.name;
+
+const leadShareId = templates.find((template) => template.shareId)?.shareId;
+const heroCtaUrl = leadShareId
+  ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_hero`)
+  : getCloudLandingUrl(`usecase_${def.slug}_hero`);
+const footerCtaUrl = leadShareId
+  ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_footer`)
+  : getCloudLandingUrl(`usecase_${def.slug}_footer`);
+
+const useCasesUrl = absoluteUrl(useCasesIndexPath(locale));
+const breadcrumbTrail = [
+  { label: t('template.useCases', locale), href: useCasesIndexPath(locale) },
+];
+
+const structuredData = buildCollectionPageJsonLd({
+  name: def.title,
+  description,
+  url: canonicalUrl,
+});
+const breadcrumbStructuredData = buildBreadcrumbJsonLd([
+  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
+  { name: t('template.useCases', locale), item: useCasesUrl },
+  { name: def.h1 },
+]);
+const faqStructuredData = buildFaqJsonLd(content?.faqItems);
+
+// "Keep exploring" image cards: related models (derived from this page's grid,
+// so they only ever link rich, canonical model pages) followed by sibling
+// use-cases. Every card gets an image: a model's own thumbnail when available,
+// otherwise a still drawn (without repeats) from this page's grid then the
+// wider catalog, so no Gallery card is ever empty.
+const backfillStills = [...templates, ...fallbackPool]
+  .flatMap((tpl) => tpl.thumbnails ?? [])
+  .filter((thumb) => !isMediaFile(thumb));
+let backfillIndex = 0;
+const nextStill = () => backfillStills[backfillIndex++];
+
+const workflowsLabel = t('useCase.workflowsCount', locale);
+
+const relatedModelCards = related.map((model) => ({
+  title: model.label,
+  eyebrow: t('labels.models', locale),
+  meta: `${model.count} ${workflowsLabel}`,
+  href: localizeUrl(modelPath(model.slug), locale),
+  logo: getModelLogoPath(model.label),
+  thumb: model.thumbnail ?? nextStill(),
+}));
+
+const relatedUseCaseCards = SEO_PAGES.filter((other) => other.slug !== def.slug)
+  .slice(0, 6)
+  .map((other) => ({
+    title: other.h1,
+    eyebrow: t('template.useCases', locale),
+    meta: undefined as string | undefined,
+    href: localizeUrl(useCasePath(other.slug), locale),
+    logo: null,
+    thumb: nextStill(),
+  }));
+
+const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).map((c) => ({
+  title: c.title,
+  eyebrow: c.eyebrow,
+  meta: c.meta,
+  href: c.href,
+  logo: c.logo,
+  image: c.thumb ? { src: thumbnailPath(c.thumb), alt: c.title } : null,
+}));
+---
+
+<BaseLayout
+  title={def.title}
+  description={description}
+  canonicalUrl={canonicalUrl}
+  ogImage="/workflows/og-default.png"
+  structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath={basePath}
+  hreflangLocalized={false}
+  theme="dark"
+  noindex={noindex}
+  hideDefaultFooter
+>
+  <HubNavbar />
+
+  <article class="bg-page min-h-screen text-content scroll-smooth hyphens-none wrap-normal">
+    <div class:list={[inner, 'pt-4 lg:pt-6']}>
+      <Breadcrumbs locale={locale} title={def.h1} trail={breadcrumbTrail} />
+    </div>
+    <LandingHero
+      eyebrow={t('template.useCases', locale)}
+      title={def.h1}
+      description={subheading}
+      meta={`${templates.length} ${t('useCase.workflowsCount', locale)}`}
+      primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
+      secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
+      templates={templates}
+    />
+
+    <section id="workflows" class="scroll-mt-8 bg-page pt-20 pb-10 lg:pt-28 lg:pb-12">
+      <div class={inner}>
+        <p class={eyebrow}>{t('useCase.theWorkflows', locale)}</p>
+        <h2 class={`${heading} mb-8 lg:mb-10`}>
+          {templates.length}
+          {def.h1}
+        </h2>
+        <WorkflowGrid
+          client:load
+          templates={templates}
+          locale={locale}
+          toolbarLabels={buildToolbarLabels(locale)}
+          gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        />
+      </div>
+    </section>
+
+    {
+      content && (
+        <LandingPageBody
+          locale={locale}
+          keyword={keyword}
+          intro={content.extendedDescription}
+          styles={content.styles}
+          capabilitiesIntro={content.capabilitiesIntro}
+          whyComfy={content.whyComfy}
+          applicationsIntro={content.applicationsIntro}
+          suggestedUseCases={content.suggestedUseCases}
+          faqItems={content.faqItems}
+          templates={templates}
+          catalog={fallbackPool}
+          reservedTemplates={heroTemplateName ? [heroTemplateName] : []}
+          ctaLabel={t('useCase.tryWorkflow', locale)}
+          ctaHref={(tpl) =>
+            tpl.shareId
+              ? getCloudCtaUrl(tpl.shareId, `usecase_${def.slug}_capability`)
+              : getCloudLandingUrl(`usecase_${def.slug}_capability`)
+          }
+          banner={{
+            title: t('useCase.bannerTitle', locale),
+            body: t('useCase.bannerBody', locale),
+            kicker: t('useCase.bannerKicker', locale),
+            cta: {
+              label: t('useCase.bannerCta', locale),
+              href: getCloudLandingUrl(`usecase_${def.slug}_banner`),
+            },
+          }}
+        />
+      )
+    }
+
+    {relatedCards.length > 0 && <RelatedRail locale={locale} cards={relatedCards} />}
+
+    <ClosingCta locale={locale} href={footerCtaUrl} analytics={{ useCase: def.slug }} />
+  </article>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+  />
+  {
+    faqStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

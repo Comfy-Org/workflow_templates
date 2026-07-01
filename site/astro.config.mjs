@@ -8,26 +8,44 @@ import path from 'node:path';
 import os from 'node:os';
 
 import vue from '@astrojs/vue';
+import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
 
-// Build template date lookup at config time
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
+const modelContentDir = path.join(process.cwd(), 'src/content/landing/models');
 const templateDates = new Map();
+/** Raw content templates, reused below to derive indexable model slugs. @type {any[]} */
+const contentTemplates = [];
 
 if (fs.existsSync(templatesDir)) {
   const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
   for (const file of files) {
     try {
       const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
+      contentTemplates.push(content);
       if (content.name && content.date) {
         templateDates.set(content.name, content.date);
       }
     } catch {
-      // Skip invalid JSON files
+      // Skip invalid JSON
     }
   }
 }
+const indexableModelSlugs = new Set(
+  deriveModelGroups(contentTemplates)
+    .filter((group) => {
+      if (!group.qualifies) return false;
+      const contentPath = path.join(modelContentDir, `${group.slug}.json`);
+      if (!fs.existsSync(contentPath)) return false;
+      try {
+        return JSON.parse(fs.readFileSync(contentPath, 'utf-8')).qualityFailed !== true;
+      } catch {
+        return false;
+      }
+    })
+    .map((group) => group.slug)
+);
 
-// Build timestamp used as lastmod fallback for pages without a specific date
+// lastmod fallback for pages without a specific date.
 const buildDate = new Date().toISOString();
 
 // Supported locales (matches src/i18n/config.ts)
@@ -52,9 +70,7 @@ if (fs.existsSync(templatesDir)) {
 }
 
 const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
-const localeCustomPages = nonDefaultLocales.map((locale) =>
-  `${siteOrigin}/${locale}/workflows/`
-);
+const localeCustomPages = nonDefaultLocales.map((locale) => `${siteOrigin}/${locale}/workflows/`);
 const customPages = [...creatorPages, ...localeCustomPages];
 
 // https://astro.build/config
@@ -138,30 +154,47 @@ export default defineConfig({
           item.priority = 0.6;
           return item;
         }
+        if (pathname.match(/^\/workflows\/use-cases\//)) {
+          // @ts-expect-error - sitemap types are stricter than actual API
+          item.changefreq = 'weekly';
+          item.priority = 0.8;
+          return item;
+        }
 
-        // Default for other pages
         // @ts-expect-error - sitemap types are stricter than actual API
         item.changefreq = 'weekly';
         item.priority = 0.5;
         return item;
       },
-      // Exclude OG image routes and legacy redirect pages from sitemap.
-      // Legacy redirects are /workflows/{slug}/ without a 12-char hex share_id suffix.
-      // Canonical detail pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
+      // Exclude OG image routes and legacy redirect pages. Legacy redirects are
+      // /workflows/{slug}/ without a 12-char hex share_id suffix; canonical detail
+      // pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
       filter: (page) => {
         if (page.includes('/workflows/og/') || page.includes('/workflows/og.png')) return false;
-        // Check if this is a workflow detail path (not category/tag/model/creators)
+        // Only list indexable model pages. Non-qualifying families and
+        // variant-redirect slugs still resolve to a route but render noindex (or
+        // 301), so they must stay out of the sitemap.
+        const modelMatch = page.match(/\/workflows\/model\/([^/]+)\/$/);
+        if (modelMatch) {
+          return indexableModelSlugs.has(modelMatch[1]);
+        }
+
         const match = page.match(/\/workflows\/([^/]+)\/$/);
         if (match) {
           const segment = match[1];
-          // Skip known sub-paths
-          if (['category', 'tag', 'model', 'creators'].some((p) => page.includes(`/workflows/${p}/`))) return true;
-          // Include if it has a share_id suffix (12 hex chars after last hyphen)
+          if (
+            ['category', 'tag', 'model', 'creators', 'use-cases'].some((p) =>
+              page.includes(`/workflows/${p}/`)
+            )
+          )
+            return true;
+          // Include only when the slug carries a share_id suffix (12 hex chars
+          // after the last hyphen); anything else is a legacy redirect.
           const lastHyphen = segment.lastIndexOf('-');
-          if (lastHyphen === -1) return false; // No hyphen = legacy redirect
+          if (lastHyphen === -1) return false;
           const candidate = segment.slice(lastHyphen + 1);
           if (candidate.length === 12 && /^[0-9a-f]+$/.test(candidate)) return true;
-          return false; // Has hyphen but not a valid share_id = legacy redirect
+          return false;
         }
         return true;
       },
