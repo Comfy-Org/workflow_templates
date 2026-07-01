@@ -1,0 +1,75 @@
+---
+/** Capability row: large title + description on one side, image on the other,
+ *  sides alternating per index. Image carries an optional model-logo badge. */
+import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import { ButtonPill } from '../../ui/button-pill';
+import Thumbnail from '../Thumbnail.astro';
+
+interface Props {
+  index: number;
+  title?: string;
+  text: string;
+  image?: CardImage | null;
+  logo?: string | null;
+  /** Per-card CTA, e.g. "Try workflow". */
+  cta?: { label: string; href: string } | null;
+}
+
+const { index, title, text, image, logo, cta } = Astro.props;
+const imageFirst = index % 2 === 1;
+---
+
+<article
+  class="group/pill-trigger group flex flex-col gap-2 rounded-5xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover md:items-stretch md:gap-2"
+  class:list={[image ? (imageFirst ? 'md:flex-row-reverse' : 'md:flex-row') : '']}
+>
+  <div class="flex flex-1 flex-col justify-between px-6 py-8 lg:px-10 lg:py-12">
+    {
+      title && (
+        <h3 class="font-display text-3xl font-light leading-[1.1] tracking-[-0.03em] text-content lg:text-[2.75rem]">
+          {title}
+        </h3>
+      )
+    }
+    <p
+      class:list={[
+        'max-w-[46ch] font-display text-[1.0625rem] font-light leading-[1.6] text-content',
+        title && 'mt-6',
+      ]}
+    >
+      {text}
+    </p>
+    {
+      cta && (
+        <ButtonPill
+          as="a"
+          href={cta.href}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="solid"
+          aria-label={cta.label}
+          class="mt-8 **:aria-[hidden]:bg-transparent **:aria-[hidden]:text-page"
+        >
+          <span class="font-display font-extrabold">{cta.label}</span>
+        </ButtonPill>
+      )
+    }
+  </div>
+
+  {
+    image && (
+      <div class="relative aspect-3/2 flex-1 self-stretch overflow-hidden rounded-[2.25rem] md:aspect-auto md:min-h-88">
+        <Thumbnail
+          src={image.src}
+          alt={image.alt}
+          class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+        {logo && (
+          <span class="absolute bottom-4 left-4 flex h-9 items-center gap-1.5 rounded-full bg-page/80 px-3 backdrop-blur">
+            <img src={logo} alt="" class="size-5 rounded-full object-contain" loading="lazy" />
+          </span>
+        )}
+      </div>
+    )
+  }
+</article>

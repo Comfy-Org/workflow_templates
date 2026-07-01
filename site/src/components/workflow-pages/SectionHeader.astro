@@ -1,0 +1,24 @@
+---
+/** Centered section header: eyebrow + H2 + optional summary. Shared by the
+ *  card sections (Capabilities, Applications, Gallery) per the Figma layout. */
+import { eyebrow, heading, body, leadProse } from './landing-styles';
+
+interface Props {
+  id?: string;
+  eyebrowLabel: string;
+  headingLabel: string;
+  summary?: string;
+}
+
+const { id, eyebrowLabel, headingLabel, summary } = Astro.props;
+---
+
+<div class="mb-10 flex flex-col items-center text-center lg:mb-14">
+  <p class={eyebrow}>{eyebrowLabel}</p>
+  <h2 id={id} class={`${heading} max-w-3xl text-balance`}>{headingLabel}</h2>
+  {
+    summary && (
+      <p class={`${body} ${leadProse} mt-4 max-w-[60ch] text-pretty text-content`}>{summary}</p>
+    )
+  }
+</div>

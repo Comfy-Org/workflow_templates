@@ -1,0 +1,91 @@
+---
+import { isMediaFile } from '../../lib/media-utils';
+import { thumbnailPath } from '../../lib/routes';
+import type { SerializedTemplate } from '../../lib/hub-api';
+import { Button } from '../ui/button';
+import { inner } from './landing-styles';
+
+interface Props {
+  eyebrow: string;
+  title: string;
+  description: string;
+  /** Small line under the description, e.g. "19 workflows". */
+  meta?: string;
+  primaryCta: { label: string; href: string };
+  secondaryCta: { label: string; href: string };
+  /** Templates the page resolves to; the first still image becomes the hero visual. */
+  templates: SerializedTemplate[];
+}
+
+const { eyebrow, title, description, meta, primaryCta, secondaryCta, templates } = Astro.props;
+
+// Mirror HeaderMain's CTA pattern: an array of buttons rendered through the
+// shared brand-solid / brand-outline variants, so the hero and navbar stay in sync.
+const ctaButtons = [
+  { ...primaryCta, primary: true },
+  { ...secondaryCta, primary: false },
+];
+
+const heroImage = templates
+  .flatMap((tpl) => tpl.thumbnails ?? [])
+  .find((thumb) => !isMediaFile(thumb));
+const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
+---
+
+<header class:list={[inner, 'py-12 lg:py-20']}>
+  <div class:list={['flex flex-col gap-12', heroSrc && 'lg:flex-row lg:items-center lg:gap-16']}>
+    <!-- Text block (≈40% on desktop; image panel takes the larger share) -->
+    <div class="flex flex-col lg:flex-2">
+      <p class="font-display text-sm font-extrabold uppercase tracking-[0.05em] text-brand">
+        {eyebrow}
+      </p>
+      <h1 class="mt-5 font-display text-4xl font-light leading-14 text-content sm:text-5xl">
+        {title}
+      </h1>
+      <p
+        class="mt-6 max-w-[46ch] font-display text-[1.0625rem] font-light leading-[1.6] text-content"
+      >
+        {description}
+      </p>
+      {meta && <p class="mt-3 font-display text-[1.0625rem] font-light text-content">{meta}</p>}
+
+      <div class="mt-9 flex flex-wrap items-center gap-2">
+        {
+          ctaButtons.map((cta) => (
+            <Button
+              as="a"
+              href={cta.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant={cta.primary ? 'brand-solid' : 'brand-outline'}
+              size="nav"
+              aria-label={cta.label}
+            >
+              <span class="ppformula-text-center-sm uppercase font-extrabold cursor-pointer">
+                {cta.label}
+              </span>
+            </Button>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- Visual -->
+    {
+      heroSrc && (
+        <div class="flex flex-3 items-center justify-center rounded-[2.25rem] border border-border-strong bg-page p-4">
+          <div class="aspect-940/516 w-full overflow-hidden rounded-3xl">
+            <img
+              src={heroSrc}
+              alt={title}
+              class="size-full object-cover"
+              loading="eager"
+              fetchpriority="high"
+              decoding="async"
+            />
+          </div>
+        </div>
+      )
+    }
+  </div>
+</header>

@@ -1,0 +1,212 @@
+---
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import {
+  titleCaseKeyword,
+  type SeoStyle,
+  type ModelSpec,
+  type FaqItem,
+  type Application,
+  type WhyComfyReason,
+} from '../../lib/workflow-pages/schema';
+import type { MatcherTemplate } from '../../lib/hub-api';
+import { assignCardTemplates, type CardImage } from '../../lib/workflow-pages/card-images';
+import { isMediaFile } from '../../lib/media-utils';
+import { thumbnailPath } from '../../lib/routes';
+import { getModelLogoPath } from '../../lib/model-logos';
+import AboutSection from './sections/AboutSection.astro';
+import CapabilitiesSection, { type CapabilityCard } from './sections/CapabilitiesSection.astro';
+import ProductShowcase from './ProductShowcase.vue';
+import WhyComfySection from './sections/WhyComfySection.astro';
+import ApplicationsSection from './sections/ApplicationsSection.astro';
+import FaqSection from './sections/FaqSection.astro';
+
+interface Props {
+  locale: Locale;
+  /** Use-case keyword phrase that headings are built around (use-case pages). */
+  keyword?: string;
+  /** Heading style: model pages read around the model name, use-case around the keyword. */
+  kind?: 'model' | 'use-case';
+  intro?: string;
+  styles?: SeoStyle[];
+  /** Model-only "what is <model>" block, rendered in place of styles. */
+  modelSpec?: ModelSpec;
+  /** Bare model name for model-page headings ("What is the Z-Image model?"). */
+  specName?: string;
+  /** Subheading for the "What you can create" section (use-case pages; model pages
+   *  fall back to `modelSpec.summary`). */
+  capabilitiesIntro?: string;
+  /** "Why ComfyUI" reason rows (title + supporting sentence). */
+  whyComfy?: WhyComfyReason[];
+  /** Subheading for the "What people use it for" section. */
+  applicationsIntro?: string;
+  suggestedUseCases?: (string | Application)[];
+  faqItems?: FaqItem[];
+  /** Yellow CTA banner under the about intro. */
+  banner?: { title: string; body: string; kicker?: string; cta: { label: string; href: string } };
+  /** Page grid, used to assign a content-matched image to each capability card. */
+  templates?: MatcherTemplate[];
+  /** Whole catalog; images fall back to it once the page grid is exhausted. */
+  catalog?: MatcherTemplate[];
+  /** Template names already shown on the page (e.g. the hero), never reused. */
+  reservedTemplates?: string[];
+  /** Cloud CTA URL for a given template (drives per-card "Try workflow"). */
+  ctaHref?: (template: MatcherTemplate) => string;
+  /** Per-card CTA label, e.g. "Try workflow". */
+  ctaLabel?: string;
+}
+
+const {
+  locale,
+  keyword,
+  kind = 'use-case',
+  intro,
+  styles,
+  modelSpec,
+  specName,
+  capabilitiesIntro,
+  whyComfy,
+  applicationsIntro,
+  suggestedUseCases,
+  faqItems,
+  banner,
+  templates = [],
+  catalog = [],
+  reservedTemplates = [],
+  ctaHref,
+  ctaLabel,
+} = Astro.props;
+
+const isModel = kind === 'model';
+// Heading subject: model pages read around the bare model name, use-case pages
+// around the title-cased keyword phrase.
+const subject = isModel ? (specName ?? '') : keyword ? titleCaseKeyword(keyword) : '';
+const aboutHeading = subject
+  ? isModel
+    ? t('useCase.whatIsModel', locale).replace('{keyword}', subject)
+    : t('useCase.whatIs', locale).replace('{keyword}', subject)
+  : t('template.about', locale);
+const faqHeading = subject
+  ? `${subject} ${t('useCase.faqShort', locale)}`
+  : t('template.faq', locale);
+
+const introParagraphs = intro
+  ? intro
+      .split('\n\n')
+      .map((p) => p.trim())
+      .filter(Boolean)
+  : [];
+
+const hasStyles = !!styles?.length;
+const hasModelSpec = !!modelSpec?.highlights?.length;
+
+// Use-case styles and model capabilities are the same slot on different page
+// types — they never co-exist, so normalize both to one card list.
+const baseCards = hasStyles
+  ? styles!.map((s) => ({ title: s.title, text: s.description }))
+  : hasModelSpec
+    ? modelSpec!.highlights.map((h) => ({ text: h }))
+    : [];
+
+// Give each card a content-matched template image, its model logo, and a CTA.
+const stillImage = (tpl: MatcherTemplate): CardImage | null => {
+  const still = tpl.thumbnails?.find((thumb) => !isMediaFile(thumb));
+  return still ? { src: thumbnailPath(still), alt: tpl.title || tpl.name } : null;
+};
+
+// One exclusion set for the whole page (seeded with the hero's template) so no
+// image repeats across sections; the full catalog backs the page grid.
+const usedTemplates = new Set<string>(reservedTemplates);
+const matchedTemplates = assignCardTemplates(baseCards, templates, {
+  used: usedTemplates,
+  fallback: catalog,
+});
+const enrichedCards: CapabilityCard[] = baseCards.map((card, i) => {
+  const tpl = matchedTemplates[i];
+  return {
+    ...card,
+    image: tpl ? stillImage(tpl) : null,
+    logo: tpl?.models?.length ? getModelLogoPath(tpl.models[0]) : null,
+    cta: tpl && ctaHref && ctaLabel ? { label: ctaLabel, href: ctaHref(tpl) } : null,
+  };
+});
+
+// The first two enriched cards headline the About section as a visual teaser;
+// the rest populate the Capabilities grid, so no card is shown twice.
+const aboutCards = enrichedCards.slice(0, 2).map((card, i) => ({
+  eyebrow: matchedTemplates[i]?.models?.[0],
+  title: card.title ?? '',
+  text: card.text,
+  image: card.image,
+  logo: card.logo,
+}));
+const capabilityCards = enrichedCards.slice(2);
+const hasCapabilities = capabilityCards.length > 0;
+const capabilitiesEyebrow = hasStyles
+  ? t('useCase.capabilities', locale)
+  : t('model.about', locale);
+const capabilitiesHeading = hasStyles
+  ? t('useCase.whatYouCanCreate', locale)
+  : t('model.capabilities', locale);
+// Use-case pages take the authored intro; model pages keep the modelSpec summary.
+const capabilitiesSummary = hasStyles ? capabilitiesIntro : modelSpec?.summary;
+
+const whyComfyRows: WhyComfyReason[] = whyComfy ?? [];
+const hasWhyComfy = whyComfyRows.length > 0;
+
+// Up to five application cards, each given a content-matched image + link.
+// Accept legacy strings (title only) and the preferred {title, subtitle} shape.
+const applications = (suggestedUseCases ?? [])
+  .slice(0, 5)
+  .map((u) => (typeof u === 'string' ? { title: u, subtitle: '' } : u));
+const applicationTemplates = assignCardTemplates(
+  applications.map((a) => ({ title: a.title, text: a.subtitle })),
+  templates,
+  { used: usedTemplates, fallback: catalog }
+);
+const applicationItems = applications.map((app, i) => {
+  const tpl = applicationTemplates[i];
+  return {
+    title: app.title,
+    subtitle: app.subtitle,
+    image: tpl ? stillImage(tpl) : null,
+    logo: tpl?.models?.length ? getModelLogoPath(tpl.models[0]) : null,
+    href: tpl && ctaHref ? ctaHref(tpl) : null,
+  };
+});
+const hasUseCases = applicationItems.length > 0;
+
+const hasFaq = (faqItems?.length ?? 0) >= 3;
+---
+
+{
+  introParagraphs.length > 0 && (
+    <AboutSection
+      locale={locale}
+      heading={aboutHeading}
+      paragraphs={introParagraphs}
+      cards={aboutCards}
+      banner={banner}
+    />
+  )
+}
+
+{
+  hasCapabilities && (
+    <CapabilitiesSection
+      locale={locale}
+      eyebrowLabel={capabilitiesEyebrow}
+      headingLabel={capabilitiesHeading}
+      cards={capabilityCards}
+      summary={capabilitiesSummary}
+    />
+  )
+}
+
+<ProductShowcase client:visible locale={locale} />
+
+{hasWhyComfy && <WhyComfySection locale={locale} reasons={whyComfyRows} />}
+
+{hasUseCases && <ApplicationsSection locale={locale} items={applicationItems} summary={applicationsIntro} />}
+
+{hasFaq && <FaqSection locale={locale} headingLabel={faqHeading} items={faqItems!} />}
