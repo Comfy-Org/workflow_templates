@@ -1,0 +1,118 @@
+/**
+ * Resolves use-case SEO pages from the registry (`./use-cases.ts`) against the
+ * catalog. Node-importable (no `import.meta.glob`); editorial copy is loaded
+ * separately in `content-loaders.ts`.
+ */
+import type { SerializedTemplate } from '../hub-api';
+import { SEO_PAGES, type SeoPageDef, type SeoPageFilters } from './use-cases';
+import { deriveModelGroups, type ModelGroup } from './model-groups';
+import { isMediaFile } from '../media-utils';
+
+/** First still (non-video/-audio) thumbnail across a group's templates. */
+function groupThumbnail(group: ModelGroup): string | undefined {
+  for (const template of group.templates) {
+    const still = template.thumbnails?.find((thumb) => !isMediaFile(thumb));
+    if (still) return still;
+  }
+  return undefined;
+}
+
+/** True if a template matches any of the page's filters (OR semantics). */
+function matchesFilters(template: SerializedTemplate, filters: SeoPageFilters): boolean {
+  const byModel = filters.models?.some((model) => template.models.includes(model)) ?? false;
+  const byTag = filters.tags?.some((tag) => template.tags.includes(tag)) ?? false;
+  const byMediaType = filters.mediaType ? template.mediaType === filters.mediaType : false;
+  return byModel || byTag || byMediaType;
+}
+
+/** Templates matching a page's filters, usage-sorted. Empty when none match. */
+export function resolveUseCasePageTemplates(
+  def: SeoPageDef,
+  catalog: SerializedTemplate[]
+): SerializedTemplate[] {
+  return catalog
+    .filter((template) => matchesFilters(template, def.filters))
+    .sort((a, b) => (b.usage || 0) - (a.usage || 0));
+}
+
+/** A model family related to a use-case (or vice versa), ready to link. */
+export interface RelatedModel {
+  slug: string;
+  label: string;
+  /** First still thumbnail of the family's top template, for image cards. */
+  thumbnail?: string;
+  /** Total workflows in this model family across the catalog. */
+  count: number;
+  /** Short tagline (the family's primary keyword), for richer cards. */
+  description?: string;
+}
+
+// Qualifying model groups, memoized per catalog: relatedness only links rich,
+// indexable model pages, never a bare noindex grid.
+const qualifyingGroupsCache = new WeakMap<SerializedTemplate[], ModelGroup[]>();
+
+function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
+  let groups = qualifyingGroupsCache.get(catalog);
+  if (!groups) {
+    groups = deriveModelGroups(catalog).filter((group) => group.qualifies);
+    qualifyingGroupsCache.set(catalog, groups);
+  }
+  return groups;
+}
+
+/**
+ * Models genuinely related to a use-case: the qualifying families that power its
+ * resolved grid, ranked by how many of the page's workflows use each (a model
+ * that drives many of the page's templates is more related than an incidental
+ * one). Replaces hand-typed `relatedModels`, so it can never drift from the grid.
+ */
+export function relatedModelsForUseCase(
+  def: SeoPageDef,
+  catalog: SerializedTemplate[],
+  limit = 3
+): RelatedModel[] {
+  const grid = resolveUseCasePageTemplates(def, catalog);
+  const gridNames = new Set(grid.map((template) => template.name));
+
+  return qualifyingGroups(catalog)
+    .map((group) => ({
+      group,
+      count: group.templates.filter((template) => gridNames.has(template.name)).length,
+    }))
+    .filter((entry) => entry.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, limit)
+    .map(({ group }) => ({
+      slug: group.slug,
+      label: group.label,
+      thumbnail: groupThumbnail(group),
+      count: group.templates.length,
+      description: group.keywords?.primary,
+    }));
+}
+
+/**
+ * Reverse of `relatedModelsForUseCase`: the use-case pages whose grid this model
+ * family powers, ranked by overlap. Powers the "use cases featuring this model"
+ * rail on a model page, derived rather than read from a hand-typed list.
+ */
+export function useCasesFeaturingModel(
+  modelSlug: string,
+  catalog: SerializedTemplate[],
+  limit = 6
+): SeoPageDef[] {
+  const group = qualifyingGroups(catalog).find((candidate) => candidate.slug === modelSlug);
+  if (!group) return [];
+  const familyNames = new Set(group.templates.map((template) => template.name));
+
+  return SEO_PAGES.map((def) => {
+    const overlap = resolveUseCasePageTemplates(def, catalog).filter((template) =>
+      familyNames.has(template.name)
+    ).length;
+    return { def, overlap };
+  })
+    .filter((entry) => entry.overlap > 0)
+    .sort((a, b) => b.overlap - a.overlap)
+    .slice(0, limit)
+    .map((entry) => entry.def);
+}
