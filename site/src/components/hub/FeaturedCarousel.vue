@@ -15,6 +15,7 @@ import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { cn } from '@/lib/utils';
+import { Avatar } from '@/components/ui/avatar';
 
 interface Props {
   templates: SerializedTemplate[];
@@ -204,30 +205,21 @@ onUnmounted(() => {
                 class="pointer-events-auto relative z-20 flex min-w-0 items-center gap-2 text-white/95 transition-colors hover:text-white"
                 @click.stop
               >
-                <img
-                  v-if="slide.creatorAvatarUrl"
+                <Avatar
                   :src="slide.creatorAvatarUrl"
-                  :alt="slide.creatorName"
-                  class="size-5 shrink-0 rounded-full object-cover sm:size-6"
+                  :name="slide.creatorName"
+                  class="size-5 sm:size-6"
                 />
-                <span
-                  v-else
-                  class="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-2xs font-bold leading-none text-page sm:size-6"
-                  aria-hidden="true"
-                >
-                  {{ slide.creatorName.charAt(0).toUpperCase() }}
-                </span>
                 <span class="ppformula-text-center-sm truncate text-sm sm:text-base">{{
                   slide.creatorName
                 }}</span>
               </a>
               <div v-else class="flex min-w-0 items-center gap-2 text-white/95">
-                <span
-                  class="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-2xs font-bold leading-none text-page sm:size-6"
-                  aria-hidden="true"
-                >
-                  {{ slide.creatorName.charAt(0).toUpperCase() }}
-                </span>
+                <Avatar
+                  :src="slide.creatorAvatarUrl"
+                  :name="slide.creatorName"
+                  class="size-5 sm:size-6"
+                />
                 <span class="ppformula-text-center-sm truncate text-sm sm:text-base">{{
                   slide.creatorName
                 }}</span>

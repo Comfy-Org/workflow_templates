@@ -14,6 +14,7 @@ import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
+import { Avatar } from '@/components/ui/avatar';
 
 interface Props {
   name: string;
@@ -372,47 +373,18 @@ function handleCardClick() {
     <div class="flex flex-col gap-4 px-4">
       <div class="flex items-center justify-between gap-2">
         <a
-          v-if="!hideAuthor && creatorUrl"
+          v-if="creatorUrl"
           :href="creatorUrl"
           class="creator-link flex items-center gap-2 min-w-0 w-fit text-content-secondary hover:text-content transition-colors"
           @click.stop
         >
-          <img
-            v-if="creatorAvatarUrl"
-            :src="creatorAvatarUrl"
-            :alt="authorName"
-            class="size-5 rounded-full shrink-0 object-cover"
-          />
-          <div
-            v-else
-            class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
-          >
-            <span class="text-page text-2xs font-bold leading-none">{{
-              authorName.charAt(0).toUpperCase()
-            }}</span>
-          </div>
+          <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />
           <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
         </a>
-        <div v-else-if="!hideAuthor" class="flex items-center gap-2 min-w-0">
-          <img
-            v-if="creatorAvatarUrl"
-            :src="creatorAvatarUrl"
-            :alt="authorName"
-            class="size-5 rounded-full shrink-0 object-cover"
-          />
-          <div
-            v-else
-            class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
-          >
-            <span class="text-page text-2xs font-bold leading-none">{{
-              authorName.charAt(0).toUpperCase()
-            }}</span>
-          </div>
-          <span class="ppformula-text-center-sm text-content-secondary text-base truncate">{{
-            authorName
-          }}</span>
+        <div v-else class="flex items-center gap-2 min-w-0 text-content-secondary">
+          <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />
+          <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
         </div>
-        <span v-else />
 
         <ButtonPill
           v-if="templateUrl"

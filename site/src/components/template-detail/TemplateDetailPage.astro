@@ -192,19 +192,23 @@ function formatRelativeDate(dateStr: string): string {
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">
                 {
-                  authorAvatarUrl ? (
+                  authorAvatarUrl && (
                     <img
                       src={authorAvatarUrl}
                       alt={authorName}
                       class="w-full h-full object-cover"
                       loading="lazy"
+                      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
                     />
-                  ) : (
-                    <div class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page">
-                      {authorName.charAt(0).toUpperCase()}
-                    </div>
                   )
                 }
+                <div
+                  hidden={Boolean(authorAvatarUrl)}
+                  class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page"
+                  aria-hidden="true"
+                >
+                  {authorName.charAt(0).toUpperCase()}
+                </div>
               </div>
               <div class="flex flex-col">
                 {
