@@ -354,7 +354,7 @@ function handleCardClick() {
       <!-- Glass model badges — mirrors ModelBadges.astro; keep the classes in sync. -->
       <div
         v-if="modelLogos.length"
-        class="absolute top-4 right-4 z-10 flex items-center justify-center gap-1 rounded-3xl bg-transparency-white-t8 backdrop-blur-sm"
+        class="absolute top-4 right-4 z-10 flex items-center justify-center gap-1 rounded-2xl bg-transparency-white-t8 backdrop-blur-sm"
         :class="modelLogos.length > 1 ? 'h-10 w-auto px-2' : 'size-10'"
       >
         <img
