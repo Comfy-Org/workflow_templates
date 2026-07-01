@@ -65,7 +65,7 @@ const resolvedIconPosition = reveal ? 'left' : iconPosition;
         </span>
       </span>
     </span>
-    <span v-else class="ppformula-text-center relative leading-none transition-all duration-500">
+    <span v-else class="ppformula-text-center-sm relative leading-none transition-all duration-500">
       <slot />
     </span>
     <span
