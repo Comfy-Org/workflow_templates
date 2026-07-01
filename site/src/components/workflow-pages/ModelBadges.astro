@@ -1,0 +1,41 @@
+---
+/** Glass box of provider logos overlaid on a card image. A single logo keeps the
+ *  box square (never an oval); several logos let it grow into a pill, with the
+ *  same compact logo size in every case. HubWorkflowCard.vue mirrors these
+ *  classes inline (it's a Vue island); keep the two in sync. */
+import type { ModelBadge } from '../../lib/model-logos';
+
+interface Props {
+  logos: ModelBadge[];
+  /** Positioning classes for the root, e.g. "absolute top-4 right-4 z-10". */
+  class?: string;
+  max?: number;
+}
+
+const { logos, class: className, max = 3 } = Astro.props;
+const shown = logos.slice(0, max);
+// Square for one logo, auto-width pill for several — same height either way.
+const boxSize = shown.length > 1 ? 'h-10 w-auto px-2' : 'size-10';
+---
+
+{
+  shown.length > 0 && (
+    <div
+      class:list={[
+        'flex items-center justify-center gap-1 rounded-3xl bg-transparency-white-t8 backdrop-blur-sm',
+        boxSize,
+        className,
+      ]}
+    >
+      {shown.map((logo) => (
+        <img
+          src={logo.src}
+          alt={logo.name}
+          title={logo.name}
+          class="size-7 rounded-full object-contain"
+          loading="lazy"
+        />
+      ))}
+    </div>
+  )
+}

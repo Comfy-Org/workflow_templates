@@ -14,7 +14,6 @@ import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
-import ModelBadges from '@/components/workflow-pages/ModelBadges.vue';
 
 interface Props {
   name: string;
@@ -352,7 +351,22 @@ function handleCardClick() {
         {{ title }}
       </h3>
 
-      <ModelBadges :logos="modelLogos" class="absolute top-4 right-4 z-10" />
+      <!-- Glass model badges — mirrors ModelBadges.astro; keep the classes in sync. -->
+      <div
+        v-if="modelLogos.length"
+        class="absolute top-4 right-4 z-10 flex items-center justify-center gap-1 rounded-3xl bg-transparency-white-t8 backdrop-blur-sm"
+        :class="modelLogos.length > 1 ? 'h-10 w-auto px-2' : 'size-10'"
+      >
+        <img
+          v-for="logo in modelLogos"
+          :key="logo.name"
+          :src="logo.src"
+          :alt="logo.name"
+          :title="logo.name"
+          class="size-7 rounded-full object-contain"
+          loading="lazy"
+        />
+      </div>
     </div>
 
     <div class="flex flex-col gap-4 px-4">
