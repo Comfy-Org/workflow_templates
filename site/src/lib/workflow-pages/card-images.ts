@@ -121,10 +121,7 @@ function pickForCard(
 }
 
 /** Best template for a card by overlap, ignoring the used set (allows repeats). */
-function pickBestAllowingRepeat(
-  card: CardText,
-  pool: MatcherTemplate[]
-): MatcherTemplate | null {
+function pickBestAllowingRepeat(card: CardText, pool: MatcherTemplate[]): MatcherTemplate | null {
   return pickForCard(card, pool, new Set());
 }
 

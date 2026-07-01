@@ -4,7 +4,7 @@
 import type { CardImage } from '../../../lib/workflow-pages/card-images';
 import type { ModelBadge } from '../../../lib/model-logos';
 import Thumbnail from '../Thumbnail.astro';
-import ModelBadges from '../ModelBadges.vue';
+import ModelBadges from '../ModelBadges.astro';
 
 interface Props {
   title: string;
@@ -23,15 +23,11 @@ const Tag = href ? 'a' : 'div';
   class="group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover"
 >
   <div class="relative aspect-video w-full overflow-hidden rounded-3xl">
-    {
-      image && (
-        <Thumbnail
-          src={image.src}
-          alt={image.alt}
-          class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-        />
-      )
-    }
+    <Thumbnail
+      src={image?.src}
+      alt={image?.alt ?? title}
+      class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+    />
     <!-- Top scrim keeps the overlaid title legible over any image. -->
     <div
       class="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/45 to-transparent"

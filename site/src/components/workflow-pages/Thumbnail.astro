@@ -12,7 +12,7 @@
 import { COMFY_GLYPH } from './comfy-glyph';
 
 interface Props {
-  src: string;
+  src?: string | null;
   alt: string;
   class?: string;
 }
@@ -20,20 +20,24 @@ interface Props {
 const { src, alt, class: imgClass } = Astro.props;
 ---
 
-<img
-  src={src}
-  alt={alt}
-  class={imgClass}
-  loading="lazy"
-  decoding="async"
-  onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
-/>
+{
+  src && (
+    <img
+      src={src}
+      alt={alt}
+      class={imgClass}
+      loading="lazy"
+      decoding="async"
+      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+    />
+  )
+}
 <span
-  hidden
+  hidden={Boolean(src)}
   class="absolute inset-0 flex items-center justify-center bg-hub-surface"
   aria-hidden="true"
 >
   <svg class="h-1/3 w-1/3 text-content/15" viewBox="0 0 520 520" fill="currentColor">
-    <path d={COMFY_GLYPH} />
+    <path d={COMFY_GLYPH}></path>
   </svg>
 </span>
