@@ -3,7 +3,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
-import BackButton from '../../../components/BackButton.astro';
+import IndexPageHeader from '../../../components/workflow-pages/IndexPageHeader.astro';
 import IndexCard from '../../../components/workflow-pages/cards/IndexCard.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
@@ -38,6 +38,7 @@ const structuredData = buildCollectionPageJsonLd({
 
 const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
+  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
   { name: heading },
 ]);
 ---
@@ -55,15 +56,8 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   hideDefaultFooter
 >
   <HubNavbar />
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
-    <nav class="mb-8">
-      <BackButton locale={locale} />
-    </nav>
-
-    <div class="mb-12">
-      <h1 class="text-3xl font-bold text-content">{heading}</h1>
-      <p class="text-hub-muted text-base mt-2">{description}</p>
-    </div>
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-6 pb-12">
+    <IndexPageHeader locale={locale} heading={heading} description={description} />
 
     <IndexCard cards={cards} locale={locale} />
   </div>

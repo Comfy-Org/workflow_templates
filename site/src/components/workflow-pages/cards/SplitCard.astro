@@ -1,21 +1,23 @@
 ---
 /** Capability row: large title + description on one side, image on the other,
- *  sides alternating per index. Image carries an optional model-logo badge. */
+ *  sides alternating per index. Image carries optional model badges. */
 import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
 import { ButtonPill } from '../../ui/button-pill';
 import Thumbnail from '../Thumbnail.astro';
+import ModelBadges from '../ModelBadges.vue';
 
 interface Props {
   index: number;
   title?: string;
   text: string;
   image?: CardImage | null;
-  logo?: string | null;
+  logos?: ModelBadge[];
   /** Per-card CTA, e.g. "Try workflow". */
   cta?: { label: string; href: string } | null;
 }
 
-const { index, title, text, image, logo, cta } = Astro.props;
+const { index, title, text, image, logos = [], cta } = Astro.props;
 const imageFirst = index % 2 === 1;
 ---
 
@@ -26,7 +28,7 @@ const imageFirst = index % 2 === 1;
   <div class="flex flex-1 flex-col justify-between px-6 py-8 lg:px-10 lg:py-12">
     {
       title && (
-        <h3 class="font-display text-3xl font-light leading-[1.1] tracking-[-0.03em] text-content lg:text-[2.75rem]">
+        <h3 class="font-display text-2xl font-light leading-[1.1] tracking-[-0.03em] text-content sm:text-3xl lg:text-[2.75rem]">
           {title}
         </h3>
       )
@@ -64,11 +66,7 @@ const imageFirst = index % 2 === 1;
           alt={image.alt}
           class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
-        {logo && (
-          <span class="absolute bottom-4 left-4 flex h-9 items-center gap-1.5 rounded-full bg-page/80 px-3 backdrop-blur">
-            <img src={logo} alt="" class="size-5 rounded-full object-contain" loading="lazy" />
-          </span>
-        )}
+        <ModelBadges logos={logos} class="absolute top-4 right-4 z-10" />
       </div>
     )
   }

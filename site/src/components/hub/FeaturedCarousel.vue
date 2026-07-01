@@ -9,7 +9,7 @@ import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
 import { usePreferredReducedMotion } from '@vueuse/core';
 import type { SerializedTemplate } from '@/lib/hub-api';
-import { getLogoPath, providerName } from '@/lib/provider-logos';
+import { getLogoPath, providerName } from '@/lib/model-logos';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';

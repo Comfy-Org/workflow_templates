@@ -1,4 +1,16 @@
+import { navRoutes } from '../config/nav-routes';
+
 const DEFAULT_COMFY_CLOUD_URL = 'https://cloud.comfy.org';
+
+/** Shared attribution params for site → marketing/cloud CTAs. */
+function ctaParams(ctaContent: string): URLSearchParams {
+  return new URLSearchParams({
+    utm_source: 'workflow_hub',
+    utm_medium: 'site_CTA',
+    utm_campaign: 'hub_preview',
+    utm_content: ctaContent,
+  });
+}
 
 function normalizeCloudUrl(raw?: string): string {
   const value = raw?.trim();
@@ -16,14 +28,12 @@ export function getComfyCloudBaseUrl(): string {
 }
 
 export function getCloudLandingUrl(ctaContent: string): string {
-  const params = new URLSearchParams({
-    utm_source: 'workflow_hub',
-    utm_medium: 'site_CTA',
-    utm_campaign: 'hub_preview',
-    utm_content: ctaContent,
-  });
+  return `${getComfyCloudBaseUrl()}/?${ctaParams(ctaContent).toString()}`;
+}
 
-  return `${getComfyCloudBaseUrl()}/?${params.toString()}`;
+/** Marketing pricing page, tagged with CTA attribution. */
+export function getPricingUrl(ctaContent: string): string {
+  return `${navRoutes.cloudPricing}?${ctaParams(ctaContent).toString()}`;
 }
 
 export function getCloudCtaUrl(shareId: string, ctaLocation: string): string {

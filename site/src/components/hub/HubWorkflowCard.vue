@@ -12,8 +12,9 @@ import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
-import { providerLogos } from '@/lib/provider-logos';
+import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
+import ModelBadges from '@/components/workflow-pages/ModelBadges.vue';
 
 interface Props {
   name: string;
@@ -21,6 +22,8 @@ interface Props {
   shareId?: string;
   tags?: string[];
   logos?: { provider: string | string[] }[];
+  /** Model names; badges fall back to these when `logos` is empty. */
+  models?: string[];
   thumbnails?: string[];
   locale?: string;
   username?: string;
@@ -36,6 +39,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   tags: () => [],
   logos: () => [],
+  models: () => [],
   thumbnails: () => [],
   locale: 'en',
   username: '',
@@ -56,7 +60,9 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
 };
 const tagFallbackLabel = computed(() => MEDIA_TYPE_LABELS[props.mediaType] ?? '');
 
-const modelLogos = computed(() => providerLogos(props.logos).slice(0, 3));
+const modelLogos = computed(() =>
+  resolveTemplateLogos({ logos: props.logos, models: props.models }).slice(0, 3)
+);
 
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
@@ -346,21 +352,7 @@ function handleCardClick() {
         {{ title }}
       </h3>
 
-      <div v-if="modelLogos.length" class="absolute top-4 right-4 z-10 flex flex-row-reverse">
-        <div
-          v-for="(logo, i) in modelLogos"
-          :key="logo.name"
-          class="relative flex size-12 items-center justify-center rounded-2xl bg-black/10 p-2 backdrop-blur-xs hover:z-20"
-          :class="i > 0 ? '-mr-4' : ''"
-          :title="logo.name"
-        >
-          <img
-            :src="logo.logoPath"
-            :alt="logo.name"
-            class="h-full w-full rounded-2xl object-contain"
-          />
-        </div>
-      </div>
+      <ModelBadges :logos="modelLogos" class="absolute top-4 right-4 z-10" />
     </div>
 
     <div class="flex flex-col gap-4 px-4">

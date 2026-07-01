@@ -13,7 +13,7 @@ import type { MatcherTemplate } from '../../lib/hub-api';
 import { assignCardTemplates, type CardImage } from '../../lib/workflow-pages/card-images';
 import { isMediaFile } from '../../lib/media-utils';
 import { thumbnailPath } from '../../lib/routes';
-import { getModelLogoPath } from '../../lib/model-logos';
+import { resolveTemplateLogos } from '../../lib/model-logos';
 import AboutSection from './sections/AboutSection.astro';
 import CapabilitiesSection, { type CapabilityCard } from './sections/CapabilitiesSection.astro';
 import ProductShowcase from './ProductShowcase.vue';
@@ -126,7 +126,7 @@ const enrichedCards: CapabilityCard[] = baseCards.map((card, i) => {
   return {
     ...card,
     image: tpl ? stillImage(tpl) : null,
-    logo: tpl?.models?.length ? getModelLogoPath(tpl.models[0]) : null,
+    logos: tpl ? resolveTemplateLogos(tpl) : [],
     cta: tpl && ctaHref && ctaLabel ? { label: ctaLabel, href: ctaHref(tpl) } : null,
   };
 });
@@ -138,7 +138,7 @@ const aboutCards = enrichedCards.slice(0, 2).map((card, i) => ({
   title: card.title ?? '',
   text: card.text,
   image: card.image,
-  logo: card.logo,
+  logos: card.logos ?? [],
 }));
 const capabilityCards = enrichedCards.slice(2);
 const hasCapabilities = capabilityCards.length > 0;
@@ -170,7 +170,7 @@ const applicationItems = applications.map((app, i) => {
     title: app.title,
     subtitle: app.subtitle,
     image: tpl ? stillImage(tpl) : null,
-    logo: tpl?.models?.length ? getModelLogoPath(tpl.models[0]) : null,
+    logos: tpl ? resolveTemplateLogos(tpl) : [],
     href: tpl && ctaHref ? ctaHref(tpl) : null,
   };
 });

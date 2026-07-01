@@ -4,17 +4,19 @@
  *  overlaid, plus an eyebrow and workflow count below. */
 import type { Locale } from '../../../i18n/config';
 import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
 import { t } from '../../../i18n/ui';
 import { inner, sectionPad } from '../landing-styles';
 import SectionHeader from '../SectionHeader.astro';
 import Thumbnail from '../Thumbnail.astro';
+import ModelBadges from '../ModelBadges.vue';
 
 interface RailCard {
   title: string;
   eyebrow?: string;
   meta?: string;
   image?: CardImage | null;
-  logo?: string | null;
+  logos: ModelBadge[];
   href: string;
 }
 
@@ -62,11 +64,7 @@ const cards = allCards.slice(0, 5);
               <h3 class="absolute left-5 right-16 top-5 font-display text-lg font-medium leading-tight text-white lg:text-2xl">
                 {card.title}
               </h3>
-              {card.logo && (
-                <span class="absolute right-4 top-4 flex h-9 items-center rounded-full bg-page/70 px-2.5 backdrop-blur">
-                  <img src={card.logo} alt="" class="size-5 rounded-full object-contain" loading="lazy" />
-                </span>
-              )}
+              <ModelBadges logos={card.logos} class="absolute right-4 top-4 z-10" />
             </div>
 
             <div class="flex items-center justify-between gap-3 px-4 pb-2">

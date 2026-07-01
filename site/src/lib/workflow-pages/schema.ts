@@ -93,6 +93,12 @@ export const WORD_COUNT_TIERS = {
 
 export type WordCountTier = keyof typeof WORD_COUNT_TIERS;
 
+/** A model/provider badge overlaid on a card: logo asset + name for alt text. */
+export interface CardBadge {
+  src: string;
+  name: string;
+}
+
 /** An SEO landing page (use-case or model) summarized as an index/rail card. */
 export interface SeoPageCard {
   /** Absolute or root-relative href to the page. */
@@ -103,6 +109,8 @@ export interface SeoPageCard {
   count: number;
   /** Lead template's first thumbnail, or null for a placeholder. */
   thumbnail: string | null;
+  /** Provider badges shown on the card, in order (may be empty). */
+  logos: CardBadge[];
 }
 
 /** Title-case a keyword for use inside a heading ("ai headshot" -> "AI Headshot"). */

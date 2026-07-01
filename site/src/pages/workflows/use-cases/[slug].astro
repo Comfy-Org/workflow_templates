@@ -12,11 +12,11 @@ import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
 import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { getModelLogoPath } from '../../../lib/model-logos';
+import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { isMediaFile } from '../../../lib/media-utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
-import { getCloudCtaUrl, getCloudLandingUrl } from '../../../lib/urls';
+import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import {
   loadSerializedTemplates,
@@ -135,7 +135,7 @@ const relatedModelCards = related.map((model) => ({
   eyebrow: t('labels.models', locale),
   meta: `${model.count} ${workflowsLabel}`,
   href: localizeUrl(modelPath(model.slug), locale),
-  logo: getModelLogoPath(model.label),
+  logos: resolveTemplateLogos({ models: [model.label] }),
   thumb: model.thumbnail ?? nextStill(),
 }));
 
@@ -146,7 +146,7 @@ const relatedUseCaseCards = SEO_PAGES.filter((other) => other.slug !== def.slug)
     eyebrow: t('template.useCases', locale),
     meta: undefined as string | undefined,
     href: localizeUrl(useCasePath(other.slug), locale),
-    logo: null,
+    logos: [] as ReturnType<typeof resolveTemplateLogos>,
     thumb: nextStill(),
   }));
 
@@ -155,7 +155,7 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).
   eyebrow: c.eyebrow,
   meta: c.meta,
   href: c.href,
-  logo: c.logo,
+  logos: c.logos,
   image: c.thumb ? { src: thumbnailPath(c.thumb), alt: c.title } : null,
 }));
 ---
@@ -187,9 +187,10 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).
       primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
       templates={templates}
+      locale={locale}
     />
 
-    <section id="workflows" class="scroll-mt-8 bg-page pt-20 pb-10 lg:pt-28 lg:pb-12">
+    <section id="workflows" class="scroll-mt-8 bg-page pt-16 pb-10 lg:pt-24 lg:pb-12">
       <div class={inner}>
         <p class={eyebrow}>{t('useCase.theWorkflows', locale)}</p>
         <h2 class={`${heading} mb-8 lg:mb-10`}>
@@ -233,7 +234,7 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).
             kicker: t('useCase.bannerKicker', locale),
             cta: {
               label: t('useCase.bannerCta', locale),
-              href: getCloudLandingUrl(`usecase_${def.slug}_banner`),
+              href: getPricingUrl(`usecase_${def.slug}_banner`),
             },
           }}
         />

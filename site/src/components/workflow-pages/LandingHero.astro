@@ -1,8 +1,11 @@
 ---
+import type { Locale } from '../../i18n/config';
 import { isMediaFile } from '../../lib/media-utils';
-import { thumbnailPath } from '../../lib/routes';
+import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
 import type { SerializedTemplate } from '../../lib/hub-api';
+import { resolveTemplateLogos } from '../../lib/model-logos';
 import { Button } from '../ui/button';
+import ModelBadges from './ModelBadges.vue';
 import { inner } from './landing-styles';
 
 interface Props {
@@ -15,9 +18,11 @@ interface Props {
   secondaryCta: { label: string; href: string };
   /** Templates the page resolves to; the first still image becomes the hero visual. */
   templates: SerializedTemplate[];
+  locale: Locale;
 }
 
-const { eyebrow, title, description, meta, primaryCta, secondaryCta, templates } = Astro.props;
+const { eyebrow, title, description, meta, primaryCta, secondaryCta, templates, locale } =
+  Astro.props;
 
 // Mirror HeaderMain's CTA pattern: an array of buttons rendered through the
 // shared brand-solid / brand-outline variants, so the hero and navbar stay in sync.
@@ -26,10 +31,16 @@ const ctaButtons = [
   { ...secondaryCta, primary: false },
 ];
 
-const heroImage = templates
-  .flatMap((tpl) => tpl.thumbnails ?? [])
-  .find((thumb) => !isMediaFile(thumb));
+const heroTemplate = templates.find((template) =>
+  template.thumbnails?.some((thumb) => !isMediaFile(thumb))
+);
+const heroImage = heroTemplate?.thumbnails?.find((thumb) => !isMediaFile(thumb));
 const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
+const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
+// The hero visual links to its own template's detail page (plain div if unknown).
+const heroHref = workflowDetailPath(heroTemplate?.name, heroTemplate?.shareId, locale);
+const HeroVisual = heroHref ? 'a' : 'div';
+const heroVisualProps = heroHref ? { href: heroHref, 'aria-label': title } : {};
 ---
 
 <header class:list={[inner, 'py-12 lg:py-20']}>
@@ -39,7 +50,7 @@ const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
       <p class="font-display text-sm font-extrabold uppercase tracking-[0.05em] text-brand">
         {eyebrow}
       </p>
-      <h1 class="mt-5 font-display text-4xl font-light leading-14 text-content sm:text-5xl">
+      <h1 class="mt-5 font-display text-3xl font-light leading-14 text-content sm:text-4xl lg:text-5xl">
         {title}
       </h1>
       <p
@@ -70,20 +81,24 @@ const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
       </div>
     </div>
 
-    <!-- Visual -->
+    <!-- Visual — links to the lead template's detail page. -->
     {
       heroSrc && (
         <div class="flex flex-3 items-center justify-center rounded-[2.25rem] border border-border-strong bg-page p-4">
-          <div class="aspect-940/516 w-full overflow-hidden rounded-3xl">
+          <HeroVisual
+            {...heroVisualProps}
+            class="group relative block aspect-940/516 w-full overflow-hidden rounded-3xl"
+          >
             <img
               src={heroSrc}
               alt={title}
-              class="size-full object-cover"
+              class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               loading="eager"
               fetchpriority="high"
               decoding="async"
             />
-          </div>
+            <ModelBadges logos={heroLogos} class="absolute top-4 right-4 z-10" />
+          </HeroVisual>
         </div>
       )
     }

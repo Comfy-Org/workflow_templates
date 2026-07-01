@@ -4,6 +4,7 @@
  *  travels with the markup it depends on. */
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
+import { Button } from '../ui/button';
 import { inner } from './landing-styles';
 
 interface Props {
@@ -16,7 +17,7 @@ interface Props {
 const { locale, href, analytics } = Astro.props;
 ---
 
-<section class="bg-page py-20 lg:py-28">
+<section class="bg-page py-16 lg:py-24">
   <div class={`${inner} flex flex-col items-center text-center`}>
     <h2 class="font-display text-3xl lg:text-4xl font-semibold tracking-tight text-content-bright">
       {t('template.ready', locale)}
@@ -24,19 +25,21 @@ const { locale, href, analytics } = Astro.props;
     <p class="font-body mt-3 max-w-xl text-base text-content-secondary">
       {t('template.startNow', locale)}
     </p>
-    <a
+    <Button
+      as="a"
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      class:list={[
-        analytics && 'usecase-cta',
-        'mt-8 inline-flex items-center justify-center rounded-full bg-brand px-8 py-3.5 text-sm font-bold text-page transition-opacity hover:opacity-90',
-      ]}
+      variant="brand-solid"
+      size="nav"
+      class:list={[analytics && 'usecase-cta', 'mt-8']}
       data-location={analytics ? 'footer' : undefined}
       data-usecase={analytics?.useCase}
     >
-      {t('cta.tryCloud', locale)}
-    </a>
+      <span class="ppformula-text-center-sm uppercase font-extrabold cursor-pointer">
+        {t('cta.tryCloud', locale)}
+      </span>
+    </Button>
   </div>
 </section>
 

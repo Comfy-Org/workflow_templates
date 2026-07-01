@@ -13,9 +13,10 @@ import { inner, eyebrow, heading } from '../../../components/workflow-pages/land
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { isMediaFile } from '../../../lib/media-utils';
+import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
-import { getCloudCtaUrl, getCloudLandingUrl } from '../../../lib/urls';
+import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { loadSerializedTemplates, type MatcherTemplate } from '../../../lib/hub-api';
 import { deriveModelGroups, type ModelGroup } from '../../../lib/workflow-pages/model-groups';
@@ -132,12 +133,15 @@ const useCasePoolStills = group.templates
   .flatMap((tpl) => tpl.thumbnails ?? [])
   .filter((thumb) => !isMediaFile(thumb));
 
+// Every "keep exploring" card here is this model applied to a use-case, so they
+// all carry this family's badge(s).
+const modelBadges = resolveTemplateLogos({ models: group.modelNames });
 const relatedCards = isRich
   ? relatedUseCaseDefs.slice(0, 6).map((def, i) => ({
       title: def.h1,
       eyebrow: t('template.useCases', locale),
       href: localizeUrl(useCasePath(def.slug), locale),
-      logo: null,
+      logos: modelBadges,
       image: useCasePoolStills[i]
         ? { src: thumbnailPath(useCasePoolStills[i]), alt: def.h1 }
         : null,
@@ -172,9 +176,10 @@ const relatedCards = isRich
       primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
       templates={group.templates}
+      locale={locale}
     />
 
-    <section id="workflows" class="scroll-mt-8 bg-page pt-20 pb-10 lg:pt-28 lg:pb-12">
+    <section id="workflows" class="scroll-mt-8 bg-page pt-16 pb-10 lg:pt-24 lg:pb-12">
       <div class={inner}>
         <p class={eyebrow}>{t('useCase.theWorkflows', locale)}</p>
         <h2 class={`${heading} mb-8 lg:mb-10`}>
@@ -220,7 +225,7 @@ const relatedCards = isRich
             kicker: t('useCase.bannerKicker', locale),
             cta: {
               label: t('useCase.bannerCta', locale),
-              href: getCloudLandingUrl(`model_${group.slug}_banner`),
+              href: getPricingUrl(`model_${group.slug}_banner`),
             },
           }}
         />
