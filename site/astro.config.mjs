@@ -9,11 +9,18 @@ import os from 'node:os';
 
 import vue from '@astrojs/vue';
 import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
+import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
+import { resolveUseCasePageTemplates } from './src/lib/workflow-pages/use-case-resolver.ts';
 
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const modelContentDir = path.join(process.cwd(), 'src/content/landing/models');
+const useCaseContentDir = path.join(process.cwd(), 'src/content/landing/use-cases');
 const templateDates = new Map();
-/** Raw content templates, reused below to derive indexable model slugs. @type {any[]} */
+/**
+ * @typedef {{ name: string; date?: string; username?: string; models?: string[];
+ *   tags?: string[]; usage?: number }} SitemapTemplate
+ */
+/** Raw content templates, reused below to derive indexable slugs. @type {SitemapTemplate[]} */
 const contentTemplates = [];
 
 if (fs.existsSync(templatesDir)) {
@@ -21,28 +28,52 @@ if (fs.existsSync(templatesDir)) {
   for (const file of files) {
     try {
       const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
+      if (typeof content.name !== 'string') continue;
+      // Normalize the arrays the group/use-case resolvers read, so a template
+      // JSON missing `models`/`tags` can't crash sitemap derivation.
+      content.models = Array.isArray(content.models) ? content.models : [];
+      content.tags = Array.isArray(content.tags) ? content.tags : [];
       contentTemplates.push(content);
-      if (content.name && content.date) {
-        templateDates.set(content.name, content.date);
-      }
+      if (content.date) templateDates.set(content.name, content.date);
     } catch {
       // Skip invalid JSON
     }
   }
 }
+
+/**
+ * Slug is indexable when its content JSON exists and did not fail the quality gate.
+ * @param {string} dir
+ * @param {string} slug
+ * @returns {boolean}
+ */
+const contentPasses = (dir, slug) => {
+  const contentPath = path.join(dir, `${slug}.json`);
+  if (!fs.existsSync(contentPath)) return false;
+  try {
+    return JSON.parse(fs.readFileSync(contentPath, 'utf-8')).qualityFailed !== true;
+  } catch {
+    return false;
+  }
+};
 const indexableModelSlugs = new Set(
   deriveModelGroups(contentTemplates)
-    .filter((group) => {
-      if (!group.qualifies) return false;
-      const contentPath = path.join(modelContentDir, `${group.slug}.json`);
-      if (!fs.existsSync(contentPath)) return false;
-      try {
-        return JSON.parse(fs.readFileSync(contentPath, 'utf-8')).qualityFailed !== true;
-      } catch {
-        return false;
-      }
-    })
+    .filter((group) => group.qualifies && contentPasses(modelContentDir, group.slug))
     .map((group) => group.slug)
+);
+
+// Use-case pages are indexable on the same terms as model pages: a resolved
+// template cluster plus content JSON that passed the quality gate. Mirrors the
+// route's getStaticPaths + noindex logic so the sitemap can't advertise a
+// noindex page.
+const indexableUseCaseSlugs = new Set(
+  SEO_PAGES.filter(
+    (def) =>
+      // contentTemplates carries the fields the resolver reads (models/tags/usage/name).
+      // @ts-expect-error - build-time SitemapTemplate is narrower than SerializedTemplate
+      resolveUseCasePageTemplates(def, contentTemplates).length > 0 &&
+      contentPasses(useCaseContentDir, def.slug)
+  ).map((def) => def.slug)
 );
 
 // lastmod fallback for pages without a specific date.
@@ -52,7 +83,6 @@ const buildDate = new Date().toISOString();
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
 const nonDefaultLocales = locales.filter((l) => l !== 'en');
 
-// Custom sitemap pages for ISR routes not discovered at build time
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
 
 // Creator profile pages — extract unique usernames from synced templates
@@ -113,7 +143,6 @@ export default defineConfig({
           return item;
         }
 
-        // Homepage
         if (pathname === '/' || pathname === '') {
           item.lastmod = buildDate;
           // @ts-expect-error - sitemap types are stricter than actual API
@@ -179,6 +208,13 @@ export default defineConfig({
           return indexableModelSlugs.has(modelMatch[1]);
         }
 
+        // Same rule for use-case pages: only list slugs that actually get an
+        // indexable page, so a noindex/thin use-case never enters the sitemap.
+        const useCaseMatch = page.match(/\/workflows\/use-cases\/([^/]+)\/$/);
+        if (useCaseMatch) {
+          return indexableUseCaseSlugs.has(useCaseMatch[1]);
+        }
+
         const match = page.match(/\/workflows\/([^/]+)\/$/);
         if (match) {
           const segment = match[1];
@@ -207,50 +243,37 @@ export default defineConfig({
     skewProtection: true,
   }),
 
-  // Build performance optimizations
   build: {
-    // Increase concurrency for faster builds on multi-core systems
     concurrency: Math.max(1, os.cpus().length),
-    // Inline small stylesheets automatically
     inlineStylesheets: 'auto',
   },
 
-  // HTML compression
   compressHTML: true,
 
-  // Image optimization settings
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',
       config: {
-        // Limit input pixels to prevent memory issues with large images
-        limitInputPixels: 268402689, // ~16384x16384
+        limitInputPixels: 268402689, // ~16384x16384, guards against memory blowups
       },
     },
   },
 
-  // Responsive images for automatic srcset generation (now stable in Astro 5)
-  // Note: responsiveImages was moved from experimental to stable in Astro 5.x
-
   vite: {
     plugins: [tailwindcss()],
     build: {
-      // Increase chunk size warning limit (reduces noise)
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
-          // Manual chunking for better caching
           manualChunks: {
             vendor: ['web-vitals'],
           },
         },
       },
     },
-    // Optimize dependency pre-bundling
     optimizeDeps: {
       include: ['web-vitals'],
     },
-    // Disable dev sourcemaps for CSS (faster)
     css: {
       devSourcemap: false,
     },

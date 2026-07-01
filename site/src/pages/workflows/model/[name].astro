@@ -23,7 +23,7 @@ import { deriveModelGroups, type ModelGroup } from '../../../lib/workflow-pages/
 import { loadModelContent } from '../../../lib/workflow-pages/content-loaders';
 import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-resolver';
 import { type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
-import { isIndexable } from '../../../lib/workflow-pages/governance';
+import { assertBrandSafe, isIndexable } from '../../../lib/workflow-pages/governance';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
 import {
   buildCollectionPageJsonLd,
@@ -47,6 +47,14 @@ export async function getStaticPaths() {
   }[] = [];
 
   for (const group of groups) {
+    // Fail the build if a qualifying (indexable) model page carries a denied term.
+    if (group.qualifies) {
+      assertBrandSafe({
+        slug: group.slug,
+        primaryKeyword: group.keywords.primary,
+        title: group.label,
+      });
+    }
     const relatedUseCases = useCasesFeaturingModel(group.slug, catalog);
     paths.push({ params: { name: group.slug }, props: { group, relatedUseCases, fallbackPool } });
     for (const variant of group.redirectFrom) {
@@ -93,9 +101,11 @@ const subheading =
   content?.subheading ||
   `Ready-to-run ComfyUI workflows built on ${label}, fully editable and runnable on Comfy Cloud with no setup.`;
 
-const noindex =
-  !isRich ||
-  !isIndexable({ clusterSize: templates.length, humanEdited: true, qualityPassed: true });
+const noindex = !isIndexable({
+  clusterSize: templates.length,
+  humanEdited: true,
+  qualityPassed: isRich,
+});
 
 const leadShareId = templates.find((template) => template.shareId)?.shareId;
 const heroCtaUrl = leadShareId
@@ -130,6 +140,7 @@ const heroTemplateName = group.templates.find((tpl) =>
 // "Keep exploring" image cards: use-cases featuring this model family (derived
 // from grid overlap), each borrowing a still from this page's own grid.
 const useCasePoolStills = group.templates
+  .filter((tpl) => tpl.name !== heroTemplateName)
   .flatMap((tpl) => tpl.thumbnails ?? [])
   .filter((thumb) => !isMediaFile(thumb));
 
@@ -181,11 +192,8 @@ const relatedCards = isRich
 
     <section id="workflows" class="scroll-mt-8 bg-page pt-16 pb-10 lg:pt-24 lg:pb-12">
       <div class={inner}>
-        <p class={eyebrow}>{t('useCase.theWorkflows', locale)}</p>
-        <h2 class={`${heading} mb-8 lg:mb-10`}>
-          {templates.length}
-          {h1}
-        </h2>
+        <p class={eyebrow}>{t('template.theWorkflows', locale)}</p>
+        <h2 class={`${heading} mb-8 lg:mb-10`}>{`${templates.length} ${h1}`}</h2>
         <WorkflowGrid
           client:load
           templates={templates}

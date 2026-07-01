@@ -30,7 +30,7 @@ import {
   type RelatedModel,
 } from '../../../lib/workflow-pages/use-case-resolver';
 import { loadUseCaseContent } from '../../../lib/workflow-pages/content-loaders';
-import { isIndexable } from '../../../lib/workflow-pages/governance';
+import { assertBrandSafe, isIndexable } from '../../../lib/workflow-pages/governance';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
 import {
   buildCollectionPageJsonLd,
@@ -45,23 +45,30 @@ export async function getStaticPaths() {
   // Skip use-cases whose cluster resolves to nothing: an empty page would be
   // noindex yet still land in the sitemap. Related models are derived from the
   // grid here (where the catalog lives), so the rail can never drift from it.
-  return SEO_PAGES.map((def) => ({
+  const routed = SEO_PAGES.map((def) => ({
     def,
     templates: resolveUseCasePageTemplates(def, catalog),
     related: relatedModelsForUseCase(def, catalog),
-  }))
-    .filter(({ templates }) => templates.length > 0)
-    .map(({ def, templates, related }) => ({
-      params: { slug: def.slug },
-      props: { def, templates, related, fallbackPool },
-    }));
+  })).filter(({ templates }) => templates.length > 0);
+  // Fail the build if any routed use-case page carries a denied term.
+  for (const { def } of routed) {
+    assertBrandSafe({ slug: def.slug, primaryKeyword: def.keywords.primary, title: def.h1 });
+  }
+  // Slugs that actually get a page — so the sibling rail never links to one that
+  // was skipped above.
+  const routedSlugs = routed.map(({ def }) => def.slug);
+  return routed.map(({ def, templates, related }) => ({
+    params: { slug: def.slug },
+    props: { def, templates, related, fallbackPool, routedSlugs },
+  }));
 }
 
-const { def, templates, related, fallbackPool } = Astro.props as {
+const { def, templates, related, fallbackPool, routedSlugs } = Astro.props as {
   def: SeoPageDef;
   templates: SerializedTemplate[];
   related: RelatedModel[];
   fallbackPool: MatcherTemplate[];
+  routedSlugs: string[];
 };
 
 const locale = getLocaleFromPath(Astro.url.pathname);
@@ -69,6 +76,8 @@ const keyword = def.keywords.primary;
 const basePath = useCasePath(def.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const content = await loadUseCaseContent(def.slug);
+// No editorial JSON → a thin page; keep it out of the index (mirrors the model page).
+const hasRichContent = !!content && !content.qualityFailed;
 
 const description =
   content?.metaDescription ||
@@ -80,7 +89,7 @@ const subheading =
 const noindex = !isIndexable({
   clusterSize: templates.length,
   humanEdited: true,
-  qualityPassed: !content?.qualityFailed,
+  qualityPassed: hasRichContent,
 });
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
@@ -139,7 +148,9 @@ const relatedModelCards = related.map((model) => ({
   thumb: model.thumbnail ?? nextStill(),
 }));
 
-const relatedUseCaseCards = SEO_PAGES.filter((other) => other.slug !== def.slug)
+const relatedUseCaseCards = SEO_PAGES.filter(
+  (other) => other.slug !== def.slug && routedSlugs.includes(other.slug)
+)
   .slice(0, 6)
   .map((other) => ({
     title: other.h1,
@@ -192,11 +203,8 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).
 
     <section id="workflows" class="scroll-mt-8 bg-page pt-16 pb-10 lg:pt-24 lg:pb-12">
       <div class={inner}>
-        <p class={eyebrow}>{t('useCase.theWorkflows', locale)}</p>
-        <h2 class={`${heading} mb-8 lg:mb-10`}>
-          {templates.length}
-          {def.h1}
-        </h2>
+        <p class={eyebrow}>{t('template.theWorkflows', locale)}</p>
+        <h2 class={`${heading} mb-8 lg:mb-10`}>{`${templates.length} ${def.h1}`}</h2>
         <WorkflowGrid
           client:load
           templates={templates}

@@ -42,12 +42,15 @@ export interface IndexabilityInput {
   qualityPassed: boolean;
 }
 
-/** Indexable only when backed by real templates and the copy is trustworthy. */
+/**
+ * Indexable only when backed by real templates AND the copy is trustworthy —
+ * every condition must hold, so a failed quality gate can never be overridden by
+ * the `humanEdited` flag.
+ */
 export function isIndexable({
   clusterSize,
   humanEdited,
   qualityPassed,
 }: IndexabilityInput): boolean {
-  if (clusterSize <= 0) return false;
-  return humanEdited || qualityPassed;
+  return clusterSize > 0 && humanEdited && qualityPassed;
 }

@@ -10,7 +10,6 @@ import { t } from '../../../i18n/ui';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { useCasesIndexPath } from '../../../lib/routes';
 import { loadSerializedTemplates } from '../../../lib/hub-api';
-import { SEO_PAGES } from '../../../lib/workflow-pages/use-cases';
 import { resolveUseCasePageCards } from '../../../lib/workflow-pages/index-cards';
 import {
   buildCollectionPageJsonLd,
@@ -26,10 +25,9 @@ const cards = resolveUseCasePageCards(catalog, locale);
 const basePath = useCasesIndexPath();
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const heading = t('template.useCases', locale);
-const description = `Browse ComfyUI workflows by use case — ready-to-run templates for ${SEO_PAGES.map(
-  (u) => u.keywords.primary
-)
+const description = `Browse ComfyUI workflows by use case — ready-to-run templates for ${cards
   .slice(0, 4)
+  .map((card) => card.title)
   .join(', ')} and more.`;
 
 const structuredData = buildCollectionPageJsonLd({
@@ -40,7 +38,10 @@ const structuredData = buildCollectionPageJsonLd({
 
 const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
-  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
   { name: heading },
 ]);
 ---
