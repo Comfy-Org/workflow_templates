@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getLogoPath, providerLogos, providerName, resolveTemplateLogos } from '../../src/lib/model-logos';
+import {
+  getLogoPath,
+  providerLogos,
+  providerName,
+  resolveTemplateLogos,
+} from '../../src/lib/model-logos';
 
 describe('getLogoPath', () => {
   it('resolves an exact provider name to its logo asset', () => {
@@ -84,6 +89,13 @@ describe('providerLogos', () => {
     ]);
   });
 
+  it('dedupes aliases that resolve to the same logo', () => {
+    // Google and Gemini both map to /logos/google.png — one badge, not two.
+    expect(providerLogos([{ provider: 'Google' }, { provider: 'Gemini' }])).toEqual([
+      { name: 'Google', logoPath: '/logos/google.png' },
+    ]);
+  });
+
   it('returns an empty array for missing or empty input', () => {
     expect(providerLogos(undefined)).toEqual([]);
     expect(providerLogos([])).toEqual([]);
@@ -93,12 +105,12 @@ describe('providerLogos', () => {
 
 describe('resolveTemplateLogos', () => {
   it('prefers the structured logos, one badge per distinct provider in order', () => {
-    expect(resolveTemplateLogos({ logos: [{ provider: 'OpenAI' }, { provider: 'Google' }] })).toEqual(
-      [
-        { src: '/logos/openai.png', name: 'OpenAI' },
-        { src: '/logos/google.png', name: 'Google' },
-      ]
-    );
+    expect(
+      resolveTemplateLogos({ logos: [{ provider: 'OpenAI' }, { provider: 'Google' }] })
+    ).toEqual([
+      { src: '/logos/openai.png', name: 'OpenAI' },
+      { src: '/logos/google.png', name: 'Google' },
+    ]);
   });
 
   it('flattens provider arrays and dedupes repeats', () => {

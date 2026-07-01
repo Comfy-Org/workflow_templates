@@ -83,7 +83,10 @@ export function providerName(logos?: { provider: string | string[] }[]): string 
   return Array.isArray(p) ? (p[0] ?? null) : (p ?? null);
 }
 
-/** All distinct, logo-resolvable providers from `logos`, in order (deduped). */
+/**
+ * Distinct providers from `logos`, in order, deduped by resolved logo — so alias
+ * pairs like "Google" + "Gemini" (same asset) yield a single badge, not two.
+ */
 export function providerLogos(
   logos?: { provider: string | string[] }[]
 ): { name: string; logoPath: string }[] {
@@ -93,10 +96,11 @@ export function providerLogos(
   const seen = new Set<string>();
   const out: { name: string; logoPath: string }[] = [];
   for (const name of names) {
-    if (!name || seen.has(name)) continue;
-    seen.add(name);
+    if (!name) continue;
     const logoPath = getLogoPath(name);
-    if (logoPath) out.push({ name, logoPath });
+    if (!logoPath || seen.has(logoPath)) continue;
+    seen.add(logoPath);
+    out.push({ name, logoPath });
   }
   return out;
 }
