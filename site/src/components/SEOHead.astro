@@ -12,8 +12,12 @@ interface Props {
   structuredData?: object;
   /** Base path for hreflang tags (without locale prefix) */
   hreflangBasePath?: string;
+  /** Whether localized variants exist; false emits x-default only (no per-locale alternates). */
+  hreflangLocalized?: boolean;
   /** Locale is accepted for compatibility but computed from URL in HreflangTags */
   locale?: string;
+  /** Emit robots noindex (keeps follow) for thin/unverified pages. */
+  noindex?: boolean;
 }
 
 const {
@@ -24,6 +28,8 @@ const {
   ogType = 'website',
   structuredData,
   hreflangBasePath,
+  hreflangLocalized = true,
+  noindex = false,
 } = Astro.props;
 
 const pathname = Astro.url.pathname;
@@ -56,10 +62,11 @@ if (!computedHreflangBasePath) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>{title}</title>
 <meta name="description" content={description} />
+{noindex && <meta name="robots" content="noindex,follow" />}
 <link rel="canonical" href={fullCanonicalUrl} />
 
 {/* Hreflang tags for international SEO */}
-<HreflangTags basePath={computedHreflangBasePath} />
+<HreflangTags basePath={computedHreflangBasePath} localized={hreflangLocalized} />
 
 <!-- Open Graph -->
 <meta property="og:type" content={ogType} />
