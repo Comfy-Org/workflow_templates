@@ -4,7 +4,8 @@
  */
 import type { SerializedTemplate } from '../hub-api';
 import { modelPath, useCasePath } from '../routes';
-import type { SeoPageCard } from './schema';
+import { getLogoPath, resolveTemplateLogos } from '../model-logos';
+import type { CardBadge, SeoPageCard } from './schema';
 import { deriveModelGroups } from './model-groups';
 import { SEO_PAGES } from './use-cases';
 import { resolveUseCasePageTemplates } from './use-case-resolver';
@@ -16,12 +17,21 @@ export function resolveModelPageCards(
   return deriveModelGroups(catalog)
     .filter((group) => group.qualifies)
     .sort((a, b) => b.usage - a.usage)
-    .map((group) => ({
-      href: modelPath(group.slug, locale),
-      title: `${group.label} ComfyUI Workflows`,
-      count: group.templates.length,
-      thumbnail: group.templates[0]?.thumbnails?.[0] ?? null,
-    }));
+    .map((group) => {
+      const familyLogo = getLogoPath(group.label);
+      const logos: CardBadge[] = familyLogo
+        ? [{ src: familyLogo, name: group.label }]
+        : group.templates[0]
+          ? resolveTemplateLogos(group.templates[0])
+          : [];
+      return {
+        href: modelPath(group.slug, locale),
+        title: `${group.label} ComfyUI Workflows`,
+        count: group.templates.length,
+        thumbnail: group.templates[0]?.thumbnails?.[0] ?? null,
+        logos,
+      };
+    });
 }
 
 export function resolveUseCasePageCards(
@@ -35,6 +45,7 @@ export function resolveUseCasePageCards(
       title: def.h1,
       count: templates.length,
       thumbnail: templates[0]?.thumbnails?.[0] ?? null,
+      logos: templates[0] ? resolveTemplateLogos(templates[0]) : [],
     };
   }).filter((card) => card.count > 0);
 }
