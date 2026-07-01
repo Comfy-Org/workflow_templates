@@ -38,18 +38,20 @@ defineProps<{
             class="group flex w-full items-center justify-between gap-4 py-5 text-left text-base font-medium text-content transition-colors data-[state=open]:text-brand"
           >
             <span>{{ item.question }}</span>
+            <!-- Plus that morphs to minus on open: the vertical stroke collapses. -->
             <svg
-              class="size-5 shrink-0 text-content-secondary transition-transform duration-200 group-data-[state=open]:rotate-180 group-data-[state=open]:text-brand"
+              class="size-5 shrink-0 text-content-secondary transition-colors duration-200 group-data-[state=open]:text-brand"
               viewBox="0 0 24 24"
               fill="none"
               aria-hidden="true"
             >
+              <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
               <path
-                d="M6 9l6 6 6-6"
+                class="origin-center transition-transform duration-200 group-data-[state=open]:rotate-90 group-data-[state=open]:opacity-0"
+                d="M12 5v14"
                 stroke="currentColor"
                 stroke-width="2"
                 stroke-linecap="round"
-                stroke-linejoin="round"
               />
             </svg>
           </AccordionTrigger>
