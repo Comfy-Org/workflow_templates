@@ -8,10 +8,20 @@ import {
   TooltipProvider,
 } from 'reka-ui';
 
-withDefaults(defineProps<{ text: string; disabled?: boolean; delay?: number }>(), {
-  disabled: false,
-  delay: 200,
-});
+withDefaults(
+  defineProps<{
+    text: string;
+    disabled?: boolean;
+    delay?: number;
+    /** Which side of the trigger to render on (reka-ui). Defaults to 'top'. */
+    side?: 'top' | 'right' | 'bottom' | 'left';
+  }>(),
+  {
+    disabled: false,
+    delay: 200,
+    side: 'top',
+  }
+);
 </script>
 
 <template>
@@ -22,6 +32,7 @@ withDefaults(defineProps<{ text: string; disabled?: boolean; delay?: number }>()
       </TooltipTrigger>
       <TooltipPortal>
         <TooltipContent
+          :side="side"
           :side-offset="6"
           class="z-50 max-w-xs rounded-lg border border-white/10 bg-site-dropdown px-2.5 py-1.5 text-xs text-content shadow-lg shadow-black/50"
         >
