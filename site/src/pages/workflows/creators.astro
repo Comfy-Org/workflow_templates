@@ -13,7 +13,12 @@ import HubWorkflowCard from '../../components/hub/HubWorkflowCard.vue';
 import BackButton from '../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
+import {
+  listWorkflowIndex,
+  getProfileCache,
+  serializeIndexEntry,
+  type SerializedTemplate,
+} from '../../lib/hub-api';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const profiles = await getProfileCache();
@@ -91,19 +96,23 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                 {/* Creator profile info */}
                 <div class="w-full lg:w-52 shrink-0 flex flex-col gap-6">
                   {/* Avatar */}
-                  {avatarUrl ? (
+                  {avatarUrl && (
                     <img
                       src={avatarUrl}
                       alt={displayName}
                       class="size-16 rounded-full object-cover"
+                      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
                     />
-                  ) : (
-                    <div class="size-16 rounded-full bg-brand flex items-center justify-center">
-                      <span class="text-black text-lg font-bold">
-                        {displayName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
                   )}
+                  <div
+                    hidden={Boolean(avatarUrl)}
+                    class="size-16 rounded-full bg-brand flex items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    <span class="text-black text-lg font-bold">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
 
                   {/* Name & Handle */}
                   <div class="flex flex-col gap-2">

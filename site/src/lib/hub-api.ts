@@ -155,6 +155,15 @@ export interface SerializedTemplate {
   mediaSubtype?: string;
 }
 
+/**
+ * The subset of template fields the SEO image-matcher / fallback pool reads.
+ * Lets pages trim the catalog to a lean payload without an unsafe cast.
+ */
+export type MatcherTemplate = Pick<
+  SerializedTemplate,
+  'name' | 'shareId' | 'title' | 'description' | 'tags' | 'models' | 'usage' | 'thumbnails'
+>;
+
 // ---------------------------------------------------------------------------
 // Query parameters
 // ---------------------------------------------------------------------------

@@ -53,7 +53,7 @@ export const buttonPillVariants = cva(
       {
         reveal: true,
         size: 'default',
-        class: 'ps-10 pe-0 group-hover/button-pill:pe-5 group-hover/pill-trigger:pe-5',
+        class: 'ps-9 pe-0 group-hover/button-pill:pe-5 group-hover/pill-trigger:pe-5',
       },
       {
         reveal: true,

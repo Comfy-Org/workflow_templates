@@ -11,10 +11,12 @@ interface Props extends PrimitiveProps {
   variant?: ButtonPillVariants['variant'];
   size?: ButtonPillVariants['size'];
   iconPosition?: ButtonPillVariants['iconPosition'];
-  /** Hide the label at rest; reveal it on hover (of the pill or a parent group/pill-trigger). */
   reveal?: boolean;
   class?: HTMLAttributes['class'];
   disabled?: boolean;
+  href?: string;
+  target?: string;
+  rel?: string;
 }
 
 const {
@@ -26,6 +28,9 @@ const {
   reveal = false,
   class: className,
   disabled,
+  href,
+  target,
+  rel,
 } = defineProps<Props>();
 
 // Reveal always pins the icon to the start, so it implies a left icon position.
@@ -40,6 +45,9 @@ const resolvedIconPosition = reveal ? 'left' : iconPosition;
     :as="as"
     :as-child="asChild"
     :disabled="disabled"
+    :href="href"
+    :target="target"
+    :rel="rel"
     :class="
       cn(
         buttonPillVariants({ variant, size, iconPosition: resolvedIconPosition, reveal }),
@@ -57,7 +65,7 @@ const resolvedIconPosition = reveal ? 'left' : iconPosition;
         </span>
       </span>
     </span>
-    <span v-else class="ppformula-text-center relative leading-none transition-all duration-500">
+    <span v-else class="ppformula-text-center-sm relative leading-none transition-all duration-500">
       <slot />
     </span>
     <span

@@ -1,0 +1,102 @@
+{
+  "humanEdited": true,
+  "subheading": "Run xAI's Grok image and video generation in ComfyUI: photorealistic generation, image editing, and image-to-video, on Comfy Cloud.",
+  "extendedDescription": "The starting point for Grok comfyui workflows is that Grok is a cloud model from xAI, so these workflows reach it through ComfyUI's API nodes rather than loading weights. There is no local download, which means you trade self-hosting for access to xAI's image and video stack without managing a GPU. The workflows on this page wire those calls into editable graphs, so the prompt, the reference images, and the output flow through nodes you can adjust and chain.\n\nThe image side is built on Aurora, xAI's autoregressive generator, which leans toward photorealistic results and renders text and logos in-frame more accurately than many models. You can generate from a prompt, request several variations in one run, or edit an existing photo by uploading it with a text instruction. The Grok Image Edit node accepts up to three source images, and xAI quotes outputs in roughly four seconds per image, so iterating on framing stays fast. On the video side, Grok Imagine turns a prompt into a clip and can animate a still image you provide, with native audio generated alongside the picture and clip length set in the workflow.\n\nBecause these are open ComfyUI graphs around a closed model, you keep control of the inputs that shape the result: the prompt wording, the reference images for editing, the number of outputs, and the aspect ratio. Partner nodes also add reference-to-video, which takes up to seven reference images for a consistent clip, and a video-extend node that lengthens an existing clip while keeping motion and sound continuous. The model itself is fixed and hosted by xAI, but everything around it in the graph is yours to tune, and the output drops straight into the rest of your ComfyUI pipeline.\n\nTo run one, open a Grok workflow on Comfy Cloud with nothing to install, since there is no local option. Write your prompt or upload the photo you want to edit, set the options the workflow exposes, and generate. Re-run with a revised prompt or different references until the framing and detail are right. xAI notes that Grok Imagine is still a beta under active development, so it pays to layer your own controls and combine its output with other nodes rather than relying on a single pass.",
+  "modelSpec": {
+    "summary": "Grok is xAI's cloud image and video stack, accessed through ComfyUI API nodes. The Aurora image model favors photorealism and accurate in-frame text, while Grok Imagine handles video generation.",
+    "highlights": [
+      "Cloud model from xAI; no public weights, run through ComfyUI API nodes",
+      "Aurora autoregressive image model tuned for photorealistic results",
+      "Accurate rendering of text and logos inside generated images",
+      "Image editing from a photo plus a text instruction, up to three source images",
+      "Grok Imagine generates video with native audio and animates a still image",
+      "Reference-to-video takes up to seven images; a video-extend node lengthens a clip",
+      "Runs on Comfy Cloud with no install and no GPU needed on your end"
+    ]
+  },
+  "howToUse": [
+    "Pick a Grok workflow: image generation, image editing, or image-to-video.",
+    "Open it on Comfy Cloud, which runs the ComfyUI API nodes that call Grok.",
+    "Write your prompt, or upload the photo and references for an edit.",
+    "Set the options the workflow exposes, such as count or aspect ratio.",
+    "Generate the result and review the framing, detail, and any text in-frame.",
+    "Re-run with a revised prompt or different references, then download it."
+  ],
+  "whyComfy": [
+    {
+      "title": "Image and video in one graph",
+      "description": "Aurora generation, photo editing, and Grok Imagine video all run from editable ComfyUI nodes, so the output of one step feeds the next."
+    },
+    {
+      "title": "Pick your variant and settings",
+      "description": "Choose the Grok task, set the source images, output count, aspect ratio, and clip length, then re-run until the framing and detail are right.",
+      "cloudOnly": true
+    },
+    {
+      "title": "Cloud access without a GPU",
+      "description": "Grok has no public weights, so the workflows call xAI through ComfyUI API nodes on Comfy Cloud with no install and nothing to download."
+    },
+    {
+      "title": "Accurate text and native audio",
+      "description": "Aurora renders legible text and logos in-frame, and Grok Imagine generates sound together with the video in a single pass."
+    }
+  ],
+  "metaDescription": "Run xAI Grok with ComfyUI workflows: photorealistic image generation, photo editing, and image-to-video through API nodes, on Comfy Cloud with no install.",
+  "applicationsIntro": "What people generate and edit through Grok's cloud image and video models.",
+  "suggestedUseCases": [
+    {
+      "title": "Text to image",
+      "subtitle": "Generate photorealistic images from a prompt with a grok text to image workflow"
+    },
+    {
+      "title": "Instruction edit",
+      "subtitle": "Edit an existing photo with a text instruction using grok image edit"
+    },
+    {
+      "title": "Text and logos",
+      "subtitle": "Render accurate text or a logo inside a generated image"
+    },
+    {
+      "title": "Image to video",
+      "subtitle": "Animate a still into a short clip with a grok image to video workflow"
+    },
+    {
+      "title": "Prompt variations",
+      "subtitle": "Request several variations of one prompt in a single run"
+    }
+  ],
+  "faqItems": [
+    {
+      "question": "What are Grok ComfyUI workflows?",
+      "answer": "They are ready-made ComfyUI graphs that run xAI's Grok image and video models through ComfyUI's API nodes. Each wires up a task like grok text to image or grok image edit, so you give a prompt or a photo and get a result without assembling the graph yourself."
+    },
+    {
+      "question": "Can I run Grok locally on my own GPU?",
+      "answer": "No. Grok has no public weights to download, so it runs as a cloud model through ComfyUI's API nodes rather than on local hardware. Comfy Cloud handles the compute, so you do not need a powerful GPU on your end."
+    },
+    {
+      "question": "What can Grok generate?",
+      "answer": "Grok's Aurora model generates photorealistic images from a prompt and can edit an existing photo from a text instruction. Grok Imagine handles video, turning a prompt into a clip and animating a still image you provide."
+    },
+    {
+      "question": "Is Grok good at rendering text in images?",
+      "answer": "Yes. xAI built Aurora to render text and logos inside images more accurately than many image models. That makes it a reasonable choice when a generated image needs legible lettering or a recognizable mark in the frame."
+    },
+    {
+      "question": "Can Grok edit an existing photo?",
+      "answer": "Yes. You upload a photo with a text instruction and up to a few reference images, and the workflow returns the edited result. Because the graph is open, that output can flow into other ComfyUI nodes for further work."
+    },
+    {
+      "question": "Does Grok generate video?",
+      "answer": "Yes. Grok Imagine generates video from a text prompt and can animate a still image into a short clip, with native audio produced alongside the picture and the length set in the workflow. Partner nodes add reference-to-video from up to seven images and a video-extend node that lengthens a clip while keeping motion and sound continuous."
+    },
+    {
+      "question": "Do I need to install anything to use these workflows?",
+      "answer": "No. The workflows open on Comfy Cloud in the browser with no install, and the ComfyUI API nodes handle the calls to xAI for you. If you prefer local ComfyUI, you can update it and add your xAI API key, since the nodes are partner API nodes rather than local model files."
+    },
+    {
+      "question": "How much does it cost to run Grok this way?",
+      "answer": "Comfy Cloud is a paid plan with tiered seats, and the Grok API nodes bill per call on top of that, so cost scales with how many images or clips you generate. xAI quotes image pricing in the range of a few cents per output, with video priced higher per clip; check the current xAI rates for the exact figures."
+    }
+  ]
+}

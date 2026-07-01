@@ -6,11 +6,13 @@ const {
   segmentClass = 'px-6',
   textClass = 'text-2xl sm:text-3xl lg:text-5xl',
   sizeClass = '',
+  logoClass = 'h-5 sm:h-7 lg:h-10',
 } = defineProps<{
   segments: Array<{ text?: string; logoSrc?: string; logoAlt?: string }>;
   segmentClass?: string;
   textClass?: string;
   sizeClass?: string;
+  logoClass?: string;
 }>();
 </script>
 
@@ -43,7 +45,7 @@ const {
           v-if="segment.logoSrc"
           :src="segment.logoSrc"
           :alt="segment.logoAlt ?? ''"
-          class="inline-block h-5 brightness-0 transition-all duration-300 sm:h-7 lg:h-10"
+          :class="cn('inline-block brightness-0 transition-all duration-300', logoClass)"
         />
         <span
           v-else

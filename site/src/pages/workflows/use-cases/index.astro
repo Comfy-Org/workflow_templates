@@ -1,0 +1,77 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
+import IndexPageHeader from '../../../components/workflow-pages/IndexPageHeader.astro';
+import IndexCard from '../../../components/workflow-pages/cards/IndexCard.astro';
+import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
+import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { useCasesIndexPath } from '../../../lib/routes';
+import { loadSerializedTemplates } from '../../../lib/hub-api';
+import { resolveUseCasePageCards } from '../../../lib/workflow-pages/index-cards';
+import {
+  buildCollectionPageJsonLd,
+  buildBreadcrumbJsonLd,
+  serializeJsonLdForScript,
+} from '../../../lib/structured-data';
+
+const locale = getLocaleFromPath(Astro.url.pathname);
+const catalog = await loadSerializedTemplates(() => getCollection('templates'));
+
+const cards = resolveUseCasePageCards(catalog, locale);
+
+const basePath = useCasesIndexPath();
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+const heading = t('template.useCases', locale);
+const description = `Browse ComfyUI workflows by use case — ready-to-run templates for ${cards
+  .slice(0, 4)
+  .map((card) => card.title)
+  .join(', ')} and more.`;
+
+const structuredData = buildCollectionPageJsonLd({
+  name: `${heading} — ComfyUI Workflows`,
+  description,
+  url: canonicalUrl,
+});
+
+const breadcrumbStructuredData = buildBreadcrumbJsonLd([
+  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
+  { name: heading },
+]);
+---
+
+<BaseLayout
+  title={`${heading} — ComfyUI Workflows`}
+  description={description}
+  canonicalUrl={canonicalUrl}
+  ogImage="/workflows/og-default.png"
+  structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath={basePath}
+  hreflangLocalized={false}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-6 pb-12">
+    <IndexPageHeader locale={locale} heading={heading} description={description} />
+
+    <IndexCard cards={cards} locale={locale} />
+  </div>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+  />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

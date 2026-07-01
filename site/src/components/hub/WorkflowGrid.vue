@@ -124,6 +124,7 @@ function loadMore() {
         :share-id="tmpl.shareId"
         :tags="tmpl.tags"
         :logos="tmpl.logos"
+        :models="tmpl.models"
         :thumbnails="tmpl.thumbnails"
         :locale="locale"
         :username="tmpl.username"

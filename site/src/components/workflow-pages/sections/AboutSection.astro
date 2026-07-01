@@ -1,0 +1,83 @@
+---
+/** "What is X" section: an intro lead (keyword-rich SEO prose), 2 image cards,
+ *  and a CTA banner. The prose leads; the cards are the visual hook. */
+import ExpandableText from '../../shared/ExpandableText.vue';
+import CtaBanner from '../CtaBanner.astro';
+import MediaCard from '../cards/MediaCard.astro';
+import type { Locale } from '../../../i18n/config';
+import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
+import { t } from '../../../i18n/ui';
+import { inner, sectionPad, eyebrow, heading, leadProse } from '../landing-styles';
+
+interface AboutCard {
+  eyebrow?: string;
+  title: string;
+  text: string;
+  image?: CardImage | null;
+  logos?: ModelBadge[];
+}
+
+interface Props {
+  locale: Locale;
+  heading: string;
+  paragraphs: string[];
+  cards?: AboutCard[];
+  banner?: { title: string; body: string; kicker?: string; cta: { label: string; href: string } };
+}
+
+const { locale, heading: aboutHeading, paragraphs, cards = [], banner } = Astro.props;
+const hasCards = cards.length > 0;
+// Instance-scoped heading id so two renders on one page never collide.
+const headingId = `about-heading-${crypto.randomUUID().slice(0, 8)}`;
+---
+
+<section aria-labelledby={headingId} class={`bg-page ${sectionPad}`}>
+  <div class={inner}>
+    <p class={`${eyebrow} text-center`}>{t('template.about', locale)}</p>
+    <h2 id={headingId} class={`${heading} mx-auto max-w-3xl text-balance text-center`}>
+      {aboutHeading}
+    </h2>
+
+    <div
+      class={`${leadProse} mx-auto mt-6 max-w-[68ch] text-center [&_p:first-child]:text-content`}
+    >
+      <ExpandableText
+        client:visible
+        paragraphs={paragraphs}
+        collapsedMax={200}
+        moreLabel={t('template.readMore', locale)}
+        lessLabel={t('template.readLess', locale)}
+      />
+    </div>
+
+    {
+      hasCards && (
+        <div class="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:mt-16">
+          {cards.map((card) => (
+            <MediaCard
+              eyebrow={card.eyebrow}
+              title={card.title}
+              text={card.text}
+              image={card.image}
+              logos={card.logos}
+            />
+          ))}
+        </div>
+      )
+    }
+
+    {
+      banner && (
+        <div class="mt-12 lg:mt-16">
+          <CtaBanner
+            title={banner.title}
+            body={banner.body}
+            kicker={banner.kicker}
+            cta={banner.cta}
+          />
+        </div>
+      )
+    }
+  </div>
+</section>

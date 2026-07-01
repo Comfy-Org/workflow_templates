@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { navExternalLinks } from '@/config/nav-routes';
-import NodeBadge from './NodeBadge.vue';
+import NodeBadge from '@/components/shared/NodeBadge.vue';
 
 const { stars } = defineProps<{
   stars: string;

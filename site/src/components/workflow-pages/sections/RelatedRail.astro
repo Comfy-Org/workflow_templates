@@ -1,0 +1,87 @@
+---
+/** "Keep exploring" — expressive image cards for related models and use-cases:
+ *  two wide cards on top, three below. Each card shows an image with the name
+ *  overlaid, plus an eyebrow and workflow count below. */
+import type { Locale } from '../../../i18n/config';
+import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
+import { t } from '../../../i18n/ui';
+import { inner, sectionPad } from '../landing-styles';
+import SectionHeader from '../SectionHeader.astro';
+import Thumbnail from '../Thumbnail.astro';
+import ModelBadges from '../ModelBadges.astro';
+
+interface RailCard {
+  title: string;
+  eyebrow?: string;
+  meta?: string;
+  image?: CardImage | null;
+  logos: ModelBadge[];
+  href: string;
+}
+
+interface Props {
+  locale: Locale;
+  cards: RailCard[];
+}
+
+const { locale, cards: allCards } = Astro.props;
+// Two wide cards on top, three on the next row (6-col grid).
+const cards = allCards.slice(0, 5);
+---
+
+<section aria-labelledby="related-heading" class={`bg-page ${sectionPad}`}>
+  <div class={inner}>
+    <SectionHeader
+      id="related-heading"
+      eyebrowLabel={t('useCase.explore', locale)}
+      headingLabel={t('useCase.keepExploring', locale)}
+      summary={t('useCase.keepExploringSub', locale)}
+    />
+
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
+      {
+        cards.map((card, i) => (
+          <a
+            href={card.href}
+            class:list={[
+              'group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover',
+              i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
+            ]}
+          >
+            <div class="relative aspect-video w-full overflow-hidden rounded-3xl bg-hub-surface">
+              {card.image && (
+                <Thumbnail
+                  src={card.image.src}
+                  alt={card.image.alt}
+                  class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                />
+              )}
+              <div
+                class="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/45 to-transparent"
+                aria-hidden="true"
+              />
+              <h3 class="absolute left-5 right-16 top-5 font-display text-lg font-medium leading-tight text-white lg:text-2xl">
+                {card.title}
+              </h3>
+              <ModelBadges logos={card.logos} class="absolute right-4 top-4 z-10" />
+            </div>
+
+            <div class="flex items-center justify-between gap-3 px-4 pb-2">
+              {card.eyebrow && (
+                <span class="font-display text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">
+                  {card.eyebrow}
+                </span>
+              )}
+              {card.meta && (
+                <span class="shrink-0 font-display text-xs font-medium text-brand">
+                  {card.meta}
+                </span>
+              )}
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

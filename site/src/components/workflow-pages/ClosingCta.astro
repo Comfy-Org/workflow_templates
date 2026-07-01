@@ -1,0 +1,62 @@
+---
+/** Closing "Ready to…" CTA band, shared by the use-case and model landing pages.
+ *  Pass `analytics` on pages that report cta_click (use-case); the click handler
+ *  travels with the markup it depends on. */
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import { Button } from '../ui/button';
+import { inner } from './landing-styles';
+
+interface Props {
+  locale: Locale;
+  href: string;
+  /** When set, tags the CTA for click tracking (data-usecase drives cta_click). */
+  analytics?: { useCase: string };
+}
+
+const { locale, href, analytics } = Astro.props;
+---
+
+<section class="bg-page py-16 lg:py-24">
+  <div class={`${inner} flex flex-col items-center text-center`}>
+    <h2 class="font-display text-3xl lg:text-4xl font-semibold tracking-tight text-content-bright">
+      {t('template.ready', locale)}
+    </h2>
+    <p class="font-body mt-3 max-w-xl text-base text-content-secondary">
+      {t('template.startNow', locale)}
+    </p>
+    <Button
+      as="a"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="brand-solid"
+      size="nav"
+      class:list={[analytics && 'usecase-cta', 'mt-8']}
+      data-location={analytics ? 'footer' : undefined}
+      data-usecase={analytics?.useCase}
+    >
+      <span class="ppformula-text-center-sm uppercase font-extrabold cursor-pointer">
+        {t('cta.tryCloud', locale)}
+      </span>
+    </Button>
+  </div>
+</section>
+
+{
+  analytics && (
+    <script is:inline>
+      document.querySelectorAll('.usecase-cta').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.va) {
+            window.va('event', {
+              name: 'cta_click',
+              useCase: link.getAttribute('data-usecase'),
+              location: link.getAttribute('data-location') || 'hero',
+            });
+          }
+        });
+      });
+    </script>
+  )
+}

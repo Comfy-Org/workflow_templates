@@ -1,4 +1,5 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
 
 // Base schema for template data
 const templateSchema = z.object({
@@ -101,9 +102,55 @@ const templates = defineCollection({
   schema: templateSchema,
 });
 
-// Localized content is stored in subdirectories (templates/zh/, templates/ja/, etc.)
-// and is handled automatically by the main templates collection.
+// Landing page editorial copy. Use-case and model pages share one content shape
+// (the only structural difference is `styles` vs `modelSpec`), so both
+// collections validate against the same schema. Authored by hand under
+// src/content/landing/{use-cases,models}/<slug>.json; rendered by the landing routes.
+// The Zod shape mirrors the `SeoContent` interface in src/lib/workflow-pages/schema.ts,
+// which carries the per-field documentation (plus `humanEdited`/`qualityFailed`
+// content-loading flags handled here).
+const seoContentSchema = z.object({
+  subheading: z.string().optional(),
+  extendedDescription: z.string(),
+  styles: z.array(z.object({ title: z.string(), description: z.string() })).optional(),
+  modelSpec: z.object({ summary: z.string(), highlights: z.array(z.string()) }).optional(),
+  howToUse: z.array(z.string()),
+  capabilitiesIntro: z.string().optional(),
+  whyComfy: z
+    .array(
+      z.object({
+        title: z.string(),
+        description: z.string(),
+        cloudOnly: z.boolean().optional(),
+      })
+    )
+    .optional(),
+  applicationsIntro: z.string().optional(),
+  suggestedUseCases: z
+    .array(z.union([z.string(), z.object({ title: z.string(), subtitle: z.string() })]))
+    .optional(),
+  metaDescription: z.string(),
+  faqItems: z.array(z.object({ question: z.string(), answer: z.string() })),
+  /** True for hand-authored copy (vs generated). */
+  humanEdited: z.boolean().optional(),
+  /** Set by the generator when content could not pass the quality contract. */
+  qualityFailed: z.boolean().optional(),
+  lastAIGeneration: z.string().optional(),
+});
+
+// Nested under src/content/landing/, so each needs an explicit glob loader (entry
+// `id` is the file's base name, e.g. "ai-headshot-generator" / "wan").
+const seoUseCases = defineCollection({
+  loader: glob({ pattern: '*.json', base: './src/content/landing/use-cases' }),
+  schema: seoContentSchema,
+});
+const seoModels = defineCollection({
+  loader: glob({ pattern: '*.json', base: './src/content/landing/models' }),
+  schema: seoContentSchema,
+});
 
 export const collections = {
   templates,
+  seoUseCases,
+  seoModels,
 };

@@ -4,80 +4,160 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
-import HreflangTags from '../../../components/HreflangTags.astro';
-import BackButton from '../../../components/BackButton.astro';
+import Breadcrumbs from '../../../components/template-detail/Breadcrumbs.astro';
+import LandingPageBody from '../../../components/workflow-pages/LandingPageBody.astro';
+import LandingHero from '../../../components/workflow-pages/LandingHero.astro';
+import RelatedRail from '../../../components/workflow-pages/sections/RelatedRail.astro';
+import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
+import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { slugify } from '../../../lib/slugify';
-import { absoluteUrl } from '../../../config/site';
-import { modelPath } from '../../../lib/routes';
+import { isMediaFile } from '../../../lib/media-utils';
+import { resolveTemplateLogos } from '../../../lib/model-logos';
+import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
+import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
+import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
-import { badgeVariants } from '../../../components/ui/badge';
-import { loadSerializedTemplates, type SerializedTemplate } from '../../../lib/hub-api';
-import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../lib/structured-data';
+import { loadSerializedTemplates, type MatcherTemplate } from '../../../lib/hub-api';
+import { deriveModelGroups, type ModelGroup } from '../../../lib/workflow-pages/model-groups';
+import { loadModelContent } from '../../../lib/workflow-pages/content-loaders';
+import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-resolver';
+import { type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
+import { assertBrandSafe, isIndexable } from '../../../lib/workflow-pages/governance';
+import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import {
+  buildCollectionPageJsonLd,
+  buildBreadcrumbJsonLd,
+  buildFaqJsonLd,
+  serializeJsonLdForScript,
+} from '../../../lib/structured-data';
 
 export async function getStaticPaths() {
-  const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
+  const catalog = await loadSerializedTemplates(() => getCollection('templates'));
+  const groups = deriveModelGroups(catalog);
+  const fallbackPool = buildFallbackPool(catalog);
+  const paths: {
+    params: { name: string };
+    props: {
+      group: ModelGroup;
+      relatedUseCases: SeoPageDef[];
+      fallbackPool: MatcherTemplate[];
+      redirectTo?: string;
+    };
+  }[] = [];
 
-  const modelMap = new Map<string, SerializedTemplate[]>();
-
-  for (const template of allSerialized) {
-    for (const model of template.models) {
-      const normalized = slugify(model);
-      if (!modelMap.has(normalized)) {
-        modelMap.set(normalized, []);
-      }
-      modelMap.get(normalized)!.push(template);
+  for (const group of groups) {
+    // Fail the build if a qualifying (indexable) model page carries a denied term.
+    if (group.qualifies) {
+      assertBrandSafe({
+        slug: group.slug,
+        primaryKeyword: group.keywords.primary,
+        title: group.label,
+      });
+    }
+    const relatedUseCases = useCasesFeaturingModel(group.slug, catalog);
+    paths.push({ params: { name: group.slug }, props: { group, relatedUseCases, fallbackPool } });
+    for (const variant of group.redirectFrom) {
+      paths.push({
+        params: { name: variant },
+        props: { group, relatedUseCases, fallbackPool, redirectTo: group.slug },
+      });
     }
   }
-
-  return Array.from(modelMap.entries()).map(([name, modelTemplates]) => {
-    const originalName =
-      modelTemplates[0]?.models?.find((m: string) => slugify(m) === name) || name;
-
-    return {
-      params: { name },
-      props: {
-        templates: modelTemplates,
-        modelName: originalName,
-      },
-    };
-  });
+  return paths;
 }
 
-const { name } = Astro.params;
-const { templates, modelName } = Astro.props as {
-  templates: SerializedTemplate[];
-  modelName: string;
+const {
+  group,
+  relatedUseCases: relatedUseCaseDefs,
+  fallbackPool,
+  redirectTo,
+} = Astro.props as {
+  group: ModelGroup;
+  relatedUseCases: SeoPageDef[];
+  fallbackPool: MatcherTemplate[];
+  redirectTo?: string;
 };
-
 const locale = getLocaleFromPath(Astro.url.pathname);
-const basePath = modelPath(name!);
 
-const title = `${modelName} ComfyUI Workflows - Free Templates`;
-const description = `Browse ${templates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
+if (redirectTo) {
+  return Astro.redirect(localizeUrl(modelPath(redirectTo), locale), 301);
+}
 
+const { label, templates, keywords } = group;
+const content = await loadModelContent(group.slug);
+const basePath = modelPath(group.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: `${modelName} ComfyUI Workflows`,
-  description,
-  url: canonicalUrl,
-};
+const isRich = group.qualifies && !!content && !content.qualityFailed;
+const h1 = `${label} ComfyUI Workflows`;
+const title = content
+  ? `${label} ComfyUI Workflows — Ready-to-Run Templates`
+  : `${label} Workflows`;
+const description =
+  content?.metaDescription ||
+  `Browse ${templates.length} ready-to-use ComfyUI workflow templates using ${label}. AI generation workflows that run on Comfy Cloud with no setup.`;
+const subheading =
+  content?.subheading ||
+  `Ready-to-run ComfyUI workflows built on ${label}, fully editable and runnable on Comfy Cloud with no setup.`;
 
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(
-  locale,
-  { name: modelName },
+const noindex = !isIndexable({
+  clusterSize: templates.length,
+  humanEdited: true,
+  qualityPassed: isRich,
+});
+
+const leadShareId = templates.find((template) => template.shareId)?.shareId;
+const heroCtaUrl = leadShareId
+  ? getCloudCtaUrl(leadShareId, `model_${group.slug}_hero`)
+  : getCloudLandingUrl(`model_${group.slug}_hero`);
+const footerCtaUrl = leadShareId
+  ? getCloudCtaUrl(leadShareId, `model_${group.slug}_footer`)
+  : getCloudLandingUrl(`model_${group.slug}_footer`);
+
+const modelsUrl = absoluteUrl(localizeUrl('/workflows/model/', locale));
+const breadcrumbTrail = [
+  { label: t('labels.models', locale), href: localizeUrl('/workflows/model/', locale) },
+];
+
+const structuredData = buildCollectionPageJsonLd({ name: h1, description, url: canonicalUrl });
+const breadcrumbStructuredData = buildBreadcrumbJsonLd([
+  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
   {
-    name: t('labels.models', locale),
-    item: absoluteUrl(localizeUrl('/workflows/model/', locale)),
-  }
-);
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
+  { name: t('labels.models', locale), item: modelsUrl },
+  { name: h1 },
+]);
+const faqStructuredData = isRich ? buildFaqJsonLd(content!.faqItems) : null;
 
-// Templates are already serialized from getStaticPaths
-const serialized = templates;
+// The template whose still becomes the hero image — reserved so no section reuses it.
+const heroTemplateName = group.templates.find((tpl) =>
+  tpl.thumbnails?.some((thumb) => !isMediaFile(thumb))
+)?.name;
+
+// "Keep exploring" image cards: use-cases featuring this model family (derived
+// from grid overlap), each borrowing a still from this page's own grid.
+const useCasePoolStills = group.templates
+  .filter((tpl) => tpl.name !== heroTemplateName)
+  .flatMap((tpl) => tpl.thumbnails ?? [])
+  .filter((thumb) => !isMediaFile(thumb));
+
+// Every "keep exploring" card here is this model applied to a use-case, so they
+// all carry this family's badge(s).
+const modelBadges = resolveTemplateLogos({ models: group.modelNames });
+const relatedCards = isRich
+  ? relatedUseCaseDefs.slice(0, 6).map((def, i) => ({
+      title: def.h1,
+      eyebrow: t('template.useCases', locale),
+      href: localizeUrl(useCasePath(def.slug), locale),
+      logos: modelBadges,
+      image: useCasePoolStills[i]
+        ? { src: thumbnailPath(useCasePoolStills[i]), alt: def.h1 }
+        : null,
+    }))
+  : [];
 ---
 
 <BaseLayout
@@ -86,43 +166,99 @@ const serialized = templates;
   canonicalUrl={canonicalUrl}
   ogImage="/workflows/og-default.png"
   structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath={basePath}
+  hreflangLocalized={false}
   theme="dark"
+  noindex={noindex}
   hideDefaultFooter
 >
-  <HreflangTags slot="head" basePath={basePath} />
   <HubNavbar />
-  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
-    <!-- Back -->
-    <nav class="mb-8">
-      <BackButton locale={locale} />
-    </nav>
 
-    <!-- Header -->
-    <div class="mb-12">
-      <span class={badgeVariants({ variant: 'hub-pill' })}>Model</span>
-      <h1 class="text-3xl font-bold text-content mt-3">
-        {modelName} Workflows
-      </h1>
-      <p class="text-hub-muted text-base mt-2">
-        {templates.length} workflow{templates.length !== 1 ? 's' : ''}
-      </p>
+  <article class="bg-page min-h-screen text-content scroll-smooth hyphens-none wrap-normal">
+    <div class:list={[inner, 'pt-4 lg:pt-6']}>
+      <Breadcrumbs locale={locale} title={h1} trail={breadcrumbTrail} />
     </div>
-
-    <!-- Interactive Grid -->
-    <WorkflowGrid
-      client:load
-      templates={serialized}
+    <LandingHero
+      eyebrow={t('labels.models', locale)}
+      title={h1}
+      description={subheading}
+      meta={`${group.templates.length} ${t('useCase.workflowsCount', locale)}`}
+      primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
+      secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
+      templates={group.templates}
       locale={locale}
-      toolbarLabels={buildToolbarLabels(locale)}
-      gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
     />
-  </div>
+
+    <section id="workflows" class="scroll-mt-8 bg-page pt-16 pb-10 lg:pt-24 lg:pb-12">
+      <div class={inner}>
+        <p class={eyebrow}>{t('template.theWorkflows', locale)}</p>
+        <h2 class={`${heading} mb-8 lg:mb-10`}>{`${templates.length} ${h1}`}</h2>
+        <WorkflowGrid
+          client:load
+          templates={templates}
+          locale={locale}
+          toolbarLabels={buildToolbarLabels(locale)}
+          gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        />
+      </div>
+    </section>
+
+    {
+      isRich && (
+        <LandingPageBody
+          locale={locale}
+          kind="model"
+          keyword={keywords.primary}
+          intro={content!.extendedDescription}
+          modelSpec={content!.modelSpec}
+          specName={label}
+          capabilitiesIntro={content!.capabilitiesIntro}
+          whyComfy={content!.whyComfy}
+          applicationsIntro={content!.applicationsIntro}
+          suggestedUseCases={content!.suggestedUseCases}
+          faqItems={content!.faqItems}
+          templates={group.templates}
+          catalog={fallbackPool}
+          reservedTemplates={heroTemplateName ? [heroTemplateName] : []}
+          ctaLabel={t('useCase.tryWorkflow', locale)}
+          ctaHref={(tpl) =>
+            tpl.shareId
+              ? getCloudCtaUrl(tpl.shareId, `model_${group.slug}_capability`)
+              : getCloudLandingUrl(`model_${group.slug}_capability`)
+          }
+          banner={{
+            title: t('useCase.bannerTitle', locale),
+            body: t('useCase.bannerBody', locale),
+            kicker: t('useCase.bannerKicker', locale),
+            cta: {
+              label: t('useCase.bannerCta', locale),
+              href: getPricingUrl(`model_${group.slug}_banner`),
+            },
+          }}
+        />
+      )
+    }
+
+    {relatedCards.length > 0 && <RelatedRail locale={locale} cards={relatedCards} />}
+
+    {isRich && <ClosingCta locale={locale} href={footerCtaUrl} />}
+  </article>
 
   <script
     is:inline
     type="application/ld+json"
     set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
   />
+  {
+    faqStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
 
   <Fragment slot="footer">
     <SiteFooter />
