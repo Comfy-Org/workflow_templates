@@ -7,7 +7,7 @@ const {
   segments,
   segmentClass = 'px-6',
   textClass = 'text-2xl sm:text-3xl lg:text-5xl',
-  sizeClass = '',
+  sizeClass,
   logoClass = 'h-5 sm:h-7 lg:h-10',
 } = defineProps<{
   segments: NodeBadgeSegment[];
