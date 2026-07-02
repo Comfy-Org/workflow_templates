@@ -28,8 +28,8 @@ export interface WhyComfyReason {
 /** Factual "what is <model>" block; every claim must be exposed by our templates. */
 export interface ModelSpec {
   summary: string;
-  /** Modalities, resolution, speed, license note. */
-  highlights: string[];
+  /** Titled facts (modalities, resolution, speed, license) — the About cards. */
+  highlights: SeoStyle[];
 }
 
 /** One FAQ entry; drives both the accordion and the FAQPage JSON-LD. */

@@ -113,7 +113,12 @@ const seoContentSchema = z.object({
   subheading: z.string().optional(),
   extendedDescription: z.string(),
   styles: z.array(z.object({ title: z.string(), description: z.string() })).optional(),
-  modelSpec: z.object({ summary: z.string(), highlights: z.array(z.string()) }).optional(),
+  modelSpec: z
+    .object({
+      summary: z.string(),
+      highlights: z.array(z.object({ title: z.string(), description: z.string() })),
+    })
+    .optional(),
   howToUse: z.array(z.string()),
   capabilitiesIntro: z.string().optional(),
   whyComfy: z

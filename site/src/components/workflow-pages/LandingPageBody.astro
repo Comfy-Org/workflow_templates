@@ -105,7 +105,7 @@ const hasModelSpec = !!modelSpec?.highlights?.length;
 const baseCards = hasStyles
   ? styles!.map((s) => ({ title: s.title, text: s.description }))
   : hasModelSpec
-    ? modelSpec!.highlights.map((h) => ({ text: h }))
+    ? modelSpec!.highlights.map((h) => ({ title: h.title, text: h.description }))
     : [];
 
 // Give each card a content-matched template image, its model logo, and a CTA.
@@ -135,7 +135,7 @@ const enrichedCards: CapabilityCard[] = baseCards.map((card, i) => {
 // the rest populate the Capabilities grid, so no card is shown twice.
 const aboutCards = enrichedCards.slice(0, 2).map((card, i) => ({
   eyebrow: matchedTemplates[i]?.models?.[0],
-  title: card.title ?? '',
+  title: card.title,
   text: card.text,
   image: card.image,
   logos: card.logos ?? [],
