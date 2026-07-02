@@ -10,11 +10,10 @@ import IndexCard from './cards/IndexCard.astro';
 import type { SeoPageCard } from '../../lib/workflow-pages/schema';
 import type { Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
-import { t } from '../../i18n/ui';
-import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
+import { absoluteUrl } from '../../config/site';
 import {
   buildCollectionPageJsonLd,
-  buildBreadcrumbJsonLd,
+  buildWorkflowBreadcrumb,
   serializeJsonLdForScript,
 } from '../../lib/structured-data';
 
@@ -34,14 +33,7 @@ const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const name = `${heading} — ComfyUI Workflows`;
 
 const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl });
-const breadcrumbStructuredData = buildBreadcrumbJsonLd([
-  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
-  {
-    name: t('breadcrumb.workflows', locale),
-    item: absoluteUrl(localizeUrl('/workflows/', locale)),
-  },
-  { name: heading },
-]);
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: heading });
 ---
 
 <BaseLayout
