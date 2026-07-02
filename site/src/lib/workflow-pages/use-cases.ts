@@ -185,7 +185,9 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     wordCountTier: 'medium',
-    filters: { tags: ['Portrait'] },
+    filters: {
+      tags: ['Character Reference', 'Lip Sync', 'Character Replacement', 'Character', 'Face Swap'],
+    },
   },
   {
     slug: 'ai-image-to-video',
