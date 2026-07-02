@@ -31,6 +31,8 @@ const {
   textClass?: string;
 }>();
 
+const OVERFLOW_SLACK_PX = 8;
+
 const contentRef = useTemplateRef<HTMLElement>('content');
 const contentId = useId();
 const expanded = ref(false);
@@ -47,7 +49,7 @@ const containerStyle = ref<Record<string, string>>({ maxHeight: `${COLLAPSED_MAX
 function measure() {
   const el = contentRef.value;
   if (!el) return;
-  overflows.value = el.scrollHeight > COLLAPSED_MAX + 8;
+  overflows.value = el.scrollHeight > COLLAPSED_MAX + OVERFLOW_SLACK_PX;
   // While collapsed, keep the cap; while expanded, stay uncapped.
   if (!expanded.value) {
     containerStyle.value = overflows.value ? { maxHeight: `${COLLAPSED_MAX}px` } : {};
