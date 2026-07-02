@@ -14,9 +14,9 @@ import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { localizeUrl } from '../../../../i18n/utils';
 import { t } from '../../../../i18n/ui';
-import { slugify } from '../../../../lib/slugify';
 import { absoluteUrl } from '../../../../config/site';
 import { modelPath } from '../../../../lib/routes';
+import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
@@ -37,20 +37,26 @@ const typedLocale = locale as Locale;
 
 const allTemplates = await loadSerializedTemplates(() => getCollection('templates'));
 
-// Find templates matching this model slug
-const matchingTemplates = allTemplates.filter((tmpl) =>
-  tmpl.models.some((m: string) => slugify(m) === name)
-);
+// Resolve the model family via the same grouping the English page uses, so both
+// routes agree on canonical slugs, variant redirects, and display label — the
+// hreflang cluster between them is only reciprocal if the slugs resolve identically.
+const groups = deriveModelGroups(allTemplates);
+const family =
+  groups.find((group) => group.slug === name) ??
+  groups.find((group) => group.redirectFrom.includes(name!));
 
-if (matchingTemplates.length === 0) {
+if (!family) {
   return Astro.redirect(`/${locale}/workflows/`);
 }
 
-// Get display name from the first matching model
-const modelName =
-  matchingTemplates[0]?.models?.find((m: string) => slugify(m) === name) || name || '';
+// A variant slug 301s to its family's canonical URL, matching the English route.
+if (family.slug !== name) {
+  return Astro.redirect(localizeUrl(modelPath(family.slug), typedLocale), 301);
+}
 
-const basePath = modelPath(name!);
+const modelName = family.label;
+const matchingTemplates = family.templates;
+const basePath = modelPath(family.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
 
 const title = `${modelName} ComfyUI Workflows - Free Templates`;
