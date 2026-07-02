@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
 
+type NodeBadgeSegment = { text: string } | { logoSrc: string; logoAlt: string };
+
 const {
   segments,
   segmentClass = 'px-6',
@@ -8,7 +10,7 @@ const {
   sizeClass = '',
   logoClass = 'h-5 sm:h-7 lg:h-10',
 } = defineProps<{
-  segments: Array<{ text?: string; logoSrc?: string; logoAlt?: string }>;
+  segments: NodeBadgeSegment[];
   segmentClass?: string;
   textClass?: string;
   sizeClass?: string;
@@ -25,7 +27,7 @@ const {
       aria-hidden="true"
     />
 
-    <template v-for="(segment, i) in segments" :key="segment.text || segment.logoSrc || i">
+    <template v-for="(segment, i) in segments" :key="i">
       <img
         v-if="i > 0"
         src="/icons/node-union.svg"
@@ -42,9 +44,9 @@ const {
         "
       >
         <img
-          v-if="segment.logoSrc"
+          v-if="'logoSrc' in segment"
           :src="segment.logoSrc"
-          :alt="segment.logoAlt ?? ''"
+          :alt="segment.logoAlt"
           :class="cn('inline-block brightness-0 transition-all duration-300', logoClass)"
         />
         <span
