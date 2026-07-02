@@ -3,7 +3,7 @@
  * page. Pure and deterministic — same inputs, same assignment every build.
  */
 import type { MatcherTemplate } from '../hub-api';
-import { isMediaFile } from '../media-utils';
+import { hasStillThumbnail } from '../media-utils';
 
 export interface CardImage {
   src: string;
@@ -77,10 +77,6 @@ function relevance(cardTokens: Set<string>, template: MatcherTemplate): number {
   return overlap(cardTokens, tagTokens) * 3 + overlap(cardTokens, proseTokens);
 }
 
-function firstStill(template: MatcherTemplate): string | null {
-  return template.thumbnails?.find((thumb) => !isMediaFile(thumb)) ?? null;
-}
-
 export interface AssignOptions {
   /**
    * Shared exclusion set, mutated as templates are consumed. Pass the SAME set
@@ -96,7 +92,7 @@ export interface AssignOptions {
 
 const withStill = (templates: MatcherTemplate[]) =>
   templates
-    .filter((t) => firstStill(t) !== null)
+    .filter((t) => hasStillThumbnail(t.thumbnails))
     .sort((a, b) => (b.usage || 0) - (a.usage || 0) || a.name.localeCompare(b.name));
 
 /** Best unused template for a card by token overlap; null if the pool is dry. */

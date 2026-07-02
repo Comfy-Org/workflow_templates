@@ -24,3 +24,13 @@ export function isAudioFile(filename: string): boolean {
 export function isMediaFile(filename: string): boolean {
   return isVideoFile(filename) || isAudioFile(filename);
 }
+
+/** First still (non-video/-audio) thumbnail, so a card never renders a video src. */
+export function firstStillThumbnail(thumbnails?: string[]): string | null {
+  return thumbnails?.find((thumb) => !isMediaFile(thumb)) ?? null;
+}
+
+/** Whether any thumbnail is a still image (usable as a card visual). */
+export function hasStillThumbnail(thumbnails?: string[]): boolean {
+  return thumbnails?.some((thumb) => !isMediaFile(thumb)) ?? false;
+}

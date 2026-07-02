@@ -11,7 +11,7 @@ import {
 } from '../../lib/workflow-pages/schema';
 import type { MatcherTemplate } from '../../lib/hub-api';
 import { assignCardTemplates, type CardImage } from '../../lib/workflow-pages/card-images';
-import { isMediaFile } from '../../lib/media-utils';
+import { firstStillThumbnail } from '../../lib/media-utils';
 import { thumbnailPath } from '../../lib/routes';
 import { resolveTemplateLogos } from '../../lib/model-logos';
 import AboutSection from './sections/AboutSection.astro';
@@ -110,7 +110,7 @@ const baseCards = hasStyles
 
 // Give each card a content-matched template image, its model logo, and a CTA.
 const stillImage = (tpl: MatcherTemplate): CardImage | null => {
-  const still = tpl.thumbnails?.find((thumb) => !isMediaFile(thumb));
+  const still = firstStillThumbnail(tpl.thumbnails);
   return still ? { src: thumbnailPath(still), alt: tpl.title || tpl.name } : null;
 };
 

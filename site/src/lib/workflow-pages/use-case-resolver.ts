@@ -6,30 +6,39 @@
 import type { SerializedTemplate } from '../hub-api';
 import { SEO_PAGES, type SeoPageDef, type SeoPageFilters } from './use-cases';
 import { deriveModelGroups, type ModelGroup } from './model-groups';
-import { isMediaFile } from '../media-utils';
+import { firstStillThumbnail } from '../media-utils';
 
 /** First still (non-video/-audio) thumbnail across a group's templates. */
 function groupThumbnail(group: ModelGroup): string | undefined {
   for (const template of group.templates) {
-    const still = template.thumbnails?.find((thumb) => !isMediaFile(thumb));
+    const still = firstStillThumbnail(template.thumbnails);
     if (still) return still;
   }
   return undefined;
 }
 
+/** The template fields the filter/sort reads — kept minimal so build-time
+ *  sitemap templates (a narrower shape than SerializedTemplate) also satisfy it. */
+export interface FilterableTemplate {
+  models?: string[];
+  tags?: string[];
+  mediaType?: 'image' | 'video' | 'audio' | '3d';
+  usage?: number;
+}
+
 /** True if a template matches any of the page's filters (OR semantics). */
-function matchesFilters(template: SerializedTemplate, filters: SeoPageFilters): boolean {
-  const byModel = filters.models?.some((model) => template.models.includes(model)) ?? false;
-  const byTag = filters.tags?.some((tag) => template.tags.includes(tag)) ?? false;
+function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): boolean {
+  const byModel = filters.models?.some((model) => template.models?.includes(model)) ?? false;
+  const byTag = filters.tags?.some((tag) => template.tags?.includes(tag)) ?? false;
   const byMediaType = filters.mediaType ? template.mediaType === filters.mediaType : false;
   return byModel || byTag || byMediaType;
 }
 
 /** Templates matching a page's filters, usage-sorted. Empty when none match. */
-export function resolveUseCasePageTemplates(
+export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   def: SeoPageDef,
-  catalog: SerializedTemplate[]
-): SerializedTemplate[] {
+  catalog: T[]
+): T[] {
   return catalog
     .filter((template) => matchesFilters(template, def.filters))
     .sort((a, b) => (b.usage || 0) - (a.usage || 0));

@@ -13,7 +13,7 @@ import { inner, eyebrow, heading } from '../../../components/workflow-pages/land
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
-import { isMediaFile } from '../../../lib/media-utils';
+import { isMediaFile, hasStillThumbnail } from '../../../lib/media-utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
@@ -93,9 +93,7 @@ const noindex = !isIndexable({
 });
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
-const heroTemplateName = templates.find((tpl) =>
-  tpl.thumbnails?.some((thumb) => !isMediaFile(thumb))
-)?.name;
+const heroTemplateName = templates.find((tpl) => hasStillThumbnail(tpl.thumbnails))?.name;
 
 const leadShareId = templates.find((template) => template.shareId)?.shareId;
 const heroCtaUrl = leadShareId

@@ -3,18 +3,13 @@
  * `SeoPageCard` grid; only qualifying/non-empty pages become cards.
  */
 import type { SerializedTemplate } from '../hub-api';
-import { isMediaFile } from '../media-utils';
+import { firstStillThumbnail } from '../media-utils';
 import { modelPath, useCasePath } from '../routes';
 import { getLogoPath, resolveTemplateLogos } from '../model-logos';
 import type { CardBadge, SeoPageCard } from './schema';
 import { deriveModelGroups } from './model-groups';
 import { SEO_PAGES } from './use-cases';
 import { resolveUseCasePageTemplates } from './use-case-resolver';
-
-/** First still-image thumbnail (never a video), so a card never gets a video src. */
-function firstStillThumbnail(template?: SerializedTemplate): string | null {
-  return template?.thumbnails?.find((thumb) => !isMediaFile(thumb)) ?? null;
-}
 
 export function resolveModelPageCards(
   catalog: SerializedTemplate[],
@@ -34,7 +29,7 @@ export function resolveModelPageCards(
         href: modelPath(group.slug, locale),
         title: `${group.label} ComfyUI Workflows`,
         count: group.templates.length,
-        thumbnail: firstStillThumbnail(group.templates[0]),
+        thumbnail: firstStillThumbnail(group.templates[0]?.thumbnails),
         logos,
       };
     });
@@ -50,7 +45,7 @@ export function resolveUseCasePageCards(
       href: useCasePath(def.slug, locale),
       title: def.h1,
       count: templates.length,
-      thumbnail: firstStillThumbnail(templates[0]),
+      thumbnail: firstStillThumbnail(templates[0]?.thumbnails),
       logos: templates[0] ? resolveTemplateLogos(templates[0]) : [],
     };
   }).filter((card) => card.count > 0);

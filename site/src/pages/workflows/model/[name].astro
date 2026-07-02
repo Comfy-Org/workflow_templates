@@ -12,7 +12,7 @@ import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
 import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { isMediaFile } from '../../../lib/media-utils';
+import { isMediaFile, hasStillThumbnail } from '../../../lib/media-utils';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
@@ -133,9 +133,7 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
 const faqStructuredData = isRich ? buildFaqJsonLd(content!.faqItems) : null;
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
-const heroTemplateName = group.templates.find((tpl) =>
-  tpl.thumbnails?.some((thumb) => !isMediaFile(thumb))
-)?.name;
+const heroTemplateName = group.templates.find((tpl) => hasStillThumbnail(tpl.thumbnails))?.name;
 
 // "Keep exploring" image cards: use-cases featuring this model family (derived
 // from grid overlap), each borrowing a still from this page's own grid.

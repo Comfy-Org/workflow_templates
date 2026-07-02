@@ -7,11 +7,11 @@
  * so no card is ever left empty.
  */
 import type { SerializedTemplate, MatcherTemplate } from '../hub-api';
-import { isMediaFile } from '../media-utils';
+import { hasStillThumbnail } from '../media-utils';
 
 export function buildFallbackPool(catalog: SerializedTemplate[]): MatcherTemplate[] {
   return catalog
-    .filter((t) => t.thumbnails?.some((thumb) => !isMediaFile(thumb)))
+    .filter((t) => hasStillThumbnail(t.thumbnails))
     .map(
       (t): MatcherTemplate => ({
         name: t.name,

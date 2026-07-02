@@ -1,6 +1,6 @@
 ---
 import type { Locale } from '../../i18n/config';
-import { isMediaFile } from '../../lib/media-utils';
+import { firstStillThumbnail, hasStillThumbnail } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
 import type { SerializedTemplate } from '../../lib/hub-api';
 import { resolveTemplateLogos } from '../../lib/model-logos';
@@ -38,10 +38,8 @@ const ctaButtons = [
   };
 });
 
-const heroTemplate = templates.find((template) =>
-  template.thumbnails?.some((thumb) => !isMediaFile(thumb))
-);
-const heroImage = heroTemplate?.thumbnails?.find((thumb) => !isMediaFile(thumb));
+const heroTemplate = templates.find((template) => hasStillThumbnail(template.thumbnails));
+const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
 // The hero visual links to its own template's detail page (plain div if unknown).
