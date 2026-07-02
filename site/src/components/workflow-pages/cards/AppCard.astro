@@ -4,8 +4,7 @@
  *  template; the card body itself is not a link (so the CTA stays clickable). */
 import type { CardImage } from '../../../lib/workflow-pages/card-images';
 import type { ModelBadge } from '../../../lib/model-logos';
-import Thumbnail from '../Thumbnail.astro';
-import ModelBadges from '../ModelBadges.astro';
+import CardOverlayImage from './CardOverlayImage.astro';
 import { ButtonPill } from '../../ui/button-pill';
 
 interface Props {
@@ -28,25 +27,7 @@ const ImageTag = href ? 'a' : 'div';
     {...href ? { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': title } : {}}
     class="relative block aspect-video w-full overflow-hidden rounded-3xl"
   >
-    <Thumbnail
-      src={image?.src}
-      alt={image?.alt ?? title}
-      class="absolute inset-0 size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-    />
-    <!-- Top scrim keeps the overlaid title legible over any image. -->
-    <div
-      class="absolute inset-x-0 top-0 h-1/2 bg-linear-to-b from-black/45 to-transparent"
-      aria-hidden="true"
-    >
-    </div>
-
-    <h3
-      class="absolute left-5 right-16 top-5 font-display text-lg font-medium leading-tight text-white lg:text-2xl"
-    >
-      {title}
-    </h3>
-
-    <ModelBadges logos={logos} class="absolute right-4 top-4 z-10" />
+    <CardOverlayImage title={title} image={image} logos={logos} />
   </ImageTag>
 
   <!-- Caption on the left, CTA pinned bottom-right (closed pill, no reveal). -->
