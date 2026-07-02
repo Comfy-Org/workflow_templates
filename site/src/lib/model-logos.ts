@@ -1,7 +1,6 @@
 /**
  * Model / provider → logo resolution. One map + one matcher, plus the
  * template-shaped helpers the hub card and SEO/landing surfaces consume.
- * Used by HubWorkflowCard.vue, FeaturedCarousel.vue, and the workflow-pages.
  */
 
 const MODEL_TO_LOGO: Record<string, string> = {
@@ -124,10 +123,13 @@ export function resolveTemplateLogos(input: {
   if (input.logos?.length) {
     return providerLogos(input.logos).map((logo) => ({ src: logo.logoPath, name: logo.name }));
   }
-  const out: ModelBadge[] = [];
+  const badges: ModelBadge[] = [];
+  const seenLogos = new Set<string>();
   for (const model of input.models ?? []) {
-    const src = getLogoPath(model);
-    if (src && !out.some((badge) => badge.src === src)) out.push({ src, name: model });
+    const logoPath = getLogoPath(model);
+    if (!logoPath || seenLogos.has(logoPath)) continue;
+    seenLogos.add(logoPath);
+    badges.push({ src: logoPath, name: model });
   }
-  return out;
+  return badges;
 }
