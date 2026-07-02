@@ -1,10 +1,12 @@
 ---
 /** Application card: an image with the title overlaid top-left (over a scrim)
- *  and the caption below the image on the card base. Whole card links out. */
+ *  and the caption below. The image and a "Try workflow" CTA link to the
+ *  template; the card body itself is not a link (so the CTA stays clickable). */
 import type { CardImage } from '../../../lib/workflow-pages/card-images';
 import type { ModelBadge } from '../../../lib/model-logos';
 import Thumbnail from '../Thumbnail.astro';
 import ModelBadges from '../ModelBadges.astro';
+import { ButtonPill } from '../../ui/button-pill';
 
 interface Props {
   title: string;
@@ -12,17 +14,20 @@ interface Props {
   image?: CardImage | null;
   logos?: ModelBadge[];
   href?: string | null;
+  ctaLabel?: string;
 }
 
-const { title, subtitle, image, logos = [], href } = Astro.props;
-const Tag = href ? 'a' : 'div';
+const { title, subtitle, image, logos = [], href, ctaLabel } = Astro.props;
+const ImageTag = href ? 'a' : 'div';
 ---
 
-<Tag
-  {...href ? { href, target: '_blank', rel: 'noopener noreferrer' } : {}}
-  class="group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover"
+<article
+  class="group/pill-trigger group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover"
 >
-  <div class="relative aspect-video w-full overflow-hidden rounded-3xl">
+  <ImageTag
+    {...href ? { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': title } : {}}
+    class="relative block aspect-video w-full overflow-hidden rounded-3xl"
+  >
     <Thumbnail
       src={image?.src}
       alt={image?.alt ?? title}
@@ -42,13 +47,30 @@ const Tag = href ? 'a' : 'div';
     </h3>
 
     <ModelBadges logos={logos} class="absolute right-4 top-4 z-10" />
-  </div>
+  </ImageTag>
 
-  {
-    subtitle && (
-      <p class="px-4 pb-2 font-display text-sm font-light leading-snug text-content-secondary">
-        {subtitle}
-      </p>
-    )
-  }
-</Tag>
+  <!-- Caption on the left, CTA pinned bottom-right (closed pill, no reveal). -->
+  <div class="flex items-end justify-between gap-4 px-4 pb-2">
+    {
+      subtitle && (
+        <p class="font-display text-sm font-light leading-snug text-content-secondary">
+          {subtitle}
+        </p>
+      )
+    }
+    {
+      href && ctaLabel && (
+        <ButtonPill
+          as="a"
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant="solid"
+          mode="icon"
+          aria-label={ctaLabel}
+          class="shrink-0"
+        />
+      )
+    }
+  </div>
+</article>
