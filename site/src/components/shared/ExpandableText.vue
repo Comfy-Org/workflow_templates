@@ -123,7 +123,7 @@ onUnmounted(() => {
     <button
       v-if="overflows"
       type="button"
-      class="mt-3 rounded-sm text-sm font-medium text-content transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      class="mt-3 rounded-sm text-sm font-medium text-content underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :aria-expanded="expanded"
       :aria-controls="contentId"
       @click="toggle"
