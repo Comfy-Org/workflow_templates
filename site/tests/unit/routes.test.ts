@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { workflowDetailPath, workflowDetailSlug, tagPath, creatorPath } from '../../src/lib/routes';
+import {
+  workflowDetailPath,
+  workflowDetailSlug,
+  tagPath,
+  creatorPath,
+  modelPath,
+  modelsIndexPath,
+  useCasePath,
+  useCasesIndexPath,
+} from '../../src/lib/routes';
 
 describe('workflowDetailPath', () => {
   it('builds a {name}-{shareId} URL when both are present', () => {
@@ -81,5 +90,33 @@ describe('creatorPath', () => {
   it('prefixes non-default locales but not the default', () => {
     expect(creatorPath('topaz', 'ar')).toBe('/ar/workflows/topaz/');
     expect(creatorPath('topaz', 'en')).toBe('/workflows/topaz/');
+  });
+});
+
+describe('modelPath / modelsIndexPath', () => {
+  it('builds a slug path and prefixes non-default locales', () => {
+    expect(modelPath('flux')).toBe('/workflows/model/flux/');
+    expect(modelPath('flux', 'ar')).toBe('/ar/workflows/model/flux/');
+  });
+
+  it('returns the bare index base, locale-prefixed when non-default', () => {
+    expect(modelsIndexPath()).toBe('/workflows/model/');
+    expect(modelsIndexPath('ja')).toBe('/ja/workflows/model/');
+  });
+});
+
+describe('useCasePath / useCasesIndexPath', () => {
+  it('builds a slug path and prefixes non-default locales', () => {
+    expect(useCasePath('ai-headshot-generator')).toBe(
+      '/workflows/use-cases/ai-headshot-generator/'
+    );
+    expect(useCasePath('ai-headshot-generator', 'ja')).toBe(
+      '/ja/workflows/use-cases/ai-headshot-generator/'
+    );
+  });
+
+  it('returns the bare index base, locale-prefixed when non-default', () => {
+    expect(useCasesIndexPath()).toBe('/workflows/use-cases/');
+    expect(useCasesIndexPath('ar')).toBe('/ar/workflows/use-cases/');
   });
 });
