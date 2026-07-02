@@ -5,6 +5,7 @@ import type { Locale } from '../../../i18n/config';
 import type { WhyComfyReason } from '../../../lib/workflow-pages/schema';
 import { t } from '../../../i18n/ui';
 import { inner, sectionPad, eyebrow } from '../landing-styles';
+import NodeBadge from '../../shared/NodeBadge.vue';
 
 interface Props {
   locale: Locale;
@@ -13,12 +14,6 @@ interface Props {
 
 const { locale, reasons } = Astro.props;
 
-// "ONLY ON · Comfy · CLOUD" node-shaped badge, rendered inline in Astro (static
-// markup, so no Vue island); segment glyphs come from /icons/node-*.svg.
-const badgeText = 'flex items-center justify-center bg-brand px-2.5 text-page';
-// `ppformula-text-center` nudges the PP Formula caps down to the optical middle
-// of the node segment (the font sits high in its line box otherwise).
-const badgeLabel = 'ppformula-text-center text-xs font-extrabold uppercase tracking-[0.04em]';
 // Instance-scoped heading id so two renders on one page never collide.
 const headingId = `why-heading-${crypto.randomUUID().slice(0, 8)}`;
 ---
@@ -46,41 +41,16 @@ const headingId = `why-heading-${crypto.randomUUID().slice(0, 8)}`;
                 {reason.title}
               </h3>
               {reason.cloudOnly && (
-                <div class="flex h-7 items-stretch font-semibold select-none">
-                  <img
-                    src="/icons/node-left.svg"
-                    alt=""
-                    class="-mx-px h-full w-auto self-stretch"
-                    aria-hidden="true"
-                  />
-                  <span class={badgeText}>
-                    <span class={badgeLabel}>{t('useCase.onlyOn', locale)}</span>
-                  </span>
-                  <img
-                    src="/icons/node-union.svg"
-                    alt=""
-                    class="-mx-px h-full w-auto self-stretch"
-                    aria-hidden="true"
-                  />
-                  <span class={badgeText}>
-                    <span class={badgeLabel}>Comfy</span>
-                  </span>
-                  <img
-                    src="/icons/node-union.svg"
-                    alt=""
-                    class="-mx-px h-full w-auto self-stretch"
-                    aria-hidden="true"
-                  />
-                  <span class={badgeText}>
-                    <span class={badgeLabel}>{t('useCase.cloud', locale)}</span>
-                  </span>
-                  <img
-                    src="/icons/node-right.svg"
-                    alt=""
-                    class="-mx-px h-full w-auto self-stretch"
-                    aria-hidden="true"
-                  />
-                </div>
+                <NodeBadge
+                  segments={[
+                    { text: t('useCase.onlyOn', locale) },
+                    { text: 'Comfy' },
+                    { text: t('useCase.cloud', locale) },
+                  ]}
+                  size-class="h-7 sm:h-7"
+                  segment-class="px-2.5 py-0 sm:py-0 lg:py-0"
+                  text-class="ppformula-text-center translate-y-0 text-xs font-extrabold uppercase tracking-[0.04em]"
+                />
               )}
             </div>
             <p class="flex-1 pt-0.5 font-display text-[0.9375rem] font-light leading-[1.65] text-content-muted lg:max-w-md">
