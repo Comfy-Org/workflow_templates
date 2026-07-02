@@ -69,8 +69,6 @@ const indexableModelSlugs = new Set(
 const indexableUseCaseSlugs = new Set(
   SEO_PAGES.filter(
     (def) =>
-      // contentTemplates carries the fields the resolver reads (models/tags/usage/name).
-      // @ts-expect-error - build-time SitemapTemplate is narrower than SerializedTemplate
       resolveUseCasePageTemplates(def, contentTemplates).length > 0 &&
       contentPasses(useCaseContentDir, def.slug)
   ).map((def) => def.slug)

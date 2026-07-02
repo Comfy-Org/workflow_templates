@@ -33,8 +33,6 @@ export interface SeoPageDef {
   keywords: KeywordModel;
   /** Word-count band the quality validator enforces, by keyword difficulty/value. */
   wordCountTier: WordCountTier;
-  /** Pill label above the H1. Defaults to "Use case" at the call site. */
-  badgeLabel?: string;
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
 }
