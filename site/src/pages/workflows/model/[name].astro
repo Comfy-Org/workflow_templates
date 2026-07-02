@@ -46,6 +46,8 @@ export async function getStaticPaths() {
     };
   }[] = [];
 
+  // Astro rejects duplicate params.name, so every canonical + variant slug must be unique.
+  const claimed = new Set<string>();
   for (const group of groups) {
     // Fail the build if a qualifying (indexable) model page carries a denied term.
     if (group.qualifies) {
@@ -55,9 +57,17 @@ export async function getStaticPaths() {
         title: group.label,
       });
     }
+    if (claimed.has(group.slug)) {
+      throw new Error(
+        `Duplicate model slug "${group.slug}" across families; slugs must be unique.`
+      );
+    }
+    claimed.add(group.slug);
     const relatedUseCases = useCasesFeaturingModel(group.slug, catalog);
     paths.push({ params: { name: group.slug }, props: { group, relatedUseCases, fallbackPool } });
     for (const variant of group.redirectFrom) {
+      if (claimed.has(variant)) continue;
+      claimed.add(variant);
       paths.push({
         params: { name: variant },
         props: { group, relatedUseCases, fallbackPool, redirectTo: group.slug },
@@ -95,9 +105,7 @@ const richContent = isRich ? content : null;
 const h1 = `${label} ComfyUI Workflows`;
 // Rich copy only when the page actually renders the rich body; otherwise the
 // title/meta would advertise editorial content a thin (noindex) page never shows.
-const title = isRich
-  ? `${label} ComfyUI Workflows — Ready-to-Run Templates`
-  : `${label} Workflows`;
+const title = isRich ? `${label} ComfyUI Workflows — Ready-to-Run Templates` : `${label} Workflows`;
 const description =
   richContent?.metaDescription ||
   `Browse ${templates.length} ready-to-use ComfyUI workflow templates using ${label}. AI generation workflows that run on Comfy Cloud with no setup.`;
@@ -147,17 +155,16 @@ const useCasePoolStills = group.templates
   .filter((thumb) => !isMediaFile(thumb));
 
 const modelBadges = resolveTemplateLogos({ models: group.modelNames });
-const relatedCards = isRich
-  ? relatedUseCaseDefs.slice(0, 6).map((def, i) => ({
-      title: def.h1,
-      eyebrow: t('template.useCases', locale),
-      href: localizeUrl(useCasePath(def.slug), locale),
-      logos: modelBadges,
-      image: useCasePoolStills[i]
-        ? { src: thumbnailPath(useCasePoolStills[i]), alt: def.h1 }
-        : null,
-    }))
-  : [];
+const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
+  const still = useCasePoolStills[index];
+  return {
+    title: useCaseDef.h1,
+    eyebrow: t('template.useCases', locale),
+    href: localizeUrl(useCasePath(useCaseDef.slug), locale),
+    logos: modelBadges,
+    image: still ? { src: thumbnailPath(still), alt: useCaseDef.h1 } : null,
+  };
+});
 ---
 
 <BaseLayout
