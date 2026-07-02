@@ -2,6 +2,7 @@
 import HreflangTags from './HreflangTags.astro';
 import { LANGUAGES, DEFAULT_LOCALE } from '../i18n/config';
 import { absoluteUrl } from '../config/site';
+import { serializeJsonLdForScript } from '../lib/structured-data';
 
 interface Props {
   title: string;
@@ -100,6 +101,6 @@ if (!computedHreflangBasePath) {
 
 {
   structuredData && (
-    <script is:inline type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+    <script is:inline type="application/ld+json" set:html={serializeJsonLdForScript(structuredData)} />
   )
 }
