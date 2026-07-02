@@ -169,7 +169,8 @@ export default defineConfig({
           item.priority = 0.6;
           return item;
         }
-        if (pathname.match(/^\/workflows\/use-cases\//)) {
+        // Use-case pages: /workflows/use-cases/{slug}/ or /{locale}/workflows/use-cases/{slug}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/use-cases\//)) {
           // @ts-expect-error - sitemap types are stricter than actual API
           item.changefreq = 'weekly';
           item.priority = 0.8;

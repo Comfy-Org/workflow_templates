@@ -11,6 +11,11 @@ describe('getLogoPath', () => {
     expect(getLogoPath('OpenAI')).toBe('/logos/openai.png');
   });
 
+  it('trims surrounding whitespace before matching', () => {
+    expect(getLogoPath('  OpenAI  ')).toBe('/logos/openai.png');
+    expect(getLogoPath(' Wan2.2 ')).toBe('/logos/wan.png');
+  });
+
   it('maps aliased names to a shared slug', () => {
     // Stability / Stable Diffusion / SDXL all share the "stability" logo.
     expect(getLogoPath('Stable Diffusion')).toBe('/logos/stability.png');
