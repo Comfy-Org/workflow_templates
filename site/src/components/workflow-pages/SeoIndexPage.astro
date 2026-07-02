@@ -1,0 +1,75 @@
+---
+/** Shared shell for the SEO index pages (models, use-cases): navbar, page header,
+ *  the IndexCard grid, and CollectionPage + breadcrumb JSON-LD. Each route computes
+ *  its cards/heading/description/basePath and delegates the layout here. */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HubNavbar from '../hub/HubNavbar.astro';
+import SiteFooter from '../hub/SiteFooter.astro';
+import IndexPageHeader from './IndexPageHeader.astro';
+import IndexCard from './cards/IndexCard.astro';
+import type { SeoPageCard } from '../../lib/workflow-pages/schema';
+import type { Locale } from '../../i18n/config';
+import { localizeUrl } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
+import { SITE_ORIGIN, absoluteUrl } from '../../config/site';
+import {
+  buildCollectionPageJsonLd,
+  buildBreadcrumbJsonLd,
+  serializeJsonLdForScript,
+} from '../../lib/structured-data';
+
+interface Props {
+  locale: Locale;
+  /** Root-relative index path (no locale prefix), e.g. "/workflows/model/". */
+  basePath: string;
+  /** H1 + breadcrumb leaf + JSON-LD name stem. */
+  heading: string;
+  description: string;
+  cards: SeoPageCard[];
+}
+
+const { locale, basePath, heading, description, cards } = Astro.props;
+
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+const name = `${heading} — ComfyUI Workflows`;
+
+const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl });
+const breadcrumbStructuredData = buildBreadcrumbJsonLd([
+  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
+  { name: heading },
+]);
+---
+
+<BaseLayout
+  title={name}
+  description={description}
+  canonicalUrl={canonicalUrl}
+  ogImage="/workflows/og-default.png"
+  structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath={basePath}
+  hreflangLocalized={false}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-6 pb-12">
+    <IndexPageHeader locale={locale} heading={heading} description={description} />
+
+    <IndexCard cards={cards} locale={locale} />
+  </div>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+  />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
