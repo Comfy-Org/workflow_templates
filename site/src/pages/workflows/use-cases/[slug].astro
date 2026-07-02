@@ -13,7 +13,7 @@ import { inner, eyebrow, heading } from '../../../components/workflow-pages/land
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
-import { isMediaFile, hasStillThumbnail } from '../../../lib/media-utils';
+import { isMediaFile, hasStillThumbnail, firstStillThumbnail } from '../../../lib/media-utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
 import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
@@ -95,7 +95,9 @@ const noindex = !isIndexable({
 });
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
-const heroTemplateName = templates.find((tpl) => hasStillThumbnail(tpl.thumbnails))?.name;
+const heroTemplate = templates.find((tpl) => hasStillThumbnail(tpl.thumbnails));
+const heroTemplateName = heroTemplate?.name;
+const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
 const leadShareId = templates.find((template) => template.shareId)?.shareId;
 const heroCtaUrl = leadShareId
@@ -127,16 +129,14 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
 // Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.
 const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
 
-// "Keep exploring" image cards: related models (derived from this page's grid,
-// so they only ever link rich, canonical model pages) followed by sibling
-// use-cases. Every card gets an image: a model's own thumbnail when available,
-// otherwise a still drawn (without repeats) from this page's grid then the
-// wider catalog, so no Gallery card is ever empty.
-const backfillStills = [...templates, ...fallbackPool]
-  .flatMap((tpl) => tpl.thumbnails ?? [])
-  .filter((thumb) => !isMediaFile(thumb));
-let backfillIndex = 0;
-const nextStill = () => backfillStills[backfillIndex++];
+// "Keep exploring" cards: related models then sibling use-cases. Each card uses
+// its own thumbnail, else the next image from a shared fallback queue (this page's
+// grid then the wider catalog) so none is empty and none repeats the hero image.
+const fallbackImages = [...templates, ...fallbackPool]
+  .filter((template) => template.name !== heroTemplateName)
+  .flatMap((template) => template.thumbnails ?? [])
+  .filter((thumbnail) => !isMediaFile(thumbnail) && thumbnail !== heroImage);
+const takeFallbackImage = (): string | undefined => fallbackImages.shift();
 
 const workflowsLabel = t('useCase.workflowsCount', locale);
 
@@ -146,29 +146,29 @@ const relatedModelCards = related.map((model) => ({
   meta: `${model.count} ${workflowsLabel}`,
   href: localizeUrl(modelPath(model.slug), locale),
   logos: resolveTemplateLogos({ models: [model.label] }),
-  thumb: model.thumbnail ?? nextStill(),
+  thumbnail: model.thumbnail ?? takeFallbackImage(),
 }));
 
 const relatedUseCaseCards = SEO_PAGES.filter(
   (other) => other.slug !== def.slug && routedSlugs.includes(other.slug)
 )
-  .slice(0, 6)
+  .slice(0, 5)
   .map((other) => ({
     title: other.h1,
     eyebrow: t('template.useCases', locale),
     meta: undefined as string | undefined,
     href: localizeUrl(useCasePath(other.slug), locale),
     logos: [] as ReturnType<typeof resolveTemplateLogos>,
-    thumb: nextStill(),
+    thumbnail: takeFallbackImage(),
   }));
 
-const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).map((c) => ({
-  title: c.title,
-  eyebrow: c.eyebrow,
-  meta: c.meta,
-  href: c.href,
-  logos: c.logos,
-  image: c.thumb ? { src: thumbnailPath(c.thumb), alt: c.title } : null,
+const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).map((card) => ({
+  title: card.title,
+  eyebrow: card.eyebrow,
+  meta: card.meta,
+  href: card.href,
+  logos: card.logos,
+  image: card.thumbnail ? { src: thumbnailPath(card.thumbnail), alt: card.title } : null,
 }));
 ---
 
