@@ -90,15 +90,19 @@ const basePath = modelPath(group.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
 const isRich = group.qualifies && !!content && !content.qualityFailed;
+// Non-null only when rich, so the body/JSON-LD can read it without assertions.
+const richContent = isRich ? content : null;
 const h1 = `${label} ComfyUI Workflows`;
-const title = content
+// Rich copy only when the page actually renders the rich body; otherwise the
+// title/meta would advertise editorial content a thin (noindex) page never shows.
+const title = isRich
   ? `${label} ComfyUI Workflows — Ready-to-Run Templates`
   : `${label} Workflows`;
 const description =
-  content?.metaDescription ||
+  richContent?.metaDescription ||
   `Browse ${templates.length} ready-to-use ComfyUI workflow templates using ${label}. AI generation workflows that run on Comfy Cloud with no setup.`;
 const subheading =
-  content?.subheading ||
+  richContent?.subheading ||
   `Ready-to-run ComfyUI workflows built on ${label}, fully editable and runnable on Comfy Cloud with no setup.`;
 
 const noindex = !isIndexable({
@@ -130,7 +134,7 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('labels.models', locale), item: modelsUrl },
   { name: h1 },
 ]);
-const faqStructuredData = isRich ? buildFaqJsonLd(content!.faqItems) : null;
+const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
 const heroTemplateName = group.templates.find((tpl) => hasStillThumbnail(tpl.thumbnails))?.name;
@@ -201,19 +205,19 @@ const relatedCards = isRich
     </section>
 
     {
-      isRich && (
+      richContent && (
         <LandingPageBody
           locale={locale}
           kind="model"
           keyword={keywords.primary}
-          intro={content!.extendedDescription}
-          modelSpec={content!.modelSpec}
+          intro={richContent.extendedDescription}
+          modelSpec={richContent.modelSpec}
           specName={label}
-          capabilitiesIntro={content!.capabilitiesIntro}
-          whyComfy={content!.whyComfy}
-          applicationsIntro={content!.applicationsIntro}
-          suggestedUseCases={content!.suggestedUseCases}
-          faqItems={content!.faqItems}
+          capabilitiesIntro={richContent.capabilitiesIntro}
+          whyComfy={richContent.whyComfy}
+          applicationsIntro={richContent.applicationsIntro}
+          suggestedUseCases={richContent.suggestedUseCases}
+          faqItems={richContent.faqItems}
           templates={group.templates}
           catalog={fallbackPool}
           reservedTemplates={heroTemplateName ? [heroTemplateName] : []}

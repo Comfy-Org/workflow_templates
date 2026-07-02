@@ -78,6 +78,8 @@ const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const content = await loadUseCaseContent(def.slug);
 // No editorial JSON → a thin page; keep it out of the index (mirrors the model page).
 const hasRichContent = !!content && !content.qualityFailed;
+// Non-null only when rich, so the body/JSON-LD can read it without assertions.
+const richContent = hasRichContent ? content : null;
 
 const description =
   content?.metaDescription ||
@@ -122,7 +124,8 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('template.useCases', locale), item: useCasesUrl },
   { name: def.h1 },
 ]);
-const faqStructuredData = buildFaqJsonLd(content?.faqItems);
+// Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.
+const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
 
 // "Keep exploring" image cards: related models (derived from this page's grid,
 // so they only ever link rich, canonical model pages) followed by sibling
@@ -214,17 +217,17 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 6).
     </section>
 
     {
-      content && (
+      richContent && (
         <LandingPageBody
           locale={locale}
           keyword={keyword}
-          intro={content.extendedDescription}
-          styles={content.styles}
-          capabilitiesIntro={content.capabilitiesIntro}
-          whyComfy={content.whyComfy}
-          applicationsIntro={content.applicationsIntro}
-          suggestedUseCases={content.suggestedUseCases}
-          faqItems={content.faqItems}
+          intro={richContent.extendedDescription}
+          styles={richContent.styles}
+          capabilitiesIntro={richContent.capabilitiesIntro}
+          whyComfy={richContent.whyComfy}
+          applicationsIntro={richContent.applicationsIntro}
+          suggestedUseCases={richContent.suggestedUseCases}
+          faqItems={richContent.faqItems}
           templates={templates}
           catalog={fallbackPool}
           reservedTemplates={heroTemplateName ? [heroTemplateName] : []}
