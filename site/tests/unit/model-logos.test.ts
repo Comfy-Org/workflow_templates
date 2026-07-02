@@ -122,6 +122,12 @@ describe('resolveTemplateLogos', () => {
     ]);
   });
 
+  it('lets logos win and ignores models when both are present', () => {
+    expect(resolveTemplateLogos({ logos: [{ provider: 'OpenAI' }], models: ['Wan2.2'] })).toEqual([
+      { src: '/logos/openai.png', name: 'OpenAI' },
+    ]);
+  });
+
   it('falls back to the models list when no structured logos are present', () => {
     expect(resolveTemplateLogos({ models: ['Wan2.2', 'Flux.1 [dev]'] })).toEqual([
       { src: '/logos/wan.png', name: 'Wan2.2' },
