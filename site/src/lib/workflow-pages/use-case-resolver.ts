@@ -50,8 +50,6 @@ export interface RelatedModel {
   thumbnail?: string;
   /** Total workflows in this model family across the catalog. */
   count: number;
-  /** Short tagline (the family's primary keyword), for richer cards. */
-  description?: string;
 }
 
 // Qualifying model groups, memoized per catalog: relatedness only links rich,
@@ -94,7 +92,6 @@ export function relatedModelsForUseCase(
       label: group.label,
       thumbnail: groupThumbnail(group),
       count: group.templates.length,
-      description: group.keywords?.primary,
     }));
 }
 

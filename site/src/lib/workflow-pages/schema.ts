@@ -4,11 +4,10 @@
  * validator, and tests can all import it.
  */
 
-/** Target keywords: `primary` head term, `secondary` cluster, `paaQuestions` seed FAQs. */
+/** Target keywords: `primary` head term, `secondary` cluster. */
 export interface KeywordModel {
   primary: string;
   secondary: string[];
-  paaQuestions?: string[];
 }
 
 /** A "what you can create" capability card. */
