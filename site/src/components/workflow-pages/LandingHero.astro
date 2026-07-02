@@ -24,12 +24,19 @@ interface Props {
 const { eyebrow, title, description, meta, primaryCta, secondaryCta, templates, locale } =
   Astro.props;
 
-// Mirror HeaderMain's CTA pattern: an array of buttons rendered through the
-// shared brand-solid / brand-outline variants, so the hero and navbar stay in sync.
+// Shared brand-solid / brand-outline buttons. Only external links open a new
+// tab; same-page anchors (e.g. "#workflows") must scroll in place.
 const ctaButtons = [
   { ...primaryCta, primary: true },
   { ...secondaryCta, primary: false },
-];
+].map((cta) => {
+  const external = /^https?:/i.test(cta.href);
+  return {
+    ...cta,
+    target: external ? '_blank' : undefined,
+    rel: external ? 'noopener noreferrer' : undefined,
+  };
+});
 
 const heroTemplate = templates.find((template) =>
   template.thumbnails?.some((thumb) => !isMediaFile(thumb))
@@ -68,8 +75,8 @@ const heroVisualProps = heroHref ? { href: heroHref, 'aria-label': title } : {};
             <Button
               as="a"
               href={cta.href}
-              target="_blank"
-              rel="noopener noreferrer"
+              target={cta.target}
+              rel={cta.rel}
               variant={cta.primary ? 'brand-solid' : 'brand-outline'}
               size="nav"
               aria-label={cta.label}
