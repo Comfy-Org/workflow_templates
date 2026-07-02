@@ -5,17 +5,19 @@ import { getLocaleFromPath } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { modelsIndexPath } from '../../../lib/routes';
 import { loadSerializedTemplates } from '../../../lib/hub-api';
-import { resolveModelPageCards } from '../../../lib/workflow-pages/index-cards';
+import {
+  resolveModelPageCards,
+  resolveTopModelLabels,
+} from '../../../lib/workflow-pages/index-cards';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const catalog = await loadSerializedTemplates(() => getCollection('templates'));
 
 const cards = resolveModelPageCards(catalog, locale);
 const heading = t('labels.models', locale);
-const description = `Browse ComfyUI workflows by model — ready-to-run templates for ${cards
-  .slice(0, 4)
-  .map((card) => card.title.replace(/ ComfyUI Workflows$/, ''))
-  .join(', ')} and more.`;
+
+const topModelLabels = resolveTopModelLabels(catalog).join(', ');
+const description = `Browse ComfyUI workflows by model — ready-to-run templates for ${topModelLabels} and more.`;
 ---
 
 <SeoIndexPage

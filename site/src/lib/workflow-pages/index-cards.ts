@@ -11,28 +11,40 @@ import { deriveModelGroups } from './model-groups';
 import { SEO_PAGES } from './use-cases';
 import { resolveUseCasePageTemplates } from './use-case-resolver';
 
+/** Indexable model families, ranked by usage — the shared source order for both
+ *  the card grid and the index description, so the two can't list different models. */
+function qualifyingModelGroups(catalog: SerializedTemplate[]) {
+  return deriveModelGroups(catalog)
+    .filter((group) => group.qualifies)
+    .sort((a, b) => b.usage - a.usage);
+}
+
+/** Top model family labels (bare, e.g. "Flux"), for the index page description. */
+export function resolveTopModelLabels(catalog: SerializedTemplate[], limit = 4): string[] {
+  return qualifyingModelGroups(catalog)
+    .slice(0, limit)
+    .map((group) => group.label);
+}
+
 export function resolveModelPageCards(
   catalog: SerializedTemplate[],
   locale?: string
 ): SeoPageCard[] {
-  return deriveModelGroups(catalog)
-    .filter((group) => group.qualifies)
-    .sort((a, b) => b.usage - a.usage)
-    .map((group) => {
-      const familyLogo = getLogoPath(group.label);
-      const logos: CardBadge[] = familyLogo
-        ? [{ src: familyLogo, name: group.label }]
-        : group.templates[0]
-          ? resolveTemplateLogos(group.templates[0])
-          : [];
-      return {
-        href: modelPath(group.slug, locale),
-        title: `${group.label} ComfyUI Workflows`,
-        count: group.templates.length,
-        thumbnail: firstStillThumbnail(group.templates[0]?.thumbnails),
-        logos,
-      };
-    });
+  return qualifyingModelGroups(catalog).map((group) => {
+    const familyLogo = getLogoPath(group.label);
+    const logos: CardBadge[] = familyLogo
+      ? [{ src: familyLogo, name: group.label }]
+      : group.templates[0]
+        ? resolveTemplateLogos(group.templates[0])
+        : [];
+    return {
+      href: modelPath(group.slug, locale),
+      title: `${group.label} ComfyUI Workflows`,
+      count: group.templates.length,
+      thumbnail: firstStillThumbnail(group.templates[0]?.thumbnails),
+      logos,
+    };
+  });
 }
 
 export function resolveUseCasePageCards(
