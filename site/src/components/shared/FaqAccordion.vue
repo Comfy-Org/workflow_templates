@@ -1,8 +1,7 @@
 <script setup lang="ts">
 /**
- * FAQ accordion (reka-ui) for the workflow detail page.
- *
- * Visible counterpart to the `FAQPage` JSON-LD emitted by the route pages.
+ * Shared FAQ accordion (reka-ui) for the workflow detail page and the SEO
+ * landing FAQ section. Visible counterpart to the `FAQPage` JSON-LD.
  */
 import { useId } from 'vue';
 import {
