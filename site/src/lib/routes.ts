@@ -1,5 +1,4 @@
 import { tagSlug } from './tag-aliases';
-import { slugify } from './slugify';
 
 /**
  * Prefix a root-relative path with the locale segment, matching the site's
@@ -22,7 +21,7 @@ export const useCasesIndexPath = (locale?: string) => localize(USE_CASES_BASE, l
 export const useCasePath = (slug: string, locale?: string) =>
   localize(`${USE_CASES_BASE}${slug}/`, locale);
 export const creatorPath = (username: string, locale?: string) =>
-  localize(`/workflows/${slugify(username)}/`, locale);
+  localize(`/workflows/${encodeURIComponent(username)}/`, locale);
 export const thumbnailPath = (asset: string) =>
   asset.startsWith('http://') || asset.startsWith('https://')
     ? asset

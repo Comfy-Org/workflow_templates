@@ -73,8 +73,9 @@ describe('tagPath', () => {
 });
 
 describe('creatorPath', () => {
-  it('slugifies the username', () => {
-    expect(creatorPath('Comfy Org')).toBe('/workflows/comfy-org/');
+  it('keeps the raw username (URL-encoded), matching how the profile route resolves it', () => {
+    expect(creatorPath('Comfy Org')).toBe('/workflows/Comfy%20Org/');
+    expect(creatorPath('enigmatic_e')).toBe('/workflows/enigmatic_e/');
   });
 
   it('prefixes non-default locales but not the default', () => {
