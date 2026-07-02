@@ -1,7 +1,6 @@
 /**
  * Loads SEO-page editorial copy from the `seoModels`/`seoUseCases` collections,
- * returning `null` when a slug has none. Astro-only (`getEntry`); Node callers
- * read the JSON via `fs` in `load-articles.ts`.
+ * returning `null` when a slug has none. Astro-only (`getEntry`).
  */
 import { getEntry } from 'astro:content';
 import type { GeneratedSeoContent } from './schema';
