@@ -22,7 +22,6 @@ function groupThumbnail(group: ModelGroup): string | undefined {
 export interface FilterableTemplate {
   models?: string[];
   tags?: string[];
-  mediaType?: 'image' | 'video' | 'audio' | '3d';
   usage?: number;
 }
 
@@ -30,8 +29,7 @@ export interface FilterableTemplate {
 function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): boolean {
   const byModel = filters.models?.some((model) => template.models?.includes(model)) ?? false;
   const byTag = filters.tags?.some((tag) => template.tags?.includes(tag)) ?? false;
-  const byMediaType = filters.mediaType ? template.mediaType === filters.mediaType : false;
-  return byModel || byTag || byMediaType;
+  return byModel || byTag;
 }
 
 /** Templates matching a page's filters, usage-sorted. Empty when none match. */

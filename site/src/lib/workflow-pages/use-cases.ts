@@ -20,8 +20,6 @@ export interface SeoPageFilters {
   models?: string[];
   /** Match templates whose `tags` include any of these (exact tag strings). */
   tags?: string[];
-  /** Match templates of this media type. */
-  mediaType?: 'image' | 'video' | 'audio' | '3d';
 }
 
 export interface SeoPageDef {
