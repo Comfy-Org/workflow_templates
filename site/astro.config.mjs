@@ -22,12 +22,14 @@ const templateDates = new Map();
  */
 /** Raw content templates, reused below to derive indexable slugs. @type {SitemapTemplate[]} */
 const contentTemplates = [];
+const creatorUsernames = new Set();
 
 if (fs.existsSync(templatesDir)) {
   const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
   for (const file of files) {
     try {
       const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
+      if (content.username) creatorUsernames.add(content.username);
       if (typeof content.name !== 'string') continue;
       // Normalize the arrays the group/use-case resolvers read, so a template
       // JSON missing `models`/`tags` can't crash sitemap derivation.
@@ -82,20 +84,6 @@ const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 
 const nonDefaultLocales = locales.filter((l) => l !== 'en');
 
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
-
-// Creator profile pages — extract unique usernames from synced templates
-const creatorUsernames = new Set();
-if (fs.existsSync(templatesDir)) {
-  const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
-  for (const file of files) {
-    try {
-      const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
-      if (content.username) creatorUsernames.add(content.username);
-    } catch {
-      // Skip invalid JSON
-    }
-  }
-}
 
 const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
 const localeCustomPages = nonDefaultLocales.map((locale) => `${siteOrigin}/${locale}/workflows/`);
