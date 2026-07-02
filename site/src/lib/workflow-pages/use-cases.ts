@@ -240,7 +240,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     title: 'AI Anime Generator — ComfyUI Workflows',
     h1: 'AI Anime Generator Workflows',
     // Keywords from grounded search research (~30 competitor pages, autocomplete + PAA).
-    // "free ..." is a real variant but omitted: it would trip the no-"free" content gate.
+    // "free ..." is a real variant but omitted as an off-brand positioning choice.
     keywords: {
       primary: 'ai anime generator',
       secondary: [

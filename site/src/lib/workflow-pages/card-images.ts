@@ -127,7 +127,8 @@ function pickBestAllowingRepeat(card: CardText, pool: MatcherTemplate[]): Matche
  * set is threaded through every section. Resolution order per card:
  *   1. content-matched, unused, from the page grid;
  *   2. content-matched, unused, from the whole-dataset `fallback`;
- *   3. content-matched repeat (only once everything is exhausted).
+ *   3. best-effort repeat (content-matched if any overlap, else highest-usage),
+ *      only once every unused pool is exhausted.
  */
 export function assignCardTemplates(
   cards: CardText[],
