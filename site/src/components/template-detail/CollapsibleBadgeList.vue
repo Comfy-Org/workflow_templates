@@ -51,9 +51,7 @@ const maxHeightStyle = computed(() => {
   return expanded.value ? `${fullHeight.value}px` : `${COLLAPSED_HEIGHT}px`;
 });
 
-const toggleLabel = computed(() =>
-  expanded.value ? 'Show less' : `${hiddenCount.value} more`
-);
+const toggleLabel = computed(() => (expanded.value ? 'Show less' : `${hiddenCount.value} more`));
 </script>
 
 <template>

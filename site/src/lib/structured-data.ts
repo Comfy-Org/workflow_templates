@@ -108,4 +108,3 @@ export function buildCollectionPageJsonLd(params: {
     ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
   };
 }
-
