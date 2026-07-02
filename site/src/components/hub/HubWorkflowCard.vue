@@ -391,7 +391,7 @@ function handleCardClick() {
           as="button"
           type="button"
           variant="solid"
-          reveal
+          mode="reveal"
           class="shrink-0"
           :aria-label="title"
           @click.stop="handleCardClick"

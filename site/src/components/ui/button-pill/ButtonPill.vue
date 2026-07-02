@@ -1,84 +1,107 @@
 <script setup lang="ts">
+/**
+ * ButtonPill — the brand pill CTA (yellow "run" button used across the hub).
+ *
+ * A single `mode` selects how the label and chevron behave:
+ * - `animated` (default) — label always shown; the chevron glides across on hover.
+ * - `reveal` — chevron always shown; the label expands from zero width on hover.
+ * - `plain` — label only, no chevron, no motion (still recolors on hover).
+ * - `icon` — just the chevron circle, a compact "closed pill" for tight footers.
+ *
+ * Renders as a `<button>` by default; pass `as="a"` (+ `href`) for a link, or
+ * `as-child` to merge props onto a custom child (reka-ui `Primitive`). Slot the
+ * label as default content; override the icon via the `icon` slot.
+ *
+ * @example
+ * <ButtonPill as="a" href="/run" mode="reveal">Try now</ButtonPill>
+ * <ButtonPill mode="icon" aria-label="Open workflow" />
+ */
+import { computed } from 'vue';
 import { ChevronRight } from 'lucide-vue-next';
 import { Primitive } from 'reka-ui';
 import type { PrimitiveProps } from 'reka-ui';
 import type { HTMLAttributes } from 'vue';
 import { cn } from '@/lib/utils';
-import type { ButtonPillVariants } from '.';
+import type { ButtonPillMode, ButtonPillVariants } from '.';
 import { buttonPillBadgeVariants, buttonPillVariants } from '.';
-
-interface Props extends PrimitiveProps {
-  variant?: ButtonPillVariants['variant'];
-  size?: ButtonPillVariants['size'];
-  iconPosition?: ButtonPillVariants['iconPosition'];
-  reveal?: boolean;
-  class?: HTMLAttributes['class'];
-  disabled?: boolean;
-  href?: string;
-  target?: string;
-  rel?: string;
-}
 
 const {
   as = 'button',
   asChild,
   variant,
   size,
+  mode = 'animated',
   iconPosition = 'right',
-  reveal = false,
   class: className,
   disabled,
   href,
   target,
   rel,
-} = defineProps<Props>();
+} = defineProps<
+  PrimitiveProps & {
+    variant?: ButtonPillVariants['variant'];
+    size?: ButtonPillVariants['size'];
+    mode?: ButtonPillMode;
+    iconPosition?: ButtonPillVariants['iconPosition'];
+    class?: HTMLAttributes['class'];
+    disabled?: boolean;
+    href?: string;
+    target?: string;
+    rel?: string;
+  }
+>();
 
-// Reveal always pins the icon to the start, so it implies a left icon position.
-const resolvedIconPosition = reveal ? 'left' : iconPosition;
+// `reveal` keeps the chevron pinned at the leading edge, so it reads as left-placed.
+const resolvedIconPosition = computed(() => (mode === 'reveal' ? 'left' : iconPosition));
+const showLabel = computed(() => mode !== 'icon');
+const showBadge = computed(() => mode === 'animated' || mode === 'reveal');
 </script>
 
 <template>
   <Primitive
-    data-slot="button-pill"
-    :data-variant="variant"
-    :data-size="size"
     :as="as"
     :as-child="asChild"
     :disabled="disabled"
     :href="href"
     :target="target"
     :rel="rel"
+    data-slot="button-pill"
+    :data-variant="variant"
+    :data-size="size"
+    :data-mode="mode"
     :class="
-      cn(
-        buttonPillVariants({ variant, size, iconPosition: resolvedIconPosition, reveal }),
-        className
-      )
+      cn(buttonPillVariants({ variant, size, mode, iconPosition: resolvedIconPosition }), className)
     "
   >
-    <span
-      v-if="reveal"
-      class="grid grid-cols-[0fr] transition-[grid-template-columns] duration-500 group-hover/button-pill:grid-cols-[1fr] group-hover/pill-trigger:grid-cols-[1fr]"
-    >
-      <span class="overflow-hidden">
-        <span class="ppformula-text-center relative leading-none">
-          <slot />
+    <template v-if="showLabel">
+      <span
+        v-if="mode === 'reveal'"
+        class="grid grid-cols-[0fr] transition-[grid-template-columns] duration-500 group-hover/button-pill:grid-cols-[1fr] group-hover/pill-trigger:grid-cols-[1fr]"
+      >
+        <span class="overflow-hidden">
+          <span class="ppformula-text-center relative leading-none"><slot /></span>
         </span>
       </span>
-    </span>
-    <span v-else class="ppformula-text-center-sm relative leading-none transition-all duration-500">
-      <slot />
-    </span>
+      <span
+        v-else
+        class="ppformula-text-center-sm relative leading-none transition-all duration-500"
+      >
+        <slot />
+      </span>
+    </template>
+
     <span
-      :class="
-        buttonPillBadgeVariants({ variant, size, iconPosition: resolvedIconPosition, reveal })
-      "
+      v-if="showBadge"
+      :class="buttonPillBadgeVariants({ variant, size, mode, iconPosition: resolvedIconPosition })"
       aria-hidden="true"
     >
       <span class="inline-flex transition-transform duration-500">
-        <slot name="icon">
-          <ChevronRight class="size-4" :stroke-width="2" />
-        </slot>
+        <slot name="icon"><ChevronRight class="size-4" :stroke-width="2" /></slot>
       </span>
     </span>
+
+    <slot v-if="mode === 'icon'" name="icon">
+      <ChevronRight class="size-4" :stroke-width="2" />
+    </slot>
   </Primitive>
 </template>
