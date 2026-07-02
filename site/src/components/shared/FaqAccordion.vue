@@ -57,8 +57,7 @@ defineProps<{
           </AccordionTrigger>
         </AccordionHeader>
         <AccordionContent
-          force-mount
-          class="overflow-hidden data-[state=closed]:h-0 motion-safe:data-[state=open]:animate-accordion-down motion-safe:data-[state=closed]:animate-accordion-up"
+          class="overflow-hidden motion-safe:data-[state=open]:animate-accordion-down motion-safe:data-[state=closed]:animate-accordion-up"
         >
           <p class="pb-5 text-base leading-relaxed text-content-muted">{{ item.answer }}</p>
         </AccordionContent>
