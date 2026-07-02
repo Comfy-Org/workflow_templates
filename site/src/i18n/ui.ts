@@ -79,7 +79,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.createdBy': 'CREATED BY',
     'labels.lastUpdate': 'LAST UPDATE',
     'labels.categories': 'CATEGORIES',
-    'cta.tryCloud': 'Try On Comfy Cloud',
+    'cta.tryCloud': 'Try Comfy Cloud',
     'cta.tryCloudSubline': '✦ Get Free Credits',
     'labels.workflowPreviewNote':
       'This is a simplified visualization. The actual workflow may contain additional nodes and connections.',
