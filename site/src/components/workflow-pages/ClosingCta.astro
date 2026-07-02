@@ -5,7 +5,7 @@
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { Button } from '../ui/button';
-import { inner, heading } from './landing-styles';
+import { inner, heading, sectionPad } from './landing-styles';
 
 interface Props {
   locale: Locale;
@@ -17,7 +17,7 @@ interface Props {
 const { locale, href, analytics } = Astro.props;
 ---
 
-<section class="bg-page py-16 lg:py-24">
+<section class={`bg-page ${sectionPad}`}>
   <div class={`${inner} flex flex-col items-center text-center`}>
     <h2 class={`${heading} text-balance`}>
       {t('template.ready', locale)}
@@ -52,7 +52,7 @@ const { locale, href, analytics } = Astro.props;
             window.va('event', {
               name: 'cta_click',
               useCase: link.getAttribute('data-usecase'),
-              location: link.getAttribute('data-location') || 'hero',
+              location: 'footer',
             });
           }
         });
