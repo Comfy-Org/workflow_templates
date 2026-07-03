@@ -21,6 +21,7 @@ import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
 import { DEFAULT_LOCALE } from '../../i18n/config';
 import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
+import { fetchRankingMap } from '../../lib/ranking';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../lib/structured-data';
 import { getSocialDisplay } from '../../lib/social-links';
@@ -85,12 +86,13 @@ try {
 
 // Fetch workflows for this creator from index
 const profiles = await getProfileCache();
+const rankingMap = await fetchRankingMap();
 let serialized: SerializedTemplate[] = [];
 
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
-  serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
+  serialized = filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap));
 } catch {
   // Index API failed — show empty grid
 }
