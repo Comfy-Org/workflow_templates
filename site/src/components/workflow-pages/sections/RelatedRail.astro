@@ -9,6 +9,7 @@ import { t } from '../../../i18n/ui';
 import { inner, sectionPad } from '../landing-styles';
 import SectionHeader from '../SectionHeader.astro';
 import CardOverlayImage from '../cards/CardOverlayImage.astro';
+import { ButtonPill } from '../../ui/button-pill';
 
 interface RailCard {
   title: string;
@@ -40,30 +41,45 @@ const cards = allCards.slice(0, 5);
     <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
       {
         cards.map((card, i) => (
-          <a
-            href={card.href}
+          <article
             class:list={[
-              'group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover',
+              'group/pill-trigger group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover',
               i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
             ]}
           >
-            <div class="relative aspect-video w-full overflow-hidden rounded-3xl bg-hub-surface">
+            <a
+              href={card.href}
+              aria-label={card.title}
+              class="relative block aspect-video w-full overflow-hidden rounded-3xl bg-hub-surface"
+            >
               <CardOverlayImage title={card.title} image={card.image} logos={card.logos} />
-            </div>
+            </a>
 
             <div class="flex items-center justify-between gap-3 px-4 pb-2">
-              {card.eyebrow && (
-                <span class="font-display text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">
-                  {card.eyebrow}
-                </span>
-              )}
-              {card.meta && (
-                <span class="shrink-0 font-display text-xs font-medium text-brand">
-                  {card.meta}
-                </span>
-              )}
+              <div class="flex min-w-0 items-center gap-3">
+                {card.eyebrow && (
+                  <span class="truncate font-display text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">
+                    {card.eyebrow}
+                  </span>
+                )}
+                {card.meta && (
+                  <span class="shrink-0 font-display text-xs font-medium text-brand">
+                    {card.meta}
+                  </span>
+                )}
+              </div>
+              <ButtonPill
+                as="a"
+                href={card.href}
+                variant="solid"
+                mode="reveal"
+                aria-label={card.title}
+                class="shrink-0"
+              >
+                {t('cta.viewAll', locale)}
+              </ButtonPill>
             </div>
-          </a>
+          </article>
         ))
       }
     </div>
