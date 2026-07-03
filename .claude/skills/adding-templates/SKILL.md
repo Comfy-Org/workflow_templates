@@ -15,7 +15,8 @@ ComfyUI workflow_templates repository.
 - Template file names **must** be `snake_case` — no spaces, dots, or special characters.
 - **Always** run `python scripts/sync/sync_bundles.py` after editing `bundles.json`.
 - **Always** run `python scripts/sync/sync_data.py --templates-dir templates` after editing `templates/index.json`.
-- Bump the version in the root `pyproject.toml` before finalising.
+- For **new** templates, assign thumbnails/media to `media-assets-01` — see [`scripts/docs/frozen_bundles.md`](../../scripts/docs/frozen_bundles.md).
+- Bump root `pyproject.toml` only when the PR is an intentional PyPI release (`release` label).
 - Use double-quotes `"` in all JSON files (never single-quotes).
 - Ensure model download URLs produce filenames that **exactly** match the `widgets_values` entries in the workflow JSON.
 
@@ -116,16 +117,7 @@ category's `templates` array. If no category fits, create a new category object.
 
 ## Step 4 — Assign to a Bundle in `bundles.json`
 
-Open `bundles.json` and add the template name string to the correct bundle array:
-
-| Bundle | When to use |
-|--------|-------------|
-| `media-image` | Image generation / editing workflows |
-| `media-video` | Video generation workflows |
-| `media-api` | Workflows that call external APIs |
-| `media-other` | Audio, 3D, utilities, everything else |
-
-Then sync:
+Open `bundles.json` and add the template name to the correct bundle. **New templates:** use `media-assets-01` for media assets — see [`scripts/docs/frozen_bundles.md`](../../scripts/docs/frozen_bundles.md).
 
 ```bash
 python scripts/sync/sync_bundles.py
@@ -230,10 +222,9 @@ Then re-run `python scripts/sync/sync_data.py --templates-dir templates` to appl
 
 ---
 
-## Step 9 — Bump Version
+## Step 9 — Bump Version (release PRs only)
 
-Increment the `version` field in the root `pyproject.toml`. CI uses this to
-detect which subpackages changed and publishes only affected packages to PyPI.
+See [`scripts/docs/frozen_bundles.md`](../../scripts/docs/frozen_bundles.md). Bump root `pyproject.toml` only for intentional PyPI releases (`release` label).
 
 ---
 
@@ -246,7 +237,7 @@ detect which subpackages changed and publishes only affected packages to PyPI.
 | "Add a thumbnail for template X" | Step 2 only — add/replace thumbnail, validate |
 | "Register my template in the index" | Steps 3–4, then validate and sync |
 | "Embed models into this workflow" | Step 5 only |
-| "What bundle does this template go in?" | Inspect `mediaType` / tags; advise `media-image`, `media-video`, `media-api`, or `media-other` |
+| "What bundle does this template go in?" | Use `media-assets-01` for new template media; legacy `media-*` bundles are frozen |
 | "Validate my template" | Step 7 only |
 | "Sync translations" | Step 8 only |
 | "Bump the version" | Step 9 only |
@@ -260,8 +251,9 @@ detect which subpackages changed and publishes only affected packages to PyPI.
 |------------|---------|
 | `templates/` | Workflow JSON files and thumbnail images |
 | `templates/index.json` | Master template manifest (English) |
-| `bundles.json` | Maps template names → media-type bundles |
-| `pyproject.toml` | Root package version (bump before PR) |
+| `bundles.json` | Maps template names → bundle arrays |
+| `scripts/docs/frozen_bundles.md` | Frozen legacy `media-*` policy and inventory |
+| `pyproject.toml` | Root meta version — bump only for intentional PyPI releases |
 | `scripts/sync/sync_bundles.py` | Regenerate manifest + copy assets to packages |
 | `scripts/validate/validate_templates.py` | Validate template JSON structure |
 | `scripts/validate/validate_thumbnails.py` | Validate thumbnail files |

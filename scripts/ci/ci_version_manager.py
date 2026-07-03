@@ -3,12 +3,23 @@
 Auto-bump sub-package versions only when the root pyproject.toml version has been
 changed (e.g. by the PR author). Otherwise skip bumping to avoid unnecessary
 version churn on every template-only PR.
+
+Frozen legacy media packages: scripts/docs/frozen_bundles.md
 """
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Set, List, Optional
+
+_LIB_DIR = Path(__file__).resolve().parent.parent / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+
+from paths import VERSION_POLICY_FILE  # noqa: E402
+from version_policy import get_frozen_packages as _get_frozen_packages_from_policy  # noqa: E402
+from version_policy import load_version_policy  # noqa: E402
 
 ROOT = Path.cwd()
 
@@ -97,6 +108,15 @@ def _manifest_media_assets_changed(old_manifest: dict, cur_manifest: dict, bundl
 
 def run_git(args: List[str]) -> str:
     return subprocess.check_output(["git", *args], cwd=ROOT).decode().strip()
+
+
+def get_frozen_packages() -> Set[str]:
+    """Packages excluded from CI auto-bump. See scripts/docs/frozen_bundles.md."""
+    try:
+        return _get_frozen_packages_from_policy(load_version_policy(VERSION_POLICY_FILE))
+    except Exception as exc:
+        print(f"Warning: could not read {VERSION_POLICY_FILE}: {exc}")
+        return set()
 
 
 def root_version_changed() -> bool:
@@ -324,10 +344,17 @@ def get_changed_packages() -> Set[str]:
             else:
                 print(f"Package {pkg} up to date since version {current_version}")
 
+        frozen = get_frozen_packages()
+        if frozen:
+            skipped = affected & frozen
+            if skipped:
+                print(f"Skipping frozen packages (no auto-bump): {sorted(skipped)}")
+            affected -= frozen
+
         # If any non-meta packages changed, also bump meta
         if affected - {"meta"}:
             affected.add("meta")
-            
+
         return affected
     except Exception as e:
         print(f"Error in change detection: {e}")
@@ -343,9 +370,10 @@ def get_changed_packages() -> Set[str]:
         }
 
 def bump_versions(packages: Set[str]) -> None:
+    frozen = get_frozen_packages()
     # Auto-bump individual packages (core, media-api, etc.) but not the root meta package
     for pkg in packages:
-        if pkg == "meta":
+        if pkg == "meta" or pkg in frozen:
             continue  # Root pyproject.toml version is manually controlled
         
         paths = [f"packages/{pkg}/pyproject.toml"]
@@ -388,8 +416,12 @@ def update_dependencies() -> None:
         "media_assets_01": "packages/media_assets_01/pyproject.toml",
     }
     
+    frozen = get_frozen_packages()
+
     # Get versions for packages that were auto-bumped
     for pkg, path in pyprojects.items():
+        if pkg in frozen:
+            continue
         if pkg in non_meta_packages and Path(path).exists():
             text = Path(path).read_text()
             match = version_re.search(text)

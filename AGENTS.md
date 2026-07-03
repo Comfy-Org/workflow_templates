@@ -14,8 +14,12 @@
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
 - `python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail` — CI-style static compat scan
+- `python scripts/sync/sync_frozen_inventory.py` — Regenerate frozen bundle template inventory from `bundles.json`
+- `python scripts/ci/check_frozen_policy.py --base-ref origin/main` — Dry-run frozen-bundle PR reminder locally
 
 **MCP index pipeline:** see skill `.claude/skills/managing-mcp-index/SKILL.md` and `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md`. Do not confuse with hub i18n (`i18n`) or site AI (`site/scripts/generate-ai.ts`).
+
+**Frozen legacy media bundles:** see [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (policy, inventory, CI reminders, publishing).
 
 ## Archiving templates
 
@@ -33,7 +37,7 @@ The script moves the workflow JSON and thumbnails to `archived/`, removes the en
 1. Set `"status": "active"` on the template in `archived/index.json`
 2. Run the same script (restore runs first, then any pending archives)
 
-**After archive or restore:** bump `pyproject.toml` version and run `npm run sync:bundles` (or `python3 scripts/sync/sync_bundles.py`).
+**After archive or restore:** if `bundles.json` frozen-bundle rows changed, run `python scripts/sync/sync_frozen_inventory.py`. See [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) — archive does not require a legacy media wheel bump unless you intend a PyPI release.
 
 ## Architecture
 - **Monorepo** with Nx, Python packages, and Astro site
@@ -55,8 +59,8 @@ Root `scripts/` is organized by role:
 | `scripts/validate/` | Validation & analysis (CI) | `validate_templates.py`, `check_links.py`, `analyze_models.py` |
 | `scripts/comfyui_node_compat/` | ComfyUI node baseline vs templates | `check.py` |
 | `scripts/blueprints/` | Blueprint-specific import | `import_blueprints.py` |
-| `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_pypi_quota.py` |
-| `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `mcp/models_registry.json`, `mcp/template_cache.json` |
+| `scripts/ci/` | Release pipeline only | `ci_version_manager.py`, `check_frozen_policy.py`, `check_pypi_quota.py` |
+| `scripts/data/` | Static config JSON | `i18n.json`, `whitelist.json`, `version_policy.json`, `frozen_bundle_inventory.json`, `mcp/*` |
 | `scripts/lib/` | Shared importable modules | `paths.py`, `locale_index_files.py`, `ai/` |
 | `scripts/maintenance/` | Local-only / one-off tools | `archive_templates.py`, `check_templates.sh` |
 | `scripts/docs/` | Script-specific markdown docs | `whitelist.md`, `check_input_assets.md` |
@@ -124,7 +128,7 @@ For full site-specific instructions, see `site/AGENTS.md`.
 - **Python**: Ruff linter, line-length 100, target py312. Select rules: E, F
 - **Templates**: JSON workflow files with embedded model metadata. Thumbnails named `{template}-1.webp`
 - **Naming**: snake_case for Python/templates
-- Bump version in root `pyproject.toml` when adding/modifying templates
+- Bump root `pyproject.toml` version only when intentionally releasing to PyPI (`release` label). Template-only / archive PRs usually leave the root version unchanged.
 
 ### Vue 3 & Astro Standards (site/)
 - All Vue components use `<script setup lang="ts">` with Composition API only — no Options API, no mixins
