@@ -1,4 +1,4 @@
-"""Shared helpers for frozen package and archived template policy."""
+"""Shared helpers for frozen legacy media package policy."""
 
 from __future__ import annotations
 
@@ -39,6 +39,12 @@ def load_version_policy(policy_file: Path) -> dict[str, Any]:
     return json.loads(policy_file.read_text(encoding="utf-8"))
 
 
+def load_bundles(bundles_file: Path) -> dict[str, list[str]]:
+    if not bundles_file.exists():
+        return {}
+    return json.loads(bundles_file.read_text(encoding="utf-8"))
+
+
 def get_frozen_packages(policy: dict[str, Any]) -> set[str]:
     return set(policy.get("frozen_packages", []))
 
@@ -52,24 +58,6 @@ def get_frozen_bundle_map(policy: dict[str, Any]) -> dict[str, str]:
     return {bundle: pkg for bundle, pkg in BUNDLE_PACKAGE_MAP.items() if pkg in frozen}
 
 
-def archived_index_path(policy: dict[str, Any], repo_root: Path) -> Path:
-    rel = policy.get("archived_templates_index", "archived/index.json")
-    return repo_root / rel
-
-
-def load_archived_template_names(archived_index_file: Path) -> list[str]:
-    if not archived_index_file.exists():
-        return []
-    data = json.loads(archived_index_file.read_text(encoding="utf-8"))
-    names: list[str] = []
-    for category in data:
-        for template in category.get("templates", []):
-            name = template.get("name")
-            if name:
-                names.append(name)
-    return sorted(names)
-
-
 def get_pinned_package_versions(pyproject_file: Path, package_ids: set[str]) -> dict[str, str]:
     if not pyproject_file.exists() or not package_ids:
         return {}
@@ -81,6 +69,47 @@ def get_pinned_package_versions(pyproject_file: Path, package_ids: set[str]) -> 
         if match:
             versions[pkg] = match.group(1)
     return versions
+
+
+def build_frozen_bundle_inventory(
+    bundles: dict[str, list[str]],
+    policy: dict[str, Any],
+    pyproject_file: Path,
+) -> dict[str, Any]:
+    frozen_bundles = get_frozen_bundle_map(policy)
+    frozen_packages = set(frozen_bundles.values())
+    pinned = get_pinned_package_versions(pyproject_file, frozen_packages)
+    inventory_bundles: dict[str, Any] = {}
+    for bundle_name in sorted(frozen_bundles):
+        pkg = frozen_bundles[bundle_name]
+        inventory_bundles[bundle_name] = {
+            "package": pkg,
+            "pinned_version": pinned.get(pkg),
+            "templates": sorted(bundles.get(bundle_name, [])),
+        }
+    return {
+        "source": "bundles.json",
+        "description": (
+            "Templates assigned to frozen legacy media bundles. "
+            "Regenerate after bundles.json changes: python scripts/sync/sync_frozen_inventory.py"
+        ),
+        "bundles": inventory_bundles,
+    }
+
+
+def load_frozen_bundle_inventory(inventory_file: Path) -> dict[str, Any]:
+    if not inventory_file.exists():
+        return {"bundles": {}}
+    return json.loads(inventory_file.read_text(encoding="utf-8"))
+
+
+def frozen_template_membership(inventory: dict[str, Any]) -> dict[str, str]:
+    """Map template id -> frozen bundle name."""
+    mapping: dict[str, str] = {}
+    for bundle_name, entry in inventory.get("bundles", {}).items():
+        for template_id in entry.get("templates", []):
+            mapping[template_id] = bundle_name
+    return mapping
 
 
 def template_id_from_asset_path(file_path: str, bundles: dict[str, list[str]] | None = None) -> str:
@@ -97,6 +126,14 @@ def template_id_from_asset_path(file_path: str, bundles: dict[str, list[str]] | 
         if stem in all_ids:
             return stem
     return candidate
+
+
+def is_workflow_template_path(file_path: str) -> bool:
+    return (
+        file_path.startswith("templates/")
+        and file_path.endswith(".json")
+        and not file_path.startswith("templates/index")
+    )
 
 
 def is_media_template_asset_path(file_path: str) -> bool:

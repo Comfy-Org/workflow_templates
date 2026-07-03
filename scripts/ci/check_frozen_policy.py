@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Detect PR changes that would affect frozen legacy media packages or archived templates.
+Detect PR changes that touch templates assigned to frozen legacy media bundles.
 
+Uses scripts/data/frozen_bundle_inventory.json (generated from bundles.json).
 Writes a PR comment when impacts are found. Informational only (exit 0).
 """
 from __future__ import annotations
@@ -19,21 +20,27 @@ _LIB_DIR = Path(__file__).resolve().parent.parent / "lib"
 if str(_LIB_DIR) not in sys.path:
     sys.path.insert(0, str(_LIB_DIR))
 
-from paths import REPO_ROOT, VERSION_POLICY_FILE  # noqa: E402
+from paths import (  # noqa: E402
+    FROZEN_BUNDLE_INVENTORY_FILE,
+    REPO_ROOT,
+    VERSION_POLICY_FILE,
+)
 from version_policy import (  # noqa: E402
-    archived_index_path,
+    build_frozen_bundle_inventory,
+    frozen_template_membership,
     get_frozen_bundle_map,
     get_frozen_packages,
-    get_pinned_package_versions,
     is_media_template_asset_path,
-    load_archived_template_names,
+    is_workflow_template_path,
+    load_bundles,
+    load_frozen_bundle_inventory,
     load_version_policy,
     template_id_from_asset_path,
 )
 
 COMMENT_MARKER = "<!-- frozen-policy-check -->"
-MAX_ARCHIVED_LISTED = 40
-MAX_CHANGE_LINES = 25
+MAX_TEMPLATES_LISTED = 30
+MAX_CHANGE_LINES = 20
 
 
 @dataclass(frozen=True)
@@ -72,12 +79,23 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
     if not changed:
         return []
 
-    bundles_path = REPO_ROOT / "bundles.json"
-    bundles = json.loads(bundles_path.read_text(encoding="utf-8")) if bundles_path.exists() else {}
-    template_to_bundle: dict[str, str] = {}
-    for bundle_name, template_ids in bundles.items():
-        for template_id in template_ids:
-            template_to_bundle[template_id] = bundle_name
+    bundles = load_bundles(REPO_ROOT / "bundles.json")
+    inventory = load_frozen_bundle_inventory(FROZEN_BUNDLE_INVENTORY_FILE)
+    expected_inventory = build_frozen_bundle_inventory(
+        bundles, policy, REPO_ROOT / "pyproject.toml"
+    )
+    if inventory.get("bundles") != expected_inventory.get("bundles"):
+        impacts.append(
+            PolicyImpact(
+                kind="inventory_stale",
+                detail=(
+                    "`scripts/data/frozen_bundle_inventory.json` is out of date with `bundles.json`. "
+                    "Run `python scripts/sync/sync_frozen_inventory.py`."
+                ),
+            )
+        )
+
+    membership = frozen_template_membership(expected_inventory)
 
     for file_path in changed:
         for pkg in frozen_packages:
@@ -85,50 +103,30 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
                 impacts.append(
                     PolicyImpact(
                         kind="frozen_package_tree",
-                        detail=f"Modified `packages/{pkg}/` (`{file_path}`). "
-                        "Frozen packages are not auto-bumped or published unless you release manually.",
-                    )
-                )
-
-        if is_media_template_asset_path(file_path):
-            template_id = template_id_from_asset_path(file_path, bundles)
-            bundle_name = template_to_bundle.get(template_id)
-            if bundle_name in frozen_bundles:
-                pkg = frozen_bundles[bundle_name]
-                impacts.append(
-                    PolicyImpact(
-                        kind="frozen_bundle_media_asset",
                         detail=(
-                            f"Media asset `{file_path}` belongs to frozen bundle `{bundle_name}` "
-                            f"(`{pkg}`). Legacy wheels stay pinned; use `media-assets-01` for new assets."
+                            f"Modified frozen package tree `packages/{pkg}/` (`{file_path}`). "
+                            "CI will not auto-bump or publish this wheel."
                         ),
                     )
                 )
 
-    archived_changes = [file_path for file_path in changed if file_path.startswith("archived/")]
-    if archived_changes:
-        workflow_or_asset = [
-            f for f in archived_changes if f.startswith("archived/") and not f.startswith("archived/index")
-            and not f.endswith("archived_i18n.json")
-        ]
-        index_changes = [f for f in archived_changes if "/index" in f or f.endswith("archived_i18n.json")]
-        if workflow_or_asset:
+        template_id: str | None = None
+        if is_workflow_template_path(file_path):
+            template_id = Path(file_path).stem
+        elif is_media_template_asset_path(file_path):
+            template_id = template_id_from_asset_path(file_path, bundles)
+
+        if template_id and template_id in membership:
+            bundle_name = membership[template_id]
+            pkg = frozen_bundles[bundle_name]
+            file_kind = "workflow JSON" if is_workflow_template_path(file_path) else "media asset"
             impacts.append(
                 PolicyImpact(
-                    kind="archived_templates",
+                    kind="frozen_bundle_template_file",
                     detail=(
-                        f"Changed {len(workflow_or_asset)} archived template file(s) under `archived/` "
-                        f"(e.g. `{workflow_or_asset[0]}`)."
-                    ),
-                )
-            )
-        if index_changes:
-            impacts.append(
-                PolicyImpact(
-                    kind="archived_index",
-                    detail=(
-                        f"Updated archived hub index/i18n ({len(index_changes)} file(s)). "
-                        "Inventory lives in `archived/index.json`."
+                        f"Changed {file_kind} `{file_path}` for template `{template_id}`, "
+                        f"which is assigned to frozen bundle `{bundle_name}` (`{pkg}`). "
+                        f"Legacy `{pkg}` stays pinned; put new work in `{policy.get('recommended_asset_bundle', 'media-assets-01')}`."
                     ),
                 )
             )
@@ -140,7 +138,6 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
                 old_ids = set(old_bundles.get(bundle_name, []))
                 new_ids = set(bundles.get(bundle_name, []))
                 added = sorted(new_ids - old_ids)
-                removed = sorted(old_ids - new_ids)
                 if added:
                     impacts.append(
                         PolicyImpact(
@@ -148,18 +145,7 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
                             detail=(
                                 f"Added to frozen bundle `{bundle_name}` (`{pkg}`): "
                                 f"{', '.join(f'`{name}`' for name in added)}. "
-                                "New templates should use `media-assets-01`, not legacy media bundles."
-                            ),
-                        )
-                    )
-                if removed:
-                    impacts.append(
-                        PolicyImpact(
-                            kind="frozen_bundle_assignment_removed",
-                            detail=(
-                                f"Removed from frozen bundle `{bundle_name}` (`{pkg}`): "
-                                f"{', '.join(f'`{name}`' for name in removed)}. "
-                                "This does not bump or update the frozen PyPI wheel."
+                                f"Use `{policy.get('recommended_asset_bundle', 'media-assets-01')}` for new templates instead."
                             ),
                         )
                     )
@@ -196,18 +182,21 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
 
 def build_comment(impacts: list[PolicyImpact]) -> str:
     policy = load_version_policy(VERSION_POLICY_FILE)
-    frozen_packages = get_frozen_packages(policy)
-    frozen_bundles = get_frozen_bundle_map(policy)
-    pinned = get_pinned_package_versions(REPO_ROOT / "pyproject.toml", frozen_packages)
-    archived_names = load_archived_template_names(archived_index_path(policy, REPO_ROOT))
+    bundles = load_bundles(REPO_ROOT / "bundles.json")
+    inventory = build_frozen_bundle_inventory(
+        bundles, policy, REPO_ROOT / "pyproject.toml"
+    )
     recommended_bundle = policy.get("recommended_asset_bundle", "media-assets-01")
+    inventory_path = policy.get(
+        "frozen_bundle_inventory", "scripts/data/frozen_bundle_inventory.json"
+    )
 
     lines = [
         COMMENT_MARKER,
-        "## Frozen package policy reminder",
+        "## Frozen bundle policy reminder",
         "",
-        "This PR touches **frozen legacy media bundles** or **archived templates**. "
-        "These packages are excluded from CI auto-bump; pinned versions only change when you release manually.",
+        "This PR changes files tied to **frozen legacy media bundles** in `bundles.json`. "
+        "Those PyPI packages are pinned and excluded from CI auto-bump.",
         "",
         "### Changes detected in this PR",
     ]
@@ -216,36 +205,39 @@ def build_comment(impacts: list[PolicyImpact]) -> str:
     if len(impacts) > MAX_CHANGE_LINES:
         lines.append(f"- … and {len(impacts) - MAX_CHANGE_LINES} more impact(s)")
 
-    lines.extend(["", "### Frozen packages (CI will not auto-bump)", ""])
-    lines.append("| Bundle | PyPI package | Pinned version |")
-    lines.append("| --- | --- | --- |")
-    for bundle_name, pkg in sorted(frozen_bundles.items()):
-        pip_name = f"`comfyui-workflow-templates-{pkg.replace('_', '-')}`"
-        version = pinned.get(pkg, "—")
-        lines.append(f"| `{bundle_name}` | {pip_name} | `{version}` |")
-
-    lines.extend(["", f"### Archived templates ({len(archived_names)} total)", ""])
-    if archived_names:
-        listed = archived_names[:MAX_ARCHIVED_LISTED]
-        lines.append(", ".join(f"`{name}`" for name in listed))
-        if len(archived_names) > MAX_ARCHIVED_LISTED:
-            lines.append("")
-            lines.append(
-                f"_…and {len(archived_names) - MAX_ARCHIVED_LISTED} more in "
-                f"`{policy.get('archived_templates_index', 'archived/index.json')}`._"
-            )
-    else:
-        lines.append("_No archived templates listed yet._")
-
     lines.extend(
         [
             "",
+            f"### Frozen bundle inventory (from `{inventory_path}`)",
+            "",
+        ]
+    )
+    for bundle_name in sorted(inventory.get("bundles", {})):
+        entry = inventory["bundles"][bundle_name]
+        pkg = entry["package"]
+        version = entry.get("pinned_version") or "—"
+        templates = entry.get("templates", [])
+        lines.append(
+            f"**`{bundle_name}`** → `{pkg}` @ `{version}` — {len(templates)} template(s)"
+        )
+        if templates:
+            listed = templates[:MAX_TEMPLATES_LISTED]
+            lines.append(", ".join(f"`{name}`" for name in listed))
+            if len(templates) > MAX_TEMPLATES_LISTED:
+                lines.append(
+                    f"_…and {len(templates) - MAX_TEMPLATES_LISTED} more in `{inventory_path}`._"
+                )
+        lines.append("")
+
+    lines.extend(
+        [
             "### What to do",
-            f"- Put **new template media assets** in bundle `{recommended_bundle}`, not legacy `media-*` bundles.",
-            "- Workflow/index JSON changes bump the `json` package only.",
-            "- To intentionally ship legacy media wheels: manually bump `packages/<pkg>/pyproject.toml`, "
-            "update root pins, and temporarily remove the package from "
-            "`scripts/data/version_policy.json` → `frozen_packages`.",
+            f"- Assign **new** templates to `{recommended_bundle}`, not `media-api` / `media-image` / `media-video` / `media-other`.",
+            "- Workflow JSON still ships via the `json` package; legacy media wheels do not update automatically.",
+            "- After editing frozen bundle assignments in `bundles.json`, run "
+            "`python scripts/sync/sync_frozen_inventory.py`.",
+            "- To intentionally release a legacy media wheel: manually bump `packages/<pkg>/pyproject.toml` "
+            "and root pins, and temporarily remove the package from `frozen_packages`.",
             "",
             "<sub>Generated by `scripts/ci/check_frozen_policy.py`</sub>",
         ]
@@ -262,10 +254,10 @@ def main() -> int:
 
     impacts = detect_impacts(args.base_ref)
     if not impacts:
-        print("No frozen-package or archived-template policy impacts detected.")
+        print("No frozen-bundle policy impacts detected.")
         return 0
 
-    print(f"Detected {len(impacts)} frozen-policy impact(s):")
+    print(f"Detected {len(impacts)} frozen-bundle impact(s):")
     for impact in impacts:
         print(f"  [{impact.kind}] {impact.detail}")
 
