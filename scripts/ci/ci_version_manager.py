@@ -7,11 +7,19 @@ version churn on every template-only PR.
 import json
 import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Set, List, Optional
 
+_LIB_DIR = Path(__file__).resolve().parent.parent / "lib"
+if str(_LIB_DIR) not in sys.path:
+    sys.path.insert(0, str(_LIB_DIR))
+
+from paths import VERSION_POLICY_FILE  # noqa: E402
+from version_policy import get_frozen_packages as _get_frozen_packages_from_policy  # noqa: E402
+from version_policy import load_version_policy  # noqa: E402
+
 ROOT = Path.cwd()
-VERSION_POLICY_FILE = ROOT / "scripts" / "data" / "version_policy.json"
 
 MEDIA_ASSET_EXTENSIONS = {
     ".webp", ".png", ".jpg", ".jpeg", ".gif", ".mp4", ".webm",
@@ -102,11 +110,8 @@ def run_git(args: List[str]) -> str:
 
 def get_frozen_packages() -> Set[str]:
     """Packages excluded from CI auto-bump (see scripts/data/version_policy.json)."""
-    if not VERSION_POLICY_FILE.exists():
-        return set()
     try:
-        data = json.loads(VERSION_POLICY_FILE.read_text(encoding="utf-8"))
-        return set(data.get("frozen_packages", []))
+        return _get_frozen_packages_from_policy(load_version_policy(VERSION_POLICY_FILE))
     except Exception as exc:
         print(f"Warning: could not read {VERSION_POLICY_FILE}: {exc}")
         return set()

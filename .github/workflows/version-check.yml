@@ -28,6 +28,7 @@ on:
       - 'blueprints_bundles.json'
       - 'pyproject.toml'
       - 'scripts/data/version_policy.json'
+      - 'archived/**'
 
 permissions:
   contents: write
@@ -56,11 +57,13 @@ jobs:
             blueprints_bundles.json
             scripts/
             scripts/data/version_policy.json
+            scripts/ci/check_frozen_policy.py
             scripts/ci/check_pypi_quota.py
             scripts/ci/comfyui_reference.py
             .github/pypi-packages.json
             packages/
             pyproject.toml
+            archived/index.json
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -108,6 +111,55 @@ jobs:
             git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
           fi
           git cat-file -e "${BASE_SHA}^{commit}"
+
+      - name: Check frozen package and archive policy
+        id: frozen_policy
+        run: |
+          python scripts/ci/check_frozen_policy.py \
+            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --comment-file pr-frozen-policy-comment.md \
+            --github-summary
+          if [ -f pr-frozen-policy-comment.md ]; then
+            echo "post_comment=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "post_comment=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post frozen policy comment on PR
+        if: steps.frozen_policy.outputs.post_comment == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- frozen-policy-check -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-frozen-policy-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No frozen policy comment file');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Detect release version vs base branch (PyPI comment gate)
         id: release_detect

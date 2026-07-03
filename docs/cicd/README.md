@@ -28,6 +28,7 @@ Template Added → Version Check → Package Bump → Publish → PyPI + GitHub 
 - Analyzes git history since last package tag
 - Bumps packages with template changes, except packages listed in `scripts/data/version_policy.json` (`frozen_packages`)
 - Updates meta package dependencies (exact pinning `==x.y.z`) for bumped packages only
+- Posts a PR comment via `scripts/ci/check_frozen_policy.py` when changes touch frozen legacy bundles, archived templates, or frozen package pins (see inventory in `archived/index.json`)
 
 ### 3. Publishing (`publish.yml`)
 - Triggers on `pyproject.toml` changes (main branch)
@@ -57,6 +58,7 @@ Template Added → Version Check → Package Bump → Publish → PyPI + GitHub 
 - `scripts/validate/check_input_assets.py` - Input asset validation
 
 ### CI Utilities  
+- `scripts/ci/check_frozen_policy.py` - PR comment when frozen media bundles or archived templates are affected
 - `scripts/ci/validate_bundles.sh` - Bundle assignment validation (shared)
 - `scripts/ci/get_pypi_version.sh` - Robust PyPI version fetching (shared)
 - `scripts/ci/get_version.sh` - Consistent pyproject.toml version extraction (shared)
