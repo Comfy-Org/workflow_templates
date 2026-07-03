@@ -76,6 +76,7 @@ except ImportError:
 
 from locale_index_files import LANGUAGE_FILES  # noqa: E402
 from paths import I18N_FILE  # noqa: E402
+from run_click_coverage import log_run_click_coverage  # noqa: E402
 
 
 def _io_entry_has_nonempty_file(entry: Any) -> bool:
@@ -84,41 +85,6 @@ def _io_entry_has_nonempty_file(entry: Any) -> bool:
         return False
     file_val = entry.get("file")
     return isinstance(file_val, str) and bool(file_val.strip())
-
-
-# ~77% coverage is healthy (some templates aren't in Algolia yet); below 50% signals
-# a real slug↔name join break, where coverage craters toward 0.
-RUN_CLICK_COVERAGE_WARN_THRESHOLD = 0.5
-
-
-def compute_run_click_coverage(master_data: list, usage_data: Dict[str, int]) -> Tuple[int, int]:
-    """Return (covered, total): templates whose ``name`` has a run-click CSV entry."""
-    total = 0
-    covered = 0
-    for category in master_data:
-        for template in category.get("templates", []):
-            total += 1
-            if template.get("name", "") in usage_data:
-                covered += 1
-    return covered, total
-
-
-def log_run_click_coverage(master_data: list, usage_data: Dict[str, int]) -> None:
-    """Print run-click coverage; warn when it drops below threshold (join likely drifted).
-
-    Uses print() so the signal is always visible — the syncer's logger has no
-    handlers configured, so logger.info here would be swallowed in CLI/CI runs.
-    """
-    if not usage_data:
-        return
-    covered, total = compute_run_click_coverage(master_data, usage_data)
-    rate = covered / total if total else 0
-    print(f"  📊 Run-click coverage: {covered}/{total} ({rate:.0%})")
-    if rate < RUN_CLICK_COVERAGE_WARN_THRESHOLD:
-        print(
-            f"  ⚠️  Only {covered}/{total} templates got run-click data "
-            f"(< {RUN_CLICK_COVERAGE_WARN_THRESHOLD:.0%}) — Algolia slug↔name join may have drifted."
-        )
 
 
 class TemplateSyncer:
