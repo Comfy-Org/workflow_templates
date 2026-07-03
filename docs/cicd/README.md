@@ -5,10 +5,10 @@
 comfyui-workflow-templates/           # Meta package (depends on all others)
 ├── comfyui-workflow-templates-core   # Manifest + loader
 ├── comfyui-workflow-templates-json   # All workflow/index JSON
-├── comfyui-workflow-templates-media-api     # Legacy API assets (frozen — ~79 MB, PyPI 100 MB cap)
-├── comfyui-workflow-templates-media-video   # Legacy video assets (frozen — ~95 MB, near cap)
-├── comfyui-workflow-templates-media-image   # Legacy image assets (frozen — ~47 MB)
-├── comfyui-workflow-templates-media-other   # Legacy other assets (frozen — ~93 MB, near cap)
+├── comfyui-workflow-templates-media-api     # Legacy API assets (frozen — 0.3.84, 95.5 MB on PyPI)
+├── comfyui-workflow-templates-media-video   # Legacy video assets (frozen — 0.3.101, 99.5 MB on PyPI)
+├── comfyui-workflow-templates-media-image   # Legacy image assets (frozen — 0.3.160, 85.3 MB on PyPI)
+├── comfyui-workflow-templates-media-other   # Legacy other assets (frozen — 0.3.229, 85.0 MB on PyPI)
 ├── comfyui-workflow-templates-media-assets-01  # New template assets
 └── comfyui-subgraph-blueprints              # Subgraph blueprints
 ```

@@ -201,10 +201,10 @@ Templates in `bundles.json` map to Python packages:
 
 | Bundle        | Contents                      | PyPI status |
 | ------------- | ----------------------------- | ----------- |
-| `media-api`   | Templates using external APIs | **Frozen** (~79 MB; near PyPI 100 MB/file cap) |
-| `media-image` | Image generation/editing      | **Frozen** (~47 MB) |
-| `media-video` | Video generation              | **Frozen** (~95 MB; near PyPI 100 MB/file cap) |
-| `media-other` | Audio, 3D, utilities          | **Frozen** (~93 MB; near PyPI 100 MB/file cap) |
+| `media-api`   | Templates using external APIs | **Frozen** (0.3.84, **95.5 MB** on PyPI) |
+| `media-image` | Image generation/editing      | **Frozen** (0.3.160, **85.3 MB** on PyPI) |
+| `media-video` | Video generation              | **Frozen** (0.3.101, **99.5 MB** on PyPI) |
+| `media-other` | Audio, 3D, utilities          | **Frozen** (0.3.229, **85.0 MB** on PyPI) |
 | `media-assets-01` | **New** template thumbnails/media | Active |
 
 Frozen legacy `media-*` bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (why frozen, CI, publishing).

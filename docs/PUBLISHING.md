@@ -120,12 +120,12 @@ JSON fixes bump only the `json` package (~28MB). New templates assign assets via
 
 PyPI has a **~100 MB per-file** upload limit. That is the main reason the legacy `media-*` wheels are **frozen** — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md).
 
-Current approximate wheel sizes:
+Current wheel sizes on PyPI (pinned versions in root `pyproject.toml`):
 
-- `media_image`: ~47 MB
-- `media_other`: ~93 MB (near limit)
-- `media_video`: ~95 MB (near limit)
-- `media_api`: ~79 MB
+- `media_api` (0.3.84): **95.5 MB**
+- `media_image` (0.3.160): **85.3 MB**
+- `media_video` (0.3.101): **99.5 MB**
+- `media_other` (0.3.229): **85.0 MB**
 
 New template assets go to `media-assets-01`. Unfreezing a legacy wheel should only happen for a deliberate, larger change (split, cleanup, or redesign) — not routine template PRs.
 

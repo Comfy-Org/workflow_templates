@@ -6,14 +6,16 @@ This is separate from **hub archive** (`archived/`, `archive_templates.py`) — 
 
 ## Why these bundles are frozen
 
-PyPI enforces a **~100 MB per-file** upload limit per wheel. The legacy media bundles are large and still growing; several are already close to that cap:
+PyPI enforces a **~100 MB per-file** upload limit per wheel. The legacy media bundles are large; most pinned wheels are **85–99 MB** (queried from PyPI for versions in root `pyproject.toml`):
 
-| Bundle | PyPI package | Approx. wheel size | Notes |
-|--------|--------------|-------------------|--------|
-| `media-api` | `comfyui-workflow-templates-media-api` | ~79 MB | Frozen |
-| `media-image` | `comfyui-workflow-templates-media-image` | ~47 MB | Frozen |
-| `media-video` | `comfyui-workflow-templates-media-video` | ~95 MB | Near limit |
-| `media-other` | `comfyui-workflow-templates-media-other` | ~93 MB | Near limit |
+| Bundle | PyPI package | Pinned version | Wheel size (PyPI) | Notes |
+|--------|--------------|----------------|-------------------|--------|
+| `media-api` | `comfyui-workflow-templates-media-api` | 0.3.84 | **95.5 MB** | Near limit |
+| `media-image` | `comfyui-workflow-templates-media-image` | 0.3.160 | **85.3 MB** | Near limit |
+| `media-video` | `comfyui-workflow-templates-media-video` | 0.3.101 | **99.5 MB** | At limit |
+| `media-other` | `comfyui-workflow-templates-media-other` | 0.3.229 | **85.0 MB** | Near limit |
+
+Re-check sizes: `curl -s https://pypi.org/pypi/comfyui-workflow-templates-media-image/json` (wheel `size` field for the pinned version).
 
 We freeze these wheels so routine template work does **not** rebuild or republish them (which would consume PyPI project quota and risks hitting the 100 MB ceiling). **New template media** goes to **`media-assets-01`** instead.
 
