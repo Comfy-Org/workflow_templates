@@ -118,13 +118,18 @@ JSON fixes bump only the `json` package (~28MB). New templates assign assets via
 
 ## Package Size Considerations
 
-PyPI has a 100MB per-file upload limit. Our current package sizes:
-- `media_image`: ~47MB
-- `media_other`: ~93MB
-- `media_video`: ~95MB (approaching limit)
-- `media_api`: ~79MB
+PyPI has a **~100 MB per-file** upload limit. That is the main reason the legacy `media-*` wheels are **frozen** — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md).
 
-By using label-based publishing, we avoid building packages multiple times, which would waste storage and approach limits faster.
+Current approximate wheel sizes:
+
+- `media_image`: ~47 MB
+- `media_other`: ~93 MB (near limit)
+- `media_video`: ~95 MB (near limit)
+- `media_api`: ~79 MB
+
+New template assets go to `media-assets-01`. Unfreezing a legacy wheel should only happen for a deliberate, larger change (split, cleanup, or redesign) — not routine template PRs.
+
+Label-based publishing also avoids rebuilding wheels on every merge, which saves PyPI project quota (~10 GB per project).
 
 ## Troubleshooting
 

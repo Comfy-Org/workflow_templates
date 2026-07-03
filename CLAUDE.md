@@ -199,15 +199,15 @@ Standard ComfyUI workflow format with embedded model metadata:
 Templates in `bundles.json` map to Python packages:
 
 
-| Bundle        | Contents                      |
-| ------------- | ----------------------------- |
-| `media-api`   | Templates using external APIs |
-| `media-image` | Image generation/editing      |
-| `media-video` | Video generation              |
-| `media-other` | Audio, 3D, utilities          |
-| `media-assets-01` | **New** template thumbnails/media (active) |
+| Bundle        | Contents                      | PyPI status |
+| ------------- | ----------------------------- | ----------- |
+| `media-api`   | Templates using external APIs | **Frozen** (~79 MB; near PyPI 100 MB/file cap) |
+| `media-image` | Image generation/editing      | **Frozen** (~47 MB) |
+| `media-video` | Video generation              | **Frozen** (~95 MB; near PyPI 100 MB/file cap) |
+| `media-other` | Audio, 3D, utilities          | **Frozen** (~93 MB; near PyPI 100 MB/file cap) |
+| `media-assets-01` | **New** template thumbnails/media | Active |
 
-Frozen legacy `media-*` bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md).
+Frozen legacy `media-*` bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (why frozen, CI, publishing).
 
 ## Internationalization
 

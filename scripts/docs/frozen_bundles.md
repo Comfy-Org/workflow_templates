@@ -4,6 +4,21 @@ Legacy PyPI wheels `comfyui-workflow-templates-media-{api,image,video,other}` ar
 
 This is separate from **hub archive** (`archived/`, `archive_templates.py`) — archiving removes templates from the active hub index; frozen-bundle policy governs **pip wheel churn**.
 
+## Why these bundles are frozen
+
+PyPI enforces a **~100 MB per-file** upload limit per wheel. The legacy media bundles are large and still growing; several are already close to that cap:
+
+| Bundle | PyPI package | Approx. wheel size | Notes |
+|--------|--------------|-------------------|--------|
+| `media-api` | `comfyui-workflow-templates-media-api` | ~79 MB | Frozen |
+| `media-image` | `comfyui-workflow-templates-media-image` | ~47 MB | Frozen |
+| `media-video` | `comfyui-workflow-templates-media-video` | ~95 MB | Near limit |
+| `media-other` | `comfyui-workflow-templates-media-other` | ~93 MB | Near limit |
+
+We freeze these wheels so routine template work does **not** rebuild or republish them (which would consume PyPI project quota and risks hitting the 100 MB ceiling). **New template media** goes to **`media-assets-01`** instead.
+
+Unfreezing and shipping a new legacy wheel should be a **deliberate, rare** decision — e.g. a major split, asset cleanup, or architectural change — not part of normal template PRs.
+
 ## Config files
 
 | File | Role |
