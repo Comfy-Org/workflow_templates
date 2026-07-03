@@ -58,16 +58,17 @@ If you need to publish to PyPI after a PR was already merged without the `releas
 4. Check **"Force publish to PyPI"**
 5. Click **"Run workflow"**
 
-This bypasses the label check and publishes packages for the current version.
+This bypasses the label check. It still only uploads packages whose **local version differs from PyPI** (recovery mode). See [Frozen legacy media bundles](../scripts/docs/frozen_bundles.md).
 
 ## Version Bumping
 
-Version bumping is **automatic** via the `version-check.yml` workflow:
+See [Frozen legacy media bundles](../scripts/docs/frozen_bundles.md) for the full policy. Summary:
 
-1. When templates change in a PR, versions are auto-bumped
-2. Only the root `pyproject.toml` version is bumped
-3. Sub-package versions are synced automatically by `scripts/sync/sync_bundles.py`
-4. **Never manually edit package versions** unless necessary
+1. **Template-only PRs** (root `pyproject.toml` unchanged): no auto-bump.
+2. **Release PRs** (author bumps root version + `release` label): CI auto-bumps non-frozen sub-packages.
+3. **Frozen** `media-{api,image,video,other}`: never auto-bumped; pins stay fixed until a deliberate legacy release.
+
+**Do not** bump root version for hub-only changes (archive, metadata) unless you intend a PyPI release.
 
 ## Label Management
 
@@ -111,19 +112,24 @@ gh pr edit <PR-NUMBER> --add-label release
 |--------------|----------|--------|
 | `comfyui-workflow-templates-json` | All workflow + index JSON | Active |
 | `comfyui-workflow-templates-media-assets-01` | New template thumbnails/media | Active |
-| `comfyui-workflow-templates-media-{api,image,video,other}` | Legacy assets only (JSON stripped) | Frozen |
+| `comfyui-workflow-templates-media-{api,image,video,other}` | Legacy assets only (JSON stripped) | Frozen — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md) |
 
 JSON fixes bump only the `json` package (~28MB). New templates assign assets via `bundles.json` → `media-assets-01`.
 
 ## Package Size Considerations
 
-PyPI has a 100MB per-file upload limit. Our current package sizes:
-- `media_image`: ~47MB
-- `media_other`: ~93MB
-- `media_video`: ~95MB (approaching limit)
-- `media_api`: ~79MB
+PyPI has a **~100 MB per-file** upload limit. That is the main reason the legacy `media-*` wheels are **frozen** — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md).
 
-By using label-based publishing, we avoid building packages multiple times, which would waste storage and approach limits faster.
+Current wheel sizes on PyPI (pinned versions in root `pyproject.toml`):
+
+- `media_api` (0.3.84): **95.5 MB**
+- `media_image` (0.3.160): **85.3 MB**
+- `media_video` (0.3.101): **99.5 MB**
+- `media_other` (0.3.229): **85.0 MB**
+
+New template assets go to `media-assets-01`. Unfreezing a legacy wheel should only happen for a deliberate, larger change (split, cleanup, or redesign) — not routine template PRs.
+
+Label-based publishing also avoids rebuilding wheels on every merge, which saves PyPI project quota (~10 GB per project).
 
 ## Troubleshooting
 

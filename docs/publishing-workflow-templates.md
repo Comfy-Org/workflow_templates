@@ -102,7 +102,7 @@ Publishing to PyPI is automated via `.github/workflows/publish.yml`. This workfl
 4. **Creates a GitHub Release** with auto-generated release notes.
 5. **Includes recovery mode**: on manual dispatch, it checks all packages against PyPI and publishes any that are out of sync.
 
-Version bumping on PRs is handled separately by `.github/workflows/version-check.yml`, which runs `scripts/ci/ci_version_manager.py` to auto-bump affected packages and commit the changes back to the PR branch.
+Version bumping on PRs: [`version-check.yml`](../../.github/workflows/version-check.yml) + [`ci_version_manager.py`](../../scripts/ci/ci_version_manager.py). Frozen legacy `media-*` policy: [`scripts/docs/frozen_bundles.md`](../../scripts/docs/frozen_bundles.md).
 
 ## Recovery & Troubleshooting
 
