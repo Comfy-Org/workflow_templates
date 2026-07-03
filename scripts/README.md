@@ -8,6 +8,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 |------|---------|
 | Full local sync (i18n + bundles + validation) | `python scripts/sync/sync_data.py --templates-dir templates` |
 | Sync bundles only | `python scripts/sync/sync_bundles.py` |
+| Regenerate frozen bundle inventory | `python scripts/sync/sync_frozen_inventory.py` |
 | Sync blueprints | `python scripts/sync/sync_blueprints.py` |
 | Validate templates | `python scripts/validate/validate_templates.py` |
 | Validate manifests | `python scripts/validate/validate_manifests.py` |
@@ -27,7 +28,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | [`maintenance/`](maintenance/) | Local-only tools (archive, one-off fixes) |
 | [`data/`](data/) | Config files (`i18n.json`, `whitelist.json`) |
 | [`lib/`](lib/) | Shared modules (`locale_index_files.py`, `paths.py`) |
-| [`docs/`](docs/) | Script-specific documentation |
+| [`docs/`](docs/) | Script-specific documentation (`frozen_bundles.md`, `whitelist.md`, …) |
 
 ## `sync_data.py` pipeline
 
@@ -44,6 +45,14 @@ When you run `scripts/sync/sync_data.py`, it orchestrates:
 
 Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sync.
 
+## Script docs
+
+| Doc | Topic |
+|-----|-------|
+| [`docs/frozen_bundles.md`](docs/frozen_bundles.md) | Frozen legacy `media-*` bundles, inventory, CI, publishing |
+| [`docs/whitelist.md`](docs/whitelist.md) | `whitelist.json` for link/model/custom-node checks |
+| [`docs/check_input_assets.md`](docs/check_input_assets.md) | Input asset validation |
+
 ## CI mapping
 
 | Workflow | Scripts |
@@ -56,7 +65,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py` (static scan; PR comment only) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
-| `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `sync/sync_bundles.py`, `ci/*` |
+| `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `ci/check_frozen_policy.py`, `sync/sync_bundles.py`, `sync/sync_frozen_inventory.py`, `ci/*` |
 | `build-test.yml` | `sync/sync_bundles.py` |
 
 ## Maintenance tools (not in CI)
@@ -82,6 +91,8 @@ npm run mcp:models   # AI model registry
 
 - **`data/i18n.json`** — Translation strings and pending-translation tracking. See [`docs/I18N_GUIDE.md`](../docs/I18N_GUIDE.md).
 - **`data/whitelist.json`** — URL skip list, model-check ignores, custom-node allowlist. See [`docs/whitelist.md`](docs/whitelist.md).
+- **`data/version_policy.json`** — Frozen legacy media packages. See [`docs/frozen_bundles.md`](docs/frozen_bundles.md).
+- **`data/frozen_bundle_inventory.json`** — Template list per frozen bundle. Regenerate with `sync/sync_frozen_inventory.py` (see [`docs/frozen_bundles.md`](docs/frozen_bundles.md)).
 - **`data/mcp/api_node_model_options.json`** — Generated cache of API node `model` dropdown options (from ComfyUI source).
 - **`data/mcp/models_registry.json`** — Model profiles (summary, strengths, capabilities) for AI description generation.
 - **`data/mcp/template_cache.json`** — Per-template AI copy, versioned by workflow JSON hash.

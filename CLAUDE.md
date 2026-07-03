@@ -199,13 +199,15 @@ Standard ComfyUI workflow format with embedded model metadata:
 Templates in `bundles.json` map to Python packages:
 
 
-| Bundle        | Contents                      |
-| ------------- | ----------------------------- |
-| `media-api`   | Templates using external APIs |
-| `media-image` | Image generation/editing      |
-| `media-video` | Video generation              |
-| `media-other` | Audio, 3D, utilities          |
+| Bundle        | Contents                      | PyPI status |
+| ------------- | ----------------------------- | ----------- |
+| `media-api`   | Templates using external APIs | **Frozen** (0.3.84, **95.5 MB** on PyPI) |
+| `media-image` | Image generation/editing      | **Frozen** (0.3.160, **85.3 MB** on PyPI) |
+| `media-video` | Video generation              | **Frozen** (0.3.101, **99.5 MB** on PyPI) |
+| `media-other` | Audio, 3D, utilities          | **Frozen** (0.3.229, **85.0 MB** on PyPI) |
+| `media-assets-01` | **New** template thumbnails/media | Active |
 
+Frozen legacy `media-*` bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (why frozen, CI, publishing).
 
 ## Internationalization
 
@@ -326,7 +328,7 @@ Do NOT use inline `<script>` tags in `.astro` files that `dispatchEvent(new Cust
 - **Python**: Ruff, line-length 100, py312, rules E/F
 - **TypeScript/Astro**: ESLint + Prettier (configured in site/)
 - **Templates**: snake_case naming, JSON format
-- **Commits**: Bump version in `pyproject.toml` when modifying templates
+- **Commits**: Bump root `pyproject.toml` only for intentional PyPI releases (`release` label)
 
 ### Vue 3 & Astro Coding Standards
 
