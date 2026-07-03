@@ -22,12 +22,21 @@ interface AboutCard {
 interface Props {
   locale: Locale;
   heading: string;
+  /** Eyebrow above the heading. Defaults to the workflow label; model pages override it. */
+  eyebrowLabel?: string;
   paragraphs: string[];
   cards?: AboutCard[];
   banner?: { title: string; body: string; kicker?: string; cta: { label: string; href: string } };
 }
 
-const { locale, heading: aboutHeading, paragraphs, cards = [], banner } = Astro.props;
+const {
+  locale,
+  heading: aboutHeading,
+  eyebrowLabel = t('template.about', locale),
+  paragraphs,
+  cards = [],
+  banner,
+} = Astro.props;
 const hasCards = cards.length > 0;
 // Instance-scoped heading id so two renders on one page never collide.
 const headingId = `about-heading-${crypto.randomUUID().slice(0, 8)}`;
@@ -35,7 +44,7 @@ const headingId = `about-heading-${crypto.randomUUID().slice(0, 8)}`;
 
 <section aria-labelledby={headingId} class={`bg-page ${sectionPad}`}>
   <div class={inner}>
-    <p class={`${eyebrow} text-center`}>{t('template.about', locale)}</p>
+    <p class={`${eyebrow} text-center`}>{eyebrowLabel}</p>
     <h2 id={headingId} class={`${heading} mx-auto max-w-3xl text-balance text-center`}>
       {aboutHeading}
     </h2>
