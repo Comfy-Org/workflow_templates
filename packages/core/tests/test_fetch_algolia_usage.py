@@ -9,8 +9,11 @@ import csv
 import importlib.util
 import io
 import json
+import urllib.error
 from pathlib import Path
 from unittest import mock
+
+import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
@@ -74,18 +77,29 @@ def test_fetch_run_clicks_non_numeric_coerces_to_zero_without_aborting():
     assert result == {"bad": 0, "good": 5}
 
 
-def test_fetch_run_clicks_propagates_http_error():
-    import urllib.error
-
+def test_fetch_run_clicks_retries_then_propagates(monkeypatch):
+    # A persistent network error is retried MAX_ATTEMPTS times, then re-raised.
+    monkeypatch.setattr(fetch_algolia_usage.time, "sleep", lambda _: None)
     err = urllib.error.HTTPError("url", 500, "Server Error", {}, None)
-    with mock.patch("urllib.request.urlopen", side_effect=err):
-        with __import__("pytest").raises(urllib.error.HTTPError):
+    with mock.patch("urllib.request.urlopen", side_effect=err) as urlopen:
+        with pytest.raises(urllib.error.HTTPError):
             fetch_algolia_usage.fetch_run_clicks("app", "key", "templates_index")
+    assert urlopen.call_count == fetch_algolia_usage.MAX_ATTEMPTS
+
+
+def test_fetch_run_clicks_recovers_after_transient_error(monkeypatch):
+    # First call fails, second succeeds → no exception, data returned.
+    monkeypatch.setattr(fetch_algolia_usage.time, "sleep", lambda _: None)
+    ok = _page([{"slug": "a", "run_clicks": 3}])
+    with mock.patch(
+        "urllib.request.urlopen",
+        side_effect=[urllib.error.URLError("boom"), ok],
+    ):
+        result = fetch_algolia_usage.fetch_run_clicks("app", "key", "templates_index")
+    assert result == {"a": 3}
 
 
 def test_main_returns_1_when_fetch_raises(monkeypatch, tmp_path):
-    import urllib.error
-
     monkeypatch.setenv("ALGOLIA_API_KEY", "key")
     monkeypatch.setattr("sys.argv", _argv(tmp_path / "templates"))
     err = urllib.error.URLError("connection refused")

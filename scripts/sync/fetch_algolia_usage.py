@@ -21,6 +21,8 @@ import json
 import logging
 import os
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -28,6 +30,9 @@ DEFAULT_APP_ID = "4E0RO38HS8"
 DEFAULT_INDEX = "templates_index"
 # Algolia's per-request cap; the index fits one page today but we paginate.
 HITS_PER_PAGE = 1000
+# Retry the scheduled fetch through a transient hiccup rather than skip a whole cycle.
+MAX_ATTEMPTS = 3
+BACKOFF_SECONDS = 2
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -52,8 +57,15 @@ def _algolia_page(app_id: str, api_key: str, index: str, page: int) -> dict:
         },
         method="POST",
     )
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.load(response)
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return json.load(response)
+        except urllib.error.URLError as error:
+            if attempt == MAX_ATTEMPTS:
+                raise
+            logger.warning(f"Algolia request failed ({error}); retry {attempt}/{MAX_ATTEMPTS - 1}")
+            time.sleep(BACKOFF_SECONDS * attempt)
 
 
 def fetch_run_clicks(app_id: str, api_key: str, index: str) -> dict:
