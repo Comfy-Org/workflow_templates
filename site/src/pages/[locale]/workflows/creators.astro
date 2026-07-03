@@ -25,8 +25,7 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 }
 
 const typedLocale = locale as Locale;
-const profiles = await getProfileCache();
-const rankingMap = await fetchRankingMap();
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 
 // Fetch all workflows from hub API
 let allTemplates: SerializedTemplate[] = [];

@@ -522,8 +522,7 @@ export async function loadSerializedTemplates(
     { id: string; data: Parameters<typeof serializeCollectionEntry>[0] }[]
   >
 ): Promise<SerializedTemplate[]> {
-  const profiles = await getProfileCache();
-  const rankingMap = await fetchRankingMap();
+  const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
   try {
     const entries = await listWorkflowIndex();
     return entries.map((e) => serializeIndexEntry(e, profiles, rankingMap));

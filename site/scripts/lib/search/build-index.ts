@@ -101,10 +101,8 @@ export async function buildSearchIndex(): Promise<void> {
   const documents: SearchDocument[] = [];
 
   // Override usage with Algolia run_clicks so the popover's "X runs" matches ranking.
-  const rankingMap = await fetchRankingMap();
-
-  // Hub API is the primary source; content collection is only for local/offline builds
-  const hubEntries = await fetchIndexEntries();
+  // Both fetches are independent — run them concurrently.
+  const [rankingMap, hubEntries] = await Promise.all([fetchRankingMap(), fetchIndexEntries()]);
   if (hubEntries) {
     logger.info(`Building search index from hub API (${hubEntries.length} entries)`);
 

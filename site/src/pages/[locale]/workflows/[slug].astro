@@ -125,8 +125,7 @@ try {
 }
 
 // Fetch workflows for this creator from index
-const profiles = await getProfileCache();
-const rankingMap = await fetchRankingMap();
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 let serialized: SerializedTemplate[] = [];
 
 try {

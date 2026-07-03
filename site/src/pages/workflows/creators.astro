@@ -17,8 +17,7 @@ import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type Serialize
 import { fetchRankingMap } from '../../lib/ranking';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
-const profiles = await getProfileCache();
-const rankingMap = await fetchRankingMap();
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 
 // Fetch all workflows from hub API
 let allTemplates: SerializedTemplate[] = [];
