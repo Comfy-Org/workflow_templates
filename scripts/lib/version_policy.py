@@ -1,4 +1,4 @@
-"""Shared helpers for frozen legacy media package policy."""
+"""Shared helpers for frozen legacy media package policy. See scripts/docs/frozen_bundles.md."""
 
 from __future__ import annotations
 

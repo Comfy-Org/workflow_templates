@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Regenerate scripts/data/frozen_bundle_inventory.json from bundles.json + version policy."""
+"""
+Regenerate scripts/data/frozen_bundle_inventory.json from bundles.json + version policy.
+
+See scripts/docs/frozen_bundles.md
+"""
 
 from __future__ import annotations
 

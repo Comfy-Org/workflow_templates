@@ -205,7 +205,9 @@ Templates in `bundles.json` map to Python packages:
 | `media-image` | Image generation/editing      |
 | `media-video` | Video generation              |
 | `media-other` | Audio, 3D, utilities          |
+| `media-assets-01` | **New** template thumbnails/media (active) |
 
+Frozen legacy `media-*` bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md).
 
 ## Internationalization
 
@@ -326,7 +328,7 @@ Do NOT use inline `<script>` tags in `.astro` files that `dispatchEvent(new Cust
 - **Python**: Ruff, line-length 100, py312, rules E/F
 - **TypeScript/Astro**: ESLint + Prettier (configured in site/)
 - **Templates**: snake_case naming, JSON format
-- **Commits**: Bump version in `pyproject.toml` when modifying templates
+- **Commits**: Bump root `pyproject.toml` only for intentional PyPI releases (`release` label)
 
 ### Vue 3 & Astro Coding Standards
 

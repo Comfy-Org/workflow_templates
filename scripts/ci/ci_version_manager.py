@@ -3,6 +3,8 @@
 Auto-bump sub-package versions only when the root pyproject.toml version has been
 changed (e.g. by the PR author). Otherwise skip bumping to avoid unnecessary
 version churn on every template-only PR.
+
+Frozen legacy media packages: scripts/docs/frozen_bundles.md
 """
 import json
 import re
@@ -109,7 +111,7 @@ def run_git(args: List[str]) -> str:
 
 
 def get_frozen_packages() -> Set[str]:
-    """Packages excluded from CI auto-bump (see scripts/data/version_policy.json)."""
+    """Packages excluded from CI auto-bump. See scripts/docs/frozen_bundles.md."""
     try:
         return _get_frozen_packages_from_policy(load_version_policy(VERSION_POLICY_FILE))
     except Exception as exc:
