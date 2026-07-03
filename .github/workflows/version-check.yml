@@ -27,6 +27,12 @@ on:
       - 'blueprints/**'
       - 'blueprints_bundles.json'
       - 'pyproject.toml'
+      - 'scripts/data/version_policy.json'
+      - 'scripts/data/frozen_bundle_inventory.json'
+      - 'scripts/lib/paths.py'
+      - 'scripts/lib/version_policy.py'
+      - 'scripts/ci/check_frozen_policy.py'
+      - 'scripts/ci/ci_version_manager.py'
 
 permissions:
   contents: write
@@ -54,6 +60,8 @@ jobs:
             bundles.json
             blueprints_bundles.json
             scripts/
+            scripts/sync/sync_frozen_inventory.py
+            scripts/ci/check_frozen_policy.py
             scripts/ci/check_pypi_quota.py
             scripts/ci/comfyui_reference.py
             .github/pypi-packages.json
@@ -106,6 +114,57 @@ jobs:
             git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
           fi
           git cat-file -e "${BASE_SHA}^{commit}"
+
+      - name: Check frozen package and archive policy
+        id: frozen_policy
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python scripts/ci/check_frozen_policy.py \
+            --base-ref "$BASE_SHA" \
+            --comment-file pr-frozen-policy-comment.md \
+            --github-summary
+          if [ -f pr-frozen-policy-comment.md ]; then
+            echo "post_comment=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "post_comment=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post frozen bundle policy comment on PR
+        if: steps.frozen_policy.outputs.post_comment == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- frozen-policy-check -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-frozen-policy-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No frozen policy comment file');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
 
       - name: Detect release version vs base branch (PyPI comment gate)
         id: release_detect
