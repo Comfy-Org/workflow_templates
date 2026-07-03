@@ -36,6 +36,7 @@ def resolve_comfyui_dir() -> Path | None:
 
 I18N_FILE = DATA_DIR / "i18n.json"
 WHITELIST_FILE = DATA_DIR / "whitelist.json"
+VERSION_POLICY_FILE = DATA_DIR / "version_policy.json"
 
 # MCP pipeline data (scripts/mcp/)
 MODELS_REGISTRY_FILE = MCP_DATA_DIR / "models_registry.json"
