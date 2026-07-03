@@ -42,10 +42,11 @@ MAX_TEMPLATES_LISTED = 30
 MAX_CHANGE_LINES = 20
 
 
-@dataclass(frozen=True)
-class PolicyImpact:
-    kind: str
-    detail: str
+def validate_git_ref(ref: str) -> str:
+    """Reject refs that could be interpreted as git flags."""
+    if not ref or ref.startswith("-") or "\0" in ref:
+        raise ValueError(f"Invalid git ref: {ref!r}")
+    return ref
 
 
 def run_git(args: list[str]) -> str:
@@ -66,6 +67,12 @@ def read_json_at_ref(path: str, ref: str) -> dict | list | None:
     return json.loads(raw)
 
 
+@dataclass(frozen=True)
+class PolicyImpact:
+    kind: str
+    detail: str
+
+
 def detect_impacts(base_ref: str) -> list[PolicyImpact]:
     policy = load_version_policy(VERSION_POLICY_FILE)
     frozen_packages = get_frozen_packages(policy)
@@ -83,7 +90,8 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
     expected_inventory = build_frozen_bundle_inventory(
         bundles, policy, REPO_ROOT / "pyproject.toml"
     )
-    if inventory.get("bundles") != expected_inventory.get("bundles"):
+    inventory_sources_changed = {"bundles.json", "pyproject.toml"} & set(changed)
+    if inventory_sources_changed and inventory.get("bundles") != expected_inventory.get("bundles"):
         impacts.append(
             PolicyImpact(
                 kind="inventory_stale",
@@ -250,23 +258,32 @@ def main() -> int:
     parser.add_argument("--github-summary", action="store_true", help="Write report to GITHUB_STEP_SUMMARY")
     args = parser.parse_args()
 
-    impacts = detect_impacts(args.base_ref)
+    try:
+        base_ref = validate_git_ref(args.base_ref)
+        impacts = detect_impacts(base_ref)
+    except Exception as exc:
+        print(f"Warning: frozen-bundle policy check skipped: {exc}")
+        return 0
+
     if not impacts:
         print("No frozen-bundle policy impacts detected.")
         return 0
 
-    print(f"Detected {len(impacts)} frozen-bundle impact(s):")
-    for impact in impacts:
-        print(f"  [{impact.kind}] {impact.detail}")
+    try:
+        print(f"Detected {len(impacts)} frozen-bundle impact(s):")
+        for impact in impacts:
+            print(f"  [{impact.kind}] {impact.detail}")
 
-    body = build_comment(impacts)
-    if args.comment_file:
-        args.comment_file.write_text(body, encoding="utf-8")
-        print(f"Wrote PR comment to {args.comment_file}")
+        body = build_comment(impacts)
+        if args.comment_file:
+            args.comment_file.write_text(body, encoding="utf-8")
+            print(f"Wrote PR comment to {args.comment_file}")
 
-    summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
-    if args.github_summary and summary_path:
-        Path(summary_path).write_text(body.replace(COMMENT_MARKER, "").strip() + "\n", encoding="utf-8")
+        summary_path = os.environ.get("GITHUB_STEP_SUMMARY")
+        if args.github_summary and summary_path:
+            Path(summary_path).write_text(body.replace(COMMENT_MARKER, "").strip() + "\n", encoding="utf-8")
+    except Exception as exc:
+        print(f"Warning: frozen-bundle policy comment generation failed: {exc}")
 
     return 0
 

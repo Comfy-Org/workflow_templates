@@ -29,6 +29,10 @@ on:
       - 'pyproject.toml'
       - 'scripts/data/version_policy.json'
       - 'scripts/data/frozen_bundle_inventory.json'
+      - 'scripts/lib/paths.py'
+      - 'scripts/lib/version_policy.py'
+      - 'scripts/ci/check_frozen_policy.py'
+      - 'scripts/ci/ci_version_manager.py'
 
 permissions:
   contents: write
@@ -56,8 +60,6 @@ jobs:
             bundles.json
             blueprints_bundles.json
             scripts/
-            scripts/data/version_policy.json
-            scripts/data/frozen_bundle_inventory.json
             scripts/sync/sync_frozen_inventory.py
             scripts/ci/check_frozen_policy.py
             scripts/ci/check_pypi_quota.py
@@ -115,9 +117,11 @@ jobs:
 
       - name: Check frozen package and archive policy
         id: frozen_policy
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           python scripts/ci/check_frozen_policy.py \
-            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --base-ref "$BASE_SHA" \
             --comment-file pr-frozen-policy-comment.md \
             --github-summary
           if [ -f pr-frozen-policy-comment.md ]; then
@@ -128,7 +132,7 @@ jobs:
 
       - name: Post frozen bundle policy comment on PR
         if: steps.frozen_policy.outputs.post_comment == 'true'
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const fs = require('fs');
