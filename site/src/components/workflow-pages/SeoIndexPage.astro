@@ -11,6 +11,7 @@ import type { SeoPageCard } from '../../lib/workflow-pages/schema';
 import type { Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
+import { thumbnailPath } from '../../lib/routes';
 import {
   buildCollectionPageJsonLd,
   buildWorkflowBreadcrumb,
@@ -32,7 +33,19 @@ const { locale, basePath, heading, description, cards } = Astro.props;
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const name = `${heading} — ComfyUI Workflows`;
 
-const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl });
+// Mirror the visible card grid as an ItemList of the child pages. `card.href` is
+// already locale-prefixed by the route helpers, so it only needs absolutizing;
+// thumbnails are stills that may be a Hub-CDN absolute URL or a local asset.
+const items = cards.map((card) => {
+  const thumb = card.thumbnail ? thumbnailPath(card.thumbnail) : undefined;
+  return {
+    name: card.title,
+    url: absoluteUrl(card.href),
+    image: thumb ? (thumb.startsWith('http') ? thumb : absoluteUrl(thumb)) : undefined,
+  };
+});
+
+const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl, items });
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: heading });
 ---
 

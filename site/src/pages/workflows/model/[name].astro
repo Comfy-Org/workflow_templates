@@ -12,10 +12,10 @@ import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
 import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { isMediaFile, hasStillThumbnail } from '../../../lib/media-utils';
+import { isMediaFile, hasStillThumbnail, firstStillThumbnail } from '../../../lib/media-utils';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
+import { modelPath, useCasePath, thumbnailPath, workflowDetailPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { loadSerializedTemplates, type MatcherTemplate } from '../../../lib/hub-api';
@@ -29,6 +29,8 @@ import {
   buildCollectionPageJsonLd,
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
+  buildHowToJsonLd,
+  buildSoftwareApplicationJsonLd,
   serializeJsonLdForScript,
 } from '../../../lib/structured-data';
 
@@ -132,7 +134,21 @@ const breadcrumbTrail = [
   { label: t('labels.models', locale), href: localizeUrl('/workflows/model/', locale) },
 ];
 
-const structuredData = buildCollectionPageJsonLd({ name: h1, description, url: canonicalUrl });
+// ItemList mirrors the visible grid; drop any template with no derivable detail URL.
+const collectionItems = templates.flatMap((tpl) => {
+  const path = workflowDetailPath(tpl.name, tpl.shareId, locale);
+  if (!path) return [];
+  const still = firstStillThumbnail(tpl.thumbnails);
+  const image = still ? (still.startsWith('http') ? still : absoluteUrl(thumbnailPath(still))) : undefined;
+  return [{ name: tpl.title, url: absoluteUrl(path), image }];
+});
+
+const structuredData = buildCollectionPageJsonLd({
+  name: h1,
+  description,
+  url: canonicalUrl,
+  items: collectionItems,
+});
 const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
   {
@@ -143,6 +159,23 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: h1 },
 ]);
 const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
+
+// Rich-result schema (HowTo/SoftwareApplication) is gated on rich content,
+// matching the FAQ above — a thin (noindex) page never advertises it.
+const howToStructuredData = richContent
+  ? buildHowToJsonLd({
+      name: `How to use ${label} ComfyUI workflows`,
+      steps: richContent.howToUse,
+      description: subheading,
+    })
+  : null;
+const softwareAppStructuredData = richContent
+  ? buildSoftwareApplicationJsonLd({
+      name: h1,
+      description,
+      featureList: richContent.modelSpec?.highlights.map((highlight) => highlight.title),
+    })
+  : null;
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
 const heroTemplateName = group.templates.find((tpl) => hasStillThumbnail(tpl.thumbnails))?.name;
@@ -263,6 +296,24 @@ const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
         is:inline
         type="application/ld+json"
         set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
+  {
+    howToStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(howToStructuredData)}
+      />
+    )
+  }
+  {
+    softwareAppStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
       />
     )
   }

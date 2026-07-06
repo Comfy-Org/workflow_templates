@@ -15,7 +15,13 @@ import { t } from '../../../i18n/ui';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { isMediaFile, hasStillThumbnail, firstStillThumbnail } from '../../../lib/media-utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
+import {
+  useCasePath,
+  useCasesIndexPath,
+  modelPath,
+  thumbnailPath,
+  workflowDetailPath,
+} from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import {
@@ -24,6 +30,7 @@ import {
   type MatcherTemplate,
 } from '../../../lib/hub-api';
 import { SEO_PAGES, type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
+import { titleCaseKeyword } from '../../../lib/workflow-pages/schema';
 import {
   resolveUseCasePageTemplates,
   relatedModelsForUseCase,
@@ -36,6 +43,8 @@ import {
   buildCollectionPageJsonLd,
   buildBreadcrumbJsonLd,
   buildFaqJsonLd,
+  buildHowToJsonLd,
+  buildSoftwareApplicationJsonLd,
   serializeJsonLdForScript,
 } from '../../../lib/structured-data';
 
@@ -112,10 +121,20 @@ const breadcrumbTrail = [
   { label: t('template.useCases', locale), href: useCasesIndexPath(locale) },
 ];
 
+// ItemList mirrors the visible grid; drop any template with no derivable detail URL.
+const collectionItems = templates.flatMap((tpl) => {
+  const path = workflowDetailPath(tpl.name, tpl.shareId, locale);
+  if (!path) return [];
+  const still = firstStillThumbnail(tpl.thumbnails);
+  const image = still ? (still.startsWith('http') ? still : absoluteUrl(thumbnailPath(still))) : undefined;
+  return [{ name: tpl.title, url: absoluteUrl(path), image }];
+});
+
 const structuredData = buildCollectionPageJsonLd({
   name: def.title,
   description,
   url: canonicalUrl,
+  items: collectionItems,
 });
 const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
@@ -128,6 +147,22 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
 ]);
 // Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.
 const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
+
+// HowTo/SoftwareApplication share the FAQ's rich-content gate.
+const howToStructuredData = richContent
+  ? buildHowToJsonLd({
+      name: `How to create ${titleCaseKeyword(keyword)} with ComfyUI`,
+      steps: richContent.howToUse,
+      description: subheading,
+    })
+  : null;
+const softwareAppStructuredData = richContent
+  ? buildSoftwareApplicationJsonLd({
+      name: def.title,
+      description,
+      featureList: richContent.styles?.map((style) => style.title),
+    })
+  : null;
 
 // "Keep exploring" cards: related models then sibling use-cases. Each card uses
 // its own thumbnail, else the next image from a shared fallback queue (this page's
@@ -266,6 +301,24 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).
         is:inline
         type="application/ld+json"
         set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
+  {
+    howToStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(howToStructuredData)}
+      />
+    )
+  }
+  {
+    softwareAppStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
       />
     )
   }
