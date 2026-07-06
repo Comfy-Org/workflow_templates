@@ -7,16 +7,13 @@ import { firstStillThumbnail } from '../media-utils';
 import { modelPath, useCasePath } from '../routes';
 import { getLogoPath, resolveTemplateLogos } from '../model-logos';
 import type { CardBadge, SeoPageCard } from './schema';
-import { deriveModelGroups } from './model-groups';
 import { SEO_PAGES } from './use-cases';
-import { resolveUseCasePageTemplates } from './use-case-resolver';
+import { qualifyingGroups, resolveUseCasePageTemplates } from './use-case-resolver';
 
 /** Indexable model families, ranked by usage — the shared source order for both
  *  the card grid and the index description, so the two can't list different models. */
 function qualifyingModelGroups(catalog: SerializedTemplate[]) {
-  return deriveModelGroups(catalog)
-    .filter((group) => group.qualifies)
-    .sort((a, b) => b.usage - a.usage);
+  return [...qualifyingGroups(catalog)].sort((a, b) => b.usage - a.usage);
 }
 
 /** Top model family labels (bare, e.g. "Flux"), for the index page description. */
