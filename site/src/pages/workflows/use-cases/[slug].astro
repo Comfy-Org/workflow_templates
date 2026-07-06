@@ -15,13 +15,7 @@ import { t } from '../../../i18n/ui';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { isMediaFile, hasStillThumbnail, firstStillThumbnail } from '../../../lib/media-utils';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import {
-  useCasePath,
-  useCasesIndexPath,
-  modelPath,
-  thumbnailPath,
-  workflowDetailPath,
-} from '../../../lib/routes';
+import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import {
@@ -31,6 +25,7 @@ import {
 } from '../../../lib/hub-api';
 import { SEO_PAGES, type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
 import { titleCaseKeyword } from '../../../lib/workflow-pages/schema';
+import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/index-cards';
 import {
   resolveUseCasePageTemplates,
   relatedModelsForUseCase,
@@ -121,20 +116,11 @@ const breadcrumbTrail = [
   { label: t('template.useCases', locale), href: useCasesIndexPath(locale) },
 ];
 
-// ItemList mirrors the visible grid; drop any template with no derivable detail URL.
-const collectionItems = templates.flatMap((tpl) => {
-  const path = workflowDetailPath(tpl.name, tpl.shareId, locale);
-  if (!path) return [];
-  const still = firstStillThumbnail(tpl.thumbnails);
-  const image = still ? (still.startsWith('http') ? still : absoluteUrl(thumbnailPath(still))) : undefined;
-  return [{ name: tpl.title, url: absoluteUrl(path), image }];
-});
-
 const structuredData = buildCollectionPageJsonLd({
   name: def.title,
   description,
   url: canonicalUrl,
-  items: collectionItems,
+  items: buildTemplateItemListEntries(templates, locale),
 });
 const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },

@@ -12,10 +12,10 @@ import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
 import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { isMediaFile, hasStillThumbnail, firstStillThumbnail } from '../../../lib/media-utils';
+import { isMediaFile, hasStillThumbnail } from '../../../lib/media-utils';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { modelPath, useCasePath, thumbnailPath, workflowDetailPath } from '../../../lib/routes';
+import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { loadSerializedTemplates, type MatcherTemplate } from '../../../lib/hub-api';
@@ -25,6 +25,7 @@ import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-res
 import { type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
 import { assertBrandSafe, isIndexable } from '../../../lib/workflow-pages/governance';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/index-cards';
 import {
   buildCollectionPageJsonLd,
   buildBreadcrumbJsonLd,
@@ -134,20 +135,11 @@ const breadcrumbTrail = [
   { label: t('labels.models', locale), href: localizeUrl('/workflows/model/', locale) },
 ];
 
-// ItemList mirrors the visible grid; drop any template with no derivable detail URL.
-const collectionItems = templates.flatMap((tpl) => {
-  const path = workflowDetailPath(tpl.name, tpl.shareId, locale);
-  if (!path) return [];
-  const still = firstStillThumbnail(tpl.thumbnails);
-  const image = still ? (still.startsWith('http') ? still : absoluteUrl(thumbnailPath(still))) : undefined;
-  return [{ name: tpl.title, url: absoluteUrl(path), image }];
-});
-
 const structuredData = buildCollectionPageJsonLd({
   name: h1,
   description,
   url: canonicalUrl,
-  items: collectionItems,
+  items: buildTemplateItemListEntries(templates, locale),
 });
 const breadcrumbStructuredData = buildBreadcrumbJsonLd([
   { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },

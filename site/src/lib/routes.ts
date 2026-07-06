@@ -1,4 +1,5 @@
 import { tagSlug } from './tag-aliases';
+import { absoluteUrl } from '../config/site';
 
 /**
  * Prefix a root-relative path with the locale segment, matching the site's
@@ -26,6 +27,17 @@ export const thumbnailPath = (asset: string) =>
   asset.startsWith('http://') || asset.startsWith('https://')
     ? asset
     : `/workflows/thumbnails/${asset}`;
+
+/**
+ * Resolve a thumbnail asset to an absolute URL for structured-data image fields.
+ * Hub-CDN URLs are already absolute; local assets are rooted then absolutized.
+ * Returns `undefined` for a missing thumbnail so callers can omit the field.
+ */
+export const resolveAbsoluteThumbnail = (thumbnail: string | null | undefined): string | undefined => {
+  if (!thumbnail) return undefined;
+  const rooted = thumbnailPath(thumbnail);
+  return rooted.startsWith('http') ? rooted : absoluteUrl(rooted);
+};
 
 /**
  * Build the URL slug component (no `/workflows/` prefix, no locale).

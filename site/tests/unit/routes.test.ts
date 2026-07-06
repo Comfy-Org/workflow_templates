@@ -8,6 +8,7 @@ import {
   modelsIndexPath,
   useCasePath,
   useCasesIndexPath,
+  resolveAbsoluteThumbnail,
 } from '../../src/lib/routes';
 
 describe('workflowDetailPath', () => {
@@ -118,5 +119,24 @@ describe('useCasePath / useCasesIndexPath', () => {
   it('returns the bare index base, locale-prefixed when non-default', () => {
     expect(useCasesIndexPath()).toBe('/workflows/use-cases/');
     expect(useCasesIndexPath('ar')).toBe('/ar/workflows/use-cases/');
+  });
+});
+
+describe('resolveAbsoluteThumbnail', () => {
+  it('returns undefined for a missing thumbnail', () => {
+    expect(resolveAbsoluteThumbnail(undefined)).toBeUndefined();
+    expect(resolveAbsoluteThumbnail(null)).toBeUndefined();
+    expect(resolveAbsoluteThumbnail('')).toBeUndefined();
+  });
+
+  it('passes through an already-absolute Hub CDN URL', () => {
+    const url = 'https://comfy-hub-assets.comfy.org/templates/abc.png';
+    expect(resolveAbsoluteThumbnail(url)).toBe(url);
+  });
+
+  it('roots and absolutizes a local asset', () => {
+    expect(resolveAbsoluteThumbnail('flux-1.webp')).toBe(
+      'https://comfy.org/workflows/thumbnails/flux-1.webp'
+    );
   });
 });

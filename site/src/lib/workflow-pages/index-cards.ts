@@ -4,11 +4,35 @@
  */
 import type { SerializedTemplate } from '../hub-api';
 import { firstStillThumbnail } from '../media-utils';
-import { modelPath, useCasePath } from '../routes';
+import { modelPath, useCasePath, workflowDetailPath, resolveAbsoluteThumbnail } from '../routes';
 import { getLogoPath, resolveTemplateLogos } from '../model-logos';
+import { absoluteUrl } from '../../config/site';
+import type { ItemListEntry } from '../structured-data';
 import type { CardBadge, SeoPageCard } from './schema';
 import { SEO_PAGES } from './use-cases';
 import { qualifyingGroups, resolveUseCasePageTemplates } from './use-case-resolver';
+
+/**
+ * Map a page's workflow grid to `ItemList` entries for its CollectionPage —
+ * each template linking to its own detail page, mirroring the visible grid.
+ * Templates with no derivable detail URL are skipped.
+ */
+export function buildTemplateItemListEntries(
+  templates: SerializedTemplate[],
+  locale?: string
+): ItemListEntry[] {
+  return templates.flatMap((tpl) => {
+    const path = workflowDetailPath(tpl.name, tpl.shareId, locale);
+    if (!path) return [];
+    return [
+      {
+        name: tpl.title,
+        url: absoluteUrl(path),
+        image: resolveAbsoluteThumbnail(firstStillThumbnail(tpl.thumbnails)),
+      },
+    ];
+  });
+}
 
 /** Indexable model families, ranked by usage — the shared source order for both
  *  the card grid and the index description, so the two can't list different models. */
