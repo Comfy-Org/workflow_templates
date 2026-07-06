@@ -30,7 +30,6 @@ interface Props {
   creatorDisplayName?: string;
   creatorAvatarUrl?: string;
   isApp?: boolean;
-  hideAuthor?: boolean;
   thumbnailVariant?: ThumbnailVariant;
   mediaType?: string;
   mediaSubtype?: string;
@@ -46,7 +45,6 @@ const props = withDefaults(defineProps<Props>(), {
   creatorDisplayName: 'ComfyUI',
   creatorAvatarUrl: '',
   isApp: false,
-  hideAuthor: false,
   mediaType: '',
   mediaSubtype: '',
 });
