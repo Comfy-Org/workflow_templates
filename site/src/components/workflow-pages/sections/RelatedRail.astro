@@ -38,27 +38,26 @@ const cards = allCards.slice(0, 5);
       summary={t('useCase.keepExploringSub', locale)}
     />
 
-    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-6">
+    <div
+      class="grid grid-cols-1 gap-5 rounded-4xl bg-hub-surface p-4 sm:grid-cols-2 lg:grid-cols-6 lg:p-5"
+    >
       {
         cards.map((card, i) => (
           <article
             class:list={[
-              'group/pill-trigger group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover',
+              'group/pill-trigger group relative aspect-video w-full overflow-hidden rounded-3xl',
               i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
             ]}
           >
-            <a
-              href={card.href}
-              aria-label={card.title}
-              class="relative block aspect-video w-full overflow-hidden rounded-3xl bg-hub-surface"
-            >
+            <a href={card.href} aria-label={card.title} class="absolute inset-0 block">
               <CardOverlayImage title={card.title} image={card.image} logos={card.logos} />
             </a>
 
-            <div class="flex items-center justify-between gap-3 px-4 pb-2">
+            {/* Footer overlaid on the image bottom — sibling of the link, no nested anchors. */}
+            <div class="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-3 px-5 pb-1">
               <div class="flex min-w-0 items-center gap-3">
                 {card.eyebrow && (
-                  <span class="truncate font-display text-xs font-semibold uppercase tracking-[0.12em] text-content-muted">
+                  <span class="truncate font-display text-xs font-semibold uppercase tracking-[0.12em] text-white/85">
                     {card.eyebrow}
                   </span>
                 )}
