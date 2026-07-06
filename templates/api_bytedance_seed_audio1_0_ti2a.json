@@ -1,0 +1,183 @@
+{
+  "id": "6d029989-7e4b-4077-acb4-e5c45eec2b1d",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "ByteDanceSeedAudio",
+      "pos": [
+        -243.23859960711826,
+        -386.98716660616896
+      ],
+      "size": [
+        519.984375,
+        709
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "reference_image",
+          "name": "reference_mode.reference_image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDanceSeedAudio"
+      },
+      "widgets_values": [
+        "[Environment: quiet dreamlike garden at dusk, soft blue light, petals drifting, faint water ripples, goldfish swimming overhead.]\n\n[Background music: gentle piano and airy strings, slow, melancholic, ethereal. Ambience: soft wind, distant chimes.]\n\n[Language: English only. All dialogue must be spoken in English.]\n\nThe girl (young woman, soft breathy voice, quiet and fragile, dreamy, slightly sad) whispers:\n\"I thought the flowers would stay with me forever.\"\n\n[Long pause. Petals fall. Water shimmers.]\n\nShe (same voice, a little warmer) says softly:\n\"Maybe that is why this place feels beautiful.\"\n\n[Background music fades to a single piano note, then silence.]",
+        "image reference",
+        "24000",
+        0,
+        0,
+        0,
+        886100183,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        345.59583883312115,
+        -387.3237445260305
+      ],
+      "size": [
+        644.453125,
+        216
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Seed_Audio_1.0",
+        "mp3",
+        "V0"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -1192.5262732565643,
+        -389.08180319438
+      ],
+      "size": [
+        470.21875,
+        1521.71875
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: TI2A Prompt Guide",
+      "properties": {},
+      "widgets_values": [
+        "Seed Audio 1.0: TI2A (Text + Image to Audio) Workflow Guide\n\n## What This Workflow Does\nLoad Image → ByteDance Seed Audio 1.0 (image reference) → Save Audio.\n\nTI2A = text prompt + reference image. The model derives the character voice from your image, then generates speech, ambience, music, and SFX from your prompt.\n\nBest for: character art, portraits, or scene images when you have no reference audio. One image = one derived voice.\n\n## How to Use\n1. Load Image: upload a clear character image (portrait or upper body works best).\n2. Connect IMAGE → Seed Audio reference_image input.\n3. Keep reference_mode on \"image reference\".\n4. Write text_prompt matching your scene (see format below).\n5. Run the workflow.\n\nDo NOT use @Audio1 / @Audio2 / @Audio3 in this mode.\n\n## Target Language\nThe model supports English and Chinese. It may mix languages if you do not specify.\n\nTo lock the output language, add a bracket tag near the top of your prompt:\n- [Language: English only.]\n- [Language: Chinese only.]\n\nAlso state the language in the character's voice traits, for example: speaks English only, or speaks Chinese only. Write all dialogue in your target language.\n\nImage reference controls voice tone and character feel. Language is controlled by your prompt.\n\n## Avoid Scene Text Being Spoken\nPlain prose at the start may be read aloud as narration, making the audio too long.\n\nWrap anything that is NOT dialogue in [square brackets]:\n- [Environment: ...] for location, weather, ambience\n- [Background music: ...] for BGM style and mood\n- [Language: English only.] or [Language: Chinese only.] for output language\n- [Long pause. ...] for effects and stage directions\n- [Outro: ...] for ending\n\nOnly text in quotes after says / whispers should be spoken. Keep dialogue short.\n\n## Prompt Guide\n1. [Language: ...] recommended\n2. [Environment: ...]\n3. [Background music / SFX: ...]\n4. Character (delivery traits, target language) says / whispers: \"dialogue only\"\n5. [Beat / pause / SFX]\n6. [Outro]\n\nLimits: prompt ≤3000 chars · output ≤2 min · English & Chinese\n\n## Example\n[Language: English only.]\n[Environment: quiet dreamlike garden at dusk, soft blue light, petals drifting, faint water ripples.]\n[Background music: gentle piano and airy strings, melancholic and ethereal.]\n\nThe girl (young woman, soft breathy voice, quiet and fragile, dreamy, slightly sad, speaks English only) whispers:\n\"I thought the flowers would stay with me forever.\"\n\n[Long pause. Petals fall. Water shimmers.]\n\nShe (same voice, a little warmer) says softly:\n\"Maybe that is why this place feels beautiful.\"\n\n[Background music fades to silence.]"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [
+        -670,
+        -390
+      ],
+      "size": [
+        386.625,
+        535.40625
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "girl_and_fish.png",
+        "image"
+      ]
+    }
+  ],
+  "links": [
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "AUDIO"
+    ],
+    [
+      4,
+      6,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7651805044950032,
+      "offset": [
+        1163.5846393445972,
+        881.0401016124736
+      ]
+    },
+    "frontendVersion": "1.45.20"
+  },
+  "version": 0.4
+}
