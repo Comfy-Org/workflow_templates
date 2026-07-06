@@ -20,38 +20,33 @@ const { title, subtitle, image, logos = [], href, ctaLabel } = Astro.props;
 const ImageTag = href ? 'a' : 'div';
 ---
 
-<article
-  class="group/pill-trigger group flex flex-col gap-4 rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover"
->
+<article class="group/pill-trigger group relative aspect-video w-full overflow-hidden rounded-3xl">
   <ImageTag
     {...href ? { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': title } : {}}
-    class="relative block aspect-video w-full overflow-hidden rounded-3xl"
+    class="absolute inset-0 block"
   >
     <CardOverlayImage title={title} image={image} logos={logos} />
   </ImageTag>
 
-  <!-- Caption on the left, CTA pinned bottom-right (closed pill, no reveal). -->
-  <div class="flex items-end justify-between gap-4 px-4 pb-2">
-    {
-      subtitle && (
-        <p class="font-display text-sm font-light leading-snug text-content-secondary">
-          {subtitle}
-        </p>
-      )
-    }
-    {
-      href && ctaLabel && (
-        <ButtonPill
-          as="a"
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          variant="solid"
-          mode="icon"
-          aria-label={ctaLabel}
-          class="shrink-0"
-        />
-      )
-    }
-  </div>
+  {
+    (subtitle || (href && ctaLabel)) && (
+      <div class="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-4 px-5 pb-4">
+        {subtitle && (
+          <p class="font-display text-sm font-light leading-snug text-white/85">{subtitle}</p>
+        )}
+        {href && ctaLabel && (
+          <ButtonPill
+            as="a"
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="solid"
+            mode="icon"
+            aria-label={ctaLabel}
+            class="shrink-0"
+          />
+        )}
+      </div>
+    )
+  }
 </article>

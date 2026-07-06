@@ -17,6 +17,7 @@ import { t } from '../../../../i18n/ui';
 import { absoluteUrl } from '../../../../config/site';
 import { modelPath } from '../../../../lib/routes';
 import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
+import { isIndexable } from '../../../../lib/workflow-pages/governance';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
@@ -59,6 +60,19 @@ const matchingTemplates = family.templates;
 const basePath = modelPath(family.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
 
+// noindex parity with the English route across the hreflang cluster (no editorial
+// copy here, so `qualifies` is the quality signal).
+const noindex = !isIndexable({
+  clusterSize: matchingTemplates.length,
+  humanEdited: true,
+  qualityPassed: family.qualifies,
+});
+
+const countLabel =
+  matchingTemplates.length === 1
+    ? t('template.countOne', typedLocale)
+    : t('template.count', typedLocale);
+
 const title = `${modelName} ComfyUI Workflows - Free Templates`;
 const description = `Browse ${matchingTemplates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
 
@@ -90,6 +104,7 @@ const serialized = matchingTemplates;
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}
+  noindex={noindex}
   theme="dark"
   hideDefaultFooter
 >
@@ -108,7 +123,7 @@ const serialized = matchingTemplates;
       </h1>
       <p class="text-content-muted text-base mt-2">
         {matchingTemplates.length}
-        {t('template.count', typedLocale)}
+        {countLabel}
       </p>
     </div>
 

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, useTemplateRef, nextTick } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { badgeVariants } from '../ui/badge';
 
 interface BadgeItem {
@@ -7,8 +8,11 @@ interface BadgeItem {
   href: string;
 }
 
-defineProps<{
+// Labels are resolved in Astro and passed as props — islands don't import i18n.
+const { items, moreLabel, lessLabel } = defineProps<{
   items: BadgeItem[];
+  moreLabel: string;
+  lessLabel: string;
 }>();
 
 const expanded = ref(false);
@@ -38,11 +42,10 @@ function measure() {
 onMounted(async () => {
   await nextTick();
   measure();
-  // Re-measure on width changes so the pixel target for the animation stays correct.
-  if (contentRef.value && typeof ResizeObserver !== 'undefined') {
-    new ResizeObserver(() => measure()).observe(contentRef.value);
-  }
 });
+
+// Re-measure on width changes so the pixel target for the animation stays correct.
+useResizeObserver(contentRef, measure);
 
 // Animate to a pixel height (CSS can't transition to `max-height: none`); after
 // expanding, allow it to grow freely so wrapping never clips.
@@ -51,7 +54,9 @@ const maxHeightStyle = computed(() => {
   return expanded.value ? `${fullHeight.value}px` : `${COLLAPSED_HEIGHT}px`;
 });
 
-const toggleLabel = computed(() => (expanded.value ? 'Show less' : `${hiddenCount.value} more`));
+const toggleLabel = computed(() =>
+  expanded.value ? lessLabel : `${hiddenCount.value} ${moreLabel}`
+);
 </script>
 
 <template>

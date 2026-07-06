@@ -56,7 +56,7 @@ export interface RelatedModel {
 // indexable model pages, never a bare noindex grid.
 const qualifyingGroupsCache = new WeakMap<SerializedTemplate[], ModelGroup[]>();
 
-function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
+export function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
   let groups = qualifyingGroupsCache.get(catalog);
   if (!groups) {
     groups = deriveModelGroups(catalog).filter((group) => group.qualifies);

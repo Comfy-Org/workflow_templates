@@ -77,20 +77,8 @@ export type GeneratedSeoContent = SeoContent & {
   qualityFailed?: boolean;
 };
 
-/** Word-count band the validator enforces over rendered body copy. */
-export interface WordCountBand {
-  min: number;
-  max: number;
-}
-
-/** Word-count tiers by keyword value (validated over body copy, excluding meta). */
-export const WORD_COUNT_TIERS = {
-  long: { min: 1100, max: 1700 },
-  medium: { min: 850, max: 1300 },
-  lean: { min: 650, max: 1050 },
-} as const satisfies Record<string, WordCountBand>;
-
-export type WordCountTier = keyof typeof WORD_COUNT_TIERS;
+/** Target body-copy length tier for a keyword, by search intent. */
+export type WordCountTier = 'long' | 'medium' | 'lean';
 
 /** A model/provider badge overlaid on a card: logo asset + name for alt text. */
 export interface CardBadge {

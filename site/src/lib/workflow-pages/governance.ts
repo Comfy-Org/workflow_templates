@@ -15,7 +15,7 @@ const BRAND_SAFETY_DENY = [
   'porn',
 ];
 
-export function checkBrandSafety(text: string): string[] {
+function checkBrandSafety(text: string): string[] {
   const haystack = text.toLowerCase();
   return BRAND_SAFETY_DENY.filter((term) => haystack.includes(term));
 }
