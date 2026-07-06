@@ -89,7 +89,7 @@ const FAMILY_RULES: { match: RegExp; label: string }[] = [
 
 const NON_MODELS = new Set(['none', '']);
 
-export function modelFamilyLabel(modelName: string): string {
+function modelFamilyLabel(modelName: string): string {
   const normalized = modelName.trim().replace(/\s+/g, '-');
   const rule = FAMILY_RULES.find(({ match }) => match.test(modelName) || match.test(normalized));
   return rule?.label ?? modelName;

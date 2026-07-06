@@ -10,7 +10,7 @@ export interface CardImage {
   alt: string;
 }
 
-export interface CardText {
+interface CardText {
   title?: string;
   text?: string;
 }
