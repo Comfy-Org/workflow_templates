@@ -86,6 +86,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'Uses',
     'meta.title': 'ComfyUI Workflows',
     'meta.description': 'Browse free, ready-to-use ComfyUI workflows',
+    'meta.ogDescription':
+      'Ready-to-run workflows. Pick one, hit run, see results in seconds. No building from scratch.',
     'template.count': 'templates',
     'template.updated': 'Updated daily',
     'template.runs': 'runs',
@@ -208,6 +210,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI 工作流',
     'meta.description': '浏览免费、开箱即用的 ComfyUI 工作流',
+    'meta.ogDescription': '开箱即用的工作流。选一个，点击运行，几秒钟即可看到结果。无需从零搭建。',
     'template.count': '个模板',
     'template.updated': '每日更新',
     'template.runs': '次运行',
@@ -330,6 +333,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI 工作流',
     'meta.description': '瀏覽免費、開箱即用的 ComfyUI 工作流',
+    'meta.ogDescription': '開箱即用的工作流。選一個，點擊執行，幾秒鐘即可看到結果。無需從零開始搭建。',
     'template.count': '個模板',
     'template.updated': '每日更新',
     'template.runs': '次運行',
@@ -453,6 +457,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': '使用',
     'meta.title': 'ComfyUI ワークフロー',
     'meta.description': '無料で使える ComfyUI ワークフロー',
+    'meta.ogDescription':
+      'すぐに実行できるワークフロー。選んで実行するだけで、数秒で結果が得られます。ゼロから作る必要はありません。',
     'template.count': 'テンプレート',
     'template.updated': '毎日更新',
     'template.runs': '回実行',
@@ -576,6 +582,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': '사용',
     'meta.title': 'ComfyUI 워크플로우',
     'meta.description': '무료로 사용 가능한 ComfyUI 워크플로우',
+    'meta.ogDescription':
+      '바로 실행할 수 있는 워크플로우. 하나를 골라 실행하면 몇 초 만에 결과를 확인할 수 있습니다. 처음부터 만들 필요가 없습니다.',
     'template.count': '템플릿',
     'template.updated': '매일 업데이트',
     'template.runs': '회 실행',
@@ -699,6 +707,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'Usa',
     'meta.title': 'ComfyUI Workflows',
     'meta.description': 'Explora workflows gratuitos de ComfyUI',
+    'meta.ogDescription':
+      'Workflows listos para usar. Elige uno, pulsa ejecutar y ve los resultados en segundos. Sin construir desde cero.',
     'template.count': 'plantillas',
     'template.updated': 'Actualizado diariamente',
     'template.runs': 'ejecuciones',
@@ -822,6 +832,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'Utilise',
     'meta.title': 'ComfyUI Workflows',
     'meta.description': 'Parcourez les workflows ComfyUI gratuits',
+    'meta.ogDescription':
+      'Des workflows prêts à l’emploi. Choisissez-en un, lancez-le et voyez les résultats en quelques secondes. Sans rien construire depuis zéro.',
     'template.count': 'modèles',
     'template.updated': 'Mis à jour quotidiennement',
     'template.runs': 'exécutions',
@@ -945,6 +957,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'Использует',
     'meta.title': 'ComfyUI Воркфлоу',
     'meta.description': 'Бесплатные воркфлоу ComfyUI',
+    'meta.ogDescription':
+      'Готовые воркфлоу. Выберите один, нажмите запуск и получите результат за секунды. Не нужно собирать с нуля.',
     'template.count': 'шаблонов',
     'template.updated': 'Обновляется ежедневно',
     'template.runs': 'запусков',
@@ -1068,6 +1082,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'Kullanır',
     'meta.title': 'ComfyUI Workflows',
     'meta.description': "Ücretsiz ComfyUI workflow'larına göz atın",
+    'meta.ogDescription':
+      "Kullanıma hazır workflow'lar. Birini seçin, çalıştırın, sonuçları saniyeler içinde görün. Sıfırdan kurmaya gerek yok.",
     'template.count': 'şablon',
     'template.updated': 'Günlük güncellenir',
     'template.runs': 'çalıştırma',
@@ -1191,6 +1207,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'يستخدم',
     'meta.title': 'ComfyUI سير العمل',
     'meta.description': 'تصفح سير العمل المجانية في ComfyUI',
+    'meta.ogDescription':
+      'سير عمل جاهزة للتشغيل. اختر واحدًا، اضغط تشغيل، وشاهد النتائج في ثوانٍ. دون البناء من الصفر.',
     'template.count': 'قالب',
     'template.updated': 'يتم التحديث يومياً',
     'template.runs': 'تشغيل',
@@ -1314,6 +1332,8 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'labels.nodeUses': 'Usa',
     'meta.title': 'ComfyUI Workflows',
     'meta.description': 'Explore workflows gratuitos do ComfyUI',
+    'meta.ogDescription':
+      'Workflows prontos para usar. Escolha um, clique em executar e veja os resultados em segundos. Sem montar do zero.',
     'template.count': 'templates',
     'template.updated': 'Atualizado diariamente',
     'template.runs': 'execuções',
