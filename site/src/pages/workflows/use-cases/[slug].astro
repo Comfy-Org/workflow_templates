@@ -30,7 +30,8 @@ import {
   type RelatedModel,
 } from '../../../lib/workflow-pages/use-case-resolver';
 import { loadUseCaseContent } from '../../../lib/workflow-pages/content-loaders';
-import { assertBrandSafe, isIndexable } from '../../../lib/workflow-pages/governance';
+import { assertBrandSafe } from '../../../lib/workflow-pages/governance';
+import { buildUseCasePageMeta, isUseCasePageIndexable } from '../../../lib/workflow-pages/seo-page';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
 import {
   buildCollectionPageJsonLd,
@@ -52,7 +53,12 @@ export async function getStaticPaths() {
   })).filter(({ templates }) => templates.length > 0);
   // Fail the build if any routed use-case page carries a denied term.
   for (const { def } of routed) {
-    assertBrandSafe({ slug: def.slug, primaryKeyword: def.keywords.primary, title: def.h1 });
+    assertBrandSafe({
+      slug: def.slug,
+      primaryKeyword: def.keywords.primary,
+      title: def.h1,
+      secondaryKeywords: def.keywords.secondary,
+    });
   }
   // Slugs that actually get a page — so the sibling rail never links to one that
   // was skipped above.
@@ -76,23 +82,16 @@ const keyword = def.keywords.primary;
 const basePath = useCasePath(def.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const content = await loadUseCaseContent(def.slug);
-// No editorial JSON → a thin page; keep it out of the index (mirrors the model page).
-const hasRichContent = !!content && !content.qualityFailed;
-// Non-null only when rich, so the body/JSON-LD can read it without assertions.
-const richContent = hasRichContent ? content : null;
-
-const description =
-  content?.metaDescription ||
-  `Browse ${templates.length} ready-to-use ComfyUI workflow templates for ${keyword}. No setup required on Comfy Cloud.`;
-const subheading =
-  content?.subheading ||
-  `Ready-to-run ComfyUI workflows for ${keyword}, fully editable and runnable on Comfy Cloud with no setup.`;
-
-const noindex = !isIndexable({
-  clusterSize: templates.length,
-  humanEdited: true,
-  qualityPassed: hasRichContent,
+const { isRich, title, h1, description, subheading } = buildUseCasePageMeta({
+  def,
+  content,
+  locale,
+  templateCount: templates.length,
 });
+// Non-null only when rich, so the body/JSON-LD can read it without assertions.
+const richContent = isRich ? content : null;
+
+const noindex = !isUseCasePageIndexable(templates.length, content);
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
 const heroTemplate = templates.find((tpl) => hasStillThumbnail(tpl.thumbnails));
@@ -100,12 +99,12 @@ const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
 const leadShareId = templates.find((template) => template.shareId)?.shareId;
-const heroCtaUrl = leadShareId
-  ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_hero`)
-  : getCloudLandingUrl(`usecase_${def.slug}_hero`);
-const footerCtaUrl = leadShareId
-  ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_footer`)
-  : getCloudLandingUrl(`usecase_${def.slug}_footer`);
+const useCaseCtaUrl = (placement: string) =>
+  leadShareId
+    ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_${placement}`)
+    : getCloudLandingUrl(`usecase_${def.slug}_${placement}`);
+const heroCtaUrl = useCaseCtaUrl('hero');
+const footerCtaUrl = useCaseCtaUrl('footer');
 
 const useCasesUrl = absoluteUrl(useCasesIndexPath(locale));
 const breadcrumbTrail = [
@@ -113,7 +112,7 @@ const breadcrumbTrail = [
 ];
 
 const structuredData = buildCollectionPageJsonLd({
-  name: def.title,
+  name: title,
   description,
   url: canonicalUrl,
 });
@@ -124,29 +123,27 @@ const breadcrumbStructuredData = buildBreadcrumbJsonLd([
     item: absoluteUrl(localizeUrl('/workflows/', locale)),
   },
   { name: t('template.useCases', locale), item: useCasesUrl },
-  { name: def.h1 },
+  { name: h1 },
 ]);
 // Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.
 const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
 
-// "Keep exploring" cards: related models then sibling use-cases. Each card uses
-// its own thumbnail, else the next image from a shared fallback queue (this page's
-// grid then the wider catalog) so none is empty and none repeats the hero image.
 const fallbackImages = [...templates, ...fallbackPool]
   .filter((template) => template.name !== heroTemplateName)
   .flatMap((template) => template.thumbnails ?? [])
   .filter((thumbnail) => !isMediaFile(thumbnail) && thumbnail !== heroImage);
 const takeFallbackImage = (): string | undefined => fallbackImages.shift();
 
-const workflowsLabel = t('useCase.workflowsCount', locale);
+const workflowsMeta = (count: number): string =>
+  `${count} ${t(count === 1 ? 'useCase.workflowsCountOne' : 'useCase.workflowsCount', locale)}`;
 
 const relatedModelCards = related.map((model) => ({
   title: model.label,
   eyebrow: t('labels.models', locale),
-  meta: `${model.count} ${workflowsLabel}`,
+  meta: workflowsMeta(model.count) as string | undefined,
   href: localizeUrl(modelPath(model.slug), locale),
   logos: resolveTemplateLogos({ models: [model.label] }),
-  thumbnail: model.thumbnail ?? takeFallbackImage(),
+  ownThumbnail: model.thumbnail,
 }));
 
 const relatedUseCaseCards = SEO_PAGES.filter(
@@ -159,21 +156,24 @@ const relatedUseCaseCards = SEO_PAGES.filter(
     meta: undefined as string | undefined,
     href: localizeUrl(useCasePath(other.slug), locale),
     logos: [] as ReturnType<typeof resolveTemplateLogos>,
-    thumbnail: takeFallbackImage(),
+    ownThumbnail: undefined as string | undefined,
   }));
 
-const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).map((card) => ({
-  title: card.title,
-  eyebrow: card.eyebrow,
-  meta: card.meta,
-  href: card.href,
-  logos: card.logos,
-  image: card.thumbnail ? { src: thumbnailPath(card.thumbnail), alt: card.title } : null,
-}));
+const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).map((card) => {
+  const thumbnail = card.ownThumbnail ?? takeFallbackImage();
+  return {
+    title: card.title,
+    eyebrow: card.eyebrow,
+    meta: card.meta,
+    href: card.href,
+    logos: card.logos,
+    image: thumbnail ? { src: thumbnailPath(thumbnail), alt: card.title } : null,
+  };
+});
 ---
 
 <BaseLayout
-  title={def.title}
+  title={title}
   description={description}
   canonicalUrl={canonicalUrl}
   ogImage="/workflows/og-default.png"
@@ -189,13 +189,13 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).
 
   <article class="bg-page min-h-screen text-content scroll-smooth hyphens-none wrap-normal">
     <div class:list={[inner, 'pt-4 lg:pt-6']}>
-      <Breadcrumbs locale={locale} title={def.h1} trail={breadcrumbTrail} />
+      <Breadcrumbs locale={locale} title={h1} trail={breadcrumbTrail} />
     </div>
     <LandingHero
       eyebrow={t('template.useCases', locale)}
-      title={def.h1}
+      title={h1}
       description={subheading}
-      meta={`${templates.length} ${t('useCase.workflowsCount', locale)}`}
+      meta={workflowsMeta(templates.length)}
       primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
       templates={templates}
@@ -205,7 +205,7 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).
     <section id="workflows" class="scroll-mt-8 bg-page pt-16 pb-10 lg:pt-24 lg:pb-12">
       <div class={inner}>
         <p class={eyebrow}>{t('template.theWorkflows', locale)}</p>
-        <h2 class={`${heading} mb-8 lg:mb-10`}>{`${templates.length} ${def.h1}`}</h2>
+        <h2 class={`${heading} mb-8 lg:mb-10`}>{`${templates.length} ${h1}`}</h2>
         <WorkflowGrid
           client:load
           templates={templates}

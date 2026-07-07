@@ -23,7 +23,8 @@ import { deriveModelGroups, type ModelGroup } from '../../../lib/workflow-pages/
 import { loadModelContent } from '../../../lib/workflow-pages/content-loaders';
 import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-resolver';
 import { type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
-import { assertBrandSafe, isIndexable } from '../../../lib/workflow-pages/governance';
+import { assertBrandSafe } from '../../../lib/workflow-pages/governance';
+import { buildModelPageMeta, isModelPageIndexable } from '../../../lib/workflow-pages/seo-page';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
 import {
   buildCollectionPageJsonLd,
@@ -55,6 +56,7 @@ export async function getStaticPaths() {
         slug: group.slug,
         primaryKeyword: group.keywords.primary,
         title: group.label,
+        secondaryKeywords: group.keywords.secondary,
       });
     }
     if (claimed.has(group.slug)) {
@@ -99,33 +101,24 @@ const content = await loadModelContent(group.slug);
 const basePath = modelPath(group.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
-const isRich = group.qualifies && !!content && !content.qualityFailed;
+const { isRich, h1, title, description, subheading } = buildModelPageMeta({
+  group,
+  content,
+  locale,
+  templateCount: templates.length,
+});
 // Non-null only when rich, so the body/JSON-LD can read it without assertions.
 const richContent = isRich ? content : null;
-const h1 = `${label} ComfyUI Workflows`;
-// Rich copy only when the page actually renders the rich body; otherwise the
-// title/meta would advertise editorial content a thin (noindex) page never shows.
-const title = isRich ? `${label} ComfyUI Workflows — Ready-to-Run Templates` : `${label} Workflows`;
-const description =
-  richContent?.metaDescription ||
-  `Browse ${templates.length} ready-to-use ComfyUI workflow templates using ${label}. AI generation workflows that run on Comfy Cloud with no setup.`;
-const subheading =
-  richContent?.subheading ||
-  `Ready-to-run ComfyUI workflows built on ${label}, fully editable and runnable on Comfy Cloud with no setup.`;
 
-const noindex = !isIndexable({
-  clusterSize: templates.length,
-  humanEdited: true,
-  qualityPassed: isRich,
-});
+const noindex = !isModelPageIndexable(group, templates.length, content);
 
 const leadShareId = templates.find((template) => template.shareId)?.shareId;
-const heroCtaUrl = leadShareId
-  ? getCloudCtaUrl(leadShareId, `model_${group.slug}_hero`)
-  : getCloudLandingUrl(`model_${group.slug}_hero`);
-const footerCtaUrl = leadShareId
-  ? getCloudCtaUrl(leadShareId, `model_${group.slug}_footer`)
-  : getCloudLandingUrl(`model_${group.slug}_footer`);
+const modelCtaUrl = (placement: string) =>
+  leadShareId
+    ? getCloudCtaUrl(leadShareId, `model_${group.slug}_${placement}`)
+    : getCloudLandingUrl(`model_${group.slug}_${placement}`);
+const heroCtaUrl = modelCtaUrl('hero');
+const footerCtaUrl = modelCtaUrl('footer');
 
 const modelsUrl = absoluteUrl(localizeUrl('/workflows/model/', locale));
 const breadcrumbTrail = [
@@ -190,7 +183,7 @@ const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
       eyebrow={t('model.heroEyebrow', locale)}
       title={h1}
       description={subheading}
-      meta={`${group.templates.length} ${t('useCase.workflowsCount', locale)}`}
+      meta={`${group.templates.length} ${t(group.templates.length === 1 ? 'useCase.workflowsCountOne' : 'useCase.workflowsCount', locale)}`}
       primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
       templates={group.templates}

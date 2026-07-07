@@ -45,29 +45,18 @@ export interface Application {
 
 /** Editorial content an SEO page renders; optional fields render only if present. */
 export interface SeoContent {
-  /** Hero subheading under the H1. */
   subheading?: string;
-  /** Intro; paragraphs separated by blank lines. */
   extendedDescription: string;
-  /** Capability cards (use-case pages). */
   styles?: SeoStyle[];
-  /** "What is <model>" block (model pages). */
   modelSpec?: ModelSpec;
   howToUse: string[];
-  /** Subheading for the "What you can create" capabilities section (use-case pages;
-   *  model pages fall back to `modelSpec.summary`). */
   capabilitiesIntro?: string;
-  /** "Why ComfyUI" reason rows (title + description). */
   whyComfy?: WhyComfyReason[];
-  /** Subheading for the "What people use it for" section. */
   applicationsIntro?: string;
-  /** "What people use it for" cards; strings are legacy, objects are preferred. */
   suggestedUseCases?: (string | Application)[];
   /** 150-160 chars; excluded from body word counts. */
   metaDescription: string;
-  /** Drives FAQPage JSON-LD. */
   faqItems: FaqItem[];
-  /** Set when generated rather than hand-authored. */
   lastAIGeneration?: string;
 }
 
@@ -88,15 +77,10 @@ export interface CardBadge {
 
 /** An SEO landing page (use-case or model) summarized as an index/rail card. */
 export interface SeoPageCard {
-  /** Absolute or root-relative href to the page. */
   href: string;
-  /** Card heading (the page's H1). */
   title: string;
-  /** Resolved grid size, shown as the workflow count. */
   count: number;
-  /** Lead template's first thumbnail, or null for a placeholder. */
   thumbnail: string | null;
-  /** Provider badges shown on the card, in order (may be empty). */
   logos: CardBadge[];
 }
 

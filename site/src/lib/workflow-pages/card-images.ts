@@ -2,7 +2,7 @@
  * Assigns a representative template thumbnail to each editorial card on an SEO
  * page. Pure and deterministic — same inputs, same assignment every build.
  */
-import type { MatcherTemplate } from '../hub-api';
+import { byUsageDesc, type MatcherTemplate } from '../hub-api';
 import { hasStillThumbnail } from '../media-utils';
 
 export interface CardImage {
@@ -78,22 +78,15 @@ function relevance(cardTokens: Set<string>, template: MatcherTemplate): number {
 }
 
 export interface AssignOptions {
-  /**
-   * Shared exclusion set, mutated as templates are consumed. Pass the SAME set
-   * to every section on a page so an image never repeats across sections.
-   */
+  /** Exclusion set, mutated as templates are consumed. Share one across a page's
+   *  sections so an image never repeats across them. */
   used?: Set<string>;
-  /**
-   * Wider catalog to draw from once `templates` is exhausted — lets a section
-   * borrow a relevant image from the whole dataset instead of repeating one.
-   */
+  /** Wider pool drawn from once `templates` is exhausted, to avoid a repeat. */
   fallback?: MatcherTemplate[];
 }
 
 const withStill = (templates: MatcherTemplate[]) =>
-  templates
-    .filter((t) => hasStillThumbnail(t.thumbnails))
-    .sort((a, b) => (b.usage || 0) - (a.usage || 0) || a.name.localeCompare(b.name));
+  templates.filter((t) => hasStillThumbnail(t.thumbnails)).sort(byUsageDesc);
 
 /** Best unused template for a card by token overlap; null if the pool is dry. */
 function pickForCard(

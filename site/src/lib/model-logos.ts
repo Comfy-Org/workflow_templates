@@ -53,8 +53,8 @@ function escapeRegex(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Key at a word start, followed only by a version (digit/dot/space) or end, so a
-// family matches its variants ("wan2.2") but not a longer word ("swan", "waning").
+// Key at a word start, not followed by another letter, so a family matches its
+// variants ("wan2.2", "wan animate") but not a longer word ("swan", "waning").
 const LOGO_MATCHERS: [RegExp, string][] = Object.entries(MODEL_TO_LOGO).map(([key, slug]) => [
   new RegExp(`(?:^|[^a-z0-9])${escapeRegex(key.toLowerCase())}(?![a-z])`),
   slug,
@@ -112,17 +112,19 @@ export interface ModelBadge {
 
 /**
  * Distinct provider badges for a template, in order. Prefers the structured
- * `logos` (already deduped by `providerLogos`); falls back to the `models` list
- * via `getLogoPath`. Shared by the landing hero, About cards, and the
- * model/use-case index cards so every surface resolves badges the same way.
+ * `logos`, falling back to the `models` list when those resolve to nothing.
+ * Shared by the landing hero, About cards, and the model/use-case index cards so
+ * every surface resolves badges the same way.
  */
 export function resolveTemplateLogos(input: {
   models?: string[];
   logos?: { provider: string | string[] }[];
 }): ModelBadge[] {
-  if (input.logos?.length) {
-    return providerLogos(input.logos).map((logo) => ({ src: logo.logoPath, name: logo.name }));
-  }
+  const fromLogos = input.logos?.length
+    ? providerLogos(input.logos).map((logo) => ({ src: logo.logoPath, name: logo.name }))
+    : [];
+  if (fromLogos.length) return fromLogos;
+
   const badges: ModelBadge[] = [];
   const seenLogos = new Set<string>();
   for (const model of input.models ?? []) {

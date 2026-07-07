@@ -15,9 +15,12 @@ const BRAND_SAFETY_DENY = [
   'porn',
 ];
 
+const DENY_PATTERNS = BRAND_SAFETY_DENY.map(
+  (term) => new RegExp(`\\b${term.replace(/[\s-]+/g, '[\\s_-]+')}`, 'i')
+);
+
 function checkBrandSafety(text: string): string[] {
-  const haystack = text.toLowerCase();
-  return BRAND_SAFETY_DENY.filter((term) => haystack.includes(term));
+  return BRAND_SAFETY_DENY.filter((_, i) => DENY_PATTERNS[i].test(text));
 }
 
 /** Throws on any denylist hit; call at build time so denied pages never ship. */
@@ -25,10 +28,15 @@ export function assertBrandSafe(fields: {
   slug: string;
   primaryKeyword: string;
   title: string;
+  secondaryKeywords?: string[];
 }): void {
-  const hits = [
-    ...new Set([fields.slug, fields.primaryKeyword, fields.title].flatMap(checkBrandSafety)),
+  const fieldsToCheck = [
+    fields.slug,
+    fields.primaryKeyword,
+    fields.title,
+    ...(fields.secondaryKeywords ?? []),
   ];
+  const hits = [...new Set(fieldsToCheck.flatMap(checkBrandSafety))];
   if (hits.length > 0) {
     throw new Error(
       `Brand-safety violation on page "${fields.slug}": denied term(s) found in slug/keyword/title: ${hits.join(', ')}.`

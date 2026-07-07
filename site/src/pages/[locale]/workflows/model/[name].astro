@@ -17,7 +17,8 @@ import { t } from '../../../../i18n/ui';
 import { absoluteUrl } from '../../../../config/site';
 import { modelPath } from '../../../../lib/routes';
 import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
-import { isIndexable } from '../../../../lib/workflow-pages/governance';
+import { loadModelContent } from '../../../../lib/workflow-pages/content-loaders';
+import { buildModelPageMeta, isModelPageIndexable } from '../../../../lib/workflow-pages/seo-page';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
@@ -55,37 +56,37 @@ if (family.slug !== name) {
   return Astro.redirect(localizeUrl(modelPath(family.slug), typedLocale), 301);
 }
 
-const modelName = family.label;
 const matchingTemplates = family.templates;
 const basePath = modelPath(family.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
 
-// noindex parity with the English route across the hreflang cluster (no editorial
-// copy here, so `qualifies` is the quality signal).
-const noindex = !isIndexable({
-  clusterSize: matchingTemplates.length,
-  humanEdited: true,
-  qualityPassed: family.qualifies,
+// Localized pages carry no editorial copy of their own, but title/meta/noindex
+// resolve through the same helper as the English route so the hreflang cluster
+// stays consistent.
+const content = await loadModelContent(family.slug);
+const { h1, title, description } = buildModelPageMeta({
+  group: family,
+  content,
+  locale: typedLocale,
+  templateCount: matchingTemplates.length,
 });
+const noindex = !isModelPageIndexable(family, matchingTemplates.length, content);
 
 const countLabel =
   matchingTemplates.length === 1
     ? t('template.countOne', typedLocale)
     : t('template.count', typedLocale);
 
-const title = `${modelName} ComfyUI Workflows - Free Templates`;
-const description = `Browse ${matchingTemplates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
-
 const structuredData = buildCollectionPageJsonLd({
-  name: `${modelName} ComfyUI Workflows`,
+  name: h1,
   description,
   url: canonicalUrl,
-  inLanguage: locale,
+  inLanguage: typedLocale,
 });
 
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(
   typedLocale,
-  { name: modelName },
+  { name: h1 },
   {
     name: t('labels.models', typedLocale),
     item: absoluteUrl(localizeUrl('/workflows/model/', typedLocale)),
@@ -119,7 +120,7 @@ const serialized = matchingTemplates;
     <div class="mb-12">
       <span class={badgeVariants({ variant: 'hub-pill' })}>{t('labels.models', typedLocale)}</span>
       <h1 class="text-3xl font-bold text-content mt-3">
-        {modelName} ComfyUI Workflows
+        {h1}
       </h1>
       <p class="text-content-muted text-base mt-2">
         {matchingTemplates.length}

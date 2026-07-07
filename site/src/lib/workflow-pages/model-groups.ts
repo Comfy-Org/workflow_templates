@@ -5,7 +5,7 @@
  * the thresholds and FAMILY_RULES.
  */
 import { slugify } from '../slugify';
-import type { SerializedTemplate } from '../hub-api';
+import { byUsageDesc, type SerializedTemplate } from '../hub-api';
 import type { KeywordModel } from './schema';
 
 /** Minimal template shape deriveModelGroups reads. */
@@ -17,7 +17,7 @@ export interface CatalogTemplate {
 }
 
 function sortByUsage<T extends CatalogTemplate>(templates: T[]): T[] {
-  return [...templates].sort((a, b) => (b.usage ?? 0) - (a.usage ?? 0));
+  return [...templates].sort(byUsageDesc);
 }
 
 const MIN_CLUSTER_SIZE = 5;
@@ -62,15 +62,15 @@ function isProvider(label: string): boolean {
   return PROVIDER_DENYLIST.has(label.toLowerCase());
 }
 
-/** Priority if the slug equals or is a versioned variant of a priority slug. */
+/** Priority if the slug equals a priority slug or is a `-` suffixed variant of one. */
 function isPriority(label: string): boolean {
   const slug = slugify(label);
   return PRIORITY_SLUGS.some((priority) => slug === priority || slug.startsWith(`${priority}-`));
 }
 
-// Collapse versioned variants to one canonical family label. Rules use hyphen
-// form and are matched against both raw and space->hyphen forms (so "Nano Banana
-// Pro" matches ^nano-banana). Order matters: specific rules precede their bases.
+// Collapse versioned variants to one canonical family label. Rules match against
+// both raw and space->hyphen forms. Order matters: specific rules precede their
+// bases (e.g. ^nano-banana-pro before ^nano-banana).
 const FAMILY_RULES: { match: RegExp; label: string }[] = [
   { match: /^wan/i, label: 'Wan' },
   { match: /^flux/i, label: 'Flux' },
@@ -83,7 +83,8 @@ const FAMILY_RULES: { match: RegExp; label: string }[] = [
   { match: /^kling/i, label: 'Kling' },
   { match: /^z-image/i, label: 'Z-Image' },
   { match: /^gpt-image/i, label: 'GPT-Image' },
-  { match: /^nano-banana|^gemini.*image/i, label: 'Nano Banana Pro' },
+  { match: /^nano-banana-pro/i, label: 'Nano Banana Pro' },
+  { match: /^nano-banana|^gemini.*image/i, label: 'Nano Banana' },
   { match: /^hunyuan3d/i, label: 'Hunyuan3D' },
 ];
 
