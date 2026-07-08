@@ -1,0 +1,296 @@
+{
+  "id": "00000000-0000-0000-0000-000000000000",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "ByteDanceSeedreamNodeV2",
+      "pos": [
+        750,
+        420
+      ],
+      "size": [
+        400,
+        520
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "image_1",
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "label": "image_2",
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDanceSeedreamNodeV2"
+      },
+      "widgets_values": [
+        "Convert the entire collage into a cohesive, realistic interior design photo of a cozy living room. Render the sketched bay window area on the left into a real window filled with potted plants, including Swiss cheese plants and a fiddle-leaf fig, with a lush forest view outside. Transform the sketched snake plant in the bottom-left into a real potted snake plant. Blend the elements seamlessly under warm, natural afternoon sunlight.",
+        "seedream 5.0 lite",
+        "(2K) 2048x2048 (1:1)",
+        2048,
+        2048,
+        1,
+        false,
+        0,
+        "randomize",
+        false
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        1200,
+        420
+      ],
+      "size": [
+        580,
+        520
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImageAdvanced"
+      },
+      "widgets_values": [
+        "Seedream5.0_Pro_image_edit",
+        "png",
+        "8-bit",
+        "sRGB"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        -370,
+        420
+      ],
+      "size": [
+        580,
+        720
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "interior_college.png",
+        "image"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "Painter",
+      "pos": [
+        270,
+        420
+      ],
+      "size": [
+        420,
+        757.859375
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3,
+            4
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "title": "Painter (Optional)",
+      "properties": {
+        "Node name for S&R": "Painter",
+        "painterTool": "brush",
+        "painterBrushSize": 20,
+        "painterBrushColor": "#ffffff",
+        "painterBrushOpacity": 1,
+        "painterBrushHardness": 1
+      },
+      "widgets_values": [
+        "painter/painter-4-1783518860417.png [temp]",
+        1024,
+        1024,
+        "#000000"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "PreviewImage",
+      "pos": [
+        270,
+        1460
+      ],
+      "size": [
+        420,
+        480
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 6,
+      "type": "MarkdownNote",
+      "pos": [
+        270,
+        1230
+      ],
+      "size": [
+        420,
+        168.453125
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Enable Node 2.0. If you can’t use the Painter node, use the [Partial Execution](https://docs.comfy.org/interface/features/partial-execution) feature on the Preview Image node. This way, you won’t need to run the entire workflow just to get the Painter preview working.\n\nYou can run this workflow without updating it; if you want, you can use it to draw some marks on the input image."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      4,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      4,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.4545649132433333,
+      "offset": [
+        1313.853551524431,
+        137.97326684204225
+      ]
+    },
+    "frontendVersion": "1.45.20"
+  },
+  "version": 0.4
+}
