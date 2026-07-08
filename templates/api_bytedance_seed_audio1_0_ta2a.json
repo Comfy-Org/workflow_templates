@@ -1,0 +1,193 @@
+{
+  "id": "6d029989-7e4b-4077-acb4-e5c45eec2b1d",
+  "revision": 0,
+  "last_node_id": 8,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 3,
+      "type": "ByteDanceSeedAudio",
+      "pos": [
+        -243.23859960711826,
+        -386.98716660616896
+      ],
+      "size": [
+        501.90625,
+        572.375
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "reference_audio_1",
+          "name": "reference_mode.reference_audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 5
+        },
+        {
+          "label": "reference_audio_2",
+          "name": "reference_mode.reference_audio_2",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "label": "reference_audio_3",
+          "name": "reference_mode.reference_audio_3",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDanceSeedAudio"
+      },
+      "widgets_values": [
+        "Quiet café ambience, soft room tone, faint distant chatter, no background music.\n\nElena (woman in her late twenties, warm mid-range voice, soft but clear, calm and friendly, voiced by @Audio1) says gently:\n\"Hi, I'm Elena. Thanks for joining me today. I'll speak naturally, warmly, and clearly, just like my reference voice.\"\n\nElena (voiced by @Audio1), a little warmer, says:\n\"Listen for my pitch, my pauses, and how I finish each sentence softly but clearly.\"\n\nEnds in silence.",
+        "audio reference",
+        "24000",
+        0,
+        0,
+        0,
+        1266743122,
+        "randomize"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        286.54824314203955,
+        -386.8170900771985
+      ],
+      "size": [
+        621.46875,
+        216
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Seed_Audio_1.0_r2a",
+        "mp3",
+        "V0"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -1201.9415604737128,
+        -388.79810918508224
+      ],
+      "size": [
+        476.71875,
+        629.765625
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: TA2A Prompt Guide",
+      "properties": {},
+      "widgets_values": [
+        "Seed Audio 1.0: TA2A (Text + Audio to Audio) Workflow Guide\n\n## What This Workflow Does\nLoad Audio → ByteDance Seed Audio 1.0 (audio reference) → Save Audio.\n\nTA2A = text prompt + reference audio. Clone voice(s) from up to 3 reference clips, then generate a new scene with those voices plus ambience, music, and SFX.\n\nBest for: keeping a consistent character voice, multi-speaker scenes with known voices, dubbing when you already have a voice sample.\n\n## How to Use\n1. Load Audio: add your reference clip(s) (≤30s each).\n2. Connect AUDIO → reference_audio_1 (and _2, _3 if needed, in order, no gaps).\n3. Keep reference_mode on \"audio reference\".\n4. In text_prompt, tag each speaker with voiced by @AudioN matching the connected clip.\n5. Run the workflow.\n\n@Audio1 = reference_audio_1 · @Audio2 = reference_audio_2 · @Audio3 = reference_audio_3\n\nNeed a reference clip first? Use the T2A workflow to generate a clean single-speaker sample, then use it here.\n\n## Target Language\nThe model supports English and Chinese. It may mix languages if you do not specify.\n\nTo lock the output language, add a bracket tag at the top:\n- [Language: English only.]\n- [Language: Chinese only.]\n\nAlso state the language in each character's voice traits, for example: speaks English only, or speaks Chinese only. Write dialogue in your target language.\n\n## Avoid Scene Text Being Spoken\nWrap non-dialogue in [square brackets]. Only quoted text after says / whispers should be spoken.\n\n## Prompt Guide\n1. [Language: ...] optional but recommended\n2. [Environment / BGM / SFX: ...]\n3. Name (voice traits, voiced by @Audio1) says: \"dialogue\"\n4. Name (voiced by @Audio1), [emotion], says: \"next line\"\n5. Name2 (voice traits, voiced by @Audio2) replies: \"dialogue\"\n6. [Outro]\n\nRules:\n- Every @AudioN in the prompt must have a matching connected clip\n- Same speaker reuses the same @AudioN on later lines\n- Max 3 reference clips · ≤30s each · connect 1→2→3 without gaps\n\nLimits: prompt ≤3000 chars · output ≤2 min · English & Chinese\n\n## Example (single reference)\n[Language: English only.]\n[Environment: quiet café ambience, soft room tone, no music.]\n\nElena (warm mid-range voice, calm and friendly, speaks English only, voiced by @Audio1) says gently:\n\"Hi, thanks for joining me today.\"\n\nElena (voiced by @Audio1), a little warmer, says:\n\"I'll speak naturally, just like my reference voice.\"\n\n[Silence.]"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 8,
+      "type": "LoadAudio",
+      "pos": [
+        -687.3165865045286,
+        -386.89512185518817
+      ],
+      "size": [
+        366.625,
+        152
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "seed_audio_ref_audio1.mp3",
+        null,
+        ""
+      ]
+    }
+  ],
+  "links": [
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "AUDIO"
+    ],
+    [
+      5,
+      8,
+      0,
+      3,
+      0,
+      "AUDIO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5404449616503781,
+      "offset": [
+        1786.4337984914434,
+        1032.5114596356975
+      ]
+    },
+    "frontendVersion": "1.45.20"
+  },
+  "version": 0.4
+}
