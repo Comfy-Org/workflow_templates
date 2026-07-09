@@ -35,7 +35,17 @@ const fullCanonicalUrl = canonicalUrl
   ? canonicalUrl
   : absoluteUrl(`${pathname}${pathname.endsWith('/') ? '' : '/'}`);
 const fullOgImage = ogImage.startsWith('http') ? ogImage : absoluteUrl(ogImage);
-const ogImageType = /\.jpe?g$/i.test(ogImage.split('?')[0]) ? 'image/jpeg' : 'image/png';
+
+const OG_IMAGE_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  gif: 'image/gif',
+};
+const ogImageExt = ogImage.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
+const ogImageType = OG_IMAGE_MIME[ogImageExt] ?? 'image/png';
 
 // Compute hreflang base path if not provided
 // Strip locale prefix from pathname to get the base path
