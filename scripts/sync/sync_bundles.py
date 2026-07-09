@@ -83,6 +83,19 @@ BUNDLE_TARGETS = {
 }
 BUNDLES_CONFIG = ROOT / "bundles.json"
 
+
+def media_file_belongs_to_template(filename: str, template_id: str) -> bool:
+    """Return True when a media asset filename belongs to exactly this template.
+
+    Prevents prefix collisions such as assigning ``image_krea2_turbo_t2i_int8-1.webp``
+    to template ``image_krea2_turbo_t2i`` (``{template_id}*.webp`` glob is too broad).
+    """
+    stem = Path(filename).stem
+    if stem == template_id:
+        return True
+    return stem.startswith(f"{template_id}-")
+
+
 def get_pip_excluded_template_names() -> frozenset[str]:
     """Return the set of template names that must be excluded from pip packages.
 
@@ -237,6 +250,8 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
             for pattern in media_patterns:
                 for asset_path in sorted(TEMPLATES_DIR.glob(pattern)):
                     if asset_path.name in seen:
+                        continue
+                    if not media_file_belongs_to_template(asset_path.name, template_id):
                         continue
                     seen.add(asset_path.name)
                     assets.append(

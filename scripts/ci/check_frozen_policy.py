@@ -30,7 +30,6 @@ from version_policy import (  # noqa: E402
     get_frozen_bundle_map,
     get_frozen_packages,
     is_media_template_asset_path,
-    is_workflow_template_path,
     load_bundles,
     load_frozen_bundle_inventory,
     load_version_policy,
@@ -117,21 +116,18 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
                     )
                 )
 
-        template_id: str | None = None
-        if is_workflow_template_path(file_path):
-            template_id = Path(file_path).stem
-        elif is_media_template_asset_path(file_path):
-            template_id = template_id_from_asset_path(file_path, bundles)
+        if not is_media_template_asset_path(file_path):
+            continue
 
+        template_id = template_id_from_asset_path(file_path, bundles)
         if template_id and template_id in membership:
             bundle_name = membership[template_id]
             pkg = frozen_bundles[bundle_name]
-            file_kind = "workflow JSON" if is_workflow_template_path(file_path) else "media asset"
             impacts.append(
                 PolicyImpact(
                     kind="frozen_bundle_template_file",
                     detail=(
-                        f"Changed {file_kind} `{file_path}` for template `{template_id}`, "
+                        f"Changed media asset `{file_path}` for template `{template_id}`, "
                         f"which is assigned to frozen bundle `{bundle_name}` (`{pkg}`). "
                         f"Legacy `{pkg}` stays pinned; put new work in `{policy.get('recommended_asset_bundle', 'media-assets-01')}`."
                     ),
@@ -202,8 +198,10 @@ def build_comment(impacts: list[PolicyImpact]) -> str:
         COMMENT_MARKER,
         "## Frozen bundle policy reminder",
         "",
-        "This PR changes files tied to **frozen legacy media bundles** in `bundles.json`. "
-        "Those PyPI packages are pinned and excluded from CI auto-bump.",
+        "This PR changes **media assets** (thumbnails, previews, etc.) for templates "
+        "assigned to **frozen legacy media bundles**. "
+        "Those PyPI packages are pinned and excluded from CI auto-bump. "
+        "Workflow JSON changes are not flagged — they ship via the `json` package.",
         "",
         "### Changes detected in this PR",
     ]
