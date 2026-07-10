@@ -117,10 +117,13 @@ const structuredData = buildCollectionPageJsonLd({
   name: h1,
   description,
   url: canonicalUrl,
-  items: buildTemplateItemListEntries(templates, locale),
+  items: noindex ? undefined : buildTemplateItemListEntries(templates, locale),
 });
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
-  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
   { name: t('labels.models', locale), item: modelsUrl },
 ]);
 const faqStructuredData = qualityContent ? buildFaqJsonLd(qualityContent.faqItems) : null;

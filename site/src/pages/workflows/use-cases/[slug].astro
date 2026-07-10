@@ -123,10 +123,13 @@ const structuredData = buildCollectionPageJsonLd({
   name: title,
   description,
   url: canonicalUrl,
-  items: buildTemplateItemListEntries(templates, locale),
+  items: noindex ? undefined : buildTemplateItemListEntries(templates, locale),
 });
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
-  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
   { name: t('template.useCases', locale), item: useCasesUrl },
 ]);
 // Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.

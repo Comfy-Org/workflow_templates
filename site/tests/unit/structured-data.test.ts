@@ -121,8 +121,36 @@ describe('buildCollectionPageJsonLd', () => {
 
   it('omits mainEntity for an empty items array', () => {
     expect(
-      buildCollectionPageJsonLd({ name: 'X', description: 'd', url: 'https://comfy.org/', items: [] })
+      buildCollectionPageJsonLd({
+        name: 'X',
+        description: 'd',
+        url: 'https://comfy.org/',
+        items: [],
+      })
     ).not.toHaveProperty('mainEntity');
+  });
+
+  it('omits mainEntity when items is undefined (the gated-noindex path)', () => {
+    expect(
+      buildCollectionPageJsonLd({
+        name: 'X',
+        description: 'd',
+        url: 'https://comfy.org/',
+        items: undefined,
+      })
+    ).not.toHaveProperty('mainEntity');
+  });
+
+  it('carries both inLanguage and mainEntity for a localized page with items', () => {
+    const result = buildCollectionPageJsonLd({
+      name: 'Models',
+      description: 'desc',
+      url: 'https://comfy.org/ja/workflows/model/flux/',
+      inLanguage: 'ja',
+      items: [{ name: 'Flux', url: 'https://comfy.org/ja/workflows/flux-abc/' }],
+    });
+    expect(result).toHaveProperty('inLanguage', 'ja');
+    expect(result.mainEntity).toMatchObject({ '@type': 'ItemList', numberOfItems: 1 });
   });
 });
 
