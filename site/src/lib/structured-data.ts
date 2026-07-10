@@ -36,21 +36,23 @@ export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
 }
 
 /**
- * BreadcrumbList for a workflows sub-page: Home → a section crumb → the current
- * page. `section` defaults to the `/workflows/` listing; pass an override for
- * pages nested under a different parent (e.g. the models index).
+ * BreadcrumbList for a workflows sub-page: Home → section crumb(s) → the current
+ * page. `sections` defaults to the `/workflows/` listing; pass deeper parents
+ * (e.g. Workflows → Models) so routes that share a parent emit the same trail.
  */
 export function buildWorkflowBreadcrumb(
   locale: Locale,
   leaf: BreadcrumbItem,
-  section: BreadcrumbItem = {
-    name: t('breadcrumb.workflows', locale),
-    item: absoluteUrl(localizeUrl('/workflows/', locale)),
-  }
+  sections: BreadcrumbItem[] = [
+    {
+      name: t('breadcrumb.workflows', locale),
+      item: absoluteUrl(localizeUrl('/workflows/', locale)),
+    },
+  ]
 ) {
   return buildBreadcrumbJsonLd([
     { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
-    section,
+    ...sections,
     leaf,
   ]);
 }

@@ -83,6 +83,12 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'cta.viewAll': 'View All',
     'model.aboutEyebrow': 'About This AI Model',
     'model.heroEyebrow': 'AI Model',
+    'model.metaH1': '{label} ComfyUI Workflows',
+    'model.metaTitle': '{label} ComfyUI Workflows — Free Templates',
+    'model.metaDescription':
+      'Browse {count} ready-to-run ComfyUI workflow templates using {label}. AI generation workflows that run on Comfy Cloud with no setup.',
+    'model.subheading':
+      'Ready-to-run ComfyUI workflows built on {label}, fully editable and runnable on Comfy Cloud with no setup.',
     'cta.tryCloudSubline': '✦ Get Free Credits',
     'labels.workflowPreviewNote':
       'This is a simplified visualization. The actual workflow may contain additional nodes and connections.',
@@ -115,6 +121,7 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'template.theWorkflows': 'The workflows',
     'useCase.keepExploring': 'Keep exploring',
     'useCase.keepExploringSub': 'Related models and use cases to try next.',
+    'useCase.workflowsCountOne': 'workflow',
     'useCase.workflowsCount': 'workflows',
     'useCase.bannerTitle': 'Reproducible, tunable, yours',
     'useCase.bannerBody':
@@ -122,6 +129,10 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
     'useCase.bannerKicker': 'Start free. Upgrade when you’re ready.',
     'useCase.bannerCta': 'See pricing plans',
     'useCase.tryWorkflow': 'Try workflow',
+    'useCase.metaDescription':
+      'Browse {count} ready-to-use ComfyUI workflow templates for {keyword}. No setup required on Comfy Cloud.',
+    'useCase.subheading':
+      'Ready-to-run ComfyUI workflows for {keyword}, fully editable and runnable on Comfy Cloud with no setup.',
     'model.about': 'About the model',
     'model.capabilities': 'Key capabilities',
     'template.techDetails': 'Technical Details',

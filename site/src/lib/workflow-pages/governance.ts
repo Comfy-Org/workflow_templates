@@ -15,9 +15,12 @@ const BRAND_SAFETY_DENY = [
   'porn',
 ];
 
+const DENY_PATTERNS = BRAND_SAFETY_DENY.map(
+  (term) => new RegExp(`\\b${term.replace(/[\s-]+/g, '[\\s_-]+')}`, 'i')
+);
+
 function checkBrandSafety(text: string): string[] {
-  const haystack = text.toLowerCase();
-  return BRAND_SAFETY_DENY.filter((term) => haystack.includes(term));
+  return BRAND_SAFETY_DENY.filter((_, i) => DENY_PATTERNS[i].test(text));
 }
 
 /** Throws on any denylist hit; call at build time so denied pages never ship. */
@@ -25,10 +28,15 @@ export function assertBrandSafe(fields: {
   slug: string;
   primaryKeyword: string;
   title: string;
+  secondaryKeywords?: string[];
 }): void {
-  const hits = [
-    ...new Set([fields.slug, fields.primaryKeyword, fields.title].flatMap(checkBrandSafety)),
+  const fieldsToCheck = [
+    fields.slug,
+    fields.primaryKeyword,
+    fields.title,
+    ...(fields.secondaryKeywords ?? []),
   ];
+  const hits = [...new Set(fieldsToCheck.flatMap(checkBrandSafety))];
   if (hits.length > 0) {
     throw new Error(
       `Brand-safety violation on page "${fields.slug}": denied term(s) found in slug/keyword/title: ${hits.join(', ')}.`
@@ -38,19 +46,10 @@ export function assertBrandSafe(fields: {
 
 export interface IndexabilityInput {
   clusterSize: number;
-  humanEdited: boolean;
   qualityPassed: boolean;
 }
 
-/**
- * Indexable only when backed by real templates AND the copy is trustworthy —
- * every condition must hold, so a failed quality gate can never be overridden by
- * the `humanEdited` flag.
- */
-export function isIndexable({
-  clusterSize,
-  humanEdited,
-  qualityPassed,
-}: IndexabilityInput): boolean {
-  return clusterSize > 0 && humanEdited && qualityPassed;
+/** Indexable only when backed by real templates AND the copy passed the quality gate. */
+export function isIndexable({ clusterSize, qualityPassed }: IndexabilityInput): boolean {
+  return clusterSize > 0 && qualityPassed;
 }

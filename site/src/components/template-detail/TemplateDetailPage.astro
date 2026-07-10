@@ -10,6 +10,7 @@ import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
+import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
 import { featureFlags } from '../../config/featureFlags';
@@ -48,9 +49,7 @@ const profiles = await getProfileCache();
 const profile = data.username ? profiles.get(data.username) : null;
 const authorName = profile?.display_name || data.username || 'ComfyUI';
 const authorAvatarUrl = profile?.avatar_url || null;
-const authorProfileUrl = data.username
-  ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
-  : null;
+const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const cloudTemplateId = data.shareId || data.name;

@@ -9,7 +9,7 @@ import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
 import { usePreferredReducedMotion } from '@vueuse/core';
 import type { SerializedTemplate } from '@/lib/hub-api';
-import { getLogoPath, providerName } from '@/lib/model-logos';
+import { resolveTemplateLogos } from '@/lib/model-logos';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';
@@ -81,13 +81,14 @@ const slides = computed<FeaturedSlide[]>(() =>
     const primary = t.thumbnails?.[0] ?? null;
     const isVideo = Boolean(primary && isVideoFile(primary));
     const mediaUrl = primary ? thumbnailPath(primary) : null;
-    const provider = providerName(t.logos);
+    // Falls back to `models` when `logos` is absent, which most featured templates are.
+    const badge = resolveTemplateLogos({ logos: t.logos, models: t.models })[0] ?? null;
     return {
       key: t.shareId || t.name,
       title: t.title,
       href: workflowDetailPath(t.name, t.shareId, props.locale),
-      providerName: provider,
-      logoPath: provider ? getLogoPath(provider) : null,
+      providerName: badge?.name ?? null,
+      logoPath: badge?.src ?? null,
       imageUrl: isVideo ? null : mediaUrl,
       videoUrl: isVideo ? mediaUrl : null,
       posterUrl: isVideo && mediaUrl ? getVideoFrameUrl(mediaUrl) : null,

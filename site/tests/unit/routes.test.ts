@@ -92,6 +92,13 @@ describe('creatorPath', () => {
     expect(creatorPath('topaz', 'ar')).toBe('/ar/workflows/topaz/');
     expect(creatorPath('topaz', 'en')).toBe('/workflows/topaz/');
   });
+
+  it('round-trips to the raw username the profile route matches', () => {
+    for (const username of ['enigmatic_e', 'Comfy Org', 'user.name', 'MixLab']) {
+      const segment = creatorPath(username).replace(/^\/workflows\/|\/$/g, '');
+      expect(decodeURIComponent(segment)).toBe(username);
+    }
+  });
 });
 
 describe('modelPath / modelsIndexPath', () => {

@@ -67,8 +67,10 @@ Run `sync_frozen_inventory.py` after removals so the inventory matches `bundles.
 CI posts a PR comment (informational, non-blocking) when a PR:
 
 - **Adds** template IDs to a frozen bundle in `bundles.json`
-- Changes `templates/{id}.json` or media assets for a template still assigned to a frozen bundle
+- Changes media assets (thumbnails, previews, etc.) for a template still assigned to a frozen bundle
 - Modifies `packages/media_*` tree or frozen pins in root `pyproject.toml`
+
+Workflow JSON changes for frozen-bundle templates are **not** flagged — those ship via the `json` package.
 
 ### Version bumps
 

@@ -3,7 +3,7 @@
  * `SeoPageCard` grid; only qualifying/non-empty pages become cards.
  */
 import type { SerializedTemplate } from '../hub-api';
-import { firstStillThumbnail } from '../media-utils';
+import { firstStillThumbnail, firstStillAcross } from '../media-utils';
 import { modelPath, useCasePath, workflowDetailPath, resolveAbsoluteThumbnail } from '../routes';
 import { getLogoPath, resolveTemplateLogos } from '../model-logos';
 import { absoluteUrl } from '../../config/site';
@@ -40,7 +40,7 @@ function qualifyingModelGroups(catalog: SerializedTemplate[]) {
   return [...qualifyingGroups(catalog)].sort((a, b) => b.usage - a.usage);
 }
 
-/** Top model family labels (bare, e.g. "Flux"), for the index page description. */
+/** Top model family labels (e.g. "Flux") for the index page description. */
 export function resolveTopModelLabels(catalog: SerializedTemplate[], limit = 4): string[] {
   return qualifyingModelGroups(catalog)
     .slice(0, limit)
@@ -62,7 +62,7 @@ export function resolveModelPageCards(
       href: modelPath(group.slug, locale),
       title: `${group.label} ComfyUI Workflows`,
       count: group.templates.length,
-      thumbnail: firstStillThumbnail(group.templates[0]?.thumbnails),
+      thumbnail: firstStillAcross(group.templates),
       logos,
     };
   });
@@ -78,7 +78,7 @@ export function resolveUseCasePageCards(
       href: useCasePath(def.slug, locale),
       title: def.h1,
       count: templates.length,
-      thumbnail: firstStillThumbnail(templates[0]?.thumbnails),
+      thumbnail: firstStillAcross(templates),
       logos: templates[0] ? resolveTemplateLogos(templates[0]) : [],
     };
   }).filter((card) => card.count > 0);

@@ -34,3 +34,23 @@ export function firstStillThumbnail(thumbnails?: string[]): string | null {
 export function hasStillThumbnail(thumbnails?: string[]): boolean {
   return thumbnails?.some((thumb) => !isMediaFile(thumb)) ?? false;
 }
+
+/**
+ * First still thumbnail across a list of templates, in order — so a card falls
+ * back to a later template's still when the lead template is video-only.
+ */
+export function firstStillAcross(templates: { thumbnails?: string[] }[]): string | null {
+  for (const template of templates) {
+    const still = firstStillThumbnail(template.thumbnails);
+    if (still) return still;
+  }
+  return null;
+}
+
+/** First template with a usable still thumbnail — the shared hero pick, so a page's
+ *  reserved-hero exclusion can't diverge from what LandingHero actually renders. */
+export function firstTemplateWithStill<T extends { thumbnails?: string[] }>(
+  templates: T[]
+): T | undefined {
+  return templates.find((template) => hasStillThumbnail(template.thumbnails));
+}

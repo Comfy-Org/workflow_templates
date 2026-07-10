@@ -1,5 +1,6 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import type { GeneratedSeoContent } from '../lib/workflow-pages/schema';
 
 // Base schema for template data
 const templateSchema = z.object({
@@ -102,13 +103,8 @@ const templates = defineCollection({
   schema: templateSchema,
 });
 
-// Landing page editorial copy. Use-case and model pages share one content shape
-// (the only structural difference is `styles` vs `modelSpec`), so both
-// collections validate against the same schema. Authored by hand under
-// src/content/landing/{use-cases,models}/<slug>.json; rendered by the landing routes.
-// The Zod shape mirrors the `SeoContent` interface in src/lib/workflow-pages/schema.ts,
-// which carries the per-field documentation (plus `humanEdited`/`qualityFailed`
-// content-loading flags handled here).
+// Use-case and model pages share this content shape (`styles` vs `modelSpec`).
+// Must stay in sync with `GeneratedSeoContent` (schema.ts) — see assertion below.
 const seoContentSchema = z.object({
   subheading: z.string().optional(),
   extendedDescription: z.string(),
@@ -136,15 +132,14 @@ const seoContentSchema = z.object({
     .optional(),
   metaDescription: z.string(),
   faqItems: z.array(z.object({ question: z.string(), answer: z.string() })),
-  /** True for hand-authored copy (vs generated). */
-  humanEdited: z.boolean().optional(),
-  /** Set by the generator when content could not pass the quality contract. */
   qualityFailed: z.boolean().optional(),
   lastAIGeneration: z.string().optional(),
 });
 
-// Nested under src/content/landing/, so each needs an explicit glob loader (entry
-// `id` is the file's base name, e.g. "ai-headshot-generator" / "wan").
+// Guard against schema/type drift (schema.ts).
+const _assertMatch = (content: z.infer<typeof seoContentSchema>): GeneratedSeoContent => content;
+void _assertMatch;
+
 const seoUseCases = defineCollection({
   loader: glob({ pattern: '*.json', base: './src/content/landing/use-cases' }),
   schema: seoContentSchema,

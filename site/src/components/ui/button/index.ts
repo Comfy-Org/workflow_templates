@@ -26,6 +26,8 @@ export const buttonVariants = cva(
           'rounded-2xl bg-brand text-page font-semibold tracking-wider hover:opacity-90',
         'brand-outline':
           'rounded-2xl border border-brand text-brand font-semibold tracking-wider hover:bg-brand hover:text-page',
+        'brand-inverse':
+          'rounded-2xl bg-page text-brand font-semibold tracking-wider hover:opacity-90',
         nav: 'text-primary-warm-white hover:text-primary-comfy-yellow h-auto justify-between px-0 py-1 text-start text-2xl font-medium',
         'nav-muted':
           'text-primary-comfy-canvas hover:text-primary-comfy-yellow h-auto w-full justify-between px-0 py-1 text-start text-2xl font-medium uppercase',

@@ -3,19 +3,11 @@
  * catalog. Node-importable (no `import.meta.glob`); editorial copy is loaded
  * separately in `content-loaders.ts`.
  */
-import type { SerializedTemplate } from '../hub-api';
+import { byUsageDesc, type SerializedTemplate } from '../hub-api';
 import { SEO_PAGES, type SeoPageDef, type SeoPageFilters } from './use-cases';
 import { deriveModelGroups, type ModelGroup } from './model-groups';
-import { firstStillThumbnail } from '../media-utils';
-
-/** First still (non-video/-audio) thumbnail across a group's templates. */
-function groupThumbnail(group: ModelGroup): string | undefined {
-  for (const template of group.templates) {
-    const still = firstStillThumbnail(template.thumbnails);
-    if (still) return still;
-  }
-  return undefined;
-}
+import { modelContentPasses } from './landing-content';
+import { firstStillAcross } from '../media-utils';
 
 /** The template fields the filter/sort reads — kept minimal so build-time
  *  sitemap templates (a narrower shape than SerializedTemplate) also satisfy it. */
@@ -25,7 +17,7 @@ export interface FilterableTemplate {
   usage?: number;
 }
 
-/** True if a template matches any of the page's filters (OR semantics). */
+/** Matches if any filter matches (OR semantics). */
 function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): boolean {
   const byModel = filters.models?.some((model) => template.models?.includes(model)) ?? false;
   const byTag = filters.tags?.some((tag) => template.tags?.includes(tag)) ?? false;
@@ -37,29 +29,30 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   def: SeoPageDef,
   catalog: T[]
 ): T[] {
-  return catalog
-    .filter((template) => matchesFilters(template, def.filters))
-    .sort((a, b) => (b.usage || 0) - (a.usage || 0));
+  return catalog.filter((template) => matchesFilters(template, def.filters)).sort(byUsageDesc);
 }
 
 /** A model family related to a use-case (or vice versa), ready to link. */
 export interface RelatedModel {
   slug: string;
   label: string;
-  /** First still thumbnail of the family's top template, for image cards. */
+  /** First still thumbnail across the family's templates, for image cards. */
   thumbnail?: string;
   /** Total workflows in this model family across the catalog. */
   count: number;
 }
 
-// Qualifying model groups, memoized per catalog: relatedness only links rich,
-// indexable model pages, never a bare noindex grid.
+// Indexable model groups, memoized per catalog. `qualifies` alone is weaker than
+// the page's own gate, so a priority family without a landing JSON would link to a
+// noindex grid — require shippable content too.
 const qualifyingGroupsCache = new WeakMap<SerializedTemplate[], ModelGroup[]>();
 
 export function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
   let groups = qualifyingGroupsCache.get(catalog);
   if (!groups) {
-    groups = deriveModelGroups(catalog).filter((group) => group.qualifies);
+    groups = deriveModelGroups(catalog).filter(
+      (group) => group.qualifies && modelContentPasses(group.slug)
+    );
     qualifyingGroupsCache.set(catalog, groups);
   }
   return groups;
@@ -90,7 +83,7 @@ export function relatedModelsForUseCase(
     .map(({ group }) => ({
       slug: group.slug,
       label: group.label,
-      thumbnail: groupThumbnail(group),
+      thumbnail: firstStillAcross(group.templates) ?? undefined,
       count: group.templates.length,
     }));
 }

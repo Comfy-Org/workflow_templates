@@ -13,7 +13,7 @@
  * `src/lib/workflow-pages/use-case-resolver.ts` for the matching rules.
  */
 
-import type { KeywordModel, WordCountTier } from './schema';
+import type { KeywordModel } from './schema';
 
 export interface SeoPageFilters {
   /** Match templates whose `models` include any of these (exact model strings). */
@@ -29,8 +29,6 @@ export interface SeoPageDef {
   h1: string;
   /** Target keywords; `keywords.primary` drives copy + meta fallback. */
   keywords: KeywordModel;
-  /** Word-count band the quality validator enforces, by keyword difficulty/value. */
-  wordCountTier: WordCountTier;
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
 }
@@ -51,7 +49,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'studio lighting',
       ],
     },
-    wordCountTier: 'long',
     filters: { tags: ['Portrait'] },
   },
   {
@@ -69,7 +66,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'remodel visualization',
       ],
     },
-    wordCountTier: 'medium',
     filters: { tags: ['ControlNet'] },
   },
   {
@@ -87,7 +83,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'funny portrait',
       ],
     },
-    wordCountTier: 'lean',
     filters: { tags: ['Style Transfer'] },
   },
   {
@@ -105,7 +100,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'fine line tattoo design',
       ],
     },
-    wordCountTier: 'long',
     // No dedicated tattoo workflow exists; the structure-preserving ControlNet and
     // line-art workflows are what adapt to tattoo/stencil design. The copy frames
     // them honestly as design tools, not a one-click app.
@@ -126,7 +120,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'video upscaler',
       ],
     },
-    wordCountTier: 'long',
     filters: { tags: ['Image Upscale', 'Video Upscale'] },
   },
   {
@@ -144,7 +137,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'custom avatar',
       ],
     },
-    wordCountTier: 'medium',
     filters: {
       tags: ['Character Reference', 'Lip Sync', 'Character Replacement', 'Character', 'Face Swap'],
     },
@@ -164,7 +156,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'video from photo',
       ],
     },
-    wordCountTier: 'long',
     filters: { tags: ['Image to Video'] },
   },
   {
@@ -182,7 +173,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'photo repair',
       ],
     },
-    wordCountTier: 'lean',
     // Restoration = repair (Image Edit) + enhancement (Image Upscale). This overlaps
     // the upscaler page on the upscale tag, but the keyword + copy are distinct.
     filters: { tags: ['Image Edit', 'Image Upscale'] },
@@ -204,7 +194,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'manga art generator',
       ],
     },
-    wordCountTier: 'medium',
     // Open anime text-to-image models (Anima base/preview, plus Lumina/NewBie) tagged Anime.
     filters: { tags: ['Anime'] },
   },
@@ -227,7 +216,6 @@ export const SEO_PAGES: SeoPageDef[] = [
         'character swap in video',
       ],
     },
-    wordCountTier: 'medium',
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
