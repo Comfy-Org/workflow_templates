@@ -25,7 +25,7 @@ Release PR (release label + root bump) → publish.yml → PyPI + GitHub Release
 ### 2. Version Detection (`ci_version_manager.py`)
 - Runs only when the PR author bumps the root `pyproject.toml` version (template-only PRs skip auto-bump)
 - Skips packages in `frozen_packages` — see [frozen_bundles.md](../scripts/docs/frozen_bundles.md)
-- PR comment via `check_frozen_policy.py` when templates are **added** to frozen bundles or their files change
+- PR comment via `check_frozen_policy.py` when templates are **added** to frozen bundles or their media assets change
 
 ### 3. Publishing (`publish.yml`)
 - See [frozen_bundles.md](../scripts/docs/frozen_bundles.md) for frozen-wheel behavior and force publish
