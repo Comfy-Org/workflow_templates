@@ -25,6 +25,7 @@ import {
   buildFaqJsonLd,
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
+  buildSoftwareApplicationJsonLd,
 } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
 
@@ -146,15 +147,10 @@ const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
   item: canonicalUrl,
 });
 
-const softwareAppStructuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
+const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   name: data.title,
-  applicationCategory: 'MultimediaApplication',
-  operatingSystem: 'Windows, macOS, Linux',
   description: data.metaDescription || data.description,
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-};
+});
 
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
 const toolbarLabels = buildToolbarLabels(locale);
