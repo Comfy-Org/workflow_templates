@@ -122,14 +122,16 @@ export function fetchRankingMap(): Promise<RankingMap> {
 }
 
 /**
- * Resolve the popularity number for a template: prefer live Algolia `run_clicks`
- * for the shareId, fall back to the backend `usage`, then 0. The single override
- * rule shared by the serializers and the search-index builder.
+ * Popularity for a template: positive Algolia `run_clicks`, else backend `usage`,
+ * else 0. A `run_clicks` of 0 is "no signal" (a record can exist before clicks are
+ * backfilled), so it never overrides a nonzero `usage`.
  */
 export function applyRanking(
   shareId: string,
   usage: number | undefined,
   rankingMap: RankingMap | undefined
 ): number {
-  return rankingMap?.get(shareId)?.runClicks ?? usage ?? 0;
+  const runClicks = rankingMap?.get(shareId)?.runClicks;
+  if (runClicks && runClicks > 0) return runClicks;
+  return usage ?? 0;
 }

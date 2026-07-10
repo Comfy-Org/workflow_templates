@@ -158,4 +158,16 @@ describe('applyRanking', () => {
     const { applyRanking } = await loadRanking();
     expect(applyRanking('abc', undefined, undefined)).toBe(0);
   });
+
+  it('treats a run_clicks of 0 as no signal and keeps nonzero usage', async () => {
+    const { applyRanking } = await loadRanking();
+    const map = new Map([['abc', { runClicks: 0 }]]);
+    expect(applyRanking('abc', 999, map)).toBe(999);
+  });
+
+  it('returns 0 when both run_clicks and usage are 0', async () => {
+    const { applyRanking } = await loadRanking();
+    const map = new Map([['abc', { runClicks: 0 }]]);
+    expect(applyRanking('abc', 0, map)).toBe(0);
+  });
 });

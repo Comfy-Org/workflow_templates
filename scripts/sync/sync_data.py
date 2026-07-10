@@ -1346,19 +1346,18 @@ class TemplateSyncManager:
                             fixed_templates.append(template_name)
                             self.syncer.logger.info(f"  ✓ Set vram to 0 for '{template_name}' (size is 0)")
                 
-                # Handle usage data - sync from CSV if available
-                if self.syncer.usage_data and template_name in self.syncer.usage_data:
-                    usage_value = self.syncer.usage_data[template_name]
-                    if "usage" not in template or template["usage"] != usage_value:
+                # Sync usage from CSV. A 0 is "no signal" (a record can exist before
+                # run-clicks are backfilled), so it never overwrites an existing usage.
+                usage_value = self.syncer.usage_data.get(template_name, 0)
+                if usage_value > 0:
+                    if template.get("usage") != usage_value:
                         template["usage"] = usage_value
                         changes_made = True
                         self.syncer.logger.info(f"  📊 Updated usage for '{template_name}': {usage_value}")
-                else:
-                    # If usage has no data (missing or not in CSV), fill with 0
-                    if "usage" not in template:
-                        template["usage"] = 0
-                        changes_made = True
-                        self.syncer.logger.info(f"  📊 Filled missing usage with 0 for '{template_name}'")
+                elif "usage" not in template:
+                    template["usage"] = 0
+                    changes_made = True
+                    self.syncer.logger.info(f"  📊 Filled missing usage with 0 for '{template_name}'")
 
         log_run_click_coverage(master_data, self.syncer.usage_data)
 
