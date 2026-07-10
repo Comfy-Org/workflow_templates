@@ -150,6 +150,13 @@ const softwareAppStructuredData = qualityContent
     })
   : null;
 
+const jsonLdBlocks = [
+  breadcrumbStructuredData,
+  faqStructuredData,
+  howToStructuredData,
+  softwareAppStructuredData,
+].filter(Boolean);
+
 const workflowsMeta = (count: number): string =>
   `${count} ${t(count === 1 ? 'useCase.workflowsCountOne' : 'useCase.workflowsCount', locale)}`;
 
@@ -266,37 +273,10 @@ const relatedCards = resolveRailImages(
     <ClosingCta locale={locale} href={footerCtaUrl} analytics={{ useCase: def.slug }} />
   </article>
 
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
   {
-    faqStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(faqStructuredData)}
-      />
-    )
-  }
-  {
-    howToStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(howToStructuredData)}
-      />
-    )
-  }
-  {
-    softwareAppStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-      />
-    )
+    jsonLdBlocks.map((data) => (
+      <script is:inline type="application/ld+json" set:html={serializeJsonLdForScript(data)} />
+    ))
   }
 
   <Fragment slot="footer">

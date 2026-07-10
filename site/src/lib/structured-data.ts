@@ -112,21 +112,19 @@ export function buildCollectionPageJsonLd(params: {
   /** Child pages to enumerate as a nested `ItemList`; omit for a bare CollectionPage. */
   items?: ItemListEntry[];
 }) {
-  const itemList = params.items?.length
+  const mainEntity = params.items?.length
     ? {
-        mainEntity: {
-          '@type': 'ItemList',
-          numberOfItems: params.items.length,
-          itemListElement: params.items.map((entry, i) => ({
-            '@type': 'ListItem',
-            position: i + 1,
-            name: entry.name,
-            url: entry.url,
-            ...(entry.image ? { image: entry.image } : {}),
-          })),
-        },
+        '@type': 'ItemList',
+        numberOfItems: params.items.length,
+        itemListElement: params.items.map((entry, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: entry.name,
+          url: entry.url,
+          ...(entry.image ? { image: entry.image } : {}),
+        })),
       }
-    : {};
+    : undefined;
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -134,7 +132,7 @@ export function buildCollectionPageJsonLd(params: {
     description: params.description,
     url: params.url,
     ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
-    ...itemList,
+    ...(mainEntity ? { mainEntity } : {}),
   };
 }
 

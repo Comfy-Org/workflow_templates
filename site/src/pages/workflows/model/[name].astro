@@ -143,6 +143,13 @@ const softwareAppStructuredData = qualityContent
     })
   : null;
 
+const jsonLdBlocks = [
+  breadcrumbStructuredData,
+  faqStructuredData,
+  howToStructuredData,
+  softwareAppStructuredData,
+].filter(Boolean);
+
 // The template whose still becomes the hero image — reserved so no section reuses it.
 const heroTemplateName = firstTemplateWithStill(group.templates)?.name;
 
@@ -246,37 +253,10 @@ const relatedCards = resolveRailImages(relatedCardData, group.templates, {
     {hasQualityContent && <ClosingCta locale={locale} href={footerCtaUrl} />}
   </article>
 
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
   {
-    faqStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(faqStructuredData)}
-      />
-    )
-  }
-  {
-    howToStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(howToStructuredData)}
-      />
-    )
-  }
-  {
-    softwareAppStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-      />
-    )
+    jsonLdBlocks.map((data) => (
+      <script is:inline type="application/ld+json" set:html={serializeJsonLdForScript(data)} />
+    ))
   }
 
   <Fragment slot="footer">

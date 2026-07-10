@@ -24,7 +24,12 @@ describe('buildHowToJsonLd', () => {
       name: 'How to use Flux',
       step: [
         { '@type': 'HowToStep', position: 1, name: 'Pick a workflow.', text: 'Pick a workflow.' },
-        { '@type': 'HowToStep', position: 2, name: 'Open it on Comfy Cloud.', text: 'Open it on Comfy Cloud.' },
+        {
+          '@type': 'HowToStep',
+          position: 2,
+          name: 'Open it on Comfy Cloud.',
+          text: 'Open it on Comfy Cloud.',
+        },
         { '@type': 'HowToStep', position: 3, name: 'Run it.', text: 'Run it.' },
       ],
     });
@@ -78,7 +83,11 @@ describe('buildSoftwareApplicationJsonLd', () => {
 describe('buildCollectionPageJsonLd', () => {
   it('matches the prior shape when no items are passed', () => {
     expect(
-      buildCollectionPageJsonLd({ name: 'Models', description: 'desc', url: 'https://comfy.org/workflows/model/' })
+      buildCollectionPageJsonLd({
+        name: 'Models',
+        description: 'desc',
+        url: 'https://comfy.org/workflows/model/',
+      })
     ).toEqual({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
@@ -94,7 +103,11 @@ describe('buildCollectionPageJsonLd', () => {
       description: 'desc',
       url: 'https://comfy.org/workflows/model/',
       items: [
-        { name: 'Flux', url: 'https://comfy.org/workflows/model/flux/', image: 'https://cdn/flux.webp' },
+        {
+          name: 'Flux',
+          url: 'https://comfy.org/workflows/model/flux/',
+          image: 'https://cdn/flux.webp',
+        },
         { name: 'Qwen', url: 'https://comfy.org/workflows/model/qwen/' },
       ],
     });

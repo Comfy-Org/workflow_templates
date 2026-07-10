@@ -33,7 +33,9 @@ export const thumbnailPath = (asset: string) =>
  * Hub-CDN URLs are already absolute; local assets are rooted then absolutized.
  * Returns `undefined` for a missing thumbnail so callers can omit the field.
  */
-export const resolveAbsoluteThumbnail = (thumbnail: string | null | undefined): string | undefined => {
+export const resolveAbsoluteThumbnail = (
+  thumbnail: string | null | undefined
+): string | undefined => {
   if (!thumbnail) return undefined;
   const rooted = thumbnailPath(thumbnail);
   return rooted.startsWith('http') ? rooted : absoluteUrl(rooted);
