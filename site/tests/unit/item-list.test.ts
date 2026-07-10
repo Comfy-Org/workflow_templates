@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SerializedTemplate } from '../../src/lib/hub-api';
-import { buildTemplateItemListEntries } from '../../src/lib/workflow-pages/index-cards';
+import { buildTemplateItemListEntries } from '../../src/lib/workflow-pages/item-list';
 
 /** Minimal SerializedTemplate for list-entry tests; override only what matters. */
 function template(overrides: Partial<SerializedTemplate>): SerializedTemplate {
@@ -31,7 +31,11 @@ describe('buildTemplateItemListEntries', () => {
       template({ name: 'qwen_edit', shareId: 'def456', title: 'Qwen Edit' }),
     ]);
     expect(entries).toEqual([
-      { name: 'Flux Schnell', url: 'https://comfy.org/workflows/flux_schnell-abc123/', image: undefined },
+      {
+        name: 'Flux Schnell',
+        url: 'https://comfy.org/workflows/flux_schnell-abc123/',
+        image: undefined,
+      },
       { name: 'Qwen Edit', url: 'https://comfy.org/workflows/qwen_edit-def456/', image: undefined },
     ]);
   });
@@ -50,6 +54,26 @@ describe('buildTemplateItemListEntries', () => {
       'ja'
     );
     expect(entry.url).toBe('https://comfy.org/ja/workflows/flux_schnell-abc123/');
+  });
+
+  it('returns an empty list for empty input', () => {
+    expect(buildTemplateItemListEntries([])).toEqual([]);
+  });
+
+  it('keeps a video-only template but omits its image', () => {
+    const [entry] = buildTemplateItemListEntries([
+      template({ thumbnails: ['https://comfy-hub-assets.comfy.org/uploads/clip.mp4'] }),
+    ]);
+    expect(entry.image).toBeUndefined();
+    expect(entry.url).toBe('https://comfy.org/workflows/flux_schnell-abc123/');
+  });
+
+  it('still emits a template with no name, falling back to shareId for the slug', () => {
+    const [entry] = buildTemplateItemListEntries([
+      template({ name: '', shareId: 'abc123', title: 'Untitled' }),
+    ]);
+    expect(entry.name).toBe('Untitled');
+    expect(entry.url).toBe('https://comfy.org/workflows/abc123-abc123/');
   });
 
   it('skips a template with no name or shareId (no derivable detail URL)', () => {
