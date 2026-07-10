@@ -1,7 +1,8 @@
 ---
 /** Closing "Ready to…" CTA band, shared by the use-case and model landing pages.
- *  Pass `analytics` on pages that report cta_click (use-case); the click handler
- *  travels with the markup it depends on. */
+ *  The `run-cloud-btn` + `data-location` hooks fire PostHog's hub:signup_cta_clicked
+ *  on every page. `analytics` additionally opts a page into the use-case-specific
+ *  Vercel `va` cta_click; the click handler travels with the markup it depends on. */
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { Button } from '../ui/button';
@@ -32,8 +33,8 @@ const { locale, href, analytics } = Astro.props;
       rel="noopener noreferrer"
       variant="brand-solid"
       size="nav"
-      class:list={[analytics && 'usecase-cta', 'mt-8']}
-      data-location={analytics ? 'footer' : undefined}
+      class:list={['run-cloud-btn', analytics && 'usecase-cta', 'mt-8']}
+      data-location="footer"
       data-usecase={analytics?.useCase}
     >
       <span class="ppformula-text-center-sm uppercase font-extrabold cursor-pointer">
