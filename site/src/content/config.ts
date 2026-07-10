@@ -132,7 +132,6 @@ const seoContentSchema = z.object({
     .optional(),
   metaDescription: z.string(),
   faqItems: z.array(z.object({ question: z.string(), answer: z.string() })),
-  humanEdited: z.boolean().optional(),
   qualityFailed: z.boolean().optional(),
   lastAIGeneration: z.string().optional(),
 });

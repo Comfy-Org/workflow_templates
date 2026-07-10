@@ -12,13 +12,14 @@ import type { SeoPageDef } from './use-cases';
 import type { GeneratedSeoContent } from './schema';
 import { isIndexable } from './governance';
 
-/** Indexable only when rich and backed by real templates. Shared by both kinds. */
-function pageIndexable(isRich: boolean, templateCount: number): boolean {
-  return isIndexable({ clusterSize: templateCount, humanEdited: true, qualityPassed: isRich });
+/** Indexable only when the page has shippable content and real templates. */
+function pageIndexable(hasQualityContent: boolean, templateCount: number): boolean {
+  return isIndexable({ clusterSize: templateCount, qualityPassed: hasQualityContent });
 }
 
 export interface SeoPageMeta {
-  isRich: boolean;
+  /** Editorial content exists and passed the quality gate (drives indexability + rich sections). */
+  hasQualityContent: boolean;
   h1: string;
   title: string;
   description: string;
@@ -27,8 +28,8 @@ export interface SeoPageMeta {
 
 // --- Model pages ---------------------------------------------------------
 
-/** A model page is rich only when it qualifies AND has quality editorial copy. */
-function isModelPageRich(
+/** A model page has shippable content only when it qualifies AND the copy passed the gate. */
+function hasModelQualityContent(
   group: Pick<ModelGroup, 'qualifies'>,
   content: GeneratedSeoContent | null
 ): boolean {
@@ -40,11 +41,11 @@ export function isModelPageIndexable(
   templateCount: number,
   content: GeneratedSeoContent | null
 ): boolean {
-  return pageIndexable(isModelPageRich(group, content), templateCount);
+  return pageIndexable(hasModelQualityContent(group, content), templateCount);
 }
 
-/** Title/meta/subheading from the derived family label; rich pages prefer the
- *  generator's own metaDescription/subheading. */
+/** Title/meta/subheading from the derived family label; pages with content prefer
+ *  the generator's own metaDescription/subheading. */
 export function buildModelPageMeta({
   group,
   content,
@@ -58,7 +59,7 @@ export function buildModelPageMeta({
 }): SeoPageMeta {
   const label = group.label;
   return {
-    isRich: isModelPageRich(group, content),
+    hasQualityContent: hasModelQualityContent(group, content),
     h1: t('model.metaH1', locale).replace('{label}', label),
     title: t('model.metaTitle', locale).replace('{label}', label),
     description:
@@ -72,8 +73,8 @@ export function buildModelPageMeta({
 
 // --- Use-case pages ------------------------------------------------------
 
-/** A use-case page is rich only when it has quality editorial copy. */
-function isUseCasePageRich(content: GeneratedSeoContent | null): boolean {
+/** A use-case page has shippable content only when the copy passed the quality gate. */
+function hasUseCaseQualityContent(content: GeneratedSeoContent | null): boolean {
   return !!content && !content.qualityFailed;
 }
 
@@ -81,11 +82,11 @@ export function isUseCasePageIndexable(
   templateCount: number,
   content: GeneratedSeoContent | null
 ): boolean {
-  return pageIndexable(isUseCasePageRich(content), templateCount);
+  return pageIndexable(hasUseCaseQualityContent(content), templateCount);
 }
 
-/** `title`/`h1` are authored per page in the registry; rich pages prefer the
- *  generator's own metaDescription/subheading, else templated i18n copy. */
+/** `title`/`h1` are authored per page in the registry; pages with content prefer
+ *  the generator's own metaDescription/subheading, else templated i18n copy. */
 export function buildUseCasePageMeta({
   def,
   content,
@@ -99,7 +100,7 @@ export function buildUseCasePageMeta({
 }): SeoPageMeta {
   const keyword = def.keywords.primary;
   return {
-    isRich: isUseCasePageRich(content),
+    hasQualityContent: hasUseCaseQualityContent(content),
     h1: def.h1,
     title: def.title,
     description:

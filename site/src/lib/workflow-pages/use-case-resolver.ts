@@ -6,6 +6,7 @@
 import { byUsageDesc, type SerializedTemplate } from '../hub-api';
 import { SEO_PAGES, type SeoPageDef, type SeoPageFilters } from './use-cases';
 import { deriveModelGroups, type ModelGroup } from './model-groups';
+import { modelContentPasses } from './landing-content';
 import { firstStillAcross } from '../media-utils';
 
 /** The template fields the filter/sort reads — kept minimal so build-time
@@ -41,14 +42,17 @@ export interface RelatedModel {
   count: number;
 }
 
-// Qualifying model groups, memoized per catalog: relatedness only links rich,
-// indexable model pages, never a bare noindex grid.
+// Indexable model groups, memoized per catalog. `qualifies` alone is weaker than
+// the page's own gate, so a priority family without a landing JSON would link to a
+// noindex grid — require shippable content too.
 const qualifyingGroupsCache = new WeakMap<SerializedTemplate[], ModelGroup[]>();
 
 export function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
   let groups = qualifyingGroupsCache.get(catalog);
   if (!groups) {
-    groups = deriveModelGroups(catalog).filter((group) => group.qualifies);
+    groups = deriveModelGroups(catalog).filter(
+      (group) => group.qualifies && modelContentPasses(group.slug)
+    );
     qualifyingGroupsCache.set(catalog, groups);
   }
   return groups;

@@ -46,19 +46,10 @@ export function assertBrandSafe(fields: {
 
 export interface IndexabilityInput {
   clusterSize: number;
-  humanEdited: boolean;
   qualityPassed: boolean;
 }
 
-/**
- * Indexable only when backed by real templates AND the copy is trustworthy —
- * every condition must hold, so a failed quality gate can never be overridden by
- * the `humanEdited` flag.
- */
-export function isIndexable({
-  clusterSize,
-  humanEdited,
-  qualityPassed,
-}: IndexabilityInput): boolean {
-  return clusterSize > 0 && humanEdited && qualityPassed;
+/** Indexable only when backed by real templates AND the copy passed the quality gate. */
+export function isIndexable({ clusterSize, qualityPassed }: IndexabilityInput): boolean {
+  return clusterSize > 0 && qualityPassed;
 }

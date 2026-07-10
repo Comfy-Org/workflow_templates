@@ -12,10 +12,10 @@ import ClosingCta from '../../../components/workflow-pages/ClosingCta.astro';
 import { inner, eyebrow, heading } from '../../../components/workflow-pages/landing-styles';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
-import { isMediaFile, hasStillThumbnail } from '../../../lib/media-utils';
+import { firstTemplateWithStill } from '../../../lib/media-utils';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
-import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { modelPath, useCasePath, thumbnailPath } from '../../../lib/routes';
+import { absoluteUrl } from '../../../config/site';
+import { modelPath, modelsIndexPath, useCasePath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { loadSerializedTemplates, type MatcherTemplate } from '../../../lib/hub-api';
@@ -25,10 +25,12 @@ import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-res
 import { type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
 import { assertBrandSafe } from '../../../lib/workflow-pages/governance';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../lib/workflow-pages/seo-page';
+import { assertNoOrphanedContent } from '../../../lib/workflow-pages/landing-content';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import { resolveRailImages } from '../../../lib/workflow-pages/card-images';
 import {
   buildCollectionPageJsonLd,
-  buildBreadcrumbJsonLd,
+  buildWorkflowBreadcrumb,
   buildFaqJsonLd,
   serializeJsonLdForScript,
 } from '../../../lib/structured-data';
@@ -36,6 +38,7 @@ import {
 export async function getStaticPaths() {
   const catalog = await loadSerializedTemplates(() => getCollection('templates'));
   const groups = deriveModelGroups(catalog);
+  assertNoOrphanedContent('model', new Set(groups.map((group) => group.slug)));
   const fallbackPool = buildFallbackPool(catalog);
   const paths: {
     params: { name: string };
@@ -43,11 +46,10 @@ export async function getStaticPaths() {
       group: ModelGroup;
       relatedUseCases: SeoPageDef[];
       fallbackPool: MatcherTemplate[];
-      redirectTo?: string;
     };
   }[] = [];
 
-  // Astro rejects duplicate params.name, so every canonical + variant slug must be unique.
+  // Canonical slugs only; variants 301 via the platform redirects (astro.config.mjs).
   const claimed = new Set<string>();
   for (const group of groups) {
     // Fail the build if a qualifying (indexable) model page carries a denied term.
@@ -67,14 +69,6 @@ export async function getStaticPaths() {
     claimed.add(group.slug);
     const relatedUseCases = useCasesFeaturingModel(group.slug, catalog);
     paths.push({ params: { name: group.slug }, props: { group, relatedUseCases, fallbackPool } });
-    for (const variant of group.redirectFrom) {
-      if (claimed.has(variant)) continue;
-      claimed.add(variant);
-      paths.push({
-        params: { name: variant },
-        props: { group, relatedUseCases, fallbackPool, redirectTo: group.slug },
-      });
-    }
   }
   return paths;
 }
@@ -83,32 +77,25 @@ const {
   group,
   relatedUseCases: relatedUseCaseDefs,
   fallbackPool,
-  redirectTo,
 } = Astro.props as {
   group: ModelGroup;
   relatedUseCases: SeoPageDef[];
   fallbackPool: MatcherTemplate[];
-  redirectTo?: string;
 };
 const locale = getLocaleFromPath(Astro.url.pathname);
-
-if (redirectTo) {
-  return Astro.redirect(localizeUrl(modelPath(redirectTo), locale), 301);
-}
 
 const { label, templates, keywords } = group;
 const content = await loadModelContent(group.slug);
 const basePath = modelPath(group.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
-const { isRich, h1, title, description, subheading } = buildModelPageMeta({
+const { hasQualityContent, h1, title, description, subheading } = buildModelPageMeta({
   group,
   content,
   locale,
   templateCount: templates.length,
 });
-// Non-null only when rich, so the body/JSON-LD can read it without assertions.
-const richContent = isRich ? content : null;
+const qualityContent = hasQualityContent ? content : null;
 
 const noindex = !isModelPageIndexable(group, templates.length, content);
 
@@ -120,43 +107,30 @@ const modelCtaUrl = (placement: string) =>
 const heroCtaUrl = modelCtaUrl('hero');
 const footerCtaUrl = modelCtaUrl('footer');
 
-const modelsUrl = absoluteUrl(localizeUrl('/workflows/model/', locale));
-const breadcrumbTrail = [
-  { label: t('labels.models', locale), href: localizeUrl('/workflows/model/', locale) },
-];
+const modelsUrl = absoluteUrl(modelsIndexPath(locale));
+const breadcrumbTrail = [{ label: t('labels.models', locale), href: modelsIndexPath(locale) }];
 
 const structuredData = buildCollectionPageJsonLd({ name: h1, description, url: canonicalUrl });
-const breadcrumbStructuredData = buildBreadcrumbJsonLd([
-  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
-  {
-    name: t('breadcrumb.workflows', locale),
-    item: absoluteUrl(localizeUrl('/workflows/', locale)),
-  },
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
+  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
   { name: t('labels.models', locale), item: modelsUrl },
-  { name: h1 },
 ]);
-const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
+const faqStructuredData = qualityContent ? buildFaqJsonLd(qualityContent.faqItems) : null;
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
-const heroTemplateName = group.templates.find((tpl) => hasStillThumbnail(tpl.thumbnails))?.name;
+const heroTemplateName = firstTemplateWithStill(group.templates)?.name;
 
-// "Keep exploring" image cards: use-cases featuring this model family (derived
-// from grid overlap), each borrowing a still from this page's own grid.
-const useCasePoolStills = group.templates
-  .filter((tpl) => tpl.name !== heroTemplateName)
-  .flatMap((tpl) => tpl.thumbnails ?? [])
-  .filter((thumb) => !isMediaFile(thumb));
-
+// "Keep exploring" cards: use-cases featuring this model family, each borrowing a
+// still from this page's own grid (hero excluded, never repeating).
 const modelBadges = resolveTemplateLogos({ models: group.modelNames });
-const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
-  const still = useCasePoolStills[index];
-  return {
-    title: useCaseDef.h1,
-    eyebrow: t('template.useCases', locale),
-    href: localizeUrl(useCasePath(useCaseDef.slug), locale),
-    logos: modelBadges,
-    image: still ? { src: thumbnailPath(still), alt: useCaseDef.h1 } : null,
-  };
+const relatedCardData = relatedUseCaseDefs.slice(0, 5).map((useCaseDef) => ({
+  title: useCaseDef.h1,
+  eyebrow: t('template.useCases', locale),
+  href: localizeUrl(useCasePath(useCaseDef.slug), locale),
+  logos: modelBadges,
+}));
+const relatedCards = resolveRailImages(relatedCardData, group.templates, {
+  excludeName: heroTemplateName,
 });
 ---
 
@@ -186,6 +160,7 @@ const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
       meta={`${group.templates.length} ${t(group.templates.length === 1 ? 'useCase.workflowsCountOne' : 'useCase.workflowsCount', locale)}`}
       primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
+      analytics={{ location: `model_${group.slug}_hero`, template: leadShareId }}
       templates={group.templates}
       locale={locale}
     />
@@ -205,19 +180,19 @@ const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
     </section>
 
     {
-      richContent && (
+      qualityContent && (
         <LandingPageBody
           locale={locale}
           kind="model"
           keyword={keywords.primary}
-          intro={richContent.extendedDescription}
-          modelSpec={richContent.modelSpec}
+          intro={qualityContent.extendedDescription}
+          modelSpec={qualityContent.modelSpec}
           specName={label}
-          capabilitiesIntro={richContent.capabilitiesIntro}
-          whyComfy={richContent.whyComfy}
-          applicationsIntro={richContent.applicationsIntro}
-          suggestedUseCases={richContent.suggestedUseCases}
-          faqItems={richContent.faqItems}
+          capabilitiesIntro={qualityContent.capabilitiesIntro}
+          whyComfy={qualityContent.whyComfy}
+          applicationsIntro={qualityContent.applicationsIntro}
+          suggestedUseCases={qualityContent.suggestedUseCases}
+          faqItems={qualityContent.faqItems}
           templates={group.templates}
           catalog={fallbackPool}
           reservedTemplates={heroTemplateName ? [heroTemplateName] : []}
@@ -242,7 +217,7 @@ const relatedCards = relatedUseCaseDefs.slice(0, 5).map((useCaseDef, index) => {
 
     {relatedCards.length > 0 && <RelatedRail locale={locale} cards={relatedCards} />}
 
-    {isRich && <ClosingCta locale={locale} href={footerCtaUrl} />}
+    {hasQualityContent && <ClosingCta locale={locale} href={footerCtaUrl} />}
   </article>
 
   <script

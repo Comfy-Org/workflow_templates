@@ -11,10 +11,12 @@ import vue from '@astrojs/vue';
 import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
 import { resolveUseCasePageTemplates } from './src/lib/workflow-pages/use-case-resolver.ts';
+import {
+  modelContentPasses,
+  useCaseContentPasses,
+} from './src/lib/workflow-pages/landing-content.ts';
 
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
-const modelContentDir = path.join(process.cwd(), 'src/content/landing/models');
-const useCaseContentDir = path.join(process.cwd(), 'src/content/landing/use-cases');
 const templateDates = new Map();
 /**
  * @typedef {{ name: string; date?: string; username?: string; models?: string[];
@@ -43,37 +45,33 @@ if (fs.existsSync(templatesDir)) {
   }
 }
 
-/**
- * Slug is indexable when its content JSON exists and did not fail the quality gate.
- * @param {string} dir
- * @param {string} slug
- * @returns {boolean}
- */
-const contentPasses = (dir, slug) => {
-  const contentPath = path.join(dir, `${slug}.json`);
-  if (!fs.existsSync(contentPath)) return false;
-  try {
-    return JSON.parse(fs.readFileSync(contentPath, 'utf-8')).qualityFailed !== true;
-  } catch {
-    return false;
-  }
-};
+const modelGroups = deriveModelGroups(contentTemplates);
+const canonicalModelSlugs = new Set(modelGroups.map((group) => group.slug));
+
+// Same content gate the routes' noindex uses (landing-content.ts), so the
+// sitemap can't advertise a page the route renders noindex.
 const indexableModelSlugs = new Set(
-  deriveModelGroups(contentTemplates)
-    .filter((group) => group.qualifies && contentPasses(modelContentDir, group.slug))
+  modelGroups
+    .filter((group) => group.qualifies && modelContentPasses(group.slug))
     .map((group) => group.slug)
 );
 
-// Use-case pages are indexable on the same terms as model pages: a resolved
-// template cluster plus content JSON that passed the quality gate. Mirrors the
-// route's getStaticPaths + noindex logic so the sitemap can't advertise a
-// noindex page.
 const indexableUseCaseSlugs = new Set(
   SEO_PAGES.filter(
     (def) =>
       resolveUseCasePageTemplates(def, contentTemplates).length > 0 &&
-      contentPasses(useCaseContentDir, def.slug)
+      useCaseContentPasses(def.slug)
   ).map((def) => def.slug)
+);
+
+// Variant → canonical 301s (real, via the Vercel adapter). Skip a variant that is
+// itself a canonical slug, so a redirect can never shadow a real page.
+const modelSlugRedirects = Object.fromEntries(
+  modelGroups.flatMap((group) =>
+    group.redirectFrom
+      .filter((variant) => !canonicalModelSlugs.has(variant))
+      .map((variant) => [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`])
+  )
 );
 
 // lastmod fallback for pages without a specific date.
@@ -103,6 +101,7 @@ export default defineConfig({
       prefixDefaultLocale: false, // English at root, others prefixed (/zh/, /ja/, etc.)
     },
   },
+  redirects: modelSlugRedirects,
   integrations: [
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml

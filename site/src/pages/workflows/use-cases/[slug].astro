@@ -13,9 +13,9 @@ import { inner, eyebrow, heading } from '../../../components/workflow-pages/land
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
-import { isMediaFile, hasStillThumbnail, firstStillThumbnail } from '../../../lib/media-utils';
-import { SITE_ORIGIN, absoluteUrl } from '../../../config/site';
-import { useCasePath, useCasesIndexPath, modelPath, thumbnailPath } from '../../../lib/routes';
+import { firstStillThumbnail, firstTemplateWithStill } from '../../../lib/media-utils';
+import { absoluteUrl } from '../../../config/site';
+import { useCasePath, useCasesIndexPath, modelPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import {
@@ -32,16 +32,19 @@ import {
 import { loadUseCaseContent } from '../../../lib/workflow-pages/content-loaders';
 import { assertBrandSafe } from '../../../lib/workflow-pages/governance';
 import { buildUseCasePageMeta, isUseCasePageIndexable } from '../../../lib/workflow-pages/seo-page';
+import { assertNoOrphanedContent } from '../../../lib/workflow-pages/landing-content';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import { resolveRailImages } from '../../../lib/workflow-pages/card-images';
 import {
   buildCollectionPageJsonLd,
-  buildBreadcrumbJsonLd,
+  buildWorkflowBreadcrumb,
   buildFaqJsonLd,
   serializeJsonLdForScript,
 } from '../../../lib/structured-data';
 
 export async function getStaticPaths() {
   const catalog = await loadSerializedTemplates(() => getCollection('templates'));
+  assertNoOrphanedContent('use-case', new Set(SEO_PAGES.map((def) => def.slug)));
   const fallbackPool = buildFallbackPool(catalog);
   // Skip use-cases whose cluster resolves to nothing: an empty page would be
   // noindex yet still land in the sitemap. Related models are derived from the
@@ -82,19 +85,20 @@ const keyword = def.keywords.primary;
 const basePath = useCasePath(def.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const content = await loadUseCaseContent(def.slug);
-const { isRich, title, h1, description, subheading } = buildUseCasePageMeta({
+const { hasQualityContent, title, h1, description, subheading } = buildUseCasePageMeta({
   def,
   content,
   locale,
   templateCount: templates.length,
 });
-// Non-null only when rich, so the body/JSON-LD can read it without assertions.
-const richContent = isRich ? content : null;
+// Non-null only when the page has quality content, so the body/JSON-LD can read it
+// without assertions.
+const qualityContent = hasQualityContent ? content : null;
 
 const noindex = !isUseCasePageIndexable(templates.length, content);
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
-const heroTemplate = templates.find((tpl) => hasStillThumbnail(tpl.thumbnails));
+const heroTemplate = firstTemplateWithStill(templates);
 const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
@@ -116,23 +120,12 @@ const structuredData = buildCollectionPageJsonLd({
   description,
   url: canonicalUrl,
 });
-const breadcrumbStructuredData = buildBreadcrumbJsonLd([
-  { name: t('breadcrumb.home', locale), item: SITE_ORIGIN },
-  {
-    name: t('breadcrumb.workflows', locale),
-    item: absoluteUrl(localizeUrl('/workflows/', locale)),
-  },
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
+  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
   { name: t('template.useCases', locale), item: useCasesUrl },
-  { name: h1 },
 ]);
 // Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.
-const faqStructuredData = richContent ? buildFaqJsonLd(richContent.faqItems) : null;
-
-const fallbackImages = [...templates, ...fallbackPool]
-  .filter((template) => template.name !== heroTemplateName)
-  .flatMap((template) => template.thumbnails ?? [])
-  .filter((thumbnail) => !isMediaFile(thumbnail) && thumbnail !== heroImage);
-const takeFallbackImage = (): string | undefined => fallbackImages.shift();
+const faqStructuredData = qualityContent ? buildFaqJsonLd(qualityContent.faqItems) : null;
 
 const workflowsMeta = (count: number): string =>
   `${count} ${t(count === 1 ? 'useCase.workflowsCountOne' : 'useCase.workflowsCount', locale)}`;
@@ -159,17 +152,11 @@ const relatedUseCaseCards = SEO_PAGES.filter(
     ownThumbnail: undefined as string | undefined,
   }));
 
-const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).map((card) => {
-  const thumbnail = card.ownThumbnail ?? takeFallbackImage();
-  return {
-    title: card.title,
-    eyebrow: card.eyebrow,
-    meta: card.meta,
-    href: card.href,
-    logos: card.logos,
-    image: thumbnail ? { src: thumbnailPath(thumbnail), alt: card.title } : null,
-  };
-});
+const relatedCards = resolveRailImages(
+  [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5),
+  [...templates, ...fallbackPool],
+  { excludeName: heroTemplateName, excludeStills: heroImage ? [heroImage] : [] }
+);
 ---
 
 <BaseLayout
@@ -198,6 +185,7 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).
       meta={workflowsMeta(templates.length)}
       primaryCta={{ label: t('cta.tryCloud', locale), href: heroCtaUrl }}
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
+      analytics={{ location: `usecase_${def.slug}_hero`, template: leadShareId }}
       templates={templates}
       locale={locale}
     />
@@ -217,17 +205,17 @@ const relatedCards = [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5).
     </section>
 
     {
-      richContent && (
+      qualityContent && (
         <LandingPageBody
           locale={locale}
           keyword={keyword}
-          intro={richContent.extendedDescription}
-          styles={richContent.styles}
-          capabilitiesIntro={richContent.capabilitiesIntro}
-          whyComfy={richContent.whyComfy}
-          applicationsIntro={richContent.applicationsIntro}
-          suggestedUseCases={richContent.suggestedUseCases}
-          faqItems={richContent.faqItems}
+          intro={qualityContent.extendedDescription}
+          styles={qualityContent.styles}
+          capabilitiesIntro={qualityContent.capabilitiesIntro}
+          whyComfy={qualityContent.whyComfy}
+          applicationsIntro={qualityContent.applicationsIntro}
+          suggestedUseCases={qualityContent.suggestedUseCases}
+          faqItems={qualityContent.faqItems}
           templates={templates}
           catalog={fallbackPool}
           reservedTemplates={heroTemplateName ? [heroTemplateName] : []}

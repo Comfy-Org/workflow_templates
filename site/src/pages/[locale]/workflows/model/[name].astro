@@ -15,7 +15,7 @@ import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { localizeUrl } from '../../../../i18n/utils';
 import { t } from '../../../../i18n/ui';
 import { absoluteUrl } from '../../../../config/site';
-import { modelPath } from '../../../../lib/routes';
+import { modelPath, modelsIndexPath } from '../../../../lib/routes';
 import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
 import { loadModelContent } from '../../../../lib/workflow-pages/content-loaders';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../../lib/workflow-pages/seo-page';
@@ -28,6 +28,11 @@ import {
   serializeJsonLdForScript,
 } from '../../../../lib/structured-data';
 
+const buildGroups = async () =>
+  deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
+let groupsCache: ReturnType<typeof buildGroups> | null = null;
+const loadModelGroups = () => (groupsCache ??= buildGroups());
+
 const { locale, name } = Astro.params;
 
 // Validate locale
@@ -37,12 +42,10 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-const allTemplates = await loadSerializedTemplates(() => getCollection('templates'));
-
 // Resolve the model family via the same grouping the English page uses, so both
 // routes agree on canonical slugs, variant redirects, and display label — the
 // hreflang cluster between them is only reciprocal if the slugs resolve identically.
-const groups = deriveModelGroups(allTemplates);
+const groups = await loadModelGroups();
 const family =
   groups.find((group) => group.slug === name) ??
   groups.find((group) => group.redirectFrom.includes(name!));
@@ -84,14 +87,10 @@ const structuredData = buildCollectionPageJsonLd({
   inLanguage: typedLocale,
 });
 
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(
-  typedLocale,
-  { name: h1 },
-  {
-    name: t('labels.models', typedLocale),
-    item: absoluteUrl(localizeUrl('/workflows/model/', typedLocale)),
-  }
-);
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(typedLocale, { name: h1 }, [
+  { name: t('breadcrumb.workflows', typedLocale), item: absoluteUrl(localizeUrl('/workflows/', typedLocale)) },
+  { name: t('labels.models', typedLocale), item: absoluteUrl(modelsIndexPath(typedLocale)) },
+]);
 
 // matchingTemplates are already SerializedTemplate[] with profile data
 const serialized = matchingTemplates;
