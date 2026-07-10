@@ -107,8 +107,10 @@ watch(activeIndex, (_current, previous) => {
       <!-- Feature accordion -->
       <div class="flex w-full flex-col lg:w-85 lg:gap-4">
         <template v-for="(feature, i) in features" :key="feature.title">
-          <!-- Video area (mobile, rendered before active item) -->
-          <div v-if="activeIndex === i" :class="cn('aspect-video lg:hidden', i !== 0 && 'mt-4')">
+          <div
+            v-if="activeIndex === i && isVisible"
+            :class="cn('aspect-video lg:hidden', i !== 0 && 'mt-4')"
+          >
             <div class="animate-border-spin size-full overflow-hidden rounded-4xl p-0.5">
               <div class="bg-page size-full overflow-hidden rounded-[calc(2rem-2px)]">
                 <video
