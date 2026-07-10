@@ -66,9 +66,6 @@ export type GeneratedSeoContent = SeoContent & {
   qualityFailed?: boolean;
 };
 
-/** Target body-copy length tier for a keyword, by search intent. */
-export type WordCountTier = 'long' | 'medium' | 'lean';
-
 /** A model/provider badge overlaid on a card: logo asset + name for alt text. */
 export interface CardBadge {
   src: string;
