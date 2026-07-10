@@ -38,17 +38,23 @@ const videoRefs = useTemplateRefsList<HTMLVideoElement>();
 const sectionRef = useTemplateRef<HTMLElement>('sectionRef');
 const isVisible = ref(false);
 
-useIntersectionObserver(sectionRef, ([entry]) => {
-  isVisible.value = entry?.isIntersecting ?? false;
-});
-
-watch(activeIndex, (current, previous) => {
-  videoRefs.value[previous]?.pause();
-  const active = videoRefs.value[current];
+const playActive = () => {
+  const active = videoRefs.value[activeIndex.value];
   if (active) {
     active.currentTime = 0;
     active.play().catch(() => {});
   }
+};
+
+useIntersectionObserver(sectionRef, ([entry]) => {
+  isVisible.value = entry?.isIntersecting ?? false;
+  if (isVisible.value) playActive();
+  else videoRefs.value.forEach((video) => video?.pause());
+});
+
+watch(activeIndex, (_current, previous) => {
+  videoRefs.value[previous]?.pause();
+  if (isVisible.value) playActive();
 });
 </script>
 
@@ -83,8 +89,7 @@ watch(activeIndex, (current, previous) => {
               :ref="videoRefs.set"
               :key="feature.title"
               :src="feature.video"
-              :autoplay="i === 0"
-              :preload="i === 0 ? 'metadata' : 'none'"
+              preload="none"
               loop
               muted
               playsinline
@@ -108,6 +113,7 @@ watch(activeIndex, (current, previous) => {
               <div class="bg-page size-full overflow-hidden rounded-[calc(2rem-2px)]">
                 <video
                   :src="feature.video"
+                  preload="none"
                   autoplay
                   loop
                   muted
