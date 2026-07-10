@@ -19,12 +19,11 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
-import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import type { MediaType, CreatorEntry } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
-import { workflowDetailPath, workflowDetailSlug, thumbnailPath } from '@/lib/routes';
+import { workflowDetailPath, workflowDetailSlug, thumbnailPath, creatorPath } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 export interface SearchTemplate {
@@ -289,9 +288,7 @@ function getTemplateUrl(slug: string | null | undefined): string | null {
 }
 
 function getCreatorUrl(username: string): string {
-  return props.locale && props.locale !== 'en'
-    ? `/${props.locale}/workflows/${slugify(username)}/`
-    : `/workflows/${slugify(username)}/`;
+  return creatorPath(username, props.locale);
 }
 
 // React to search focus requests from other components (e.g. HubBrowse sidebar)
