@@ -140,7 +140,8 @@ export function buildCollectionPageJsonLd(params: {
 
 /**
  * schema.org `HowTo` for a page's ordered "how to use" steps, or `null` when
- * there are no non-blank steps (so the caller can skip an empty graph).
+ * there are no non-blank steps. Not a Google rich result (deprecated 2023) — this
+ * is machine-readable step data for LLMs and other consumers.
  */
 export function buildHowToJsonLd(params: {
   name: string;
@@ -164,9 +165,10 @@ export function buildHowToJsonLd(params: {
 }
 
 /**
- * schema.org `SoftwareApplication` framing a landing page as a runnable tool.
- * No `offers` (Comfy Cloud is not free) and no `aggregateRating` (no rating
- * data exists) — never assert either.
+ * schema.org `SoftwareApplication` framing a landing page as a runnable tool —
+ * machine-readable metadata, not a Google rich result (that needs `offers` and
+ * `aggregateRating`, which we never assert: Comfy Cloud isn't free and no rating
+ * data exists).
  */
 export function buildSoftwareApplicationJsonLd(params: {
   name: string;
