@@ -74,4 +74,16 @@ describe('resolveRailImages', () => {
     expect(out[0].image).not.toBeNull();
     expect(out[1].image).toBeNull();
   });
+
+  it('never hands two cards the same still when templates share a thumbnail', () => {
+    // 'dup.webp' appears on both templates; the second card must not reuse it.
+    const shared = [
+      { name: 'a', thumbnails: ['dup.webp'] },
+      { name: 'b', thumbnails: ['dup.webp', 'unique.webp'] },
+    ];
+    const out = resolveRailImages([{ title: 'X' }, { title: 'Y' }], shared);
+    expect(out[0].image?.src).toContain('dup.webp');
+    expect(out[1].image?.src).toContain('unique.webp');
+    expect(out[0].image?.src).not.toBe(out[1].image?.src);
+  });
 });
