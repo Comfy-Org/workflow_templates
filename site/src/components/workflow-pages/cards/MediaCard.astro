@@ -18,38 +18,30 @@ interface Props {
 }
 
 const { eyebrow, title, text, image, logos = [], cta } = Astro.props;
+
+const ImageTag = cta?.href ? 'a' : 'div';
+const imageLinkProps = cta?.href
+  ? { href: cta.href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': cta.label }
+  : {};
 ---
 
 <article
   class="group/pill-trigger group flex h-full flex-col rounded-4xl bg-hub-surface p-2 transition-colors duration-300 hover:bg-hub-surface-hover"
 >
   {
-    image &&
-      (cta?.href ? (
-        <a
-          href={cta.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={cta.label}
-          class="relative block aspect-video w-full overflow-hidden rounded-3xl"
-        >
-          <Thumbnail
-            src={image.src}
-            alt={image.alt}
-            class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          />
-          <ModelBadges logos={logos} class="absolute top-3 right-3 z-10" />
-        </a>
-      ) : (
-        <div class="relative aspect-video w-full overflow-hidden rounded-3xl">
-          <Thumbnail
-            src={image.src}
-            alt={image.alt}
-            class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-          />
-          <ModelBadges logos={logos} class="absolute top-3 right-3 z-10" />
-        </div>
-      ))
+    image && (
+      <ImageTag
+        {...imageLinkProps}
+        class="relative block aspect-video w-full overflow-hidden rounded-3xl"
+      >
+        <Thumbnail
+          src={image.src}
+          alt={image.alt}
+          class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+        />
+        <ModelBadges logos={logos} class="absolute top-3 right-3 z-10" />
+      </ImageTag>
+    )
   }
   <div class="flex flex-1 flex-col p-5 lg:p-6">
     {

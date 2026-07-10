@@ -3,7 +3,8 @@
  * page. Pure and deterministic — same inputs, same assignment every build.
  */
 import { byUsageDesc, type MatcherTemplate } from '../hub-api';
-import { hasStillThumbnail } from '../media-utils';
+import { hasStillThumbnail, isMediaFile } from '../media-utils';
+import { thumbnailPath } from '../routes';
 
 export interface CardImage {
   src: string;
@@ -67,14 +68,27 @@ function overlap(a: Set<string>, b: Set<string>): number {
   return score;
 }
 
+/** Per-template token sets, memoized by identity — read once per (card, template) pair. */
+const tokenCache = new WeakMap<MatcherTemplate, { tags: Set<string>; prose: Set<string> }>();
+function templateTokens(template: MatcherTemplate) {
+  let tokens = tokenCache.get(template);
+  if (!tokens) {
+    tokens = {
+      tags: tokenize(...(template.tags ?? []), ...(template.models ?? [])),
+      prose: tokenize(template.title, template.description),
+    };
+    tokenCache.set(template, tokens);
+  }
+  return tokens;
+}
+
 /**
  * Relevance of a template to a card's words. Tags and models are the strongest
  * topical signal, so they weigh more than incidental title/description words.
  */
 function relevance(cardTokens: Set<string>, template: MatcherTemplate): number {
-  const tagTokens = tokenize(...(template.tags ?? []), ...(template.models ?? []));
-  const proseTokens = tokenize(template.title, template.description);
-  return overlap(cardTokens, tagTokens) * 3 + overlap(cardTokens, proseTokens);
+  const { tags, prose } = templateTokens(template);
+  return overlap(cardTokens, tags) * 3 + overlap(cardTokens, prose);
 }
 
 export interface AssignOptions {
@@ -88,7 +102,7 @@ export interface AssignOptions {
 const withStill = (templates: MatcherTemplate[]) =>
   templates.filter((t) => hasStillThumbnail(t.thumbnails)).sort(byUsageDesc);
 
-/** Best unused template for a card by token overlap; null if the pool is dry. */
+/** Best unused, content-matched template for a card; null when nothing overlaps. */
 function pickForCard(
   card: CardText,
   pool: MatcherTemplate[],
@@ -105,8 +119,12 @@ function pickForCard(
       bestScore = score;
     }
   }
-  // No semantic match → highest-usage unused template in the pool.
-  return best ?? pool.find((t) => !used.has(t.name)) ?? null;
+  return best;
+}
+
+/** First unused template in a pool, ignoring relevance. */
+function firstUnused(pool: MatcherTemplate[], used: Set<string>): MatcherTemplate | null {
+  return pool.find((t) => !used.has(t.name)) ?? null;
 }
 
 /** Best template for a card by overlap, ignoring the used set (allows repeats). */
@@ -120,7 +138,8 @@ function pickBestAllowingRepeat(card: CardText, pool: MatcherTemplate[]): Matche
  * set is threaded through every section. Resolution order per card:
  *   1. content-matched, unused, from the page grid;
  *   2. content-matched, unused, from the whole-dataset `fallback`;
- *   3. best-effort repeat (content-matched if any overlap, else highest-usage),
+ *   3. any unused grid template, then any unused fallback template;
+ *   4. best-effort repeat (content-matched if any overlap, else highest-usage),
  *      only once every unused pool is exhausted.
  */
 export function assignCardTemplates(
@@ -136,8 +155,34 @@ export function assignCardTemplates(
     const best =
       pickForCard(card, pool, used) ??
       pickForCard(card, fallbackPool, used) ??
+      firstUnused(pool, used) ??
+      firstUnused(fallbackPool, used) ??
       pickBestAllowingRepeat(card, fallbackPool.length ? fallbackPool : pool);
     if (best) used.add(best.name);
     return best;
+  });
+}
+
+/**
+ * Attaches a related-rail `image` to each card: the card's own thumbnail when set,
+ * else the next unused still from `templates` (hero and already-owned stills
+ * excluded), so a rail never repeats an image. `ownThumbnail` is consumed; the
+ * returned card carries `image: CardImage | null` keyed to its title for alt text.
+ */
+export function resolveRailImages<T extends { title: string; ownThumbnail?: string }>(
+  cards: T[],
+  templates: { name: string; thumbnails?: string[] }[],
+  opts: { excludeName?: string; excludeStills?: string[] } = {}
+): (Omit<T, 'ownThumbnail'> & { image: CardImage | null })[] {
+  const owned = cards.map((card) => card.ownThumbnail).filter(Boolean) as string[];
+  const taken = new Set([...owned, ...(opts.excludeStills ?? [])]);
+  const queue = templates
+    .filter((template) => template.name !== opts.excludeName)
+    .flatMap((template) => template.thumbnails ?? [])
+    .filter((thumb) => !isMediaFile(thumb) && !taken.has(thumb));
+
+  return cards.map(({ ownThumbnail, ...card }) => {
+    const still = ownThumbnail ?? queue.shift();
+    return { ...card, image: still ? { src: thumbnailPath(still), alt: card.title } : null };
   });
 }

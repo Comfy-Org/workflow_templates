@@ -46,3 +46,11 @@ export function firstStillAcross(templates: { thumbnails?: string[] }[]): string
   }
   return null;
 }
+
+/** First template with a usable still thumbnail — the shared hero pick, so a page's
+ *  reserved-hero exclusion can't diverge from what LandingHero actually renders. */
+export function firstTemplateWithStill<T extends { thumbnails?: string[] }>(
+  templates: T[]
+): T | undefined {
+  return templates.find((template) => hasStillThumbnail(template.thumbnails));
+}
