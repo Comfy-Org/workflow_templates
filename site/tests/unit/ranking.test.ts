@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const searchMock = vi.hoisted(() => vi.fn());
 const liteClientMock = vi.hoisted(() => vi.fn(() => ({ search: searchMock })));
 
-vi.mock('algoliasearch/dist/lite/builds/node', () => ({
+vi.mock('algoliasearch/lite', () => ({
   liteClient: liteClientMock,
 }));
 
