@@ -179,7 +179,11 @@ export function resolveRailImages<T extends { title: string; ownThumbnail?: stri
   const queue = templates
     .filter((template) => template.name !== opts.excludeName)
     .flatMap((template) => template.thumbnails ?? [])
-    .filter((thumb) => !isMediaFile(thumb) && !taken.has(thumb));
+    .filter((thumb) => {
+      if (isMediaFile(thumb) || taken.has(thumb)) return false;
+      taken.add(thumb);
+      return true;
+    });
 
   return cards.map(({ ownThumbnail, ...card }) => {
     const still = ownThumbnail ?? queue.shift();
