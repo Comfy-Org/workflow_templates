@@ -95,12 +95,36 @@ export function buildFaqJsonLd(faqItems: FaqItem[] | undefined) {
   };
 }
 
+/** One entry of a `CollectionPage`'s `ItemList` — a link to a child page. */
+export interface ItemListEntry {
+  name: string;
+  /** Absolute URL to the child page. */
+  url: string;
+  /** Absolute image URL, omitted when the child has no still. */
+  image?: string;
+}
+
 export function buildCollectionPageJsonLd(params: {
   name: string;
   description: string;
   url: string;
   inLanguage?: string;
+  /** Child pages to enumerate as a nested `ItemList`; omit for a bare CollectionPage. */
+  items?: ItemListEntry[];
 }) {
+  const mainEntity = params.items?.length
+    ? {
+        '@type': 'ItemList',
+        numberOfItems: params.items.length,
+        itemListElement: params.items.map((entry, i) => ({
+          '@type': 'ListItem',
+          position: i + 1,
+          name: entry.name,
+          url: entry.url,
+          ...(entry.image ? { image: entry.image } : {}),
+        })),
+      }
+    : undefined;
   return {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -108,5 +132,55 @@ export function buildCollectionPageJsonLd(params: {
     description: params.description,
     url: params.url,
     ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
+    ...(mainEntity ? { mainEntity } : {}),
+  };
+}
+
+/**
+ * schema.org `HowTo` for a page's ordered "how to use" steps, or `null` when
+ * there are no non-blank steps. Not a Google rich result (deprecated 2023) — this
+ * is machine-readable step data for LLMs and other consumers.
+ */
+export function buildHowToJsonLd(params: {
+  name: string;
+  steps: string[] | undefined;
+  description?: string;
+}) {
+  const steps = params.steps?.map((s) => s.trim()).filter(Boolean);
+  if (!steps?.length) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name: params.name,
+    ...(params.description ? { description: params.description } : {}),
+    step: steps.map((text, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: text,
+      text,
+    })),
+  };
+}
+
+/**
+ * schema.org `SoftwareApplication` framing a landing page as a runnable tool —
+ * machine-readable metadata, not a Google rich result (that needs `offers` and
+ * `aggregateRating`, which we never assert: Comfy Cloud isn't free and no rating
+ * data exists).
+ */
+export function buildSoftwareApplicationJsonLd(params: {
+  name: string;
+  description: string;
+  featureList?: string[];
+}) {
+  const featureList = params.featureList?.map((f) => f.trim()).filter(Boolean);
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'SoftwareApplication',
+    name: params.name,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    description: params.description,
+    ...(featureList?.length ? { featureList } : {}),
   };
 }

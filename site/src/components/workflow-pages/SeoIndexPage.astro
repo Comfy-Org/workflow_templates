@@ -11,6 +11,7 @@ import type { SeoPageCard } from '../../lib/workflow-pages/schema';
 import type { Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
+import { resolveAbsoluteThumbnail } from '../../lib/routes';
 import {
   buildCollectionPageJsonLd,
   buildWorkflowBreadcrumb,
@@ -19,9 +20,9 @@ import {
 
 interface Props {
   locale: Locale;
-  /** Root-relative index path (no locale prefix), e.g. "/workflows/model/". */
+  /** Root-relative index path with NO locale prefix — `localizeUrl` below prepends
+   *  the locale, so a prefixed value would double it into `/ja/ja/…`. */
   basePath: string;
-  /** H1 + breadcrumb leaf + JSON-LD name stem. */
   heading: string;
   description: string;
   cards: SeoPageCard[];
@@ -32,7 +33,13 @@ const { locale, basePath, heading, description, cards } = Astro.props;
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const name = `${heading} — ComfyUI Workflows`;
 
-const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl });
+const items = cards.map((card) => ({
+  name: card.title,
+  url: absoluteUrl(card.href),
+  image: resolveAbsoluteThumbnail(card.thumbnail),
+}));
+
+const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl, items });
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: heading });
 ---
 

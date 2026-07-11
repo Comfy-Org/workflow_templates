@@ -22,6 +22,7 @@ import { buildModelPageMeta, isModelPageIndexable } from '../../../../lib/workfl
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
+import { buildTemplateItemListEntries } from '../../../../lib/workflow-pages/item-list';
 import {
   buildCollectionPageJsonLd,
   buildWorkflowBreadcrumb,
@@ -85,10 +86,14 @@ const structuredData = buildCollectionPageJsonLd({
   description,
   url: canonicalUrl,
   inLanguage: typedLocale,
+  items: noindex ? undefined : buildTemplateItemListEntries(matchingTemplates, typedLocale),
 });
 
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(typedLocale, { name: h1 }, [
-  { name: t('breadcrumb.workflows', typedLocale), item: absoluteUrl(localizeUrl('/workflows/', typedLocale)) },
+  {
+    name: t('breadcrumb.workflows', typedLocale),
+    item: absoluteUrl(localizeUrl('/workflows/', typedLocale)),
+  },
   { name: t('labels.models', typedLocale), item: absoluteUrl(modelsIndexPath(typedLocale)) },
 ]);
 

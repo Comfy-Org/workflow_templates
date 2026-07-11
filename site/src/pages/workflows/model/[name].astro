@@ -27,11 +27,14 @@ import { assertBrandSafe } from '../../../lib/workflow-pages/governance';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../lib/workflow-pages/seo-page';
 import { assertNoOrphanedContent } from '../../../lib/workflow-pages/landing-content';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/item-list';
 import { resolveRailImages } from '../../../lib/workflow-pages/card-images';
 import {
   buildCollectionPageJsonLd,
   buildWorkflowBreadcrumb,
   buildFaqJsonLd,
+  buildHowToJsonLd,
+  buildSoftwareApplicationJsonLd,
   serializeJsonLdForScript,
 } from '../../../lib/structured-data';
 
@@ -110,12 +113,42 @@ const footerCtaUrl = modelCtaUrl('footer');
 const modelsUrl = absoluteUrl(modelsIndexPath(locale));
 const breadcrumbTrail = [{ label: t('labels.models', locale), href: modelsIndexPath(locale) }];
 
-const structuredData = buildCollectionPageJsonLd({ name: h1, description, url: canonicalUrl });
+const structuredData = buildCollectionPageJsonLd({
+  name: h1,
+  description,
+  url: canonicalUrl,
+  items: noindex ? undefined : buildTemplateItemListEntries(templates, locale),
+});
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
-  { name: t('breadcrumb.workflows', locale), item: absoluteUrl(localizeUrl('/workflows/', locale)) },
+  {
+    name: t('breadcrumb.workflows', locale),
+    item: absoluteUrl(localizeUrl('/workflows/', locale)),
+  },
   { name: t('labels.models', locale), item: modelsUrl },
 ]);
 const faqStructuredData = qualityContent ? buildFaqJsonLd(qualityContent.faqItems) : null;
+
+const howToStructuredData = qualityContent
+  ? buildHowToJsonLd({
+      name: `How to use ${label} ComfyUI workflows`,
+      steps: qualityContent.howToUse,
+      description: subheading,
+    })
+  : null;
+const softwareAppStructuredData = qualityContent
+  ? buildSoftwareApplicationJsonLd({
+      name: h1,
+      description,
+      featureList: qualityContent.modelSpec?.highlights.map((highlight) => highlight.title),
+    })
+  : null;
+
+const jsonLdBlocks = [
+  breadcrumbStructuredData,
+  faqStructuredData,
+  howToStructuredData,
+  softwareAppStructuredData,
+].filter(Boolean);
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
 const heroTemplateName = firstTemplateWithStill(group.templates)?.name;
@@ -220,19 +253,10 @@ const relatedCards = resolveRailImages(relatedCardData, group.templates, {
     {hasQualityContent && <ClosingCta locale={locale} href={footerCtaUrl} />}
   </article>
 
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
   {
-    faqStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(faqStructuredData)}
-      />
-    )
+    jsonLdBlocks.map((data) => (
+      <script is:inline type="application/ld+json" set:html={serializeJsonLdForScript(data)} />
+    ))
   }
 
   <Fragment slot="footer">
