@@ -1,0 +1,25 @@
+---
+import { getCollection } from 'astro:content';
+import SeoIndexPage from '../../../components/workflow-pages/SeoIndexPage.astro';
+import { getLocaleFromPath } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
+import { useCasesIndexPath } from '../../../lib/routes';
+import { loadSerializedTemplates } from '../../../lib/hub-api';
+import { resolveUseCasePageCards } from '../../../lib/workflow-pages/index-cards';
+
+const locale = getLocaleFromPath(Astro.url.pathname);
+const catalog = await loadSerializedTemplates(() => getCollection('templates'));
+
+const cards = resolveUseCasePageCards(catalog, locale);
+const heading = t('template.useCases', locale);
+const description =
+  'Browse ComfyUI workflows by use case — ready-to-run templates for AI Headshot Generator, AI Interior Design, AI Caricature Generator, AI Tattoo Generator, and more.';
+---
+
+<SeoIndexPage
+  locale={locale}
+  basePath={useCasesIndexPath()}
+  heading={heading}
+  description={description}
+  cards={cards}
+/>

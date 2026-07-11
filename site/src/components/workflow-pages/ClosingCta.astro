@@ -1,0 +1,63 @@
+---
+/** Closing "Ready to…" CTA band, shared by the use-case and model landing pages.
+ *  The `run-cloud-btn` + `data-location` hooks fire PostHog's hub:signup_cta_clicked
+ *  on every page. `analytics` additionally opts a page into the use-case-specific
+ *  Vercel `va` cta_click; the click handler travels with the markup it depends on. */
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import { Button } from '../ui/button';
+import { inner, heading, sectionPad } from './landing-styles';
+
+interface Props {
+  locale: Locale;
+  href: string;
+  /** When set, tags the CTA for click tracking (data-usecase drives cta_click). */
+  analytics?: { useCase: string };
+}
+
+const { locale, href, analytics } = Astro.props;
+---
+
+<section class={`bg-page ${sectionPad}`}>
+  <div class={`${inner} flex flex-col items-center text-center`}>
+    <h2 class={`${heading} text-balance`}>
+      {t('template.ready', locale)}
+    </h2>
+    <p class="font-body mt-3 max-w-xl text-base text-content-secondary">
+      {t('template.startNow', locale)}
+    </p>
+    <Button
+      as="a"
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      variant="brand-solid"
+      size="nav"
+      class:list={['run-cloud-btn', analytics && 'usecase-cta', 'mt-8']}
+      data-location="footer"
+      data-usecase={analytics?.useCase}
+    >
+      <span class="ppformula-text-center-sm uppercase font-extrabold cursor-pointer">
+        {t('cta.tryCloud', locale)}
+      </span>
+    </Button>
+  </div>
+</section>
+
+{
+  analytics && (
+    <script is:inline>
+      document.querySelectorAll('.usecase-cta').forEach((link) => {
+        link.addEventListener('click', () => {
+          if (window.va) {
+            window.va('event', {
+              name: 'cta_click',
+              useCase: link.getAttribute('data-usecase'),
+              location: 'footer',
+            });
+          }
+        });
+      });
+    </script>
+  )
+}

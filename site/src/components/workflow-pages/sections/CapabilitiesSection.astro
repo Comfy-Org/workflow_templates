@@ -1,0 +1,52 @@
+---
+import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
+import { inner, sectionPad } from '../landing-styles';
+import SectionHeader from '../SectionHeader.astro';
+import SplitCard from '../cards/SplitCard.astro';
+
+export interface CapabilityCard {
+  title?: string;
+  text: string;
+  image?: CardImage | null;
+  logos?: ModelBadge[];
+  cta?: { label: string; href: string } | null;
+}
+
+interface Props {
+  eyebrowLabel: string;
+  headingLabel: string;
+  cards: CapabilityCard[];
+  summary?: string;
+}
+
+const { eyebrowLabel, headingLabel, cards, summary } = Astro.props;
+
+const visibleCards = cards.slice(0, 3);
+const headingId = `capabilities-heading-${crypto.randomUUID().slice(0, 8)}`;
+---
+
+<section aria-labelledby={headingId} class={`bg-page ${sectionPad}`}>
+  <div class={inner}>
+    <SectionHeader
+      id={headingId}
+      eyebrowLabel={eyebrowLabel}
+      headingLabel={headingLabel}
+      summary={summary}
+    />
+    <div class="flex flex-col gap-6 lg:gap-8">
+      {
+        visibleCards.map((card, i) => (
+          <SplitCard
+            index={i}
+            title={card.title}
+            text={card.text}
+            image={card.image}
+            logos={card.logos}
+            cta={card.cta}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>

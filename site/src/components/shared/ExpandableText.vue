@@ -15,30 +15,33 @@
  * Labels are resolved in Astro and passed as props — islands don't import i18n.
  */
 import { ref, computed, onMounted, onUnmounted, useId, useTemplateRef } from 'vue';
+import { useResizeObserver, usePreferredReducedMotion } from '@vueuse/core';
 
-const props = withDefaults(
-  defineProps<{
-    paragraphs: string[];
-    moreLabel: string;
-    lessLabel: string;
-    collapsedMax?: number;
-    textClass?: string;
-  }>(),
-  { collapsedMax: 320, textClass: 'text-base leading-relaxed text-content-secondary' }
-);
+const {
+  paragraphs,
+  moreLabel,
+  lessLabel,
+  collapsedMax: COLLAPSED_MAX = 320,
+  textClass = 'text-base leading-relaxed text-content-secondary',
+} = defineProps<{
+  paragraphs: string[];
+  moreLabel: string;
+  lessLabel: string;
+  collapsedMax?: number;
+  textClass?: string;
+}>();
 
-/** Collapsed height cap, in px. */
-const COLLAPSED_MAX = props.collapsedMax;
+const OVERFLOW_SLACK_PX = 8;
 
 const contentRef = useTemplateRef<HTMLElement>('content');
 const contentId = useId();
 const expanded = ref(false);
 const overflows = ref(false);
+const reducedMotion = usePreferredReducedMotion();
 
-let resizeObserver: ResizeObserver | null = null;
 let transitionTimer: number | null = null;
 
-const toggleLabel = computed(() => (expanded.value ? props.lessLabel : props.moreLabel));
+const toggleLabel = computed(() => (expanded.value ? lessLabel : moreLabel));
 
 /** Inline style driving the collapse/expand animation. */
 const containerStyle = ref<Record<string, string>>({ maxHeight: `${COLLAPSED_MAX}px` });
@@ -46,7 +49,7 @@ const containerStyle = ref<Record<string, string>>({ maxHeight: `${COLLAPSED_MAX
 function measure() {
   const el = contentRef.value;
   if (!el) return;
-  overflows.value = el.scrollHeight > COLLAPSED_MAX + 8;
+  overflows.value = el.scrollHeight > COLLAPSED_MAX + OVERFLOW_SLACK_PX;
   // While collapsed, keep the cap; while expanded, stay uncapped.
   if (!expanded.value) {
     containerStyle.value = overflows.value ? { maxHeight: `${COLLAPSED_MAX}px` } : {};
@@ -58,7 +61,7 @@ function toggle() {
   if (!el) return;
   if (transitionTimer) window.clearTimeout(transitionTimer);
 
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduce = reducedMotion.value === 'reduce';
 
   if (!expanded.value) {
     // Expand: cap → measured full height → uncapped (so later reflow isn't clipped).
@@ -88,16 +91,10 @@ function toggle() {
   }
 }
 
-onMounted(() => {
-  measure();
-  if (contentRef.value && 'ResizeObserver' in window) {
-    resizeObserver = new ResizeObserver(() => measure());
-    resizeObserver.observe(contentRef.value);
-  }
-});
+onMounted(measure);
+useResizeObserver(contentRef, measure);
 
 onUnmounted(() => {
-  resizeObserver?.disconnect();
   if (transitionTimer) window.clearTimeout(transitionTimer);
 });
 </script>
@@ -121,9 +118,9 @@ onUnmounted(() => {
       />
     </div>
     <button
-      v-if="overflows"
+      v-if="overflows || expanded"
       type="button"
-      class="mt-3 rounded-sm text-sm font-medium text-content transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      class="mt-3 rounded-sm text-sm font-medium text-content underline underline-offset-2 transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
       :aria-expanded="expanded"
       :aria-controls="contentId"
       @click="toggle"

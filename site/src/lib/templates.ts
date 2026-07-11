@@ -93,10 +93,7 @@ export function sortByUsage(templates: Template[]): Template[] {
 /**
  * Filter templates by media type
  */
-export function filterByMediaType(
-  templates: Template[],
-  mediaType: MediaType
-): Template[] {
+export function filterByMediaType(templates: Template[], mediaType: MediaType): Template[] {
   return templates.filter((t) => t.data.mediaType === mediaType);
 }
 

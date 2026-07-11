@@ -9,7 +9,12 @@ interface ValidationResult {
 }
 
 const SITE_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const DIST_DIR = path.join(SITE_DIR, 'dist');
+// The Vercel adapter emits sitemaps + pages under dist/client; plain static builds use dist.
+const DIST_DIR =
+  ['dist/client', 'dist']
+    .map((d) => path.join(SITE_DIR, d))
+    .find((d) => fs.existsSync(d) && fs.readdirSync(d).some((f) => f.startsWith('sitemap'))) ??
+  path.join(SITE_DIR, 'dist');
 
 function findSitemaps(): string[] {
   const files = fs.readdirSync(DIST_DIR);
