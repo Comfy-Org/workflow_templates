@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { workflowDetailPath, workflowDetailSlug, tagPath, creatorPath } from '../../src/lib/routes';
+import {
+  workflowDetailPath,
+  workflowDetailSlug,
+  tagPath,
+  creatorPath,
+  modelPath,
+  modelsIndexPath,
+  useCasePath,
+  useCasesIndexPath,
+  resolveAbsoluteThumbnail,
+} from '../../src/lib/routes';
 
 describe('workflowDetailPath', () => {
   it('builds a {name}-{shareId} URL when both are present', () => {
@@ -73,12 +83,67 @@ describe('tagPath', () => {
 });
 
 describe('creatorPath', () => {
-  it('slugifies the username', () => {
-    expect(creatorPath('Comfy Org')).toBe('/workflows/comfy-org/');
+  it('keeps the raw username (URL-encoded), matching how the profile route resolves it', () => {
+    expect(creatorPath('Comfy Org')).toBe('/workflows/Comfy%20Org/');
+    expect(creatorPath('enigmatic_e')).toBe('/workflows/enigmatic_e/');
   });
 
   it('prefixes non-default locales but not the default', () => {
     expect(creatorPath('topaz', 'ar')).toBe('/ar/workflows/topaz/');
     expect(creatorPath('topaz', 'en')).toBe('/workflows/topaz/');
+  });
+
+  it('round-trips to the raw username the profile route matches', () => {
+    for (const username of ['enigmatic_e', 'Comfy Org', 'user.name', 'MixLab']) {
+      const segment = creatorPath(username).replace(/^\/workflows\/|\/$/g, '');
+      expect(decodeURIComponent(segment)).toBe(username);
+    }
+  });
+});
+
+describe('modelPath / modelsIndexPath', () => {
+  it('builds a slug path and prefixes non-default locales', () => {
+    expect(modelPath('flux')).toBe('/workflows/model/flux/');
+    expect(modelPath('flux', 'ar')).toBe('/ar/workflows/model/flux/');
+  });
+
+  it('returns the bare index base, locale-prefixed when non-default', () => {
+    expect(modelsIndexPath()).toBe('/workflows/model/');
+    expect(modelsIndexPath('ja')).toBe('/ja/workflows/model/');
+  });
+});
+
+describe('useCasePath / useCasesIndexPath', () => {
+  it('builds a slug path and prefixes non-default locales', () => {
+    expect(useCasePath('ai-headshot-generator')).toBe(
+      '/workflows/use-cases/ai-headshot-generator/'
+    );
+    expect(useCasePath('ai-headshot-generator', 'ja')).toBe(
+      '/ja/workflows/use-cases/ai-headshot-generator/'
+    );
+  });
+
+  it('returns the bare index base, locale-prefixed when non-default', () => {
+    expect(useCasesIndexPath()).toBe('/workflows/use-cases/');
+    expect(useCasesIndexPath('ar')).toBe('/ar/workflows/use-cases/');
+  });
+});
+
+describe('resolveAbsoluteThumbnail', () => {
+  it('returns undefined for a missing thumbnail', () => {
+    expect(resolveAbsoluteThumbnail(undefined)).toBeUndefined();
+    expect(resolveAbsoluteThumbnail(null)).toBeUndefined();
+    expect(resolveAbsoluteThumbnail('')).toBeUndefined();
+  });
+
+  it('passes through an already-absolute Hub CDN URL', () => {
+    const url = 'https://comfy-hub-assets.comfy.org/templates/abc.png';
+    expect(resolveAbsoluteThumbnail(url)).toBe(url);
+  });
+
+  it('roots and absolutizes a local asset', () => {
+    expect(resolveAbsoluteThumbnail('flux-1.webp')).toBe(
+      'https://comfy.org/workflows/thumbnails/flux-1.webp'
+    );
   });
 });

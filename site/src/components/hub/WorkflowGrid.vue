@@ -38,8 +38,6 @@ const props = withDefaults(
     locale: string;
     /** Additional grid classes to override default column layout */
     gridClass?: string;
-    /** Hide author line on cards (useful on creator profile pages) */
-    hideAuthor?: boolean;
     /**
      * Toolbar labels. When provided, the grid renders the shared BrowseToolbar
      * (tabs + sort, plus filter when `facetsConfig` is set). Omit to render the
@@ -57,7 +55,6 @@ const props = withDefaults(
   }>(),
   {
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-    hideAuthor: false,
     toolbarLabels: undefined,
     facetsConfig: undefined,
     facetTemplates: undefined,
@@ -124,13 +121,13 @@ function loadMore() {
         :share-id="tmpl.shareId"
         :tags="tmpl.tags"
         :logos="tmpl.logos"
+        :models="tmpl.models"
         :thumbnails="tmpl.thumbnails"
         :locale="locale"
         :username="tmpl.username"
         :creator-display-name="tmpl.creatorDisplayName"
         :creator-avatar-url="tmpl.creatorAvatarUrl"
         :is-app="tmpl.isApp"
-        :hide-author="hideAuthor"
         :thumbnail-variant="tmpl.thumbnailVariant"
         :media-type="tmpl.mediaType"
         :media-subtype="tmpl.mediaSubtype"

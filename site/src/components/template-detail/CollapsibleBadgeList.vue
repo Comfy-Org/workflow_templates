@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted, useTemplateRef, nextTick } from 'vue';
+import { ref, computed, onMounted, useTemplateRef, nextTick } from 'vue';
+import { useResizeObserver } from '@vueuse/core';
 import { badgeVariants } from '../ui/badge';
 
 interface BadgeItem {
@@ -7,68 +8,97 @@ interface BadgeItem {
   href: string;
 }
 
-defineProps<{
+// Labels are resolved in Astro and passed as props — islands don't import i18n.
+const { items, moreLabel, lessLabel } = defineProps<{
   items: BadgeItem[];
+  moreLabel: string;
+  lessLabel: string;
 }>();
 
 const expanded = ref(false);
 const needsCollapse = ref(false);
+const hiddenCount = ref(0);
+const fullHeight = ref(0);
 const contentRef = useTemplateRef<HTMLElement>('content');
 
 // ~2 rows of h-6 badges with gap-2 (8px): 24 + 8 + 24 = 56px
 const COLLAPSED_HEIGHT = 56;
 
+// Count how many pills fall below the collapsed fold so the toggle can read "+N more".
+function measure() {
+  const el = contentRef.value;
+  if (!el) return;
+  fullHeight.value = el.scrollHeight;
+  needsCollapse.value = el.scrollHeight > COLLAPSED_HEIGHT + 4;
+  if (!needsCollapse.value) {
+    hiddenCount.value = 0;
+    return;
+  }
+  const pills = Array.from(el.querySelectorAll<HTMLElement>('[data-pill]'));
+  const foldBottom = el.getBoundingClientRect().top + COLLAPSED_HEIGHT;
+  hiddenCount.value = pills.filter((p) => p.getBoundingClientRect().top >= foldBottom).length;
+}
+
 onMounted(async () => {
   await nextTick();
-  if (contentRef.value) {
-    needsCollapse.value = contentRef.value.scrollHeight > COLLAPSED_HEIGHT + 4;
-  }
+  measure();
 });
+
+// Re-measure on width changes so the pixel target for the animation stays correct.
+useResizeObserver(contentRef, measure);
+
+// Animate to a pixel height (CSS can't transition to `max-height: none`); after
+// expanding, allow it to grow freely so wrapping never clips.
+const maxHeightStyle = computed(() => {
+  if (!needsCollapse.value) return undefined;
+  return expanded.value ? `${fullHeight.value}px` : `${COLLAPSED_HEIGHT}px`;
+});
+
+const toggleLabel = computed(() =>
+  expanded.value ? lessLabel : `${hiddenCount.value} ${moreLabel}`
+);
 </script>
 
 <template>
-  <div>
+  <div class="flex flex-col gap-2">
     <div
       ref="content"
-      class="flex flex-wrap gap-2 transition-[max-height] duration-200 overflow-hidden"
-      :style="
-        needsCollapse && !expanded
-          ? { maxHeight: COLLAPSED_HEIGHT + 'px' }
-          : { maxHeight: contentRef?.scrollHeight + 'px' }
-      "
+      class="flex flex-wrap gap-2 overflow-hidden motion-safe:transition-[max-height] motion-safe:duration-300 motion-safe:ease-out"
+      :style="{ maxHeight: maxHeightStyle }"
     >
       <a
         v-for="item in items"
         :key="item.label"
         :href="item.href"
+        data-pill
         :class="badgeVariants({ variant: 'hub-pill' })"
         data-astro-prefetch
       >
         {{ item.label }}
       </a>
     </div>
+    <!-- Toggle is a compact pill left-aligned to the grid's edge (not a
+         full-width row), so its icon lines up with the pills above it. -->
     <button
       v-if="needsCollapse"
       type="button"
-      class="flex items-center justify-between w-full px-4 h-8 mt-2 rounded-full text-xs text-content hover:bg-hub-surface transition-colors"
+      class="group inline-flex h-6 w-fit shrink-0 items-center gap-1 rounded-full border border-divider pl-2.5 pr-3 text-xs font-medium text-content-secondary hover:bg-hub-surface hover:text-content transition-colors"
+      :aria-expanded="expanded"
       @click="expanded = !expanded"
     >
-      {{ expanded ? 'See less' : 'See more' }}
-      <svg
-        class="size-4 transition-transform duration-200"
-        :class="{ 'rotate-90': !expanded }"
-        viewBox="0 0 16 16"
-        fill="none"
-        aria-hidden="true"
-      >
+      <!-- Plus that morphs to minus when expanded: the vertical stroke collapses. -->
+      <svg class="size-3.5 shrink-0" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M3.5 8h9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
         <path
-          d="M4 6l4 4 4-4"
+          class="origin-center transition-transform duration-200"
+          :class="{ 'rotate-90 opacity-0': expanded }"
+          d="M8 3.5v9"
           stroke="currentColor"
-          stroke-width="1.3"
+          stroke-width="1.4"
           stroke-linecap="round"
-          stroke-linejoin="round"
         />
       </svg>
+      <span class="tabular-nums">{{ toggleLabel }}</span>
     </button>
   </div>
 </template>

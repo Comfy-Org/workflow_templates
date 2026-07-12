@@ -11,6 +11,9 @@
 }
 
 @theme inline {
+  --font-display: 'PP Formula', 'Inter', system-ui, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -67,6 +70,7 @@
   --color-site-dropdown: #332b38;
 
   --font-formula: var(--font-family);
+  --radius-5xl: 2.5rem;
 }
 
 /* Navbar height → `top-hub-nav` for the inline search bar to dock beneath. */
@@ -203,5 +207,29 @@
   .ppformula-text-center-sm {
     position: relative;
     top: 0.12em;
+  }
+}
+@property --border-angle {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes border-angle-spin {
+  to {
+    --border-angle: 360deg;
+  }
+}
+
+@utility animate-border-spin {
+  animation: border-angle-spin 2s linear infinite;
+  background: conic-gradient(
+    from var(--border-angle),
+    color-mix(in srgb, var(--color-primary-comfy-yellow) 4%, transparent) 0%,
+    var(--color-primary-comfy-yellow) 100%
+  );
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
   }
 }

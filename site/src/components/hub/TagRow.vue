@@ -87,7 +87,7 @@ const overflowAriaLabel = computed(
         </Badge>
       </a>
 
-      <Tooltip v-if="hiddenTags.length" :text="overflowText">
+      <Tooltip v-if="hiddenTags.length" :text="overflowText" side="right">
         <Badge
           as="button"
           type="button"

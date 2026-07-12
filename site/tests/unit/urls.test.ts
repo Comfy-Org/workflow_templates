@@ -4,6 +4,7 @@ import {
   getCloudLandingUrl,
   getComfyCloudBaseUrl,
   getWorkflowDownloadUrl,
+  getPricingUrl,
 } from '../../src/lib/urls';
 
 afterEach(() => {
@@ -38,9 +39,7 @@ describe('getCloudCtaUrl', () => {
 
     expect(getComfyCloudBaseUrl()).toBe('https://testcloud.comfy.org');
     expect(new URL(getCloudCtaUrl('test', 'hero')).origin).toBe('https://testcloud.comfy.org');
-    expect(new URL(getCloudLandingUrl('site_button')).origin).toBe(
-      'https://testcloud.comfy.org'
-    );
+    expect(new URL(getCloudLandingUrl('site_button')).origin).toBe('https://testcloud.comfy.org');
   });
 
   it('builds canonical workflow download URLs from shareId', () => {
@@ -48,5 +47,16 @@ describe('getCloudCtaUrl', () => {
     expect(getWorkflowDownloadUrl('abc123def456', 'video_ltx2_3_i2v')).toBe(
       '/workflows/download/abc123def456.json?filename=video_ltx2_3_i2v'
     );
+  });
+});
+
+describe('getPricingUrl', () => {
+  it('points at the pricing page with UTM params appended', () => {
+    const url = new URL(getPricingUrl('usecase_headshot_banner'));
+    expect(url.origin + url.pathname).toBe('https://comfy.org/cloud/pricing');
+    expect(url.searchParams.get('utm_source')).toBe('workflow_hub');
+    expect(url.searchParams.get('utm_medium')).toBe('site_CTA');
+    expect(url.searchParams.get('utm_campaign')).toBe('hub_preview');
+    expect(url.searchParams.get('utm_content')).toBe('usecase_headshot_banner');
   });
 });

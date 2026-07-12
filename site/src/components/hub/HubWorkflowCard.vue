@@ -12,8 +12,9 @@ import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
-import { providerLogos } from '@/lib/provider-logos';
+import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
+import { Avatar } from '@/components/ui/avatar';
 
 interface Props {
   name: string;
@@ -21,13 +22,14 @@ interface Props {
   shareId?: string;
   tags?: string[];
   logos?: { provider: string | string[] }[];
+  /** Model names; badges fall back to these when `logos` is empty. */
+  models?: string[];
   thumbnails?: string[];
   locale?: string;
   username?: string;
   creatorDisplayName?: string;
   creatorAvatarUrl?: string;
   isApp?: boolean;
-  hideAuthor?: boolean;
   thumbnailVariant?: ThumbnailVariant;
   mediaType?: string;
   mediaSubtype?: string;
@@ -36,13 +38,13 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   tags: () => [],
   logos: () => [],
+  models: () => [],
   thumbnails: () => [],
   locale: 'en',
   username: '',
   creatorDisplayName: 'ComfyUI',
   creatorAvatarUrl: '',
   isApp: false,
-  hideAuthor: false,
   mediaType: '',
   mediaSubtype: '',
 });
@@ -56,7 +58,9 @@ const MEDIA_TYPE_LABELS: Record<string, string> = {
 };
 const tagFallbackLabel = computed(() => MEDIA_TYPE_LABELS[props.mediaType] ?? '');
 
-const modelLogos = computed(() => providerLogos(props.logos).slice(0, 3));
+const modelLogos = computed(() =>
+  resolveTemplateLogos({ logos: props.logos, models: props.models }).slice(0, 3)
+);
 
 const authorName = computed(() => props.creatorDisplayName || 'ComfyUI');
 
@@ -346,74 +350,46 @@ function handleCardClick() {
         {{ title }}
       </h3>
 
-      <div v-if="modelLogos.length" class="absolute top-4 right-4 z-10 flex flex-row-reverse">
-        <div
-          v-for="(logo, i) in modelLogos"
+      <!-- Glass model badges — mirrors ModelBadges.astro; keep the classes in sync. -->
+      <div
+        v-if="modelLogos.length"
+        class="absolute top-4 right-4 z-10 flex items-center justify-center gap-1 rounded-2xl bg-transparency-white-t8 backdrop-blur-sm"
+        :class="modelLogos.length > 1 ? 'h-10 w-auto px-2' : 'size-10'"
+      >
+        <img
+          v-for="logo in modelLogos"
           :key="logo.name"
-          class="relative flex size-12 items-center justify-center rounded-2xl bg-black/10 p-2 backdrop-blur-xs hover:z-20"
-          :class="i > 0 ? '-mr-4' : ''"
+          :src="logo.src"
+          :alt="logo.name"
           :title="logo.name"
-        >
-          <img
-            :src="logo.logoPath"
-            :alt="logo.name"
-            class="h-full w-full rounded-2xl object-contain"
-          />
-        </div>
+          class="size-7 rounded-full object-contain"
+          loading="lazy"
+        />
       </div>
     </div>
 
     <div class="flex flex-col gap-4 px-4">
       <div class="flex items-center justify-between gap-2">
         <a
-          v-if="!hideAuthor && creatorUrl"
+          v-if="creatorUrl"
           :href="creatorUrl"
           class="creator-link flex items-center gap-2 min-w-0 w-fit text-content-secondary hover:text-content transition-colors"
           @click.stop
         >
-          <img
-            v-if="creatorAvatarUrl"
-            :src="creatorAvatarUrl"
-            :alt="authorName"
-            class="size-5 rounded-full shrink-0 object-cover"
-          />
-          <div
-            v-else
-            class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
-          >
-            <span class="text-page text-2xs font-bold leading-none">{{
-              authorName.charAt(0).toUpperCase()
-            }}</span>
-          </div>
+          <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />
           <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
         </a>
-        <div v-else-if="!hideAuthor" class="flex items-center gap-2 min-w-0">
-          <img
-            v-if="creatorAvatarUrl"
-            :src="creatorAvatarUrl"
-            :alt="authorName"
-            class="size-5 rounded-full shrink-0 object-cover"
-          />
-          <div
-            v-else
-            class="size-5 rounded-full shrink-0 flex items-center justify-center bg-brand"
-          >
-            <span class="text-page text-2xs font-bold leading-none">{{
-              authorName.charAt(0).toUpperCase()
-            }}</span>
-          </div>
-          <span class="ppformula-text-center-sm text-content-secondary text-base truncate">{{
-            authorName
-          }}</span>
+        <div v-else class="flex items-center gap-2 min-w-0 text-content-secondary">
+          <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />
+          <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
         </div>
-        <span v-else />
 
         <ButtonPill
           v-if="templateUrl"
           as="button"
           type="button"
           variant="solid"
-          reveal
+          mode="reveal"
           class="shrink-0"
           :aria-label="title"
           @click.stop="handleCardClick"

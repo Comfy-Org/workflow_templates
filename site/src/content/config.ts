@@ -1,4 +1,6 @@
 import { defineCollection, z } from 'astro:content';
+import { glob } from 'astro/loaders';
+import type { GeneratedSeoContent } from '../lib/workflow-pages/schema';
 
 // Base schema for template data
 const templateSchema = z.object({
@@ -101,9 +103,54 @@ const templates = defineCollection({
   schema: templateSchema,
 });
 
-// Localized content is stored in subdirectories (templates/zh/, templates/ja/, etc.)
-// and is handled automatically by the main templates collection.
+// Use-case and model pages share this content shape (`styles` vs `modelSpec`).
+// Must stay in sync with `GeneratedSeoContent` (schema.ts) — see assertion below.
+const seoContentSchema = z.object({
+  subheading: z.string().optional(),
+  extendedDescription: z.string(),
+  styles: z.array(z.object({ title: z.string(), description: z.string() })).optional(),
+  modelSpec: z
+    .object({
+      summary: z.string(),
+      highlights: z.array(z.object({ title: z.string(), description: z.string() })),
+    })
+    .optional(),
+  howToUse: z.array(z.string()),
+  capabilitiesIntro: z.string().optional(),
+  whyComfy: z
+    .array(
+      z.object({
+        title: z.string(),
+        description: z.string(),
+        cloudOnly: z.boolean().optional(),
+      })
+    )
+    .optional(),
+  applicationsIntro: z.string().optional(),
+  suggestedUseCases: z
+    .array(z.union([z.string(), z.object({ title: z.string(), subtitle: z.string() })]))
+    .optional(),
+  metaDescription: z.string(),
+  faqItems: z.array(z.object({ question: z.string(), answer: z.string() })),
+  qualityFailed: z.boolean().optional(),
+  lastAIGeneration: z.string().optional(),
+});
+
+// Guard against schema/type drift (schema.ts).
+const _assertMatch = (content: z.infer<typeof seoContentSchema>): GeneratedSeoContent => content;
+void _assertMatch;
+
+const seoUseCases = defineCollection({
+  loader: glob({ pattern: '*.json', base: './src/content/landing/use-cases' }),
+  schema: seoContentSchema,
+});
+const seoModels = defineCollection({
+  loader: glob({ pattern: '*.json', base: './src/content/landing/models' }),
+  schema: seoContentSchema,
+});
 
 export const collections = {
   templates,
+  seoUseCases,
+  seoModels,
 };

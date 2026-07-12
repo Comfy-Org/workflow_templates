@@ -1,0 +1,27 @@
+---
+/** Breadcrumb trail + large display title and subtitle shared by the model and
+ *  use-case index pages. The trail continues the detail pages'
+ *  Home → Workflows → {title} breadcrumbs, with the index title as the current
+ *  (non-linked) crumb — keep it in sync with each page's BreadcrumbList JSON-LD. */
+import type { Locale } from '../../i18n/config';
+import Breadcrumbs from '../template-detail/Breadcrumbs.astro';
+
+interface Props {
+  locale: Locale;
+  heading: string;
+  description: string;
+}
+
+const { locale, heading, description } = Astro.props;
+---
+
+<Breadcrumbs locale={locale} title={heading} class="mb-8" />
+
+<div class="mt-8 mb-12 lg:mb-16">
+  <h1 class="font-display text-4xl font-light leading-none text-brand sm:text-5xl lg:text-6xl">
+    {heading}
+  </h1>
+  <p class="mt-6 max-w-2/3 font-display text-lg font-light leading-[1.6] text-primary-comfy-canvas">
+    {description}
+  </p>
+</div>

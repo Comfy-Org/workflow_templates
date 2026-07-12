@@ -1,0 +1,61 @@
+---
+import { thumbnailPath } from '../../../lib/routes';
+import { t } from '../../../i18n/ui';
+import type { Locale } from '../../../i18n/config';
+import type { SeoPageCard } from '../../../lib/workflow-pages/schema';
+import Thumbnail from '../Thumbnail.astro';
+import ModelBadges from '../ModelBadges.astro';
+import { ButtonPill } from '../../ui/button-pill';
+
+interface Props {
+  cards: SeoPageCard[];
+  locale: Locale;
+}
+
+const { cards, locale } = Astro.props;
+---
+
+<ul class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+  {
+    cards.map((card) => (
+      <li>
+        <article class="group/pill-trigger group flex flex-col gap-4 rounded-5xl bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 hover:bg-hub-surface-hover">
+          <a
+            href={card.href}
+            aria-label={card.title}
+            class="aspect-4/3 bg-hub-surface rounded-4xl overflow-hidden relative block"
+          >
+            <Thumbnail
+              src={card.thumbnail ? thumbnailPath(card.thumbnail) : null}
+              alt={card.title}
+              class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105 select-none"
+            />
+            <div
+              class="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none bg-linear-to-t from-black/70 via-black/30 to-transparent"
+              aria-hidden="true"
+            />
+            <h2 class="absolute bottom-5 left-5 right-5 z-10 font-medium text-content-bright text-base leading-[1.3] line-clamp-2 drop-shadow-md sm:text-lg lg:text-xl">
+              {card.title}
+            </h2>
+            <ModelBadges logos={card.logos} class="absolute top-4 right-4 z-10" />
+          </a>
+          <div class="flex items-center justify-between gap-4 px-4">
+            <p class="text-sm text-content-secondary">
+              {card.count} {t('template.count', locale)}
+            </p>
+            <ButtonPill
+              as="a"
+              href={card.href}
+              variant="solid"
+              mode="reveal"
+              aria-label={card.title}
+              class="shrink-0"
+            >
+              {t('cta.viewAll', locale)}
+            </ButtonPill>
+          </div>
+        </article>
+      </li>
+    ))
+  }
+</ul>

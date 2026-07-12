@@ -8,53 +8,83 @@ import path from 'node:path';
 import os from 'node:os';
 
 import vue from '@astrojs/vue';
+import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
+import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
+import { resolveUseCasePageTemplates } from './src/lib/workflow-pages/use-case-resolver.ts';
+import {
+  modelContentPasses,
+  useCaseContentPasses,
+} from './src/lib/workflow-pages/landing-content.ts';
 
-// Build template date lookup at config time
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const templateDates = new Map();
-
-if (fs.existsSync(templatesDir)) {
-  const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
-  for (const file of files) {
-    try {
-      const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
-      if (content.name && content.date) {
-        templateDates.set(content.name, content.date);
-      }
-    } catch {
-      // Skip invalid JSON files
-    }
-  }
-}
-
-// Build timestamp used as lastmod fallback for pages without a specific date
-const buildDate = new Date().toISOString();
-
-// Supported locales (matches src/i18n/config.ts)
-const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
-const nonDefaultLocales = locales.filter((l) => l !== 'en');
-
-// Custom sitemap pages for ISR routes not discovered at build time
-const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
-
-// Creator profile pages — extract unique usernames from synced templates
+/**
+ * @typedef {{ name: string; date?: string; username?: string; models?: string[];
+ *   tags?: string[]; usage?: number }} SitemapTemplate
+ */
+/** Raw content templates, reused below to derive indexable slugs. @type {SitemapTemplate[]} */
+const contentTemplates = [];
 const creatorUsernames = new Set();
+
 if (fs.existsSync(templatesDir)) {
   const files = fs.readdirSync(templatesDir).filter((f) => f.endsWith('.json'));
   for (const file of files) {
     try {
       const content = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf-8'));
       if (content.username) creatorUsernames.add(content.username);
+      if (typeof content.name !== 'string') continue;
+      // Normalize the arrays the group/use-case resolvers read, so a template
+      // JSON missing `models`/`tags` can't crash sitemap derivation.
+      content.models = Array.isArray(content.models) ? content.models : [];
+      content.tags = Array.isArray(content.tags) ? content.tags : [];
+      contentTemplates.push(content);
+      if (content.date) templateDates.set(content.name, content.date);
     } catch {
       // Skip invalid JSON
     }
   }
 }
 
-const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
-const localeCustomPages = nonDefaultLocales.map((locale) =>
-  `${siteOrigin}/${locale}/workflows/`
+const modelGroups = deriveModelGroups(contentTemplates);
+const canonicalModelSlugs = new Set(modelGroups.map((group) => group.slug));
+
+// Same content gate the routes' noindex uses (landing-content.ts), so the
+// sitemap can't advertise a page the route renders noindex.
+const indexableModelSlugs = new Set(
+  modelGroups
+    .filter((group) => group.qualifies && modelContentPasses(group.slug))
+    .map((group) => group.slug)
 );
+
+const indexableUseCaseSlugs = new Set(
+  SEO_PAGES.filter(
+    (def) =>
+      resolveUseCasePageTemplates(def, contentTemplates).length > 0 &&
+      useCaseContentPasses(def.slug)
+  ).map((def) => def.slug)
+);
+
+// Variant → canonical 301s (real, via the Vercel adapter). Skip a variant that is
+// itself a canonical slug, so a redirect can never shadow a real page.
+const modelSlugRedirects = Object.fromEntries(
+  modelGroups.flatMap((group) =>
+    group.redirectFrom
+      .filter((variant) => !canonicalModelSlugs.has(variant))
+      .map((variant) => [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`])
+  )
+);
+
+// lastmod fallback for pages without a specific date.
+const buildDate = new Date().toISOString();
+
+// Supported locales (matches src/i18n/config.ts)
+const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
+const nonDefaultLocales = locales.filter((l) => l !== 'en');
+
+const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
+
+const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
+const localeCustomPages = nonDefaultLocales.map((locale) => `${siteOrigin}/${locale}/workflows/`);
 const customPages = [...creatorPages, ...localeCustomPages];
 
 // https://astro.build/config
@@ -71,6 +101,7 @@ export default defineConfig({
       prefixDefaultLocale: false, // English at root, others prefixed (/zh/, /ja/, etc.)
     },
   },
+  redirects: modelSlugRedirects,
   integrations: [
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
@@ -97,7 +128,6 @@ export default defineConfig({
           return item;
         }
 
-        // Homepage
         if (pathname === '/' || pathname === '') {
           item.lastmod = buildDate;
           // @ts-expect-error - sitemap types are stricter than actual API
@@ -138,30 +168,55 @@ export default defineConfig({
           item.priority = 0.6;
           return item;
         }
+        // Use-case pages: /workflows/use-cases/{slug}/ or /{locale}/workflows/use-cases/{slug}/
+        if (pathname.match(/^(?:\/[a-z]{2}(?:-[A-Z]{2})?)?\/workflows\/use-cases\//)) {
+          // @ts-expect-error - sitemap types are stricter than actual API
+          item.changefreq = 'weekly';
+          item.priority = 0.8;
+          return item;
+        }
 
-        // Default for other pages
         // @ts-expect-error - sitemap types are stricter than actual API
         item.changefreq = 'weekly';
         item.priority = 0.5;
         return item;
       },
-      // Exclude OG image routes and legacy redirect pages from sitemap.
-      // Legacy redirects are /workflows/{slug}/ without a 12-char hex share_id suffix.
-      // Canonical detail pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
+      // Exclude OG image routes and legacy redirect pages. Legacy redirects are
+      // /workflows/{slug}/ without a 12-char hex share_id suffix; canonical detail
+      // pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
       filter: (page) => {
         if (page.includes('/workflows/og/') || page.includes('/workflows/og.png')) return false;
-        // Check if this is a workflow detail path (not category/tag/model/creators)
+        // Only list indexable model pages. Non-qualifying families and
+        // variant-redirect slugs still resolve to a route but render noindex (or
+        // 301), so they must stay out of the sitemap.
+        const modelMatch = page.match(/\/workflows\/model\/([^/]+)\/$/);
+        if (modelMatch) {
+          return indexableModelSlugs.has(modelMatch[1]);
+        }
+
+        // Same rule for use-case pages: only list slugs that actually get an
+        // indexable page, so a noindex/thin use-case never enters the sitemap.
+        const useCaseMatch = page.match(/\/workflows\/use-cases\/([^/]+)\/$/);
+        if (useCaseMatch) {
+          return indexableUseCaseSlugs.has(useCaseMatch[1]);
+        }
+
         const match = page.match(/\/workflows\/([^/]+)\/$/);
         if (match) {
           const segment = match[1];
-          // Skip known sub-paths
-          if (['category', 'tag', 'model', 'creators'].some((p) => page.includes(`/workflows/${p}/`))) return true;
-          // Include if it has a share_id suffix (12 hex chars after last hyphen)
+          if (
+            ['category', 'tag', 'model', 'creators', 'use-cases'].some((p) =>
+              page.includes(`/workflows/${p}/`)
+            )
+          )
+            return true;
+          // Include only when the slug carries a share_id suffix (12 hex chars
+          // after the last hyphen); anything else is a legacy redirect.
           const lastHyphen = segment.lastIndexOf('-');
-          if (lastHyphen === -1) return false; // No hyphen = legacy redirect
+          if (lastHyphen === -1) return false;
           const candidate = segment.slice(lastHyphen + 1);
           if (candidate.length === 12 && /^[0-9a-f]+$/.test(candidate)) return true;
-          return false; // Has hyphen but not a valid share_id = legacy redirect
+          return false;
         }
         return true;
       },
@@ -174,50 +229,37 @@ export default defineConfig({
     skewProtection: true,
   }),
 
-  // Build performance optimizations
   build: {
-    // Increase concurrency for faster builds on multi-core systems
     concurrency: Math.max(1, os.cpus().length),
-    // Inline small stylesheets automatically
     inlineStylesheets: 'auto',
   },
 
-  // HTML compression
   compressHTML: true,
 
-  // Image optimization settings
   image: {
     service: {
       entrypoint: 'astro/assets/services/sharp',
       config: {
-        // Limit input pixels to prevent memory issues with large images
-        limitInputPixels: 268402689, // ~16384x16384
+        limitInputPixels: 268402689, // ~16384x16384, guards against memory blowups
       },
     },
   },
 
-  // Responsive images for automatic srcset generation (now stable in Astro 5)
-  // Note: responsiveImages was moved from experimental to stable in Astro 5.x
-
   vite: {
     plugins: [tailwindcss()],
     build: {
-      // Increase chunk size warning limit (reduces noise)
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
-          // Manual chunking for better caching
           manualChunks: {
             vendor: ['web-vitals'],
           },
         },
       },
     },
-    // Optimize dependency pre-bundling
     optimizeDeps: {
       include: ['web-vitals'],
     },
-    // Disable dev sourcemaps for CSS (faster)
     css: {
       devSourcemap: false,
     },

@@ -10,18 +10,29 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
 import WorkflowGrid from '../../../../components/hub/WorkflowGrid.vue';
-import HreflangTags from '../../../../components/HreflangTags.astro';
 import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { localizeUrl } from '../../../../i18n/utils';
 import { t } from '../../../../i18n/ui';
-import { slugify } from '../../../../lib/slugify';
 import { absoluteUrl } from '../../../../config/site';
-import { modelPath } from '../../../../lib/routes';
+import { modelPath, modelsIndexPath } from '../../../../lib/routes';
+import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
+import { loadModelContent } from '../../../../lib/workflow-pages/content-loaders';
+import { buildModelPageMeta, isModelPageIndexable } from '../../../../lib/workflow-pages/seo-page';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
-import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../lib/structured-data';
+import { buildTemplateItemListEntries } from '../../../../lib/workflow-pages/item-list';
+import {
+  buildCollectionPageJsonLd,
+  buildWorkflowBreadcrumb,
+  serializeJsonLdForScript,
+} from '../../../../lib/structured-data';
+
+const buildGroups = async () =>
+  deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
+let groupsCache: ReturnType<typeof buildGroups> | null = null;
+const loadModelGroups = () => (groupsCache ??= buildGroups());
 
 const { locale, name } = Astro.params;
 
@@ -32,44 +43,59 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-const allTemplates = await loadSerializedTemplates(() => getCollection('templates'));
+// Resolve the model family via the same grouping the English page uses, so both
+// routes agree on canonical slugs, variant redirects, and display label — the
+// hreflang cluster between them is only reciprocal if the slugs resolve identically.
+const groups = await loadModelGroups();
+const family =
+  groups.find((group) => group.slug === name) ??
+  groups.find((group) => group.redirectFrom.includes(name!));
 
-// Find templates matching this model slug
-const matchingTemplates = allTemplates.filter((tmpl) =>
-  tmpl.models.some((m: string) => slugify(m) === name)
-);
-
-if (matchingTemplates.length === 0) {
+if (!family) {
   return Astro.redirect(`/${locale}/workflows/`);
 }
 
-// Get display name from the first matching model
-const modelName =
-  matchingTemplates[0]?.models?.find((m: string) => slugify(m) === name) || name || '';
+// A variant slug 301s to its family's canonical URL, matching the English route.
+if (family.slug !== name) {
+  return Astro.redirect(localizeUrl(modelPath(family.slug), typedLocale), 301);
+}
 
-const basePath = modelPath(name!);
+const matchingTemplates = family.templates;
+const basePath = modelPath(family.slug);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
 
-const title = `${modelName} ComfyUI Workflows - Free Templates`;
-const description = `Browse ${matchingTemplates.length} free ComfyUI workflow templates using ${modelName}. Ready-to-use AI generation workflows for image, video, and audio creation.`;
+// Localized pages carry no editorial copy of their own, but title/meta/noindex
+// resolve through the same helper as the English route so the hreflang cluster
+// stays consistent.
+const content = await loadModelContent(family.slug);
+const { h1, title, description } = buildModelPageMeta({
+  group: family,
+  content,
+  locale: typedLocale,
+  templateCount: matchingTemplates.length,
+});
+const noindex = !isModelPageIndexable(family, matchingTemplates.length, content);
 
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: `${modelName} ComfyUI Workflows`,
+const countLabel =
+  matchingTemplates.length === 1
+    ? t('template.countOne', typedLocale)
+    : t('template.count', typedLocale);
+
+const structuredData = buildCollectionPageJsonLd({
+  name: h1,
   description,
   url: canonicalUrl,
-  inLanguage: locale,
-};
+  inLanguage: typedLocale,
+  items: noindex ? undefined : buildTemplateItemListEntries(matchingTemplates, typedLocale),
+});
 
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(
-  typedLocale,
-  { name: modelName },
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(typedLocale, { name: h1 }, [
   {
-    name: t('labels.models', typedLocale),
-    item: absoluteUrl(localizeUrl('/workflows/model/', typedLocale)),
-  }
-);
+    name: t('breadcrumb.workflows', typedLocale),
+    item: absoluteUrl(localizeUrl('/workflows/', typedLocale)),
+  },
+  { name: t('labels.models', typedLocale), item: absoluteUrl(modelsIndexPath(typedLocale)) },
+]);
 
 // matchingTemplates are already SerializedTemplate[] with profile data
 const serialized = matchingTemplates;
@@ -83,10 +109,10 @@ const serialized = matchingTemplates;
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}
+  noindex={noindex}
   theme="dark"
   hideDefaultFooter
 >
-  <HreflangTags slot="head" basePath={basePath} />
   <HubNavbar />
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
     <!-- Back -->
@@ -96,12 +122,13 @@ const serialized = matchingTemplates;
 
     <!-- Header -->
     <div class="mb-12">
-      <span class={badgeVariants({ variant: 'hub-pill' })}>Model</span>
+      <span class={badgeVariants({ variant: 'hub-pill' })}>{t('labels.models', typedLocale)}</span>
       <h1 class="text-3xl font-bold text-content mt-3">
-        {modelName} Workflows
+        {h1}
       </h1>
-      <p class="text-hub-muted text-base mt-2">
-        {matchingTemplates.length} workflow{matchingTemplates.length !== 1 ? 's' : ''}
+      <p class="text-content-muted text-base mt-2">
+        {matchingTemplates.length}
+        {countLabel}
       </p>
     </div>
 
