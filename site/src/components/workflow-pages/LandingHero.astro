@@ -1,6 +1,6 @@
 ---
 import type { Locale } from '../../i18n/config';
-import { firstStillThumbnail, firstTemplateWithStill } from '../../lib/media-utils';
+import { firstStillThumbnail, pickHeroTemplate } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
 import type { SerializedTemplate } from '../../lib/hub-api';
 import { resolveTemplateLogos } from '../../lib/model-logos';
@@ -19,11 +19,23 @@ interface Props {
   analytics?: { location: string; template?: string };
   /** Templates the page resolves to; the first still image becomes the hero visual. */
   templates: SerializedTemplate[];
+  /** Optional `template.name` to pin as the hero, overriding the still-image auto-pick. */
+  heroTemplateName?: string;
   locale: Locale;
 }
 
-const { eyebrow, title, description, meta, primaryCta, secondaryCta, analytics, templates, locale } =
-  Astro.props;
+const {
+  eyebrow,
+  title,
+  description,
+  meta,
+  primaryCta,
+  secondaryCta,
+  analytics,
+  templates,
+  heroTemplateName,
+  locale,
+} = Astro.props;
 
 // Shared brand-solid / brand-outline buttons. Only external links open a new
 // tab; same-page anchors (e.g. "#workflows") must scroll in place.
@@ -42,7 +54,7 @@ const ctaButtons = [
   };
 });
 
-const heroTemplate = firstTemplateWithStill(templates);
+const heroTemplate = pickHeroTemplate(templates, heroTemplateName);
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];

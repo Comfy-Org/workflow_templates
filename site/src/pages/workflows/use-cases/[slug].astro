@@ -13,7 +13,7 @@ import { inner, eyebrow, heading } from '../../../components/workflow-pages/land
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveTemplateLogos } from '../../../lib/model-logos';
-import { firstStillThumbnail, firstTemplateWithStill } from '../../../lib/media-utils';
+import { firstStillThumbnail, pickHeroTemplate } from '../../../lib/media-utils';
 import { absoluteUrl } from '../../../config/site';
 import { useCasePath, useCasesIndexPath, modelPath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
@@ -102,7 +102,9 @@ const qualityContent = hasQualityContent ? content : null;
 const noindex = !isUseCasePageIndexable(templates.length, content);
 
 // The template whose still becomes the hero image — reserved so no section reuses it.
-const heroTemplate = firstTemplateWithStill(templates);
+// Honors `def.heroTemplateName` when set (with fallback), so the reserved-hero
+// exclusion downstream stays in sync with what LandingHero actually renders.
+const heroTemplate = pickHeroTemplate(templates, def.heroTemplateName);
 const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
@@ -217,6 +219,7 @@ const relatedCards = resolveRailImages(
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
       analytics={{ location: `usecase_${def.slug}_hero`, template: leadShareId }}
       templates={templates}
+      heroTemplateName={def.heroTemplateName}
       locale={locale}
     />
 
