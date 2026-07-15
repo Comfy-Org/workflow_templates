@@ -347,7 +347,10 @@ function handleCardClick() {
       <h3
         class="absolute bottom-5 left-5 right-5 z-10 font-medium text-content-bright text-base leading-[1.3] line-clamp-2 drop-shadow-md pointer-events-none sm:text-lg lg:text-xl"
       >
-        {{ title }}
+        <a v-if="templateUrl" :href="templateUrl" class="pointer-events-auto" @click.stop>
+          {{ title }}
+        </a>
+        <template v-else>{{ title }}</template>
       </h3>
 
       <!-- Glass model badges — mirrors ModelBadges.astro; keep the classes in sync. -->
@@ -386,13 +389,13 @@ function handleCardClick() {
 
         <ButtonPill
           v-if="templateUrl"
-          as="button"
-          type="button"
+          as="a"
+          :href="templateUrl"
           variant="solid"
           mode="reveal"
           class="shrink-0"
           :aria-label="title"
-          @click.stop="handleCardClick"
+          @click.stop
         >
           Try now
         </ButtonPill>
