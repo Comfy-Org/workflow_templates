@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import ast
-import re
 from pathlib import Path
 
 from models import NodeSpec
 
-NODE_ID_RE = re.compile(r'node_id\s*=\s*["\']([^"\']+)["\']')
-DISPLAY_NAME_RE = re.compile(r'display_name\s*=\s*["\']([^"\']+)["\']')
 SCAN_RELATIVE_PATHS = (
     Path("nodes.py"),
     Path("comfy_extras"),
@@ -85,16 +82,112 @@ def _input_types_return_dict(class_def: ast.ClassDef) -> ast.Dict | None:
     return None
 
 
-def _class_is_api_node(class_def: ast.ClassDef, *, file_path: Path) -> bool:
-    if "comfy_api_nodes" in file_path.parts:
-        return True
+def _const_bool(node: ast.AST | None) -> bool | None:
+    if isinstance(node, ast.Constant) and isinstance(node.value, bool):
+        return node.value
+    return None
+
+
+def _display_name_is_deprecated(display_name: str | None) -> bool:
+    return bool(display_name and "DEPRECATED" in display_name.upper())
+
+
+def _is_schema_call(node: ast.Call) -> bool:
+    return _class_name(node.func) == "Schema"
+
+
+def _class_attr_value(class_def: ast.ClassDef, attr: str) -> ast.AST | None:
     for node in class_def.body:
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "API_NODE":
-                    if isinstance(node.value, ast.Constant) and node.value.value is True:
-                        return True
+                if isinstance(target, ast.Name) and target.id == attr:
+                    return node.value
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == attr:
+                return node.value
+    return None
+
+
+def _class_is_api_node(class_def: ast.ClassDef, *, file_path: Path) -> bool:
+    if "comfy_api_nodes" in file_path.parts:
+        return True
+    if _const_bool(_class_attr_value(class_def, "API_NODE")) is True:
+        return True
+    if _const_bool(_class_attr_value(class_def, "is_api_node")) is True:
+        return True
+    for node in class_def.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if node.name != "define_schema":
+            continue
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call) or not _is_schema_call(child):
+                continue
+            for kw in child.keywords:
+                if kw.arg == "is_api_node" and _const_bool(kw.value) is True:
+                    return True
     return False
+
+
+def _class_marks_deprecated(class_def: ast.ClassDef) -> bool:
+    """True if the class marks itself deprecated via V3 Schema or class attrs."""
+    if _const_bool(_class_attr_value(class_def, "is_deprecated")) is True:
+        return True
+    if _const_bool(_class_attr_value(class_def, "DEPRECATED")) is True:
+        return True
+    display_name = _string_value(_class_attr_value(class_def, "display_name"))
+    if _display_name_is_deprecated(display_name):
+        return True
+
+    for node in class_def.body:
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if node.name != "define_schema":
+            continue
+        for child in ast.walk(node):
+            if not isinstance(child, ast.Call) or not _is_schema_call(child):
+                continue
+            meta = _schema_call_meta(child)
+            if meta is not None and meta[2]:
+                return True
+    return False
+
+
+def _schema_call_meta(call: ast.Call) -> tuple[str, str | None, bool] | None:
+    """Extract (node_id, display_name, deprecated) from IO.Schema(...)."""
+    kwargs = {kw.arg: kw.value for kw in call.keywords if kw.arg}
+    node_id = _string_value(kwargs.get("node_id"))
+    if not node_id:
+        return None
+    display_name = _string_value(kwargs.get("display_name"))
+    deprecated = _const_bool(kwargs.get("is_deprecated")) is True
+    deprecated = deprecated or _display_name_is_deprecated(display_name)
+    return node_id, display_name, deprecated
+
+
+def _upsert_node_spec(
+    specs: dict[str, NodeSpec],
+    node_id: str,
+    *,
+    display_name: str | None,
+    deprecated: bool,
+    api_node: bool | None = None,
+) -> None:
+    existing = specs.get(node_id)
+    if existing is None:
+        specs[node_id] = NodeSpec(
+            node_type=node_id,
+            api_node=bool(api_node),
+            deprecated=deprecated,
+            display_name=display_name,
+        )
+        return
+    if display_name:
+        existing.display_name = display_name
+    if deprecated:
+        existing.deprecated = True
+    if api_node is True:
+        existing.api_node = True
 
 
 def _parse_python_file(path: Path) -> tuple[dict[str, str], dict[str, str], dict[str, ast.ClassDef]]:
@@ -145,25 +238,53 @@ def _iter_scan_files(comfyui_dir: Path) -> list[Path]:
     return files
 
 
-def _register_schema_nodes(path: Path, specs: dict[str, NodeSpec], warnings: list[str]) -> None:
+def _register_v3_nodes(path: Path, specs: dict[str, NodeSpec], warnings: list[str]) -> None:
+    """Register ComfyUI V3 nodes from Schema(...) and class-level node_id attrs.
+
+    Deprecation is detected from:
+    - Schema(..., is_deprecated=True)  — preferred modern flag
+    - class attribute is_deprecated / DEPRECATED = True
+    - display_name containing "DEPRECATED" (legacy)
+    """
     try:
         source = path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(path))
     except OSError as exc:
         warnings.append(f"{path}: {exc}")
         return
+    except SyntaxError as exc:
+        warnings.append(f"{path}: syntax error: {exc}")
+        return
 
-    for node_id in NODE_ID_RE.findall(source):
-        if node_id in specs:
+    api_default = "comfy_api_nodes" in path.parts
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not _is_schema_call(node):
             continue
-        display_name = None
-        display_match = DISPLAY_NAME_RE.search(source)
-        if display_match:
-            display_name = display_match.group(1)
-        specs[node_id] = NodeSpec(
-            node_type=node_id,
-            api_node=True,
-            deprecated=bool(display_name and "DEPRECATED" in display_name.upper()),
+        meta = _schema_call_meta(node)
+        if meta is None:
+            continue
+        node_id, display_name, deprecated = meta
+        _upsert_node_spec(
+            specs,
+            node_id,
             display_name=display_name,
+            deprecated=deprecated,
+            api_node=True if api_default else None,
+        )
+
+    for class_def in (n for n in tree.body if isinstance(n, ast.ClassDef)):
+        node_id = _string_value(_class_attr_value(class_def, "node_id"))
+        if not node_id:
+            continue
+        display_name = _string_value(_class_attr_value(class_def, "display_name"))
+        deprecated = _class_marks_deprecated(class_def)
+        _upsert_node_spec(
+            specs,
+            node_id,
+            display_name=display_name,
+            deprecated=deprecated,
+            api_node=True if api_default or _class_is_api_node(class_def, file_path=path) else None,
         )
 
 
@@ -188,26 +309,45 @@ def build_specs_static(comfyui_dir: Path) -> tuple[dict[str, NodeSpec], list[str
             pending.append((node_type, class_name, classes.get(class_name), path))
 
         for node_type, display_name in display_mappings.items():
-            spec = specs.get(node_type)
-            if spec is None:
-                spec = NodeSpec(node_type=node_type)
-                specs[node_type] = spec
-            spec.display_name = display_name
-            if "DEPRECATED" in display_name.upper():
-                spec.deprecated = True
+            _upsert_node_spec(
+                specs,
+                node_type,
+                display_name=display_name,
+                deprecated=_display_name_is_deprecated(display_name),
+            )
 
-        if "comfy_api_nodes" in path.parts and path.name.startswith("nodes_"):
-            _register_schema_nodes(path, specs, warnings)
+        # V3 Schema / class-level node_id (comfy_api_nodes + comfy_extras, etc.)
+        _register_v3_nodes(path, specs, warnings)
 
     for node_type, _class_name, class_def, path in pending:
-        if node_type in specs and specs[node_type].inputs:
+        existing = specs.get(node_type)
+        if existing is not None and existing.inputs:
+            if class_def is not None and _class_marks_deprecated(class_def):
+                existing.deprecated = True
             continue
 
-        display_name = specs.get(node_type).display_name if node_type in specs else None
-        deprecated = bool(display_name and "DEPRECATED" in display_name.upper())
+        display_name = existing.display_name if existing is not None else None
+        if class_def is not None:
+            class_display = _string_value(_class_attr_value(class_def, "display_name"))
+            if class_display:
+                display_name = class_display
+
+        deprecated = bool(existing.deprecated) if existing is not None else False
+        deprecated = deprecated or _display_name_is_deprecated(display_name)
+        if class_def is not None:
+            deprecated = deprecated or _class_marks_deprecated(class_def)
+
+        api_node = (
+            _class_is_api_node(class_def, file_path=path)
+            if class_def
+            else "comfy_api_nodes" in path.parts
+        )
+        if existing is not None and existing.api_node:
+            api_node = True
+
         spec = NodeSpec(
             node_type=node_type,
-            api_node=_class_is_api_node(class_def, file_path=path) if class_def else "comfy_api_nodes" in path.parts,
+            api_node=api_node,
             deprecated=deprecated,
             display_name=display_name,
         )
@@ -215,7 +355,12 @@ def build_specs_static(comfyui_dir: Path) -> tuple[dict[str, NodeSpec], list[str
         if class_def is not None:
             input_types = _input_types_return_dict(class_def)
             if input_types is None:
-                warnings.append(f"{node_type}: static scan could not parse INPUT_TYPES in {path.name}")
+                # V3 nodes use define_schema instead of INPUT_TYPES — already registered.
+                if not any(
+                    isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name == "define_schema"
+                    for n in class_def.body
+                ):
+                    warnings.append(f"{node_type}: static scan could not parse INPUT_TYPES in {path.name}")
             else:
                 groups = _dict_string_keys(input_types)
                 if groups:
@@ -223,6 +368,18 @@ def build_specs_static(comfyui_dir: Path) -> tuple[dict[str, NodeSpec], list[str
                     _apply_input_group(spec, groups.get("optional"))
         else:
             warnings.append(f"{node_type}: class not found while scanning {path}")
+
+        # Preserve any earlier schema-driven deprecation/api flags if we replace the spec.
+        if existing is not None:
+            if existing.deprecated:
+                spec.deprecated = True
+            if existing.api_node:
+                spec.api_node = True
+            if existing.display_name and not spec.display_name:
+                spec.display_name = existing.display_name
+            if existing.inputs and not spec.inputs:
+                spec.inputs = existing.inputs
+                spec.combo_options = existing.combo_options
 
         specs[node_type] = spec
 
