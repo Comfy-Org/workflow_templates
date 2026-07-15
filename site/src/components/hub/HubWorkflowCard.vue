@@ -347,7 +347,13 @@ function handleCardClick() {
       <h3
         class="absolute bottom-5 left-5 right-5 z-10 font-medium text-content-bright text-base leading-[1.3] line-clamp-2 drop-shadow-md pointer-events-none sm:text-lg lg:text-xl"
       >
-        <a v-if="templateUrl" :href="templateUrl" class="pointer-events-auto" @click.stop>
+        <a
+          v-if="templateUrl"
+          :href="templateUrl"
+          class="pointer-events-auto"
+          data-testid="workflow-card-link"
+          @click.stop
+        >
           {{ title }}
         </a>
         <template v-else>{{ title }}</template>
