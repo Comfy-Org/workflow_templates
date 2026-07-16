@@ -128,8 +128,16 @@ export const SEO_PAGES: SeoPageDef[] = [
     // tag-matched.
     appShareId: 'd5ce59e59ff3',
     pins: [{ shareId: 'd5ce59e59ff3', isApp: true }],
-    // Style-Transfer-tagged but a reference-to-video generator, not stylization.
-    excludeShareIds: ['5a3df986f9f8'],
+    // Style-Transfer-tagged but not photo stylization: a reference-to-video
+    // generator, a video style-transfer batch, a product-scene transform, motion
+    // collages, and a product-ad app.
+    excludeShareIds: [
+      '5a3df986f9f8',
+      'e1e03cafda18',
+      'd686f64879fb',
+      'c27ee1ed3d54',
+      '17883fb20765',
+    ],
   },
   {
     slug: 'ai-tattoo-generator',
@@ -170,6 +178,13 @@ export const SEO_PAGES: SeoPageDef[] = [
     // "seo-video-upscaler-app" App Mode share (video picker + megapixels). Covers
     // the video half; swap for a combined app when a dedicated image one ships.
     appShareId: '46102ce62252',
+    // The image half leads the grid: the sheet's new "Image Upscale" workflow
+    // and the "Image Upscale: Z-Image-Turbo 2K" App Mode share (verified in
+    // cloud.comfy.org: image picker + denoise).
+    pins: [{ shareId: 'c1959fdc5642' }, { shareId: 'b3bbbf217b89', isApp: true }],
+    // Upscale-tagged but not upscalers: a virtual try-on studio, an advertising
+    // visualization demo, a variations generator app, and an event demo.
+    excludeShareIds: ['5652fbe7f479', 'c5cbee07611f', 'c046d6c94bd1', '94ed41b87579'],
   },
   {
     slug: 'ai-avatar-generator',
@@ -209,6 +224,15 @@ export const SEO_PAGES: SeoPageDef[] = [
     // "seo-image-to-video-ltx-api-app" App Mode share (image picker + frame count).
     // OSS LTX pipeline = the free first-run anchor; premium models stay in the grid.
     appShareId: '201003c6d79c',
+    // The sheet's free-tier anchors lead the grid: LTX 2.3 (the CTA app's
+    // source workflow) then Wan 2.2 14B; Seedance et al. follow by usage. LTX
+    // leads because its still thumbnail is the page's hero image and Wan's
+    // still 404s on the asset host (hero picking trusts the file extension).
+    pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }],
+    // Image-to-Video-tagged but not an image-to-video generator: a shot
+    // annotation utility, a character-swap flow (brand-safety class pending
+    // review), and the ByteDance real-human flow (KYC-gated, not linkable).
+    excludeShareIds: ['0136284ecc19', '064da31db8f3', 'd4b951896b54'],
   },
   {
     slug: 'restore-old-photos',
@@ -250,6 +274,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['Anime'] },
     // "seo-anime-generator-anima-app" App Mode share (baked anime prompt + size).
     appShareId: '3ec117b8333d',
+    // Anime-tagged but not anime generation: a video converter that turns anime
+    // INTO live action, and an untitled personal test workflow.
+    excludeShareIds: ['6fec31e40f4a', '2030b1e2fb72'],
   },
   {
     slug: 'ai-character-replacement',
