@@ -21,9 +21,8 @@ export interface FilterableTemplate {
   isApp?: boolean;
 }
 
-/** Matches if any filter matches (OR semantics); `excludeTags` vetoes. */
+/** Matches if any filter matches (OR semantics). */
 function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): boolean {
-  if (filters.excludeTags?.some((tag) => template.tags?.includes(tag))) return false;
   const byModel = filters.models?.some((model) => template.models?.includes(model)) ?? false;
   const byTag = filters.tags?.some((tag) => template.tags?.includes(tag)) ?? false;
   return byModel || byTag;
