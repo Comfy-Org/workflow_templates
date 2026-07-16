@@ -153,8 +153,8 @@ def _class_marks_deprecated(class_def: ast.ClassDef) -> bool:
     return False
 
 
-def _schema_call_meta(call: ast.Call) -> tuple[str, str | None, bool] | None:
-    """Extract (node_id, display_name, deprecated) from IO.Schema(...)."""
+def _schema_call_meta(call: ast.Call) -> tuple[str, str | None, bool, bool] | None:
+    """Extract (node_id, display_name, deprecated, is_api_node) from IO.Schema(...)."""
     kwargs = {kw.arg: kw.value for kw in call.keywords if kw.arg}
     node_id = _string_value(kwargs.get("node_id"))
     if not node_id:
@@ -162,7 +162,8 @@ def _schema_call_meta(call: ast.Call) -> tuple[str, str | None, bool] | None:
     display_name = _string_value(kwargs.get("display_name"))
     deprecated = _const_bool(kwargs.get("is_deprecated")) is True
     deprecated = deprecated or _display_name_is_deprecated(display_name)
-    return node_id, display_name, deprecated
+    is_api_node = _const_bool(kwargs.get("is_api_node")) is True
+    return node_id, display_name, deprecated, is_api_node
 
 
 def _upsert_node_spec(
@@ -264,13 +265,13 @@ def _register_v3_nodes(path: Path, specs: dict[str, NodeSpec], warnings: list[st
         meta = _schema_call_meta(node)
         if meta is None:
             continue
-        node_id, display_name, deprecated = meta
+        node_id, display_name, deprecated, schema_api_node = meta
         _upsert_node_spec(
             specs,
             node_id,
             display_name=display_name,
             deprecated=deprecated,
-            api_node=True if api_default else None,
+            api_node=True if api_default or schema_api_node else None,
         )
 
     for class_def in (n for n in tree.body if isinstance(n, ast.ClassDef)):
