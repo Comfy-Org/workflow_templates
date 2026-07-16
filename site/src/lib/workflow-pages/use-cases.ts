@@ -20,6 +20,13 @@ export interface SeoPageFilters {
   models?: string[];
   /** Match templates whose `tags` include any of these (exact tag strings). */
   tags?: string[];
+  /**
+   * Drop matches carrying any of these tags — for image-focused pages whose
+   * match tags (ControlNet, Image Upscale) also exist on video workflows.
+   * Pins bypass this veto. (The catalog's `mediaType` describes the thumbnail,
+   * not the output, so tags are the reliable signal.)
+   */
+  excludeTags?: string[];
 }
 
 export interface SeoPagePin {
@@ -105,7 +112,13 @@ export const SEO_PAGES: SeoPageDef[] = [
         'remodel visualization',
       ],
     },
-    filters: { tags: ['ControlNet'] },
+    // ControlNet = the structure-preserving redesign family; video variants of
+    // the tag (pose/depth-to-video) are not interior design, so they are vetoed.
+    filters: { tags: ['ControlNet'], excludeTags: ['Video'] },
+    // "Qwen Image Edit 2511 - Material Replacement" (swap furniture materials,
+    // samples bundled) is the catalog's most interior-relevant edit; tagged only
+    // "Image Edit", so pinned. A dedicated room-redesign app is still needed.
+    pins: [{ shareId: '325247297bf2' }],
   },
   {
     slug: 'ai-caricature-generator',
@@ -148,8 +161,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     // No dedicated tattoo workflow exists; the structure-preserving ControlNet and
     // line-art workflows are what adapt to tattoo/stencil design. The copy frames
-    // them honestly as design tools, not a one-click app.
-    filters: { tags: ['ControlNet', 'Canny'] },
+    // them honestly as design tools, not a one-click app. Video variants of the
+    // tags are not tattoo design, so they are vetoed.
+    filters: { tags: ['ControlNet', 'Canny'], excludeTags: ['Video'] },
   },
   {
     slug: 'ai-image-upscaler',
@@ -189,6 +203,15 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: {
       tags: ['Character Reference', 'Lip Sync', 'Character Replacement', 'Character', 'Face Swap'],
     },
+    // "Kling: Avatar 2.0" — image + audio to talking avatar, samples bundled
+    // (node graph; no App Mode save published yet). The team's pick for this
+    // page's hero, pinned to the top of the grid.
+    appShareId: 'e81f8eb0ee5f',
+    pins: [{ shareId: 'e81f8eb0ee5f' }],
+    // Brand-safety: the video face-swap and voice-clone lipdub workflows are
+    // excluded/pending review and must not surface on an SEO landing page. The
+    // reference-to-video generator is not avatar work.
+    excludeShareIds: ['bed989744195', 'e4ab88456b9b', '5a3df986f9f8'],
   },
   {
     slug: 'ai-image-to-video',
@@ -225,9 +248,17 @@ export const SEO_PAGES: SeoPageDef[] = [
         'photo repair',
       ],
     },
-    // Restoration = repair (Image Edit) + enhancement (Image Upscale). This overlaps
-    // the upscaler page on the upscale tag, but the keyword + copy are distinct.
-    filters: { tags: ['Image Edit', 'Image Upscale'] },
+    // Restoration keys on the enhancement family. The broad "Image Edit" tag
+    // pulled the entire editing catalog (100+ items) into this grid, so it was
+    // dropped; still-photo restoration is what the page promises, so video
+    // matches are vetoed. Overlaps the upscaler page on the tag, but the
+    // keyword + copy are distinct.
+    filters: { tags: ['Image Upscale'], excludeTags: ['Video', 'Video Upscale'] },
+    // "WaveSpeed: AI Image Restoration with SeedVR2" (sample bundled, 4K
+    // restore + before/after compare) — the catalog's true restoration
+    // workflow; a photo restore + colorize app is still needed.
+    appShareId: '430b718c2c90',
+    pins: [{ shareId: '430b718c2c90' }],
   },
   {
     slug: 'ai-anime-generator',
