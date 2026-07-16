@@ -22,6 +22,17 @@ export interface SeoPageFilters {
   tags?: string[];
 }
 
+export interface SeoPagePin {
+  /** Catalog share id to force-include at the top of the page's grid. */
+  shareId: string;
+  /**
+   * Marks the pinned entry as an App Mode app when the catalog hasn't flagged
+   * it yet, so it files under the grid's "Comfy Apps" tab. Only set after
+   * opening the share in cloud.comfy.org and seeing App Mode.
+   */
+  isApp?: boolean;
+}
+
 export interface SeoPageDef {
   /** Canonical kebab-case URL segment, used verbatim (not re-slugified). */
   slug: string;
@@ -39,6 +50,19 @@ export interface SeoPageDef {
    * with bundled sample inputs before being linked here.
    */
   appShareId?: string;
+  /**
+   * Catalog entries force-included at the top of the grid regardless of
+   * `filters` — for on-topic workflows the tag filters can't reach (e.g. the
+   * purpose-built apps, which carry no matching tags yet). Cloud-save-only
+   * shares that aren't hub-published cannot be pinned; they stay CTA-only.
+   */
+  pins?: SeoPagePin[];
+  /**
+   * Share ids removed from the grid: high-usage catalog entries the OR filters
+   * catch even though they don't serve the page's use case (the "we should not
+   * show wrong workflows" rule).
+   */
+  excludeShareIds?: string[];
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -59,8 +83,12 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     filters: { tags: ['Portrait'] },
     // "Headshot Generator" App Mode share (photo picker + outfit/backdrop/aspect
-    // controls). Untagged on the hub, so the Portrait grid can't surface it.
+    // controls). Untagged on the hub, so it is pinned rather than tag-matched.
     appShareId: 'd70243b6fc64',
+    pins: [{ shareId: 'd70243b6fc64', isApp: true }],
+    // Portrait-tagged but not headshot tools: a reference-to-video generator, an
+    // isometric-miniature stylizer, and a product-placement app.
+    excludeShareIds: ['5a3df986f9f8', '364e72458b36', '163ff33fc4a7'],
   },
   {
     slug: 'ai-interior-design',
@@ -96,8 +124,12 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     filters: { tags: ['Style Transfer'] },
     // "Photo to Cartoon Style Caricature" App Mode share (photo picker + cartoon
-    // style dropdown). Tagged only "Image Edit", so the grid can't surface it.
+    // style dropdown). Tagged only "Image Edit", so it is pinned rather than
+    // tag-matched.
     appShareId: 'd5ce59e59ff3',
+    pins: [{ shareId: 'd5ce59e59ff3', isApp: true }],
+    // Style-Transfer-tagged but a reference-to-video generator, not stylization.
+    excludeShareIds: ['5a3df986f9f8'],
   },
   {
     slug: 'ai-tattoo-generator',

@@ -15,6 +15,10 @@ export interface FilterableTemplate {
   models?: string[];
   tags?: string[];
   usage?: number;
+  /** Needed only by pages that pin/exclude specific shares; optional so the
+   *  narrower build-time shapes stay valid (their pages just skip pinning). */
+  shareId?: string;
+  isApp?: boolean;
 }
 
 /** Matches if any filter matches (OR semantics). */
@@ -24,12 +28,33 @@ function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): 
   return byModel || byTag;
 }
 
-/** Templates matching a page's filters, usage-sorted. Empty when none match. */
+/**
+ * Templates matching a page's filters, usage-sorted, minus the page's explicit
+ * excludes, with its pinned shares prepended (registry order). Empty when none
+ * match. Pins are looked up in the catalog by share id, so a cloud-save-only
+ * share silently stays out until it is hub-published.
+ */
 export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   def: SeoPageDef,
   catalog: T[]
 ): T[] {
-  return catalog.filter((template) => matchesFilters(template, def.filters)).sort(byUsageDesc);
+  const excluded = new Set(def.excludeShareIds ?? []);
+  const matched = catalog
+    .filter((template) => matchesFilters(template, def.filters))
+    .filter((template) => !template.shareId || !excluded.has(template.shareId))
+    .sort(byUsageDesc);
+
+  const pinned = (def.pins ?? []).flatMap((pin) => {
+    const found = catalog.find((template) => template.shareId === pin.shareId);
+    if (!found) return [];
+    // isApp override: files a pinned App Mode share under the "Comfy Apps" tab
+    // when the catalog hasn't flagged it yet.
+    return [pin.isApp ? { ...found, isApp: true } : found];
+  });
+  if (pinned.length === 0) return matched;
+
+  const pinnedIds = new Set(pinned.map((template) => template.shareId));
+  return [...pinned, ...matched.filter((t) => !t.shareId || !pinnedIds.has(t.shareId))];
 }
 
 /** A model family related to a use-case (or vice versa), ready to link. */
