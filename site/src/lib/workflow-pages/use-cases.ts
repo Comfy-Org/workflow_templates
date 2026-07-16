@@ -36,7 +36,7 @@ export interface SeoPageDef {
 export const SEO_PAGES: SeoPageDef[] = [
   {
     slug: 'ai-headshot-generator',
-    title: 'AI Headshot Generator — ComfyUI Workflows',
+    title: 'AI Headshot Generator | Comfy Workflows',
     h1: 'AI Headshot Generator Workflows',
     keywords: {
       primary: 'ai headshot generator',
@@ -53,7 +53,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-interior-design',
-    title: 'AI Interior Design — ComfyUI Workflows',
+    title: 'AI Interior Design | Comfy Workflows',
     h1: 'AI Interior Design Workflows',
     keywords: {
       primary: 'ai interior design',
@@ -70,7 +70,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-caricature-generator',
-    title: 'AI Caricature Generator — ComfyUI Workflows',
+    title: 'AI Caricature Generator | Comfy Workflows',
     h1: 'AI Caricature Generator Workflows',
     keywords: {
       primary: 'ai caricature generator',
@@ -87,7 +87,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-tattoo-generator',
-    title: 'AI Tattoo Generator — ComfyUI Workflows',
+    title: 'AI Tattoo Generator | Comfy Workflows',
     h1: 'AI Tattoo Generator Workflows',
     keywords: {
       primary: 'ai tattoo generator',
@@ -107,7 +107,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-image-upscaler',
-    title: 'AI Image Upscaler — ComfyUI Workflows',
+    title: 'AI Image Upscaler | Comfy Workflows',
     h1: 'AI Image & Video Upscaler Workflows',
     keywords: {
       primary: 'ai image upscaler',
@@ -124,7 +124,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-avatar-generator',
-    title: 'AI Avatar Generator — ComfyUI Workflows',
+    title: 'AI Avatar Generator | Comfy Workflows',
     h1: 'AI Avatar Generator Workflows',
     keywords: {
       primary: 'ai avatar generator',
@@ -143,7 +143,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-image-to-video',
-    title: 'AI Image to Video — ComfyUI Workflows',
+    title: 'AI Image to Video | Comfy Workflows',
     h1: 'AI Image to Video Workflows',
     keywords: {
       primary: 'ai image to video',
@@ -160,7 +160,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'restore-old-photos',
-    title: 'Restore Old Photos with AI — ComfyUI Workflows',
+    title: 'Restore Old Photos with AI | Comfy Workflows',
     h1: 'Restore Old Photos Workflows',
     keywords: {
       primary: 'restore old photos',
@@ -179,7 +179,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-anime-generator',
-    title: 'AI Anime Generator — ComfyUI Workflows',
+    title: 'AI Anime Generator | Comfy Workflows',
     h1: 'AI Anime Generator Workflows',
     // Keywords from grounded search research (~30 competitor pages, autocomplete + PAA).
     // "free ..." is a real variant but omitted as an off-brand positioning choice.
@@ -199,7 +199,7 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'ai-character-replacement',
-    title: 'AI Character Replacement — ComfyUI Workflows',
+    title: 'AI Character Replacement | Comfy Workflows',
     h1: 'AI Character Replacement Workflows',
     // Keywords from grounded search research. Research showed "ai character replacement"
     // is the cleaner, higher-intent head term than "ai character animation" (which collides

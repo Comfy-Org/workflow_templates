@@ -36,7 +36,7 @@ export function resolveModelPageCards(
         : [];
     return {
       href: modelPath(group.slug, locale),
-      title: `${group.label} ComfyUI Workflows`,
+      title: `${group.label} Comfy Workflows`,
       count: group.templates.length,
       thumbnail: firstStillAcross(group.templates),
       logos,
