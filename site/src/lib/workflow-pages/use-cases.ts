@@ -31,6 +31,14 @@ export interface SeoPageDef {
   keywords: KeywordModel;
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
+  /**
+   * Cloud share id of the App Mode experience the page's primary CTAs (hero +
+   * closing) open. Overrides the default pick — the first template of the
+   * usage-sorted grid — which on several pages leads with a workflow unrelated
+   * to the use case. Each id is verified in cloud.comfy.org to open in App Mode
+   * with bundled sample inputs before being linked here.
+   */
+  appShareId?: string;
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -50,6 +58,9 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Portrait'] },
+    // "Headshot Generator" App Mode share (photo picker + outfit/backdrop/aspect
+    // controls). Untagged on the hub, so the Portrait grid can't surface it.
+    appShareId: 'd70243b6fc64',
   },
   {
     slug: 'ai-interior-design',
@@ -84,6 +95,9 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Style Transfer'] },
+    // "Photo to Cartoon Style Caricature" App Mode share (photo picker + cartoon
+    // style dropdown). Tagged only "Image Edit", so the grid can't surface it.
+    appShareId: 'd5ce59e59ff3',
   },
   {
     slug: 'ai-tattoo-generator',
@@ -121,6 +135,9 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image Upscale', 'Video Upscale'] },
+    // "seo-video-upscaler-app" App Mode share (video picker + megapixels). Covers
+    // the video half; swap for a combined app when a dedicated image one ships.
+    appShareId: '46102ce62252',
   },
   {
     slug: 'ai-avatar-generator',
@@ -157,6 +174,9 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image to Video'] },
+    // "seo-image-to-video-ltx-api-app" App Mode share (image picker + frame count).
+    // OSS LTX pipeline = the free first-run anchor; premium models stay in the grid.
+    appShareId: '201003c6d79c',
   },
   {
     slug: 'restore-old-photos',
@@ -196,6 +216,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     // Open anime text-to-image models (Anima base/preview, plus Lumina/NewBie) tagged Anime.
     filters: { tags: ['Anime'] },
+    // "seo-anime-generator-anima-app" App Mode share (baked anime prompt + size).
+    appShareId: '3ec117b8333d',
   },
   {
     slug: 'ai-character-replacement',

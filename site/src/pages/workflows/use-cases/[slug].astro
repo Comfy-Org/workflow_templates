@@ -106,7 +106,9 @@ const heroTemplate = firstTemplateWithStill(templates);
 const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
-const leadShareId = templates.find((template) => template.shareId)?.shareId;
+// The page's verified App Mode share (if declared) wins over the usage-sorted
+// grid pick, so the primary CTAs land on the right app for the use case.
+const leadShareId = def.appShareId ?? templates.find((template) => template.shareId)?.shareId;
 const useCaseCtaUrl = (placement: string) =>
   leadShareId
     ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_${placement}`)
