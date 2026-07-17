@@ -60,7 +60,7 @@ Publishes approved templates to the registry.
 Informational check — **never blocks PR merges**. Compares changed `templates/*.json` against ComfyUI `master` via static source scan (no torch, no running server).
 
 **What it checks (static mode):**
-- Deprecated nodes (display name contains `DEPRECATED`)
+- Deprecated nodes (`Schema(..., is_deprecated=True)`, class `is_deprecated = True`, or display name contains `DEPRECATED`)
 
 **When it runs:**
 - On pull requests that change files under `templates/` only
