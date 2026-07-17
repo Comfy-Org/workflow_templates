@@ -29,6 +29,7 @@ import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/item-l
 import {
   resolveUseCasePageTemplates,
   relatedModelsForUseCase,
+  assertCuratedSharesResolve,
   type RelatedModel,
 } from '../../../lib/workflow-pages/use-case-resolver';
 import { loadUseCaseContent } from '../../../lib/workflow-pages/content-loaders';
@@ -49,6 +50,7 @@ import {
 export async function getStaticPaths() {
   const catalog = await loadSerializedTemplates(() => getCollection('templates'));
   assertNoOrphanedContent('use-case', new Set(SEO_PAGES.map((def) => def.slug)));
+  for (const def of SEO_PAGES) assertCuratedSharesResolve(def, catalog);
   const fallbackPool = buildFallbackPool(catalog);
   // Skip use-cases whose cluster resolves to nothing: an empty page would be
   // noindex yet still land in the sitemap. Related models are derived from the

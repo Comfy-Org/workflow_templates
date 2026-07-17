@@ -9,14 +9,11 @@ import { deriveModelGroups, type ModelGroup } from './model-groups';
 import { modelContentPasses } from './landing-content';
 import { firstStillAcross } from '../media-utils';
 
-/** The template fields the filter/sort reads — kept minimal so build-time
- *  sitemap templates (a narrower shape than SerializedTemplate) also satisfy it. */
+/** Minimal template shape the filter/sort reads, so narrower build-time shapes satisfy it. */
 export interface FilterableTemplate {
   models?: string[];
   tags?: string[];
   usage?: number;
-  /** Needed only by pages that pin/exclude specific shares; optional so the
-   *  narrower build-time shapes stay valid (their pages just skip pinning). */
   shareId?: string;
   isApp?: boolean;
 }
@@ -28,12 +25,8 @@ function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): 
   return byModel || byTag;
 }
 
-/**
- * Templates matching a page's filters, usage-sorted, minus the page's explicit
- * excludes, with its pinned shares prepended (registry order). Empty when none
- * match. Pins are looked up in the catalog by share id, so a cloud-save-only
- * share silently stays out until it is hub-published.
- */
+/** Filter matches (usage-sorted, minus excludes) with pinned shares prepended in
+ *  registry order. A pin absent from the catalog is silently dropped. */
 export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   def: SeoPageDef,
   catalog: T[]
@@ -44,19 +37,41 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
     .filter((template) => !template.shareId || !excluded.has(template.shareId))
     .sort(byUsageDesc);
 
+  // Pins bypass excludes; first id wins.
+  const seen = new Set<string>();
   const pinned = (def.pins ?? []).flatMap((pin) => {
+    if (seen.has(pin.shareId)) return [];
     const found = catalog.find((template) => template.shareId === pin.shareId);
     if (!found) return [];
-    // isApp override: files a pinned App Mode share under the "Comfy Apps" tab
-    // when the catalog hasn't flagged it yet.
+    seen.add(pin.shareId);
     return [pin.isApp ? ({ ...found, isApp: true } as T) : found];
   });
   if (pinned.length === 0) return matched;
 
-  // Pins and matches come from the same catalog, so a share pinned and also
-  // filter-matched carries the same shareId in both — the id dedup is exact.
-  const pinnedIds = new Set(pinned.map((template) => template.shareId));
-  return [...pinned, ...matched.filter((t) => !t.shareId || !pinnedIds.has(t.shareId))];
+  return [...pinned, ...matched.filter((t) => !t.shareId || !seen.has(t.shareId))];
+}
+
+const SHARE_ID_RE = /^[0-9a-f]+$/;
+
+/** Fails the build on a mistyped curated share id. */
+export function assertCuratedSharesResolve(def: SeoPageDef, catalog: FilterableTemplate[]): void {
+  const known = new Set(catalog.map((t) => t.shareId).filter(Boolean));
+  const problems: string[] = [];
+
+  for (const id of [def.appShareId, ...(def.pins ?? []).map((p) => p.shareId)]) {
+    if (id && !SHARE_ID_RE.test(id)) problems.push(`malformed share id "${id}"`);
+  }
+  // Pins must resolve; excludes are best-effort. Skipped for the local fallback
+  // catalog, which carries no share ids.
+  if (known.size > 0) {
+    for (const pin of def.pins ?? []) {
+      if (!known.has(pin.shareId)) problems.push(`pin "${pin.shareId}" not in catalog`);
+    }
+  }
+
+  if (problems.length > 0) {
+    throw new Error(`Use-case page "${def.slug}" has invalid share ids: ${problems.join('; ')}.`);
+  }
 }
 
 /** A model family related to a use-case (or vice versa), ready to link. */
