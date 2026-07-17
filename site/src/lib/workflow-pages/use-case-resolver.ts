@@ -53,24 +53,24 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
 
 const SHARE_ID_RE = /^[0-9a-f]+$/;
 
-/** Fails the build on a mistyped curated share id. */
+/** Throws on a malformed curated share id; only warns on an unresolved pin, which
+ *  is often just an app unpublished in this environment's catalog. */
 export function assertCuratedSharesResolve(def: SeoPageDef, catalog: FilterableTemplate[]): void {
+  const malformed = [def.appShareId, ...(def.pins ?? []).map((p) => p.shareId)].filter(
+    (id): id is string => !!id && !SHARE_ID_RE.test(id)
+  );
+  if (malformed.length > 0) {
+    throw new Error(
+      `Use-case page "${def.slug}" has malformed share ids: ${malformed.join(', ')}.`
+    );
+  }
+
   const known = new Set(catalog.map((t) => t.shareId).filter(Boolean));
-  const problems: string[] = [];
-
-  for (const id of [def.appShareId, ...(def.pins ?? []).map((p) => p.shareId)]) {
-    if (id && !SHARE_ID_RE.test(id)) problems.push(`malformed share id "${id}"`);
-  }
-  // Pins must resolve; excludes are best-effort. Skipped for the local fallback
-  // catalog, which carries no share ids.
-  if (known.size > 0) {
-    for (const pin of def.pins ?? []) {
-      if (!known.has(pin.shareId)) problems.push(`pin "${pin.shareId}" not in catalog`);
+  if (known.size === 0) return;
+  for (const pin of def.pins ?? []) {
+    if (!known.has(pin.shareId)) {
+      console.warn(`Use-case page "${def.slug}": pinned share "${pin.shareId}" not in catalog.`);
     }
-  }
-
-  if (problems.length > 0) {
-    throw new Error(`Use-case page "${def.slug}" has invalid share ids: ${problems.join('; ')}.`);
   }
 }
 

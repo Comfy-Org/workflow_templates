@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   resolveUseCasePageTemplates,
   assertCuratedSharesResolve,
@@ -113,10 +113,13 @@ describe('assertCuratedSharesResolve', () => {
     ).not.toThrow();
   });
 
-  it('throws on a pin not in the catalog', () => {
-    expect(() => assertCuratedSharesResolve(page({ pins: [{ shareId: 'zzz' }] }), catalog)).toThrow(
-      /pin "zzz"/
-    );
+  it('warns but does not throw on a well-formed pin absent from the catalog', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(() =>
+      assertCuratedSharesResolve(page({ pins: [{ shareId: 'deadbeef' }] }), catalog)
+    ).not.toThrow();
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('deadbeef'));
+    warn.mockRestore();
   });
 
   it('allows an exclude not in the catalog (best-effort defensive curation)', () => {
