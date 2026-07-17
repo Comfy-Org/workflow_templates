@@ -113,6 +113,13 @@ def frozen_template_membership(inventory: dict[str, Any]) -> dict[str, str]:
 
 
 def template_id_from_asset_path(file_path: str, bundles: dict[str, list[str]] | None = None) -> str:
+    """Extract template id from a template asset path.
+
+    Provider logos under ``templates/logo/`` always belong to ``index_logo``.
+    """
+    if file_path.startswith("templates/logo/") or file_path.startswith("logo/"):
+        return "index_logo"
+
     name = Path(file_path).name
     if name.endswith(".json"):
         return Path(name).stem
@@ -126,6 +133,59 @@ def template_id_from_asset_path(file_path: str, bundles: dict[str, list[str]] | 
         if stem in all_ids:
             return stem
     return candidate
+
+
+def get_frozen_logo_assets(policy: dict[str, Any] | None = None) -> set[str]:
+    """Return logo asset paths that remain in the frozen media-other wheel."""
+    if policy is None:
+        policy = load_version_policy(Path(__file__).resolve().parents[1] / "data" / "version_policy.json")
+    return {str(path) for path in policy.get("frozen_logo_assets", [])}
+
+
+def get_additive_logo_bundle(policy: dict[str, Any] | None = None) -> str:
+    if policy is None:
+        policy = load_version_policy(Path(__file__).resolve().parents[1] / "data" / "version_policy.json")
+    return str(
+        policy.get("additive_logo_bundle")
+        or policy.get("recommended_asset_bundle")
+        or "media-assets-01"
+    )
+
+
+def logo_asset_relative_path(file_path: str) -> str | None:
+    """Normalize a logo path to ``logo/<filename>`` or return None if not a logo asset."""
+    if file_path.startswith("templates/logo/"):
+        return "logo/" + Path(file_path).name
+    if file_path.startswith("logo/"):
+        return file_path
+    return None
+
+
+def is_additive_logo_path(file_path: str, policy: dict[str, Any] | None = None) -> bool:
+    """True for provider logos that are not pinned in the frozen logo inventory."""
+    rel = logo_asset_relative_path(file_path)
+    if not rel:
+        return False
+    return rel not in get_frozen_logo_assets(policy)
+
+
+def media_bundle_for_template_asset(
+    file_path: str,
+    bundles: dict[str, list[str]],
+    policy: dict[str, Any] | None = None,
+) -> str | None:
+    """Return which media bundle should own a non-JSON template asset path."""
+    if policy is None:
+        policy = load_version_policy(Path(__file__).resolve().parents[1] / "data" / "version_policy.json")
+
+    if is_additive_logo_path(file_path, policy):
+        return get_additive_logo_bundle(policy)
+
+    template_id = template_id_from_asset_path(file_path, bundles)
+    for bundle_name, template_ids in bundles.items():
+        if template_id in template_ids:
+            return bundle_name
+    return None
 
 
 def is_workflow_template_path(file_path: str) -> bool:
