@@ -19,7 +19,13 @@ if str(_LIB_DIR) not in sys.path:
 
 from paths import VERSION_POLICY_FILE  # noqa: E402
 from version_policy import get_frozen_packages as _get_frozen_packages_from_policy  # noqa: E402
-from version_policy import load_version_policy  # noqa: E402
+from version_policy import (  # noqa: E402
+    is_additive_logo_path,
+    is_media_template_asset_path,
+    load_version_policy,
+    media_bundle_for_template_asset,
+    template_id_from_asset_path,
+)
 
 ROOT = Path.cwd()
 
@@ -48,26 +54,9 @@ def _is_media_template_path(file: str) -> bool:
     return suffix in MEDIA_ASSET_EXTENSIONS or file.startswith("templates/logo/")
 
 
-_THUMBNAIL_SUFFIX = re.compile(r"-\d+$")
-
-
 def _template_id_from_path(file: str, bundles: Optional[dict] = None) -> str:
     """Extract template id from a template asset path."""
-    name = Path(file).name
-    if name.endswith(".json"):
-        return Path(name).stem
-
-    stem = Path(name).stem
-    candidate = _THUMBNAIL_SUFFIX.sub("", stem)
-
-    if bundles:
-        all_ids = {tid for ids in bundles.values() for tid in ids}
-        if candidate in all_ids:
-            return candidate
-        if stem in all_ids:
-            return stem
-
-    return candidate
+    return template_id_from_asset_path(file, bundles)
 
 
 def _json_asset_fingerprints(manifest: dict) -> dict[str, str]:
@@ -81,14 +70,20 @@ def _json_asset_fingerprints(manifest: dict) -> dict[str, str]:
 
 
 def _media_asset_fingerprints(manifest: dict, bundle: str) -> dict[str, str]:
+    """Fingerprints for non-JSON assets that resolve from the given media bundle.
+
+    Honors per-asset ``bundle`` overrides (additive logos in media-assets-01).
+    """
     fingerprints: dict[str, str] = {}
     for entry in manifest.get("templates", []):
-        if entry.get("bundle") != bundle:
-            continue
         for asset in entry.get("assets", []):
             filename = asset.get("filename", "")
-            if not filename.endswith(".json"):
-                fingerprints[filename] = asset.get("sha256", "")
+            if filename.endswith(".json"):
+                continue
+            asset_bundle = asset.get("bundle") or entry.get("bundle")
+            if asset_bundle != bundle:
+                continue
+            fingerprints[filename] = asset.get("sha256", "")
     return fingerprints
 
 
@@ -97,10 +92,6 @@ def _manifest_json_assets_changed(old_manifest: dict, cur_manifest: dict) -> boo
 
 
 def _manifest_media_assets_changed(old_manifest: dict, cur_manifest: dict, bundle: str) -> bool:
-    old_ids = {e["id"] for e in old_manifest.get("templates", []) if e.get("bundle") == bundle}
-    cur_ids = {e["id"] for e in cur_manifest.get("templates", []) if e.get("bundle") == bundle}
-    if old_ids != cur_ids:
-        return True
     return _media_asset_fingerprints(old_manifest, bundle) != _media_asset_fingerprints(
         cur_manifest, bundle
     )
@@ -272,8 +263,9 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
                     continue
                 if not _is_media_template_path(file):
                     continue
-                template_name = _template_id_from_path(file, bundles)
-                if pkg_bundle in bundles and template_name in bundles[pkg_bundle]:
+                policy = load_version_policy(VERSION_POLICY_FILE)
+                owning_bundle = media_bundle_for_template_asset(file, bundles, policy)
+                if owning_bundle == pkg_bundle:
                     filtered_files.append(file)
             # manifest.json changes: JSON sha -> json; media sha -> bundle package
             elif pkg == "json" and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
@@ -345,6 +337,15 @@ def get_changed_packages() -> Set[str]:
                 print(f"Package {pkg} up to date since version {current_version}")
 
         frozen = get_frozen_packages()
+        blocked = _blocked_frozen_media_updates(affected)
+        if blocked:
+            details = ", ".join(sorted(blocked))
+            raise SystemExit(
+                "Frozen media packages need an update but are not auto-bumped: "
+                f"{details}. Move new assets to media-assets-01 (additive logos) "
+                "or manually bump the frozen package version."
+            )
+
         if frozen:
             skipped = affected & frozen
             if skipped:
@@ -356,6 +357,8 @@ def get_changed_packages() -> Set[str]:
             affected.add("meta")
 
         return affected
+    except SystemExit:
+        raise
     except Exception as e:
         print(f"Error in change detection: {e}")
         return {
@@ -368,6 +371,34 @@ def get_changed_packages() -> Set[str]:
             "media_assets_01",
             "meta",
         }
+
+
+def _blocked_frozen_media_updates(affected: Set[str]) -> Set[str]:
+    """Return frozen packages that still require a media publish for this release."""
+    policy = load_version_policy(VERSION_POLICY_FILE)
+    frozen = get_frozen_packages()
+    if not (affected & frozen):
+        return set()
+
+    bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
+    blocked: Set[str] = set()
+    for pkg in sorted(affected & frozen):
+        current_version = get_current_version(pkg)
+        last_bump_commit = find_last_version_bump_commit(pkg, current_version)
+        for file in get_files_affecting_package(pkg, last_bump_commit):
+            if not file.startswith("templates/"):
+                continue
+            if _is_json_template_path(file):
+                continue
+            if not is_media_template_asset_path(file):
+                continue
+            if is_additive_logo_path(file, policy):
+                continue
+            owning = media_bundle_for_template_asset(file, bundles, policy)
+            if owning and BUNDLE_PACKAGE_MAP.get(owning) == pkg:
+                blocked.add(pkg)
+                break
+    return blocked
 
 def bump_versions(packages: Set[str]) -> None:
     frozen = get_frozen_packages()

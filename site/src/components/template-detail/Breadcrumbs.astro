@@ -2,7 +2,8 @@
 /**
  * Visual breadcrumb trail for the workflow detail page.
  *
- * The rendered trail (Home → Workflows → {title}) MUST mirror the
+ * The rendered trail (Home → Workflows → [...trail] → {title}, where `trail`
+ * optionally inserts crumbs like Use Cases or Models) MUST mirror the
  * BreadcrumbList JSON-LD emitted by the route pages exactly — same labels,
  * same order — so the visible navigation matches the structured data Google
  * relies on. See `breadcrumbStructuredData` in the [slug] route files.
@@ -17,18 +18,26 @@ import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { SITE_ORIGIN } from '../../config/site';
 
+interface Crumb {
+  label: string;
+  href: string;
+}
+
 interface Props {
   locale: Locale;
   /** Title of the current page (rendered as the non-linked trailing crumb). */
   title: string;
+  /** Extra crumbs inserted between Workflows and the title (e.g. Use Cases, Models). */
+  trail?: Crumb[];
   class?: string;
 }
 
-const { locale, title, class: className } = Astro.props;
+const { locale, title, trail = [], class: className } = Astro.props;
 
-const crumbs = [
+const crumbs: Crumb[] = [
   { label: t('breadcrumb.home', locale), href: SITE_ORIGIN },
   { label: t('breadcrumb.workflows', locale), href: localizeUrl('/workflows/', locale) },
+  ...trail,
 ];
 ---
 

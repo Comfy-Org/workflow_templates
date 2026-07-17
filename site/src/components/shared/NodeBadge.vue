@@ -1,0 +1,73 @@
+<script setup lang="ts">
+import { cn } from '@/lib/utils';
+
+type NodeBadgeSegment = { text: string } | { logoSrc: string; logoAlt: string };
+
+const {
+  segments,
+  segmentClass = 'px-6',
+  textClass = 'text-2xl sm:text-3xl lg:text-5xl',
+  sizeClass,
+  logoClass = 'h-5 sm:h-7 lg:h-10',
+} = defineProps<{
+  segments: NodeBadgeSegment[];
+  segmentClass?: string;
+  textClass?: string;
+  sizeClass?: string;
+  logoClass?: string;
+}>();
+</script>
+
+<template>
+  <div :class="cn('flex h-11 items-stretch font-semibold **:select-none sm:h-auto', sizeClass)">
+    <img
+      src="/icons/node-left.svg"
+      alt=""
+      class="-mx-px h-full w-auto self-stretch"
+      aria-hidden="true"
+    />
+
+    <template v-for="(segment, i) in segments" :key="i">
+      <img
+        v-if="i > 0"
+        src="/icons/node-union.svg"
+        alt=""
+        class="-mx-px h-full w-auto self-stretch"
+        aria-hidden="true"
+      />
+      <span
+        :class="
+          cn(
+            'bg-brand text-page flex items-center justify-center py-1.5 transition-all duration-300 sm:py-3 lg:py-5',
+            segmentClass
+          )
+        "
+      >
+        <img
+          v-if="'logoSrc' in segment"
+          :src="segment.logoSrc"
+          :alt="segment.logoAlt"
+          :class="cn('inline-block brightness-0 transition-all duration-300', logoClass)"
+        />
+        <span
+          v-else
+          :class="
+            cn(
+              'inline-block translate-y-1 font-bold whitespace-nowrap transition-all duration-300',
+              textClass
+            )
+          "
+        >
+          {{ segment.text }}
+        </span>
+      </span>
+    </template>
+
+    <img
+      src="/icons/node-right.svg"
+      alt=""
+      class="-mx-px h-full w-auto self-stretch"
+      aria-hidden="true"
+    />
+  </div>
+</template>

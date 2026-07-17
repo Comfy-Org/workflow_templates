@@ -1,0 +1,52 @@
+---
+/** Application card: an image with the title overlaid top-left (over a scrim)
+ *  and the caption below. The image and a "Try workflow" CTA link to the
+ *  template; the card body itself is not a link (so the CTA stays clickable). */
+import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
+import CardOverlayImage from './CardOverlayImage.astro';
+import { ButtonPill } from '../../ui/button-pill';
+
+interface Props {
+  title: string;
+  subtitle?: string;
+  image?: CardImage | null;
+  logos?: ModelBadge[];
+  href?: string | null;
+  ctaLabel?: string;
+}
+
+const { title, subtitle, image, logos = [], href, ctaLabel } = Astro.props;
+const ImageTag = href ? 'a' : 'div';
+---
+
+<article class="group/pill-trigger group relative aspect-video w-full overflow-hidden rounded-3xl">
+  <ImageTag
+    {...href ? { href, target: '_blank', rel: 'noopener noreferrer', 'aria-label': title } : {}}
+    class="absolute inset-0 block"
+  >
+    <CardOverlayImage title={title} image={image} logos={logos} />
+  </ImageTag>
+
+  {
+    (subtitle || (href && ctaLabel)) && (
+      <div class="absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-4 px-5 pb-4">
+        {subtitle && (
+          <p class="font-display text-sm font-light leading-snug text-white/85">{subtitle}</p>
+        )}
+        {href && ctaLabel && (
+          <ButtonPill
+            as="a"
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="solid"
+            mode="icon"
+            aria-label={ctaLabel}
+            class="shrink-0"
+          />
+        )}
+      </div>
+    )
+  }
+</article>

@@ -123,7 +123,7 @@ Reports are written to repo root (gitignored):
 
 ### CI / static scan (no server, no torch)
 
-Clones `Comfy-Org/ComfyUI` and AST-scans Python sources. Faster and dependency-free, but only reports **deprecated nodes** (skips missing-node / combo noise from incomplete static parsing):
+Clones `Comfy-Org/ComfyUI` and AST-scans Python sources. Faster and dependency-free, but only reports **deprecated nodes** (skips missing-node / combo noise from incomplete static parsing). Deprecation is detected from V3 `is_deprecated=True` (Schema kwarg or class attribute) as well as legacy display names containing `DEPRECATED`:
 
 ```bash
 python3 scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail

@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Helper: get the first template card link from the workflow listing.
- * HubWorkflowCard renders a stretched link with aria-hidden="true"
- * pointing to /workflows/{template_name}/.
+ * Targets the card title anchor by test id — creator links share the
+ * /workflows/ prefix, so an href-only selector matches those too.
  */
 function templateCardLink(page: import('@playwright/test').Page) {
-  return page.locator('main a[aria-hidden="true"][href^="/workflows/"]').first();
+  return page.locator('main a[data-testid="workflow-card-link"]').first();
 }
 
 test.describe('Homepage', () => {
