@@ -29,6 +29,7 @@ from version_policy import (  # noqa: E402
     frozen_template_membership,
     get_frozen_bundle_map,
     get_frozen_packages,
+    is_additive_logo_path,
     is_media_template_asset_path,
     load_bundles,
     load_frozen_bundle_inventory,
@@ -117,6 +118,10 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
                 )
 
         if not is_media_template_asset_path(file_path):
+            continue
+
+        # Additive logos ship via media-assets-01 and are not frozen-bundle work.
+        if is_additive_logo_path(file_path, policy):
             continue
 
         template_id = template_id_from_asset_path(file_path, bundles)

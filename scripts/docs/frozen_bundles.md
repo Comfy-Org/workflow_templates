@@ -54,6 +54,21 @@ CI: [`.github/workflows/version-check.yml`](../../.github/workflows/version-chec
 
 Workflow / index JSON ships via the **`json`** package regardless of bundle assignment.
 
+### New provider logos
+
+`index_logo` remains assigned to frozen `media-other`. Logos already published in
+that wheel are listed once in `scripts/data/version_policy.json` → `frozen_logo_assets`.
+
+Any **new** file under `templates/logo/` that is **not** in that inventory automatically
+ships via `additive_logo_bundle` / `recommended_asset_bundle` (`media-assets-01`).
+You do not need to update the policy list for each new provider logo.
+
+Prefer single-extension filenames (e.g. `sync_so.webp`, not `sync.so.webp`).
+
+The core manifest may attach a per-asset `"bundle": "media-assets-01"` override so the
+loader resolves additive logos from the active package without republishing frozen
+`media-other`.
+
 ### Archive / remove from frozen bundles
 
 - **Removing** template IDs from frozen bundles in `bundles.json` is OK (e.g. after `archive_templates.py`).
