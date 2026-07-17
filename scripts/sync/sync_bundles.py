@@ -329,6 +329,17 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
         if not (TEMPLATES_DIR / path).is_file()
     )
     if missing_frozen:
+        logo_dir = TEMPLATES_DIR / "logo"
+        logo_files_present = (
+            logo_dir.is_dir()
+            and any(p.is_file() and not p.name.startswith(".") for p in logo_dir.iterdir())
+        )
+        if not logo_files_present:
+            raise SystemExit(
+                "templates/logo/ is empty or missing but frozen_logo_assets is configured. "
+                "Checkout templates/logo/ before running sync_bundles.py "
+                "(add `templates/logo/` to CI sparse-checkout)."
+            )
         raise SystemExit(
             "frozen_logo_assets missing from templates/logo/: "
             + ", ".join(missing_frozen)
