@@ -361,7 +361,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 
 ## Claude Skills Available
 
-- `/adding-templates` — Add new workflow templates (full workflow)
+- `/managing-templates` — Add or rename workflow templates (files, index, bundles, i18n, sync)
 - `/managing-bundles` — Move templates between bundles, reorder
 - `/managing-thumbnails` — Add/replace/audit thumbnails
 - `/managing-mcp-index` — Sync and AI-enhance `index.mcp.json` for MCP tools
