@@ -10,7 +10,7 @@ import IndexCard from './cards/IndexCard.astro';
 import type { SeoPageCard } from '../../lib/workflow-pages/schema';
 import type { Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
-import { absoluteUrl } from '../../config/site';
+import { absoluteUrl, SITE_NAME } from '../../config/site';
 import { resolveAbsoluteThumbnail } from '../../lib/routes';
 import {
   buildCollectionPageJsonLd,
@@ -31,7 +31,7 @@ interface Props {
 const { locale, basePath, heading, description, cards } = Astro.props;
 
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
-const name = `${heading} | Comfy Workflows`;
+const name = `${heading} | ${SITE_NAME}`;
 
 const items = cards.map((card) => ({
   name: card.title,

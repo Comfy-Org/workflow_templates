@@ -2,6 +2,7 @@
  * Card resolvers for the model + use-case index pages. Both render the same
  * `SeoPageCard` grid; only qualifying/non-empty pages become cards.
  */
+import { SITE_NAME } from '../../config/site';
 import type { SerializedTemplate } from '../hub-api';
 import { firstStillAcross } from '../media-utils';
 import { modelPath, useCasePath } from '../routes';
@@ -36,7 +37,7 @@ export function resolveModelPageCards(
         : [];
     return {
       href: modelPath(group.slug, locale),
-      title: `${group.label} Comfy Workflows`,
+      title: `${group.label} ${SITE_NAME}`,
       count: group.templates.length,
       thumbnail: firstStillAcross(group.templates),
       logos,

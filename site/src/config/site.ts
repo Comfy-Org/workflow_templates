@@ -1,5 +1,8 @@
 const DEFAULT_ORIGIN = 'https://comfy.org';
 
+/** User-facing brand name of the hub (GTM-271 rename). */
+export const SITE_NAME = 'Comfy Workflows';
+
 function normalizeOrigin(raw?: string): string {
   const v = raw?.trim();
   if (!v) return DEFAULT_ORIGIN;
