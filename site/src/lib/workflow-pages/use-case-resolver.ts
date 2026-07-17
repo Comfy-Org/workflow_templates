@@ -56,9 +56,11 @@ const SHARE_ID_RE = /^[0-9a-f]+$/;
 /** Throws on a malformed curated share id; only warns on an unresolved pin, which
  *  is often just an app unpublished in this environment's catalog. */
 export function assertCuratedSharesResolve(def: SeoPageDef, catalog: FilterableTemplate[]): void {
-  const malformed = [def.appShareId, ...(def.pins ?? []).map((p) => p.shareId)].filter(
-    (id): id is string => !!id && !SHARE_ID_RE.test(id)
-  );
+  const malformed = [
+    def.appShareId,
+    ...(def.pins ?? []).map((p) => p.shareId),
+    ...(def.excludeShareIds ?? []),
+  ].filter((id): id is string => !!id && !SHARE_ID_RE.test(id));
   if (malformed.length > 0) {
     throw new Error(
       `Use-case page "${def.slug}" has malformed share ids: ${malformed.join(', ')}.`

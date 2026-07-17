@@ -115,16 +115,19 @@ describe('assertCuratedSharesResolve', () => {
 
   it('warns but does not throw on a well-formed pin absent from the catalog', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(() =>
-      assertCuratedSharesResolve(page({ pins: [{ shareId: 'deadbeef' }] }), catalog)
-    ).not.toThrow();
-    expect(warn).toHaveBeenCalledWith(expect.stringContaining('deadbeef'));
-    warn.mockRestore();
+    try {
+      expect(() =>
+        assertCuratedSharesResolve(page({ pins: [{ shareId: 'deadbeef' }] }), catalog)
+      ).not.toThrow();
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('deadbeef'));
+    } finally {
+      warn.mockRestore();
+    }
   });
 
-  it('allows an exclude not in the catalog (best-effort defensive curation)', () => {
+  it('allows a well-formed exclude not in the catalog (best-effort defensive curation)', () => {
     expect(() =>
-      assertCuratedSharesResolve(page({ excludeShareIds: ['zzz'] }), catalog)
+      assertCuratedSharesResolve(page({ excludeShareIds: ['eeee'] }), catalog)
     ).not.toThrow();
   });
 
@@ -132,6 +135,9 @@ describe('assertCuratedSharesResolve', () => {
     expect(() => assertCuratedSharesResolve(page({ appShareId: 'NOT-HEX' }), catalog)).toThrow(
       /malformed/
     );
+    expect(() =>
+      assertCuratedSharesResolve(page({ excludeShareIds: ['NOT-HEX'] }), catalog)
+    ).toThrow(/malformed/);
   });
 
   it('allows a well-formed appShareId absent from the catalog (cloud-save share)', () => {
