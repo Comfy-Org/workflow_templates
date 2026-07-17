@@ -154,9 +154,8 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image Upscale', 'Video Upscale'] },
-    // Video upscaler app; swap for a combined app when a dedicated image one ships.
-    appShareId: '46102ce62252',
-    // Image half leads: Image Upscale workflow, then Image Upscale: Z-Image-Turbo 2K app.
+    // Image app, so the CTA matches the image-side hero (video app stays a grid pin).
+    appShareId: 'b3bbbf217b89',
     pins: [{ shareId: 'c1959fdc5642' }, { shareId: 'b3bbbf217b89', isApp: true }],
     // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations app, event demo.
     excludeShareIds: ['5652fbe7f479', 'c5cbee07611f', 'c046d6c94bd1', '94ed41b87579'],
@@ -242,7 +241,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     // Open anime text-to-image models (Anima base/preview, plus Lumina/NewBie) tagged Anime.
     filters: { tags: ['Anime'] },
-    // Anime generator app (baked anime prompt + size).
+    // Cloud-save app, not hub-published — CTA-only, so the hero can't match it yet.
     appShareId: '3ec117b8333d',
     // Anime-tagged non-generators: anime→live-action converter, untitled test workflow.
     excludeShareIds: ['6fec31e40f4a', '2030b1e2fb72'],
