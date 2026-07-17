@@ -25,11 +25,8 @@ export interface SeoPageFilters {
 export interface SeoPagePin {
   /** Catalog share id to force-include at the top of the page's grid. */
   shareId: string;
-  /**
-   * Marks the pinned entry as an App Mode app when the catalog hasn't flagged
-   * it yet, so it files under the grid's "Comfy Apps" tab. Only set after
-   * opening the share in cloud.comfy.org and seeing App Mode.
-   */
+  /** Files the pin under the "Comfy Apps" tab when the catalog hasn't flagged
+   *  it. Set only after verifying App Mode in cloud.comfy.org. */
   isApp?: boolean;
 }
 
@@ -42,26 +39,13 @@ export interface SeoPageDef {
   keywords: KeywordModel;
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
-  /**
-   * Cloud share id of the App Mode experience the page's primary CTAs (hero +
-   * closing) open. Overrides the default pick — the first template of the
-   * usage-sorted grid — which on several pages leads with a workflow unrelated
-   * to the use case. Each id is verified in cloud.comfy.org to open in App Mode
-   * with bundled sample inputs before being linked here.
-   */
+  /** App Mode share the primary CTAs (hero + closing) open, overriding the
+   *  grid's top pick. Verified in cloud.comfy.org before linking. */
   appShareId?: string;
-  /**
-   * Catalog entries force-included at the top of the grid regardless of
-   * `filters` — for on-topic workflows the tag filters can't reach (e.g. the
-   * purpose-built apps, which carry no matching tags yet). Cloud-save-only
-   * shares that aren't hub-published cannot be pinned; they stay CTA-only.
-   */
+  /** Catalog entries force-included atop the grid, bypassing `filters` — for
+   *  on-topic workflows the tags can't reach. Must be hub-published to resolve. */
   pins?: SeoPagePin[];
-  /**
-   * Share ids removed from the grid: high-usage catalog entries the OR filters
-   * catch even though they don't serve the page's use case (the "we should not
-   * show wrong workflows" rule).
-   */
+  /** Share ids dropped from the grid: filter matches that don't serve the page. */
   excludeShareIds?: string[];
 }
 
@@ -82,12 +66,10 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Portrait'] },
-    // "Headshot Generator" App Mode share (photo picker + outfit/backdrop/aspect
-    // controls). Untagged on the hub, so it is pinned rather than tag-matched.
+    // Headshot Generator app (untagged on the hub, so pinned not tag-matched).
     appShareId: 'd70243b6fc64',
     pins: [{ shareId: 'd70243b6fc64', isApp: true }],
-    // Portrait-tagged but not headshot tools: a reference-to-video generator, an
-    // isometric-miniature stylizer, and a product-placement app.
+    // Portrait-tagged non-headshot tools: ref-to-video, miniature stylizer, product placement.
     excludeShareIds: ['5a3df986f9f8', '364e72458b36', '163ff33fc4a7'],
   },
   {
@@ -123,14 +105,11 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Style Transfer'] },
-    // "Photo to Cartoon Style Caricature" App Mode share (photo picker + cartoon
-    // style dropdown). Tagged only "Image Edit", so it is pinned rather than
-    // tag-matched.
+    // Photo to Cartoon Style Caricature app (tagged only "Image Edit", so pinned).
     appShareId: 'd5ce59e59ff3',
     pins: [{ shareId: 'd5ce59e59ff3', isApp: true }],
-    // Style-Transfer-tagged but not photo stylization: a reference-to-video
-    // generator, a video style-transfer batch, a product-scene transform, motion
-    // collages, and a product-ad app.
+    // Style-Transfer-tagged non-stylizers: ref-to-video, video style-transfer,
+    // product-scene, motion collages, product ad.
     excludeShareIds: [
       '5a3df986f9f8',
       'e1e03cafda18',
@@ -175,15 +154,11 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image Upscale', 'Video Upscale'] },
-    // "seo-video-upscaler-app" App Mode share (video picker + megapixels). Covers
-    // the video half; swap for a combined app when a dedicated image one ships.
+    // Video upscaler app; swap for a combined app when a dedicated image one ships.
     appShareId: '46102ce62252',
-    // The image half leads the grid: the sheet's new "Image Upscale" workflow
-    // and the "Image Upscale: Z-Image-Turbo 2K" App Mode share (verified in
-    // cloud.comfy.org: image picker + denoise).
+    // Image half leads: Image Upscale workflow, then Image Upscale: Z-Image-Turbo 2K app.
     pins: [{ shareId: 'c1959fdc5642' }, { shareId: 'b3bbbf217b89', isApp: true }],
-    // Upscale-tagged but not upscalers: a virtual try-on studio, an advertising
-    // visualization demo, a variations generator app, and an event demo.
+    // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations app, event demo.
     excludeShareIds: ['5652fbe7f479', 'c5cbee07611f', 'c046d6c94bd1', '94ed41b87579'],
   },
   {
@@ -221,17 +196,12 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image to Video'] },
-    // "seo-image-to-video-ltx-api-app" App Mode share (image picker + frame count).
-    // OSS LTX pipeline = the free first-run anchor; premium models stay in the grid.
+    // OSS image-to-video LTX app (free first-run anchor; premium models stay in the grid).
     appShareId: '201003c6d79c',
-    // The sheet's free-tier anchors lead the grid: LTX 2.3 (the CTA app's
-    // source workflow) then Wan 2.2 14B; Seedance et al. follow by usage. LTX
-    // leads because its still thumbnail is the page's hero image and Wan's
-    // still 404s on the asset host (hero picking trusts the file extension).
+    // Free-tier anchors lead: LTX 2.3 (the CTA app's source), then Wan 2.2 14B.
     pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }],
-    // Image-to-Video-tagged but not an image-to-video generator: a shot
-    // annotation utility, a character-swap flow (brand-safety class pending
-    // review), and the ByteDance real-human flow (KYC-gated, not linkable).
+    // Image-to-Video-tagged non-generators: shot annotation, character-swap
+    // (brand-safety pending), ByteDance real-human (KYC-gated).
     excludeShareIds: ['0136284ecc19', '064da31db8f3', 'd4b951896b54'],
   },
   {
@@ -272,10 +242,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     // Open anime text-to-image models (Anima base/preview, plus Lumina/NewBie) tagged Anime.
     filters: { tags: ['Anime'] },
-    // "seo-anime-generator-anima-app" App Mode share (baked anime prompt + size).
+    // Anime generator app (baked anime prompt + size).
     appShareId: '3ec117b8333d',
-    // Anime-tagged but not anime generation: a video converter that turns anime
-    // INTO live action, and an untitled personal test workflow.
+    // Anime-tagged non-generators: anime→live-action converter, untitled test workflow.
     excludeShareIds: ['6fec31e40f4a', '2030b1e2fb72'],
   },
   {

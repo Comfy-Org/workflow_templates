@@ -49,10 +49,12 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
     if (!found) return [];
     // isApp override: files a pinned App Mode share under the "Comfy Apps" tab
     // when the catalog hasn't flagged it yet.
-    return [pin.isApp ? { ...found, isApp: true } : found];
+    return [pin.isApp ? ({ ...found, isApp: true } as T) : found];
   });
   if (pinned.length === 0) return matched;
 
+  // Pins and matches come from the same catalog, so a share pinned and also
+  // filter-matched carries the same shareId in both — the id dedup is exact.
   const pinnedIds = new Set(pinned.map((template) => template.shareId));
   return [...pinned, ...matched.filter((t) => !t.shareId || !pinnedIds.has(t.shareId))];
 }
