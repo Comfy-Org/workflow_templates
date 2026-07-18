@@ -1,5 +1,7 @@
 const DEFAULT_ORIGIN = 'https://comfy.org';
 
+export const SITE_NAME = 'Comfy Workflows';
+
 function normalizeOrigin(raw?: string): string {
   const v = raw?.trim();
   if (!v) return DEFAULT_ORIGIN;

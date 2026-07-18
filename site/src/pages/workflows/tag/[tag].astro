@@ -9,7 +9,7 @@ import BackButton from '../../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { tagSlug, tagDisplayName } from '../../../lib/tag-aliases';
-import { absoluteUrl } from '../../../config/site';
+import { absoluteUrl, SITE_NAME } from '../../../config/site';
 import { badgeVariants } from '../../../components/ui/badge';
 import { loadSerializedTemplates, type SerializedTemplate } from '../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../lib/toolbar';
@@ -53,13 +53,13 @@ const locale = getLocaleFromPath(Astro.url.pathname);
 const basePath = `/workflows/tag/${tag}/`;
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 
-const title = `${tagName} ComfyUI Workflows - ${t('nav.templates', locale)}`;
+const title = `${tagName} ${SITE_NAME} - ${t('nav.templates', locale)}`;
 const description = `Browse ${templates.length} ComfyUI workflow templates tagged with "${tagName}". Free, ready-to-use AI generation workflows.`;
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: `${tagName} ComfyUI Workflows`,
+  name: `${tagName} ${SITE_NAME}`,
   description,
   url: canonicalUrl,
 };
