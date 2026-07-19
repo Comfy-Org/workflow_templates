@@ -54,3 +54,23 @@ export function firstTemplateWithStill<T extends { thumbnails?: string[] }>(
 ): T | undefined {
   return templates.find((template) => hasStillThumbnail(template.thumbnails));
 }
+
+/**
+ * Hero pick that honors an optional pinned template name: a SEO page can force
+ * a specific workflow as its featured hero, overriding the usage-sorted default.
+ * Falls back to `firstTemplateWithStill` when the preferred name is absent from
+ * the grid or has no still thumbnail yet, so a preference never leaves the
+ * page heroless.
+ */
+export function pickHeroTemplate<T extends { name?: string; thumbnails?: string[] }>(
+  templates: T[],
+  preferredName?: string
+): T | undefined {
+  if (preferredName) {
+    const preferred = templates.find(
+      (template) => template.name === preferredName && hasStillThumbnail(template.thumbnails)
+    );
+    if (preferred) return preferred;
+  }
+  return firstTemplateWithStill(templates);
+}

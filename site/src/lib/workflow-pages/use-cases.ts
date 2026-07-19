@@ -31,6 +31,13 @@ export interface SeoPageDef {
   keywords: KeywordModel;
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
+  /**
+   * Optional `template.name` to pin as the hero card, overriding the default
+   * "first template with a still thumbnail" auto-pick. Silently falls back to
+   * the auto-pick when the named template is absent from the grid or lacks a
+   * still thumbnail — safe to set ahead of a pending hub thumbnail upload.
+   */
+  heroTemplateName?: string;
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -140,6 +147,11 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: {
       tags: ['Character Reference', 'Lip Sync', 'Character Replacement', 'Character', 'Face Swap'],
     },
+    // Feature Kling: Avatar 2.0 as the hero — the current auto-pick (Kling O3:
+    // Reference to Video) has a broken hub thumbnail. Falls back to auto-pick
+    // until the hub thumbnail for `api_kling_avatar2` is re-uploaded as a still
+    // (animated .webp), so this line is safe to land ahead of that upstream fix.
+    heroTemplateName: 'api_kling_avatar2',
   },
   {
     slug: 'ai-image-to-video',
