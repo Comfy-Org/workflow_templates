@@ -1,0 +1,68 @@
+name: Refresh Run-Click Usage
+
+# Fetches fresh per-template run_clicks from the Algolia templates_index and folds
+# them into templates/index*.json (the `usage` field the cloud/desktop pickers rank
+# on). Opens a PR rather than committing to main, so the existing version-check +
+# publish flow ships it with a human merge. Runs biweekly (1st & 15th) and on demand.
+#
+# The website (templates.comfy.org) refreshes its own ranking separately via
+# cron-rebuild-site.yml — this workflow is only for the published package.
+
+on:
+  schedule:
+    - cron: '0 0 1,15 * *' # biweekly: 1st and 15th, 00:00 UTC
+  workflow_dispatch: # manual/immediate refresh
+
+concurrency:
+  group: refresh-run-click-usage
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push the refresh branch
+  pull-requests: write # open the refresh PR
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    env:
+      ALGOLIA_APP_ID: 4E0RO38HS8
+      ALGOLIA_API_KEY: 684d998c36b67a9a9fce8fc2d8860579
+      GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch run_clicks and fold into index.json
+        run: |
+          python scripts/sync/fetch_algolia_usage.py --templates-dir templates
+          python scripts/sync/sync_data.py --templates-dir templates
+
+      - name: Open PR if usage changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add templates/index*.json
+          if git diff --cached --quiet; then
+            echo "No run-click usage changes — nothing to open."
+            exit 0
+          fi
+          # Supersede any prior open refresh PR so they don't pile up.
+          gh pr list --search "head:chore/refresh-run-click-usage" --state open \
+            --json number -q '.[].number' | xargs -r -n1 gh pr close --delete-branch
+          BRANCH="chore/refresh-run-click-usage-${{ github.run_id }}"
+          git checkout -b "$BRANCH"
+          git commit -m "chore: refresh template usage from Algolia run_clicks"
+          git push origin "$BRANCH"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore: refresh template usage from Algolia run_clicks" \
+            --body "Automated biweekly refresh of \`usage\` from the Algolia \`templates_index\` (real PostHog run-clicks). Merging triggers the normal version bump + PyPI publish."
