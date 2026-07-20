@@ -9,12 +9,13 @@ import { deriveModelGroups, type ModelGroup } from './model-groups';
 import { modelContentPasses } from './landing-content';
 import { firstStillAcross } from '../media-utils';
 
-/** The template fields the filter/sort reads — kept minimal so build-time
- *  sitemap templates (a narrower shape than SerializedTemplate) also satisfy it. */
+/** Minimal template shape the filter/sort reads, so narrower build-time shapes satisfy it. */
 export interface FilterableTemplate {
   models?: string[];
   tags?: string[];
   usage?: number;
+  shareId?: string;
+  isApp?: boolean;
 }
 
 /** Matches if any filter matches (OR semantics). */
@@ -24,12 +25,55 @@ function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): 
   return byModel || byTag;
 }
 
-/** Templates matching a page's filters, usage-sorted. Empty when none match. */
+/** Filter matches (usage-sorted, minus excludes) with pinned shares prepended in
+ *  registry order. A pin absent from the catalog is silently dropped. */
 export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   def: SeoPageDef,
   catalog: T[]
 ): T[] {
-  return catalog.filter((template) => matchesFilters(template, def.filters)).sort(byUsageDesc);
+  const excluded = new Set(def.excludeShareIds ?? []);
+  const matched = catalog
+    .filter((template) => matchesFilters(template, def.filters))
+    .filter((template) => !template.shareId || !excluded.has(template.shareId))
+    .sort(byUsageDesc);
+
+  // Pins bypass excludes; first id wins.
+  const seen = new Set<string>();
+  const pinned = (def.pins ?? []).flatMap((pin) => {
+    if (seen.has(pin.shareId)) return [];
+    const found = catalog.find((template) => template.shareId === pin.shareId);
+    if (!found) return [];
+    seen.add(pin.shareId);
+    return [pin.isApp ? ({ ...found, isApp: true } as T) : found];
+  });
+  if (pinned.length === 0) return matched;
+
+  return [...pinned, ...matched.filter((t) => !t.shareId || !seen.has(t.shareId))];
+}
+
+const SHARE_ID_RE = /^[0-9a-f]+$/;
+
+/** Throws on a malformed curated share id; only warns on an unresolved pin, which
+ *  is often just an app unpublished in this environment's catalog. */
+export function assertCuratedSharesResolve(def: SeoPageDef, catalog: FilterableTemplate[]): void {
+  const malformed = [
+    def.appShareId,
+    ...(def.pins ?? []).map((p) => p.shareId),
+    ...(def.excludeShareIds ?? []),
+  ].filter((id): id is string => !!id && !SHARE_ID_RE.test(id));
+  if (malformed.length > 0) {
+    throw new Error(
+      `Use-case page "${def.slug}" has malformed share ids: ${malformed.join(', ')}.`
+    );
+  }
+
+  const known = new Set(catalog.map((t) => t.shareId).filter(Boolean));
+  if (known.size === 0) return;
+  for (const pin of def.pins ?? []) {
+    if (!known.has(pin.shareId)) {
+      console.warn(`Use-case page "${def.slug}": pinned share "${pin.shareId}" not in catalog.`);
+    }
+  }
 }
 
 /** A model family related to a use-case (or vice versa), ready to link. */

@@ -22,6 +22,14 @@ export interface SeoPageFilters {
   tags?: string[];
 }
 
+export interface SeoPagePin {
+  /** Catalog share id to force-include at the top of the page's grid. */
+  shareId: string;
+  /** Files the pin under the "Comfy Apps" tab when the catalog hasn't flagged
+   *  it. Set only after verifying App Mode in cloud.comfy.org. */
+  isApp?: boolean;
+}
+
 export interface SeoPageDef {
   /** Canonical kebab-case URL segment, used verbatim (not re-slugified). */
   slug: string;
@@ -31,6 +39,14 @@ export interface SeoPageDef {
   keywords: KeywordModel;
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
+  /** App Mode share the primary CTAs (hero + closing) open, overriding the
+   *  grid's top pick. Verified in cloud.comfy.org before linking. */
+  appShareId?: string;
+  /** Catalog entries force-included atop the grid, bypassing `filters` — for
+   *  on-topic workflows the tags can't reach. Must be hub-published to resolve. */
+  pins?: SeoPagePin[];
+  /** Share ids dropped from the grid: filter matches that don't serve the page. */
+  excludeShareIds?: string[];
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -50,6 +66,11 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Portrait'] },
+    // Headshot Generator app (untagged on the hub, so pinned not tag-matched).
+    appShareId: 'd70243b6fc64',
+    pins: [{ shareId: 'd70243b6fc64', isApp: true }],
+    // Portrait-tagged non-headshot tools: ref-to-video, miniature stylizer, product placement.
+    excludeShareIds: ['5a3df986f9f8', '364e72458b36', '163ff33fc4a7'],
   },
   {
     slug: 'ai-interior-design',
@@ -84,6 +105,18 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Style Transfer'] },
+    // Photo to Cartoon Style Caricature app (tagged only "Image Edit", so pinned).
+    appShareId: 'd5ce59e59ff3',
+    pins: [{ shareId: 'd5ce59e59ff3', isApp: true }],
+    // Style-Transfer-tagged non-stylizers: ref-to-video, video style-transfer,
+    // product-scene, motion collages, product ad.
+    excludeShareIds: [
+      '5a3df986f9f8',
+      'e1e03cafda18',
+      'd686f64879fb',
+      'c27ee1ed3d54',
+      '17883fb20765',
+    ],
   },
   {
     slug: 'ai-tattoo-generator',
@@ -121,6 +154,11 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image Upscale', 'Video Upscale'] },
+    // Image app, so the CTA matches the image-side hero (video app stays a grid pin).
+    appShareId: 'b3bbbf217b89',
+    pins: [{ shareId: 'c1959fdc5642' }, { shareId: 'b3bbbf217b89', isApp: true }],
+    // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations app, event demo.
+    excludeShareIds: ['5652fbe7f479', 'c5cbee07611f', 'c046d6c94bd1', '94ed41b87579'],
   },
   {
     slug: 'ai-avatar-generator',
@@ -157,6 +195,13 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['Image to Video'] },
+    // OSS image-to-video LTX app (free first-run anchor; premium models stay in the grid).
+    appShareId: '201003c6d79c',
+    // Free-tier anchors lead: LTX 2.3 (the CTA app's source), then Wan 2.2 14B.
+    pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }],
+    // Image-to-Video-tagged non-generators: shot annotation, character-swap
+    // (brand-safety pending), ByteDance real-human (KYC-gated).
+    excludeShareIds: ['0136284ecc19', '064da31db8f3', 'd4b951896b54'],
   },
   {
     slug: 'restore-old-photos',
@@ -196,6 +241,10 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     // Open anime text-to-image models (Anima base/preview, plus Lumina/NewBie) tagged Anime.
     filters: { tags: ['Anime'] },
+    // Cloud-save app, not hub-published — CTA-only, so the hero can't match it yet.
+    appShareId: '3ec117b8333d',
+    // Anime-tagged non-generators: anime→live-action converter, untitled test workflow.
+    excludeShareIds: ['6fec31e40f4a', '2030b1e2fb72'],
   },
   {
     slug: 'ai-character-replacement',

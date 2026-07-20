@@ -29,6 +29,7 @@ import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/item-l
 import {
   resolveUseCasePageTemplates,
   relatedModelsForUseCase,
+  assertCuratedSharesResolve,
   type RelatedModel,
 } from '../../../lib/workflow-pages/use-case-resolver';
 import { loadUseCaseContent } from '../../../lib/workflow-pages/content-loaders';
@@ -49,6 +50,7 @@ import {
 export async function getStaticPaths() {
   const catalog = await loadSerializedTemplates(() => getCollection('templates'));
   assertNoOrphanedContent('use-case', new Set(SEO_PAGES.map((def) => def.slug)));
+  for (const def of SEO_PAGES) assertCuratedSharesResolve(def, catalog);
   const fallbackPool = buildFallbackPool(catalog);
   // Skip use-cases whose cluster resolves to nothing: an empty page would be
   // noindex yet still land in the sitemap. Related models are derived from the
@@ -106,7 +108,9 @@ const heroTemplate = firstTemplateWithStill(templates);
 const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
-const leadShareId = templates.find((template) => template.shareId)?.shareId;
+// The page's verified App Mode share (if declared) wins over the usage-sorted
+// grid pick, so the primary CTAs land on the right app for the use case.
+const leadShareId = def.appShareId ?? templates.find((template) => template.shareId)?.shareId;
 const useCaseCtaUrl = (placement: string) =>
   leadShareId
     ? getCloudCtaUrl(leadShareId, `usecase_${def.slug}_${placement}`)
@@ -217,6 +221,7 @@ const relatedCards = resolveRailImages(
       secondaryCta={{ label: t('template.viewAllWorkflows', locale), href: '#workflows' }}
       analytics={{ location: `usecase_${def.slug}_hero`, template: leadShareId }}
       templates={templates}
+      heroHrefOverride={def.appShareId ? heroCtaUrl : undefined}
       locale={locale}
     />
 
