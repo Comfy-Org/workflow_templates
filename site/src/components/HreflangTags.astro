@@ -12,20 +12,27 @@ import { absoluteUrl } from '../config/site';
 interface Props {
   /** Base path without locale prefix (e.g., "/workflows/" or "/workflows/flux_schnell/") */
   basePath: string;
+  /**
+   * Whether localized variants of this route exist. When false (e.g. the
+   * English-only use-case pages), only the x-default alternate is emitted so we
+   * never advertise per-locale URLs that would 404. Defaults to true.
+   */
+  localized?: boolean;
 }
 
-const { basePath } = Astro.props;
+const { basePath, localized = true } = Astro.props;
 
-// Generate hreflang entries for all supported locales
-// Note: hreflang values should be lowercase (e.g., 'zh-tw' not 'zh-TW')
-const hreflangEntries = Object.keys(LANGUAGES).map((locale) => {
-  const href = absoluteUrl(localizeUrl(basePath, locale as Locale));
+// hreflang values must be lowercase (e.g. 'zh-tw' not 'zh-TW').
+const hreflangEntries = localized
+  ? Object.keys(LANGUAGES).map((locale) => {
+      const href = absoluteUrl(localizeUrl(basePath, locale as Locale));
 
-  return {
-    hreflang: locale.toLowerCase(),
-    href,
-  };
-});
+      return {
+        hreflang: locale.toLowerCase(),
+        href,
+      };
+    })
+  : [];
 
 // Add x-default pointing to the English version
 const xDefaultHref = absoluteUrl(basePath);

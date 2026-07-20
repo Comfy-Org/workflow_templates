@@ -1,0 +1,29 @@
+---
+import { getCollection } from 'astro:content';
+import SeoIndexPage from '../../../components/workflow-pages/SeoIndexPage.astro';
+import { getLocaleFromPath } from '../../../i18n/utils';
+import { t } from '../../../i18n/ui';
+import { modelsIndexPath } from '../../../lib/routes';
+import { loadSerializedTemplates } from '../../../lib/hub-api';
+import {
+  resolveModelPageCards,
+  resolveTopModelLabels,
+} from '../../../lib/workflow-pages/index-cards';
+
+const locale = getLocaleFromPath(Astro.url.pathname);
+const catalog = await loadSerializedTemplates(() => getCollection('templates'));
+
+const cards = resolveModelPageCards(catalog, locale);
+const heading = t('labels.models', locale);
+
+const topModelLabels = resolveTopModelLabels(catalog).join(', ');
+const description = `Browse ComfyUI workflows by model — ready-to-run templates for ${topModelLabels} and more.`;
+---
+
+<SeoIndexPage
+  locale={locale}
+  basePath={modelsIndexPath()}
+  heading={heading}
+  description={description}
+  cards={cards}
+/>

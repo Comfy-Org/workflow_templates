@@ -4,10 +4,12 @@ import type { APIRoute } from 'astro';
 import { getWorkflow } from '../../../lib/hub-api';
 
 function sanitizeFilename(raw: string): string {
-  return raw
-    .trim()
-    .replace(/[^a-zA-Z0-9._-]+/g, '_')
-    .replace(/^_+|_+$/g, '') || 'workflow';
+  return (
+    raw
+      .trim()
+      .replace(/[^a-zA-Z0-9._-]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'workflow'
+  );
 }
 
 export const GET: APIRoute = async ({ params, request }) => {

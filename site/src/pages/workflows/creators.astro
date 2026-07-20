@@ -11,7 +11,8 @@ import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import HubWorkflowCard from '../../components/hub/HubWorkflowCard.vue';
 import BackButton from '../../components/BackButton.astro';
-import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { getLocaleFromPath } from '../../i18n/utils';
+import { creatorPath } from '../../lib/routes';
 import { absoluteUrl } from '../../config/site';
 import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
 import { fetchRankingMap } from '../../lib/ranking';
@@ -92,19 +93,23 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                 {/* Creator profile info */}
                 <div class="w-full lg:w-52 shrink-0 flex flex-col gap-6">
                   {/* Avatar */}
-                  {avatarUrl ? (
+                  {avatarUrl && (
                     <img
                       src={avatarUrl}
                       alt={displayName}
                       class="size-16 rounded-full object-cover"
+                      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
                     />
-                  ) : (
-                    <div class="size-16 rounded-full bg-brand flex items-center justify-center">
-                      <span class="text-black text-lg font-bold">
-                        {displayName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
                   )}
+                  <div
+                    hidden={Boolean(avatarUrl)}
+                    class="size-16 rounded-full bg-brand flex items-center justify-center"
+                    aria-hidden="true"
+                  >
+                    <span class="text-black text-lg font-bold">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
 
                   {/* Name & Handle */}
                   <div class="flex flex-col gap-2">
@@ -115,7 +120,7 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                   {/* Open Profile button */}
                   <div>
                     <a
-                      href={localizeUrl(`/workflows/${username}/`, locale)}
+                      href={creatorPath(username, locale)}
                       class="inline-flex items-center justify-center gap-1 h-8 px-4 rounded-full bg-hub-surface text-xs text-content hover:brightness-125 transition-all"
                     >
                       Open Profile
@@ -152,7 +157,6 @@ const canonicalUrl = absoluteUrl('/workflows/creators/');
                       creatorDisplayName={displayName}
                       creatorAvatarUrl={avatarUrl}
                       locale={locale}
-                      hideAuthor
                       thumbnailVariant={tmpl.thumbnailVariant}
                       mediaSubtype={tmpl.mediaSubtype}
                     />

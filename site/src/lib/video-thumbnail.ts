@@ -9,10 +9,7 @@
  */
 const CLOUDFLARE_CDN_DOMAIN = 'engcomfy.com';
 
-export function getVideoFrameUrl(
-  videoUrl: string,
-  timeSeconds: number = 1
-): string | null {
+export function getVideoFrameUrl(videoUrl: string, timeSeconds: number = 1): string | null {
   try {
     const parsed = new URL(videoUrl);
     if (!parsed.hostname.includes(CLOUDFLARE_CDN_DOMAIN)) return null;

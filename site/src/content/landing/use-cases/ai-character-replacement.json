@@ -1,0 +1,116 @@
+{
+  "subheading": "Swap the character in a clip or drive a still character with a performance using open Wan 2.2 Animate workflows in ComfyUI, with the original motion, timing, and lighting kept intact.",
+  "extendedDescription": "The real worry with any ai character replacement job is that the new character ends up pasted on top of the old one: the face changes but the body drifts, the motion goes rubbery, or the lighting no longer matches the scene. Most consumer tools that promise ai character replacement only retouch the head and leave the rest of the shot fighting itself. The Wan 2.2 Animate workflows on this page work the other way around. They read the full performance out of a driving video, body pose and facial expression together, and rebuild a new character performing that exact motion, so the whole figure moves as one piece rather than a swapped face on borrowed shoulders.\n\nWan 2.2 Animate is a 14B open-weights model from Alibaba's Tongyi Lab, released under Apache 2.0, and it runs two jobs from the same node graph. In replacement, or Mix, mode it substitutes the character in your existing footage while keeping the original background, so a person, an anime figure, or a 3D render steps into the scene and the room stays put. In animation, or Move, mode you give it one clean reference image and a driving clip, and it animates that still character with the performer's motion on the reference image's own backdrop.\n\nWhat makes the output hold together is how the model reads motion. Wan Animate uses spatially aligned skeleton signals to copy body movement and implicit facial features to drive expression, so gestures, head turns, and lip articulation land on the new character in the right frames. A Relighting LoRA matches the lighting and color of the target scene to the character it inserts, the step that stops a swap from looking cut out. Because the pipeline tracks pose and face directly, you animate a character from a reference video without the rotoscoping, masking, or hand-painted keyframes that traditional character animation and replacement used to demand.\n\nEverything here is an open, editable ComfyUI graph, so the controls are yours. Run it locally on your own GPU or on Comfy Cloud with no install, pick the FP8 or BF16 build to fit your VRAM, and add the 4-step acceleration LoRA for a faster preview. Clips extend in segments of roughly 77 frames, near five seconds each, and chain for longer takes. Treat the stack as ai motion transfer you fully own: change the reference character, retime the driving clip, adjust the relight, and re-run any node until the character swap in video reads as a real performance instead of an edit.",
+  "styles": [
+    {
+      "title": "Replace a character in footage",
+      "description": "Mix mode swaps the person in your existing clip for a new character while the original background and camera move stay in place."
+    },
+    {
+      "title": "Animate a still character",
+      "description": "Move mode drives one reference image with a performance from a driving video, so a static character acts out the full motion on its own backdrop."
+    },
+    {
+      "title": "Body and face together",
+      "description": "Skeleton signals copy the body while implicit facial features carry expression, so head turns and lip motion stay in sync with the limbs."
+    },
+    {
+      "title": "Scene-matched relighting",
+      "description": "A Relighting LoRA fits the inserted character to the target scene's lighting and color, which keeps a swap from looking pasted on."
+    },
+    {
+      "title": "Any character type",
+      "description": "Drive a real person, an anime figure, a 2D illustration, or a 3D render from the same graph, since the model conditions on your reference."
+    },
+    {
+      "title": "Longer takes by extension",
+      "description": "Each extend segment adds roughly 77 frames, near five seconds, and chains with the previous one so you build a longer shot."
+    }
+  ],
+  "howToUse": [
+    "Decide the job: replace the character in a clip you already have (Mix), or animate a reference character with a driving performance (Move).",
+    "Open the matching Wan 2.2 Animate workflow on Comfy Cloud with no install, or load it in your local ComfyUI.",
+    "Provide the inputs: a driving video for the motion, plus the source footage (Mix) or one clean reference image of the new character (Move).",
+    "Pick the FP8 or BF16 model build for your VRAM, and add the 4-step LoRA if you want a quick draft pass first.",
+    "Run the graph and check that the body, expression, and timing of the new character track the driving clip frame for frame.",
+    "Tune the relight strength or swap the reference, chain extend segments for a longer take, and export at full resolution with no watermark."
+  ],
+  "capabilitiesIntro": "Replace a character in existing footage or animate a still character with a driving performance, all from open Wan 2.2 Animate workflows.",
+  "whyComfy": [
+    {
+      "title": "Whole character, not just a head",
+      "description": "Skeleton signals carry the body and implicit facial features carry expression, so the new character performs the full motion instead of a swapped face."
+    },
+    {
+      "title": "Pick your variant and settings",
+      "description": "Choose Mix or Move mode, the FP8 or BF16 build, and the optional 4-step LoRA, then dial the relight strength to match each scene.",
+      "cloudOnly": true
+    },
+    {
+      "title": "No rotoscoping or masking",
+      "description": "The graph tracks pose and face directly, so you skip the manual masks and keyframes that traditional character replacement used to require."
+    },
+    {
+      "title": "Open weights, full resolution",
+      "description": "Wan 2.2 Animate is Apache 2.0 and runs on your own GPU, and the clips you generate ship with no watermark and no per-render charge."
+    }
+  ],
+  "metaDescription": "Open ai character replacement with ComfyUI and Wan 2.2 Animate: swap a character in a clip or animate a still character from a driving video, no rotoscoping.",
+  "applicationsIntro": "Real shots editors, animators, and creators run these Wan 2.2 Animate workflows for.",
+  "suggestedUseCases": [
+    {
+      "title": "Character swap in footage",
+      "subtitle": "Replace the person in an existing clip while the scene and motion stay put."
+    },
+    {
+      "title": "Bring a still character to life",
+      "subtitle": "Animate a reference image with a recorded performance and its own timing."
+    },
+    {
+      "title": "Anime and 3D performers",
+      "subtitle": "Drive an illustrated or rendered character with real human motion capture."
+    },
+    {
+      "title": "Stand-in and reshoot fixes",
+      "subtitle": "Recast a character into a take without reshooting the whole scene."
+    },
+    {
+      "title": "Stylized music and dance clips",
+      "subtitle": "Transfer a dancer's motion onto a new character for short-form video."
+    }
+  ],
+  "faqItems": [
+    {
+      "question": "How do you do ai character replacement in a video?",
+      "answer": "These workflows run Wan 2.2 Animate in Mix mode: it reads body pose and facial expression out of your footage, then rebuilds a new character performing that same motion while keeping the original background. You supply the source clip and a reference for the new character, and the model handles the rest with no manual masking or keyframing."
+    },
+    {
+      "question": "What is Wan Animate and how does it work?",
+      "answer": "Wan Animate is a 14B open-weights model from Alibaba's Tongyi Lab, released under Apache 2.0. It uses spatially aligned skeleton signals to copy body movement and implicit facial features to drive expression, so a new character matches the source performance. A Relighting LoRA then fits that character to the scene's lighting and color."
+    },
+    {
+      "question": "How do you animate a character from a reference video?",
+      "answer": "Use Move mode: give the workflow one clean reference image plus a driving clip, and it transfers the performer's motion onto that still character. The character keeps its own background while taking on the body movement, head turns, and expression from the driving footage. This is the ai motion transfer half of the model."
+    },
+    {
+      "question": "Can I replace a character in a video without rotoscoping or masking?",
+      "answer": "Yes. The graph tracks pose and face automatically, so you do not paint masks, draw keyframes, or roto the subject by hand. That manual labor is the part traditional character animation and replacement always required, and the model removes it. You just provide the clip and the new character."
+    },
+    {
+      "question": "How is character replacement different from swapping a face?",
+      "answer": "Swapping only a face leaves the original body, posture, and motion untouched, which often looks mismatched. Character replacement rebuilds the whole figure, so the body, gestures, and expression all belong to the new character while following the source timing. The Relighting LoRA also blends it into the scene rather than pasting a head on top."
+    },
+    {
+      "question": "What kinds of characters can these workflows handle?",
+      "answer": "Because the model conditions on the reference image you give it, you can drive a real person, an anime figure, a 2D illustration, or a 3D render from the same graph. The driving video supplies the motion and the reference supplies the look, so the same character swap in video pipeline covers all of them."
+    },
+    {
+      "question": "Does this run on Comfy Cloud or do I need a local GPU?",
+      "answer": "Both work. You can open the Wan 2.2 Animate workflow on Comfy Cloud with no install and run it in the browser, or load it in your local ComfyUI on your own GPU. Pick the FP8 build to lower VRAM use, or BF16 for full precision."
+    },
+    {
+      "question": "Are there usage limits or per-clip charges on these workflows?",
+      "answer": "Running locally uses your own GPU, so there is no per-clip charge and no cap on how many takes you process. Comfy Cloud is a paid plan with tiered seats if you would rather not run it yourself. Either way the model is open weights and the output carries no watermark."
+    }
+  ]
+}

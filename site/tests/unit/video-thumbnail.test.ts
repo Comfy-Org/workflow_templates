@@ -50,12 +50,8 @@ describe('getVideoFrameUrl', () => {
   });
 
   it('handles production and test subdomains', () => {
-    const test = getVideoFrameUrl(
-      'https://comfy-hub-assets-test.engcomfy.com/uploads/v.mp4'
-    );
-    const prod = getVideoFrameUrl(
-      'https://comfy-hub-assets.engcomfy.com/uploads/v.mp4'
-    );
+    const test = getVideoFrameUrl('https://comfy-hub-assets-test.engcomfy.com/uploads/v.mp4');
+    const prod = getVideoFrameUrl('https://comfy-hub-assets.engcomfy.com/uploads/v.mp4');
     expect(test).toContain('comfy-hub-assets-test.engcomfy.com');
     expect(prod).toContain('comfy-hub-assets.engcomfy.com');
     expect(test).toContain('cdn-cgi/media/mode=frame');

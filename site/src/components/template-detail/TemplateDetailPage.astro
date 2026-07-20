@@ -3,18 +3,20 @@ import ThumbnailDisplay from '../ThumbnailDisplay.astro';
 import Breadcrumbs from './Breadcrumbs.astro';
 import SidebarSection from './SidebarSection.astro';
 import CollapsibleBadgeList from './CollapsibleBadgeList.vue';
-import FaqAccordion from './FaqAccordion.vue';
-import ExpandableText from './ExpandableText.vue';
+import FaqAccordion from '../shared/FaqAccordion.vue';
+import ExpandableText from '../shared/ExpandableText.vue';
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
+import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
 import { featureFlags } from '../../config/featureFlags';
 import { buttonVariants } from '../ui/button';
 import { cn } from '../../lib/utils';
+import { eyebrow } from '../workflow-pages/landing-styles';
 
 interface Props {
   template: {
@@ -47,9 +49,7 @@ const profiles = await getProfileCache();
 const profile = data.username ? profiles.get(data.username) : null;
 const authorName = profile?.display_name || data.username || 'ComfyUI';
 const authorAvatarUrl = profile?.avatar_url || null;
-const authorProfileUrl = data.username
-  ? localizeUrl(`/workflows/${slugify(data.username)}/`, locale)
-  : null;
+const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const cloudTemplateId = data.shareId || data.name;
@@ -126,14 +126,16 @@ function formatRelativeDate(dateStr: string): string {
                   target="_blank"
                   rel="noopener noreferrer"
                   class={cn(
-                    buttonVariants({ variant: 'brand-solid' }),
-                    'run-cloud-btn flex h-auto flex-col py-2 transition-opacity'
+                    buttonVariants({ variant: 'brand-solid', size: 'nav' }),
+                    'run-cloud-btn flex h-auto flex-col transition-opacity'
                   )}
                   data-template={data.name}
                   data-author={data.username || ''}
                   data-location="hero"
                 >
-                  <span class="font-bold">{t('cta.tryCloud', locale)}</span>
+                  <span class="ppformula-text-center-sm font-bold">
+                    {t('cta.tryCloud', locale)}
+                  </span>
                   {featureFlags.cloudFreeTier && (
                     <span class="font-normal text-xs">{t('cta.tryCloudSubline', locale)}</span>
                   )}
@@ -144,13 +146,13 @@ function formatRelativeDate(dateStr: string): string {
               href={downloadUrl}
               download
               class={cn(
-                buttonVariants({ variant: 'pill-outline' }),
-                'download-json-btn h-10 rounded-2xl transition-colors'
+                buttonVariants({ variant: 'brand-outline', size: 'nav' }),
+                'download-json-btn transition-colors'
               )}
               data-template={data.name}
               data-author={data.username || ''}
             >
-              {t('cta.downloadJson', locale)}
+              <span class="ppformula-text-center-sm">{t('cta.downloadJson', locale)}</span>
             </a>
           </div>
 
@@ -159,6 +161,8 @@ function formatRelativeDate(dateStr: string): string {
               <SidebarSection title={t('labels.categories', locale)}>
                 <CollapsibleBadgeList
                   client:load
+                  moreLabel={t('badge.more', locale)}
+                  lessLabel={t('badge.less', locale)}
                   items={[
                     {
                       label: mediaTypeLabels[data.mediaType],
@@ -179,6 +183,8 @@ function formatRelativeDate(dateStr: string): string {
               <SidebarSection title={t('labels.models', locale)}>
                 <CollapsibleBadgeList
                   client:load
+                  moreLabel={t('badge.more', locale)}
+                  lessLabel={t('badge.less', locale)}
                   items={data.models.map((model: string) => ({
                     label: model,
                     href: localizeUrl(`/workflows/model/${slugify(model)}/`, locale),
@@ -192,19 +198,23 @@ function formatRelativeDate(dateStr: string): string {
             <div class="flex items-center gap-3">
               <div class="size-8 shrink-0 rounded-full overflow-hidden">
                 {
-                  authorAvatarUrl ? (
+                  authorAvatarUrl && (
                     <img
                       src={authorAvatarUrl}
                       alt={authorName}
                       class="w-full h-full object-cover"
                       loading="lazy"
+                      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
                     />
-                  ) : (
-                    <div class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page">
-                      {authorName.charAt(0).toUpperCase()}
-                    </div>
                   )
                 }
+                <div
+                  hidden={Boolean(authorAvatarUrl)}
+                  class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page"
+                  aria-hidden="true"
+                >
+                  {authorName.charAt(0).toUpperCase()}
+                </div>
               </div>
               <div class="flex flex-col">
                 {
@@ -267,11 +277,18 @@ function formatRelativeDate(dateStr: string): string {
       }
     </div>
 
-    {/* FAQ (renders nothing when there are no items) */}
     {
       data.faqItems && data.faqItems.length > 0 && (
-        <div class="mt-16 lg:mt-24">
-          <FaqAccordion client:load items={data.faqItems} heading={t('template.faq', locale)} />
+        <div class="mt-16 flex flex-col gap-12 lg:mt-24 lg:col-span-2 lg:flex-row lg:gap-16">
+          <div class="lg:sticky lg:top-52 lg:h-fit lg:w-md lg:shrink-0">
+            <p class={eyebrow}>{t('useCase.faqShort', locale)}</p>
+            <h2 class="mt-3 font-display text-3xl font-light leading-[1.1] tracking-[-0.03em] text-content sm:text-4xl lg:text-5xl">
+              {t('template.faq', locale)}
+            </h2>
+          </div>
+          <div class="flex-1">
+            <FaqAccordion client:visible items={data.faqItems} />
+          </div>
         </div>
       )
     }

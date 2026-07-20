@@ -1,0 +1,43 @@
+---
+/**
+ * Card thumbnail with a Comfy-mark fallback. Renders the image plus a hidden
+ * placeholder (the Comfy "C" centered on the card surface); if the image fails to
+ * load, an inline onerror hides the broken image and reveals the placeholder, so a
+ * 404 thumbnail never shows the browser's broken-image glyph. Shared by every
+ * landing-page card so the fallback looks identical everywhere.
+ *
+ * Pass `class` to keep each call site's image styling (object-cover, scale-on-hover,
+ * absolute fill, etc.); the placeholder always fills its positioned parent.
+ */
+import { COMFY_GLYPH } from './comfy-glyph';
+
+interface Props {
+  src?: string | null;
+  alt: string;
+  class?: string;
+}
+
+const { src, alt, class: imgClass } = Astro.props;
+---
+
+{
+  src && (
+    <img
+      src={src}
+      alt={alt}
+      class={imgClass}
+      loading="lazy"
+      decoding="async"
+      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+    />
+  )
+}
+<span
+  hidden={Boolean(src)}
+  class="absolute inset-0 flex items-center justify-center bg-hub-surface"
+  aria-hidden="true"
+>
+  <svg class="h-1/3 w-1/3 text-content/15" viewBox="0 0 520 520" fill="currentColor">
+    <path d={COMFY_GLYPH}></path>
+  </svg>
+</span>

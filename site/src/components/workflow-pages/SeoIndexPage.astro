@@ -1,0 +1,74 @@
+---
+/** Shared shell for the SEO index pages (models, use-cases): navbar, page header,
+ *  the IndexCard grid, and CollectionPage + breadcrumb JSON-LD. Each route computes
+ *  its cards/heading/description/basePath and delegates the layout here. */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import HubNavbar from '../hub/HubNavbar.astro';
+import SiteFooter from '../hub/SiteFooter.astro';
+import IndexPageHeader from './IndexPageHeader.astro';
+import IndexCard from './cards/IndexCard.astro';
+import type { SeoPageCard } from '../../lib/workflow-pages/schema';
+import type { Locale } from '../../i18n/config';
+import { localizeUrl } from '../../i18n/utils';
+import { absoluteUrl, SITE_NAME } from '../../config/site';
+import { resolveAbsoluteThumbnail } from '../../lib/routes';
+import {
+  buildCollectionPageJsonLd,
+  buildWorkflowBreadcrumb,
+  serializeJsonLdForScript,
+} from '../../lib/structured-data';
+
+interface Props {
+  locale: Locale;
+  /** Root-relative index path with NO locale prefix — `localizeUrl` below prepends
+   *  the locale, so a prefixed value would double it into `/ja/ja/…`. */
+  basePath: string;
+  heading: string;
+  description: string;
+  cards: SeoPageCard[];
+}
+
+const { locale, basePath, heading, description, cards } = Astro.props;
+
+const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+const name = `${heading} | ${SITE_NAME}`;
+
+const items = cards.map((card) => ({
+  name: card.title,
+  url: absoluteUrl(card.href),
+  image: resolveAbsoluteThumbnail(card.thumbnail),
+}));
+
+const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl, items });
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: heading });
+---
+
+<BaseLayout
+  title={name}
+  description={description}
+  canonicalUrl={canonicalUrl}
+  ogImage="/workflows/og-default.png"
+  structuredData={structuredData}
+  locale={locale}
+  hreflangBasePath={basePath}
+  hreflangLocalized={false}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-4 lg:pt-6 pb-12">
+    <IndexPageHeader locale={locale} heading={heading} description={description} />
+
+    <IndexCard cards={cards} locale={locale} />
+  </div>
+
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+  />
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

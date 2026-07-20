@@ -16,14 +16,14 @@ import { watchDebounced } from '@vueuse/core';
 import { useHubStore, type FilterBadge } from '@/composables/useHubStore';
 import { search as searchIndex, type SearchResults } from '@/lib/search';
 import { Badge } from '@/components/ui/badge';
+import { Avatar } from '@/components/ui/avatar';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
-import { slugify } from '@/lib/slugify';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import type { MediaType, CreatorEntry } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
-import { workflowDetailPath, workflowDetailSlug, thumbnailPath } from '@/lib/routes';
+import { workflowDetailPath, workflowDetailSlug, thumbnailPath, creatorPath } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 export interface SearchTemplate {
@@ -288,9 +288,7 @@ function getTemplateUrl(slug: string | null | undefined): string | null {
 }
 
 function getCreatorUrl(username: string): string {
-  return props.locale && props.locale !== 'en'
-    ? `/${props.locale}/workflows/${slugify(username)}/`
-    : `/workflows/${slugify(username)}/`;
+  return creatorPath(username, props.locale);
 }
 
 // React to search focus requests from other components (e.g. HubBrowse sidebar)
@@ -831,18 +829,7 @@ onUnmounted(() => {
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content-secondary text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === discCreatorOffset + i }"
                 >
-                  <img
-                    v-if="creator.avatarUrl"
-                    :src="creator.avatarUrl"
-                    :alt="creator.displayName"
-                    class="size-5 rounded-full shrink-0 object-cover"
-                  />
-                  <span
-                    v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-2xs font-bold text-page bg-brand"
-                  >
-                    {{ creator.displayName.charAt(0).toUpperCase() }}
-                  </span>
+                  <Avatar :src="creator.avatarUrl" :name="creator.displayName" class="size-5" />
                   <span class="ppformula-text-center-sm">{{ creator.displayName }}</span>
                 </a>
               </div>
@@ -1055,18 +1042,7 @@ onUnmounted(() => {
                   class="inline-flex items-center gap-2 h-8 px-3 rounded-full bg-hub-surface text-content-secondary text-sm font-normal hover:brightness-125 transition-all"
                   :class="{ 'ring-1 ring-brand': activeIndex === activeCreatorOffset + i }"
                 >
-                  <img
-                    v-if="creator.avatarUrl"
-                    :src="creator.avatarUrl"
-                    :alt="creator.displayName"
-                    class="size-5 rounded-full shrink-0 object-cover"
-                  />
-                  <span
-                    v-else
-                    class="size-5 rounded-full shrink-0 flex items-center justify-center text-2xs font-bold text-page bg-brand"
-                  >
-                    {{ creator.displayName.charAt(0).toUpperCase() }}
-                  </span>
+                  <Avatar :src="creator.avatarUrl" :name="creator.displayName" class="size-5" />
                   <span class="ppformula-text-center-sm">{{ creator.displayName }}</span>
                   <span class="text-content/30 text-xs">{{ creator.workflowCount }}</span>
                 </a>

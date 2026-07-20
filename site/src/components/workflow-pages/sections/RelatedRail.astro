@@ -1,0 +1,79 @@
+---
+/** "Keep exploring" — expressive image cards for related models and use-cases:
+ *  two wide cards on top, three below. Each card shows an image with the name
+ *  overlaid, plus an eyebrow and an optional workflow-count meta below. */
+import type { Locale } from '../../../i18n/config';
+import type { CardImage } from '../../../lib/workflow-pages/card-images';
+import type { ModelBadge } from '../../../lib/model-logos';
+import { t } from '../../../i18n/ui';
+import { inner, sectionPad } from '../landing-styles';
+import SectionHeader from '../SectionHeader.astro';
+import CardOverlayImage from '../cards/CardOverlayImage.astro';
+import { ButtonPill } from '../../ui/button-pill';
+
+interface RailCard {
+  title: string;
+  eyebrow?: string;
+  meta?: string;
+  image?: CardImage | null;
+  logos: ModelBadge[];
+  href: string;
+}
+
+interface Props {
+  locale: Locale;
+  cards: RailCard[];
+}
+
+const { locale, cards: allCards } = Astro.props;
+// Two wide cards on top, three on the next row (6-col grid).
+const cards = allCards.slice(0, 5);
+---
+
+<section aria-labelledby="related-heading" class={`bg-page ${sectionPad}`}>
+  <div class={inner}>
+    <SectionHeader
+      id="related-heading"
+      headingLabel={t('useCase.keepExploring', locale)}
+      summary={t('useCase.keepExploringSub', locale)}
+    />
+
+    <div
+      class="grid grid-cols-1 gap-5 rounded-4xl bg-hub-surface p-4 sm:grid-cols-2 lg:grid-cols-6 lg:p-5"
+    >
+      {
+        cards.map((card, i) => (
+          <article
+            class:list={[
+              'group/pill-trigger group relative aspect-video w-full overflow-hidden rounded-3xl',
+              i < 2 ? 'lg:col-span-3' : 'lg:col-span-2',
+            ]}
+          >
+            <a href={card.href} aria-label={card.title} class="absolute inset-0 block">
+              <CardOverlayImage title={card.title} image={card.image} logos={card.logos} />
+            </a>
+
+            {/* Footer overlaid on the image bottom — sibling of the link, no nested anchors. */}
+            <div class="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-3 px-5 pb-1">
+              <div class="flex min-w-0 items-center gap-3">
+                {card.eyebrow && (
+                  <span class="truncate font-display text-xs font-semibold uppercase tracking-[0.12em] text-white/85">
+                    {card.eyebrow}
+                  </span>
+                )}
+                {card.meta && (
+                  <span class="shrink-0 font-display text-xs font-medium text-brand">
+                    {card.meta}
+                  </span>
+                )}
+              </div>
+              <ButtonPill as="a" href={card.href} variant="solid" mode="reveal" class="shrink-0">
+                {t('cta.viewAll', locale)}
+              </ButtonPill>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </div>
+</section>

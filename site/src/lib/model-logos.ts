@@ -1,3 +1,8 @@
+/**
+ * Model / provider → logo resolution. One map + one matcher, plus the
+ * template-shaped helpers the hub card and SEO/landing surfaces consume.
+ */
+
 const MODEL_TO_LOGO: Record<string, string> = {
   Grok: 'grok',
   OpenAI: 'openai',
@@ -5,15 +10,26 @@ const MODEL_TO_LOGO: Record<string, string> = {
   'Stable Diffusion': 'stability',
   SDXL: 'stability',
   'SDXL-Inpainting': 'stability',
+  'SD1.5': 'stability',
+  'SD3.5': 'stability',
+  SD3: 'stability',
   'Stable Audio': 'stability',
   Wan: 'wan',
   Flux: 'bfl',
+  LTX: 'lightricks',
+  LTXV: 'lightricks',
   Google: 'google',
+  Gemini: 'google',
+  'Nano Banana': 'google',
+  Veo: 'google',
+  'GPT-Image': 'openai',
   Runway: 'runway',
   Luma: 'luma',
   Kling: 'kling',
   Hunyuan: 'hunyuan',
   ByteDance: 'bytedance',
+  Seedance: 'bytedance',
+  Seedream: 'bytedance',
   HitPaw: 'hitpaw',
   Recraft: 'recraft',
   Topaz: 'topaz',
@@ -28,23 +44,94 @@ const MODEL_TO_LOGO: Record<string, string> = {
   Magnific: 'magnific',
   Rodin: 'rodin',
   Tripo: 'tripo',
+  TripoSplat: 'tripo',
   PixVerse: 'pixverse',
   Bria: 'bria',
 };
 
-export function getModelLogoPath(modelName: string, provider?: string): string | null {
-  if (provider) {
-    const slug = MODEL_TO_LOGO[provider];
-    if (slug) return `/logos/${slug}.png`;
-  }
-  const slug = MODEL_TO_LOGO[modelName];
-  if (slug) return `/logos/${slug}.png`;
+function escapeRegex(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
-  const lower = modelName.toLowerCase();
-  for (const [key, val] of Object.entries(MODEL_TO_LOGO)) {
-    if (lower.includes(key.toLowerCase())) {
-      return `/logos/${val}.png`;
-    }
+// Key at a word start, not followed by another letter, so a family matches its
+// variants ("wan2.2", "wan animate") but not a longer word ("swan", "waning").
+const LOGO_MATCHERS: [RegExp, string][] = Object.entries(MODEL_TO_LOGO).map(([key, slug]) => [
+  new RegExp(`(?:^|[^a-z0-9])${escapeRegex(key.toLowerCase())}(?![a-z])`),
+  slug,
+]);
+
+/** Resolve a provider/model name to a logo path under `/logos/`, or null if unknown. */
+export function getLogoPath(name: string): string | null {
+  const normalized = name.trim();
+  const slug = MODEL_TO_LOGO[normalized];
+  if (slug) return `/logos/${slug}.png`;
+  const lower = normalized.toLowerCase();
+  for (const [pattern, val] of LOGO_MATCHERS) {
+    if (pattern.test(lower)) return `/logos/${val}.png`;
   }
   return null;
+}
+
+/**
+ * The primary provider name from a template's `logos`, or null when absent.
+ * `provider` may be a single string or an array (multi-provider); we take the
+ * first. Shared so every consumer unwraps it the same way.
+ */
+export function providerName(logos?: { provider: string | string[] }[]): string | null {
+  const p = logos?.[0]?.provider;
+  return Array.isArray(p) ? (p[0] ?? null) : (p ?? null);
+}
+
+/**
+ * Distinct providers from `logos`, in order, deduped by resolved logo — so alias
+ * pairs like "Google" + "Gemini" (same asset) yield a single badge, not two.
+ */
+export function providerLogos(
+  logos?: { provider: string | string[] }[]
+): { name: string; logoPath: string }[] {
+  const names = (logos ?? []).flatMap((l) =>
+    Array.isArray(l.provider) ? l.provider : [l.provider]
+  );
+  const seen = new Set<string>();
+  const out: { name: string; logoPath: string }[] = [];
+  for (const name of names) {
+    if (!name) continue;
+    const logoPath = getLogoPath(name);
+    if (!logoPath || seen.has(logoPath)) continue;
+    seen.add(logoPath);
+    out.push({ name, logoPath });
+  }
+  return out;
+}
+
+/** A resolved badge: the logo asset plus the provider name for alt/title text. */
+export interface ModelBadge {
+  src: string;
+  name: string;
+}
+
+/**
+ * Distinct provider badges for a template, in order. Prefers the structured
+ * `logos`, falling back to the `models` list when those resolve to nothing.
+ * Shared by the landing hero, About cards, and the model/use-case index cards so
+ * every surface resolves badges the same way.
+ */
+export function resolveTemplateLogos(input: {
+  models?: string[];
+  logos?: { provider: string | string[] }[];
+}): ModelBadge[] {
+  const fromLogos = input.logos?.length
+    ? providerLogos(input.logos).map((logo) => ({ src: logo.logoPath, name: logo.name }))
+    : [];
+  if (fromLogos.length) return fromLogos;
+
+  const badges: ModelBadge[] = [];
+  const seenLogos = new Set<string>();
+  for (const model of input.models ?? []) {
+    const logoPath = getLogoPath(model);
+    if (!logoPath || seenLogos.has(logoPath)) continue;
+    seenLogos.add(logoPath);
+    badges.push({ src: logoPath, name: model });
+  }
+  return badges;
 }

@@ -157,6 +157,23 @@ export interface SerializedTemplate {
   mediaSubtype?: string;
 }
 
+/**
+ * The subset of template fields the SEO image-matcher / fallback pool reads.
+ * Lets pages trim the catalog to a lean payload without an unsafe cast.
+ */
+export type MatcherTemplate = Pick<
+  SerializedTemplate,
+  'name' | 'shareId' | 'title' | 'description' | 'tags' | 'models' | 'usage' | 'thumbnails'
+>;
+
+/** Usage descending, `name` tiebreak for deterministic ordering. */
+export function byUsageDesc(
+  a: { usage?: number; name?: string },
+  b: { usage?: number; name?: string }
+): number {
+  return (b.usage ?? 0) - (a.usage ?? 0) || (a.name ?? '').localeCompare(b.name ?? '');
+}
+
 // ---------------------------------------------------------------------------
 // Query parameters
 // ---------------------------------------------------------------------------

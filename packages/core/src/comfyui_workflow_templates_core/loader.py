@@ -38,6 +38,7 @@ BLUEPRINT_BUNDLE_PACKAGE_MAP = {
 class TemplateAsset:
     filename: str
     sha256: str
+    bundle: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -60,7 +61,11 @@ def _parse_manifest(payload: str) -> Manifest:
     templates: Dict[str, TemplateEntry] = {}
     for entry in raw.get("templates", []):
         assets = [
-            TemplateAsset(a["filename"], a["sha256"])
+            TemplateAsset(
+                a["filename"],
+                a["sha256"],
+                a.get("bundle"),
+            )
             for a in entry.get("assets", [])
         ]
         templates[entry["id"]] = TemplateEntry(
@@ -103,9 +108,15 @@ def _bundle_package(bundle_name: str) -> str:
         raise KeyError(f"No package mapping defined for bundle '{bundle_name}'") from exc
 
 
-def _asset_package(entry: TemplateEntry, filename: str) -> str:
+def _asset_package(
+    entry: TemplateEntry,
+    filename: str,
+    asset_bundle: Optional[str] = None,
+) -> str:
     if filename.endswith(".json"):
         return JSON_PACKAGE
+    if asset_bundle:
+        return _bundle_package(asset_bundle)
     return _bundle_package(entry.bundle)
 
 
@@ -117,13 +128,17 @@ def get_asset_path(template_id: str, filename: str) -> str:
         FileNotFoundError: if the bundle package or asset is missing.
     """
     entry = get_template_entry(template_id)
-    package_name = _asset_package(entry, filename)
+    asset_bundle = next(
+        (asset.bundle for asset in entry.assets if asset.filename == filename),
+        None,
+    )
+    package_name = _asset_package(entry, filename, asset_bundle)
     try:
         package_files = resources.files(package_name)
     except ModuleNotFoundError as exc:
         raise FileNotFoundError(
             f"Package '{package_name}' is not installed for asset '{filename}' "
-            f"(template '{template_id}', bundle '{entry.bundle}')"
+            f"(template '{template_id}', bundle '{asset_bundle or entry.bundle}')"
         ) from exc
     asset = package_files / "templates" / filename
     if not asset.exists():

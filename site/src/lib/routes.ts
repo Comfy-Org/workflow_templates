@@ -1,5 +1,5 @@
 import { tagSlug } from './tag-aliases';
-import { slugify } from './slugify';
+import { absoluteUrl } from '../config/site';
 
 /**
  * Prefix a root-relative path with the locale segment, matching the site's
@@ -11,15 +11,35 @@ const localize = (path: string, locale?: string) =>
   locale && locale !== 'en' ? `/${locale}${path}` : path;
 
 export const categoryPath = (type: string) => `/workflows/category/${type}/`;
-export const modelPath = (name: string) => `/workflows/model/${name}/`;
+const MODEL_BASE = '/workflows/model/';
+export const modelsIndexPath = (locale?: string) => localize(MODEL_BASE, locale);
+export const modelPath = (name: string, locale?: string) =>
+  localize(`${MODEL_BASE}${name}/`, locale);
 export const tagPath = (tag: string, locale?: string) =>
   localize(`/workflows/tag/${tagSlug(tag)}/`, locale);
+const USE_CASES_BASE = '/workflows/use-cases/';
+export const useCasesIndexPath = (locale?: string) => localize(USE_CASES_BASE, locale);
+export const useCasePath = (slug: string, locale?: string) =>
+  localize(`${USE_CASES_BASE}${slug}/`, locale);
 export const creatorPath = (username: string, locale?: string) =>
-  localize(`/workflows/${slugify(username)}/`, locale);
+  localize(`/workflows/${encodeURIComponent(username)}/`, locale);
 export const thumbnailPath = (asset: string) =>
   asset.startsWith('http://') || asset.startsWith('https://')
     ? asset
     : `/workflows/thumbnails/${asset}`;
+
+/**
+ * Resolve a thumbnail asset to an absolute URL for structured-data image fields.
+ * Hub-CDN URLs are already absolute; local assets are rooted then absolutized.
+ * Returns `undefined` for a missing thumbnail so callers can omit the field.
+ */
+export const resolveAbsoluteThumbnail = (
+  thumbnail: string | null | undefined
+): string | undefined => {
+  if (!thumbnail) return undefined;
+  const rooted = thumbnailPath(thumbnail);
+  return rooted.startsWith('http') ? rooted : absoluteUrl(rooted);
+};
 
 /**
  * Build the URL slug component (no `/workflows/` prefix, no locale).

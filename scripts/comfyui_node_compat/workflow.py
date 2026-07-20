@@ -728,6 +728,7 @@ def check_node(
         return issues
 
     if spec.deprecated:
+        label = spec.display_name or node_type
         issues.append(
             Issue(
                 severity="warning",
@@ -735,7 +736,7 @@ def check_node(
                 workflow=workflow_name,
                 node_id=node_id,
                 node_type=node_type,
-                message=f"Node display name is marked deprecated: {spec.display_name}",
+                message=f"Node is marked deprecated in ComfyUI: {label}",
             )
         )
 
