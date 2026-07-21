@@ -1,7 +1,7 @@
 ---
 import HreflangTags from './HreflangTags.astro';
 import { LANGUAGES, DEFAULT_LOCALE } from '../i18n/config';
-import { absoluteUrl } from '../config/site';
+import { absoluteUrl, SITE_NAME } from '../config/site';
 import { serializeJsonLdForScript } from '../lib/structured-data';
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   description: string;
   canonicalUrl?: string;
   ogImage?: string;
+  /** Social-card description (OG/Twitter). Defaults to `description` when omitted. */
+  ogDescription?: string;
   ogType?: 'website' | 'article';
   structuredData?: object;
   /** Base path for hreflang tags (without locale prefix) */
@@ -23,7 +25,8 @@ const {
   title,
   description,
   canonicalUrl,
-  ogImage = '/workflows/og-default.png',
+  ogImage = '/brand/og-default-v2.png',
+  ogDescription = description,
   ogType = 'website',
   structuredData,
   hreflangBasePath,
@@ -37,6 +40,17 @@ const fullCanonicalUrl = canonicalUrl
   ? canonicalUrl
   : absoluteUrl(`${pathname}${pathname.endsWith('/') ? '' : '/'}`);
 const fullOgImage = ogImage.startsWith('http') ? ogImage : absoluteUrl(ogImage);
+
+const OG_IMAGE_MIME: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  avif: 'image/avif',
+  gif: 'image/gif',
+};
+const ogImageExt = ogImage.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
+const ogImageType = OG_IMAGE_MIME[ogImageExt] ?? 'image/png';
 
 // Compute hreflang base path if not provided
 // Strip locale prefix from pathname to get the base path
@@ -70,18 +84,21 @@ if (!computedHreflangBasePath) {
 <!-- Open Graph -->
 <meta property="og:type" content={ogType} />
 <meta property="og:title" content={title} />
-<meta property="og:description" content={description} />
+<meta property="og:description" content={ogDescription} />
 <meta property="og:url" content={fullCanonicalUrl} />
 <meta property="og:image" content={fullOgImage} />
+<meta property="og:image:type" content={ogImageType} />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:site_name" content="ComfyUI Workflows" />
+<meta property="og:image:alt" content={title} />
+<meta property="og:site_name" content={SITE_NAME} />
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content={title} />
-<meta name="twitter:description" content={description} />
+<meta name="twitter:description" content={ogDescription} />
 <meta name="twitter:image" content={fullOgImage} />
+<meta name="twitter:image:alt" content={title} />
 
 <!-- Favicon -->
 <link rel="icon" href="/favicon.ico" sizes="32x32" />

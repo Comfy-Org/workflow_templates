@@ -56,11 +56,7 @@ const ctaButtons = [
       <div
         class="relative col-span-full row-span-full h-10 max-w-0 overflow-clip transition-[max-width] duration-300 xl:max-w-56"
       >
-        <img
-          src="/brand/comfy-hub-logo.svg"
-          alt="ComfyHub"
-          class="h-10 w-auto max-w-none object-left"
-        />
+        <img src="/icons/logo.svg" alt="Comfy" class="h-10 w-auto max-w-none object-left" />
       </div>
     </a>
 

@@ -30,6 +30,7 @@ LOCAL_DISTRIBUTIONS = {"local", "desktop", "mac", "windows"}
 
 ROOT = Path(__file__).resolve().parents[2]
 TEMPLATES_DIR = ROOT / "templates"
+VERSION_POLICY_FILE = ROOT / "scripts" / "data" / "version_policy.json"
 CORE_MANIFEST = (
     ROOT
     / "packages"
@@ -192,8 +193,42 @@ def load_bundles_config() -> dict:
     return normalized
 
 
+def load_logo_bundle_config() -> tuple[set[str], str]:
+    """Return (frozen logo relative paths, additive target bundle) from version policy.
+
+    Logos listed in ``frozen_logo_assets`` stay with ``index_logo``'s bundle
+    (media-other). Any other file under ``templates/logo/`` ships via the
+    additive/active asset bundle so new provider logos do not require a policy
+    list update.
+    """
+    if not VERSION_POLICY_FILE.exists():
+        return set(), "media-assets-01"
+    with VERSION_POLICY_FILE.open("r", encoding="utf-8") as f:
+        policy = json.load(f)
+    frozen_logos = {str(path) for path in policy.get("frozen_logo_assets", [])}
+    # Back-compat: older policy listed additive logos explicitly.
+    if not frozen_logos and policy.get("additive_logo_assets"):
+        additive = {str(path) for path in policy.get("additive_logo_assets", [])}
+        logo_dir = TEMPLATES_DIR / "logo"
+        if logo_dir.is_dir():
+            frozen_logos = {
+                f"logo/{p.name}"
+                for p in logo_dir.iterdir()
+                if p.is_file() and not p.name.startswith(".")
+            } - additive
+    bundle = str(
+        policy.get("additive_logo_bundle")
+        or policy.get("recommended_asset_bundle")
+        or "media-assets-01"
+    )
+    if bundle not in BUNDLE_TARGETS:
+        raise SystemExit(f"Unknown additive_logo_bundle in version policy: {bundle}")
+    return frozen_logos, bundle
+
+
 def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] = None):
     bundle_map = load_bundles_config()
+    frozen_logos, additive_logo_bundle = load_logo_bundle_config()
     if excluded_names is None:
         excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
 
@@ -267,10 +302,16 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
                 if logo_dir.is_dir():
                     for logo_file in sorted(logo_dir.glob("*")):
                         if logo_file.is_file() and not logo_file.name.startswith("."):
-                            assets.append({
-                                "filename": f"logo/{logo_file.name}",
+                            rel_name = f"logo/{logo_file.name}"
+                            asset_entry = {
+                                "filename": rel_name,
                                 "sha256": sha256_for_file(logo_file),
-                            })
+                            }
+                            # New logos (not in the frozen inventory) ship via the
+                            # active assets package so media-other stays frozen.
+                            if rel_name not in frozen_logos:
+                                asset_entry["bundle"] = additive_logo_bundle
+                            assets.append(asset_entry)
             
             templates.append(
                 {
@@ -281,6 +322,28 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
                     "cdn": {"path": f"{bundle}/{template_id}/"},
                 }
             )
+
+    missing_frozen = sorted(
+        path
+        for path in frozen_logos
+        if not (TEMPLATES_DIR / path).is_file()
+    )
+    if missing_frozen:
+        logo_dir = TEMPLATES_DIR / "logo"
+        logo_files_present = (
+            logo_dir.is_dir()
+            and any(p.is_file() and not p.name.startswith(".") for p in logo_dir.iterdir())
+        )
+        if not logo_files_present:
+            raise SystemExit(
+                "templates/logo/ is empty or missing but frozen_logo_assets is configured. "
+                "Checkout templates/logo/ before running sync_bundles.py "
+                "(add `templates/logo/` to CI sparse-checkout)."
+            )
+        raise SystemExit(
+            "frozen_logo_assets missing from templates/logo/: "
+            + ", ".join(missing_frozen)
+        )
 
     manifest = {
         "manifest_version": 1,
@@ -333,8 +396,7 @@ def sync_bundle_directories(
         target.mkdir(parents=True, exist_ok=True)
 
     for template in manifest["templates"]:
-        bundle = template["bundle"]
-        target_root = BUNDLE_TARGETS[bundle]
+        default_bundle = template["bundle"]
 
         for asset in template["assets"]:
             src = TEMPLATES_DIR / asset["filename"]
@@ -352,6 +414,8 @@ def sync_bundle_directories(
                     shutil.copy2(src, dest)
                 continue
 
+            asset_bundle = asset.get("bundle") or default_bundle
+            target_root = BUNDLE_TARGETS[asset_bundle]
             dest = target_root / filename
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(src, dest)

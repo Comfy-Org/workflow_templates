@@ -14,12 +14,8 @@ import BackButton from '../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { creatorPath } from '../../../lib/routes';
 import { absoluteUrl } from '../../../config/site';
-import {
-  listWorkflowIndex,
-  getProfileCache,
-  serializeIndexEntry,
-  type SerializedTemplate,
-} from '../../../lib/hub-api';
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../../lib/hub-api';
+import { fetchRankingMap } from '../../../lib/ranking';
 
 const { locale } = Astro.params;
 
@@ -29,13 +25,13 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 }
 
 const typedLocale = locale as Locale;
-const profiles = await getProfileCache();
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 
 // Fetch all workflows from hub API
 let allTemplates: SerializedTemplate[] = [];
 try {
   const entries = await listWorkflowIndex();
-  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles));
+  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles, rankingMap));
 } catch (err) {
   console.error('Hub API failed for creators page:', err);
   // API failed — show empty page

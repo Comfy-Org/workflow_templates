@@ -7,6 +7,8 @@
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
+import { applyRanking, fetchRankingMap, type RankingMap } from './ranking';
+
 const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(
   /\/$/,
   ''
@@ -324,7 +326,8 @@ export function getCreatorsList(profiles: Map<string, HubProfile>): CreatorEntry
  */
 export function serializeIndexEntry(
   entry: HubWorkflowTemplateEntry,
-  profiles: Map<string, HubProfile>
+  profiles: Map<string, HubProfile>,
+  rankingMap?: RankingMap
 ): SerializedTemplate {
   // Prefer embedded profile, fall back to profile cache by username
   const username = entry.profile?.username || entry.username || '';
@@ -338,7 +341,7 @@ export function serializeIndexEntry(
     tags: entry.tags || [],
     models: entry.models || [],
     logos: (entry.logos || []) as { provider: string | string[] }[],
-    usage: entry.usage || 0,
+    usage: applyRanking(entry.shareId || '', entry.usage, rankingMap),
     date: entry.date || '',
     thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
     username,
@@ -368,10 +371,10 @@ export async function listRelatedWorkflows(
 ): Promise<SerializedTemplate[]> {
   try {
     const profileCache = profiles ?? (await getProfileCache());
-    const entries = await listWorkflowIndex();
+    const [entries, rankingMap] = await Promise.all([listWorkflowIndex(), fetchRankingMap()]);
     return entries
       .filter((e) => e.name !== currentName)
-      .map((e) => serializeIndexEntry(e, profileCache));
+      .map((e) => serializeIndexEntry(e, profileCache, rankingMap));
   } catch {
     // Index unavailable — caller renders the detail page without the grid.
     return [];
@@ -410,6 +413,7 @@ export function serializeCollectionEntry(
     tags: data.tags || [],
     models: data.models || [],
     logos: data.logos || [],
+    // Offline fallback: local entries have no shareId to join Algolia ranking.
     usage: data.usage || 0,
     date: data.date || '',
     thumbnails: data.thumbnails || [],
@@ -535,10 +539,10 @@ export async function loadSerializedTemplates(
     { id: string; data: Parameters<typeof serializeCollectionEntry>[0] }[]
   >
 ): Promise<SerializedTemplate[]> {
-  const profiles = await getProfileCache();
+  const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
   try {
     const entries = await listWorkflowIndex();
-    return entries.map((e) => serializeIndexEntry(e, profiles));
+    return entries.map((e) => serializeIndexEntry(e, profiles, rankingMap));
   } catch (err) {
     if (import.meta.env.PUBLIC_HUB_API_URL) {
       throw new Error(`Hub API failed during build: ${err}`);
