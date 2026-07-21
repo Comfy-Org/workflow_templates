@@ -29,6 +29,7 @@ import {
   serializeIndexEntry,
   type SerializedTemplate,
 } from '../../../lib/hub-api';
+import { fetchRankingMap } from '../../../lib/ranking';
 import { workflowOgUrl, creatorOgUrl } from '../../../lib/og-url';
 import {
   buildFaqJsonLd,
@@ -124,13 +125,13 @@ try {
 }
 
 // Fetch workflows for this creator from index
-const profiles = await getProfileCache();
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 let serialized: SerializedTemplate[] = [];
 
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
-  serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
+  serialized = filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap));
 } catch (err) {
   console.error('Hub API failed for creator grid:', err);
   // Index API failed — show empty grid
