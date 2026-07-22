@@ -1,0 +1,600 @@
+{
+  "id": "ac859c0d-0942-4e39-9252-fa689a086457",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 24,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -530,
+        -20
+      ],
+      "size": [
+        290,
+        370
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "blue_poppies_field.png",
+        "image"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "SaveText",
+      "pos": [
+        940,
+        -10
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 17
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "Kimi/K3",
+        "txt"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -640,
+        410
+      ],
+      "size": [
+        410,
+        360
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            5,
+            21,
+            23
+          ]
+        }
+      ],
+      "title": "Text (User Prompt)",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "Analyze all visual features of the image, generate standard AI art positive prompt.\nExtract subject, character pose, composition, camera angle, lighting, color palette, texture, art style, rendering type, background and details.\nArrange content in order: subject, composition & camera, lighting & color, texture & style, image quality. Separate words with commas.\nOnly output positive prompt, no extra explanations, no negative prompts."
+      ]
+    },
+    {
+      "id": 9,
+      "type": "PreviewAny",
+      "pos": [
+        300,
+        -10
+      ],
+      "size": [
+        270,
+        290
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            20
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 10,
+      "type": "1d28f9d1-7c68-4b3b-99f5-2bf7fe0615c5",
+      "pos": [
+        630,
+        -10
+      ],
+      "size": [
+        250,
+        280
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "prompt",
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 21
+        },
+        {
+          "label": "output",
+          "name": "string_b_1",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b_1"
+          },
+          "link": 20
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            17
+          ]
+        }
+      ],
+      "properties": {
+        "proxyWidgets": [
+          [
+            "6",
+            "string_b"
+          ],
+          [
+            "7",
+            "string_b"
+          ]
+        ],
+        "previewExposures": []
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 11,
+      "type": "OpenRouterLLMNode",
+      "pos": [
+        -140,
+        -10
+      ],
+      "size": [
+        400,
+        260
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 23
+        },
+        {
+          "label": "image_1",
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 22
+        },
+        {
+          "label": "image_2",
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            24
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OpenRouterLLMNode"
+      },
+      "widgets_values": [
+        "",
+        "openai/gpt-5.6-sol",
+        "off",
+        0,
+        "randomize",
+        ""
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      17,
+      10,
+      0,
+      3,
+      0,
+      "STRING"
+    ],
+    [
+      20,
+      9,
+      0,
+      10,
+      1,
+      "STRING"
+    ],
+    [
+      21,
+      5,
+      0,
+      10,
+      0,
+      "STRING"
+    ],
+    [
+      22,
+      2,
+      0,
+      11,
+      1,
+      "IMAGE"
+    ],
+    [
+      23,
+      5,
+      0,
+      11,
+      0,
+      "STRING"
+    ],
+    [
+      24,
+      11,
+      0,
+      9,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "1d28f9d1-7c68-4b3b-99f5-2bf7fe0615c5",
+        "version": 1,
+        "state": {
+          "lastGroupId": 0,
+          "lastNodeId": 11,
+          "lastLinkId": 24,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Format Output",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            492,
+            251,
+            128,
+            88
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            1630,
+            261,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "98b260aa-97cb-4c0c-a23b-c112110a86ab",
+            "name": "string_b",
+            "type": "STRING",
+            "linkIds": [
+              18
+            ],
+            "label": "prompt",
+            "pos": [
+              596,
+              275
+            ]
+          },
+          {
+            "id": "5fd17593-37c5-450a-8928-72d2971fca23",
+            "name": "string_b_1",
+            "type": "STRING",
+            "linkIds": [
+              19
+            ],
+            "label": "output",
+            "pos": [
+              596,
+              295
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "3e51d9a9-eada-4386-bd38-a856b8a32500",
+            "name": "STRING",
+            "type": "STRING",
+            "linkIds": [
+              14
+            ],
+            "localized_name": "STRING",
+            "pos": [
+              1654,
+              285
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 7,
+            "type": "StringConcatenate",
+            "pos": [
+              680,
+              30
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 19
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  9
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "\n\nOUTPUT:\n\n",
+              "",
+              ""
+            ]
+          },
+          {
+            "id": 6,
+            "type": "StringConcatenate",
+            "pos": [
+              690,
+              340
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 18
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  13
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "USER PROMPT:\n\n",
+              "",
+              ""
+            ]
+          },
+          {
+            "id": 8,
+            "type": "StringConcatenate",
+            "pos": [
+              1170,
+              30
+            ],
+            "size": [
+              400,
+              250
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "string_a",
+                "name": "string_a",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_a"
+                },
+                "link": 13
+              },
+              {
+                "localized_name": "string_b",
+                "name": "string_b",
+                "type": "STRING",
+                "widget": {
+                  "name": "string_b"
+                },
+                "link": 9
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "STRING",
+                "name": "STRING",
+                "type": "STRING",
+                "links": [
+                  14
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "StringConcatenate"
+            },
+            "widgets_values": [
+              "",
+              "",
+              ""
+            ]
+          }
+        ],
+        "groups": [],
+        "links": [
+          {
+            "id": 13,
+            "origin_id": 6,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 9,
+            "origin_id": 7,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 1,
+            "type": "STRING"
+          },
+          {
+            "id": 14,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 18,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 19,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 7,
+            "target_slot": 0,
+            "type": "STRING"
+          }
+        ],
+        "extra": {}
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7456233968369366,
+      "offset": [
+        928.7522425476466,
+        471.0668581607244
+      ]
+    },
+    "frontendVersion": "1.45.21"
+  },
+  "version": 0.4
+}
