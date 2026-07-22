@@ -8,6 +8,8 @@ import NavigationMenuTrigger from '@/components/ui/navigation-menu/NavigationMen
 import { navigationMenuTriggerStyle } from '@/components/ui/navigation-menu/navigationMenuTriggerStyle';
 import { getMainNavigation } from '@/config/main-navigation';
 import type { Locale } from '@/i18n/config';
+import { Badge } from '@/components/ui/badge';
+import { t } from '@/i18n/ui';
 import NavColumn from './NavColumn.vue';
 import NavFeaturedCard from './NavFeaturedCard.vue';
 
@@ -21,7 +23,12 @@ const mainNavigation = getMainNavigation(locale);
       <NavigationMenuItem v-for="navItem in mainNavigation" :key="navItem.label">
         <template v-if="navItem.columns?.length">
           <NavigationMenuTrigger>
-            {{ navItem.label }}
+            <span class="inline-flex items-center gap-1">
+              <p class="ppformula-text-center-sm">{{ navItem.label }}</p>
+              <Badge v-if="navItem.badge" size="xxs" variant="accent">
+                <span class="ppformula-text-center">{{ t('nav.badgeNew', locale) }}</span>
+              </Badge>
+            </span>
           </NavigationMenuTrigger>
           <NavigationMenuContent class="w-auto" data-testid="nav-dropdown">
             <ul class="flex w-max gap-16">
