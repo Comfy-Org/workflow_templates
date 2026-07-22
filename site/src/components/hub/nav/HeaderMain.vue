@@ -19,6 +19,9 @@ const {
   creators?: CreatorLink[];
 }>();
 
+/** CJK sets words solid; a Latin word gap between prefix and core reads as a typo there. */
+const ctaGap = ['zh', 'zh-TW', 'ja', 'ko'].includes(locale) ? '' : ' ';
+
 const ctaButtons = [
   {
     prefix: t('nav.ctaDesktopPrefix', locale),
@@ -74,7 +77,8 @@ const ctaButtons = [
         :class="cta.primary ? 'run-cloud-btn' : undefined"
       >
         <span class="ppformula-text-center">
-          <span class="hidden xl:inline-block">{{ cta.prefix }}&nbsp;</span>{{ cta.core }}
+          <span class="hidden whitespace-pre xl:inline-block">{{ cta.prefix }}{{ ctaGap }}</span
+          >{{ cta.core }}
         </span>
       </Button>
     </div>

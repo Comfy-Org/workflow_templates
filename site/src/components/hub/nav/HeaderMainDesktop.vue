@@ -24,7 +24,7 @@ const mainNavigation = getMainNavigation(locale);
         <template v-if="navItem.columns?.length">
           <NavigationMenuTrigger>
             <span class="inline-flex items-center gap-1">
-              <p class="ppformula-text-center-sm">{{ navItem.label }}</p>
+              <span class="ppformula-text-center-sm">{{ navItem.label }}</span>
               <Badge v-if="navItem.badge" size="xxs" variant="accent">
                 <span class="ppformula-text-center">{{ t('nav.badgeNew', locale) }}</span>
               </Badge>
