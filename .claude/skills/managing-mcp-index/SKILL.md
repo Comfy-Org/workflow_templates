@@ -24,6 +24,7 @@ npm run mcp          # Step 1: sync index.json → index.mcp.json
 npm run mcp:check    # Dry-run sync (no write)
 npm run mcp:ai       # Step 2b: AI English descriptions (stale templates only)
 npm run mcp:models   # Step 2a: AI model profiles in models_registry.json
+npm run mcp:enhance  # Step 2a + Step 2b in the required order
 npm run i18n         # Hub translations (NOT MCP — separate system)
 ```
 
@@ -50,6 +51,8 @@ templates/index.mcp.json  ◄── merge description/io from template_cache (ha
 | 2b Templates | `scripts/mcp/enhance_descriptions.py` | `template_cache.json` + merge → `index.mcp.json` |
 
 Run **2a before 2b** when both are needed. Run **sync before AI** after adding templates to `index.json`.
+Sync automatically creates complete pending registry profiles for model names introduced by new
+MCP templates. The normal `npm run sync` and release CI run MCP sync before bundle sync.
 
 ## Data Files (`scripts/data/mcp/`)
 

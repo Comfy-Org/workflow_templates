@@ -125,6 +125,7 @@ TAG_TO_CAPABILITY: dict[str, str] = {
     "ControlNet": "controlnet",
     "Upscaling": "image-upscale",
     "Image Upscale": "image-upscale",
+    "Video Upscale": "video-upscale",
     "FLF2V": "flf2v",
     "Lip Sync": "lip-sync",
     "Text to 3D": "text-to-3d",
@@ -196,12 +197,33 @@ def capabilities_from_tags(tags: list[str]) -> list[str]:
     return caps
 
 
+def _apply_name_capability_overrides(name: str, workflow: list[str]) -> list[str]:
+    """Correct misleading tag-derived capabilities using template name hints."""
+    name_l = name.lower()
+    caps = list(workflow)
+    if "image_edit" in name_l or "img_edit" in name_l:
+        if "text-to-image" in caps:
+            caps = [c for c in caps if c != "text-to-image"]
+        if "image-edit" not in caps:
+            caps.append("image-edit")
+    if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
+        if "image-upscale" in caps:
+            caps = [c for c in caps if c != "image-upscale"]
+        if "video-upscale" not in caps:
+            caps.append("video-upscale")
+    return caps
+
+
 def build_capabilities(
     tags: list[str],
     model_options: dict[str, list[str]] | None,
+    *,
+    template_name: str = "",
 ) -> dict[str, Any] | None:
     """Unified capabilities object: workflow features + optional API model dropdowns."""
     workflow = capabilities_from_tags(tags)
+    if template_name:
+        workflow = _apply_name_capability_overrides(template_name, workflow)
     if model_options and "api" not in workflow:
         workflow = ["api", *workflow]
     if not workflow and not model_options:
@@ -264,11 +286,15 @@ _HAS_VIDEO = [
 
 
 def infer_task(name: str, group_type: str, tags: list[str]) -> str:
+    name_l = name.lower()
+    if "image_edit" in name_l or "img_edit" in name_l:
+        return "Image Edit"
+    if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
+        return "Video Upscaling"
     for tag in tags:
         if tag in TAG_TO_CAPABILITY and tag not in META_TAGS:
             if tag not in ("ControlNet", "Upscaling", "Inpainting", "Outpainting"):
                 return tag
-    name_l = name.lower()
     pairs: list[tuple[list[str], str]] = [
         (["text_to_3d", "text-to-3d"], "Text to 3D"),
         (["img2_3d", "img2-3d", "image_to_3d", "image-to-3d"], "Image to 3D"),
@@ -319,10 +345,14 @@ def infer_task_type(name: str) -> str:
         return "t2v"
     if any(x in name_l for x in ["i2v", "img2vid", "img_to_vid", "image_to_video", "image-to-video", "r2v", "reference_to_video"]):
         return "i2v"
+    if "image_edit" in name_l or "img_edit" in name_l:
+        return "i2i"
     if any(x in name_l for x in ["t2i", "text_to_image", "text-to-image"]):
         return "t2i"
-    if any(x in name_l for x in ["i2i", "img_edit", "img2img"]):
+    if any(x in name_l for x in ["i2i", "img2img"]):
         return "i2i"
+    if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
+        return "video-upscale"
     if any(x in name_l for x in ["segment", "matting"]):
         return "seg"
     if "upscale" in name_l:
@@ -447,6 +477,11 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
         return _io(
             inputs=[_encode_slot("image", "Input image")],
             outputs=[_encode_slot("image", "Segmentation mask")],
+        )
+    if task_type == "video-upscale":
+        return _io(
+            inputs=[_encode_slot("video", "Input video")],
+            outputs=[_encode_slot("video", "Upscaled video")],
         )
     if task_type == "upscale":
         return _io(
@@ -610,7 +645,7 @@ def build_template_entry(
     if len(api_model_nodes) > 1:
         multi_api_skips.append((name, api_model_nodes))
         model_options = None
-    capabilities = build_capabilities(tags, model_options)
+    capabilities = build_capabilities(tags, model_options, template_name=name)
 
     usage = tpl.get("usage", 0)
     node_types = scan_workflow_nodes(name)
@@ -740,6 +775,31 @@ def sync(
     return new_data, added, removed, warnings, skipped_local, multi_api_skips
 
 
+def missing_registry_models(mcp_data: list[dict]) -> list[str]:
+    """Return model names used by MCP templates but absent from the registry."""
+    used = {
+        str(template.get("model", "")).strip()
+        for group in mcp_data
+        for template in group.get("templates", [])
+        if str(template.get("model", "")).strip()
+    }
+    return sorted(used - set(MODELS_REGISTRY), key=str.casefold)
+
+
+def add_registry_placeholders(model_names: list[str]) -> None:
+    """Seed complete profiles so mcp:models can enrich newly discovered models."""
+    if not model_names:
+        return
+    registry = dict(MODELS_REGISTRY)
+    for model_name in model_names:
+        registry[model_name] = {
+            "summary": "Pending model-specific profile.",
+            "strengths": [],
+            "capabilities": [],
+        }
+    MODELS_REGISTRY_FILE.write_text(dumps_compact_arrays(registry), encoding="utf-8")
+
+
 def _print_multi_api_skips(multi_api_skips: list[tuple[str, list[str]]]) -> None:
     if not multi_api_skips:
         return
@@ -776,6 +836,7 @@ def main() -> None:
         log_lines.append(scan_msg)
 
     new_data, added, removed, warnings, skipped_local, multi_api_skips = sync(node_index)
+    new_models = missing_registry_models(new_data)
     total = sum(len(g.get("templates", [])) for g in new_data)
 
     if multi_api_skips:
@@ -794,6 +855,7 @@ def main() -> None:
         print(f"  Added:   {len(added)}")
         print(f"  Removed: {len(removed)}")
         print(f"  Skipped (local-only): {len(skipped_local)}")
+        print(f"  New registry models: {len(new_models)}")
         if added:
             for n in added:
                 print(f"    + {n}")
@@ -805,6 +867,9 @@ def main() -> None:
                 print(f"    ~ {n}")
             if len(skipped_local) > 10:
                 print(f"    ... and {len(skipped_local) - 10} more")
+        if new_models:
+            for model_name in new_models:
+                print(f"    + model: {model_name}")
         if warnings:
             for w in warnings:
                 print(f"    ! {w}")
@@ -813,6 +878,7 @@ def main() -> None:
         return
 
     OUTPUT_FILE.write_text(dumps_compact_arrays(new_data), encoding="utf-8")
+    add_registry_placeholders(new_models)
 
     print(f"Written: {OUTPUT_FILE}")
     print(f"   Total: {total} templates in {len(new_data)} groups")
@@ -826,6 +892,10 @@ def main() -> None:
             print(f"     - {n}")
     if skipped_local:
         print(f"   Skipped local-only: {len(skipped_local)}")
+    if new_models:
+        print(f"   Added registry placeholders: {len(new_models)}")
+        for model_name in new_models:
+            print(f"     + {model_name}")
     if warnings:
         print(f"   Warnings: {len(warnings)}")
         for w in warnings:

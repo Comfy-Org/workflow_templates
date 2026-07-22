@@ -76,6 +76,10 @@ jobs:
 
       - name: Sync manifests and bundles (first)
         run: |
+          echo "=== Syncing MCP template index and model registry ==="
+          python3 scripts/mcp/sync_index.py --no-scan
+          echo "✅ MCP index sync complete"
+
           echo "=== Validating bundles.json and syncing manifests ==="
           # This step validates that all templates are assigned to bundles
           # and generates updated manifest files with SHA256 hashes
@@ -299,7 +303,8 @@ jobs:
           # Stage all potential changes from version bumps and manifest sync.
           # The PyPI quota check writes its working cache under .github/cache/,
           # which is git-ignored and never staged.
-          git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json
+          git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
+            templates/index.mcp.json scripts/data/mcp/models_registry.json
 
           # Only commit when root pyproject.toml version was changed (i.e. auto-bump ran).
           # When version unchanged, ci_version_manager.py skips bump and we skip committing
