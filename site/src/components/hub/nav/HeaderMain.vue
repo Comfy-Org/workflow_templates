@@ -19,8 +19,8 @@ const {
   creators?: CreatorLink[];
 }>();
 
-/** CJK sets words solid; a Latin word gap between prefix and core reads as a typo there. */
-const ctaGap = ['zh', 'zh-TW', 'ja', 'ko'].includes(locale) ? '' : ' ';
+/** Chinese sets solid, so a Latin gap reads as a typo. Korean and Japanese keep theirs. */
+const ctaGap = locale === 'zh' || locale === 'zh-TW' ? '' : '\u00a0';
 
 const ctaButtons = [
   {
