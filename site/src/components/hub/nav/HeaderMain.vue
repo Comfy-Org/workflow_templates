@@ -19,22 +19,17 @@ const {
   creators?: CreatorLink[];
 }>();
 
-/** Split "DOWNLOAD DESKTOP" → { prefix: "DOWNLOAD", core: "DESKTOP" } for the reveal animation. */
-function splitLabel(label: string): { prefix: string; core: string } {
-  const lastSpace = label.lastIndexOf(' ');
-  if (lastSpace === -1) return { prefix: '', core: label };
-  return { prefix: label.slice(0, lastSpace), core: label.slice(lastSpace + 1) };
-}
-
 const ctaButtons = [
   {
-    ...splitLabel(t('nav.downloadLocal', locale)),
+    prefix: t('nav.ctaDesktopPrefix', locale),
+    core: t('nav.ctaDesktopCore', locale),
     ariaLabel: t('nav.downloadLocal', locale),
     href: navRoutes.download,
     primary: false,
   },
   {
-    ...splitLabel(t('nav.launchCloud', locale)),
+    prefix: t('nav.ctaCloudPrefix', locale),
+    core: t('nav.ctaCloudCore', locale),
     ariaLabel: t('nav.launchCloud', locale),
     href: getCloudLandingUrl('site_button'),
     primary: true,
