@@ -120,6 +120,16 @@ python3 scripts/mcp/enhance_descriptions.py
 
 Run **2a before 2b**. After adding new templates to `index.json`, run sync then enhance — only uncached entries are sent to the AI.
 
+Step 1 also discovers model names used by MCP templates. Missing names are added to
+`models_registry.json` with a complete pending profile (`summary`, `strengths`, and
+`capabilities`), so Step 2a can enrich them without manual JSON setup. `--check` only reports
+the missing names and never writes them.
+
+The normal `npm run sync` release preparation now runs MCP sync before bundle sync. Release CI
+does the same, which prevents newly published templates from being omitted from the packaged MCP
+index. AI enhancement remains an explicit `npm run mcp:enhance` step because CI releases must not
+depend on an AI credential.
+
 ## Step 2 input context
 
 ### Model profiles (`enhance_models_registry.py`)
