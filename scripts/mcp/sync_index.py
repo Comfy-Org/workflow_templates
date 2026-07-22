@@ -290,7 +290,7 @@ def infer_task(name: str, group_type: str, tags: list[str]) -> str:
     if "image_edit" in name_l or "img_edit" in name_l:
         return "Image Edit"
     if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
-        return "Video Upscaling"
+        return "Video Upscale"
     for tag in tags:
         if tag in TAG_TO_CAPABILITY and tag not in META_TAGS:
             if tag not in ("ControlNet", "Upscaling", "Inpainting", "Outpainting"):
@@ -663,7 +663,7 @@ def build_template_entry(
 
     entry = {
         "name": name,
-        "title": tpl.get("title", name),
+        "title": str(tpl.get("title", name)).strip(),
         "task": task,
         "model": model,
         "freshness": freshness,
