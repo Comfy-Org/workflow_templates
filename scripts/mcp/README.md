@@ -36,7 +36,12 @@ npm run mcp:check
 npm run mcp
 npm run mcp:models    # optional: model profiles first
 npm run mcp:ai        # stale templates only
+npm run mcp:enhance   # run both AI steps in the required order
 ```
+
+`npm run mcp` automatically seeds complete pending entries in `models_registry.json` for model
+names introduced by new templates. The regular `npm run sync` and release workflows run MCP sync
+before copying bundle assets, so `index.mcp.json` stays part of the normal publishing path.
 
 Or via Python: `python3 scripts/mcp/sync_index.py`, etc. Full guide: [`docs/MCP_AI_ENHANCEMENT.md`](docs/MCP_AI_ENHANCEMENT.md).
 

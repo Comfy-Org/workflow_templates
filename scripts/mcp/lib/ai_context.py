@@ -22,6 +22,29 @@ PENDING_SUMMARY_MARKERS = (
     "placeholder for utility",
 )
 
+# Non-canonical capability slugs emitted by AI → registry vocabulary.
+CAPABILITY_SLUG_ALIASES: dict[str, str] = {
+    "image-editing": "image-edit",
+    "video-editing": "video-edit",
+    "image-upscaling": "image-upscale",
+    "video-upscaling": "video-upscale",
+}
+
+
+def normalize_capability_slugs(capabilities: list[str]) -> list[str]:
+    """Normalize model-registry capability slugs to the canonical kebab-case set."""
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in capabilities:
+        slug = str(item).strip().lower().replace(" ", "-")
+        if not slug:
+            continue
+        slug = CAPABILITY_SLUG_ALIASES.get(slug, slug)
+        if slug not in seen:
+            seen.add(slug)
+            normalized.append(slug)
+    return normalized
+
 
 def load_registry_aliases() -> dict[str, str]:
     """Map alternate model names → canonical models_registry.json keys."""
