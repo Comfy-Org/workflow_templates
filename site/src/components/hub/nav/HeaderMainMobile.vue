@@ -18,6 +18,7 @@ import { localizeUrl } from '@/i18n/utils';
 import type { Locale } from '@/i18n/config';
 import { t } from '@/i18n/ui';
 import type { CreatorLink } from './types';
+import { Badge } from '@/components/ui/badge';
 import NavLinkContent from './NavLinkContent.vue';
 
 const { locale = 'en', creators = [] } = defineProps<{
@@ -65,7 +66,7 @@ onUnmounted(() => {
       >
         <SheetHeader class="sr-only">
           <SheetTitle>{{ t('nav.menu', locale) }}</SheetTitle>
-          <SheetDescription>{{ t('nav.menu', locale) }}</SheetDescription>
+          <SheetDescription>{{ t('nav.mobileMenuDescription', locale) }}</SheetDescription>
         </SheetHeader>
 
         <a
@@ -92,7 +93,12 @@ onUnmounted(() => {
                   :href="item.columns ? undefined : item.href"
                   @click="item.columns && (activeSection = item.label)"
                 >
-                  {{ item.label }}
+                  <span class="inline-flex items-center gap-2">
+                    <span class="ppformula-text-center">{{ item.label }}</span>
+                    <Badge v-if="item.badge" size="xxs" variant="accent">
+                      <span class="ppformula-text-center">{{ t('nav.badgeNew', locale) }}</span>
+                    </Badge>
+                  </span>
                   <ChevronRight class="size-7" />
                 </Button>
               </li>

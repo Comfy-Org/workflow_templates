@@ -26,19 +26,20 @@ export type NavFeatured = {
 };
 
 export type NavItem =
-  | { label: string; columns: NavColumn[]; featured?: NavFeatured; href?: never }
-  | { label: string; href: string; columns?: never; featured?: never };
+  | { label: string; columns: NavColumn[]; featured?: NavFeatured; badge?: 'new'; href?: never }
+  | { label: string; href: string; badge?: 'new'; columns?: never; featured?: never };
 
 export function getMainNavigation(locale: Locale): NavItem[] {
   return [
     {
       label: t('nav.products', locale),
+      badge: 'new',
       featured: {
         imageSrc: navFeatured.products.image,
         imageAlt: t('nav.featuredProductsAlt', locale),
         title: t('nav.featuredProductsTitle', locale),
         cta: {
-          label: t('cta.tryWorkflow', locale),
+          label: t('cta.getStarted', locale),
           ariaLabel: t('nav.featuredProductsCtaAria', locale),
           href: navFeatured.products.cta,
         },
@@ -55,13 +56,19 @@ export function getMainNavigation(locale: Locale): NavItem[] {
         },
         {
           header: t('nav.colFeatures', locale),
-          items: [{ label: t('nav.docs', locale), href: navExternalLinks.docs, external: true }],
+          items: [
+            { label: t('nav.mcpServer', locale), href: navRoutes.mcp, badge: 'new' },
+            { label: t('nav.launches', locale), href: navRoutes.launches, badge: 'new' },
+            { label: t('nav.supportedModels', locale), href: navRoutes.models },
+            { label: t('nav.docs', locale), href: navExternalLinks.docs, external: true },
+          ],
         },
       ],
     },
     { label: t('nav.pricing', locale), href: navRoutes.cloudPricing },
     {
       label: t('nav.community', locale),
+      badge: 'new',
       featured: {
         imageSrc: navFeatured.community.image,
         imageAlt: t('nav.featuredCommunityAlt', locale),

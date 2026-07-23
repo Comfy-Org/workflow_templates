@@ -19,22 +19,20 @@ const {
   creators?: CreatorLink[];
 }>();
 
-/** Split "DOWNLOAD DESKTOP" → { prefix: "DOWNLOAD", core: "DESKTOP" } for the reveal animation. */
-function splitLabel(label: string): { prefix: string; core: string } {
-  const lastSpace = label.lastIndexOf(' ');
-  if (lastSpace === -1) return { prefix: '', core: label };
-  return { prefix: label.slice(0, lastSpace), core: label.slice(lastSpace + 1) };
-}
+/** Chinese sets solid, so a Latin gap reads as a typo. Korean and Japanese keep theirs. */
+const ctaGap = locale === 'zh' || locale === 'zh-TW' ? '' : '\u00a0';
 
 const ctaButtons = [
   {
-    ...splitLabel(t('nav.downloadLocal', locale)),
+    prefix: t('nav.ctaDesktopPrefix', locale),
+    core: t('nav.ctaDesktopCore', locale),
     ariaLabel: t('nav.downloadLocal', locale),
     href: navRoutes.download,
     primary: false,
   },
   {
-    ...splitLabel(t('nav.launchCloud', locale)),
+    prefix: t('nav.ctaCloudPrefix', locale),
+    core: t('nav.ctaCloudCore', locale),
     ariaLabel: t('nav.launchCloud', locale),
     href: getCloudLandingUrl('site_button'),
     primary: true,
@@ -79,7 +77,8 @@ const ctaButtons = [
         :class="cta.primary ? 'run-cloud-btn' : undefined"
       >
         <span class="ppformula-text-center">
-          <span class="hidden xl:inline-block">{{ cta.prefix }}&nbsp;</span>{{ cta.core }}
+          <span class="hidden whitespace-pre xl:inline-block">{{ cta.prefix }}{{ ctaGap }}</span
+          >{{ cta.core }}
         </span>
       </Button>
     </div>
