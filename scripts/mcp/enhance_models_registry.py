@@ -38,6 +38,7 @@ from ai_context import (  # noqa: E402
     load_json,
     load_mcp_data,
     model_template_usage,
+    normalize_capability_slugs,
     registry_needs_update,
 )
 from json_format import dumps_compact_arrays  # noqa: E402
@@ -92,11 +93,9 @@ def normalize_profile(raw: Any) -> dict[str, Any]:
         for item in raw.get("strengths", [])
         if str(item).strip()
     ][:MAX_STRENGTHS]
-    capabilities = [
-        str(item).strip().lower().replace(" ", "-")
-        for item in raw.get("capabilities", [])
-        if str(item).strip()
-    ][:MAX_CAPABILITIES]
+    capabilities = normalize_capability_slugs(
+        [str(item) for item in raw.get("capabilities", []) if str(item).strip()]
+    )[:MAX_CAPABILITIES]
     if not summary:
         raise ValueError("Missing summary in AI response")
     return {

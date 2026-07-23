@@ -6,12 +6,25 @@ version churn on every template-only PR.
 
 Frozen legacy media packages: scripts/docs/frozen_bundles.md
 """
+import argparse
 import json
 import re
 import subprocess
 import sys
 from pathlib import Path
 from typing import Set, List, Optional
+
+ALL_PACKAGE_IDS = (
+    "core",
+    "json",
+    "media_api",
+    "media_video",
+    "media_image",
+    "media_other",
+    "media_assets_01",
+    "blueprints",
+    "meta",
+)
 
 _LIB_DIR = Path(__file__).resolve().parent.parent / "lib"
 if str(_LIB_DIR) not in sys.path:
@@ -110,26 +123,96 @@ def get_frozen_packages() -> Set[str]:
         return set()
 
 
+AUTO_BUMP_COMMIT_PREFIXES = ("Auto-bump package versions", "chore: bump version")
+
+_auto_bump_only_files_cache: dict[str, set[str]] = {}
+
+
+def get_merge_base() -> str:
+    """Merge-base of HEAD with the default branch (origin/main or main)."""
+    try:
+        return run_git(["merge-base", "HEAD", "origin/main"])
+    except subprocess.CalledProcessError:
+        return run_git(["merge-base", "HEAD", "main"])
+
+
 def root_version_changed() -> bool:
     """
     Return True if the root pyproject.toml version was changed compared to the
     merge-base with the default branch (origin/main). Only then do we run auto-bump.
     """
     try:
-        base = run_git(["merge-base", "HEAD", "origin/main"])
-    except subprocess.CalledProcessError:
-        try:
-            base = run_git(["merge-base", "HEAD", "main"])
-        except subprocess.CalledProcessError:
-            return True  # fallback: allow bump when merge-base unavailable
-    try:
-        current = get_current_version("meta")
-        base_content = run_git(["show", f"{base}:pyproject.toml"])
-        match = re.search(r'^version\s*=\s*"([^"]+)"', base_content, re.MULTILINE)
-        base_version = match.group(1) if match else ""
-        return current != base_version
+        base = get_merge_base()
+        return get_current_version("meta") != get_version_at_ref("meta", base)
     except Exception:
         return True  # fallback: allow bump on parse/git errors
+
+
+def _pyproject_path(pkg: str) -> str:
+    if pkg == "meta":
+        return "pyproject.toml"
+    return f"packages/{pkg}/pyproject.toml"
+
+
+def get_version_at_ref(pkg: str, ref: str) -> str:
+    """Read a package version from pyproject.toml at a git ref."""
+    try:
+        content = run_git(["show", f"{ref}:{_pyproject_path(pkg)}"])
+        match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
+        return match.group(1) if match else "0.0.0"
+    except Exception:
+        return "0.0.0"
+
+
+def find_version_intro_commit_on_branch(pkg: str, current_version: str, merge_base: str) -> str:
+    """Find where current_version was introduced on this branch (merge_base..HEAD only)."""
+    file_path = _pyproject_path(pkg)
+    try:
+        log_output = run_git(["log", f"{merge_base}..HEAD", "--format=%H", "--", file_path])
+        for commit_hash in log_output.splitlines():
+            commit_hash = commit_hash.strip()
+            if not commit_hash:
+                continue
+            try:
+                if get_version_at_ref(pkg, commit_hash) == current_version:
+                    return commit_hash
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return merge_base
+
+
+def get_since_commit_for_package(pkg: str, merge_base: str) -> str:
+    """Reference commit for change detection: main merge-base, or last bump on this branch."""
+    current = get_current_version(pkg)
+    base_version = get_version_at_ref(pkg, merge_base)
+    if current != base_version:
+        return find_version_intro_commit_on_branch(pkg, current, merge_base)
+    return merge_base
+
+
+def _auto_bump_only_files(since_commit: str) -> set[str]:
+    """Files whose newest change in since_commit..HEAD came from a CI auto-bump commit."""
+    if since_commit in _auto_bump_only_files_cache:
+        return _auto_bump_only_files_cache[since_commit]
+
+    skipped: set[str] = set()
+    try:
+        output = run_git(["log", f"{since_commit}..HEAD", "--format=COMMIT:%s", "--name-only"])
+        current_msg = ""
+        for line in output.splitlines():
+            if line.startswith("COMMIT:"):
+                current_msg = line[7:]
+            elif line.strip() and line not in skipped:
+                if any(current_msg.startswith(prefix) for prefix in AUTO_BUMP_COMMIT_PREFIXES):
+                    skipped.add(line)
+    except Exception:
+        pass
+
+    _auto_bump_only_files_cache[since_commit] = skipped
+    return skipped
+
 
 def get_current_version(pkg: str) -> str:
     """Get current version of a package from its pyproject.toml"""
@@ -145,43 +228,6 @@ def get_current_version(pkg: str) -> str:
     match = re.search(r'^version\s*=\s*"([^"]+)"', text, re.MULTILINE)
     return match.group(1) if match else "0.0.0"
 
-def find_last_version_bump_commit(pkg: str, current_version: str) -> str:
-    """Find the commit where this package's version was last bumped to current_version"""
-    if pkg == "meta":
-        file_path = "pyproject.toml"
-    else:
-        file_path = f"packages/{pkg}/pyproject.toml"
-    
-    try:
-        # Get commit history for the pyproject.toml file
-        log_output = run_git(["log", "--oneline", "--follow", "--", file_path])
-        
-        for line in log_output.split('\n'):
-            if not line.strip():
-                continue
-            commit_hash = line.split()[0]
-            
-            # Check version in this commit
-            try:
-                old_content = run_git(["show", f"{commit_hash}:{file_path}"])
-                old_version_match = re.search(r'^version\s*=\s*"([^"]+)"', old_content, re.MULTILINE)
-                if old_version_match:
-                    old_version = old_version_match.group(1)
-                    if old_version == current_version:
-                        # This is where this version was introduced
-                        return commit_hash
-            except:
-                continue
-        
-        # Fallback: if we can't find the exact version bump, use HEAD~10 or first commit
-        try:
-            return run_git(["rev-list", "--max-count=1", "HEAD~10"])
-        except:
-            return run_git(["rev-list", "--max-count=1", "HEAD"])
-            
-    except:
-        # Ultimate fallback
-        return "HEAD~1"
 
 def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     """Get files that affect a specific package since the given commit, excluding CI auto-commits"""
@@ -200,29 +246,25 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
         
         # Combine committed and unstaged changes
         all_changed_files = committed_files | unstaged_set
-        
+
+        auto_bump_files = _auto_bump_only_files(since_commit)
+
         # Filter out files from CI auto-commits by checking commit messages
         affecting_files = []
         for file in all_changed_files:
             file = file.strip()
             if not file:
                 continue
-                
+
             # For unstaged files, skip the commit check and include them directly
             # (they are new changes from sync_bundles.py that haven't been committed yet)
             if file in unstaged_set:
                 affecting_files.append(file)
                 continue
-                
-            # For committed files, check if they were modified by CI auto-commits
-            try:
-                last_commit = run_git(["log", "-1", "--format=%s", f"{since_commit}..HEAD", "--", file]).strip()
-                # Skip files that were last modified by CI auto-commits
-                if last_commit.startswith("Auto-bump package versions") or last_commit.startswith("chore: bump version"):
-                    continue
-            except:
-                pass  # If we can't get commit info, include the file
-                
+
+            if file in auto_bump_files:
+                continue
+
             affecting_files.append(file)
         
         # Filter to only files that affect this package
@@ -305,26 +347,27 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     except:
         return []
 
+def get_publish_package_ids(base_ref: str) -> Set[str]:
+    """Packages whose version differs from base_ref (candidates for PyPI publish)."""
+    return {
+        pkg
+        for pkg in ALL_PACKAGE_IDS
+        if get_current_version(pkg) != get_version_at_ref(pkg, base_ref)
+    }
+
+
 def get_changed_packages() -> Set[str]:
-    """Determine which packages need version bumps based on changes since their last version bump"""
+    """Determine which packages need version bumps based on changes vs main merge-base."""
     try:
-        packages = [
-            "core",
-            "json",
-            "media_api",
-            "media_video",
-            "media_image",
-            "media_other",
-            "media_assets_01",
-            "blueprints",
-            "meta",
-        ]
+        packages = list(ALL_PACKAGE_IDS)
         affected = set()
+        merge_base = get_merge_base()
+        print(f"Comparing changes since merge-base with main: {merge_base[:12]}")
 
         for pkg in packages:
             current_version = get_current_version(pkg)
-            last_bump_commit = find_last_version_bump_commit(pkg, current_version)
-            affecting_files = get_files_affecting_package(pkg, last_bump_commit)
+            since_commit = get_since_commit_for_package(pkg, merge_base)
+            affecting_files = get_files_affecting_package(pkg, since_commit)
 
             if affecting_files:
                 affected.add(pkg)
@@ -382,10 +425,11 @@ def _blocked_frozen_media_updates(affected: Set[str]) -> Set[str]:
 
     bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
     blocked: Set[str] = set()
+    merge_base = get_merge_base()
     for pkg in sorted(affected & frozen):
         current_version = get_current_version(pkg)
-        last_bump_commit = find_last_version_bump_commit(pkg, current_version)
-        for file in get_files_affecting_package(pkg, last_bump_commit):
+        since_commit = get_since_commit_for_package(pkg, merge_base)
+        for file in get_files_affecting_package(pkg, since_commit):
             if not file.startswith("templates/"):
                 continue
             if _is_json_template_path(file):
@@ -475,24 +519,51 @@ def update_dependencies() -> None:
         
         Path(meta_path).write_text(text)
 
-if __name__ == "__main__":
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--list-publish-packages",
+        action="store_true",
+        help="Print package ids whose version differs from --base-ref (comma-separated, no bump)",
+    )
+    parser.add_argument(
+        "--base-ref",
+        help="Git ref to compare versions against (default: merge-base with origin/main)",
+    )
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = _parse_args()
+
+    if args.list_publish_packages:
+        base_ref = args.base_ref or get_merge_base()
+        publish_ids = get_publish_package_ids(base_ref)
+        print(",".join(sorted(publish_ids)))
+        return 0
+
     if not root_version_changed():
         print("Root pyproject.toml version unchanged; skipping auto-bump.")
         print("")
-        exit(0)
+        return 0
 
     packages = get_changed_packages()
     print(f"Detected changed packages: {sorted(packages)}")
-    
+
     non_meta_packages = packages - {"meta"}
-    
+
     if non_meta_packages:
         bump_versions(packages)
         update_dependencies()
         print(f"Auto-bumped packages and updated dependencies: {sorted(non_meta_packages)}")
-        
+
     # Output all packages that need building (including meta if changed)
     if packages:
         print(" ".join(sorted(packages)))
     else:
         print("")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

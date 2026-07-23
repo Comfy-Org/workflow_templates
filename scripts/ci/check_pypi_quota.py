@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import urllib.error
 import urllib.request
@@ -162,6 +163,37 @@ def discover_packages() -> list[PackageSpec]:
     return list(by_name.values())
 
 
+def parse_package_ids(raw: str | None) -> set[str] | None:
+    if not raw or not raw.strip():
+        return None
+    return {part.strip() for part in raw.replace(" ", ",").split(",") if part.strip()}
+
+
+def resolve_release_package_ids(base_ref: str | None = None) -> set[str]:
+    """Packages whose version differs from base_ref (via ci_version_manager)."""
+    cmd = [sys.executable, str(ROOT / "scripts" / "ci" / "ci_version_manager.py"), "--list-publish-packages"]
+    if base_ref:
+        cmd.extend(["--base-ref", base_ref])
+    try:
+        output = subprocess.check_output(cmd, cwd=ROOT, text=True, stderr=subprocess.DEVNULL).strip()
+    except subprocess.CalledProcessError:
+        return set()
+    return parse_package_ids(output) or set()
+
+
+def filter_package_specs(specs: list[PackageSpec], package_ids: set[str] | None) -> list[PackageSpec]:
+    if not package_ids:
+        return specs
+    filtered = [spec for spec in specs if spec.package_id in package_ids]
+    missing = package_ids - {spec.package_id for spec in filtered}
+    if missing:
+        print(
+            f"Warning: unknown package id(s) ignored: {', '.join(sorted(missing))}",
+            file=sys.stderr,
+        )
+    return filtered
+
+
 def fetch_pypi_release_stats(pypi_name: str) -> tuple[str | None, int, int, int, bool]:
     url = f"https://pypi.org/pypi/{pypi_name}/json"
     try:
@@ -232,7 +264,7 @@ def format_bytes(num: int) -> str:
     return f"{num} B"
 
 
-def run_checks() -> tuple[list[QuotaResult], dict]:
+def run_checks(package_ids: set[str] | None = None) -> tuple[list[QuotaResult], dict]:
     config = load_config()
     quota_gb = float(config.get("project_quota_gb", 10))
     quota_bytes = int(quota_gb * 1024**3)
@@ -243,8 +275,15 @@ def run_checks() -> tuple[list[QuotaResult], dict]:
     per_file_crit = float(config.get("per_file_critical_mb", 95))
     per_file_limit = float(config.get("per_file_limit_mb", 100))
 
+    specs = filter_package_specs(discover_packages(), package_ids)
+    if package_ids:
+        print(
+            f"Checking {len(specs)} package(s): {', '.join(sorted(package_ids))}",
+            file=sys.stderr,
+        )
+
     results: list[QuotaResult] = []
-    for spec in discover_packages():
+    for spec in specs:
         latest, version_count, file_count, total_bytes, missing = fetch_pypi_release_stats(spec.pypi_name)
         if missing:
             quota_status = "MISSING"
@@ -574,10 +613,35 @@ def main() -> int:
         type=Path,
         help="Local ComfyUI clone (overrides COMFYUI_REPO_PATH)",
     )
+    parser.add_argument(
+        "--packages",
+        help="Comma-separated package ids to check (e.g. core,json,meta). Default: all packages.",
+    )
+    parser.add_argument(
+        "--release-packages",
+        action="store_true",
+        help="Only check packages whose version differs from --base-ref (or merge-base on PRs).",
+    )
+    parser.add_argument(
+        "--base-ref",
+        help="Git ref for --release-packages (default: merge-base with origin/main). "
+        "Use HEAD~1 on main after a version-bump merge.",
+    )
     args = parser.parse_args()
 
+    package_ids = parse_package_ids(args.packages)
+    if args.release_packages:
+        release_ids = resolve_release_package_ids(args.base_ref)
+        if not release_ids:
+            print("No release package version changes detected; skipping quota check.", file=sys.stderr)
+            return 0
+        package_ids = release_ids if package_ids is None else (package_ids & release_ids)
+        if not package_ids:
+            print("No packages matched the requested release filter; skipping quota check.", file=sys.stderr)
+            return 0
+
     config = load_config()
-    results, meta = run_checks()
+    results, meta = run_checks(package_ids)
 
     ref_cfg = config.get("comfyui_reference_check") or {}
     if args.no_comfyui_ref:

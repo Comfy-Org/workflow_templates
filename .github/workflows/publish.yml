@@ -164,12 +164,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 2
           sparse-checkout: |
             .github/pypi-packages.json
             pyproject.toml
             packages/
             scripts/ci/check_pypi_quota.py
+            scripts/ci/ci_version_manager.py
             scripts/ci/comfyui_reference.py
+            scripts/lib/paths.py
+            scripts/lib/version_policy.py
+            scripts/data/version_policy.json
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -183,6 +188,8 @@ jobs:
         run: |
           echo "=== Pre-publish PyPI quota gate ==="
           python scripts/ci/check_pypi_quota.py \
+            --release-packages \
+            --base-ref HEAD~1 \
             --comfyui-ref \
             --fail-on-critical \
             --github-summary \
@@ -350,6 +357,8 @@ jobs:
         if: needs.check-pr-label.outputs.should-publish == 'true'
         run: |
           source .venv/bin/activate
+          echo "=== Syncing MCP template index and model registry ==="
+          python3 scripts/mcp/sync_index.py --no-scan
           echo "=== Syncing manifests and bundle assets ==="
           python scripts/sync/sync_bundles.py
           echo "✅ Manifest and bundle sync complete"
