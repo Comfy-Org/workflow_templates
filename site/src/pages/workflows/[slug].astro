@@ -17,6 +17,7 @@ import { absoluteUrl } from '../../config/site';
 import {
   listWorkflowIndex,
   listRelatedWorkflows,
+  byUsageDesc,
   type HubWorkflowTemplateEntry,
   type SerializedTemplate,
 } from '../../lib/hub-api';
@@ -153,6 +154,9 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
 });
 
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
+// Embed only the top-30 by usage for instant paint; the grid lazy-loads the full
+// catalog from grid.json (see WorkflowGrid `lazyFull`) so the page HTML stays small.
+const relatedPreview = [...relatedTemplates].sort(byUsageDesc).slice(0, 30);
 const toolbarLabels = buildToolbarLabels(locale);
 ---
 
@@ -180,7 +184,9 @@ const toolbarLabels = buildToolbarLabels(locale);
           </a>
           <WorkflowGrid
             client:visible
-            templates={relatedTemplates}
+            templates={relatedPreview}
+            lazyFull
+            excludeName={data.name}
             locale={locale}
             toolbarLabels={toolbarLabels}
             gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"

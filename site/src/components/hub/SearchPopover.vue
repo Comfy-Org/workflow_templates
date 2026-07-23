@@ -15,42 +15,51 @@ import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useHubStore, type FilterBadge } from '@/composables/useHubStore';
 import { search as searchIndex, type SearchResults } from '@/lib/search';
+import { loadCatalog, type GridTemplate } from '@/lib/catalog';
+import type { DiscoveryWorkflow, DiscoveryCreator, DiscoveryFacet } from '@/lib/search-discovery';
 import { Badge } from '@/components/ui/badge';
 import { Avatar } from '@/components/ui/avatar';
 import { IconApps, IconWorkflow } from '@/components/ui/icons';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
-import type { MediaType, CreatorEntry } from '@/lib/hub-api';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { workflowDetailPath, workflowDetailSlug, thumbnailPath, creatorPath } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
-export interface SearchTemplate {
-  name: string;
-  shareId: string;
-  title: string;
-  description: string;
-  mediaType: MediaType;
-  tags: string[];
-  models: string[];
-  logos: { provider: string | string[] }[];
-  usage: number;
-  date: string;
-  thumbnails: string[];
-  username: string;
-  creatorDisplayName: string;
-  creatorAvatarUrl: string;
-  isApp: boolean;
-}
-
+/**
+ * Discovery data is precomputed server-side (small); the full catalog is
+ * lazy-loaded only when a filter badge is applied. See src/lib/search-discovery.ts
+ * and src/lib/catalog.ts.
+ */
 const props = defineProps<{
-  templates: SearchTemplate[];
-  creators: CreatorEntry[];
+  popular: DiscoveryWorkflow[];
+  creators: DiscoveryCreator[];
+  facets: { tags: DiscoveryFacet[]; models: DiscoveryFacet[] };
+  totalCount: number;
   locale: string;
 }>();
 
 const store = useHubStore();
+
+// Full catalog for badge-only filtering — loaded on first badge, then cached.
+const catalog = ref<GridTemplate[]>([]);
+const catalogLoaded = ref(false);
+let catalogRequested = false;
+
+function ensureCatalog() {
+  if (catalogRequested) return;
+  catalogRequested = true;
+  loadCatalog()
+    .then((entries) => {
+      catalog.value = entries;
+      catalogLoaded.value = true;
+    })
+    .catch((err) => {
+      console.error('Failed to load catalog for filtering:', err);
+      catalogRequested = false; // allow retry on the next badge
+    });
+}
 
 const isOpen = ref(false);
 const searchQuery = ref('');
@@ -66,6 +75,16 @@ const hasQuery = computed(() => searchQuery.value.trim().length > 0);
 const hasBadges = computed(() => store.filterBadges.value.length > 0);
 const hasActiveFilters = computed(() => hasQuery.value || hasBadges.value);
 
+// Badge filtering runs over the full catalog — load it as soon as a badge is
+// applied (or a badge-scoped text search begins), then reuse the cache.
+watch(
+  hasBadges,
+  (active) => {
+    if (active) ensureCatalog();
+  },
+  { immediate: true }
+);
+
 const MAX_BADGES_DESKTOP = 4;
 const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MAX_BADGES_DESKTOP));
 const overflowCountDesktop = computed(() =>
@@ -76,29 +95,9 @@ function serializeFilters(badges: FilterBadge[]): string[] {
   return badges.map((badge) => `${badge.type}:${badge.value}`);
 }
 
-const allTags = computed(() => {
-  const counts = new Map<string, number>();
-  for (const tmpl of props.templates) {
-    for (const tag of tmpl.tags) {
-      counts.set(tag, (counts.get(tag) || 0) + 1);
-    }
-  }
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({ name, count }));
-});
-
-const allModels = computed(() => {
-  const counts = new Map<string, number>();
-  for (const tmpl of props.templates) {
-    for (const m of tmpl.models) {
-      counts.set(m, (counts.get(m) || 0) + 1);
-    }
-  }
-  return Array.from(counts.entries())
-    .sort((a, b) => b[1] - a[1])
-    .map(([name, count]) => ({ name, count }));
-});
+// Facet lists are precomputed server-side (small); see search-discovery.ts.
+const allTags = computed(() => props.facets.tags);
+const allModels = computed(() => props.facets.models);
 
 const filterSuggestions = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
@@ -132,7 +131,7 @@ const hasFilterSuggestions = computed(() => {
 });
 
 const badgeFilteredTemplates = computed(() => {
-  if (!hasBadges.value) return props.templates;
+  if (!hasBadges.value) return catalog.value;
 
   const tagBadges = store.filterBadges.value.filter((b) => b.type === 'tag').map((b) => b.value);
   const modelBadges = store.filterBadges.value
@@ -140,7 +139,7 @@ const badgeFilteredTemplates = computed(() => {
     .map((b) => b.value);
   const modeBadges = store.filterBadges.value.filter((b) => b.type === 'mode').map((b) => b.value);
 
-  let result = [...props.templates];
+  let result = [...catalog.value];
 
   if (tagBadges.length > 0) {
     result = result.filter((t) => tagBadges.some((tag) => t.tags.includes(tag)));
@@ -233,29 +232,17 @@ const displayedWorkflows = computed(() => {
   return [];
 });
 
-// Creator search — matches against the creators list from hub API profiles
+// Creator search — matches against the precomputed, enriched creators list.
 const matchedCreators = computed(() => {
   const q = searchQuery.value.trim().toLowerCase();
   if (!q) return [];
-  // Build a usage map from templates for sorting + workflow count
-  const usageMap = new Map<string, { count: number; usage: number }>();
-  for (const tmpl of props.templates) {
-    if (!tmpl.username) continue;
-    const existing = usageMap.get(tmpl.username);
-    if (existing) {
-      existing.count++;
-      existing.usage += tmpl.usage;
-    } else {
-      usageMap.set(tmpl.username, { count: 1, usage: tmpl.usage });
-    }
-  }
   return props.creators
     .filter((c) => c.displayName.toLowerCase().includes(q) || c.username.toLowerCase().includes(q))
     .map((c) => ({
       username: c.username,
       displayName: c.displayName,
       avatarUrl: c.avatarUrl || '',
-      workflowCount: usageMap.get(c.username)?.count || 0,
+      workflowCount: c.workflowCount,
     }))
     .sort((a, b) => b.workflowCount - a.workflowCount)
     .slice(0, 5);
@@ -300,29 +287,12 @@ watch(
   }
 );
 
-const popularWorkflows = computed(() =>
-  [...props.templates].sort((a, b) => b.usage - a.usage).slice(0, 4)
-);
+// Popular workflows are precomputed server-side (top by usage); show the first 4.
+const popularWorkflows = computed(() => props.popular.slice(0, 4));
 
-// Top creators from hub API profiles, enriched with workflow count + total usage
-const topCreators = computed(() => {
-  const usageMap = new Map<string, { count: number; usage: number }>();
-  for (const tmpl of props.templates) {
-    if (!tmpl.username) continue;
-    const existing = usageMap.get(tmpl.username);
-    if (existing) {
-      existing.count++;
-      existing.usage += tmpl.usage;
-    } else {
-      usageMap.set(tmpl.username, { count: 1, usage: tmpl.usage });
-    }
-  }
-  return props.creators
-    .filter((c) => usageMap.has(c.username))
-    .map((c) => ({ ...c, ...(usageMap.get(c.username) || { count: 0, usage: 0 }) }))
-    .sort((a, b) => b.usage - a.usage)
-    .slice(0, 3);
-});
+// Top creators — precomputed enriched list is already usage-sorted; take those
+// with at least one workflow so the discovery panel never shows an empty creator.
+const topCreators = computed(() => props.creators.filter((c) => c.workflowCount > 0).slice(0, 3));
 
 const uniqueCreatorCount = computed(() => props.creators.length);
 
@@ -753,7 +723,7 @@ onUnmounted(() => {
               <h3 class="text-xs font-semibold uppercase tracking-wide text-content-muted mb-3">
                 Popular Workflows
                 <span class="text-content/30 font-normal ml-1"
-                  >({{ formatUsage(templates.length) }}+)</span
+                  >({{ formatUsage(totalCount) }}+)</span
                 >
               </h3>
               <div class="space-y-1">
@@ -767,22 +737,22 @@ onUnmounted(() => {
                 >
                   <div class="size-12 rounded-lg bg-hub-surface overflow-hidden shrink-0">
                     <img
-                      v-if="getImageThumb(wf.thumbnails[0])"
-                      :src="getImageThumb(wf.thumbnails[0])!"
+                      v-if="getImageThumb(wf.thumbnail)"
+                      :src="getImageThumb(wf.thumbnail)!"
                       :alt="wf.title"
                       loading="lazy"
                       class="w-full h-full object-cover"
                     />
                     <video
-                      v-else-if="videoThumbUrl(wf.thumbnails[0])"
-                      :src="videoThumbUrl(wf.thumbnails[0])!"
+                      v-else-if="videoThumbUrl(wf.thumbnail)"
+                      :src="videoThumbUrl(wf.thumbnail)!"
                       class="w-full h-full object-cover"
                       muted
                       playsinline
                       preload="metadata"
                     />
                     <div
-                      v-else-if="wf.thumbnails.length > 0 && isAudioFile(wf.thumbnails[0])"
+                      v-else-if="wf.thumbnail && isAudioFile(wf.thumbnail)"
                       class="w-full h-full flex items-center justify-center"
                     >
                       <svg
@@ -1067,6 +1037,10 @@ onUnmounted(() => {
               <p class="text-xs text-content/30 mt-1">
                 Try a different search term or remove a filter
               </p>
+            </div>
+
+            <div v-else-if="!hasQuery && hasBadges && !catalogLoaded" class="text-center py-4">
+              <p class="text-sm text-content-muted">Loading workflows…</p>
             </div>
 
             <div

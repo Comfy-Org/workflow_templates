@@ -3,6 +3,7 @@
  *  (top-hub-nav) once scrolled past. SearchPopover keeps its own pill shape. */
 import SearchPopover from './SearchPopover.vue';
 import { getProfileCache, getCreatorsList, type SerializedTemplate } from '../../lib/hub-api';
+import { buildDiscoveryData } from '../../lib/search-discovery';
 
 interface Props {
   templates: SerializedTemplate[];
@@ -11,8 +12,18 @@ interface Props {
 
 const { templates, locale } = Astro.props;
 const creators = getCreatorsList(await getProfileCache());
+// Precompute the small discovery slices server-side; the island lazy-loads the
+// full catalog from grid.json only when a filter badge is applied.
+const discovery = buildDiscoveryData(templates, creators);
 ---
 
 <div class="sticky top-hub-nav z-40 bg-page pt-2 pb-6 lg:pb-8">
-  <SearchPopover client:load templates={templates} creators={creators} locale={locale} />
+  <SearchPopover
+    client:load
+    popular={discovery.popular}
+    creators={discovery.creators}
+    facets={discovery.facets}
+    totalCount={discovery.totalCount}
+    locale={locale}
+  />
 </div>
