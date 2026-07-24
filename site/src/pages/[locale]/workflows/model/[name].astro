@@ -36,6 +36,13 @@ const loadModelGroups = () => (groupsCache ??= buildGroups());
 
 const { locale, name } = Astro.params;
 
+if (Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
 // Validate locale
 if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
   return Astro.redirect(`/workflows/model/${name || ''}/`);
@@ -52,7 +59,10 @@ const family =
   groups.find((group) => group.redirectFrom.includes(name!));
 
 if (!family) {
-  return Astro.redirect(`/${locale}/workflows/`);
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 // A variant slug 301s to its family's canonical URL, matching the English route.

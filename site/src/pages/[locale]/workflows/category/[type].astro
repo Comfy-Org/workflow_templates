@@ -33,6 +33,13 @@ const categoryTranslationKeys: Record<MediaType, string> = {
 
 const { locale, type } = Astro.params;
 
+if (Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
 // Validate locale
 if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
   return Astro.redirect(`/workflows/category/${type || ''}/`);
@@ -40,7 +47,10 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 // Validate type
 if (!type || !validTypes.includes(type as MediaType)) {
-  return Astro.redirect(`/${locale}/workflows/`);
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 const typedLocale = locale as Locale;
@@ -52,6 +62,13 @@ const description = t('meta.description', typedLocale);
 
 const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
 const templates = allSerialized.filter((tmpl) => tmpl.mediaType === mediaType);
+
+if (templates.length === 0) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
 
 const basePath = categoryPath(mediaType);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
