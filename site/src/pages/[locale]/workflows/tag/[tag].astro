@@ -22,7 +22,15 @@ import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../lib/structured-data';
 
+
 const { locale, tag } = Astro.params;
+
+if (Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
 
 // Validate locale
 if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
@@ -39,7 +47,10 @@ const matchingTemplates = allTemplates.filter((tmpl) =>
 );
 
 if (matchingTemplates.length === 0) {
-  return Astro.redirect(`/${locale}/workflows/`);
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 // Get display name from the first matching tag
