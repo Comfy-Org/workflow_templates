@@ -5,15 +5,18 @@
  * Run: `pnpm i18n:build-source` (needs PUBLIC_HUB_API_URL; no OpenAI key).
  *
  * Outputs, under src/i18n/content/ (one file per locale, keyed by shareId):
- *   en.json          — the 7 translatable fields per workflow, from the Hub index
- *   manifest.json    — per-workflow source hashes (combined + per-field)
- *   {locale}.json    — seeded with human title/description where the repo already
- *                      has them (templates/index.{locale}.json), lobe fills the rest
+ *   en.json           — the 7 translatable fields per workflow, from the Hub index
+ *   manifest.json     — per-workflow source hashes (combined + per-field)
+ *   human/{locale}.json — human title/description from templates/index.{locale}.json
+ *   {locale}.json     — lobe's machine output (this script only prunes stale entries)
  *
- * Staleness: on each run, any English field whose hash changed since the last
- * manifest is deleted from every locale file so lobe re-translates it (and, via
- * the manifest content-hash, any sign-off for that page goes stale — see the
- * resolver/predicate). Human seeds and lobe output for unchanged fields survive.
+ * Layers stay separate so lobe always translates the complete English source and
+ * human/reviewer work is never overwritten (the resolver merges them).
+ *
+ * Staleness: when a workflow's English content hash changes, its whole entry is
+ * deleted from every machine {locale}.json so lobe re-translates it cleanly
+ * (robust to lobe's diff granularity), and via the manifest content-hash any
+ * sign-off for that page goes stale — see the resolver/predicate.
  *
  * The pure functions below are exported and unit-tested; `main()` only does IO.
  */
@@ -33,7 +36,10 @@ import {
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import { LOCALE_INDEX_FILES } from '../lib/constants';
 
-const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
+const I18N_DIR = path.join(process.cwd(), 'src', 'i18n');
+// content/ holds ONLY locale files (en.json + machine {locale}.json) so it is a
+// clean lobe entry/output dir; the other layers are siblings under src/i18n/.
+const CONTENT_DIR = path.join(I18N_DIR, 'content');
 const TEMPLATES_DIR = path.join(process.cwd(), '..', 'templates');
 
 // ---------------------------------------------------------------------------
@@ -80,42 +86,24 @@ export function hashContent(content: WorkflowContent): WorkflowSourceHashes {
 }
 
 /**
- * Given the previous and next manifests, return per-shareId the set of fields
- * whose English source changed (so callers can drop them from locale files).
+ * Return the shareIds whose English content hash changed since the previous
+ * manifest (a brand-new workflow with no prior hash is not "stale"). Their whole
+ * machine entry is dropped so lobe re-translates cleanly.
  */
-export function staleFields(
-  prev: TranslationManifest,
-  next: TranslationManifest
-): Record<string, TranslatableField[]> {
-  const out: Record<string, TranslatableField[]> = {};
-  for (const shareId of Object.keys(next)) {
-    const before = prev[shareId]?.fields ?? {};
-    const after = next[shareId].fields;
-    const changed = TRANSLATABLE_FIELDS.filter((f) => before[f] !== after[f] && before[f] != null);
-    if (changed.length > 0) out[shareId] = changed;
-  }
-  return out;
+export function staleShareIds(prev: TranslationManifest, next: TranslationManifest): string[] {
+  return Object.keys(next).filter(
+    (shareId) => prev[shareId] != null && prev[shareId].content !== next[shareId].content
+  );
 }
 
-/**
- * Merge a locale file for one run: drop stale fields, then overlay human seeds
- * (human title/description that differ from English win over any machine value).
- * Existing machine translations for non-stale, non-seeded fields are preserved.
- */
-export function mergeLocaleFile(
-  existing: Record<string, Partial<WorkflowContent>>,
-  humanSeed: Record<string, Partial<WorkflowContent>>,
-  stale: Record<string, TranslatableField[]>
+/** Remove stale shareIds from an existing machine locale file. */
+export function pruneStale(
+  machine: Record<string, Partial<WorkflowContent>>,
+  stale: string[]
 ): Record<string, Partial<WorkflowContent>> {
-  const merged: Record<string, Partial<WorkflowContent>> = {};
-  const shareIds = new Set([...Object.keys(existing), ...Object.keys(humanSeed)]);
-  for (const shareId of shareIds) {
-    const entry: Partial<WorkflowContent> = { ...existing[shareId] };
-    for (const field of stale[shareId] ?? []) delete entry[field];
-    Object.assign(entry, humanSeed[shareId] ?? {});
-    if (Object.keys(entry).length > 0) merged[shareId] = entry;
-  }
-  return merged;
+  const pruned = { ...machine };
+  for (const shareId of stale) delete pruned[shareId];
+  return pruned;
 }
 
 /**
@@ -226,28 +214,37 @@ async function main(): Promise<void> {
     nextManifest[shareId] = hashContent(content);
   }
   const prevManifest =
-    readJsonFile<TranslationManifest>(path.join(CONTENT_DIR, 'manifest.json')) ?? {};
-  const stale = staleFields(prevManifest, nextManifest);
+    readJsonFile<TranslationManifest>(path.join(I18N_DIR, 'manifest.json')) ?? {};
+  const stale = staleShareIds(prevManifest, nextManifest);
 
   fs.writeFileSync(path.join(CONTENT_DIR, 'en.json'), sortedJson(english));
-  fs.writeFileSync(path.join(CONTENT_DIR, 'manifest.json'), sortedJson(nextManifest));
+  fs.writeFileSync(path.join(I18N_DIR, 'manifest.json'), sortedJson(nextManifest));
 
   let seededTotal = 0;
   for (const locale of SUPPORTED_HUB_LOCALES) {
     if (locale === 'en') continue;
-    const localeFile = path.join(CONTENT_DIR, `${locale}.json`);
-    const existing = readJsonFile<Record<string, Partial<WorkflowContent>>>(localeFile) ?? {};
+
+    // Human seeds (title/description from the repo) — their own layer.
     const humanSeed = buildHumanSeed(english, nameByShareId, loadHumanIndex(locale));
-    const merged = mergeLocaleFile(existing, humanSeed, stale);
-    if (Object.keys(merged).length > 0) fs.writeFileSync(localeFile, sortedJson(merged));
+    const humanFile = path.join(I18N_DIR, 'human', `${locale}.json`);
+    if (Object.keys(humanSeed).length > 0) {
+      fs.mkdirSync(path.dirname(humanFile), { recursive: true });
+      fs.writeFileSync(humanFile, sortedJson(humanSeed));
+    }
     seededTotal += Object.keys(humanSeed).length;
+
+    // Machine layer: only prune stale entries so lobe re-translates them cleanly.
+    const machineFile = path.join(CONTENT_DIR, `${locale}.json`);
+    const machine = readJsonFile<Record<string, Partial<WorkflowContent>>>(machineFile);
+    if (machine && stale.length > 0) {
+      fs.writeFileSync(machineFile, sortedJson(pruneStale(machine, stale)));
+    }
   }
 
-  const staleCount = Object.keys(stale).length;
   console.log(
     `[i18n] content source: ${Object.keys(english).length} workflows, ` +
       `${seededTotal} human seeds across ${SUPPORTED_HUB_LOCALES.length - 1} locales, ` +
-      `${staleCount} workflows with stale fields dropped for re-translation.`
+      `${stale.length} workflows pruned from machine files for re-translation.`
   );
 }
 

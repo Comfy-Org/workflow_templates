@@ -3,8 +3,8 @@ import {
   extractContent,
   hashContent,
   hashValue,
-  staleFields,
-  mergeLocaleFile,
+  staleShareIds,
+  pruneStale,
   buildHumanSeed,
 } from '../../scripts/i18n/build-content-source';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
@@ -67,33 +67,25 @@ describe('hashContent', () => {
   });
 });
 
-describe('staleFields', () => {
-  it('lists only fields whose hash changed and that existed before', () => {
-    const prev = { s1: hashContent(CONTENT) };
-    const next = { s1: hashContent({ ...CONTENT, title: 'NEW' }) };
-    expect(staleFields(prev, next)).toEqual({ s1: ['title'] });
+describe('staleShareIds', () => {
+  it('lists shareIds whose content hash changed', () => {
+    const prev = { s1: hashContent(CONTENT), s2: hashContent(CONTENT) };
+    const next = { s1: hashContent({ ...CONTENT, title: 'NEW' }), s2: hashContent(CONTENT) };
+    expect(staleShareIds(prev, next)).toEqual(['s1']);
   });
   it('treats a brand-new workflow (no prior hash) as not stale', () => {
-    const next = { s2: hashContent(CONTENT) };
-    expect(staleFields({}, next)).toEqual({});
+    expect(staleShareIds({}, { s2: hashContent(CONTENT) })).toEqual([]);
   });
 });
 
-describe('mergeLocaleFile', () => {
-  it('drops stale fields, overlays human seeds, preserves the rest', () => {
-    const existing = {
-      s1: { title: '机器标题', description: '机器描述', metaDescription: '机器元' },
-    };
-    const humanSeed = { s1: { title: '人工标题' } };
-    const stale = { s1: ['description' as const] };
-    const merged = mergeLocaleFile(existing, humanSeed, stale);
-    expect(merged.s1.title).toBe('人工标题'); // human seed overlays
-    expect(merged.s1.description).toBeUndefined(); // stale dropped -> lobe refills
-    expect(merged.s1.metaDescription).toBe('机器元'); // preserved
+describe('pruneStale', () => {
+  it('drops whole stale entries from the machine file so lobe re-translates them', () => {
+    const machine = { s1: { title: '机器标题' }, s2: { title: '机器' } };
+    expect(pruneStale(machine, ['s1'])).toEqual({ s2: { title: '机器' } });
   });
-  it('adds a seed for a workflow not yet in the locale file', () => {
-    const merged = mergeLocaleFile({}, { s2: { title: '新' } }, {});
-    expect(merged.s2).toEqual({ title: '新' });
+  it('is a no-op when nothing is stale', () => {
+    const machine = { s1: { title: 'x' } };
+    expect(pruneStale(machine, [])).toEqual(machine);
   });
 });
 

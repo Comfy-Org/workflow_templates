@@ -55,12 +55,10 @@ export const REQUIRED_FOR_INDEX = [
 export type RequiredField = (typeof REQUIRED_FOR_INDEX)[number];
 
 /**
- * Where a resolved field's value came from, highest precedence first.
- * `localized` covers both human-seeded and machine translations — the builder
- * already applies human-over-machine precedence when it writes the locale file,
- * so by resolve time they are indistinguishable and both mean "translated".
+ * Where a resolved field's value came from, highest precedence first. Any source
+ * other than `english` means the field is genuinely translated.
  */
-export type FieldSource = 'override' | 'localized' | 'english';
+export type FieldSource = 'override' | 'human' | 'machine' | 'english';
 
 /**
  * Per-workflow English source hashes, committed in the manifest.

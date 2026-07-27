@@ -21,6 +21,7 @@ function setup(
   opts: {
     en?: Record<string, unknown>;
     zh?: Record<string, unknown>;
+    human?: Record<string, unknown>;
     override?: Record<string, unknown>;
     reviewedHash?: string | null;
     currentHash?: string;
@@ -35,8 +36,9 @@ function setup(
     suggestedUseCases: [],
     faqItems: [{ question: 'Q?', answer: 'A' }],
   };
-  write(`en.json`, { [SHARE]: en });
-  if (opts.zh) write(`zh.json`, { [SHARE]: opts.zh });
+  write(`content/en.json`, { [SHARE]: en });
+  if (opts.zh) write(`content/zh.json`, { [SHARE]: opts.zh });
+  if (opts.human) write(`human/zh.json`, { [SHARE]: opts.human });
   if (opts.override) write(`overrides/zh.json`, { [SHARE]: opts.override });
   write('manifest.json', { [SHARE]: { content: opts.currentHash ?? HASH, fields: {} } });
   if (opts.reviewedHash !== null) {
@@ -68,18 +70,21 @@ afterEach(() => {
 });
 
 describe('resolveLocalizedWorkflow', () => {
-  it('applies precedence override > localized > english per field', () => {
+  it('applies precedence override > human > machine > english per field', () => {
     setup({
-      zh: { title: '机翻标题', description: '机翻描述' },
-      override: { title: '人工标题' },
+      zh: { title: '机翻标题', description: '机翻描述', metaDescription: '机翻元' },
+      human: { title: '人工种子标题', description: '人工种子描述' },
+      override: { title: '审校标题' },
     });
     const { data, provenance } = RESOLVE();
-    expect(data.title).toBe('人工标题'); // override wins
+    expect(data.title).toBe('审校标题'); // override wins over human + machine
     expect(provenance.title).toBe('override');
-    expect(data.description).toBe('机翻描述'); // localized
-    expect(provenance.description).toBe('localized');
-    expect(data.metaDescription).toBe('English meta'); // fallback
-    expect(provenance.metaDescription).toBe('english');
+    expect(data.description).toBe('人工种子描述'); // human wins over machine
+    expect(provenance.description).toBe('human');
+    expect(data.metaDescription).toBe('机翻元'); // machine (no human/override)
+    expect(provenance.metaDescription).toBe('machine');
+    expect(data.extendedDescription).toBe('English long body'); // english fallback
+    expect(provenance.extendedDescription).toBe('english');
   });
 
   it('is indexable when every required field is translated + reviewed at current hash', () => {

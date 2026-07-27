@@ -8,9 +8,11 @@
  * blend: any English-fallback in a required field makes the page non-indexable
  * with a `reason`, rather than quietly rendering half-English.
  *
- * Precedence per field: reviewer override → localized (human seed or machine,
- * already merged by the builder) → English. English is the last resort and only
- * valid for non-indexable pages.
+ * Precedence per field: reviewer override → human seed → machine (lobe) →
+ * English. These are separate committed files so lobe always translates the
+ * complete English source (never a partially-seeded entry) and human/reviewer
+ * work is never overwritten by a machine run. English is the last resort and
+ * only valid for non-indexable pages.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -28,7 +30,11 @@ import {
   type WorkflowContent,
 } from './schema';
 
-const DEFAULT_CONTENT_ROOT = path.join(process.cwd(), 'src', 'i18n', 'content');
+// Root of the committed translation artifacts. Layout:
+//   content/en.json, content/{locale}.json   (lobe entry + machine output; this
+//                                              dir holds ONLY locale files)
+//   human/{locale}.json, overrides/{locale}.json, reviews/{locale}.json, manifest.json
+const DEFAULT_CONTENT_ROOT = path.join(process.cwd(), 'src', 'i18n');
 
 export interface ResolverOptions {
   /** Root of the committed translation artifacts. Overridable for tests. */
@@ -86,10 +92,17 @@ export function resolveLocalizedWorkflow(
   const supportedLocales = options.supportedLocales ?? SUPPORTED_HUB_LOCALES;
   const indexableLocales = options.indexableLocales ?? INDEXABLE_LOCALES;
 
-  // One committed file per locale, keyed by shareId (content/{locale}.json).
-  const enFile = readJson<Record<string, WorkflowContent>>(path.join(root, 'en.json')) ?? {};
-  const localeFile =
-    readJson<Record<string, Partial<WorkflowContent>>>(path.join(root, `${locale}.json`)) ?? {};
+  // One committed file per locale per layer, keyed by shareId.
+  const enFile =
+    readJson<Record<string, WorkflowContent>>(path.join(root, 'content', 'en.json')) ?? {};
+  const machineFile =
+    readJson<Record<string, Partial<WorkflowContent>>>(
+      path.join(root, 'content', `${locale}.json`)
+    ) ?? {};
+  const humanFile =
+    readJson<Record<string, Partial<WorkflowContent>>>(
+      path.join(root, 'human', `${locale}.json`)
+    ) ?? {};
   const overrides =
     readJson<Record<string, Partial<WorkflowContent>>>(
       path.join(root, 'overrides', `${locale}.json`)
@@ -98,7 +111,8 @@ export function resolveLocalizedWorkflow(
   const reviews = readJson<LocaleReviews>(path.join(root, 'reviews', `${locale}.json`)) ?? {};
 
   const english = enFile[shareId] ?? emptyContent();
-  const localized = localeFile[shareId] ?? {};
+  const machine = machineFile[shareId] ?? {};
+  const human = humanFile[shareId] ?? {};
   const override = overrides[shareId] ?? {};
 
   const data = emptyContent();
@@ -115,9 +129,12 @@ export function resolveLocalizedWorkflow(
     if (isNonEmpty(override[field])) {
       dataRecord[field] = override[field];
       provenance[field] = 'override';
-    } else if (isNonEmpty(localized[field])) {
-      dataRecord[field] = localized[field];
-      provenance[field] = 'localized';
+    } else if (isNonEmpty(human[field])) {
+      dataRecord[field] = human[field];
+      provenance[field] = 'human';
+    } else if (isNonEmpty(machine[field])) {
+      dataRecord[field] = machine[field];
+      provenance[field] = 'machine';
     } else {
       dataRecord[field] = enValue;
       provenance[field] = 'english';
