@@ -15,7 +15,9 @@ on:
 
 concurrency:
   group: i18n-update-hub
-  cancel-in-progress: true
+  # Queue overlapping runs; do not cancel, so the 2am cron can't kill a manually
+  # dispatched backfill mid-flight.
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -58,30 +60,41 @@ jobs:
         working-directory: site
         run: pnpm i18n:check
 
+      # Tolerate a mid-run rate-limit: saveImmediately has already persisted each
+      # completed chunk, and the steps below still commit that partial progress, so
+      # the next run resumes (lobe skips done keys) instead of re-spending tokens.
       - name: Translate content (lobe-i18n)
         working-directory: site
+        continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: pnpm locale
 
       - name: Translate UI chrome (fill missing keys)
         working-directory: site
+        continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: pnpm locale:ui
 
+      # always(): run even after a tolerated translate failure so partial progress
+      # is still validated, formatted, and committed.
       - name: Validate translations
+        if: always()
         working-directory: site
         run: pnpm i18n:validate
 
+      # Format only the generated files; whole-tree prettier hits pre-existing .astro errors.
       - name: Format
+        if: always()
         working-directory: site
-        run: pnpm format
+        run: pnpm exec prettier --write src/i18n
 
       # Open a PR only when the translation artifacts actually changed. The
       # committed en.json/manifest anchor the per-page freshness + sign-off gate,
       # so this is the single place translations enter the repo.
       - name: Open translation PR
+        if: always()
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
@@ -103,4 +116,4 @@ jobs:
             --base main \
             --head "$BRANCH" \
             --title "chore(i18n): update hub workflow translations" \
-            --body "Automated hub translation refresh (GTM-291). English content regenerated from the Hub index, human seeds applied, gaps machine-translated, and deterministic validators passed. Does not flip any locale to indexable."
+            --body "Automated hub translation refresh (GTM-291). English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress so the next run resumes. Does not flip any locale to indexable."

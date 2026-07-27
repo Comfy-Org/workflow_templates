@@ -15,8 +15,10 @@ try {
 
 module.exports = defineConfig({
   modelName: 'gpt-4.1',
-  splitToken: 2048,
-  concurrency: 5,
+  // Larger chunks send the system prompt fewer times (less token overhead).
+  splitToken: 6000,
+  // Serial: paced for the org's OpenAI tier (30k TPM). Raise once the tier is bumped.
+  concurrency: 1,
   saveImmediately: true,
   // content/ holds ONLY locale files, so it is a clean lobe entry/output dir.
   entry: 'src/i18n/content/en.json',

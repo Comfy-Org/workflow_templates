@@ -7,9 +7,10 @@
  *
  * Per translated field it checks:
  *  - structure: arrays match the English length; FAQ items keep question+answer
- *  - language: the target script is present in longer fields (no English leakage)
- *  - glossary: every preserve-term still appears, untranslated, the same number
- *    of times as in English (model/brand/node names are never translated away)
+ *  - language: the target script is present in longer prose fields, no English
+ *    leakage (the title field is exempt: titles are often all proper nouns)
+ *  - glossary: every preserve-term present in English still appears, untranslated
+ *    (model/brand/node names are never translated away)
  *  - format: every URL in the English field survives unchanged
  *  - brand voice: no banned hype word is introduced
  *
@@ -121,8 +122,10 @@ export function collectViolations(
       }
     }
 
-    // 2. Language: a long translated field must contain the target script.
+    // 2. Language: a long prose field must contain the target script. Title is
+    // exempt — titles are often all proper nouns / identifiers that stay English.
     if (
+      field !== 'title' &&
       scriptRe &&
       locText.replace(/\s/g, '').length >= LEAKAGE_MIN_LEN &&
       !scriptRe.test(locText)
@@ -130,14 +133,19 @@ export function collectViolations(
       add(field, 'language', 'no target-script characters (English leakage)');
     }
     // Latin locales: a long field identical to English is untranslated leakage.
-    if (!scriptRe && locText.length >= LEAKAGE_MIN_LEN && locText.trim() === enText.trim()) {
+    if (
+      field !== 'title' &&
+      !scriptRe &&
+      locText.length >= LEAKAGE_MIN_LEN &&
+      locText.trim() === enText.trim()
+    ) {
       add(field, 'language', 'identical to English (untranslated)');
     }
 
-    // 3. Glossary: every preserve-term survives, same count, untranslated.
+    // 3. Glossary: a preserve-term in English must still appear (presence, not
+    // exact count — natural translation may repeat it fewer times).
     for (const term of preserveTerms) {
-      const enCount = countOccurrences(enText, term);
-      if (enCount > 0 && countOccurrences(locText, term) < enCount) {
+      if (countOccurrences(enText, term) > 0 && countOccurrences(locText, term) === 0) {
         add(field, 'glossary', `preserve-term "${term}" translated away`);
       }
     }

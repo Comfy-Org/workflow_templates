@@ -3,8 +3,8 @@ import {
   extractContent,
   hashContent,
   hashValue,
-  staleShareIds,
-  pruneStale,
+  staleFields,
+  pruneStaleFields,
   buildHumanSeed,
 } from '../../scripts/i18n/build-content-source';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
@@ -67,25 +67,45 @@ describe('hashContent', () => {
   });
 });
 
-describe('staleShareIds', () => {
-  it('lists shareIds whose content hash changed', () => {
+describe('staleFields', () => {
+  it('lists only the fields whose hash changed', () => {
     const prev = { s1: hashContent(CONTENT), s2: hashContent(CONTENT) };
     const next = { s1: hashContent({ ...CONTENT, title: 'NEW' }), s2: hashContent(CONTENT) };
-    expect(staleShareIds(prev, next)).toEqual(['s1']);
+    expect(staleFields(prev, next)).toEqual({ s1: ['title'] });
   });
   it('treats a brand-new workflow (no prior hash) as not stale', () => {
-    expect(staleShareIds({}, { s2: hashContent(CONTENT) })).toEqual([]);
+    expect(staleFields({}, { s2: hashContent(CONTENT) })).toEqual({});
+  });
+  it('marks every field stale when the prior entry lacks per-field hashes', () => {
+    const prev = { s1: { content: 'oldhash' } } as unknown as Parameters<typeof staleFields>[0];
+    const next = { s1: hashContent(CONTENT) };
+    expect(staleFields(prev, next).s1).toEqual([
+      'title',
+      'description',
+      'metaDescription',
+      'extendedDescription',
+      'howToUse',
+      'suggestedUseCases',
+      'faqItems',
+    ]);
   });
 });
 
-describe('pruneStale', () => {
-  it('drops whole stale entries from the machine file so lobe re-translates them', () => {
-    const machine = { s1: { title: '机器标题' }, s2: { title: '机器' } };
-    expect(pruneStale(machine, ['s1'])).toEqual({ s2: { title: '机器' } });
+describe('pruneStaleFields', () => {
+  it('drops only the stale fields, keeping the rest of the entry', () => {
+    const machine = { s1: { title: '机器标题', description: '机器描述' }, s2: { title: '机器' } };
+    expect(pruneStaleFields(machine, { s1: ['title'] })).toEqual({
+      s1: { description: '机器描述' },
+      s2: { title: '机器' },
+    });
+  });
+  it('removes the entry entirely when all its fields are pruned', () => {
+    const machine = { s1: { title: 'x' } };
+    expect(pruneStaleFields(machine, { s1: ['title'] })).toEqual({});
   });
   it('is a no-op when nothing is stale', () => {
     const machine = { s1: { title: 'x' } };
-    expect(pruneStale(machine, [])).toEqual(machine);
+    expect(pruneStaleFields(machine, {})).toEqual(machine);
   });
 });
 

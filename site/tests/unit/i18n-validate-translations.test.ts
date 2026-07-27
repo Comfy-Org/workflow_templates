@@ -75,4 +75,29 @@ describe('collectViolations', () => {
       []
     );
   });
+
+  it('does not flag a brand/identifier title left in English', () => {
+    // Titles are often all proper nouns or raw identifiers that stay English in
+    // every locale; the language check must not fire on the title field.
+    const enName = en({ title: 'cinematic_annotate_video' });
+    const zh = { title: 'cinematic_annotate_video' };
+    expect(kinds(collectViolations('s1', 'zh', enName, zh, PRESERVE))).not.toContain('language');
+    const es = { title: 'cinematic_annotate_video' };
+    expect(kinds(collectViolations('s1', 'es', enName, es, PRESERVE))).not.toContain('language');
+  });
+
+  it('does not flag a preserve-term that repeats fewer times but is still present', () => {
+    // English repeats "LoRA" twice; a natural translation keeps it once. The
+    // term survives, so this is not "translated away".
+    const enName = en({ howToUse: ['Enable the LoRA path', 'Disable the LoRA path'] });
+    const ja = { howToUse: ['LoRA パスを有効化', '無効化する'] };
+    expect(kinds(collectViolations('s1', 'ja', enName, ja, PRESERVE))).not.toContain('glossary');
+  });
+
+  it('still flags a preserve-term that vanishes entirely', () => {
+    // "LoRA" present in English but fully gone (e.g. rendered as katakana).
+    const enName = en({ howToUse: ['Enable the LoRA path', 'Run it'] });
+    const ja = { howToUse: ['ローラ パスを有効化', '実行する'] };
+    expect(kinds(collectViolations('s1', 'ja', enName, ja, PRESERVE))).toContain('glossary');
+  });
 });

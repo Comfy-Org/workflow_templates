@@ -86,23 +86,48 @@ export function hashContent(content: WorkflowContent): WorkflowSourceHashes {
 }
 
 /**
- * Return the shareIds whose English content hash changed since the previous
- * manifest (a brand-new workflow with no prior hash is not "stale"). Their whole
- * machine entry is dropped so lobe re-translates cleanly.
+ * For each workflow that existed before, the translatable fields whose English
+ * source hash changed since the previous manifest. Only these fields are dropped
+ * from the machine files, so a one-word title edit re-translates just the title,
+ * not the long body fields. A brand-new workflow has no prior hash and is not
+ * "stale" (lobe translates it fresh). If a prior entry lacks per-field hashes
+ * (older manifest) every field reads as changed, i.e. the whole entry re-translates.
  */
-export function staleShareIds(prev: TranslationManifest, next: TranslationManifest): string[] {
-  return Object.keys(next).filter(
-    (shareId) => prev[shareId] != null && prev[shareId].content !== next[shareId].content
-  );
+export function staleFields(
+  prev: TranslationManifest,
+  next: TranslationManifest
+): Record<string, TranslatableField[]> {
+  const result: Record<string, TranslatableField[]> = {};
+  for (const [shareId, nextHashes] of Object.entries(next)) {
+    const prevHashes = prev[shareId];
+    if (prevHashes == null) continue;
+    const changed = TRANSLATABLE_FIELDS.filter(
+      (field) => prevHashes.fields?.[field] !== nextHashes.fields[field]
+    );
+    if (changed.length > 0) result[shareId] = changed;
+  }
+  return result;
 }
 
-/** Remove stale shareIds from an existing machine locale file. */
-export function pruneStale(
+/**
+ * Drop only the changed fields from an existing machine locale file. If pruning a
+ * workflow's stale fields empties its entry, the entry is removed entirely.
+ */
+export function pruneStaleFields(
   machine: Record<string, Partial<WorkflowContent>>,
-  stale: string[]
+  stale: Record<string, TranslatableField[]>
 ): Record<string, Partial<WorkflowContent>> {
-  const pruned = { ...machine };
-  for (const shareId of stale) delete pruned[shareId];
+  const pruned: Record<string, Partial<WorkflowContent>> = {};
+  for (const [shareId, entry] of Object.entries(machine)) {
+    const staleForId = stale[shareId];
+    if (!staleForId) {
+      pruned[shareId] = entry;
+      continue;
+    }
+    const kept: Partial<WorkflowContent> = { ...entry };
+    for (const field of staleForId) delete kept[field];
+    if (Object.keys(kept).length > 0) pruned[shareId] = kept;
+  }
   return pruned;
 }
 
@@ -215,7 +240,8 @@ async function main(): Promise<void> {
   }
   const prevManifest =
     readJsonFile<TranslationManifest>(path.join(I18N_DIR, 'manifest.json')) ?? {};
-  const stale = staleShareIds(prevManifest, nextManifest);
+  const stale = staleFields(prevManifest, nextManifest);
+  const staleFieldTotal = Object.values(stale).reduce((sum, fields) => sum + fields.length, 0);
 
   fs.writeFileSync(path.join(CONTENT_DIR, 'en.json'), sortedJson(english));
   fs.writeFileSync(path.join(I18N_DIR, 'manifest.json'), sortedJson(nextManifest));
@@ -233,18 +259,19 @@ async function main(): Promise<void> {
     }
     seededTotal += Object.keys(humanSeed).length;
 
-    // Machine layer: only prune stale entries so lobe re-translates them cleanly.
+    // Machine layer: prune only the changed fields so lobe re-translates just
+    // those (not the whole entry) on the next run.
     const machineFile = path.join(CONTENT_DIR, `${locale}.json`);
     const machine = readJsonFile<Record<string, Partial<WorkflowContent>>>(machineFile);
-    if (machine && stale.length > 0) {
-      fs.writeFileSync(machineFile, sortedJson(pruneStale(machine, stale)));
+    if (machine && Object.keys(stale).length > 0) {
+      fs.writeFileSync(machineFile, sortedJson(pruneStaleFields(machine, stale)));
     }
   }
 
   console.log(
     `[i18n] content source: ${Object.keys(english).length} workflows, ` +
       `${seededTotal} human seeds across ${SUPPORTED_HUB_LOCALES.length - 1} locales, ` +
-      `${stale.length} workflows pruned from machine files for re-translation.`
+      `${staleFieldTotal} changed field(s) across ${Object.keys(stale).length} workflows pruned for re-translation.`
   );
 }
 
