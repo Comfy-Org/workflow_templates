@@ -86,17 +86,20 @@ export function resolveLocalizedWorkflow(
   const supportedLocales = options.supportedLocales ?? SUPPORTED_HUB_LOCALES;
   const indexableLocales = options.indexableLocales ?? INDEXABLE_LOCALES;
 
-  const english =
-    readJson<WorkflowContent>(path.join(root, 'en', `${shareId}.json`)) ?? emptyContent();
-  const localized =
-    readJson<Partial<WorkflowContent>>(path.join(root, locale, `${shareId}.json`)) ?? {};
+  // One committed file per locale, keyed by shareId (content/{locale}.json).
+  const enFile = readJson<Record<string, WorkflowContent>>(path.join(root, 'en.json')) ?? {};
+  const localeFile =
+    readJson<Record<string, Partial<WorkflowContent>>>(path.join(root, `${locale}.json`)) ?? {};
   const overrides =
     readJson<Record<string, Partial<WorkflowContent>>>(
       path.join(root, 'overrides', `${locale}.json`)
     ) ?? {};
-  const override = overrides[shareId] ?? {};
   const manifest = readJson<TranslationManifest>(path.join(root, 'manifest.json')) ?? {};
   const reviews = readJson<LocaleReviews>(path.join(root, 'reviews', `${locale}.json`)) ?? {};
+
+  const english = enFile[shareId] ?? emptyContent();
+  const localized = localeFile[shareId] ?? {};
+  const override = overrides[shareId] ?? {};
 
   const data = emptyContent();
   // Field types differ (string vs string[] vs FaqItem[]); write through a record

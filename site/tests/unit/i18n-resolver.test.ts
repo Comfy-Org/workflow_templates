@@ -35,8 +35,8 @@ function setup(
     suggestedUseCases: [],
     faqItems: [{ question: 'Q?', answer: 'A' }],
   };
-  write(`en/${SHARE}.json`, en);
-  if (opts.zh) write(`zh/${SHARE}.json`, opts.zh);
+  write(`en.json`, { [SHARE]: en });
+  if (opts.zh) write(`zh.json`, { [SHARE]: opts.zh });
   if (opts.override) write(`overrides/zh.json`, { [SHARE]: opts.override });
   write('manifest.json', { [SHARE]: { content: opts.currentHash ?? HASH, fields: {} } });
   if (opts.reviewedHash !== null) {
