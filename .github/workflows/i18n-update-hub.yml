@@ -1,0 +1,100 @@
+# Generates and updates hub workflow-content translations (GTM-291).
+#
+# Pushes English; CI translates. Regenerates the English content-of-record from
+# the Hub index, seeds existing human translations, fills the gaps with
+# @lobehub/i18n-cli (OpenAI), validates deterministically, and opens a PR with
+# the result for a human to review + merge. Nothing here flips any locale to
+# indexable — that stays a separate, reviewed one-line change.
+name: "i18n: Update Hub Translations"
+
+on:
+  workflow_dispatch:
+  # Pick up newly published / changed workflows on a cadence.
+  schedule:
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: i18n-update-hub
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow_templates
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      # ComfyUI_frontend's UI locales seed the glossary mirror (term consistency).
+      - name: Checkout ComfyUI_frontend locales
+        uses: actions/checkout@v4
+        with:
+          repository: Comfy-Org/ComfyUI_frontend
+          sparse-checkout: src/locales
+          path: comfyui-frontend
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      - name: Build English content source + human seeds
+        working-directory: site
+        env:
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
+          PUBLIC_APPROVED_ONLY: "true"
+        run: pnpm i18n:build-source
+
+      - name: Sync glossary
+        working-directory: site
+        env:
+          FRONTEND_LOCALES_DIR: ${{ github.workspace }}/comfyui-frontend/src/locales
+        run: pnpm i18n:glossary
+
+      - name: Check pipeline config
+        working-directory: site
+        run: pnpm i18n:check
+
+      - name: Translate (lobe-i18n)
+        working-directory: site
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: pnpm locale
+
+      - name: Validate translations
+        working-directory: site
+        run: pnpm i18n:validate
+
+      - name: Format
+        working-directory: site
+        run: pnpm format
+
+      # Open a PR only when the translation artifacts actually changed. The
+      # committed en.json/manifest anchor the per-page freshness + sign-off gate,
+      # so this is the single place translations enter the repo.
+      - name: Open translation PR
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          # Stage first — the generated content/ files are new/untracked on the
+          # initial run, which `git diff` alone would miss.
+          git add site/src/i18n
+          if git diff --cached --quiet; then
+            echo "No translation changes."
+            exit 0
+          fi
+          BRANCH="i18n/hub-translations-$(date -u +%Y%m%d-%H%M%S)"
+          git checkout -b "$BRANCH"
+          git commit -m "chore(i18n): update hub workflow translations"
+          git push origin "$BRANCH"
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "chore(i18n): update hub workflow translations" \
+            --body "Automated hub translation refresh (GTM-291). English content regenerated from the Hub index, human seeds applied, gaps machine-translated, and deterministic validators passed. Does not flip any locale to indexable."
