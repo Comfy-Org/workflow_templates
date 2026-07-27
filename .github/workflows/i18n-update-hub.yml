@@ -58,11 +58,17 @@ jobs:
         working-directory: site
         run: pnpm i18n:check
 
-      - name: Translate (lobe-i18n)
+      - name: Translate content (lobe-i18n)
         working-directory: site
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: pnpm locale
+
+      - name: Translate UI chrome (fill missing keys)
+        working-directory: site
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: pnpm locale:ui
 
       - name: Validate translations
         working-directory: site
