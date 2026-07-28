@@ -5,6 +5,7 @@ import {
   hashValue,
   staleFields,
   pruneStaleFields,
+  pruneOrphanIds,
   buildHumanSeed,
 } from '../../scripts/i18n/build-content-source';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
@@ -106,6 +107,34 @@ describe('pruneStaleFields', () => {
   it('is a no-op when nothing is stale', () => {
     const machine = { s1: { title: 'x' } };
     expect(pruneStaleFields(machine, {})).toEqual(machine);
+  });
+});
+
+describe('pruneOrphanIds', () => {
+  it('drops machine entries whose workflow is gone from the current source', () => {
+    const machine = { s1: { title: '标题1' }, gone: { title: '旧标题' }, s2: { title: '标题2' } };
+    expect(pruneOrphanIds(machine, new Set(['s1', 's2']))).toEqual({
+      s1: { title: '标题1' },
+      s2: { title: '标题2' },
+    });
+  });
+
+  it('keeps everything when all ids are current', () => {
+    const machine = { s1: { title: 'x' } };
+    expect(pruneOrphanIds(machine, new Set(['s1']))).toEqual(machine);
+  });
+
+  // The bug F4 fixes: a workflow removed then re-added with changed English must
+  // NOT silently reuse its old machine translation. Orphan pruning on every build
+  // deletes the stale entry, so lobe re-translates it fresh on the re-add.
+  it('remove → re-add: the obsolete machine entry is not reused', () => {
+    const original = { removed: { title: '过时的机器翻译' }, kept: { title: '保留' } };
+    // Build 1: `removed` disappears from the index (absent from current ids).
+    const afterRemoval = pruneOrphanIds(original, new Set(['kept']));
+    expect(afterRemoval).toEqual({ kept: { title: '保留' } });
+    // Build 2: the same id returns; there is no stale machine entry to reuse, so
+    // lobe sees the key as untranslated and re-translates from the new English.
+    expect('removed' in afterRemoval).toBe(false);
   });
 });
 

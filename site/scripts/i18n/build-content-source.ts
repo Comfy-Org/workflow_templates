@@ -110,6 +110,26 @@ export function staleFields(
 }
 
 /**
+ * Drop machine entries whose workflow is absent from the current English source
+ * (removed from the Hub index). Pruned on EVERY build, independent of per-field
+ * staleness: otherwise a removed workflow's machine translation lingers with no
+ * English source or manifest entry, and if the same shareId is later re-approved
+ * with changed English, `staleFields` treats it as brand-new (no prior hash) while
+ * lobe sees the stale key as already translated and skips it — silently serving an
+ * obsolete translation for the new English.
+ */
+export function pruneOrphanIds(
+  machine: Record<string, Partial<WorkflowContent>>,
+  currentShareIds: ReadonlySet<string>
+): Record<string, Partial<WorkflowContent>> {
+  const pruned: Record<string, Partial<WorkflowContent>> = {};
+  for (const [shareId, entry] of Object.entries(machine)) {
+    if (currentShareIds.has(shareId)) pruned[shareId] = entry;
+  }
+  return pruned;
+}
+
+/**
  * Drop only the changed fields from an existing machine locale file. If pruning a
  * workflow's stale fields empties its entry, the entry is removed entirely.
  */
@@ -242,11 +262,13 @@ async function main(): Promise<void> {
     readJsonFile<TranslationManifest>(path.join(I18N_DIR, 'manifest.json')) ?? {};
   const stale = staleFields(prevManifest, nextManifest);
   const staleFieldTotal = Object.values(stale).reduce((sum, fields) => sum + fields.length, 0);
+  const currentShareIds = new Set(Object.keys(english));
 
   fs.writeFileSync(path.join(CONTENT_DIR, 'en.json'), sortedJson(english));
   fs.writeFileSync(path.join(I18N_DIR, 'manifest.json'), sortedJson(nextManifest));
 
   let seededTotal = 0;
+  let orphanTotal = 0;
   for (const locale of SUPPORTED_HUB_LOCALES) {
     if (locale === 'en') continue;
 
@@ -259,19 +281,26 @@ async function main(): Promise<void> {
     }
     seededTotal += Object.keys(humanSeed).length;
 
-    // Machine layer: prune only the changed fields so lobe re-translates just
-    // those (not the whole entry) on the next run.
+    // Machine layer: first drop entries for removed workflows (every build), then
+    // prune the changed fields of surviving entries so lobe re-translates just
+    // those (not the whole entry) on the next run. Write only when something
+    // actually changed, to keep the diff clean.
     const machineFile = path.join(CONTENT_DIR, `${locale}.json`);
     const machine = readJsonFile<Record<string, Partial<WorkflowContent>>>(machineFile);
-    if (machine && Object.keys(stale).length > 0) {
-      fs.writeFileSync(machineFile, sortedJson(pruneStaleFields(machine, stale)));
+    if (machine) {
+      const deorphaned = pruneOrphanIds(machine, currentShareIds);
+      orphanTotal += Object.keys(machine).length - Object.keys(deorphaned).length;
+      const cleaned = pruneStaleFields(deorphaned, stale);
+      const next = sortedJson(cleaned);
+      if (next !== sortedJson(machine)) fs.writeFileSync(machineFile, next);
     }
   }
 
   console.log(
     `[i18n] content source: ${Object.keys(english).length} workflows, ` +
       `${seededTotal} human seeds across ${SUPPORTED_HUB_LOCALES.length - 1} locales, ` +
-      `${staleFieldTotal} changed field(s) across ${Object.keys(stale).length} workflows pruned for re-translation.`
+      `${staleFieldTotal} changed field(s) across ${Object.keys(stale).length} workflows pruned for re-translation, ` +
+      `${orphanTotal} orphaned machine entr(ies) removed for workflows no longer in the index.`
   );
 }
 
