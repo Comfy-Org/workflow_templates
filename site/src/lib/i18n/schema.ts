@@ -114,6 +114,13 @@ export interface IndexabilityInput {
   englishHas: Record<TranslatableField, boolean>;
   /** Current English content hash from the manifest. */
   currentContentHash: string;
+  /**
+   * Deterministic checksum of the CURRENT resolved localized artifact (the merged
+   * override/human/machine bytes that actually render). Bound to the sign-off's
+   * `reviewedArtifactChecksum` so changing translated text after a flip — without
+   * touching English — de-indexes the page until re-review.
+   */
+  currentArtifactChecksum: string;
   /** The locale's sign-off for this workflow, or null if unreviewed. */
   review: ReviewRecord | null;
   supportedLocales: readonly Locale[];

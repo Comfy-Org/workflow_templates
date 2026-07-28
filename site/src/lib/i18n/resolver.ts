@@ -14,6 +14,7 @@
  * work is never overwritten by a machine run. English is the last resort and
  * only valid for non-indexable pages.
  */
+import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { isLocalePageIndexable } from './predicate';
@@ -29,6 +30,19 @@ import {
   type TranslationManifest,
   type WorkflowContent,
 } from './schema';
+
+/**
+ * Deterministic 12-hex checksum of a resolved localized artifact. Serialized in
+ * fixed TRANSLATABLE_FIELDS order so the value is stable regardless of how `data`
+ * was built. This is the single canonical definition — whatever records a
+ * reviewer's `reviewedArtifactChecksum` MUST hash the resolved artifact with this
+ * same function so the predicate's equality check is meaningful.
+ */
+export function hashResolvedArtifact(data: WorkflowContent): string {
+  const canonical: Record<string, unknown> = {};
+  for (const field of TRANSLATABLE_FIELDS) canonical[field] = data[field];
+  return createHash('sha256').update(JSON.stringify(canonical)).digest('hex').slice(0, 12);
+}
 
 // Root of the committed translation artifacts. Layout:
 //   content/en.json, content/{locale}.json   (lobe entry + machine output; this
@@ -143,12 +157,16 @@ export function resolveLocalizedWorkflow(
 
   const review: ReviewRecord | null = reviews[shareId] ?? null;
   const currentContentHash = manifest[shareId]?.content ?? '';
+  // Checksum the fully-merged localized artifact so the sign-off binds to the
+  // exact bytes reviewed, not just the English source hash.
+  const currentArtifactChecksum = hashResolvedArtifact(data);
 
   const { indexable, reason } = isLocalePageIndexable({
     locale,
     provenance,
     englishHas,
     currentContentHash,
+    currentArtifactChecksum,
     review,
     supportedLocales,
     indexableLocales,

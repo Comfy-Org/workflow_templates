@@ -16,11 +16,12 @@ function baseInput(overrides: Partial<IndexabilityInput> = {}): IndexabilityInpu
     provenance,
     englishHas,
     currentContentHash: HASH,
+    currentArtifactChecksum: 'artifact-v1',
     review: {
       reviewer: 'tiger',
       reviewedAt: '2026-07-24',
       reviewedContentHash: HASH,
-      reviewedArtifactChecksum: 'x',
+      reviewedArtifactChecksum: 'artifact-v1',
     },
     supportedLocales: ['zh', 'ja', 'ko'],
     indexableLocales: ['zh'],
@@ -81,5 +82,13 @@ describe('isLocalePageIndexable', () => {
     const r = isLocalePageIndexable(baseInput({ currentContentHash: 'def456' }));
     expect(r.indexable).toBe(false);
     expect(r.reason).toContain('stale');
+  });
+
+  it('drops out when the localized artifact changed after sign-off (same English)', () => {
+    // English hash unchanged, but the resolved translation bytes differ from what
+    // the reviewer signed — must de-index until re-review.
+    const r = isLocalePageIndexable(baseInput({ currentArtifactChecksum: 'artifact-v2' }));
+    expect(r.indexable).toBe(false);
+    expect(r.reason).toContain('translation');
   });
 });

@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { resolveLocalizedWorkflow, __resetResolverCache } from '../../src/lib/i18n/resolver';
+import {
+  resolveLocalizedWorkflow,
+  hashResolvedArtifact,
+  __resetResolverCache,
+} from '../../src/lib/i18n/resolver';
 import type { Locale } from '../../src/lib/i18n/schema';
 
 const HASH = 'hash-v1';
@@ -25,6 +29,8 @@ function setup(
     override?: Record<string, unknown>;
     reviewedHash?: string | null;
     currentHash?: string;
+    /** Force a specific reviewed artifact checksum (default: the real resolved one). */
+    artifactChecksum?: string;
   } = {}
 ) {
   const en = opts.en ?? {
@@ -42,14 +48,24 @@ function setup(
   if (opts.override) write(`overrides/zh.json`, { [SHARE]: opts.override });
   write('manifest.json', { [SHARE]: { content: opts.currentHash ?? HASH, fields: {} } });
   if (opts.reviewedHash !== null) {
+    // Bind the sign-off to the ACTUAL resolved artifact by default (what a real
+    // reviewer signs): resolve once to learn the checksum, then write the record.
+    // Content/provenance don't depend on the review, so this probe is stable.
+    __resetResolverCache();
+    const probe = resolveLocalizedWorkflow(SHARE, 'zh', {
+      contentRoot: root,
+      supportedLocales: ['zh', 'ja', 'ko'],
+      indexableLocales: ['zh'],
+    });
     write('reviews/zh.json', {
       [SHARE]: {
         reviewer: 'tiger',
         reviewedAt: '2026-07-24',
         reviewedContentHash: opts.reviewedHash ?? HASH,
-        reviewedArtifactChecksum: 'ck',
+        reviewedArtifactChecksum: opts.artifactChecksum ?? hashResolvedArtifact(probe.data),
       },
     });
+    __resetResolverCache();
   }
 }
 
@@ -132,6 +148,24 @@ describe('resolveLocalizedWorkflow', () => {
     const r = RESOLVE();
     expect(r.indexable).toBe(false);
     expect(r.reason).toContain('stale');
+  });
+
+  it('drops out when the localized artifact changed after sign-off (English unchanged)', () => {
+    // Same English + content hash, but the reviewer signed off on different
+    // translated bytes than what now resolves — must de-index until re-review.
+    setup({
+      zh: {
+        title: '标题',
+        description: '描述',
+        metaDescription: '元描述',
+        extendedDescription: '长描述',
+        faqItems: [{ question: '问', answer: '答' }],
+      },
+      artifactChecksum: 'signed-off-older-bytes',
+    });
+    const r = RESOLVE();
+    expect(r.indexable).toBe(false);
+    expect(r.reason).toContain('translation');
   });
 
   it('never blends silently: returns full English data even when non-indexable', () => {

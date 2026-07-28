@@ -45,12 +45,19 @@ export function isLocalePageIndexable(input: IndexabilityInput): IndexabilityRes
     return { indexable: false, reason: `untranslated fields: ${untranslated.join(', ')}` };
   }
 
-  // 3. A native reviewer must have signed off on this exact English version.
+  // 3. A native reviewer must have signed off on this exact English version AND on
+  // the exact localized bytes they read. The content hash alone leaves a hole:
+  // editing machine/human/override text without touching English would keep the
+  // page indexable under the old sign-off. Binding the artifact checksum too closes
+  // it — any change to the rendered translation de-indexes until re-review.
   if (!input.review) {
     return { indexable: false, reason: 'no review sign-off' };
   }
   if (input.review.reviewedContentHash !== input.currentContentHash) {
     return { indexable: false, reason: 'stale: English source changed since sign-off' };
+  }
+  if (input.review.reviewedArtifactChecksum !== input.currentArtifactChecksum) {
+    return { indexable: false, reason: 'stale: reviewed translation changed since sign-off' };
   }
 
   return { indexable: true, reason: '' };
