@@ -1,0 +1,244 @@
+---
+/**
+ * Localized SSR catch-all for /{locale}/workflows/{segment}/ (on-demand rendered).
+ * The prerendered `[locale]/workflows/[slug].astro` serves known workflow detail
+ * pages statically; this route catches creator profiles, redirects legacy slugs
+ * and not-yet-built workflow details to their canonical URLs, and 404s the rest.
+ */
+export const prerender = false;
+
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import HubNavbar from '../../../components/hub/HubNavbar.astro';
+import SiteFooter from '../../../components/hub/SiteFooter.astro';
+import SidebarSection from '../../../components/template-detail/SidebarSection.astro';
+import BackButton from '../../../components/BackButton.astro';
+import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
+import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { absoluteUrl } from '../../../config/site';
+import {
+  listWorkflowIndex,
+  getProfile,
+  getWorkflow,
+  extractShareId,
+  getProfileCache,
+  serializeIndexEntry,
+  HubApiError,
+  type SerializedTemplate,
+} from '../../../lib/hub-api';
+import { fetchRankingMap } from '../../../lib/ranking';
+import { creatorOgUrl } from '../../../lib/og-url';
+import { buildToolbarLabels } from '../../../lib/toolbar';
+import { getSocialDisplay } from '../../../lib/social-links';
+
+// ISR: cache for 60s, serve stale for up to 10 min while revalidating
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
+// The [username] segment is the SSR catch-all: a creator username, or a detail
+// slug (name-shareId) for a workflow not prerendered yet.
+const { locale, username: slug } = Astro.params;
+
+if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
+// Validate locale
+if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
+  return Astro.redirect('/workflows/');
+}
+
+const typedLocale = locale as Locale;
+
+if (!slug) {
+  return Astro.redirect(`/${locale}/workflows/`);
+}
+
+// A `name-shareId` slug is a workflow detail request. The prerendered [slug] route
+// serves these (gated, English-canonical); anything reaching this SSR route is a
+// workflow added since the last build. Rather than render an un-gated localized
+// detail (wrong inLanguage/hreflang, no noindex), confirm it exists and redirect
+// to the English detail — the next build prerenders the gated localized page.
+const detailShareId = extractShareId(slug);
+if (detailShareId) {
+  try {
+    await getWorkflow(detailShareId);
+  } catch (err) {
+    if (err instanceof HubApiError && err.status === 404) {
+      return new Response(null, { status: 404, statusText: 'Not Found' });
+    }
+    console.error('Hub API error on ISR detail:', err);
+    return new Response(null, {
+      status: 502,
+      statusText: 'Bad Gateway',
+      headers: { 'CDN-Cache-Control': 'no-store' },
+    });
+  }
+  return Astro.redirect(`/workflows/${slug}/`, 302);
+}
+
+// Not a detail slug → a creator username, or a legacy template slug. A legacy slug
+// 301s to its canonical detail URL. A transient index outage must not bake in a
+// permanent redirect, so its content-collection fallback is a 302, not a 301.
+let redirectUrl: string | undefined;
+let redirectPermanent = true;
+try {
+  const entries = await listWorkflowIndex();
+  const entry = entries.find((e) => e.name === slug);
+  if (entry && entry.shareId) {
+    redirectUrl = `/${locale}/workflows/${entry.name}-${entry.shareId}/`;
+  }
+} catch {
+  const templates = await getCollection('templates');
+  const template = templates.find((tmpl) => !tmpl.id.includes('/') && tmpl.data.name === slug);
+  if (template) {
+    redirectUrl = `/workflows/`;
+    redirectPermanent = false; // transient — the index will recover
+  }
+}
+if (redirectUrl) {
+  return Astro.redirect(redirectUrl, redirectPermanent ? 301 : 302);
+}
+
+// Creator profile — try the dedicated endpoint, fall back to index-embedded profiles.
+let profileFound = false;
+let displayName = slug;
+let avatarUrl: string | null = null;
+let description = '';
+let websiteUrls: string[] = [];
+try {
+  const profile = await getProfile(slug);
+  profileFound = true;
+  displayName = profile.display_name || slug;
+  avatarUrl = profile.avatar_url || null;
+  description = profile.description || '';
+  websiteUrls = profile.website_urls || [];
+} catch {
+  const cachedProfiles = await getProfileCache();
+  const cached = cachedProfiles.get(slug);
+  if (cached) {
+    profileFound = true;
+    displayName = cached.display_name || slug;
+    avatarUrl = cached.avatar_url || null;
+    description = cached.description || '';
+    websiteUrls = cached.website_urls || [];
+  }
+}
+
+// Workflows for this creator, from the index.
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
+let serialized: SerializedTemplate[] = [];
+let indexFetchFailed = false;
+try {
+  const entries = await listWorkflowIndex();
+  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
+  serialized = filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap));
+} catch (err) {
+  indexFetchFailed = true;
+  console.error('Hub API failed for creator grid:', err);
+}
+
+// Bogus slug (no profile, no workflows): 404/502 rather than an indexable
+// "<slug> (@<slug>)" shell. A failed grid fetch is transient → 502 (no-store),
+// never cached; a genuinely empty result → 404.
+if (indexFetchFailed) {
+  return new Response(null, {
+    status: 502,
+    statusText: 'Bad Gateway',
+    headers: { 'CDN-Cache-Control': 'no-store' },
+  });
+}
+if (!profileFound && serialized.length === 0) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
+const socialLinks = websiteUrls.map(getSocialDisplay);
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  name: displayName,
+  description: description || `Workflows by ${displayName}`,
+  url: canonicalUrl,
+};
+---
+
+<BaseLayout
+  title={`${displayName} (@${slug}) - ComfyUI Workflow Templates`}
+  description={description || `Workflows by ${displayName}`}
+  canonicalUrl={canonicalUrl}
+  ogImage={creatorOgUrl(displayName, slug!, avatarUrl || undefined)}
+  structuredData={structuredData}
+  locale={typedLocale}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+
+  <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pb-20">
+    <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 pt-8">
+      <aside class="w-full lg:w-[328px] shrink-0">
+        <div class="lg:sticky lg:top-16 flex flex-col gap-8 pt-8">
+          <BackButton locale={typedLocale} class="self-start" />
+          <SidebarSection contentClass="p-8 gap-6">
+            <div class="flex flex-col gap-4">
+              {
+                avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={displayName}
+                    class="size-16 rounded-full object-cover"
+                  />
+                ) : (
+                  <div class="size-16 rounded-full bg-brand flex items-center justify-center">
+                    <span class="text-black text-2xl font-bold">
+                      {displayName.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )
+              }
+              <div class="flex flex-col">
+                <p class="text-content text-base font-bold">{displayName}</p>
+                <p class="text-hub-muted text-sm">@{slug}</p>
+              </div>
+            </div>
+
+            {description && <p class="text-hub-muted text-sm leading-normal">{description}</p>}
+
+            {
+              socialLinks.length > 0 && (
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-hub-muted">
+                  {socialLinks.map((link) => (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="underline hover:text-content transition-colors"
+                    >
+                      {link.label}
+                    </a>
+                  ))}
+                </div>
+              )
+            }
+          </SidebarSection>
+        </div>
+      </aside>
+
+      <WorkflowGrid
+        client:load
+        templates={serialized}
+        locale={typedLocale}
+        toolbarLabels={buildToolbarLabels(typedLocale)}
+        gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+      />
+    </div>
+  </div>
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

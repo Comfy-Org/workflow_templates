@@ -191,6 +191,21 @@ export interface ListWorkflowsParams {
 // API functions
 // ---------------------------------------------------------------------------
 
+/**
+ * Hub API failure carrying the HTTP status, so callers branch on `err.status`
+ * (e.g. 404 vs a transient 5xx) instead of string-matching the message.
+ */
+export class HubApiError extends Error {
+  constructor(
+    readonly status: number,
+    statusText: string,
+    url: string
+  ) {
+    super(`Hub API error: ${status} ${statusText} — ${url}`);
+    this.name = 'HubApiError';
+  }
+}
+
 async function hubFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${HUB_API_BASE}${path}`;
   const res = await fetch(url, {
@@ -202,7 +217,7 @@ async function hubFetch<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!res.ok) {
-    throw new Error(`Hub API error: ${res.status} ${res.statusText} — ${url}`);
+    throw new HubApiError(res.status, res.statusText, url);
   }
 
   return res.json() as Promise<T>;

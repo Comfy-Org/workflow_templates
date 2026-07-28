@@ -17,6 +17,7 @@
 import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
+import { DEFAULT_LOCALE } from '../../i18n/config';
 import { isLocalePageIndexable } from './predicate';
 import { SUPPORTED_HUB_LOCALES, INDEXABLE_LOCALES } from './locales';
 import {
@@ -173,4 +174,23 @@ export function resolveLocalizedWorkflow(
   });
 
   return { data, provenance, indexable, reason };
+}
+
+/**
+ * The non-English locales for which THIS workflow's detail page is indexable — the
+ * per-page hreflang cluster (Google discards a cluster that points at noindexed
+ * alternates). Cheap while gated: `INDEXABLE_LOCALES` empty short-circuits to `[]`
+ * before any resolve, so English detail pages pay nothing until a locale flips.
+ */
+export function indexableAlternateLocales(
+  shareId: string,
+  options: ResolverOptions = {}
+): Locale[] {
+  const indexableLocales = options.indexableLocales ?? INDEXABLE_LOCALES;
+  if (indexableLocales.length === 0) return [];
+  const supported = options.supportedLocales ?? SUPPORTED_HUB_LOCALES;
+  return supported.filter(
+    (locale) =>
+      locale !== DEFAULT_LOCALE && resolveLocalizedWorkflow(shareId, locale, options).indexable
+  );
 }

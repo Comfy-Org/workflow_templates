@@ -3,6 +3,39 @@
  * SiteFooter - Blue footer matching the Figma design
  * Blue background, Comfy logo, social icons, 4-column link grid
  */
+import { LANGUAGES, DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
+
+// Language switcher (GTM-291). Self-derives from the current URL so no caller
+// has to thread props: the current locale is the path's locale prefix, and the
+// un-prefixed base path is what every alternate URL is rebuilt from.
+const currentLocale = getLocaleFromPath(Astro.url.pathname);
+const strippedPath =
+  currentLocale === DEFAULT_LOCALE
+    ? Astro.url.pathname
+    : Astro.url.pathname.replace(new RegExp(`^/${currentLocale}`), '') || '/';
+const basePath = strippedPath.startsWith('/') ? strippedPath : `/${strippedPath}`;
+
+// Predicate-gated links (design v3 §13 PR 3): only offer languages whose pages
+// are actually live. INDEXABLE_LOCALES is the language-level rollout gate and is
+// empty until a language passes native review, so today this renders nothing and
+// the footer stays byte-identical. English is always offered as the return path.
+// Per-page refinement (a workflow untranslated in an otherwise-live locale) lands
+// with the indexability predicate in a later PR.
+const offeredLocales: Locale[] = [
+  DEFAULT_LOCALE,
+  ...INDEXABLE_LOCALES.filter((l) => l !== DEFAULT_LOCALE),
+];
+const languageLinks =
+  offeredLocales.length > 1
+    ? offeredLocales.map((locale) => ({
+        locale,
+        nativeName: LANGUAGES[locale].nativeName,
+        url: localizeUrl(basePath, locale),
+        isCurrent: locale === currentLocale,
+      }))
+    : [];
 ---
 
 <footer class="bg-page text-content">
@@ -362,6 +395,32 @@
 
     <!-- Bottom bar -->
     <div class="mt-14 pt-6 border-t border-white/10">
+      <!-- Language switcher: only rendered once a locale is live (gated off today) -->
+      {
+        languageLinks.length > 0 && (
+          <nav
+            aria-label="Language"
+            class="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm"
+          >
+            {languageLinks.map((link) =>
+              link.isCurrent ? (
+                <span class="text-content font-medium" lang={link.locale} aria-current="true">
+                  {link.nativeName}
+                </span>
+              ) : (
+                <a
+                  href={link.url}
+                  hreflang={link.locale}
+                  lang={link.locale}
+                  class="text-content-muted hover:text-content transition-colors"
+                >
+                  {link.nativeName}
+                </a>
+              )
+            )}
+          </nav>
+        )
+      }
       <div
         class="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-content-muted"
       >
