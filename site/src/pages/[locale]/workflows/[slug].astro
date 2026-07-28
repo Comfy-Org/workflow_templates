@@ -46,7 +46,7 @@ Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while
 
 const { locale, slug } = Astro.params;
 
-if (Astro.url.pathname.endsWith('.json/')) {
+if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
   return new Response(null, {
     status: 404,
     statusText: 'Not Found',
@@ -158,7 +158,9 @@ try {
 // Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
 // link): no profile and no workflows — redirect instead of rendering a page
 // that would title itself "<slug> (@<slug>)" and get indexed by Google.
-if (!isDetailPage && !profileFound && serialized.length === 0) {
+if (!isDetailPage) {
+  // A failed grid-index fetch is a transient error, not a missing page: 502 (no-store)
+  // regardless of profileFound, so an empty grid from an API glitch is never cached.
   if (indexFetchFailed) {
     return new Response(null, {
       status: 502,
@@ -168,10 +170,13 @@ if (!isDetailPage && !profileFound && serialized.length === 0) {
       },
     });
   }
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  // 404 only for a successfully queried, genuinely empty result.
+  if (!profileFound && serialized.length === 0) {
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not Found',
+    });
+  }
 }
 
 const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
