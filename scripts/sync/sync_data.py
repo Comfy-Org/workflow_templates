@@ -1631,7 +1631,10 @@ class TemplateSyncManager:
             self.syncer.logger.info(f"   Templates marked for vram/size management: {len(self.syncer.vram_size_update_templates)}")
 
         if self.sync_options.get('index_only'):
-            self.syncer.logger.info("\n⏭️  Index-only mode: skipping bundles, asset checks, model analysis, spellcheck, and validation")
+            self.syncer.logger.info(
+                "\n⏭️  Index-only mode: skipping bundles, asset checks, model analysis, "
+                "spellcheck, and validation"
+            )
             if self.errors:
                 self.syncer.logger.error("\n❌ Errors summary:")
                 for err in self.errors:
@@ -1760,7 +1763,10 @@ Translation System:
     parser.add_argument(
         '--index-only',
         action='store_true',
-        help='Sync index.json and locale index files only (skip bundles, asset checks, model analysis, spellcheck, validation)',
+        help=(
+            'Sync index.json and locale index files only (skip bundles, asset checks, '
+            'model analysis, spellcheck, validation)'
+        ),
     )
     
     args = parser.parse_args()
