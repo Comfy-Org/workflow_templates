@@ -1,0 +1,36 @@
+# Runs the deterministic hub-translation validator on any PR that touches the
+# translation artifacts or their pipeline (GTM-291). The auto-PR from
+# i18n-update-hub.yml already gates publication on this validator, but normal
+# Site CI does not run it, so a hand-edited translation PR could otherwise show
+# all-green while failing the deterministic gate. This closes that gap.
+name: "i18n: Validate Translations"
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'site/src/i18n/**'
+      - 'site/scripts/i18n/**'
+      - 'site/.i18nrc.cjs'
+      - 'site/.i18nrc.ui.cjs'
+      - '.github/workflows/i18n-validate.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: Validate Translations
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      - name: Validate translations
+        run: pnpm i18n:validate
