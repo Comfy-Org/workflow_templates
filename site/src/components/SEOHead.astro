@@ -1,6 +1,6 @@
 ---
 import HreflangTags from './HreflangTags.astro';
-import { LANGUAGES, DEFAULT_LOCALE } from '../i18n/config';
+import { LANGUAGES, DEFAULT_LOCALE, type Locale } from '../i18n/config';
 import { absoluteUrl, SITE_NAME } from '../config/site';
 import { serializeJsonLdForScript } from '../lib/structured-data';
 
@@ -17,6 +17,8 @@ interface Props {
   hreflangBasePath?: string;
   /** Whether localized variants exist; false emits x-default only (no per-locale alternates). */
   hreflangLocalized?: boolean;
+  /** Explicit per-page alternate locales (GTM-291); overrides hreflangLocalized. */
+  hreflangLocales?: readonly Locale[];
   /** Emit robots noindex (keeps follow) for thin/unverified pages. */
   noindex?: boolean;
 }
@@ -31,6 +33,7 @@ const {
   structuredData,
   hreflangBasePath,
   hreflangLocalized = true,
+  hreflangLocales,
   noindex = false,
 } = Astro.props;
 
@@ -79,7 +82,11 @@ if (!computedHreflangBasePath) {
 <link rel="canonical" href={fullCanonicalUrl} />
 
 {/* Hreflang tags for international SEO */}
-<HreflangTags basePath={computedHreflangBasePath} localized={hreflangLocalized} />
+<HreflangTags
+  basePath={computedHreflangBasePath}
+  localized={hreflangLocalized}
+  locales={hreflangLocales}
+/>
 
 <!-- Open Graph -->
 <meta property="og:type" content={ogType} />

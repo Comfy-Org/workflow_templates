@@ -8,6 +8,7 @@ import path from 'node:path';
 import os from 'node:os';
 
 import vue from '@astrojs/vue';
+import { INDEXABLE_LOCALES } from './src/lib/i18n/locales.ts';
 import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
 import { resolveUseCasePageTemplates } from './src/lib/workflow-pages/use-case-resolver.ts';
@@ -66,11 +67,19 @@ const indexableUseCaseSlugs = new Set(
 
 // Variant → canonical 301s (real, via the Vercel adapter). Skip a variant that is
 // itself a canonical slug, so a redirect can never shadow a real page.
+// Key BOTH slash forms: canonical model URLs carry a trailing slash
+// (`modelPath` → `/workflows/model/<slug>/`), so a no-slash-only redirect key let
+// the canonicalized `/workflows/model/<variant>/` fall through to a 404. The
+// locale route redirects variants in code regardless of trailing slash, so both
+// forms here restore parity (the wan2-5 bug).
 const modelSlugRedirects = Object.fromEntries(
   modelGroups.flatMap((group) =>
     group.redirectFrom
       .filter((variant) => !canonicalModelSlugs.has(variant))
-      .map((variant) => [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`])
+      .flatMap((variant) => [
+        [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`],
+        [`/workflows/model/${variant}/`, `/workflows/model/${group.slug}/`],
+      ])
   )
 );
 
@@ -80,6 +89,15 @@ const buildDate = new Date().toISOString();
 // Supported locales (matches src/i18n/config.ts)
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
 const nonDefaultLocales = locales.filter((l) => l !== 'en');
+
+// Locales flipped to indexable — the single source of truth is INDEXABLE_LOCALES
+// in src/lib/i18n/locales.ts (imported above), so a go-live flip is one edit there
+// and the sitemap gate follows automatically. While empty, no prerendered locale
+// detail page enters the sitemap, so its Google-facing content is unchanged; a
+// locale detail URL would leak in otherwise, since those pages are now static and
+// match the generic detail rule below.
+/** @type {Set<string>} */
+const indexableLocales = new Set(INDEXABLE_LOCALES);
 
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
 
@@ -215,7 +233,15 @@ export default defineConfig({
           const lastHyphen = segment.lastIndexOf('-');
           if (lastHyphen === -1) return false;
           const candidate = segment.slice(lastHyphen + 1);
-          if (candidate.length === 12 && /^[0-9a-f]+$/.test(candidate)) return true;
+          if (candidate.length === 12 && /^[0-9a-f]+$/.test(candidate)) {
+            // Locale detail pages are prerendered now; only list them once their
+            // locale is flipped indexable. English detail pages have no prefix.
+            const localeMatch = page.match(/\/([a-z]{2}(?:-[A-Z]{2})?)\/workflows\//);
+            if (localeMatch && localeMatch[1] !== 'en' && !indexableLocales.has(localeMatch[1])) {
+              return false;
+            }
+            return true;
+          }
           return false;
         }
         return true;

@@ -20,6 +20,8 @@ interface Props {
   hreflangBasePath?: string;
   /** Whether localized variants of this route exist (controls hreflang alternates). */
   hreflangLocalized?: boolean;
+  /** Explicit per-page alternate locales (GTM-291); overrides hreflangLocalized. */
+  hreflangLocales?: readonly Locale[];
   theme?: 'light' | 'dark';
   hideDefaultFooter?: boolean;
   noindex?: boolean;
@@ -36,6 +38,7 @@ const {
   locale: propLocale,
   hreflangBasePath,
   hreflangLocalized = true,
+  hreflangLocales,
   theme = 'light',
   hideDefaultFooter = false,
   noindex = false,
@@ -85,6 +88,7 @@ const bodyClasses = isDark
       structuredData={structuredData}
       hreflangBasePath={hreflangBasePath}
       hreflangLocalized={hreflangLocalized}
+      hreflangLocales={hreflangLocales}
       noindex={noindex}
     />
     <slot name="head" />
