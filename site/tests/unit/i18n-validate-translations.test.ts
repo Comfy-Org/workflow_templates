@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { collectViolations, collectUiViolations } from '../../scripts/i18n/validate-translations';
+import {
+  collectViolations,
+  collectUiViolations,
+  localeContentMisaligned,
+} from '../../scripts/i18n/validate-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 
 const PRESERVE = ['ComfyUI', 'Wan', 'LoRA'];
@@ -159,5 +163,22 @@ describe('collectUiViolations', () => {
   it('flags a key that does not exist in English', () => {
     const zh = { 'hub.ghost': '幽灵' };
     expect(uiKinds(collectUiViolations('zh', enUi, zh))).toContain('unknown-key');
+  });
+});
+
+describe('localeContentMisaligned', () => {
+  const english = { s1: {}, s2: {} };
+
+  it('is true when the file has entries but none match English (corrupt output)', () => {
+    // e.g. a mangled machine file keyed by garbage, not shareIds.
+    expect(localeContentMisaligned({ '### zh.json': {}, broken: {} }, english)).toBe(true);
+  });
+
+  it('is false when at least one entry aligns to English', () => {
+    expect(localeContentMisaligned({ s1: {}, unknown: {} }, english)).toBe(false);
+  });
+
+  it('is false for an empty/absent file (nothing translated yet)', () => {
+    expect(localeContentMisaligned({}, english)).toBe(false);
   });
 });

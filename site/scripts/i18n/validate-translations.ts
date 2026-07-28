@@ -245,6 +245,23 @@ export function collectUiViolations(
   return out;
 }
 
+/**
+ * True when a locale CONTENT file has entries but NONE align to the English
+ * source (no shared shareId). The per-field checks skip any entry whose shareId
+ * is absent from English, so a corrupt or misaligned machine file — e.g. a model
+ * mangling fenced JSON into a wrong-shaped object, as Claude did in the Anthropic
+ * trial — would otherwise pass with zero violations. An empty or absent file is
+ * fine: nothing has been translated for that locale yet.
+ */
+export function localeContentMisaligned(
+  localeContent: Record<string, unknown>,
+  english: Record<string, unknown>
+): boolean {
+  const keys = Object.keys(localeContent);
+  if (keys.length === 0) return false;
+  return keys.every((shareId) => !(shareId in english));
+}
+
 // ---------------------------------------------------------------------------
 // IO (main)
 // ---------------------------------------------------------------------------
@@ -266,12 +283,21 @@ function main(): void {
   const preserveTerms = readJson<string[]>(path.join(GLOSSARY_DIR, 'preserve-terms.json'), []);
 
   const all: Violation[] = [];
+  const fileErrors: string[] = [];
   for (const locale of SUPPORTED_HUB_LOCALES) {
     if (locale === 'en') continue;
     const localeContent = readJson<Record<string, Partial<WorkflowContent>>>(
       path.join(CONTENT_DIR, `${locale}.json`),
       {}
     );
+    // Corrupt/misaligned file guard: entries present but none match English means
+    // the per-field checks below would silently skip everything and pass.
+    if (localeContentMisaligned(localeContent, english)) {
+      fileErrors.push(
+        `content/${locale}.json has ${Object.keys(localeContent).length} entries but none ` +
+          `match the English source (corrupt or misaligned machine output)`
+      );
+    }
     // Curated per-locale terms that must be honored (the override layer's teeth).
     const overrides = readJson<Record<string, string>>(
       path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
@@ -296,9 +322,14 @@ function main(): void {
     uiAll.push(...collectUiViolations(locale, enUi, localeUi));
   }
 
-  if (all.length === 0 && uiAll.length === 0) {
+  if (all.length === 0 && uiAll.length === 0 && fileErrors.length === 0) {
     console.log('[i18n] validate: no violations.');
     return;
+  }
+
+  if (fileErrors.length > 0) {
+    console.error(`[i18n] validate: ${fileErrors.length} locale file(s) misaligned:`);
+    for (const err of fileErrors) console.error(`  ${err}`);
   }
 
   if (all.length > 0) {
