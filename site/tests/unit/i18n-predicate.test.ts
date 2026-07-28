@@ -6,7 +6,7 @@ const HASH = 'abc123';
 
 function baseInput(overrides: Partial<IndexabilityInput> = {}): IndexabilityInput {
   const provenance = Object.fromEntries(
-    TRANSLATABLE_FIELDS.map((f) => [f, 'localized'])
+    TRANSLATABLE_FIELDS.map((f) => [f, 'machine'])
   ) as IndexabilityInput['provenance'];
   const englishHas = Object.fromEntries(
     TRANSLATABLE_FIELDS.map((f) => [f, true])
