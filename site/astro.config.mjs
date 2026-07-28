@@ -246,7 +246,7 @@ export default defineConfig({
   },
 
   vite: {
-    plugins: [tailwindcss()],
+    plugins: [/** @type {any} */ (tailwindcss())],
     build: {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {

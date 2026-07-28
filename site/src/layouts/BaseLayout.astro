@@ -63,7 +63,12 @@ const bodyClasses = isDark
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
         <script is:inline define:vars={{ GA_ID }}>
           window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
+          function gtag() {
+            // gtag.js requires the raw Arguments object here, not an array, or the
+            // js/config commands are misinterpreted. Keep Google's official shim.
+            // eslint-disable-next-line prefer-rest-params
+            dataLayer.push(arguments);
+          }
           window.gtag = gtag;
           gtag('js', new Date());
           gtag('config', GA_ID);
