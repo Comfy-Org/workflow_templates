@@ -4,11 +4,12 @@
  * Accepts pre-filtered templates and handles tabs, sorting, and display internally.
  * Used by both HubBrowse (hub page) and [username].astro (profile page).
  */
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import HubWorkflowCard from './HubWorkflowCard.vue';
 import BrowseToolbar from './BrowseToolbar.vue';
 import { useHubStore } from '@/composables/useHubStore';
+import { loadCatalog } from '@/lib/catalog';
 import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 
 export type HubThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
@@ -52,29 +53,66 @@ const props = withDefaults(
      * `templates` by the active badges (so counts stay stable while filtering).
      */
     facetTemplates?: WorkflowTemplate[];
+    /**
+     * When true, `templates` is only the embedded first-page slice (for instant
+     * paint); the full catalog is lazy-loaded from grid.json on mount and swapped
+     * in. Used by the detail "View all workflows" grid so pages don't embed the
+     * whole catalog. Omit for pages that already pass a bounded subset.
+     */
+    lazyFull?: boolean;
+    /** With `lazyFull`, exclude this workflow `name` from the fetched catalog. */
+    excludeName?: string;
   }>(),
   {
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
     toolbarLabels: undefined,
     facetsConfig: undefined,
     facetTemplates: undefined,
+    lazyFull: false,
+    excludeName: undefined,
   }
 );
 
-const facetSource = computed(() => props.facetTemplates ?? props.templates);
+// Working set: starts as the passed `templates` (embedded slice or full subset),
+// then, when `lazyFull`, is replaced by the full catalog once it loads.
+const workingSet = ref<WorkflowTemplate[]>([...props.templates]);
+
+onMounted(() => {
+  if (!props.lazyFull) return;
+  loadCatalog()
+    .then((catalog) => {
+      workingSet.value = props.excludeName
+        ? catalog.filter((t) => t.name !== props.excludeName)
+        : catalog;
+    })
+    .catch((err) => {
+      // Keep the embedded slice on failure — the grid stays usable.
+      console.error('Failed to load full catalog for grid:', err);
+    });
+});
+
+// Keep the working set in sync if the parent swaps `templates` (non-lazy pages).
+watch(
+  () => props.templates,
+  (next) => {
+    if (!props.lazyFull) workingSet.value = [...next];
+  }
+);
+
+const facetSource = computed(() => props.facetTemplates ?? workingSet.value);
 
 const store = useHubStore();
 const displayCount = ref(30);
 
 // Reset pagination when the inputs that change the result set change.
-watch([() => props.templates, store.activeTab, store.sortBy], () => {
+watch([workingSet, store.activeTab, store.sortBy], () => {
   displayCount.value = 30;
 });
 
 const tabbedTemplates = computed(() => {
-  if (store.activeTab.value === 'comfyApps') return props.templates.filter((t) => t.isApp);
-  if (store.activeTab.value === 'nodeGraphs') return props.templates.filter((t) => !t.isApp);
-  return props.templates;
+  if (store.activeTab.value === 'comfyApps') return workingSet.value.filter((t) => t.isApp);
+  if (store.activeTab.value === 'nodeGraphs') return workingSet.value.filter((t) => !t.isApp);
+  return workingSet.value;
 });
 
 const sortedTemplates = computed(() => {

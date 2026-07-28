@@ -1,0 +1,173 @@
+# Generates and updates hub workflow-content translations (GTM-291).
+#
+# Pushes English; CI translates. Regenerates the English content-of-record from
+# the Hub index, seeds existing human translations, fills the gaps with
+# @lobehub/i18n-cli (OpenAI), validates deterministically, and opens a PR with
+# the result for a human to review + merge. Nothing here flips any locale to
+# indexable — that stays a separate, reviewed one-line change.
+name: "i18n: Update Hub Translations"
+
+on:
+  workflow_dispatch:
+  # Pick up newly published / changed workflows on a cadence.
+  schedule:
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: i18n-update-hub
+  # Queue overlapping runs; do not cancel, so the 2am cron can't kill a manually
+  # dispatched backfill mid-flight.
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow_templates
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      # ComfyUI_frontend's UI locales seed the glossary mirror (term consistency).
+      - name: Checkout ComfyUI_frontend locales
+        uses: actions/checkout@v4
+        with:
+          repository: Comfy-Org/ComfyUI_frontend
+          sparse-checkout: src/locales
+          path: comfyui-frontend
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      # Resume a prior rate-limited run. If the single stable automation branch
+      # exists and is still unmerged, start from its committed partial output so
+      # lobe skips already-translated keys instead of re-spending tokens. English
+      # is recomputed below, so any changed source still re-translates its fields.
+      - name: Restore partial progress from automation branch
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          # Fetch into the remote-tracking ref explicitly (the checkout action uses
+          # a narrow refspec), so both the restore and the later force-with-lease
+          # have a real base. Absent branch (first run) -> fetch fails, start fresh.
+          if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
+            git checkout "origin/$STABLE_BRANCH" -- site/src/i18n || true
+            echo "Restored partial translations from $STABLE_BRANCH."
+          else
+            echo "No automation branch yet; starting fresh from main."
+          fi
+
+      - name: Build English content source + human seeds
+        working-directory: site
+        env:
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
+          PUBLIC_APPROVED_ONLY: "true"
+        run: pnpm i18n:build-source
+
+      - name: Sync glossary
+        working-directory: site
+        env:
+          FRONTEND_LOCALES_DIR: ${{ github.workspace }}/comfyui-frontend/src/locales
+        run: pnpm i18n:glossary
+
+      - name: Check pipeline config
+        working-directory: site
+        run: pnpm i18n:check
+
+      # Per-locale so each run injects that locale's product-UI terminology
+      # (mirror + overrides) into the prompt, which a single all-locales run can't
+      # do (shared reference). Also paces one locale at a time under the OpenAI
+      # Tier-1 TPM cap. Tolerate a mid-run rate-limit: saveImmediately has already
+      # persisted each completed chunk, one locale's failure doesn't skip the rest
+      # (inner `|| echo`), and the steps below still commit that partial progress,
+      # so the next run resumes (lobe skips done keys) instead of re-spending tokens.
+      - name: Translate content (lobe-i18n, per-locale)
+        working-directory: site
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          set -uo pipefail
+          for loc in zh zh-TW ja ko es fr ru tr ar pt-BR; do
+            echo "::group::translate content → $loc"
+            HUB_I18N_LOCALE="$loc" pnpm locale \
+              || echo "locale $loc translation failed (tolerated; partial output saved)"
+            echo "::endgroup::"
+          done
+
+      - name: Translate UI chrome (fill missing keys)
+        working-directory: site
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: pnpm locale:ui
+
+      # always(): run even after a tolerated translate failure so partial progress
+      # is still validated. This step has no continue-on-error, so a validation
+      # failure fails the job and the success()-gated publish steps below skip —
+      # invalid artifacts are never committed or opened as a green-looking PR.
+      - name: Validate translations
+        if: always()
+        working-directory: site
+        run: pnpm i18n:validate
+
+      # Format only the generated files; whole-tree prettier hits pre-existing
+      # .astro errors. success() so we only format output we intend to publish.
+      - name: Format
+        if: success()
+        working-directory: site
+        run: pnpm exec prettier --write src/i18n
+
+      # Publish only on success() — i.e. validation (and formatting) passed. A
+      # tolerated translate rate-limit keeps the job successful (continue-on-error),
+      # so valid partial progress still publishes; a validation failure does not.
+      # One stable branch + its open PR is reused so partial runs accumulate
+      # instead of orphaning progress on per-run timestamped branches.
+      - name: Open or update translation PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          # Stage first — the generated content/ files are new/untracked on the
+          # initial run, which `git diff` alone would miss.
+          git add site/src/i18n
+          if git diff --cached --quiet; then
+            echo "No translation changes vs main."
+            exit 0
+          fi
+          # No-op guard: when the automation branch already exists, skip if this run
+          # reproduced its EXACT committed content. Because we restore that branch
+          # before translating, the diff vs main is non-empty even on a byte-identical
+          # rerun; comparing against the branch (not main) is what tells a real update
+          # from a no-op. Without this, every daily cron force-pushes a new head,
+          # reruns CI, and dismisses review state for zero progress.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
+            if git diff --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+              echo "No change vs the open automation PR; leaving its head untouched."
+              exit 0
+            fi
+          fi
+          # Point the stable branch at this run's main checkout and carry the
+          # accumulated translations onto it, so the branch is always rebased on
+          # main and the open PR updates in place (force-with-lease; runs are
+          # serialized by the concurrency group).
+          git checkout -B "$STABLE_BRANCH"
+          git commit -m "chore(i18n): update hub workflow translations"
+          git push --force-with-lease origin "$STABLE_BRANCH"
+          if gh pr view "$STABLE_BRANCH" --json state --jq '.state' 2>/dev/null | grep -qx OPEN; then
+            echo "Existing translation PR updated via push."
+          else
+            gh pr create \
+              --base main \
+              --head "$STABLE_BRANCH" \
+              --title "chore(i18n): update hub workflow translations" \
+              --body "Automated hub translation refresh (GTM-291). English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
+          fi

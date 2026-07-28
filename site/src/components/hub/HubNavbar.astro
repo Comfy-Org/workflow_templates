@@ -3,12 +3,8 @@ import { getCollection } from 'astro:content';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import HeaderMain from './nav/HeaderMain.vue';
 import SearchPopover from './SearchPopover.vue';
-import {
-  getProfileCache,
-  getCreatorsList,
-  loadSerializedTemplates,
-  type SerializedTemplate,
-} from '../../lib/hub-api';
+import { getProfileCache, getCreatorsList, loadSerializedTemplates } from '../../lib/hub-api';
+import { buildDiscoveryData, type DiscoveryData } from '../../lib/search-discovery';
 import { fetchGitHubStars, formatStarCount } from '../../lib/github';
 
 interface Props {
@@ -35,11 +31,13 @@ const creatorLinks = Array.from(profiles.entries())
     href: localizeUrl(`/workflows/creators/${username}/`, locale),
   }));
 
-// Fetch search data only when the header renders the search bar.
-let searchTemplates: SerializedTemplate[] = [];
-const searchCreators = showSearch ? getCreatorsList(profiles) : [];
+// Precompute the small discovery slices (popular, creators, facets) only when
+// the header renders the search bar. The full catalog stays server-side and is
+// lazy-loaded by the island from grid.json when a filter is applied.
+let discovery: DiscoveryData | null = null;
 if (showSearch) {
-  searchTemplates = await loadSerializedTemplates(() => getCollection('templates'));
+  const searchTemplates = await loadSerializedTemplates(() => getCollection('templates'));
+  discovery = buildDiscoveryData(searchTemplates, getCreatorsList(profiles));
 }
 ---
 
@@ -50,12 +48,14 @@ if (showSearch) {
     </div>
 
     {
-      showSearch && (
+      showSearch && discovery && (
         <div class="w-full min-w-0 pb-6 lg:pb-8">
           <SearchPopover
             client:load
-            templates={searchTemplates}
-            creators={searchCreators}
+            popular={discovery.popular}
+            creators={discovery.creators}
+            facets={discovery.facets}
+            totalCount={discovery.totalCount}
             locale={locale}
           />
         </div>

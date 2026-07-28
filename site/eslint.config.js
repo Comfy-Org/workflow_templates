@@ -8,7 +8,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   ...eslintPluginAstro.configs.recommended,
   {
-    ignores: ['dist/', 'node_modules/', '.astro/', '.vercel/', '.i18nrc.cjs'],
+    ignores: ['dist/', 'node_modules/', '.astro/', '.vercel/'],
   },
   {
     files: ['*.config.mjs', '*.config.js'],
@@ -16,6 +16,20 @@ export default tseslint.config(
       globals: {
         ...globals.node,
       },
+    },
+  },
+  {
+    // CommonJS configs (e.g. the .i18nrc*.cjs lobe configs): allow require/module
+    // and lint them as Node CJS rather than ignoring them outright.
+    files: ['**/*.cjs'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
   {

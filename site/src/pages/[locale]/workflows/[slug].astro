@@ -27,6 +27,7 @@ import {
   extractShareId,
   getProfileCache,
   serializeIndexEntry,
+  byUsageDesc,
   type SerializedTemplate,
 } from '../../../lib/hub-api';
 import { fetchRankingMap } from '../../../lib/ranking';
@@ -228,6 +229,8 @@ const structuredData = !isDetailPage
 // "View all workflows" grid for the detail page — full index minus current.
 const detailRelated: SerializedTemplate[] =
   isDetailPage && detailData ? await listRelatedWorkflows(detailData.name, profiles) : [];
+// Embed only the top-30 by usage; the grid lazy-loads the full catalog (grid.json).
+const detailRelatedPreview = [...detailRelated].sort(byUsageDesc).slice(0, 30);
 ---
 
 {
@@ -256,7 +259,9 @@ const detailRelated: SerializedTemplate[] =
             </a>
             <WorkflowGrid
               client:visible
-              templates={detailRelated}
+              templates={detailRelatedPreview}
+              lazyFull
+              excludeName={detailData.name}
               locale={typedLocale}
               toolbarLabels={buildToolbarLabels(typedLocale)}
               gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
