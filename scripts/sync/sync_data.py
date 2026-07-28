@@ -1629,6 +1629,16 @@ class TemplateSyncManager:
             self.syncer.logger.info(f"   New category fields found: {len(self.syncer.new_category_fields)}")
         if self.syncer.vram_size_update_templates:
             self.syncer.logger.info(f"   Templates marked for vram/size management: {len(self.syncer.vram_size_update_templates)}")
+
+        if self.sync_options.get('index_only'):
+            self.syncer.logger.info("\n⏭️  Index-only mode: skipping bundles, asset checks, model analysis, spellcheck, and validation")
+            if self.errors:
+                self.syncer.logger.error("\n❌ Errors summary:")
+                for err in self.errors:
+                    self.syncer.logger.error(f"  - {err}")
+            else:
+                self.syncer.logger.info("\n✅ No errors detected.")
+            return success
         
         # Step 4: Sync bundles (manifest and bundle package assets)
         if sync_bundles is not None:
@@ -1747,11 +1757,17 @@ Translation System:
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
     parser.add_argument('--force-sync-language-fields', action='store_true', 
                        help='Force sync language-specific fields (title, description) - overwrite existing translations')
+    parser.add_argument(
+        '--index-only',
+        action='store_true',
+        help='Sync index.json and locale index files only (skip bundles, asset checks, model analysis, spellcheck, validation)',
+    )
     
     args = parser.parse_args()
     
     sync_options = {
-        'force_sync_language_fields': args.force_sync_language_fields
+        'force_sync_language_fields': args.force_sync_language_fields,
+        'index_only': args.index_only,
     }
     
     try:
