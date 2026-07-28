@@ -85,6 +85,14 @@ watch(
   { immediate: true }
 );
 
+// Retry a previously failed catalog load whenever the popover is (re)opened with
+// active badge filters — a transient fetch failure then recovers on interaction
+// rather than leaving badge filtering silently broken. `ensureCatalog` is guarded,
+// so this is a no-op once the catalog is loaded or in flight.
+watch(isOpen, (open) => {
+  if (open && hasBadges.value) ensureCatalog();
+});
+
 const MAX_BADGES_DESKTOP = 4;
 const visibleBadgesDesktop = computed(() => store.filterBadges.value.slice(0, MAX_BADGES_DESKTOP));
 const overflowCountDesktop = computed(() =>
@@ -173,7 +181,9 @@ const badgeOnlyResults = computed(() => {
 });
 
 watchDebounced(
-  [searchQuery, () => store.filterBadges.value],
+  // `catalogLoaded` is a dependency so a badge-scoped search typed before the
+  // catalog finished loading re-runs with the correct allowedNames once it lands.
+  [searchQuery, () => store.filterBadges.value, () => catalogLoaded.value],
   async ([query]) => {
     const trimmed = (query as string).trim();
     if (!trimmed) {

@@ -32,10 +32,16 @@ export const GET: APIRoute = async () => {
       );
       return rest;
     });
-  } catch {
-    // Index unavailable — ship an empty catalog so the build never fails on a
-    // supplementary asset. Islands fall back to their embedded slice.
-    catalog = [];
+  } catch (err) {
+    // The browse grid and search depend on this catalog; emitting an empty 200
+    // would ship a broken grid and let the CDN cache it as genuinely empty. Fail
+    // the build instead (fail-closed) — a missing Hub index at build time is a
+    // deploy-blocking problem, not a supplementary one.
+    throw new Error(
+      `grid.json: failed to build the workflow catalog from the Hub index: ${
+        err instanceof Error ? err.message : String(err)
+      }`
+    );
   }
 
   return new Response(JSON.stringify(catalog), {
