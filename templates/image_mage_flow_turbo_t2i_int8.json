@@ -1,0 +1,965 @@
+{
+  "id": "e13112f7-3d09-4ae1-9e84-633a0627d945",
+  "revision": 0,
+  "last_node_id": 28,
+  "last_link_id": 72,
+  "nodes": [
+    {
+      "id": 10,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        -1640,
+        310
+      ],
+      "size": [
+        840,
+        130
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveImageAdvanced"
+      },
+      "widgets_values": [
+        "Mage_flow_turbo",
+        "png",
+        "8-bit",
+        "sRGB"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "d069257b-0abc-4d5a-9a19-579e0fe5bd8d",
+      "pos": [
+        -2160,
+        310
+      ],
+      "size": [
+        490,
+        800
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "width",
+          "name": "value",
+          "type": "INT",
+          "widget": {
+            "name": "value"
+          },
+          "link": 67
+        },
+        {
+          "label": "height",
+          "name": "value_1",
+          "type": "INT",
+          "widget": {
+            "name": "value_1"
+          },
+          "link": 71
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "previewExposures": [
+          {
+            "name": "$$canvas-image-preview",
+            "sourceNodeId": "6",
+            "sourcePreviewName": "$$canvas-image-preview"
+          }
+        ]
+      },
+      "widgets_values": [
+        "Vintage analogue film photograph, a surreal scene in which an entire person is completely wrapped and obscured by a large soft white cumulus cloud. The cloud covers the head, face, shoulders and most of the upper body so that no human facial features are visible at all, no eyes, no nose, no mouth, no skin, no hair. Only a loose blue-and-white floral shirt and the shape of a seated figure can be faintly perceived beneath the cloud. The person sits sideways at an old wooden classroom desk, beside a large wooden window frame with pale blue sky outside. Soft daylight falls from the window, creating a quiet dreamy nostalgic atmosphere, muted retro pastel colors, subtle film grain, soft focus, gentle haze, minimalist surreal photography, photorealistic, 8K.\n",
+        151355717311033,
+        1024,
+        1024,
+        "mage_flow_turbo_int8_convrot.safetensors",
+        "qwen3vl_4b_bf16.safetensors",
+        "mage_flow_vae_bf16.safetensors",
+        ""
+      ]
+    },
+    {
+      "id": 23,
+      "type": "MarkdownNote",
+      "pos": [
+        -3180,
+        310
+      ],
+      "size": [
+        610,
+        855.828125
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Mage-Flow-Turbo",
+      "properties": {},
+      "widgets_values": [
+        "# Mage-Flow-Turbo (Text-to-Image)\n\n**Mage-Flow-Turbo** is the few-step distilled variant of Microsoft's 4B Mage-Flow text-to-image model. Distilled from the Base/RL checkpoints via decoupled-DMD + adversarial perceptual guidance, Turbo trades a small amount of quality for **~7× fewer denoising steps**.\n\n**Good at:** fast prompt iteration, interactive previews, portraits, landscapes, still life, cinematic scenes, and surreal/editorial compositions.\n\n## Links\n\n- **Mage project:** https://github.com/microsoft/Mage\n- **ComfyUI integration PR:** https://github.com/Comfy-Org/ComfyUI/pull/15026\n- **Official model:** https://huggingface.co/microsoft/Mage-Flow-Turbo\n\nThis workflow ships with **4 steps / CFG 1.0** pre-configured in the KSampler.\n\n## Resolution limits\n\n| Item | Value |\n|------|-------|\n| Output range | **512 – 2048** px per side |\n| Alignment | Width & height must be a **multiple of 16** |\n| Aspect ratio | Any; extreme **4:1** supported (e.g. `2048×512`) |\n\n**Recommendations:** **1024** for everyday use; **1536–2048** when you need more detail. Avoid exceeding **2048**.\n\n## Workflow parameters\n\n| Parameter | Description |\n|-----------|-------------|\n| `prompt` | Text description (English recommended) |\n| `negative_prompt` | Optional; what to avoid |\n| `seed` | Fixed seed or randomize |\n| `width` / `height` | Via **ResolutionSelector**; step 16 |\n| `unet_name` | `mage_flow_turbo_int8_convrot` (default) or `mage_flow_turbo_bf16` |\n| `clip_name` | `qwen3vl_4b_bf16.safetensors` (type: mage) |\n| `vae_name` | `mage_flow_vae_bf16.safetensors` (shared with all Mage-Flow variants) |"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 25,
+      "type": "MarkdownNote",
+      "pos": [
+        -3740,
+        310
+      ],
+      "size": [
+        530,
+        780
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Model Links",
+      "properties": {},
+      "widgets_values": [
+        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n**diffusion_models** (Mage-Flow-Turbo)\n\n- [mage_flow_turbo_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/diffusion_models/mage_flow_turbo_int8_convrot.safetensors) (INT8, default in this workflow)\n- [mage_flow_turbo_bf16.safetensors](https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/diffusion_models/mage_flow_turbo_bf16.safetensors) (BF16, higher quality)\n\n**text_encoders** (shared across all Mage-Flow variants)\n\n- [qwen3vl_4b_bf16.safetensors](https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/text_encoders/qwen3vl_4b_bf16.safetensors)\n\n**vae** (shared across all Mage-Flow variants)\n\n- [mage_flow_vae_bf16.safetensors](https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/vae/mage_flow_vae_bf16.safetensors)\n\nOfficial Hugging Face: [Mage-Flow-Turbo](https://huggingface.co/microsoft/Mage-Flow-Turbo)\n\nOther variants: [Mage-Flow-Base](https://huggingface.co/microsoft/Mage-Flow-Base) · [Mage-Flow](https://huggingface.co/microsoft/Mage-Flow)\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── mage_flow_turbo_int8_convrot.safetensors\n│   │   └── mage_flow_turbo_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_bf16.safetensors\n│   └── 📂 vae/\n│       └── mage_flow_vae_bf16.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 27,
+      "type": "ResolutionSelector",
+      "pos": [
+        -2500,
+        570
+      ],
+      "size": [
+        270,
+        200
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            67
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResolutionSelector"
+      },
+      "widgets_values": [
+        "1:1 (Square)",
+        1,
+        16
+      ]
+    }
+  ],
+  "links": [
+    [
+      14,
+      12,
+      0,
+      10,
+      0,
+      "IMAGE"
+    ],
+    [
+      67,
+      27,
+      0,
+      12,
+      0,
+      "INT"
+    ],
+    [
+      71,
+      27,
+      1,
+      12,
+      1,
+      "INT"
+    ]
+  ],
+  "groups": [],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "d069257b-0abc-4d5a-9a19-579e0fe5bd8d",
+        "version": 1,
+        "state": {
+          "lastGroupId": 6,
+          "lastNodeId": 28,
+          "lastLinkId": 72,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Text to Image (Mage-Flow Turbo)",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -2060,
+            -50,
+            143.044921875,
+            208
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            640,
+            -190,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "f96438af-739b-459f-9bfe-4667beca6d65",
+            "name": "prompt",
+            "type": "STRING",
+            "linkIds": [
+              16
+            ],
+            "pos": [
+              -1940.955078125,
+              -26
+            ]
+          },
+          {
+            "id": "7a9e4c4e-6d5e-4c26-8717-de5ad1da3c9e",
+            "name": "seed",
+            "type": "INT",
+            "linkIds": [
+              19
+            ],
+            "pos": [
+              -1940.955078125,
+              -6
+            ]
+          },
+          {
+            "id": "f8e7a2a3-63d4-4fd6-8bbe-3bbc302616a6",
+            "name": "value",
+            "type": "INT",
+            "linkIds": [
+              70
+            ],
+            "label": "width",
+            "pos": [
+              -1940.955078125,
+              14
+            ]
+          },
+          {
+            "id": "dc02d218-a0ca-4032-bfbb-ec6038e9581d",
+            "name": "value_1",
+            "type": "INT",
+            "linkIds": [
+              69
+            ],
+            "label": "height",
+            "pos": [
+              -1940.955078125,
+              34
+            ]
+          },
+          {
+            "id": "a50dd6d8-6e61-45bc-b804-862f00bd59d5",
+            "name": "unet_name",
+            "type": "COMBO",
+            "linkIds": [
+              53
+            ],
+            "pos": [
+              -1940.955078125,
+              54
+            ]
+          },
+          {
+            "id": "ed39ed30-448e-4cbc-8743-13c7841c9f50",
+            "name": "clip_name",
+            "type": "COMBO",
+            "linkIds": [
+              54
+            ],
+            "pos": [
+              -1940.955078125,
+              74
+            ]
+          },
+          {
+            "id": "8fb2d359-2b68-4a57-a374-be2da66b8d0e",
+            "name": "vae_name",
+            "type": "COMBO",
+            "linkIds": [
+              55
+            ],
+            "pos": [
+              -1940.955078125,
+              94
+            ]
+          },
+          {
+            "id": "1e92bdcb-f2f8-4c05-941a-2eb308410c81",
+            "name": "negative_prompt",
+            "type": "STRING",
+            "linkIds": [
+              72
+            ],
+            "pos": [
+              -1940.955078125,
+              114
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "c9854530-28d9-4d0f-9ecc-2163f2b3a640",
+            "name": "IMAGE",
+            "type": "IMAGE",
+            "linkIds": [
+              10
+            ],
+            "localized_name": "IMAGE",
+            "pos": [
+              664,
+              -166
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 1,
+            "type": "UNETLoader",
+            "pos": [
+              -1640,
+              -160
+            ],
+            "size": [
+              450,
+              110
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "unet_name",
+                "name": "unet_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "unet_name"
+                },
+                "link": 53
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "MODEL",
+                "name": "MODEL",
+                "type": "MODEL",
+                "links": [
+                  9
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "UNETLoader",
+              "models": [
+                {
+                  "name": "mage_flow_int8_convrot.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/diffusion_models/mage_flow_int8_convrot.safetensors",
+                  "directory": "diffusion_models"
+                }
+              ]
+            },
+            "widgets_values": [
+              "mage_flow_int8_convrot.safetensors",
+              "default"
+            ]
+          },
+          {
+            "id": 3,
+            "type": "CLIPLoader",
+            "pos": [
+              -1640,
+              0
+            ],
+            "size": [
+              450,
+              140
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "clip_name",
+                "name": "clip_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "clip_name"
+                },
+                "link": 54
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "CLIP",
+                "name": "CLIP",
+                "type": "CLIP",
+                "links": [
+                  1
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CLIPLoader",
+              "models": [
+                {
+                  "name": "qwen3vl_4b_bf16.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/text_encoders/qwen3vl_4b_bf16.safetensors",
+                  "directory": "text_encoders"
+                }
+              ]
+            },
+            "widgets_values": [
+              "qwen3vl_4b_bf16.safetensors",
+              "mage",
+              "default"
+            ]
+          },
+          {
+            "id": 4,
+            "type": "VAELoader",
+            "pos": [
+              -1640,
+              180
+            ],
+            "size": [
+              450,
+              110
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "vae_name",
+                "name": "vae_name",
+                "type": "COMBO",
+                "widget": {
+                  "name": "vae_name"
+                },
+                "link": 55
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VAE",
+                "name": "VAE",
+                "type": "VAE",
+                "links": [
+                  5,
+                  8
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAELoader",
+              "models": [
+                {
+                  "name": "mage_flow_vae_bf16.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/Mage-Flow/resolve/main/vae/mage_flow_vae_bf16.safetensors",
+                  "directory": "vae"
+                }
+              ]
+            },
+            "widgets_values": [
+              "mage_flow_vae_bf16.safetensors"
+            ]
+          },
+          {
+            "id": 5,
+            "type": "TextEncodeMageFlowEdit",
+            "pos": [
+              -1020,
+              -80
+            ],
+            "size": [
+              400,
+              360
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "showAdvanced": true,
+            "inputs": [
+              {
+                "localized_name": "clip",
+                "name": "clip",
+                "type": "CLIP",
+                "link": 1
+              },
+              {
+                "label": "image_1",
+                "localized_name": "images.image_1",
+                "name": "images.image_1",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": null
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "shape": 7,
+                "type": "VAE",
+                "link": 5
+              },
+              {
+                "localized_name": "prompt",
+                "name": "prompt",
+                "type": "STRING",
+                "widget": {
+                  "name": "prompt"
+                },
+                "link": 16
+              },
+              {
+                "localized_name": "negative_prompt",
+                "name": "negative_prompt",
+                "type": "STRING",
+                "widget": {
+                  "name": "negative_prompt"
+                },
+                "link": 72
+              },
+              {
+                "localized_name": "width",
+                "name": "width",
+                "type": "INT",
+                "widget": {
+                  "name": "width"
+                },
+                "link": 70
+              },
+              {
+                "localized_name": "height",
+                "name": "height",
+                "type": "INT",
+                "widget": {
+                  "name": "height"
+                },
+                "link": 69
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "links": [
+                  3
+                ]
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "links": [
+                  4
+                ]
+              },
+              {
+                "localized_name": "latent",
+                "name": "latent",
+                "type": "LATENT",
+                "links": [
+                  2
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "TextEncodeMageFlowEdit"
+            },
+            "widgets_values": [
+              "photorealistic cinematic shot, massive classic flying saucer UFO hovering in foggy sky, ring of warm glowing cabin lights on the saucer, bright neon green tractor beam shooting downward from the bottom of the UFO, a cow suspended mid-air inside the green light beam, old weathered wooden farm houses along muddy country path, warm yellow light glowing from cottage windows, bare leafless trees, old wooden utility pole, thick hazy grey-green mist, overcast gloomy atmosphere, retro sci-fi aesthetic, eerie mysterious mood, soft atmospheric haze, muted desaturated color grading, depth of field, detailed textures, 8k, shot on 35mm film\n",
+              "",
+              1024,
+              1024,
+              1
+            ]
+          },
+          {
+            "id": 6,
+            "type": "KSampler",
+            "pos": [
+              -470,
+              -220
+            ],
+            "size": [
+              370,
+              610
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "model",
+                "name": "model",
+                "type": "MODEL",
+                "link": 9
+              },
+              {
+                "localized_name": "positive",
+                "name": "positive",
+                "type": "CONDITIONING",
+                "link": 3
+              },
+              {
+                "localized_name": "negative",
+                "name": "negative",
+                "type": "CONDITIONING",
+                "link": 4
+              },
+              {
+                "localized_name": "latent_image",
+                "name": "latent_image",
+                "type": "LATENT",
+                "link": 2
+              },
+              {
+                "localized_name": "seed",
+                "name": "seed",
+                "type": "INT",
+                "widget": {
+                  "name": "seed"
+                },
+                "link": 19
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "LATENT",
+                "name": "LATENT",
+                "type": "LATENT",
+                "links": [
+                  7
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "KSampler"
+            },
+            "widgets_values": [
+              778222884792664,
+              "randomize",
+              4,
+              1,
+              "euler",
+              "simple",
+              1
+            ]
+          },
+          {
+            "id": 8,
+            "type": "VAEDecode",
+            "pos": [
+              -40,
+              -220
+            ],
+            "size": [
+              230,
+              80
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "samples",
+                "name": "samples",
+                "type": "LATENT",
+                "link": 7
+              },
+              {
+                "localized_name": "vae",
+                "name": "vae",
+                "type": "VAE",
+                "link": 8
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
+                "type": "IMAGE",
+                "links": [
+                  10
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "VAEDecode"
+            },
+            "widgets_values": []
+          }
+        ],
+        "groups": [
+          {
+            "id": 1,
+            "title": "Models",
+            "bounding": [
+              -1670,
+              -260,
+              510,
+              570
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 4,
+            "title": "Conditioning",
+            "bounding": [
+              -1130,
+              -260,
+              600,
+              570
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          },
+          {
+            "id": 6,
+            "title": "Core Pipeline",
+            "bounding": [
+              -1680,
+              -300,
+              2040,
+              700
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          }
+        ],
+        "links": [
+          {
+            "id": 1,
+            "origin_id": 3,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 5,
+            "origin_id": 4,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 2,
+            "type": "VAE"
+          },
+          {
+            "id": 9,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 3,
+            "origin_id": 5,
+            "origin_slot": 0,
+            "target_id": 6,
+            "target_slot": 1,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 4,
+            "origin_id": 5,
+            "origin_slot": 1,
+            "target_id": 6,
+            "target_slot": 2,
+            "type": "CONDITIONING"
+          },
+          {
+            "id": 2,
+            "origin_id": 5,
+            "origin_slot": 2,
+            "target_id": 6,
+            "target_slot": 3,
+            "type": "LATENT"
+          },
+          {
+            "id": 7,
+            "origin_id": 6,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 0,
+            "type": "LATENT"
+          },
+          {
+            "id": 8,
+            "origin_id": 4,
+            "origin_slot": 0,
+            "target_id": 8,
+            "target_slot": 1,
+            "type": "VAE"
+          },
+          {
+            "id": 10,
+            "origin_id": 8,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 16,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 5,
+            "target_slot": 3,
+            "type": "STRING"
+          },
+          {
+            "id": 19,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 6,
+            "target_slot": 4,
+            "type": "INT"
+          },
+          {
+            "id": 53,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 1,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 54,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 3,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 55,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 4,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 69,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 5,
+            "target_slot": 6,
+            "type": "INT"
+          },
+          {
+            "id": 70,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 5,
+            "target_slot": 5,
+            "type": "INT"
+          },
+          {
+            "id": 72,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 5,
+            "target_slot": 4,
+            "type": "STRING"
+          }
+        ],
+        "extra": {}
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "frontendVersion": "1.47.10",
+    "ds": {
+      "scale": 0.506821445266656,
+      "offset": [
+        4183.086915500401,
+        591.38905189261
+      ]
+    },
+    "linearData": {
+      "inputs": [
+        [
+          "e13112f7-3d09-4ae1-9e84-633a0627d945:12:prompt",
+          "prompt"
+        ],
+        [
+          "e13112f7-3d09-4ae1-9e84-633a0627d945:27:aspect_ratio",
+          "aspect_ratio"
+        ],
+        [
+          "e13112f7-3d09-4ae1-9e84-633a0627d945:27:megapixels",
+          "megapixels"
+        ]
+      ],
+      "outputs": [
+        "10"
+      ]
+    },
+    "linearMode": false
+  },
+  "version": 0.4
+}
