@@ -1,17 +1,29 @@
 name: Sync Template Index
 
-# When templates/ change in a PR:
+# When index files change in a PR:
 #   1. Fetch per-template run_clicks from Algolia (templates_index)
-#   2. Fold usage into templates/index.json via sync_data.py
-#   3. Propagate all technical fields (usage, models, tags, io, …) to every locale index
+#   2. Fold usage into templates/index.json via sync_data.py --index-only
+#   3. Propagate technical fields to every locale index
 #
-# Requires repo secret ALGOLIA_API_KEY (search-only Algolia API key).
+# Optimized for speed: sparse checkout (index files only), no workflow JSON scan,
+# no i18n bookkeeping. Requires repo secret ALGOLIA_API_KEY.
 
 on:
   pull_request:
     types: [opened, synchronize]
     paths:
-      - 'templates/**'
+      - 'templates/index.json'
+      - 'templates/index.zh.json'
+      - 'templates/index.zh-TW.json'
+      - 'templates/index.ja.json'
+      - 'templates/index.ko.json'
+      - 'templates/index.es.json'
+      - 'templates/index.fr.json'
+      - 'templates/index.ru.json'
+      - 'templates/index.tr.json'
+      - 'templates/index.ar.json'
+      - 'templates/index.fa.json'
+      - 'templates/index.pt-BR.json'
       - 'scripts/sync/sync_data.py'
       - 'scripts/lib/locale_index_files.py'
       - 'scripts/data/i18n.json'
@@ -39,15 +51,32 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
-          fetch-depth: 0
+          fetch-depth: 1
+          sparse-checkout: |
+            templates/index.json
+            templates/index.zh.json
+            templates/index.zh-TW.json
+            templates/index.ja.json
+            templates/index.ko.json
+            templates/index.es.json
+            templates/index.fr.json
+            templates/index.ru.json
+            templates/index.tr.json
+            templates/index.ar.json
+            templates/index.fa.json
+            templates/index.pt-BR.json
+            scripts/sync/sync_data.py
+            scripts/sync/fetch_algolia_usage.py
+            scripts/lib/locale_index_files.py
+            scripts/lib/paths.py
+            scripts/lib/run_click_coverage.py
+            scripts/data/i18n.json
+          sparse-checkout-cone-mode: false
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
-
-      - name: Install dependencies
-        run: pip install jsonschema
 
       - name: Fetch usage from Algolia and sync index to all locales
         run: |
@@ -78,7 +107,6 @@ jobs:
             templates/index.ar.json \
             templates/index.fa.json \
             templates/index.pt-BR.json
-          git add scripts/data/i18n.json
 
           if ! git diff --cached --quiet; then
             echo "📝 Changes detected - committing to PR branch"
