@@ -58,6 +58,22 @@ describe('collectViolations', () => {
     expect(kinds(collectViolations('s1', 'zh', en(), zh, PRESERVE))).toContain('structure');
   });
 
+  it('flags an array field emitted as a scalar (container mismatch)', () => {
+    // English howToUse is an array; a scalar would otherwise skip every check.
+    const zh = { howToUse: '这是一个错误的标量' as unknown as string[] };
+    expect(kinds(collectViolations('s1', 'zh', en(), zh, PRESERVE))).toContain('structure');
+  });
+
+  it('flags a string field emitted as an array (container mismatch)', () => {
+    const zh = { description: ['not', 'a', 'string'] as unknown as string };
+    expect(kinds(collectViolations('s1', 'zh', en(), zh, PRESERVE))).toContain('structure');
+  });
+
+  it('flags a non-string array element', () => {
+    const zh = { howToUse: ['加载工作流', 123 as unknown as string] };
+    expect(kinds(collectViolations('s1', 'zh', en(), zh, PRESERVE))).toContain('structure');
+  });
+
   it('flags a dropped URL', () => {
     const zh = { metaDescription: '在 ComfyUI 中使用 Wan 2.1 创建视频。' }; // URL missing
     expect(kinds(collectViolations('s1', 'zh', en(), zh, PRESERVE))).toContain('format');

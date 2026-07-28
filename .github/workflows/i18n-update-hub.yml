@@ -140,8 +140,20 @@ jobs:
           # initial run, which `git diff` alone would miss.
           git add site/src/i18n
           if git diff --cached --quiet; then
-            echo "No translation changes."
+            echo "No translation changes vs main."
             exit 0
+          fi
+          # No-op guard: when the automation branch already exists, skip if this run
+          # reproduced its EXACT committed content. Because we restore that branch
+          # before translating, the diff vs main is non-empty even on a byte-identical
+          # rerun; comparing against the branch (not main) is what tells a real update
+          # from a no-op. Without this, every daily cron force-pushes a new head,
+          # reruns CI, and dismisses review state for zero progress.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
+            if git diff --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+              echo "No change vs the open automation PR; leaving its head untouched."
+              exit 0
+            fi
           fi
           # Point the stable branch at this run's main checkout and carry the
           # accumulated translations onto it, so the branch is always rebased on

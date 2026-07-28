@@ -109,19 +109,50 @@ export function collectViolations(
     const enText = toText(enValue);
     const locText = toText(locValue);
 
-    // 1. Structure: arrays must match English length; FAQ items well-formed.
-    if (Array.isArray(enValue) && Array.isArray(locValue)) {
+    // 1. Structure: the localized value must share English's container type first
+    // (an array field emitted as a scalar/object would otherwise skip every check
+    // below and be treated as translated content by the resolver). Then arrays
+    // must match English length and carry well-formed elements.
+    const enIsArray = Array.isArray(enValue);
+    const locIsArray = Array.isArray(locValue);
+    if (enIsArray !== locIsArray) {
+      add(
+        field,
+        'structure',
+        `container mismatch: expected ${enIsArray ? 'array' : 'string'}, got ${
+          locIsArray ? 'array' : typeof locValue
+        }`
+      );
+    } else if (enIsArray && locIsArray) {
       if (enValue.length !== locValue.length) {
         add(field, 'structure', `array length ${locValue.length} != English ${enValue.length}`);
       }
       if (field === 'faqItems') {
-        for (const item of locValue as FaqItem[]) {
-          if (!item || !item.question?.trim() || !item.answer?.trim()) {
-            add(field, 'structure', 'FAQ item missing question or answer');
+        for (const item of locValue) {
+          if (
+            !item ||
+            typeof item !== 'object' ||
+            Array.isArray(item) ||
+            typeof (item as FaqItem).question !== 'string' ||
+            typeof (item as FaqItem).answer !== 'string' ||
+            !(item as FaqItem).question.trim() ||
+            !(item as FaqItem).answer.trim()
+          ) {
+            add(
+              field,
+              'structure',
+              'FAQ item malformed (need non-empty question + answer strings)'
+            );
             break;
           }
         }
+      } else if (locValue.some((el) => typeof el !== 'string')) {
+        // howToUse / suggestedUseCases carry plain strings.
+        add(field, 'structure', 'array element is not a string');
       }
+    } else if (typeof enValue === 'string' && typeof locValue !== 'string') {
+      // A string field (title/description/meta/extended) sent as a non-string.
+      add(field, 'structure', `expected string, got ${typeof locValue}`);
     }
 
     // 2. Language: a long prose field must contain the target script. Title is
