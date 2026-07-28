@@ -93,7 +93,9 @@ export function collectViolations(
   locale: Locale,
   english: WorkflowContent,
   localized: Partial<WorkflowContent>,
-  preserveTerms: string[]
+  preserveTerms: string[],
+  /** Curated English->localized product-UI terms that MUST be used (overrides). */
+  overrides: Record<string, string> = {}
 ): Violation[] {
   const violations: Violation[] = [];
   const scriptRe = SCRIPT_RANGES[locale];
@@ -162,9 +164,85 @@ export function collectViolations(
         add(field, 'brand-voice', `banned hype word "${hype}" introduced`);
       }
     }
+
+    // 6. Product-UI terminology: when the English contains a term with a curated
+    // override, the translation must render exactly the paired term (so the
+    // override layer is binding, not just advisory prompt guidance).
+    for (const [enTerm, locTerm] of Object.entries(overrides)) {
+      if (!locTerm) continue;
+      if (countOccurrences(enText, enTerm) > 0 && !locText.includes(locTerm)) {
+        add(field, 'glossary', `override term "${enTerm}" not rendered as "${locTerm}"`);
+      }
+    }
   }
 
   return violations;
+}
+
+// ---------------------------------------------------------------------------
+// UI chrome strings (src/i18n/locales/*.json) — validated separately from
+// workflow content. These are flat "a.b.c" -> string maps filled by `locale:ui`,
+// and several carry interpolation placeholders ({label}, {count}, {keyword}).
+// A model can drop/rename one and still commit, breaking runtime interpolation,
+// so we check value type + exact placeholder multiset against en.json. Missing
+// keys are allowed (they render via the English fallback); present keys must match.
+// ---------------------------------------------------------------------------
+
+export interface UiViolation {
+  locale: string;
+  key: string;
+  kind: 'type' | 'placeholder' | 'unknown-key';
+  detail: string;
+}
+
+const PLACEHOLDER_RE = /\{[a-zA-Z0-9_]+\}/g;
+
+/** Sorted multiset of `{token}` placeholders in a string (for exact comparison). */
+function placeholderMultiset(value: string): string[] {
+  return (value.match(PLACEHOLDER_RE) ?? []).sort();
+}
+
+/**
+ * Violations for one locale's UI strings against English. For every key present
+ * in the locale file: its value type must match English, and (for strings) its
+ * placeholder multiset must match exactly. A key absent from English is flagged
+ * (stale/hallucinated) since its interpolation contract cannot be checked.
+ */
+export function collectUiViolations(
+  locale: string,
+  enUi: Record<string, unknown>,
+  localeUi: Record<string, unknown>
+): UiViolation[] {
+  const out: UiViolation[] = [];
+  for (const [key, locVal] of Object.entries(localeUi)) {
+    const enVal = enUi[key];
+    if (enVal === undefined) {
+      out.push({ locale, key, kind: 'unknown-key', detail: 'key not present in en.json' });
+      continue;
+    }
+    if (typeof enVal !== typeof locVal) {
+      out.push({
+        locale,
+        key,
+        kind: 'type',
+        detail: `type ${typeof locVal} != English ${typeof enVal}`,
+      });
+      continue;
+    }
+    if (typeof enVal === 'string' && typeof locVal === 'string') {
+      const enPh = placeholderMultiset(enVal);
+      const locPh = placeholderMultiset(locVal);
+      if (enPh.join(' ') !== locPh.join(' ')) {
+        out.push({
+          locale,
+          key,
+          kind: 'placeholder',
+          detail: `placeholders [${locPh.join(', ')}] != English [${enPh.join(', ')}]`,
+        });
+      }
+    }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -172,6 +250,7 @@ export function collectViolations(
 // ---------------------------------------------------------------------------
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
+const LOCALES_DIR = path.join(process.cwd(), 'src', 'i18n', 'locales');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
 
 function readJson<T>(file: string, fallback: T): T {
@@ -193,27 +272,59 @@ function main(): void {
       path.join(CONTENT_DIR, `${locale}.json`),
       {}
     );
+    // Curated per-locale terms that must be honored (the override layer's teeth).
+    const overrides = readJson<Record<string, string>>(
+      path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
+      {}
+    );
     for (const [shareId, localized] of Object.entries(localeContent)) {
       const en = english[shareId];
       if (!en) continue;
-      all.push(...collectViolations(shareId, locale, en, localized, preserveTerms));
+      all.push(...collectViolations(shareId, locale, en, localized, preserveTerms, overrides));
     }
   }
 
-  if (all.length === 0) {
+  // UI chrome strings: placeholder/type parity against en.json.
+  const enUi = readJson<Record<string, unknown>>(path.join(LOCALES_DIR, 'en.json'), {});
+  const uiAll: UiViolation[] = [];
+  for (const locale of SUPPORTED_HUB_LOCALES) {
+    if (locale === 'en') continue;
+    const localeUi = readJson<Record<string, unknown>>(
+      path.join(LOCALES_DIR, `${locale}.json`),
+      {}
+    );
+    uiAll.push(...collectUiViolations(locale, enUi, localeUi));
+  }
+
+  if (all.length === 0 && uiAll.length === 0) {
     console.log('[i18n] validate: no violations.');
     return;
   }
 
-  const byKind = all.reduce<Record<string, number>>((acc, v) => {
-    acc[v.kind] = (acc[v.kind] ?? 0) + 1;
-    return acc;
-  }, {});
-  console.error(`[i18n] validate: ${all.length} violation(s):`, byKind);
-  for (const v of all.slice(0, 50)) {
-    console.error(`  [${v.locale}] ${v.shareId} ${v.field} (${v.kind}): ${v.detail}`);
+  if (all.length > 0) {
+    const byKind = all.reduce<Record<string, number>>((acc, v) => {
+      acc[v.kind] = (acc[v.kind] ?? 0) + 1;
+      return acc;
+    }, {});
+    console.error(`[i18n] validate: ${all.length} content violation(s):`, byKind);
+    for (const v of all.slice(0, 50)) {
+      console.error(`  [${v.locale}] ${v.shareId} ${v.field} (${v.kind}): ${v.detail}`);
+    }
+    if (all.length > 50) console.error(`  …and ${all.length - 50} more.`);
   }
-  if (all.length > 50) console.error(`  …and ${all.length - 50} more.`);
+
+  if (uiAll.length > 0) {
+    const byKind = uiAll.reduce<Record<string, number>>((acc, v) => {
+      acc[v.kind] = (acc[v.kind] ?? 0) + 1;
+      return acc;
+    }, {});
+    console.error(`[i18n] validate: ${uiAll.length} UI-string violation(s):`, byKind);
+    for (const v of uiAll.slice(0, 50)) {
+      console.error(`  [${v.locale}] ${v.key} (${v.kind}): ${v.detail}`);
+    }
+    if (uiAll.length > 50) console.error(`  …and ${uiAll.length - 50} more.`);
+  }
+
   process.exit(1);
 }
 

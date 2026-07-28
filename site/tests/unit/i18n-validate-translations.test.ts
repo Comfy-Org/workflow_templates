@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collectViolations } from '../../scripts/i18n/validate-translations';
+import { collectViolations, collectUiViolations } from '../../scripts/i18n/validate-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 
 const PRESERVE = ['ComfyUI', 'Wan', 'LoRA'];
@@ -99,5 +99,65 @@ describe('collectViolations', () => {
     const enName = en({ howToUse: ['Enable the LoRA path', 'Run it'] });
     const ja = { howToUse: ['ローラ パスを有効化', '実行する'] };
     expect(kinds(collectViolations('s1', 'ja', enName, ja, PRESERVE))).toContain('glossary');
+  });
+
+  it('enforces a curated override term (must render the paired translation)', () => {
+    // Override says English "workflow" must be "工作流" in zh; the translation used
+    // a different word, so it fails.
+    const enName = en({ description: 'Run this workflow in ComfyUI.' });
+    const zh = { description: '在 ComfyUI 中运行此流程。' }; // uses 流程, not 工作流
+    const overrides = { workflow: '工作流' };
+    const vs = collectViolations('s1', 'zh', enName, zh, PRESERVE, overrides);
+    expect(vs.some((v) => v.kind === 'glossary' && v.detail.includes('工作流'))).toBe(true);
+  });
+
+  it('passes when the override term is rendered correctly', () => {
+    const enName = en({ description: 'Run this workflow in ComfyUI.' });
+    const zh = { description: '在 ComfyUI 中运行此工作流。' };
+    const overrides = { workflow: '工作流' };
+    expect(collectViolations('s1', 'zh', enName, zh, PRESERVE, overrides)).toEqual([]);
+  });
+});
+
+const uiKinds = (vs: ReturnType<typeof collectUiViolations>) => vs.map((v) => v.kind);
+
+describe('collectUiViolations', () => {
+  const enUi = {
+    'hub.title': 'Comfy Workflows',
+    'model.metaH1': '{label} ComfyUI Workflows',
+    'model.metaDescription': '{count} {label} workflows for ComfyUI.',
+  };
+
+  it('passes a translation that preserves placeholders and types', () => {
+    const zh = {
+      'hub.title': 'Comfy 工作流',
+      'model.metaH1': '{label} ComfyUI 工作流',
+      'model.metaDescription': '{count} 个 {label} ComfyUI 工作流。',
+    };
+    expect(collectUiViolations('zh', enUi, zh)).toEqual([]);
+  });
+
+  it('allows missing keys (they render via the English fallback)', () => {
+    expect(collectUiViolations('zh', enUi, { 'hub.title': 'Comfy 工作流' })).toEqual([]);
+  });
+
+  it('flags a dropped placeholder', () => {
+    const zh = { 'model.metaDescription': '{label} 的 ComfyUI 工作流。' }; // {count} dropped
+    expect(uiKinds(collectUiViolations('zh', enUi, zh))).toContain('placeholder');
+  });
+
+  it('flags a renamed placeholder', () => {
+    const zh = { 'model.metaH1': '{name} ComfyUI 工作流' }; // {label} -> {name}
+    expect(uiKinds(collectUiViolations('zh', enUi, zh))).toContain('placeholder');
+  });
+
+  it('flags a type mismatch against English', () => {
+    const zh = { 'hub.title': ['not', 'a', 'string'] as unknown as string };
+    expect(uiKinds(collectUiViolations('zh', enUi, zh))).toContain('type');
+  });
+
+  it('flags a key that does not exist in English', () => {
+    const zh = { 'hub.ghost': '幽灵' };
+    expect(uiKinds(collectUiViolations('zh', enUi, zh))).toContain('unknown-key');
   });
 });
