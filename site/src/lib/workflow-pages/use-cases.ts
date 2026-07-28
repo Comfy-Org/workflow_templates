@@ -138,6 +138,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['ControlNet', 'Canny'] },
     // Purz's dedicated Tattoo Generator app, pinned atop the grid.
     // isApp left unset: App Mode not verified in cloud.comfy.org — confirm before setting.
+    appShareId: '90d086fef9e3',
     pins: [{ shareId: '90d086fef9e3' }],
   },
   {
