@@ -24,14 +24,18 @@ interface Props {
    *  the locale, so a prefixed value would double it into `/ja/ja/…`. */
   basePath: string;
   heading: string;
+  /** Optional `<title>`/JSON-LD name override for when `heading` is too short for
+   *  SEO on its own (e.g. "Use Cases"). Defaults to `${heading} | ${SITE_NAME}`.
+   *  The on-page H1 always renders `heading`, regardless of this override. */
+  title?: string;
   description: string;
   cards: SeoPageCard[];
 }
 
-const { locale, basePath, heading, description, cards } = Astro.props;
+const { locale, basePath, heading, title, description, cards } = Astro.props;
 
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
-const name = `${heading} | ${SITE_NAME}`;
+const name = title ?? `${heading} | ${SITE_NAME}`;
 
 const items = cards.map((card) => ({
   name: card.title,
