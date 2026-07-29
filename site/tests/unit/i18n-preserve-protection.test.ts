@@ -5,6 +5,7 @@ import {
   restoreText,
   protectContent,
   restoreContent,
+  findSentinelCollisions,
   sentinelFor,
 } from '../../scripts/i18n/preserve-protection';
 
@@ -55,6 +56,28 @@ describe('restoreText tolerance', () => {
   });
   it('leaves an unknown sentinel index untouched (validator catches residue)', () => {
     expect(restoreText('x {{PT999}} y', map)).toBe('x {{PT999}} y');
+  });
+});
+
+describe('findSentinelCollisions (data-integrity guard)', () => {
+  const map = buildTermMap(TERMS);
+  it('detects sentinel-shaped text already present in the source', () => {
+    expect(findSentinelCollisions({ a: { title: 'see {{PT0}} here' } })).toEqual([
+      'see {{PT0}} here',
+    ]);
+    // the tolerant single-brace form too
+    expect(findSentinelCollisions({ a: { howToUse: ['x {PT3} y'] } })).toEqual(['x {PT3} y']);
+  });
+
+  it('is empty for clean content', () => {
+    expect(
+      findSentinelCollisions({ a: { title: 'ComfyUI ControlNet', howToUse: ['Load it'] } })
+    ).toEqual([]);
+  });
+
+  it('proves the guard is necessary: restore WOULD rewrite a literal marker', () => {
+    // If protect did not reject this, genuine content would be corrupted on restore.
+    expect(restoreText('literal {{PT0}} token', map)).toBe(`literal ${map.termByIndex[0]} token`);
   });
 });
 

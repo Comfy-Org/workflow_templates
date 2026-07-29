@@ -38,7 +38,9 @@ export function sentinelFor(index: number): string {
  * optional spaces, case-insensitive PT, digits. A residual it can't match stays as
  * a missing preserve-term, which the validator then catches (fail-closed).
  */
-const SENTINEL_RE = /[{｛]{1,2}\s*[Pp][Tt]\s*(\d+)\s*[}｝]{1,2}/g;
+const SENTINEL_PATTERN = '[{｛]{1,2}\\s*[Pp][Tt]\\s*(\\d+)\\s*[}｝]{1,2}';
+const SENTINEL_RE = new RegExp(SENTINEL_PATTERN, 'g'); // restore: replace every match
+const SENTINEL_TEST = new RegExp(SENTINEL_PATTERN); // detection: stateless test
 
 export interface TermMap {
   /** Preserve-terms longest-first, so "ComfyUI" is replaced before "Comfy". */
@@ -93,6 +95,20 @@ export function restoreContent(content: unknown, map: TermMap): unknown {
   return mapStrings(content, (s) => restoreText(s, map));
 }
 
+/**
+ * Strings in `content` that already contain sentinel-shaped text. Protecting such
+ * content would let `restore` silently rewrite genuine Hub content into a
+ * preserve-term, so `protect` refuses the build when this returns anything.
+ */
+export function findSentinelCollisions(content: unknown): string[] {
+  const hits: string[] = [];
+  mapStrings(content, (s) => {
+    if (SENTINEL_TEST.test(s)) hits.push(s);
+    return s;
+  });
+  return hits;
+}
+
 // ---------------------------------------------------------------------------
 // IO (main)
 // ---------------------------------------------------------------------------
@@ -122,11 +138,26 @@ function main(): void {
 
   if (mode === 'protect') {
     // Only the English source lobe reads; restored before commit.
-    const done = transformFile(path.join(CONTENT_DIR, 'en.json'), (d) => protectContent(d, map));
+    const enFile = path.join(CONTENT_DIR, 'en.json');
+    if (!fs.existsSync(enFile)) {
+      console.log('[i18n] protect: content/en.json not found.');
+      return;
+    }
+    const source = JSON.parse(fs.readFileSync(enFile, 'utf-8'));
+    // Fail closed if the Hub source already contains sentinel-shaped text — restore
+    // would otherwise rewrite that genuine content into a preserve-term.
+    const collisions = findSentinelCollisions(source);
+    if (collisions.length > 0) {
+      console.error(
+        `[i18n] protect: ${collisions.length} source string(s) contain sentinel-shaped text; ` +
+          `refusing to protect (restore would corrupt them). Examples:`
+      );
+      for (const c of collisions.slice(0, 5)) console.error(`  ${c}`);
+      process.exit(1);
+    }
+    fs.writeFileSync(enFile, JSON.stringify(protectContent(source, map), null, 2) + '\n');
     console.log(
-      done
-        ? `[i18n] protect: sentinelized ${map.ordered.length} preserve-terms in content/en.json.`
-        : '[i18n] protect: content/en.json not found.'
+      `[i18n] protect: sentinelized ${map.ordered.length} preserve-terms in content/en.json.`
     );
   } else {
     // Restore every content file: en.json plus each machine locale lobe produced.
