@@ -21,8 +21,8 @@ function pageIndexable(hasQualityContent: boolean, templateCount: number): boole
  * English keeps the richer AI-generated copy; localized routes prefer the
  * translated templated copy. The generated `content.*` is English-only, so on a
  * non-English (already self-canonical, indexable) page it would show an English
- * meta description — ranking well but tanking CTR. Quick win: swap the precedence
- * per locale so these pages read in-language without waiting on any locale flip.
+ * meta description — ranking well but tanking CTR. Swapping the precedence per
+ * locale lets these pages read in-language without waiting on any locale flip.
  */
 function localizedFirst(locale: Locale, english: string | undefined, localized: string): string {
   return (locale === DEFAULT_LOCALE ? english : undefined) || localized;

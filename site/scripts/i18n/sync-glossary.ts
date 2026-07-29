@@ -1,5 +1,5 @@
 /**
- * sync-glossary — builds the translation glossary for the hub pipeline (GTM-291).
+ * sync-glossary — builds the translation glossary for the hub pipeline.
  *
  * Run: `pnpm i18n:glossary` (reads a ComfyUI_frontend checkout; no OpenAI key).
  *

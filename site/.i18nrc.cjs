@@ -9,9 +9,9 @@
 // that locale's product-UI terminology (the synced mirror + curated overrides)
 // into the prompt. This is the only way to feed per-locale terms — the all-locales
 // run shares one reference prompt across every output locale, so a locale's mirror
-// cannot be injected there. It is also the per-locale pacing the Tier-1 backfill
-// uses (one locale under the ~30k TPM cap at a time). With no env set the config
-// keeps its original all-locales behavior (no per-locale terms) for local runs.
+// cannot be injected there. It also paces one locale at a time to stay under the
+// OpenAI rate limit. With no env set the config keeps its original all-locales
+// behavior (no per-locale terms) for local runs.
 const { defineConfig } = require('@lobehub/i18n-cli');
 const fs = require('node:fs');
 const path = require('node:path');

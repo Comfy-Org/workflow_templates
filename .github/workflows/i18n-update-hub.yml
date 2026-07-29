@@ -1,4 +1,4 @@
-# Generates and updates hub workflow-content translations (GTM-291).
+# Generates and updates hub workflow-content translations.
 #
 # Pushes English; CI translates. Regenerates the English content-of-record from
 # the Hub index, seeds existing human translations, fills the gaps with
@@ -47,6 +47,28 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/site-setup
+
+      # Resolve which locales to translate. The manual-dispatch input arrives via
+      # env (never spliced into the script) and must match the supported allowlist,
+      # so it can neither inject shell nor request an unsupported locale. A blank
+      # input and the scheduled run translate all supported locales.
+      - name: Resolve target locales
+        env:
+          INPUT_LOCALE: ${{ github.event.inputs.locale }}
+        run: |
+          set -euo pipefail
+          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR"
+          if [ -n "${INPUT_LOCALE:-}" ]; then
+            # Match the input exactly against the allowlist (literal case patterns,
+            # so a value like "*" cannot glob-match its way in).
+            case "$INPUT_LOCALE" in
+              zh|zh-TW|ja|ko|es|fr|ru|tr|ar|pt-BR) TARGET="$INPUT_LOCALE" ;;
+              *) echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"; exit 1 ;;
+            esac
+          else
+            TARGET="$SUPPORTED"
+          fi
+          echo "TRANSLATE_LOCALES=$TARGET" >> "$GITHUB_ENV"
 
       # Resume a prior rate-limited run. If the single stable automation branch
       # exists and is still unmerged, start from its committed partial output so
@@ -104,11 +126,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -uo pipefail
-          # Manual dispatch may target one locale (e.g. -f locale=zh) for the
-          # per-language backfill; the cron and a blank input do all supported.
-          LOCALES="${{ github.event.inputs.locale }}"
-          [ -z "$LOCALES" ] && LOCALES="zh zh-TW ja ko es fr ru tr ar pt-BR"
-          for loc in $LOCALES; do
+          for loc in $TRANSLATE_LOCALES; do
             echo "::group::translate content → $loc"
             HUB_I18N_LOCALE="$loc" pnpm locale \
               || echo "locale $loc translation failed (tolerated; partial output saved)"
@@ -193,5 +211,5 @@ jobs:
               --base main \
               --head "$STABLE_BRANCH" \
               --title "chore(i18n): update hub workflow translations" \
-              --body "Automated hub translation refresh (GTM-291). English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
+              --body "Automated hub translation refresh. English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
           fi

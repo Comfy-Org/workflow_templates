@@ -1,5 +1,5 @@
 /**
- * check-config — fails the build if the i18n pipeline is mis-wired (GTM-291).
+ * check-config — fails the build if the i18n pipeline is mis-wired.
  * Run: `pnpm i18n:check`. This is the check that would have caught the abandoned
  * .i18nrc.cjs whose entry file never existed.
  */

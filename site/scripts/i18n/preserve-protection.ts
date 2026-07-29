@@ -1,6 +1,6 @@
 /**
  * preserve-protection — deterministic do-not-translate protection for the hub
- * translation pipeline (GTM-291).
+ * translation pipeline.
  *
  * lobe/OpenAI's "never translate these proper nouns" instruction is advisory, so
  * brand/model names (ComfyUI, ControlNet, Flux, VAE, KSampler…) leak into the

@@ -1,6 +1,6 @@
 /**
  * resolveLocalizedWorkflow — the one place that merges a workflow's translated
- * content and decides whether its locale page may be indexed (GTM-291).
+ * content and decides whether its locale page may be indexed.
  *
  * fs-based and `astro:*`-free (like `workflow-pages/landing-content.ts`) so the
  * route, the sitemap filter, the hreflang emitter, and the CI validator all

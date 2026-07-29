@@ -1,5 +1,5 @@
 /**
- * Shared shapes for the hub localization pipeline (GTM-291).
+ * Shared shapes for the hub localization pipeline.
  *
  * Dependency-free so routes, the resolver, the builder, validators, CI, and
  * tests can all import it (mirrors `workflow-pages/schema.ts`). No `astro:*`,
