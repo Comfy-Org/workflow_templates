@@ -52,6 +52,8 @@ const authorAvatarUrl = profile?.avatar_url || null;
 const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
+// Partner/API workflows bill partner credits, so the CTA must not promise free.
+const isApiTemplate = data.tags?.includes('API') ?? false;
 const cloudTemplateId = data.shareId || data.name;
 const downloadUrl = data.shareId
   ? getWorkflowDownloadUrl(data.shareId, data.name)
@@ -134,9 +136,11 @@ function formatRelativeDate(dateStr: string): string {
                   data-location="hero"
                 >
                   <span class="ppformula-text-center-sm font-bold">
-                    {t('cta.tryCloud', locale)}
+                    {featureFlags.cloudFreeTier && !isApiTemplate
+                      ? t('cta.tryCloudFree', locale)
+                      : t('cta.tryCloud', locale)}
                   </span>
-                  {featureFlags.cloudFreeTier && (
+                  {featureFlags.cloudFreeTier && !isApiTemplate && (
                     <span class="font-normal text-xs">{t('cta.tryCloudSubline', locale)}</span>
                   )}
                 </a>

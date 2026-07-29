@@ -19,22 +19,17 @@ const {
   creators?: CreatorLink[];
 }>();
 
-/** Split "DOWNLOAD DESKTOP" → { prefix: "DOWNLOAD", core: "DESKTOP" } for the reveal animation. */
-function splitLabel(label: string): { prefix: string; core: string } {
-  const lastSpace = label.lastIndexOf(' ');
-  if (lastSpace === -1) return { prefix: '', core: label };
-  return { prefix: label.slice(0, lastSpace), core: label.slice(lastSpace + 1) };
-}
-
 const ctaButtons = [
   {
-    ...splitLabel(t('nav.downloadLocal', locale)),
+    full: t('nav.downloadLocal', locale),
+    short: t('nav.downloadLocalShort', locale),
     ariaLabel: t('nav.downloadLocal', locale),
     href: navRoutes.download,
     primary: false,
   },
   {
-    ...splitLabel(t('nav.launchCloud', locale)),
+    full: t('nav.launchCloud', locale),
+    short: t('nav.launchCloudShort', locale),
     ariaLabel: t('nav.launchCloud', locale),
     href: getCloudLandingUrl('site_button'),
     primary: true,
@@ -79,7 +74,8 @@ const ctaButtons = [
         :class="cta.primary ? 'run-cloud-btn' : undefined"
       >
         <span class="ppformula-text-center">
-          <span class="hidden xl:inline-block">{{ cta.prefix }}&nbsp;</span>{{ cta.core }}
+          <span class="hidden xl:inline-block">{{ cta.full }}</span>
+          <span class="xl:hidden">{{ cta.short }}</span>
         </span>
       </Button>
     </div>
