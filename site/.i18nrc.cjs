@@ -60,6 +60,8 @@ function terminologyBlock(locale) {
 
 const reference = `This is SEO page content for Comfy Workflows (comfy.org/workflows), a catalog of ComfyUI workflow templates. Each value is a workflow's title, description, meta description, extended description, how-to steps, suggested use cases, or FAQ. Preserve JSON structure exactly: translate only string values, never keys, and keep every array the same length.
 
+The text may contain placeholder tokens of the form {{PT0}}, {{PT1}}, {{PT2}}, and so on — they stand in for brand, product, model, and node names. Reproduce EVERY token exactly as written and in place: never translate, remove, reorder, merge, or add tokens, even when rephrasing or shortening a sentence.
+
 Never translate these proper nouns (brand, product, model, and node names) — keep them byte-for-byte:
 ${preserveTerms.join(', ')}
 Also keep any URL, file name, and share id unchanged.

@@ -25,18 +25,20 @@ import { pathToFileURL } from 'node:url';
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
 
-/** Sentinel token for term index `i`. ASCII double-brackets read as a placeholder
- *  to the model (like a wiki link) and never occur in real workflow content. */
+/** Sentinel token for term index `i`. Double-braces read as a required
+ *  interpolation variable, which models preserve far more reliably than a
+ *  bracketed marker (they drop the latter when rephrasing), and never occur in
+ *  real workflow content. */
 export function sentinelFor(index: number): string {
-  return `[[PT${index}]]`;
+  return `{{PT${index}}}`;
 }
 
 /**
- * Match a sentinel even if the model nudged it: 1-2 ASCII or fullwidth brackets,
+ * Match a sentinel even if the model nudged it: 1-2 ASCII or fullwidth braces,
  * optional spaces, case-insensitive PT, digits. A residual it can't match stays as
  * a missing preserve-term, which the validator then catches (fail-closed).
  */
-const SENTINEL_RE = /[[［【]{1,2}\s*[Pp][Tt]\s*(\d+)\s*[\]］】]{1,2}/g;
+const SENTINEL_RE = /[{｛]{1,2}\s*[Pp][Tt]\s*(\d+)\s*[}｝]{1,2}/g;
 
 export interface TermMap {
   /** Preserve-terms longest-first, so "ComfyUI" is replaced before "Comfy". */

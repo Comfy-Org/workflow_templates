@@ -45,17 +45,16 @@ describe('protect + restore round-trip', () => {
 
 describe('restoreText tolerance', () => {
   const map = buildTermMap(TERMS);
-  it('restores sentinels the model nudged (spaces, fullwidth brackets)', () => {
-    const i = 0;
-    const token = sentinelFor(i);
-    expect(token).toBe('[[PT0]]');
-    // spaced + fullwidth-bracket variants a model might emit
-    expect(restoreText('a [[ PT0 ]] b', map)).toBe(`a ${map.termByIndex[0]} b`);
-    expect(restoreText('a ［［PT0］］ b', map)).toBe(`a ${map.termByIndex[0]} b`);
-    expect(restoreText('a 【PT0】 b', map)).toBe(`a ${map.termByIndex[0]} b`);
+  it('restores sentinels the model nudged (spaces, single/fullwidth braces)', () => {
+    const token = sentinelFor(0);
+    expect(token).toBe('{{PT0}}');
+    // spaced + single-brace + fullwidth-brace variants a model might emit
+    expect(restoreText('a {{ PT0 }} b', map)).toBe(`a ${map.termByIndex[0]} b`);
+    expect(restoreText('a {PT0} b', map)).toBe(`a ${map.termByIndex[0]} b`);
+    expect(restoreText('a ｛｛PT0｝｝ b', map)).toBe(`a ${map.termByIndex[0]} b`);
   });
   it('leaves an unknown sentinel index untouched (validator catches residue)', () => {
-    expect(restoreText('x [[PT999]] y', map)).toBe('x [[PT999]] y');
+    expect(restoreText('x {{PT999}} y', map)).toBe('x {{PT999}} y');
   });
 });
 
