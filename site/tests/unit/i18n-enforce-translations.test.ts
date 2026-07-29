@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pruneViolatingFields } from '../../scripts/i18n/enforce-translations';
+import { pruneViolatingFields, isEmptyTranslation } from '../../scripts/i18n/enforce-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 
 const PRESERVE = ['ComfyUI', 'VAE'];
@@ -83,5 +83,22 @@ describe('pruneViolatingFields', () => {
     );
     expect(fieldsInspected).toBe(2);
     expect(prunedFieldCount).toBe(1); // 50% -> main() would flag systemic at this scale
+  });
+});
+
+describe('isEmptyTranslation (wholesale-failure guard)', () => {
+  it('flags a run where every target locale is empty but English is populated', () => {
+    expect(isEmptyTranslation(582, [0])).toBe(true); // the OpenAI-quota case: zh came back {}
+    expect(isEmptyTranslation(582, [0, 0, 0])).toBe(true); // all targets empty
+  });
+
+  it('allows partial progress (at least one target has entries)', () => {
+    expect(isEmptyTranslation(582, [582])).toBe(false);
+    expect(isEmptyTranslation(582, [0, 300])).toBe(false); // zh empty but ja partial -> publish
+  });
+
+  it('never fires when there is no English source or no targets were attempted', () => {
+    expect(isEmptyTranslation(0, [0])).toBe(false); // nothing to translate against
+    expect(isEmptyTranslation(582, [])).toBe(false); // TRANSLATE_LOCALES unset (e.g. local run)
   });
 });

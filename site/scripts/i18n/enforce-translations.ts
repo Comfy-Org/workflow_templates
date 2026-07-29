@@ -94,9 +94,40 @@ export function pruneViolatingFields(
   return { content, pruned, prunedFieldCount, fieldsInspected };
 }
 
+/**
+ * True when translation was attempted for locales but produced NOTHING for any of
+ * them while English is populated — i.e. the model call failed wholesale (e.g. an
+ * OpenAI 429 quota error), not a partial rate-limited run. Publishing then would
+ * open an empty PR, so the run must fail instead. A run with any translated entry
+ * (real partial progress) is allowed through.
+ */
+export function isEmptyTranslation(englishCount: number, targetEntryCounts: number[]): boolean {
+  return (
+    englishCount > 0 && targetEntryCounts.length > 0 && targetEntryCounts.every((n) => n === 0)
+  );
+}
+
 function main(): void {
   const english = readJson<Record<string, WorkflowContent>>(path.join(CONTENT_DIR, 'en.json'), {});
   const preserveTerms = readJson<string[]>(path.join(GLOSSARY_DIR, 'preserve-terms.json'), []);
+
+  // Fail fast on a wholesale translation failure: if every locale we tried to
+  // translate this run came back empty (English is populated), the model call died
+  // (e.g. OpenAI quota) and there is nothing to publish. Refuse to open an empty PR.
+  const targets = (process.env.TRANSLATE_LOCALES ?? '').split(/\s+/).filter((l) => l && l !== 'en');
+  const targetCounts = targets.map(
+    (loc) =>
+      Object.keys(readJson<Record<string, unknown>>(path.join(CONTENT_DIR, `${loc}.json`), {}))
+        .length
+  );
+  if (isEmptyTranslation(Object.keys(english).length, targetCounts)) {
+    console.error(
+      `[i18n] enforce: translation produced 0 entries for every target locale ` +
+        `(${targets.join(', ')}) while English has ${Object.keys(english).length} workflow(s). ` +
+        `The translation step failed wholesale (e.g. OpenAI quota) — refusing to publish an empty PR.`
+    );
+    process.exit(1);
+  }
 
   let totalPruned = 0;
   const systemic: string[] = [];
