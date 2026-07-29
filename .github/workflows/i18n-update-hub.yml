@@ -35,7 +35,8 @@ jobs:
       - name: Checkout workflow_templates
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          # PAT_TOKEN lost repo write (403); PERSONAL_ACCESS_TOKEN has it.
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       # ComfyUI_frontend's UI locales seed the glossary mirror (term consistency).
       - name: Checkout ComfyUI_frontend locales
@@ -183,7 +184,7 @@ jobs:
       - name: Open or update translation PR
         if: success()
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           set -euo pipefail
           STABLE_BRANCH="i18n/hub-translations"
