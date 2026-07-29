@@ -19,20 +19,17 @@ const {
   creators?: CreatorLink[];
 }>();
 
-/** Chinese sets solid, so a Latin gap reads as a typo. Korean and Japanese keep theirs. */
-const ctaGap = locale === 'zh' || locale === 'zh-TW' ? '' : '\u00a0';
-
 const ctaButtons = [
   {
-    prefix: t('nav.ctaDesktopPrefix', locale),
-    core: t('nav.ctaDesktopCore', locale),
+    full: t('nav.downloadLocal', locale),
+    short: t('nav.downloadLocalShort', locale),
     ariaLabel: t('nav.downloadLocal', locale),
     href: navRoutes.download,
     primary: false,
   },
   {
-    prefix: t('nav.ctaCloudPrefix', locale),
-    core: t('nav.ctaCloudCore', locale),
+    full: t('nav.launchCloud', locale),
+    short: t('nav.launchCloudShort', locale),
     ariaLabel: t('nav.launchCloud', locale),
     href: getCloudLandingUrl('site_button'),
     primary: true,
@@ -77,8 +74,8 @@ const ctaButtons = [
         :class="cta.primary ? 'run-cloud-btn' : undefined"
       >
         <span class="ppformula-text-center">
-          <span class="hidden whitespace-pre xl:inline-block">{{ cta.prefix }}{{ ctaGap }}</span
-          >{{ cta.core }}
+          <span class="hidden xl:inline-block">{{ cta.full }}</span>
+          <span class="xl:hidden">{{ cta.short }}</span>
         </span>
       </Button>
     </div>
