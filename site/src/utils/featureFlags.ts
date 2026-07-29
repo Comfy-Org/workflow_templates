@@ -7,8 +7,6 @@ import { FeaturesResponseSchema } from './featureFlags.schema';
 
 import bundledSnapshot from '../data/feature-flags.snapshot.json' with { type: 'json' };
 
-// PostHog via the site's own proxy; the decide endpoint evaluates global
-// flags for anonymous callers, which is what a build-time fetch is.
 const DEFAULT_BASE_URL = 'https://t.comfy.org';
 const POSTHOG_PROJECT_KEY =
   process.env.PUBLIC_POSTHOG_KEY ?? import.meta.env?.PUBLIC_POSTHOG_KEY ?? '';
@@ -148,8 +146,6 @@ async function callOnce(
 
 function deriveFlags(features: FeaturesResponse): FeatureFlagsSnapshot['flags'] {
   return {
-    // The run-quota rollout flag (same source the desktop pill reads); the
-    // legacy new_free_tier_subscriptions stays off post-pivot.
     cloudFreeTier: features.featureFlags?.['free_tier_workflow_submission_enabled'] === true,
   };
 }
