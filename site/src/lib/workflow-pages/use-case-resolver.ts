@@ -51,6 +51,27 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   return [...pinned, ...matched.filter((t) => !t.shareId || !seen.has(t.shareId))];
 }
 
+/**
+ * Whether a use-case page will render a grid, judged from the on-disk template
+ * snapshot that `astro.config.mjs` reads for sitemap membership.
+ *
+ * That snapshot cannot answer the question with `resolveUseCasePageTemplates`
+ * alone: its entries carry no `shareId` (the content schema has no such field,
+ * and `serializeCollectionEntry` sets it to `''`), so pins never resolve against
+ * it. The routes resolve pins fine, because they read the live hub index. A page
+ * whose grid is entirely curated therefore looks empty to the sitemap while
+ * rendering as indexable, which trips `verify-sitemap-indexability`. Counting
+ * pins directly closes that gap without teaching the snapshot about share ids.
+ */
+export function useCasePageHasGrid(def: SeoPageDef, snapshot: FilterableTemplate[]): boolean {
+  if (resolveUseCasePageTemplates(def, snapshot).length > 0) return true;
+  // Only a fully curated page falls back to its pin count. A page that declares
+  // filters is still judged on whether those filters match, so this cannot mask
+  // a tag filter that has gone stale.
+  const hasFilters = (def.filters.tags?.length ?? 0) > 0 || (def.filters.models?.length ?? 0) > 0;
+  return !hasFilters && (def.pins?.length ?? 0) > 0;
+}
+
 const SHARE_ID_RE = /^[0-9a-f]+$/;
 
 /** Throws on a malformed curated share id; only warns on an unresolved pin, which

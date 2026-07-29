@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   resolveUseCasePageTemplates,
   assertCuratedSharesResolve,
+  useCasePageHasGrid,
   type FilterableTemplate,
 } from '../../src/lib/workflow-pages/use-case-resolver';
 import type { SeoPageDef } from '../../src/lib/workflow-pages/use-cases';
@@ -144,5 +145,42 @@ describe('assertCuratedSharesResolve', () => {
     expect(() =>
       assertCuratedSharesResolve(page({ appShareId: 'deadbeef' }), catalog)
     ).not.toThrow();
+  });
+});
+
+describe('useCasePageHasGrid', () => {
+  // The sitemap reads the on-disk snapshot, whose entries carry no shareId, so
+  // pins cannot resolve there even though the routes resolve them from the hub.
+  const snapshotWithoutShareIds: FilterableTemplate[] = [
+    { tags: ['a'], models: [], usage: 10 },
+    { tags: ['b'], models: [], usage: 20 },
+  ];
+
+  it('counts a filter match', () => {
+    expect(useCasePageHasGrid(page({ filters: { tags: ['a'] } }), snapshotWithoutShareIds)).toBe(
+      true
+    );
+  });
+
+  it('counts a curated page whose pins cannot resolve against the snapshot', () => {
+    expect(
+      useCasePageHasGrid(
+        page({ filters: {}, pins: [{ shareId: 'aaaa' }] }),
+        snapshotWithoutShareIds
+      )
+    ).toBe(true);
+  });
+
+  it('rejects a page with neither matches nor pins', () => {
+    expect(useCasePageHasGrid(page({ filters: {} }), snapshotWithoutShareIds)).toBe(false);
+  });
+
+  it('still judges a filtered page on its filters, so a stale tag is not masked', () => {
+    expect(
+      useCasePageHasGrid(
+        page({ filters: { tags: ['gone'] }, pins: [{ shareId: 'aaaa' }] }),
+        snapshotWithoutShareIds
+      )
+    ).toBe(false);
   });
 });
