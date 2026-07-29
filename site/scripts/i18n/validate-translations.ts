@@ -80,7 +80,10 @@ function countOccurrences(haystack: string, needle: string): number {
 }
 
 function extractUrls(text: string): string[] {
-  return text.match(/https?:\/\/[^\s"')]+/g) ?? [];
+  // Strip trailing sentence punctuation the greedy match swallows, so a URL
+  // followed by a period in English but a full-width period in the translation
+  // is not flagged as altered.
+  return (text.match(/https?:\/\/[^\s"')]+/g) ?? []).map((u) => u.replace(/[.,;:!?)\]]+$/, ''));
 }
 
 /**

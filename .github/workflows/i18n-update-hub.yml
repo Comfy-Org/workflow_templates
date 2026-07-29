@@ -9,6 +9,11 @@ name: "i18n: Update Hub Translations"
 
 on:
   workflow_dispatch:
+    inputs:
+      locale:
+        description: 'Single locale to translate (blank = all supported). e.g. zh'
+        required: false
+        default: ''
   # Pick up newly published / changed workflows on a cadence.
   schedule:
     - cron: "0 2 * * *"
@@ -99,7 +104,11 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -uo pipefail
-          for loc in zh zh-TW ja ko es fr ru tr ar pt-BR; do
+          # Manual dispatch may target one locale (e.g. -f locale=zh) for the
+          # per-language backfill; the cron and a blank input do all supported.
+          LOCALES="${{ github.event.inputs.locale }}"
+          [ -z "$LOCALES" ] && LOCALES="zh zh-TW ja ko es fr ru tr ar pt-BR"
+          for loc in $LOCALES; do
             echo "::group::translate content → $loc"
             HUB_I18N_LOCALE="$loc" pnpm locale \
               || echo "locale $loc translation failed (tolerated; partial output saved)"
