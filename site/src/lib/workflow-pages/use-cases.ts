@@ -133,10 +133,13 @@ export const SEO_PAGES: SeoPageDef[] = [
         'fine line tattoo design',
       ],
     },
-    // No dedicated tattoo workflow exists; the structure-preserving ControlNet and
-    // line-art workflows are what adapt to tattoo/stencil design. The copy frames
-    // them honestly as design tools, not a one-click app.
+    // The structure-preserving ControlNet and line-art workflows adapt to tattoo/
+    // stencil design; the copy frames them honestly as design tools.
     filters: { tags: ['ControlNet', 'Canny'] },
+    // Purz's dedicated Tattoo Generator app, pinned atop the grid.
+    // isApp left unset: App Mode not verified in cloud.comfy.org — confirm before setting.
+    appShareId: '90d086fef9e3',
+    pins: [{ shareId: '90d086fef9e3' }],
   },
   {
     slug: 'ai-image-upscaler',
