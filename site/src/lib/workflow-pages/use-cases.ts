@@ -88,6 +88,21 @@ export const SEO_PAGES: SeoPageDef[] = [
       ],
     },
     filters: { tags: ['ControlNet'] },
+    // The ControlNet tag is shared with the tattoo page, which made the two grids
+    // near-identical. Interior keeps the depth / inpainting / image-edit side
+    // (room restyling preserves geometry); the line-art / Canny / union-control
+    // side lives on ai-tattoo-generator only.
+    excludeShareIds: [
+      '0bb057fd76e3', // SD3.5 Large Canny ControlNet
+      '72448fe4e4b5', // Flux.1 Canny Model
+      'f052abfce10e', // LTX-2 Canny to Video
+      '1af3df552a07', // Qwen-Image Union Control
+      '9829786b38f5', // Qwen-Image InstantX Union ControlNet
+      'dba8340fd0f3', // Qwen-Image ControlNet Model Patch
+      '7553d92529e0', // Z-Image-Turbo Fun Union ControlNet
+      '02bd87067503', // Qwen-Image 2512: Fun Union ControlNet
+      '12c2481d04b4', // AI on the Lot video union-control LoRA (off-topic)
+    ],
   },
   {
     slug: 'ai-caricature-generator',
@@ -140,8 +155,22 @@ export const SEO_PAGES: SeoPageDef[] = [
     // App Mode verified in cloud.comfy.org, so it files under the Comfy Apps tab.
     appShareId: '90d086fef9e3',
     pins: [{ shareId: '90d086fef9e3', isApp: true }],
-    // Canny-tagged non-tattoo tool: "AI on the Lot" video union-control LoRA.
-    excludeShareIds: ['12c2481d04b4'],
+    // Complement of the ai-interior-design split: tattoo keeps the line-art /
+    // Canny / union-control cluster (stencil work), interior keeps the depth /
+    // inpainting / image-edit cluster. Plus the off-topic "AI on the Lot" LoRA.
+    excludeShareIds: [
+      '300efdae24f6', // Image Editing (New)
+      '2639a76cf00e', // Qwen Image Edit 2509
+      '15538e51d812', // Qwen-Image InstantX Inpainting ControlNet
+      '85e7df4b564e', // Flux.1 Depth Lora
+      '45a8be9c1124', // SD3.5 Large Depth
+      '011974792e13', // LTX-2 Depth to Video
+      '52dd3f09bb59', // Flux.1 Redux Model
+      '67a816af8a73', // Wan 2.2 14B Fun Control
+      '736ab92b893a', // Wan 2.2 5B Fun Control
+      '3cf3c6a082ed', // LTX-2 Pose to Video
+      '12c2481d04b4', // AI on the Lot video union-control LoRA (off-topic)
+    ],
   },
   {
     slug: 'ai-image-upscaler',
