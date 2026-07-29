@@ -6,7 +6,7 @@
  * thin typed wrapper over the shared primitive below.
  */
 import { t } from '../../i18n/ui';
-import type { Locale } from '../../i18n/config';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import type { ModelGroup } from './model-groups';
 import type { SeoPageDef } from './use-cases';
 import type { GeneratedSeoContent } from './schema';
@@ -15,6 +15,17 @@ import { isIndexable } from './governance';
 /** Indexable only when the page has shippable content and real templates. */
 function pageIndexable(hasQualityContent: boolean, templateCount: number): boolean {
   return isIndexable({ clusterSize: templateCount, qualityPassed: hasQualityContent });
+}
+
+/**
+ * English keeps the richer AI-generated copy; localized routes prefer the
+ * translated templated copy. The generated `content.*` is English-only, so on a
+ * non-English (already self-canonical, indexable) page it would show an English
+ * meta description — ranking well but tanking CTR. Quick win: swap the precedence
+ * per locale so these pages read in-language without waiting on any locale flip.
+ */
+function localizedFirst(locale: Locale, english: string | undefined, localized: string): string {
+  return (locale === DEFAULT_LOCALE ? english : undefined) || localized;
 }
 
 export interface SeoPageMeta {
@@ -62,12 +73,18 @@ export function buildModelPageMeta({
     hasQualityContent: hasModelQualityContent(group, content),
     h1: t('model.metaH1', locale).replace('{label}', label),
     title: t('model.metaTitle', locale).replace('{label}', label),
-    description:
-      content?.metaDescription ||
+    description: localizedFirst(
+      locale,
+      content?.metaDescription,
       t('model.metaDescription', locale)
         .replace('{count}', String(templateCount))
-        .replace('{label}', label),
-    subheading: content?.subheading || t('model.subheading', locale).replace('{label}', label),
+        .replace('{label}', label)
+    ),
+    subheading: localizedFirst(
+      locale,
+      content?.subheading,
+      t('model.subheading', locale).replace('{label}', label)
+    ),
   };
 }
 
@@ -103,12 +120,17 @@ export function buildUseCasePageMeta({
     hasQualityContent: hasUseCaseQualityContent(content),
     h1: def.h1,
     title: def.title,
-    description:
-      content?.metaDescription ||
+    description: localizedFirst(
+      locale,
+      content?.metaDescription,
       t('useCase.metaDescription', locale)
         .replace('{count}', String(templateCount))
-        .replace('{keyword}', keyword),
-    subheading:
-      content?.subheading || t('useCase.subheading', locale).replace('{keyword}', keyword),
+        .replace('{keyword}', keyword)
+    ),
+    subheading: localizedFirst(
+      locale,
+      content?.subheading,
+      t('useCase.subheading', locale).replace('{keyword}', keyword)
+    ),
   };
 }

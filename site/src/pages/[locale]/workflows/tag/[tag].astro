@@ -24,6 +24,13 @@ import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../l
 
 const { locale, tag } = Astro.params;
 
+if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
+
 // Validate locale
 if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
   return Astro.redirect(`/workflows/tag/${tag || ''}/`);
@@ -39,7 +46,10 @@ const matchingTemplates = allTemplates.filter((tmpl) =>
 );
 
 if (matchingTemplates.length === 0) {
-  return Astro.redirect(`/${locale}/workflows/`);
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
 }
 
 // Get display name from the first matching tag
@@ -51,7 +61,11 @@ const basePath = `/workflows/tag/${tag}/`;
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
 
 const title = `${tagName} ${SITE_NAME} - ${t('nav.templates', typedLocale)}`;
-const description = `Browse ${matchingTemplates.length} ComfyUI workflow templates tagged with "${tagName}". Free, ready-to-use AI generation workflows.`;
+// Localized (falls back to English until the CI locale step translates the new
+// key). These tag pages are already self-canonical, so this is a quick CTR win.
+const description = t('tag.metaDescription', typedLocale)
+  .replace('{count}', String(matchingTemplates.length))
+  .replace('{tag}', tagName);
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -72,7 +86,7 @@ const serialized = matchingTemplates;
   title={title}
   description={description}
   canonicalUrl={canonicalUrl}
-  ogImage="/brand/og-default-v2.png"
+  ogImage="/brand/og-default-v3.png"
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}

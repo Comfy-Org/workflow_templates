@@ -11,12 +11,14 @@ import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
 import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
-import { DEFAULT_LOCALE } from '../../i18n/config';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { indexableAlternateLocales } from '../../lib/i18n/resolver';
 import { getTemplatesForLocale } from '../../lib/templates';
 import { absoluteUrl } from '../../config/site';
 import {
   listWorkflowIndex,
   listRelatedWorkflows,
+  byUsageDesc,
   type HubWorkflowTemplateEntry,
   type SerializedTemplate,
 } from '../../lib/hub-api';
@@ -119,8 +121,15 @@ const data = {
 };
 
 const title = `${data.title} - ComfyUI Workflow`;
-const urlSlug = `${data.name}-${data.shareId}`;
+// Guard against a dangling hyphen for shareless workflows (no `-shareId` suffix).
+const urlSlug = data.shareId ? `${data.name}-${data.shareId}` : data.name;
 const canonicalUrl = absoluteUrl(`/workflows/${urlSlug}/`);
+// Reciprocal hreflang: advertise only the locales for which this workflow is
+// indexable (empty while gated → x-default→English only), matching the localized
+// detail route so the cluster never points at a noindexed alternate.
+const hreflangLocales = data.shareId
+  ? ([DEFAULT_LOCALE, ...indexableAlternateLocales(data.shareId)] as Locale[])
+  : ([DEFAULT_LOCALE] as Locale[]);
 
 const thumbnails = data.thumbnails;
 const primaryThumbnail = thumbnails[0] || null;
@@ -153,6 +162,9 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
 });
 
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
+// Embed only the top-30 by usage for instant paint; the grid lazy-loads the full
+// catalog from grid.json (see WorkflowGrid `lazyFull`) so the page HTML stays small.
+const relatedPreview = [...relatedTemplates].sort(byUsageDesc).slice(0, 30);
 const toolbarLabels = buildToolbarLabels(locale);
 ---
 
@@ -164,6 +176,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   ogType="article"
   structuredData={structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
@@ -180,7 +193,9 @@ const toolbarLabels = buildToolbarLabels(locale);
           </a>
           <WorkflowGrid
             client:visible
-            templates={relatedTemplates}
+            templates={relatedPreview}
+            lazyFull
+            excludeName={data.name}
             locale={locale}
             toolbarLabels={toolbarLabels}
             gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"

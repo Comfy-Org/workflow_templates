@@ -20,6 +20,8 @@ interface Props {
   hreflangBasePath?: string;
   /** Whether localized variants of this route exist (controls hreflang alternates). */
   hreflangLocalized?: boolean;
+  /** Explicit per-page alternate locales (GTM-291); overrides hreflangLocalized. */
+  hreflangLocales?: readonly Locale[];
   theme?: 'light' | 'dark';
   hideDefaultFooter?: boolean;
   noindex?: boolean;
@@ -36,6 +38,7 @@ const {
   locale: propLocale,
   hreflangBasePath,
   hreflangLocalized = true,
+  hreflangLocales,
   theme = 'light',
   hideDefaultFooter = false,
   noindex = false,
@@ -63,7 +66,12 @@ const bodyClasses = isDark
         <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
         <script is:inline define:vars={{ GA_ID }}>
           window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
+          function gtag() {
+            // gtag.js requires the raw Arguments object here, not an array, or the
+            // js/config commands are misinterpreted. Keep Google's official shim.
+            // eslint-disable-next-line prefer-rest-params
+            dataLayer.push(arguments);
+          }
           window.gtag = gtag;
           gtag('js', new Date());
           gtag('config', GA_ID);
@@ -80,6 +88,7 @@ const bodyClasses = isDark
       structuredData={structuredData}
       hreflangBasePath={hreflangBasePath}
       hreflangLocalized={hreflangLocalized}
+      hreflangLocales={hreflangLocales}
       noindex={noindex}
     />
     <slot name="head" />

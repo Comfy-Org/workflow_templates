@@ -1,322 +1,254 @@
 ---
 /**
- * Localized creator profile page OR workflow detail redirect (on-demand rendered)
- * Serves /{locale}/workflows/{username}/ for creator profiles.
- * URL segments with a share_id suffix redirect to the detail page.
- * Template name slugs redirect to the new URL format.
- * Data source: Hub API (listWorkflowIndex + getProfile).
+ * Localized workflow detail page — pre-rendered at build time (GTM-291).
+ * URL: /{locale}/workflows/{name}-{share_id}/
+ *
+ * Mirrors the English `workflows/[slug].astro`, but joins translated content via
+ * `resolveLocalizedWorkflow` and gates SEO by the per-page indexability predicate:
+ *
+ *  - canonical points at the localized URL only when the page is indexable
+ *    (translated + current + reviewed + locale flipped); otherwise it canonicals
+ *    to the English URL, so humans see the translation while Google keeps
+ *    indexing English. This is the "safety by canonical" the whole design rests on.
+ *  - for a locale in INDEXABLE_LOCALES, a non-indexable page fails the build
+ *    (fail-closed, section 8.4) rather than shipping a half-English indexable URL.
+ *
+ * With INDEXABLE_LOCALES empty, every page is non-indexable, so canonicals all
+ * point at English and the Google-facing output is unchanged.
+ *
+ * The SSR `[locale]/workflows/[username].astro` catches everything not generated
+ * here (creator profiles, and detail slugs for workflows added since the build).
  */
-export const prerender = false;
-
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
-import SidebarSection from '../../../components/template-detail/SidebarSection.astro';
 import TemplateDetailPage from '../../../components/template-detail/TemplateDetailPage.astro';
-import BackButton from '../../../components/BackButton.astro';
 import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
-import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { absoluteUrl } from '../../../config/site';
 import {
   listWorkflowIndex,
   listRelatedWorkflows,
-  getProfile,
-  getWorkflow,
-  toTemplateData,
-  extractShareId,
-  getProfileCache,
-  serializeIndexEntry,
+  byUsageDesc,
+  type HubWorkflowTemplateEntry,
   type SerializedTemplate,
 } from '../../../lib/hub-api';
-import { fetchRankingMap } from '../../../lib/ranking';
-import { workflowOgUrl, creatorOgUrl } from '../../../lib/og-url';
+import { workflowOgUrl } from '../../../lib/og-url';
 import {
   buildFaqJsonLd,
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
+  buildSoftwareApplicationJsonLd,
 } from '../../../lib/structured-data';
 import { buildToolbarLabels } from '../../../lib/toolbar';
-import { getSocialDisplay } from '../../../lib/social-links';
 import { localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
+import { resolveLocalizedWorkflow, indexableAlternateLocales } from '../../../lib/i18n/resolver';
+import { SUPPORTED_HUB_LOCALES, INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 
-// ISR: cache for 60s, serve stale for up to 10 min while revalidating
-Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+export async function getStaticPaths() {
+  // Every supported hub locale except English (English has its own route). Each
+  // gets prerendered pages; indexability is gated separately by the predicate, so
+  // non-flipped locales still render (English-fallback) for humans.
+  const locales = SUPPORTED_HUB_LOCALES.filter((l) => l !== DEFAULT_LOCALE) as Locale[];
 
-const { locale, slug } = Astro.params;
-
-// Validate locale
-if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
-  return Astro.redirect('/workflows/');
-}
-
-const typedLocale = locale as Locale;
-
-if (!slug) {
-  return Astro.redirect(`/${locale}/workflows/`);
-}
-
-// If URL contains a share_id suffix, this is a workflow detail page — not a creator profile.
-const detailShareId = extractShareId(slug);
-let isDetailPage = false;
-let detailData: ReturnType<typeof toTemplateData> | null = null;
-
-if (detailShareId) {
+  let entries: HubWorkflowTemplateEntry[] = [];
   try {
-    const workflow = await getWorkflow(detailShareId);
-    detailData = toTemplateData(workflow);
-    isDetailPage = true;
-  } catch (err) {
-    const is404 = err instanceof Error && err.message.includes('404');
-    if (!is404) {
-      console.error('Hub API error on ISR detail:', err);
-    }
-    return Astro.redirect(`/${locale}/workflows/`);
-  }
-}
-
-// Check if this is a template slug — redirect to new URL format
-if (!isDetailPage) {
-  let redirectUrl: string | undefined;
-  try {
-    const entries = await listWorkflowIndex();
-    const entry = entries.find((e) => e.name === slug);
-    if (entry && entry.shareId) {
-      redirectUrl = `/${locale}/workflows/${entry.name}-${entry.shareId}/`;
-    }
+    entries = await listWorkflowIndex();
   } catch {
-    const templates = await getCollection('templates');
-    const template = templates.find((t) => !t.id.includes('/') && t.data.name === slug);
-    if (template) {
-      // Content collection doesn't have shareId, redirect to English canonical
-      redirectUrl = `/workflows/`;
+    // Hub index unavailable at build: emit no prerendered locale detail pages and
+    // let the SSR [username] catch-all serve them live (with real status codes),
+    // rather than shipping a build's worth of dead-end redirects to the index.
+    return [];
+  }
+
+  const paths = [];
+  for (const locale of locales) {
+    for (const entry of entries) {
+      const shareId = entry.shareId || '';
+      const name = entry.name || shareId;
+      if (!name) continue;
+
+      if (shareId) {
+        const resolved = resolveLocalizedWorkflow(shareId, locale);
+        // Fail-closed: a flipped (indexable) locale must never ship a page that
+        // the predicate rejects (missing/stale/unreviewed translation).
+        if (INDEXABLE_LOCALES.includes(locale) && !resolved.indexable) {
+          throw new Error(
+            `[i18n] indexable locale "${locale}" page ${name}-${shareId} is not ` +
+              `translation-complete and cannot be prerendered: ${resolved.reason}`
+          );
+        }
+        paths.push({
+          params: { locale, slug: `${name}-${shareId}` },
+          props: { entry, resolved },
+        });
+        // Legacy /{locale}/workflows/{name}/ (no shareId) is intentionally NOT
+        // prerendered: the SSR [username] catch-all 301s it to the canonical slug
+        // as a real server redirect, not a prerendered browser shim.
+      } else {
+        // No shareId — render directly. Nothing to resolve by shareId.
+        paths.push({
+          params: { locale, slug: name },
+          props: { entry, resolved: null },
+        });
+      }
     }
   }
-  if (redirectUrl) {
-    return Astro.redirect(redirectUrl, 301);
-  }
+
+  return paths;
 }
 
-// Fetch profile — try dedicated endpoint first, fall back to index-embedded profiles
-let profileFound = false;
-let displayName = slug;
-let avatarUrl: string | null = null;
-let description = '';
-let websiteUrls: string[] = [];
-try {
-  const profile = await getProfile(slug);
-  profileFound = true;
-  displayName = profile.display_name || slug;
-  avatarUrl = profile.avatar_url || null;
-  description = profile.description || '';
-  websiteUrls = profile.website_urls || [];
-} catch {
-  // Profile endpoint unavailable — fall back to cached profile from index
-  const cachedProfiles = await getProfileCache();
-  const cached = cachedProfiles.get(slug);
-  if (cached) {
-    profileFound = true;
-    displayName = cached.display_name || slug;
-    avatarUrl = cached.avatar_url || null;
-    description = cached.description || '';
-    websiteUrls = cached.website_urls || [];
-  }
+type ResolvedWorkflow = ReturnType<typeof resolveLocalizedWorkflow>;
+
+interface Props {
+  entry: HubWorkflowTemplateEntry;
+  resolved: ResolvedWorkflow | null;
 }
 
-// Fetch workflows for this creator from index
-const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
-let serialized: SerializedTemplate[] = [];
+const { entry, resolved } = Astro.props;
+const locale = Astro.params.locale as Locale;
 
-try {
-  const entries = await listWorkflowIndex();
-  const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
-  serialized = filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap));
-} catch (err) {
-  console.error('Hub API failed for creator grid:', err);
-  // Index API failed — show empty grid
-}
+// Structural fields come from the English index entry (not translated); the seven
+// translatable fields come from the resolver (localized, or English-fallback when
+// untranslated — which the predicate then marks non-indexable).
+const loc = resolved?.data;
+const data = {
+  name: entry.name,
+  shareId: entry.shareId || '',
+  title: loc?.title || entry.title || entry.name,
+  description: loc?.description || entry.description || '',
+  mediaType: entry.mediaType || 'image',
+  mediaSubtype: entry.mediaSubtype,
+  thumbnailVariant: entry.thumbnailVariant,
+  thumbnails: [entry.thumbnailUrl, entry.thumbnailComparisonUrl].filter(Boolean) as string[],
+  tags: entry.tags || [],
+  models: entry.models || [],
+  username: entry.profile?.username || entry.username || '',
+  date: entry.date || '',
+  tutorialUrl: entry.tutorialUrl,
+  extendedDescription: loc?.extendedDescription || entry.extendedDescription || '',
+  metaDescription: loc?.metaDescription || entry.metaDescription || entry.description || '',
+  howToUse: loc?.howToUse ?? entry.howToUse ?? [],
+  suggestedUseCases: loc?.suggestedUseCases ?? entry.suggestedUseCases ?? [],
+  faqItems: loc?.faqItems ?? entry.faqItems ?? [],
+  contentTemplate: entry.contentTemplate,
+};
 
-// Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
-// link): no profile and no workflows — redirect instead of rendering a page
-// that would title itself "<slug> (@<slug>)" and get indexed by Google.
-if (!isDetailPage && !profileFound && serialized.length === 0) {
-  return Astro.redirect(`/${locale}/workflows/`);
-}
+const isIndexable = resolved?.indexable ?? false;
+const title = `${data.title} - ComfyUI Workflow`;
+// Shareless workflows carry no `-shareId` suffix; guard against a dangling hyphen
+// that would canonicalize to a nonexistent /workflows/name-/ URL.
+const urlSlug = data.shareId ? `${data.name}-${data.shareId}` : data.name;
+// Safety by canonical: self-canonical only when the page is indexable; otherwise
+// point at the English URL so Google keeps indexing English until the flip.
+const canonicalUrl = isIndexable
+  ? absoluteUrl(`/${locale}/workflows/${urlSlug}/`)
+  : absoluteUrl(`/workflows/${urlSlug}/`);
 
-const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
+// One predicate drives four surfaces: canonical (above), robots noindex, the
+// hreflang cluster, and sitemap membership. Emit noindex until this page is
+// indexable, and advertise only the locales for which THIS workflow is indexable
+// (empty while gated → x-default→English only). The English detail route uses the
+// same per-page set so the cluster stays reciprocal.
+const hreflangLocales = data.shareId
+  ? ([DEFAULT_LOCALE, ...indexableAlternateLocales(data.shareId)] as Locale[])
+  : ([DEFAULT_LOCALE] as Locale[]);
 
-const socialLinks = websiteUrls.map(getSocialDisplay);
+const thumbnails = data.thumbnails;
+const primaryThumbnail = thumbnails[0] || null;
+const ogImage = workflowOgUrl(
+  data.title || data.name,
+  primaryThumbnail ? primaryThumbnail : undefined,
+  data.username || undefined
+);
 
-// Detail page variables (only used when isDetailPage is true)
-const detailTitle = detailData ? `${detailData.title || detailData.name} - ComfyUI Workflow` : '';
-const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slug}/`) : '';
-const detailThumbnails = detailData?.thumbnails || [];
-const detailPrimaryThumbnail = detailThumbnails[0] || null;
-const detailOgImage = detailData
-  ? workflowOgUrl(
-      detailData.title || detailData.name,
-      detailPrimaryThumbnail || undefined,
-      detailData.username || undefined
-    )
-  : '';
-const detailStructuredData = detailData
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'TechArticle',
-      headline: detailData.title || detailData.name,
-      description: detailData.description,
-      image: detailPrimaryThumbnail || undefined,
-      datePublished: detailData.date,
-      inLanguage: locale,
-    }
-  : null;
-const detailBreadcrumb = detailData
-  ? buildWorkflowBreadcrumb(typedLocale, {
-      name: detailData.title || detailData.name,
-      item: detailCanonicalUrl,
-    })
-  : null;
-const detailFaq = buildFaqJsonLd(detailData?.faqItems);
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: data.title,
+  description: data.description,
+  image: primaryThumbnail || undefined,
+  datePublished: data.date,
+  inLanguage: locale,
+};
 
-const structuredData = !isDetailPage
-  ? {
-      '@context': 'https://schema.org',
-      '@type': 'ProfilePage',
-      name: displayName,
-      description: description || `Workflows by ${displayName}`,
-      url: canonicalUrl,
-      inLanguage: locale,
-    }
-  : null;
+const faqStructuredData = buildFaqJsonLd(data.faqItems);
 
-// "View all workflows" grid for the detail page — full index minus current.
-const detailRelated: SerializedTemplate[] =
-  isDetailPage && detailData ? await listRelatedWorkflows(detailData.name, profiles) : [];
+const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
+  name: data.title,
+  item: canonicalUrl,
+});
+
+const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
+  name: data.title,
+  description: data.metaDescription || data.description,
+});
+
+const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
+// Embed only the top-30 by usage; the grid lazy-loads the full catalog (grid.json).
+const relatedPreview = [...relatedTemplates].sort(byUsageDesc).slice(0, 30);
+const toolbarLabels = buildToolbarLabels(locale);
 ---
 
-{
-  isDetailPage && detailData ? (
-    <BaseLayout
-      title={detailTitle}
-      description={detailData.metaDescription || detailData.description}
-      canonicalUrl={detailCanonicalUrl}
-      ogImage={detailOgImage}
-      ogType="article"
-      structuredData={detailStructuredData ?? undefined}
-      hreflangBasePath={`/workflows/${slug}/`}
-      locale={typedLocale}
-      theme="dark"
-      hideDefaultFooter
-    >
-      <HubNavbar />
-      <TemplateDetailPage template={{ data: detailData }} locale={typedLocale}>
-        {detailRelated.length > 0 && (
-          <section slot="related" class="mt-16 lg:mt-24">
-            <a
-              href={localizeUrl('/workflows/', typedLocale)}
-              class="inline-block text-2xl lg:text-3xl font-semibold text-content hover:opacity-80 transition-opacity mb-6 lg:mb-8"
-            >
-              {t('template.viewAllWorkflows', typedLocale)}
-            </a>
-            <WorkflowGrid
-              client:visible
-              templates={detailRelated}
-              locale={typedLocale}
-              toolbarLabels={buildToolbarLabels(typedLocale)}
-              gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-            />
-          </section>
-        )}
-      </TemplateDetailPage>
+<BaseLayout
+  title={title}
+  description={data.metaDescription || data.description}
+  canonicalUrl={canonicalUrl}
+  ogImage={ogImage}
+  ogType="article"
+  structuredData={structuredData}
+  hreflangBasePath={`/workflows/${urlSlug}/`}
+  hreflangLocales={hreflangLocales}
+  noindex={!isIndexable}
+  locale={locale}
+  theme="dark"
+  hideDefaultFooter
+>
+  <HubNavbar />
+  <TemplateDetailPage template={{ data }} locale={locale}>
+    {
+      relatedTemplates.length > 0 && (
+        <section slot="related" class="mt-16 lg:mt-24">
+          <a
+            href={localizeUrl('/workflows/', locale)}
+            class="inline-block text-2xl lg:text-3xl font-semibold text-content hover:opacity-80 transition-opacity mb-6 lg:mb-8"
+          >
+            {t('template.viewAllWorkflows', locale)}
+          </a>
+          <WorkflowGrid
+            client:visible
+            templates={relatedPreview}
+            lazyFull
+            excludeName={data.name}
+            locale={locale}
+            toolbarLabels={toolbarLabels}
+            gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+          />
+        </section>
+      )
+    }
+  </TemplateDetailPage>
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+  />
+  <script
+    is:inline
+    type="application/ld+json"
+    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
+  />
+  {
+    faqStructuredData && (
       <script
         is:inline
         type="application/ld+json"
-        set:html={serializeJsonLdForScript(detailBreadcrumb)}
+        set:html={serializeJsonLdForScript(faqStructuredData)}
       />
-      {detailFaq && (
-        <script
-          is:inline
-          type="application/ld+json"
-          set:html={serializeJsonLdForScript(detailFaq)}
-        />
-      )}
-      <Fragment slot="footer">
-        <SiteFooter />
-      </Fragment>
-    </BaseLayout>
-  ) : (
-    <BaseLayout
-      title={`${displayName} (@${slug}) - ComfyUI Workflow Templates`}
-      description={description || `Workflows by ${displayName}`}
-      canonicalUrl={canonicalUrl}
-      ogImage={creatorOgUrl(displayName, slug!, avatarUrl || undefined)}
-      structuredData={structuredData ?? undefined}
-      locale={typedLocale}
-      theme="dark"
-      hideDefaultFooter
-    >
-      <HubNavbar />
-
-      <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pb-20">
-        <div class="flex flex-col lg:flex-row gap-8 lg:gap-16 pt-8">
-          <aside class="w-full lg:w-[328px] shrink-0">
-            <div class="lg:sticky lg:top-16 flex flex-col gap-8 pt-8">
-              <BackButton locale={typedLocale} class="self-start" />
-              <SidebarSection contentClass="p-8 gap-6">
-                <div class="flex flex-col gap-4">
-                  {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={displayName}
-                      class="size-16 rounded-full object-cover"
-                    />
-                  ) : (
-                    <div class="size-16 rounded-full bg-brand flex items-center justify-center">
-                      <span class="text-black text-2xl font-bold">
-                        {displayName.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div class="flex flex-col">
-                    <p class="text-content text-base font-bold">{displayName}</p>
-                    <p class="text-hub-muted text-sm">@{slug}</p>
-                  </div>
-                </div>
-
-                {description && <p class="text-hub-muted text-sm leading-normal">{description}</p>}
-
-                {socialLinks.length > 0 && (
-                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-hub-muted">
-                    {socialLinks.map((link) => (
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        class="underline hover:text-content transition-colors"
-                      >
-                        {link.label}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </SidebarSection>
-            </div>
-          </aside>
-
-          <WorkflowGrid
-            client:load
-            templates={serialized}
-            locale={typedLocale}
-            toolbarLabels={buildToolbarLabels(typedLocale)}
-            gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-          />
-        </div>
-      </div>
-
-      <Fragment slot="footer">
-        <SiteFooter />
-      </Fragment>
-    </BaseLayout>
-  )
-}
+    )
+  }
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>
