@@ -36,17 +36,24 @@ export function sentinelFor(index: number): string {
 /**
  * Match a sentinel even if the model nudged it: 1-2 ASCII or fullwidth braces,
  * optional spaces, case-insensitive PT, digits. A residual it can't match stays as
- * a missing preserve-term, which the validator then catches (fail-closed).
+ * a missing preserve-term, which the validator then catches (fail-closed). Kept as
+ * literal regexes (not `new RegExp(str)`) so they carry no ReDoS/dynamic-source risk.
  */
-const SENTINEL_PATTERN = '[{｛]{1,2}\\s*[Pp][Tt]\\s*(\\d+)\\s*[}｝]{1,2}';
-const SENTINEL_RE = new RegExp(SENTINEL_PATTERN, 'g'); // restore: replace every match
-const SENTINEL_TEST = new RegExp(SENTINEL_PATTERN); // detection: stateless test
+const SENTINEL_RE = /[{｛]{1,2}\s*[Pp][Tt]\s*(\d+)\s*[}｝]{1,2}/g; // restore: replace every match
+const SENTINEL_TEST = /[{｛]{1,2}\s*[Pp][Tt]\s*(\d+)\s*[}｝]{1,2}/; // detection: stateless test
+
+/** Escape a literal string for safe inclusion in a RegExp alternation. */
+function escapeRegExp(literal: string): string {
+  return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
 
 export interface TermMap {
   /** Preserve-terms longest-first, so "ComfyUI" is replaced before "Comfy". */
   ordered: string[];
   sentinelByTerm: Map<string, string>;
   termByIndex: string[];
+  /** One alternation over all terms, longest-first, or null when there are none. */
+  matcher: RegExp | null;
 }
 
 export function buildTermMap(terms: string[]): TermMap {
@@ -58,16 +65,23 @@ export function buildTermMap(terms: string[]): TermMap {
     sentinelByTerm.set(term, sentinelFor(i));
     termByIndex[i] = term;
   });
-  return { ordered, sentinelByTerm, termByIndex };
+  // Terms are escaped literals, so the alternation is safe (no ReDoS). Longest-first
+  // ordering makes "ComfyUI" win over "Comfy" at the same position.
+  const matcher = ordered.length ? new RegExp(ordered.map(escapeRegExp).join('|'), 'g') : null;
+  return { ordered, sentinelByTerm, termByIndex, matcher };
 }
 
-/** Replace every exact occurrence of each preserve-term with its sentinel. */
+/**
+ * Replace every occurrence of each preserve-term with its sentinel, in a SINGLE
+ * pass over the original text. Sequential per-term replacement re-scans its own
+ * output, so a later term ("PT0") could match inside a sentinel already emitted for
+ * an earlier term ("FooX" -> "{{PT0}}") and corrupt it; one regex pass never
+ * re-examines the text it just inserted.
+ */
 export function protectText(text: string, map: TermMap): string {
-  let out = text;
-  for (const term of map.ordered) {
-    out = out.split(term).join(map.sentinelByTerm.get(term)!);
-  }
-  return out;
+  if (!map.matcher) return text;
+  map.matcher.lastIndex = 0;
+  return text.replace(map.matcher, (m) => map.sentinelByTerm.get(m) ?? m);
 }
 
 /** Replace every sentinel with its exact English term. */

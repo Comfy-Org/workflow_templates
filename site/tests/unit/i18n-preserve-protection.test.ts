@@ -34,6 +34,16 @@ describe('protect + restore round-trip', () => {
     expect(restoreText(protectText(s, map), map)).toBe(s);
   });
 
+  it('does not reprocess a generated sentinel with a later term (FooX vs PT0)', () => {
+    // Sequential per-term replacement would turn FooX -> {{PT0}} and then let the
+    // "PT0" term rewrite that sentinel; single-pass protection must round-trip both.
+    const m = buildTermMap(['FooX', 'PT0']);
+    const s = 'render FooX then PT0';
+    const prot = protectText(s, m);
+    expect(prot).not.toContain('FooX');
+    expect(restoreText(prot, m)).toBe(s);
+  });
+
   it('the exact failure case: ComfyUI/Comfy survive a "translation" that drops originals', () => {
     const en = '在 ComfyUI 中使用 Comfy 工作流'; // English brand names embedded in zh prose
     const prot = protectText(en, map);
