@@ -137,9 +137,11 @@ export const SEO_PAGES: SeoPageDef[] = [
     // stencil design; the copy frames them honestly as design tools.
     filters: { tags: ['ControlNet', 'Canny'] },
     // Purz's dedicated Tattoo Generator app, pinned atop the grid.
-    // isApp left unset: App Mode not verified in cloud.comfy.org — confirm before setting.
+    // App Mode verified in cloud.comfy.org, so it files under the Comfy Apps tab.
     appShareId: '90d086fef9e3',
-    pins: [{ shareId: '90d086fef9e3' }],
+    pins: [{ shareId: '90d086fef9e3', isApp: true }],
+    // Canny-tagged non-tattoo tool: "AI on the Lot" video union-control LoRA.
+    excludeShareIds: ['12c2481d04b4'],
   },
   {
     slug: 'ai-image-upscaler',
@@ -159,7 +161,13 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['Image Upscale', 'Video Upscale'] },
     // Image app, so the CTA matches the image-side hero (video app stays a grid pin).
     appShareId: 'b3bbbf217b89',
-    pins: [{ shareId: 'c1959fdc5642' }, { shareId: 'b3bbbf217b89', isApp: true }],
+    // Video Upscale (0740bf78b7b6) is untagged on the hub, so only a pin can
+    // surface it. Its isApp stays unset until App Mode is verified in cloud.
+    pins: [
+      { shareId: 'c1959fdc5642' },
+      { shareId: 'b3bbbf217b89', isApp: true },
+      { shareId: '0740bf78b7b6' },
+    ],
     // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations app, event demo.
     excludeShareIds: ['5652fbe7f479', 'c5cbee07611f', 'c046d6c94bd1', '94ed41b87579'],
   },
@@ -200,8 +208,10 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['Image to Video'] },
     // OSS image-to-video LTX app (free first-run anchor; premium models stay in the grid).
     appShareId: '201003c6d79c',
-    // Free-tier anchors lead: LTX 2.3 (the CTA app's source), then Wan 2.2 14B.
-    pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }],
+    // Free-tier anchors lead: LTX 2.3 (the CTA app's source), then Wan 2.2 14B,
+    // then the dedicated Image to Video workflow (usage sorting buries it).
+    // Its pin's isApp stays unset until App Mode is verified in cloud.comfy.org.
+    pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }, { shareId: '3515c5083027' }],
     // Image-to-Video-tagged non-generators: shot annotation, character-swap
     // (brand-safety pending), ByteDance real-human (KYC-gated).
     excludeShareIds: ['0136284ecc19', '064da31db8f3', 'd4b951896b54'],
@@ -221,9 +231,21 @@ export const SEO_PAGES: SeoPageDef[] = [
         'photo repair',
       ],
     },
-    // Restoration = repair (Image Edit) + enhancement (Image Upscale). This overlaps
-    // the upscaler page on the upscale tag, but the keyword + copy are distinct.
-    filters: { tags: ['Image Edit', 'Image Upscale'] },
+    // Fully curated grid: no tag maps to photo restoration (Image Edit alone
+    // pulled ~90 generic editors), so the page pins the restoration-relevant
+    // workflows explicitly and matches nothing else.
+    filters: {},
+    // Dedicated Restore Old Photos workflow. App Mode verified in cloud.comfy.org.
+    appShareId: '69850664cf89',
+    pins: [
+      { shareId: '69850664cf89', isApp: true },
+      { shareId: 'b594a01df1d6' }, // Seedream 5.0 Pro: Image Edit
+      { shareId: 'cd929d504424' }, // Topaz: Image Enhance
+      { shareId: 'f6e9d07c02fd' }, // Image Relight
+      { shareId: '0812b435d117' }, // Topaz: Illustration Upscale
+      { shareId: '5ad4348c8417' }, // Magnific: Creative Image Upscale
+      { shareId: 'd9d6f1309cbc' }, // WaveSpeed: Image Upscale
+    ],
   },
   {
     slug: 'ai-anime-generator',
@@ -246,6 +268,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['Anime'] },
     // Cloud-save app, not hub-published — CTA-only, so the hero can't match it yet.
     appShareId: '3ec117b8333d',
+    // Hub-published Anime Generator workflow, pinned so usage sorting can't bury
+    // it. Its isApp stays unset until App Mode is verified in cloud.comfy.org.
+    pins: [{ shareId: '9f0b568bf8a1' }],
     // Anime-tagged non-generators: anime→live-action converter, untitled test workflow.
     excludeShareIds: ['6fec31e40f4a', '2030b1e2fb72'],
   },
