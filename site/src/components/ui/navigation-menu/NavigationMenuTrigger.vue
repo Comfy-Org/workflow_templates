@@ -32,7 +32,7 @@ const forwardedProps = useForwardProps(computed(() => ({ ...restProps })));
       <slot />
     </span>
     <ChevronDown
-      class="relative ml-1 size-3 transition duration-300 group-data-[state=open]:rotate-180"
+      class="relative ml-1 mt-1 size-3 transition duration-300 group-data-[state=open]:rotate-180"
       aria-hidden="true"
     />
   </NavigationMenuTrigger>
