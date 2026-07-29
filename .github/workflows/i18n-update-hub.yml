@@ -148,6 +148,17 @@ jobs:
         working-directory: site
         run: pnpm i18n:restore
 
+      # always(): prune before validate even after a tolerated translate failure.
+      # The model preserves brand names only probabilistically, so a small tail of
+      # fields still drops a preserve-term at scale. This removes exactly those
+      # fields (reusing the validator's own checks), so they fall back to English at
+      # render (page non-indexable — the gated behaviour) instead of failing the run
+      # or publishing a bad field. Fails only if pruning is systemic.
+      - name: Enforce glossary floor (prune fields the model failed)
+        if: always()
+        working-directory: site
+        run: pnpm i18n:enforce
+
       # always(): run even after a tolerated translate failure so partial progress
       # is still validated. This step has no continue-on-error, so a validation
       # failure fails the job and the success()-gated publish steps below skip —
