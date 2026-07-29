@@ -10,9 +10,9 @@ the build-time bridge: it reuses the existing usage.csv pipeline rather than
 writing ``index.json`` directly, so ranking data flows through the same path as
 the manual CSV it replaces.
 
-Credentials are the public, search-only Algolia key (safe to commit), read from
-``ALGOLIA_APP_ID`` / ``ALGOLIA_API_KEY`` (unprefixed — the site uses ``PUBLIC_``
-prefixed names for Vite; this Python script does not).
+Credentials: ``ALGOLIA_APP_ID`` (default 4E0RO38HS8) and ``ALGOLIA_API_KEY``
+(GitHub Actions secret). The site uses ``PUBLIC_`` prefixed names for Vite;
+this Python script does not.
 """
 
 import argparse

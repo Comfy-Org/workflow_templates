@@ -1,0 +1,137 @@
+name: Sync Template Index
+
+# When index files change in a PR:
+#   1. Fetch per-template run_clicks from Algolia (templates_index)
+#   2. Fold usage into templates/index.json via sync_data.py --index-only
+#   3. Propagate technical fields to every locale index
+#
+# Optimized for speed: sparse checkout (index files only), no workflow JSON scan,
+# no i18n bookkeeping. Requires repo secret ALGOLIA_API_KEY.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'templates/index.json'
+      - 'templates/index.zh.json'
+      - 'templates/index.zh-TW.json'
+      - 'templates/index.ja.json'
+      - 'templates/index.ko.json'
+      - 'templates/index.es.json'
+      - 'templates/index.fr.json'
+      - 'templates/index.ru.json'
+      - 'templates/index.tr.json'
+      - 'templates/index.ar.json'
+      - 'templates/index.fa.json'
+      - 'templates/index.pt-BR.json'
+      - 'scripts/sync/sync_data.py'
+      - 'scripts/lib/locale_index_files.py'
+      - 'scripts/data/i18n.json'
+      - 'scripts/sync/fetch_algolia_usage.py'
+      - '.github/workflows/sync-template-index.yml'
+
+# contents: write is required to commit and push synced index files back to the PR branch.
+permissions:
+  contents: write
+
+jobs:
+  sync-index:
+    runs-on: ubuntu-latest
+    env:
+      ALGOLIA_APP_ID: 4E0RO38HS8
+      ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+    # Only run on same-repo PRs (fork PRs cannot receive auto-commits).
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    concurrency:
+      group: sync-template-index-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.repo.full_name }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          fetch-depth: 1
+          sparse-checkout: |
+            templates/index.json
+            templates/index.zh.json
+            templates/index.zh-TW.json
+            templates/index.ja.json
+            templates/index.ko.json
+            templates/index.es.json
+            templates/index.fr.json
+            templates/index.ru.json
+            templates/index.tr.json
+            templates/index.ar.json
+            templates/index.fa.json
+            templates/index.pt-BR.json
+            scripts/sync/sync_data.py
+            scripts/sync/fetch_algolia_usage.py
+            scripts/lib/locale_index_files.py
+            scripts/lib/paths.py
+            scripts/lib/run_click_coverage.py
+            scripts/data/i18n.json
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch usage from Algolia and sync index to all locales
+        run: |
+          echo "=== Fetching run_clicks from Algolia ==="
+          python scripts/sync/fetch_algolia_usage.py --templates-dir ./templates
+          echo "=== Syncing templates/index.json to all locale index files ==="
+          python scripts/sync/sync_data.py --templates-dir ./templates --index-only
+          echo "✅ Template index sync complete"
+
+      - name: Commit index sync updates to PR
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
+        run: |
+          echo "=== Committing index sync updates to PR ==="
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git add templates/index.json
+          git add \
+            templates/index.zh.json \
+            templates/index.zh-TW.json \
+            templates/index.ja.json \
+            templates/index.ko.json \
+            templates/index.es.json \
+            templates/index.fr.json \
+            templates/index.ru.json \
+            templates/index.tr.json \
+            templates/index.ar.json \
+            templates/index.fa.json \
+            templates/index.pt-BR.json
+
+          if ! git diff --cached --quiet; then
+            echo "📝 Changes detected - committing to PR branch"
+
+            if ! git commit -m "Auto-sync template index fields across locales"; then
+              echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
+              if ! git pull origin "$PR_HEAD_REF" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git commit -m "Auto-sync template index fields across locales"
+            fi
+
+            if ! git push origin HEAD; then
+              echo "⚠️ Push failed, retrying after pull..."
+              if ! git pull origin "$PR_HEAD_REF" --rebase; then
+                echo "❌ Rebase failed due to conflicts. Manual intervention required."
+                git status
+                exit 1
+              fi
+              git push origin HEAD
+            fi
+
+            echo "✅ Template index sync committed to PR"
+          else
+            echo "✅ All locale index files are already in sync"
+          fi
