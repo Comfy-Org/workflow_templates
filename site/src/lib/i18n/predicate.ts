@@ -1,5 +1,5 @@
 /**
- * The single per-page indexability predicate for hub localization (GTM-291).
+ * The single per-page indexability predicate for hub localization.
  *
  * One decision, consumed by four surfaces so they can never disagree: sitemap
  * membership, which hreflang alternates a page emits, its canonical (self vs

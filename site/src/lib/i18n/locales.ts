@@ -1,5 +1,5 @@
 /**
- * The three locale sets for hub localization (GTM-291), per the approved design.
+ * The three locale sets for hub localization.
  * Discovery is not activation — each set is a deliberate narrowing of the last:
  *
  *   AVAILABLE_APP_LOCALES  ⊇  SUPPORTED_HUB_LOCALES  ⊇  INDEXABLE_LOCALES
