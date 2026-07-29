@@ -78,6 +78,13 @@ jobs:
         working-directory: site
         run: pnpm i18n:check
 
+      # Deterministically shield preserve-terms: swap brand/model names in the
+      # English source for inert sentinels the model can't translate away. Restored
+      # after translation, so the committed en.json keeps its real terms + manifest.
+      - name: Protect preserve-terms
+        working-directory: site
+        run: pnpm i18n:protect
+
       # Per-locale so each run injects that locale's product-UI terminology
       # (mirror + overrides) into the prompt, which a single all-locales run can't
       # do (shared reference). Also paces one locale at a time under the OpenAI
@@ -105,6 +112,14 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: pnpm locale:ui
+
+      # Swap the sentinels back to the exact English terms in every content file
+      # before validation reads them. always(): a tolerated translate failure still
+      # leaves partial output that must be de-sentinelized (and en.json restored).
+      - name: Restore preserve-terms
+        if: always()
+        working-directory: site
+        run: pnpm i18n:restore
 
       # always(): run even after a tolerated translate failure so partial progress
       # is still validated. This step has no continue-on-error, so a validation
