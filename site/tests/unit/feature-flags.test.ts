@@ -136,7 +136,8 @@ describe('fetchFeatureFlagsForBuild', () => {
     });
     expect(outcome.status).toBe('stale');
     if (outcome.status !== 'stale') return;
-    expect(outcome.snapshot.flags.cloudFreeTier).toBe(false);
+    // The bundled snapshot's committed value; tracks the live rollout state.
+    expect(outcome.snapshot.flags.cloudFreeTier).toBe(true);
   });
 
   it('memoizes within a single process', async () => {
