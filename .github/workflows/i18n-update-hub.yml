@@ -27,10 +27,30 @@ jobs:
   update-translations:
     runs-on: ubuntu-latest
     steps:
+      # Mint a short-lived token for the bot GitHub App so the translation PR is
+      # authored by the bot (cloud-code-bot[bot]) rather than a person's PAT.
+      # App IDs aren't secret (vars.APP_ID); the paired PEM is the secret.
+      - name: Generate bot token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.APP_ID }}
+          private-key: ${{ secrets.CLOUD_CODE_BOT_PRIVATE_KEY }}
+
+      - name: Resolve bot committer identity
+        id: bot
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          slug='${{ steps.app-token.outputs.app-slug }}'
+          uid=$(gh api "/users/${slug}[bot]" --jq .id)
+          echo "name=${slug}[bot]" >> "$GITHUB_OUTPUT"
+          echo "email=${uid}+${slug}[bot]@users.noreply.github.com" >> "$GITHUB_OUTPUT"
+
       - name: Checkout workflow_templates
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       # ComfyUI_frontend's UI locales seed the glossary mirror (term consistency).
       - name: Checkout ComfyUI_frontend locales
@@ -130,12 +150,12 @@ jobs:
       - name: Open or update translation PR
         if: success()
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           STABLE_BRANCH="i18n/hub-translations"
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git config user.name '${{ steps.bot.outputs.name }}'
+          git config user.email '${{ steps.bot.outputs.email }}'
           # Stage first — the generated content/ files are new/untracked on the
           # initial run, which `git diff` alone would miss.
           git add site/src/i18n
