@@ -7,7 +7,11 @@ import { FeaturesResponseSchema } from './featureFlags.schema';
 
 import bundledSnapshot from '../data/feature-flags.snapshot.json' with { type: 'json' };
 
-const DEFAULT_BASE_URL = 'https://api.comfy.org';
+// PostHog via the site's own proxy; the decide endpoint evaluates global
+// flags for anonymous callers, which is what a build-time fetch is.
+const DEFAULT_BASE_URL = 'https://t.comfy.org';
+const POSTHOG_PROJECT_KEY =
+  process.env.PUBLIC_POSTHOG_KEY ?? import.meta.env?.PUBLIC_POSTHOG_KEY ?? '';
 const DEFAULT_TIMEOUT_MS = 10_000;
 const RETRY_DELAYS_MS = [1_000, 2_000, 4_000];
 
@@ -78,7 +82,7 @@ async function tryFetchAndParse(options: FetchFeatureFlagsOptions): Promise<Fetc
   const fetchImpl = options.fetchImpl ?? fetch;
   const sleep = options.sleep ?? defaultSleep;
 
-  const url = `${baseUrl.replace(/\/+$/, '')}/features`;
+  const url = `${baseUrl.replace(/\/+$/, '')}/decide/?v=3`;
 
   let lastReason = 'unknown error';
   for (let attempt = 0; attempt <= retryDelaysMs.length; attempt++) {
@@ -120,8 +124,9 @@ async function callOnce(
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetchImpl(url, {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
+      method: 'POST',
+      headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key: POSTHOG_PROJECT_KEY, distinct_id: 'site-flag-snapshot' }),
       signal: controller.signal,
     });
     if (res.ok) {
@@ -143,7 +148,9 @@ async function callOnce(
 
 function deriveFlags(features: FeaturesResponse): FeatureFlagsSnapshot['flags'] {
   return {
-    cloudFreeTier: features.new_free_tier_subscriptions ?? false,
+    // The run-quota rollout flag (same source the desktop pill reads); the
+    // legacy new_free_tier_subscriptions stays off post-pivot.
+    cloudFreeTier: features.featureFlags?.['free_tier_workflow_submission_enabled'] === true,
   };
 }
 

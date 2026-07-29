@@ -66,8 +66,10 @@ describe('fetchFeatureFlagsForBuild', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns fresh with cloudFreeTier=true when /features sets the flag', async () => {
-    const fetchImpl = vi.fn(async () => response({ new_free_tier_subscriptions: true }));
+  it('returns fresh with cloudFreeTier=true when the rollout flag is on', async () => {
+    const fetchImpl = vi.fn(async () =>
+      response({ featureFlags: { free_tier_workflow_submission_enabled: true } })
+    );
     const outcome = await fetchFeatureFlagsForBuild({
       baseUrl: BASE_URL,
       fetchImpl: fetchImpl as unknown as typeof fetch,
@@ -76,8 +78,8 @@ describe('fetchFeatureFlagsForBuild', () => {
     if (outcome.status !== 'fresh') return;
     expect(outcome.snapshot.flags.cloudFreeTier).toBe(true);
     expect(fetchImpl).toHaveBeenCalledWith(
-      `${BASE_URL}/features`,
-      expect.objectContaining({ method: 'GET' })
+      `${BASE_URL}/decide/?v=3`,
+      expect.objectContaining({ method: 'POST' })
     );
   });
 
@@ -138,7 +140,9 @@ describe('fetchFeatureFlagsForBuild', () => {
   });
 
   it('memoizes within a single process', async () => {
-    const fetchImpl = vi.fn(async () => response({ new_free_tier_subscriptions: true }));
+    const fetchImpl = vi.fn(async () =>
+      response({ featureFlags: { free_tier_workflow_submission_enabled: true } })
+    );
     const opts = {
       baseUrl: BASE_URL,
       fetchImpl: fetchImpl as unknown as typeof fetch,
