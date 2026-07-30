@@ -366,8 +366,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: the song cluster (vocals + lyrics) stays disjoint from the
     // instrumental ai-music-generator page.
     filters: {},
-    // Song Generator (Ace-Step 1.5XL). App Mode not verified in cloud yet.
-    appShareId: '3ef4de40106b',
+    // Song Generator (Ace-Step 1.5XL). No appShareId: App Mode not verified in
+    // cloud yet, so the pin leads the grid and drives the CTA instead.
     pins: [
       { shareId: '3ef4de40106b' }, // Song Generator
       { shareId: 'b4d8756a63c1' }, // Text to Song (New)
@@ -393,8 +393,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // vocals-oriented ai-song-generator page; voice-clone and TTS workflows
     // in the Audio tag stay out (consent-gated class).
     filters: {},
-    // Music Generator (Stable Audio 3). App Mode not verified in cloud yet.
-    appShareId: 'a335e0968d76',
+    // Music Generator (Stable Audio 3). No appShareId: App Mode not verified in
+    // cloud yet, so the pin leads the grid and drives the CTA instead.
     pins: [
       { shareId: 'a335e0968d76' }, // Music Generator
       { shareId: '9c3c4722a8e1' }, // Stable Audio 3.0 Medium Base
@@ -426,8 +426,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: enhancement means recovering quality in an existing photo;
     // the Image Enhancement tag also carries editors and video tools.
     filters: {},
-    // Image Enhancer (SeedVR2). App Mode not verified in cloud yet.
-    appShareId: 'a09d65985659',
+    // Image Enhancer (SeedVR2). No appShareId: App Mode not verified in cloud
+    // yet, so the pin leads the grid and drives the CTA instead.
     pins: [
       { shareId: 'a09d65985659' }, // Image Enhancer
       { shareId: 'cd929d504424' }, // Topaz: Image Enhance
@@ -454,8 +454,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
-    // Hairstyle Changer. App Mode not verified in cloud yet.
-    appShareId: 'fffa07892f17',
+    // Hairstyle Changer. No appShareId: App Mode not verified in cloud yet, so
+    // the pin leads the grid and drives the CTA instead.
     pins: [{ shareId: 'fffa07892f17' }],
   },
   {
@@ -475,8 +475,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     },
     // The 3D Model tag is small and on-topic (Hunyuan 3D cluster).
     filters: { tags: ['3D Model'] },
-    // Image to 3D. App Mode not verified in cloud yet.
-    appShareId: 'e4a4339afda4',
+    // Image to 3D. No appShareId: App Mode not verified in cloud yet, so the
+    // pin leads the grid and drives the CTA instead.
     pins: [{ shareId: 'e4a4339afda4' }],
     // Maanil's thumbnail-less test workflow, 3D-Model-tagged on the hub (also
     // excluded on ai-anime-generator via its Anime tag).
