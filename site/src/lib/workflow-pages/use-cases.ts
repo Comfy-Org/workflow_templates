@@ -87,21 +87,14 @@ export const SEO_PAGES: SeoPageDef[] = [
         'remodel visualization',
       ],
     },
-    filters: { tags: ['ControlNet'] },
-    // The ControlNet tag is shared with the tattoo page, which made the two grids
-    // near-identical. Interior keeps the depth / inpainting / image-edit side
-    // (room restyling preserves geometry); the line-art / Canny / union-control
-    // side lives on ai-tattoo-generator only.
-    excludeShareIds: [
-      '0bb057fd76e3', // SD3.5 Large Canny ControlNet
-      '72448fe4e4b5', // Flux.1 Canny Model
-      'f052abfce10e', // LTX-2 Canny to Video
-      '1af3df552a07', // Qwen-Image Union Control
-      '9829786b38f5', // Qwen-Image InstantX Union ControlNet
-      'dba8340fd0f3', // Qwen-Image ControlNet Model Patch
-      '7553d92529e0', // Z-Image-Turbo Fun Union ControlNet
-      '02bd87067503', // Qwen-Image 2512: Fun Union ControlNet
-      '12c2481d04b4', // AI on the Lot video union-control LoRA (off-topic)
+    // Fully curated grid: the ControlNet tag only matched generic control demos
+    // with no room-design angle, so the page pins the structure-aware room tools
+    // explicitly and matches nothing else.
+    filters: {},
+    pins: [
+      { shareId: '7cfb99272578' }, // Photo to Blueprint to Model
+      { shareId: 'f6e9d07c02fd' }, // Image Relight (rooms/lighting)
+      { shareId: 'e0f1fb8115ed' }, // Bria: Image Edit (structured layout control)
     ],
   },
   {
@@ -119,18 +112,17 @@ export const SEO_PAGES: SeoPageDef[] = [
         'funny portrait',
       ],
     },
-    filters: { tags: ['Style Transfer'] },
-    // Photo to Cartoon Style Caricature app (tagged only "Image Edit", so pinned).
+    // Fully curated grid: the Style Transfer tag mostly matched glitch/brand
+    // tools rather than caricature makers, so the page pins the photo-to-cartoon
+    // cluster explicitly and matches nothing else.
+    filters: {},
+    // Photo to Cartoon Style Caricature app. App Mode verified in cloud.comfy.org.
     appShareId: 'd5ce59e59ff3',
-    pins: [{ shareId: 'd5ce59e59ff3', isApp: true }],
-    // Style-Transfer-tagged non-stylizers: ref-to-video, video style-transfer,
-    // product-scene, motion collages, product ad.
-    excludeShareIds: [
-      '5a3df986f9f8',
-      'e1e03cafda18',
-      'd686f64879fb',
-      'c27ee1ed3d54',
-      '17883fb20765',
+    pins: [
+      { shareId: 'd5ce59e59ff3', isApp: true },
+      { shareId: '1043317e75c9' }, // 1 input, multiple styles from prompt
+      { shareId: '452e68e4a484' }, // Seedream 5.0 Lite: Image Edit
+      { shareId: '4ab928487496' }, // SYSTMS ACTION: Qwen Image Edit 2511 (toy style)
     ],
   },
   {
@@ -155,9 +147,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // App Mode verified in cloud.comfy.org, so it files under the Comfy Apps tab.
     appShareId: '90d086fef9e3',
     pins: [{ shareId: '90d086fef9e3', isApp: true }],
-    // Complement of the ai-interior-design split: tattoo keeps the line-art /
-    // Canny / union-control cluster (stencil work), interior keeps the depth /
-    // inpainting / image-edit cluster. Plus the off-topic "AI on the Lot" LoRA.
+    // Non-line-art ControlNet matches: generic editors, depth/pose demos, and
+    // union-control t2i demos whose only tattoo link is a canny option.
     excludeShareIds: [
       '300efdae24f6', // Image Editing (New)
       '2639a76cf00e', // Qwen Image Edit 2509
@@ -170,6 +161,8 @@ export const SEO_PAGES: SeoPageDef[] = [
       '736ab92b893a', // Wan 2.2 5B Fun Control
       '3cf3c6a082ed', // LTX-2 Pose to Video
       '12c2481d04b4', // AI on the Lot video union-control LoRA (off-topic)
+      '9829786b38f5', // Qwen-Image InstantX Union ControlNet (generic t2i demo)
+      'dba8340fd0f3', // Qwen-Image ControlNet Model Patch (generic t2i demo)
     ],
   },
   {
@@ -197,8 +190,14 @@ export const SEO_PAGES: SeoPageDef[] = [
       { shareId: 'b3bbbf217b89', isApp: true },
       { shareId: '0740bf78b7b6' },
     ],
-    // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations app, event demo.
-    excludeShareIds: ['5652fbe7f479', 'c5cbee07611f', 'c046d6c94bd1', '94ed41b87579'],
+    // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations apps, event demo.
+    excludeShareIds: [
+      '5652fbe7f479',
+      'c5cbee07611f',
+      'c046d6c94bd1',
+      '94ed41b87579',
+      '8f90aec3d12c', // Realistic 2k Images - Quick Variations (variation maker, not an upscaler)
+    ],
   },
   {
     slug: 'ai-avatar-generator',
@@ -215,9 +214,17 @@ export const SEO_PAGES: SeoPageDef[] = [
         'custom avatar',
       ],
     },
-    filters: {
-      tags: ['Character Reference', 'Lip Sync', 'Character Replacement', 'Character', 'Face Swap'],
-    },
+    // Fully curated grid: the broad character tags pulled in face-swap and
+    // voice-clone workflows (brand-safety gated) plus generic reference-to-video
+    // items, so the page pins the avatar / talking-head cluster explicitly and
+    // matches nothing else.
+    filters: {},
+    // Kling: Avatar 2.0 — the dedicated avatar workflow.
+    // isApp left unset: App Mode not verified in cloud.comfy.org.
+    appShareId: 'e81f8eb0ee5f',
+    pins: [
+      { shareId: 'e81f8eb0ee5f' }, // Kling: Avatar 2.0
+    ],
   },
   {
     slug: 'ai-image-to-video',
@@ -242,8 +249,15 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Its pin's isApp stays unset until App Mode is verified in cloud.comfy.org.
     pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }, { shareId: '3515c5083027' }],
     // Image-to-Video-tagged non-generators: shot annotation, character-swap
-    // (brand-safety pending), ByteDance real-human (KYC-gated).
-    excludeShareIds: ['0136284ecc19', '064da31db8f3', 'd4b951896b54'],
+    // (brand-safety pending), ByteDance real-human (KYC-gated), and two
+    // mis-tagged text-to-video workflows.
+    excludeShareIds: [
+      '0136284ecc19',
+      '064da31db8f3',
+      'd4b951896b54',
+      '768526487e8d', // Wan2.5: Text to Video
+      '3eb92c1b2380', // AI on the Lot 2026 - Final WF - t2v
+    ],
   },
   {
     slug: 'restore-old-photos',
@@ -299,9 +313,14 @@ export const SEO_PAGES: SeoPageDef[] = [
     appShareId: '3ec117b8333d',
     // Hub-published Anime Generator workflow, pinned so usage sorting can't bury
     // it. Its isApp stays unset until App Mode is verified in cloud.comfy.org.
-    pins: [{ shareId: '9f0b568bf8a1' }],
-    // Anime-tagged non-generators: anime→live-action converter, untitled test workflow.
-    excludeShareIds: ['6fec31e40f4a', '2030b1e2fb72'],
+    // Anima Base v1 + the Illustration LoRA lack the Anime tag, so they need pins.
+    pins: [
+      { shareId: '9f0b568bf8a1' }, // Anime Generator
+      { shareId: 'ab2f354cd396' }, // Anima Base v1: Text to Image
+      { shareId: 'e41b80eb587d' }, // Qwen Image: Illustration LoRA
+    ],
+    // Anime-tagged untitled test workflow.
+    excludeShareIds: ['2030b1e2fb72'],
   },
   {
     slug: 'ai-character-replacement',
@@ -325,5 +344,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
+    // Model matches that aren't character replacement: a comedy inflation
+    // effect and a pose-control tutorial.
+    excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
   },
 ];
