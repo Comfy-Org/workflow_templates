@@ -348,4 +348,138 @@ export const SEO_PAGES: SeoPageDef[] = [
     // effect and a pose-control tutorial.
     excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
   },
+  {
+    slug: 'ai-song-generator',
+    title: 'AI Song Generator | Comfy Workflows',
+    h1: 'AI Song Generator Workflows',
+    keywords: {
+      primary: 'ai song generator',
+      secondary: [
+        'song generator',
+        'ai song maker',
+        'text to song',
+        'lyrics to song',
+        'ai songwriting',
+        'make a song with ai',
+      ],
+    },
+    // Fully curated: the song cluster (vocals + lyrics) stays disjoint from the
+    // instrumental ai-music-generator page.
+    filters: {},
+    // Song Generator (Ace-Step 1.5XL). App Mode not verified in cloud yet.
+    appShareId: '3ef4de40106b',
+    pins: [
+      { shareId: '3ef4de40106b' }, // Song Generator
+      { shareId: 'b4d8756a63c1' }, // Text to Song (New)
+      { shareId: '5d72bed48e89' }, // ACE Step v1 Text to Song
+    ],
+  },
+  {
+    slug: 'ai-music-generator',
+    title: 'AI Music Generator | Comfy Workflows',
+    h1: 'AI Music Generator Workflows',
+    keywords: {
+      primary: 'ai music generator',
+      secondary: [
+        'music generator',
+        'text to music',
+        'ai music maker',
+        'background music generator',
+        'instrumental music generator',
+        'ai sound effects generator',
+      ],
+    },
+    // Fully curated: instrumentals / audio generation, disjoint from the
+    // vocals-oriented ai-song-generator page; voice-clone and TTS workflows
+    // in the Audio tag stay out (consent-gated class).
+    filters: {},
+    // Music Generator (Stable Audio 3). App Mode not verified in cloud yet.
+    appShareId: 'a335e0968d76',
+    pins: [
+      { shareId: 'a335e0968d76' }, // Music Generator
+      { shareId: '9c3c4722a8e1' }, // Stable Audio 3.0 Medium Base
+      { shareId: 'ef36ec96537f' }, // ACE-Step 1.5 Music Generation (4B LLM)
+      { shareId: 'f93775fd8ce0' }, // ACE-Step 1.5 Music Generation Workflow
+      { shareId: 'afd30ccf8238' }, // ACE-Step 1.5 Music Generation AIO
+      { shareId: '9851c174a194' }, // ACE-Step 1.5XL Turbo: Text to Music
+      { shareId: 'ea4911d91143' }, // ACE-Step v1 Text to Instrumentals Music
+      { shareId: 'f8663cd08a9b' }, // Seed Audio 1.0: Text to Audio
+    ],
+  },
+  {
+    slug: 'ai-image-enhancer',
+    title: 'AI Image Enhancer | Comfy Workflows',
+    h1: 'AI Image Enhancer Workflows',
+    // "image enhancer" is the cluster head term; the ai-prefixed variants ride
+    // on the same page.
+    keywords: {
+      primary: 'image enhancer',
+      secondary: [
+        'photo enhancer',
+        'ai image enhancer',
+        'ai photo enhancer',
+        'enhance image quality',
+        'image quality enhancer',
+        'fix blurry photos',
+      ],
+    },
+    // Fully curated: enhancement means recovering quality in an existing photo;
+    // the Image Enhancement tag also carries editors and video tools.
+    filters: {},
+    // Image Enhancer (SeedVR2). App Mode not verified in cloud yet.
+    appShareId: 'a09d65985659',
+    pins: [
+      { shareId: 'a09d65985659' }, // Image Enhancer
+      { shareId: 'cd929d504424' }, // Topaz: Image Enhance
+      { shareId: '81643690b5e9' }, // Magnific: Skin Enhancer
+      { shareId: '68f726502f5a' }, // Nano Banana Pro: AI Image Enhancement
+    ],
+  },
+  {
+    slug: 'ai-hairstyle-changer',
+    title: 'AI Hairstyle Changer | Comfy Workflows',
+    h1: 'AI Hairstyle Changer Workflows',
+    // Also targets the "ai hair color changer" cluster (same workflow serves both).
+    keywords: {
+      primary: 'ai hairstyle changer',
+      secondary: [
+        'ai hair color changer',
+        'hairstyle try on',
+        'change hairstyle in photo',
+        'virtual hairstyle',
+        'hair color try on',
+        'short hair preview',
+      ],
+    },
+    // Fully curated: no hairstyle tag exists in the catalog, so the page is the
+    // dedicated workflow alone until siblings are published.
+    filters: {},
+    // Hairstyle Changer. App Mode not verified in cloud yet.
+    appShareId: 'fffa07892f17',
+    pins: [{ shareId: 'fffa07892f17' }],
+  },
+  {
+    slug: 'image-to-3d',
+    title: 'Image to 3D | Comfy Workflows',
+    h1: 'Image to 3D Workflows',
+    keywords: {
+      primary: 'image to 3d',
+      secondary: [
+        'image to 3d model',
+        'photo to 3d model',
+        'ai 3d model generator',
+        '2d to 3d',
+        '3d asset generator',
+        'image to 3d mesh',
+      ],
+    },
+    // The 3D Model tag is small and on-topic (Hunyuan 3D cluster).
+    filters: { tags: ['3D Model'] },
+    // Image to 3D. App Mode not verified in cloud yet.
+    appShareId: 'e4a4339afda4',
+    pins: [{ shareId: 'e4a4339afda4' }],
+    // Maanil's thumbnail-less test workflow, 3D-Model-tagged on the hub (also
+    // excluded on ai-anime-generator via its Anime tag).
+    excludeShareIds: ['2030b1e2fb72'],
+  },
 ];
