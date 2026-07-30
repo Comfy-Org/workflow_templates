@@ -7,7 +7,7 @@ import { LANGUAGES, DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
 import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
 
-// Language switcher (GTM-291). Self-derives from the current URL so no caller
+// Language switcher. Self-derives from the current URL so no caller
 // has to thread props: the current locale is the path's locale prefix, and the
 // un-prefixed base path is what every alternate URL is rebuilt from.
 const currentLocale = getLocaleFromPath(Astro.url.pathname);
@@ -17,12 +17,12 @@ const strippedPath =
     : Astro.url.pathname.replace(new RegExp(`^/${currentLocale}`), '') || '/';
 const basePath = strippedPath.startsWith('/') ? strippedPath : `/${strippedPath}`;
 
-// Predicate-gated links (design v3 §13 PR 3): only offer languages whose pages
-// are actually live. INDEXABLE_LOCALES is the language-level rollout gate and is
-// empty until a language passes native review, so today this renders nothing and
-// the footer stays byte-identical. English is always offered as the return path.
-// Per-page refinement (a workflow untranslated in an otherwise-live locale) lands
-// with the indexability predicate in a later PR.
+// Predicate-gated links: only offer languages whose pages are actually live.
+// INDEXABLE_LOCALES is the language-level rollout gate and is empty until a
+// language passes native review, so today this renders nothing and the footer
+// stays byte-identical. English is always offered as the return path. Per-page
+// refinement (a workflow untranslated in an otherwise-live locale) is handled by
+// the indexability predicate.
 const offeredLocales: Locale[] = [
   DEFAULT_LOCALE,
   ...INDEXABLE_LOCALES.filter((l) => l !== DEFAULT_LOCALE),

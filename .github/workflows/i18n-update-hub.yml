@@ -1,4 +1,4 @@
-# Generates and updates hub workflow-content translations (GTM-291).
+# Generates and updates hub workflow-content translations.
 #
 # Pushes English; CI translates. Regenerates the English content-of-record from
 # the Hub index, seeds existing human translations, fills the gaps with
@@ -9,6 +9,11 @@ name: "i18n: Update Hub Translations"
 
 on:
   workflow_dispatch:
+    inputs:
+      locale:
+        description: 'Single locale to translate (blank = all supported). e.g. zh'
+        required: false
+        default: ''
   # Pick up newly published / changed workflows on a cadence.
   schedule:
     - cron: "0 2 * * *"
@@ -30,7 +35,8 @@ jobs:
       - name: Checkout workflow_templates
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}
+          # PAT_TOKEN lost repo write (403); PERSONAL_ACCESS_TOKEN has it.
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
       # ComfyUI_frontend's UI locales seed the glossary mirror (term consistency).
       - name: Checkout ComfyUI_frontend locales
@@ -42,6 +48,28 @@ jobs:
 
       - name: Setup
         uses: ./.github/actions/site-setup
+
+      # Resolve which locales to translate. The manual-dispatch input arrives via
+      # env (never spliced into the script) and must match the supported allowlist,
+      # so it can neither inject shell nor request an unsupported locale. A blank
+      # input and the scheduled run translate all supported locales.
+      - name: Resolve target locales
+        env:
+          INPUT_LOCALE: ${{ github.event.inputs.locale }}
+        run: |
+          set -euo pipefail
+          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR"
+          if [ -n "${INPUT_LOCALE:-}" ]; then
+            # Match the input exactly against the allowlist (literal case patterns,
+            # so a value like "*" cannot glob-match its way in).
+            case "$INPUT_LOCALE" in
+              zh|zh-TW|ja|ko|es|fr|ru|tr|ar|pt-BR) TARGET="$INPUT_LOCALE" ;;
+              *) echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"; exit 1 ;;
+            esac
+          else
+            TARGET="$SUPPORTED"
+          fi
+          echo "TRANSLATE_LOCALES=$TARGET" >> "$GITHUB_ENV"
 
       # Resume a prior rate-limited run. If the single stable automation branch
       # exists and is still unmerged, start from its committed partial output so
@@ -78,6 +106,13 @@ jobs:
         working-directory: site
         run: pnpm i18n:check
 
+      # Deterministically shield preserve-terms: swap brand/model names in the
+      # English source for inert sentinels the model can't translate away. Restored
+      # after translation, so the committed en.json keeps its real terms + manifest.
+      - name: Protect preserve-terms
+        working-directory: site
+        run: pnpm i18n:protect
+
       # Per-locale so each run injects that locale's product-UI terminology
       # (mirror + overrides) into the prompt, which a single all-locales run can't
       # do (shared reference). Also paces one locale at a time under the OpenAI
@@ -92,7 +127,7 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
           set -uo pipefail
-          for loc in zh zh-TW ja ko es fr ru tr ar pt-BR; do
+          for loc in $TRANSLATE_LOCALES; do
             echo "::group::translate content → $loc"
             HUB_I18N_LOCALE="$loc" pnpm locale \
               || echo "locale $loc translation failed (tolerated; partial output saved)"
@@ -105,6 +140,25 @@ jobs:
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: pnpm locale:ui
+
+      # Swap the sentinels back to the exact English terms in every content file
+      # before validation reads them. always(): a tolerated translate failure still
+      # leaves partial output that must be de-sentinelized (and en.json restored).
+      - name: Restore preserve-terms
+        if: always()
+        working-directory: site
+        run: pnpm i18n:restore
+
+      # always(): prune before validate even after a tolerated translate failure.
+      # The model preserves brand names only probabilistically, so a small tail of
+      # fields still drops a preserve-term at scale. This removes exactly those
+      # fields (reusing the validator's own checks), so they fall back to English at
+      # render (page non-indexable — the gated behaviour) instead of failing the run
+      # or publishing a bad field. Fails only if pruning is systemic.
+      - name: Enforce glossary floor (prune fields the model failed)
+        if: always()
+        working-directory: site
+        run: pnpm i18n:enforce
 
       # always(): run even after a tolerated translate failure so partial progress
       # is still validated. This step has no continue-on-error, so a validation
@@ -130,7 +184,7 @@ jobs:
       - name: Open or update translation PR
         if: success()
         env:
-          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           set -euo pipefail
           STABLE_BRANCH="i18n/hub-translations"
@@ -169,5 +223,5 @@ jobs:
               --base main \
               --head "$STABLE_BRANCH" \
               --title "chore(i18n): update hub workflow translations" \
-              --body "Automated hub translation refresh (GTM-291). English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
+              --body "Automated hub translation refresh. English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
           fi

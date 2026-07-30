@@ -79,6 +79,14 @@ describe('collectViolations', () => {
     expect(kinds(collectViolations('s1', 'zh', en(), zh, PRESERVE))).toContain('format');
   });
 
+  it('does not flag a URL that differs only in trailing sentence punctuation', () => {
+    // English ends the sentence with the URL + a period; the translation keeps the
+    // URL but uses a full-width period. The URL itself is intact.
+    const enName = en({ metaDescription: 'Docs at https://comfy.org/docs.' });
+    const zh = { metaDescription: '文档见 https://comfy.org/docs。' };
+    expect(kinds(collectViolations('s1', 'zh', enName, zh, PRESERVE))).not.toContain('format');
+  });
+
   it('flags an introduced banned hype word', () => {
     const es = { description: 'Genera videos stunning con Wan 2.1 en ComfyUI.' };
     expect(kinds(collectViolations('s1', 'es', en(), es, PRESERVE))).toContain('brand-voice');

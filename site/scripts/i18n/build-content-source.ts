@@ -1,6 +1,6 @@
 /**
  * build-content-source — produces the English content-of-record + manifest and
- * seeds existing human translations for the hub localization pipeline (GTM-291).
+ * seeds existing human translations for the hub localization pipeline.
  *
  * Run: `pnpm i18n:build-source` (needs PUBLIC_HUB_API_URL; no OpenAI key).
  *

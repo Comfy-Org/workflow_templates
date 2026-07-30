@@ -69,7 +69,7 @@ const indexableUseCaseSlugs = new Set(
 // (`modelPath` → `/workflows/model/<slug>/`), so a no-slash-only redirect key let
 // the canonicalized `/workflows/model/<variant>/` fall through to a 404. The
 // locale route redirects variants in code regardless of trailing slash, so both
-// forms here restore parity (the wan2-5 bug).
+// forms here restore parity.
 const modelSlugRedirects = Object.fromEntries(
   modelGroups.flatMap((group) =>
     group.redirectFrom
