@@ -47,6 +47,18 @@ export function firstStillAcross(templates: { thumbnails?: string[] }[]): string
   return null;
 }
 
+/** Lead-aware visual for a template list: when the lead template (a curated
+ *  page's pinned app) has no still at all, its video thumbnail represents the
+ *  list rather than yielding the visual to a later template's still. */
+export function firstVisualAcross(templates: { thumbnails?: string[] }[]): string | null {
+  const lead = templates[0];
+  if (lead && !hasStillThumbnail(lead.thumbnails)) {
+    const video = lead.thumbnails?.find((thumb) => isVideoFile(thumb));
+    if (video) return video;
+  }
+  return firstStillAcross(templates);
+}
+
 /** First template with a usable still thumbnail — the shared hero pick, so a page's
  *  reserved-hero exclusion can't diverge from what LandingHero actually renders. */
 export function firstTemplateWithStill<T extends { thumbnails?: string[] }>(

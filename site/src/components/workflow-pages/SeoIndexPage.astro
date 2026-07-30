@@ -12,6 +12,7 @@ import type { Locale } from '../../i18n/config';
 import { localizeUrl } from '../../i18n/utils';
 import { absoluteUrl, SITE_NAME } from '../../config/site';
 import { resolveAbsoluteThumbnail } from '../../lib/routes';
+import { isVideoFile } from '../../lib/media-utils';
 import {
   buildCollectionPageJsonLd,
   buildWorkflowBreadcrumb,
@@ -36,7 +37,11 @@ const name = `${heading} | ${SITE_NAME}`;
 const items = cards.map((card) => ({
   name: card.title,
   url: absoluteUrl(card.href),
-  image: resolveAbsoluteThumbnail(card.thumbnail),
+  // A video card visual is not an image; the JSON-LD image field stays honest.
+  image:
+    card.thumbnail && isVideoFile(card.thumbnail)
+      ? undefined
+      : resolveAbsoluteThumbnail(card.thumbnail),
 }));
 
 const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl, items });
