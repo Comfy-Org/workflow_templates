@@ -35,8 +35,18 @@ describe('buildTemplateItemListEntries', () => {
         name: 'Flux Schnell',
         url: 'https://comfy.org/workflows/flux_schnell-abc123/',
         image: undefined,
+        itemType: 'CreativeWork',
+        keywords: undefined,
+        creator: undefined,
       },
-      { name: 'Qwen Edit', url: 'https://comfy.org/workflows/qwen_edit-def456/', image: undefined },
+      {
+        name: 'Qwen Edit',
+        url: 'https://comfy.org/workflows/qwen_edit-def456/',
+        image: undefined,
+        itemType: 'CreativeWork',
+        keywords: undefined,
+        creator: undefined,
+      },
     ]);
   });
 
@@ -83,5 +93,24 @@ describe('buildTemplateItemListEntries', () => {
     ]);
     expect(entries).toHaveLength(1);
     expect(entries[0].name).toBe('Flux Schnell');
+  });
+
+  it('produces joined keywords and expected creator for populated fields', () => {
+    const [entry] = buildTemplateItemListEntries([
+      template({
+        name: 'test_workflow',
+        shareId: 'test123',
+        tags: ['anime', 'character'],
+        models: ['sdxl'],
+        username: 'comfyuser',
+        creatorDisplayName: 'Comfy User',
+        creatorAvatarUrl: 'https://comfy.org/avatar.png',
+      }),
+    ]);
+    expect(entry.keywords).toBe('anime, character, sdxl');
+    expect(entry.creator).toEqual({
+      name: 'Comfy User',
+      url: 'https://comfy.org/workflows/comfyuser/',
+    });
   });
 });
