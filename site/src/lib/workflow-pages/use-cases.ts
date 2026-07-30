@@ -219,9 +219,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     // items, so the page pins the avatar / talking-head cluster explicitly and
     // matches nothing else.
     filters: {},
-    // Kling: Avatar 2.0 — the dedicated avatar workflow.
-    // isApp left unset: App Mode not verified in cloud.comfy.org.
-    appShareId: 'e81f8eb0ee5f',
+    // Kling: Avatar 2.0 — the dedicated avatar workflow, pinned to lead the grid so
+    // it still drives the CTA. No appShareId: e81f8eb0ee5f is a canvas workflow, not
+    // an App Mode app, so the CTA must not advertise it as one.
     pins: [
       { shareId: 'e81f8eb0ee5f' }, // Kling: Avatar 2.0
     ],
