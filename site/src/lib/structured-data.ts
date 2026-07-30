@@ -99,9 +99,184 @@ export function buildFaqJsonLd(faqItems: FaqItem[] | undefined) {
 export interface ItemListEntry {
   name: string;
   /** Absolute URL to the child page. */
-  url: string;
+  url?: string;
   /** Absolute image URL, omitted when the child has no still. */
   image?: string;
+  itemType?: string;
+  description?: string;
+  keywords?: string;
+  creator?: {
+    name: string;
+    url?: string;
+  };
+}
+
+export type StructuredDataAbout = Array<{ '@type': string; name: string; sameAs?: string }>;
+export type StructuredDataMention = Array<
+  { '@id': string } | { '@type': string; name: string; sameAs?: string }
+>;
+
+export const SOFTWARE_NODE_ID = `${SITE_ORIGIN}/workflows/comfyui/#software`;
+
+export function buildSeoGraphJsonLd(params: {
+  name: string;
+  description: string;
+  url: string;
+  inLanguage?: string;
+  breadcrumbItems: BreadcrumbItem[];
+  items?: ItemListEntry[];
+  itemListName?: string;
+  faqItems?: FaqItem[];
+  howTo?: { name: string; description?: string; steps: string[] };
+  about?: StructuredDataAbout;
+  mentions?: StructuredDataMention;
+}) {
+  const website = {
+    '@type': 'WebSite',
+    '@id': `${SITE_ORIGIN}/#website`,
+    name: 'ComfyUI Workflows',
+    url: `${SITE_ORIGIN}/`,
+  };
+
+  const organization = {
+    '@type': 'Organization',
+    '@id': `${SITE_ORIGIN}/#organization`,
+    name: 'Comfy Org',
+    url: `${SITE_ORIGIN}/`,
+    logo: {
+      '@type': 'ImageObject',
+      url: absoluteUrl('/brand/comfy-wordmark-yellow.svg'),
+    },
+    sameAs: [
+      'https://github.com/Comfy-Org',
+      'https://discord.gg/comfyorg',
+      'https://x.com/ComfyUI',
+      'https://www.linkedin.com/company/comfyui',
+      'https://www.instagram.com/comfyui',
+    ],
+  };
+
+  const softwareApp = {
+    '@type': 'SoftwareApplication',
+    '@id': SOFTWARE_NODE_ID,
+    name: 'ComfyUI',
+    url: absoluteUrl('/workflows/comfyui/'),
+    description:
+      'Build powerful AI pipelines by connecting nodes on an infinite canvas, with every model, parameter, and processing step visible and adjustable.',
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux, Cloud',
+    image: absoluteUrl('/workflows/og-default.png'),
+    offers: {
+      '@type': 'Offer',
+      price: '0',
+      priceCurrency: 'USD',
+    },
+    publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+  };
+
+  const breadcrumbId = `${params.url}#breadcrumb`;
+  const { '@context': _ctx, ...breadcrumb } = buildBreadcrumbJsonLd(params.breadcrumbItems);
+  const breadcrumbList = {
+    ...breadcrumb,
+    '@id': breadcrumbId,
+  };
+
+  const itemListId = params.items?.length ? `${params.url}#itemlist` : undefined;
+
+  const collectionPage = {
+    '@type': 'CollectionPage',
+    '@id': `${params.url}#webpage`,
+    url: params.url,
+    name: params.name,
+    description: params.description,
+    ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
+    isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+    breadcrumb: { '@id': breadcrumbId },
+    publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+    primaryImageOfPage: {
+      '@type': 'ImageObject',
+      url: absoluteUrl('/workflows/og-default.png'),
+      width: 1200,
+      height: 630,
+    },
+    ...(params.about ? { about: params.about } : {}),
+    ...(params.mentions ? { mentions: params.mentions } : {}),
+    ...(itemListId ? { mainEntity: { '@id': itemListId } } : {}),
+  };
+
+  const itemList =
+    itemListId && params.items
+      ? {
+          '@type': 'ItemList',
+          '@id': itemListId,
+          name: params.itemListName || params.name,
+          numberOfItems: params.items.length,
+          itemListElement: params.items.map((entry, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            item: {
+              '@type': entry.itemType || 'SoftwareApplication',
+              name: entry.name,
+              ...(entry.url ? { url: entry.url } : {}),
+              ...(entry.image ? { image: entry.image } : {}),
+              ...(entry.description ? { description: entry.description } : {}),
+              ...(entry.keywords ? { keywords: entry.keywords } : {}),
+              ...(entry.creator
+                ? {
+                    creator: {
+                      '@type': 'Person',
+                      name: entry.creator.name,
+                      ...(entry.creator.url ? { url: entry.creator.url } : {}),
+                    },
+                  }
+                : {}),
+            },
+          })),
+        }
+      : null;
+
+  const faqPage = params.faqItems?.length
+    ? {
+        '@type': 'FAQPage',
+        '@id': `${params.url}#faq`,
+        mainEntity: params.faqItems.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      }
+    : null;
+
+  const howToSteps = params.howTo?.steps.map((s) => s.trim()).filter(Boolean) || [];
+  const howTo =
+    params.howTo && howToSteps.length
+      ? {
+          '@type': 'HowTo',
+          '@id': `${params.url}#howto`,
+          name: params.howTo.name,
+          ...(params.howTo.description ? { description: params.howTo.description } : {}),
+          step: howToSteps.map((step, i) => ({
+            '@type': 'HowToStep',
+            position: i + 1,
+            name: step,
+            text: step,
+          })),
+        }
+      : null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      website,
+      organization,
+      softwareApp,
+      breadcrumbList,
+      collectionPage,
+      ...(itemList ? [itemList] : []),
+      ...(faqPage ? [faqPage] : []),
+      ...(howTo ? [howTo] : []),
+    ],
+  };
 }
 
 export function buildCollectionPageJsonLd(params: {
