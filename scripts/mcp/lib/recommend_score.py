@@ -6,8 +6,8 @@ from datetime import date
 
 from freshness_score import FRESHNESS_TIERS, _parse_index_date
 
-# Align with freshness "new" + "recent" bands (templates still gathering usage data).
-NEW_TEMPLATE_GRACE_DAYS = max(max_age for max_age, _ in FRESHNESS_TIERS)
+# Align with freshness "new" band (templates still gathering usage data).
+NEW_TEMPLATE_GRACE_DAYS = FRESHNESS_TIERS[0][0]
 
 # Discrete tiers below the top band (usage < TOP_USAGE_THRESHOLD).
 BASE_TIERS: tuple[tuple[int, str], ...] = (
@@ -44,7 +44,7 @@ def template_age_days(raw_date: str | None, *, as_of: date | None = None) -> int
 
 
 def is_new_template(raw_date: str | None, *, as_of: date | None = None) -> bool:
-    """True when the template was published within the new/recent freshness window."""
+    """True when the template was published within the freshness ``new`` window."""
     age = template_age_days(raw_date, as_of=as_of)
     if age is None:
         return False

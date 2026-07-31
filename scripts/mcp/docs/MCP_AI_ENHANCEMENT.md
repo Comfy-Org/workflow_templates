@@ -222,7 +222,7 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 
 **Category floor:** templates in **Use Cases** never sync below `low` (no `not_recommended`).
 
-**New-template floor:** templates published within the last 90 days (same window as freshness `new` + `recent`) never sync below `medium` when usage is still low. This avoids penalizing brand-new templates that have not accumulated usage data yet.
+**New-template floor:** templates published within the last 30 days (same window as freshness `new`) never sync below `medium` when usage is still low. This avoids penalizing brand-new templates that have not accumulated usage data yet.
 
 **Manual override:** `scripts/data/mcp/template_overrides.json`
 
