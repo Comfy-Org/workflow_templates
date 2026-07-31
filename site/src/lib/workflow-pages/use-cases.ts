@@ -477,7 +477,12 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['3D Model'] },
     // Image to 3D. No appShareId: App Mode not verified in cloud yet, so the
     // pin leads the grid and drives the CTA instead.
-    pins: [{ shareId: 'e4a4339afda4' }],
+    pins: [
+      { shareId: 'e4a4339afda4' },
+      // Multi-angle 3D camera app — a catalog .app, so it files under the
+      // Comfy Apps tab on its own; the tag filter can't reach it.
+      { shareId: '4724032fa666' },
+    ],
     // Maanil's thumbnail-less test workflow, 3D-Model-tagged on the hub (also
     // excluded on ai-anime-generator via its Anime tag).
     excludeShareIds: ['2030b1e2fb72'],
