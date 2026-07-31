@@ -142,7 +142,6 @@ TAG_TO_CAPABILITY: dict[str, str] = {
     "Brand Design": "brand-design",
     "Product": "product-mockup",
     "Mockup": "product-mockup",
-    "Fashion": "virtual-try-on",
     "Relight": "relight",
     "Background Removal": "background-removal",
     "Depth Estimation": "depth-estimation",
