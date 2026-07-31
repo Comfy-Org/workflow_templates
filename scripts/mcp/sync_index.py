@@ -671,6 +671,7 @@ def build_template_entry(
         "recommend": resolve_recommend(
             usage,
             mcp_category=mcp_category,
+            template_date=tpl.get("date"),
             override=override_row.get("recommend"),
         ),
         "description": desc,

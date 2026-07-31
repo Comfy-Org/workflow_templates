@@ -96,6 +96,8 @@ MCP templates. The normal `npm run sync` and release CI run MCP sync before bund
 
 **Use Cases category floor:** never below `low` (no `not_recommended`).
 
+**New-template floor (≤90 days since `date`):** never below `medium` when usage is still low (same window as freshness `new` + `recent`).
+
 Manual override example (`template_overrides.json`):
 
 ```json
