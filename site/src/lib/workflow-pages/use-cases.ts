@@ -473,18 +473,25 @@ export const SEO_PAGES: SeoPageDef[] = [
         'image to 3d mesh',
       ],
     },
-    // The 3D Model tag is small and on-topic (Hunyuan 3D cluster).
-    filters: { tags: ['3D Model'] },
-    // Image to 3D. No appShareId: App Mode not verified in cloud yet, so the
-    // pin leads the grid and drives the CTA instead.
+    // Fully curated: the 3D Model cluster (Hunyuan plus the multi-angle camera
+    // .app) lives only on the hub, so the on-disk snapshot the sitemap reads
+    // can't resolve a `3D Model` tag against it. A tag filter would render the
+    // page from the live hub yet silently drop it from the sitemap; pinning the
+    // cluster keeps the page both indexable and listed. Maanil's thumbnail-less
+    // test workflow (2030b1e2fb72) is simply left unpinned.
+    filters: {},
+    // No appShareId: App Mode not verified in cloud yet, so the first pin leads
+    // the grid and drives the CTA instead.
     pins: [
-      { shareId: 'e4a4339afda4' },
-      // Multi-angle 3D camera app — a catalog .app, so it files under the
-      // Comfy Apps tab on its own; the tag filter can't reach it.
+      { shareId: 'e4a4339afda4' }, // Hunyuan 3D lead (CTA target)
+      // Multi-angle 3D camera app — a catalog .app, filed under the Comfy Apps tab.
       { shareId: '4724032fa666' },
+      { shareId: '3c9ffca52a5e' }, // Hunyuan3D: image to model
+      { shareId: '14597b195403' }, // Hunyuan3D: model to UV
+      { shareId: 'ccc43113008f' }, // Hunyuan3D: part
+      { shareId: '2318d5c3d250' }, // Hunyuan3D: retopo UV
+      { shareId: '18f288d70060' }, // Hunyuan3D: smart topology
+      { shareId: '4fe8d97559cd' }, // MJM: image to 3D
     ],
-    // Maanil's thumbnail-less test workflow, 3D-Model-tagged on the hub (also
-    // excluded on ai-anime-generator via its Anime tag).
-    excludeShareIds: ['2030b1e2fb72'],
   },
 ];
