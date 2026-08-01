@@ -2,10 +2,10 @@
  * Registry of SEO pages served at `/workflows/use-cases/<slug>/`.
  *
  * Each entry declares ONE page that does not otherwise exist in the catalog: a
- * high-intent search keyword (e.g. "ai headshot generator") and the dynamic
- * `filters` that select which live workflow templates appear on it. The grid is
- * resolved from the catalog at build time — adding a matching workflow to
- * `index.json` surfaces it here automatically, with no list to maintain.
+ * high-intent search keyword (e.g. "ai headshot generator") and either dynamic
+ * `filters` that select live workflow templates, or an explicit `pins` list for
+ * clusters the catalog tags cannot reach. Filter-resolved pages surface new
+ * matches from `index.json` automatically; curated pages pin their grid.
  * Editorial copy lives per-slug in `src/content/landing/use-cases/<slug>.json`.
  *
  * A page whose filter resolves to zero live templates is skipped (no empty page
@@ -40,7 +40,9 @@ export interface SeoPageDef {
   /** Catalog filters that select the page's template grid (usage-sorted, OR semantics). */
   filters: SeoPageFilters;
   /** App Mode share the primary CTAs (hero + closing) open, overriding the
-   *  grid's top pick. Verified in cloud.comfy.org before linking. */
+   *  grid's top pick. Verified in cloud.comfy.org before linking. When omitted
+   *  (App Mode not yet verified for the page), the grid's top pin leads the CTA
+   *  instead. */
   appShareId?: string;
   /** Catalog entries force-included atop the grid, bypassing `filters` — for
    *  on-topic workflows the tags can't reach. Must be hub-published to resolve. */
@@ -366,10 +368,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: the song cluster (vocals + lyrics) stays disjoint from the
     // instrumental ai-music-generator page.
     filters: {},
-    // Song Generator (Ace-Step 1.5XL). No appShareId: App Mode not verified in
-    // cloud yet, so the pin leads the grid and drives the CTA instead.
     pins: [
-      { shareId: '3ef4de40106b' }, // Song Generator
+      { shareId: '3ef4de40106b' }, // Song Generator (Ace-Step 1.5XL)
       { shareId: 'b4d8756a63c1' }, // Text to Song (New)
       { shareId: '5d72bed48e89' }, // ACE Step v1 Text to Song
     ],
@@ -393,10 +393,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // vocals-oriented ai-song-generator page; voice-clone and TTS workflows
     // in the Audio tag stay out (consent-gated class).
     filters: {},
-    // Music Generator (Stable Audio 3). No appShareId: App Mode not verified in
-    // cloud yet, so the pin leads the grid and drives the CTA instead.
     pins: [
-      { shareId: 'a335e0968d76' }, // Music Generator
+      { shareId: 'a335e0968d76' }, // Music Generator (Stable Audio 3)
       { shareId: '9c3c4722a8e1' }, // Stable Audio 3.0 Medium Base
       { shareId: 'ef36ec96537f' }, // ACE-Step 1.5 Music Generation (4B LLM)
       { shareId: 'f93775fd8ce0' }, // ACE-Step 1.5 Music Generation Workflow
@@ -426,10 +424,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: enhancement means recovering quality in an existing photo;
     // the Image Enhancement tag also carries editors and video tools.
     filters: {},
-    // Image Enhancer (SeedVR2). No appShareId: App Mode not verified in cloud
-    // yet, so the pin leads the grid and drives the CTA instead.
     pins: [
-      { shareId: 'a09d65985659' }, // Image Enhancer
+      { shareId: 'a09d65985659' }, // Image Enhancer (SeedVR2)
       { shareId: 'cd929d504424' }, // Topaz: Image Enhance
       { shareId: '81643690b5e9' }, // Magnific: Skin Enhancer
       { shareId: '68f726502f5a' }, // Nano Banana Pro: AI Image Enhancement
@@ -454,9 +450,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
-    // Hairstyle Changer. No appShareId: App Mode not verified in cloud yet, so
-    // the pin leads the grid and drives the CTA instead.
-    pins: [{ shareId: 'fffa07892f17' }],
+    pins: [{ shareId: 'fffa07892f17' }], // Hairstyle Changer
   },
   {
     slug: 'image-to-3d',
@@ -473,25 +467,17 @@ export const SEO_PAGES: SeoPageDef[] = [
         'image to 3d mesh',
       ],
     },
-    // Fully curated: the 3D Model cluster (Hunyuan plus the multi-angle camera
-    // .app) lives only on the hub, so the on-disk snapshot the sitemap reads
-    // can't resolve a `3D Model` tag against it. A tag filter would render the
-    // page from the live hub yet silently drop it from the sitemap; pinning the
-    // cluster keeps the page both indexable and listed. Maanil's thumbnail-less
-    // test workflow (2030b1e2fb72) is simply left unpinned.
-    filters: {},
-    // No appShareId: App Mode not verified in cloud yet, so the first pin leads
-    // the grid and drives the CTA instead.
+    // The `3D Model` tag was retired in #1063; `Image to 3D` is the current
+    // catalog vocabulary for this cluster, so filter on that and keep the grid
+    // self-maintaining as new 3D workflows land.
+    filters: { tags: ['Image to 3D'] },
     pins: [
       { shareId: 'e4a4339afda4' }, // Hunyuan 3D lead (CTA target)
-      // Multi-angle 3D camera app — a catalog .app, filed under the Comfy Apps tab.
+      // Multi-angle 3D camera app: a catalog .app, filed under the Comfy Apps tab.
       { shareId: '4724032fa666' },
-      { shareId: '3c9ffca52a5e' }, // Hunyuan3D: image to model
-      { shareId: '14597b195403' }, // Hunyuan3D: model to UV
-      { shareId: 'ccc43113008f' }, // Hunyuan3D: part
-      { shareId: '2318d5c3d250' }, // Hunyuan3D: retopo UV
-      { shareId: '18f288d70060' }, // Hunyuan3D: smart topology
-      { shareId: '4fe8d97559cd' }, // MJM: image to 3D
     ],
+    // Maanil's thumbnail-less test workflow, kept out of the grid (also excluded
+    // on ai-anime-generator via its Anime tag).
+    excludeShareIds: ['2030b1e2fb72'],
   },
 ];

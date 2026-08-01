@@ -2,8 +2,8 @@
 import type { Locale } from '../../i18n/config';
 import {
   firstStillThumbnail,
-  firstTemplateWithStill,
   hasStillThumbnail,
+  heroTemplateFor,
   isVideoFile,
 } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
@@ -56,15 +56,16 @@ const ctaButtons = [
 
 // A video-only lead template (curated pages pin the featured app first, and Hub
 // app thumbnails are often video-only) fronts its own page as a muted loop
-// instead of yielding the hero to a later template's still.
-const leadTemplate = templates[0];
-const leadVideoThumb =
-  leadTemplate && !hasStillThumbnail(leadTemplate.thumbnails)
-    ? leadTemplate.thumbnails?.find((thumb) => isVideoFile(thumb))
+// instead of yielding the hero to a later template's still. heroTemplateFor is
+// shared with the pages' rail reservation so the reserved hero can't diverge
+// from what renders here.
+const heroTemplate = heroTemplateFor(templates);
+const heroVideoThumb =
+  heroTemplate && !hasStillThumbnail(heroTemplate.thumbnails)
+    ? heroTemplate.thumbnails?.find((thumb) => isVideoFile(thumb))
     : undefined;
-const heroTemplate = leadVideoThumb ? leadTemplate : firstTemplateWithStill(templates);
-const heroVideoSrc = leadVideoThumb ? thumbnailPath(leadVideoThumb) : null;
-const heroImage = leadVideoThumb ? null : firstStillThumbnail(heroTemplate?.thumbnails);
+const heroVideoSrc = heroVideoThumb ? thumbnailPath(heroVideoThumb) : null;
+const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
 // The hero visual links to the override (page CTA) or the hero template's detail page.
