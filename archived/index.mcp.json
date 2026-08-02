@@ -306,6 +306,63 @@
         "capabilities": {
           "workflow": ["api", "vector"]
         }
+      },
+      {
+        "name": "api_hailuo_minimax_i2v",
+        "title": "MiniMax: Image to Video",
+        "task": "Image to Video",
+        "model": "MiniMax",
+        "freshness": "established",
+        "usage": 6,
+        "recommend": "not_recommended",
+        "description": "Turn a reference image into an animated video using MiniMax’s image-to-video models (I2V-01-Director, I2V-01, or I2V-01-live). The workflow accepts a starting image and outputs a generated video with dynamic motion. Execution relies on a third‑party API, so completion time depends on server response.",
+        "io": {
+          "inputs": ["image: Reference image to use as the starting frame for video generation"],
+          "outputs": ["video: Generated video animation starting from the input image"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "MinimaxImageToVideoNode": ["I2V-01-Director", "I2V-01", "I2V-01-live"]
+          }
+        }
+      },
+      {
+        "name": "api_hailuo_minimax_t2v",
+        "title": "MiniMax: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax",
+        "freshness": "established",
+        "usage": 8,
+        "recommend": "not_recommended",
+        "description": "Generate high-quality videos from text prompts using MiniMax's frontier video models. Provide a text description, and the workflow returns a generated video with dynamic motion. This template calls the MiniMax API and supports T2V-01 and T2V-01-Director model variants for diverse visual narratives.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video"],
+          "outputs": ["video: Generated video from the text prompt using MiniMax"]
+        },
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "MinimaxTextToVideoNode": ["T2V-01", "T2V-01-Director"]
+          }
+        }
+      },
+      {
+        "name": "api_hailuo_minimax_video",
+        "title": "MiniMax: Video",
+        "task": "Text to Video",
+        "model": "MiniMax",
+        "freshness": "established",
+        "usage": 6,
+        "recommend": "not_recommended",
+        "description": "Generate high-quality videos from text prompts using MiniMax Hailuo-02, with optional first-frame image control for guidance. This API-driven workflow supports multiple resolutions and durations. Execution relies on a third-party server response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video", "image: Optional first-frame reference image to guide the video"],
+          "outputs": ["video: Generated video from the text prompt using MiniMax Hailuo-02"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-video"]
+        }
       }
     ]
   }
