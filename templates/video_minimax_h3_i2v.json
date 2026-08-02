@@ -1,22 +1,22 @@
 {
   "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
   "revision": 0,
-  "last_node_id": 117,
-  "last_link_id": 226,
+  "last_node_id": 120,
+  "last_link_id": 228,
   "nodes": [
     {
       "id": 92,
       "type": "SaveVideo",
       "pos": [
-        -270,
+        -210,
         4850
       ],
       "size": [
-        980,
-        126
+        1030,
+        630
       ],
       "flags": {},
-      "order": 5,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -43,8 +43,8 @@
       "id": 114,
       "type": "LoadImage",
       "pos": [
-        -1560,
-        4850
+        -1610,
+        4860
       ],
       "size": [
         450,
@@ -80,7 +80,7 @@
       "id": 115,
       "type": "ResolutionSelector",
       "pos": [
-        -1090,
+        -1110,
         5230
       ],
       "size": [
@@ -90,7 +90,7 @@
       "flags": {},
       "order": 1,
       "mode": 0,
-      "showAdvanced": true,
+      "showAdvanced": false,
       "inputs": [],
       "outputs": [
         {
@@ -121,7 +121,7 @@
       "id": 105,
       "type": "4c314f31-ecda-4b08-ae98-faaba1bf613f",
       "pos": [
-        -790,
+        -730,
         4850
       ],
       "size": [
@@ -129,7 +129,7 @@
         630
       ],
       "flags": {},
-      "order": 4,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -196,9 +196,9 @@
         1344,
         768,
         5,
-        1,
+        168866841893410,
         "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
-        "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "minimax_h3_video_vae_fp16.safetensors",
         "minimax_h3_audio_vae_fp32.safetensors"
       ]
@@ -207,8 +207,8 @@
       "id": 116,
       "type": "MarkdownNote",
       "pos": [
-        -2030,
-        4850
+        -2090,
+        4860
       ],
       "size": [
         450,
@@ -222,7 +222,7 @@
       "title": "Note: MiniMax H3",
       "properties": {},
       "widgets_values": [
-        "## MiniMax H3\n\n[MiniMax H3](https://www.minimax.io/blog/minimax-h3) is MiniMax's general-purpose, omni-modal generation model. It jointly understands text, image, video, and audio, and generates video with **native stereo audio**: voice, sound effects, and music are modeled jointly in a single forward pass, not layered on afterward. Output is up to 2K resolution, 24fps, and up to about 15 seconds.\n\nH3 removes the usual task boundaries between generation modes. Text-to-video, image-to-video, first/last-frame control, and reference-driven generation (character, motion, camera, voice, style) are all handled by one model instead of separate expert pipelines.\n\n## About this workflow\n\nThis template runs the **Image to Video** task (`MiniMaxH3ImageToVideo` node), which covers both:\n\n- **t2va** (text-to-video), when no images are connected\n- **fl2va** (first/last-frame image-to-video), when `first_frame` and/or `last_frame` are connected\n\n**Key inputs**\n\n- **first_frame / last_frame**: optional keyframes; the model generates the motion between them\n- **prompt**: describe the shots, motion, and the accompanying audio (dialogue, SFX, music) in one block\n- **width / height**: set via Resolution Selector. H3's native canvas is a 768px short edge, capped at 768x1344 pixels, rounded to a multiple of 32\n- **duration (seconds)**: converted to a valid frame `length` by the Math Expression node, snapping up to the model's 17-frame-per-block (17k+5) grid at 24fps"
+        "## MiniMax H3\n\n[MiniMax H3](https://www.minimax.io/blog/minimax-h3) is MiniMax's general-purpose, omni-modal generation model. It jointly understands text, image, video, and audio, and generates video with **native stereo audio**: voice, sound effects, and music are modeled jointly in a single forward pass, not layered on afterward. Output is up to 2K resolution, 24fps, and up to about 15 seconds.\n\n## About this workflow\n\nThis template runs the **Image to Video** task (`MiniMaxH3ImageToVideo` node), which covers both:\n\n- **t2va** (text-to-video), when no images are connected\n- **fl2va** (first/last-frame image-to-video), when `first_frame` and/or `last_frame` are connected\n\n**Key inputs**\n\n- **first_frame / last_frame**: optional keyframes; the model generates the motion between them\n- **prompt**: describe the shots, motion, and the accompanying audio (dialogue, SFX, music) in one block\n- **width / height**: set via Resolution Selector. H3's native canvas is a 768px short edge, capped at 768x1344 pixels, rounded to a multiple of 32\n- **duration (seconds)**: converted to a valid frame `length` by the Math Expression node, snapping up to the model's 17-frame-per-block (17k+5) grid at 24fps"
       ],
       "color": "#222",
       "bgcolor": "#000"
@@ -231,12 +231,12 @@
       "id": 117,
       "type": "MarkdownNote",
       "pos": [
-        -2500,
-        4850
+        -2570,
+        4860
       ],
       "size": [
         440,
-        740
+        680
       ],
       "flags": {},
       "order": 3,
@@ -246,10 +246,117 @@
       "title": "Note: Model Links",
       "properties": {},
       "widgets_values": [
-        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**diffusion_models**\n\n- [minimax_h3_fl2va_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 vae/\n│   │   ├── minimax_h3_video_vae_fp16.safetensors\n│   │   └── minimax_h3_audio_vae_fp32.safetensors\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_fl2va_pruned_int8_convrot.safetensors\n│   └── 📂 text_encoders/\n│       └── qwen3vl_32b_minimax_h3_int8_convrot.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "## Model Links\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**diffusion_models**\n\n- [minimax_h3_fl2va_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_fl2va_pruned_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 vae/\n│   │   ├── minimax_h3_video_vae_fp16.safetensors\n│   │   └── minimax_h3_audio_vae_fp32.safetensors\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_fl2va_pruned_int8_convrot.safetensors\n│   └── 📂 text_encoders/\n│       └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 118,
+      "type": "MarkdownNote",
+      "pos": [
+        -1130,
+        5460
+      ],
+      "size": [
+        300,
+        512
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Size Settings Reference",
+      "properties": {},
+      "widgets_values": [
+        "| megapixels | Aspect | Output (multiple=32) |\n|---|---|---|\n| 0.2 | 16:9 | 608 x 352 |\n| 0.3 | 16:9 | 736 x 416 |\n| 0.4 | 16:9 | 864 x 480 |\n| 0.5 | 16:9 | 960 x 544 |\n| 0.6 | 16:9 | 1056 x 608 |\n| 0.7 | 16:9 | 1152 x 640 |\n| 0.8 | 16:9 | 1216 x 672 |\n| 0.9 | 16:9 | 1280 x 736 |\n| 0.98 | 16:9 | 1344 x 768 |\n| 1.0 | 16:9 | 1376 x 768 |\n| 1.2 | 16:9 | 1504 x 832 |\n| 1.5 | 16:9 | 1664 x 928 |\n| 1.8 | 16:9 | 1824 x 1024 |\n| 2.0 | 16:9 | 1920 x 1088 |\n"
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 119,
+      "type": "ImageScaleToTotalPixels",
+      "pos": [
+        -1520,
+        5610
+      ],
+      "size": [
+        276.484375,
+        142
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            228
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageScaleToTotalPixels"
+      },
+      "widgets_values": [
+        "nearest-exact",
+        1,
+        32
+      ]
+    },
+    {
+      "id": 120,
+      "type": "GetImageSize",
+      "pos": [
+        -1490,
+        5810
+      ],
+      "size": [
+        225,
+        74
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 228
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize"
+      },
+      "widgets_values": []
     }
   ],
   "links": [
@@ -284,18 +391,39 @@
       105,
       3,
       "INT"
+    ],
+    [
+      228,
+      119,
+      0,
+      120,
+      0,
+      "IMAGE"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 5,
+      "title": "Use Image Size",
+      "bounding": [
+        -1530,
+        5540,
+        296.484375,
+        354
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
   "definitions": {
     "subgraphs": [
       {
         "id": "4c314f31-ecda-4b08-ae98-faaba1bf613f",
         "version": 1,
         "state": {
-          "lastGroupId": 4,
-          "lastNodeId": 117,
-          "lastLinkId": 226,
+          "lastGroupId": 5,
+          "lastNodeId": 120,
+          "lastLinkId": 228,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -313,8 +441,8 @@
         "outputNode": {
           "id": -20,
           "bounding": [
-            640,
-            4841,
+            690,
+            4810,
             128,
             68
           ]
@@ -422,7 +550,7 @@
             "name": "clip_name",
             "type": "COMBO",
             "linkIds": [
-              222
+              227
             ],
             "pos": [
               -2456,
@@ -465,8 +593,8 @@
             ],
             "localized_name": "VIDEO",
             "pos": [
-              664,
-              4865
+              714,
+              4834
             ]
           }
         ],
@@ -477,7 +605,7 @@
             "type": "VAELoader",
             "pos": [
               -2020,
-              4970
+              5020
             ],
             "size": [
               640,
@@ -527,7 +655,7 @@
             "type": "VAELoader",
             "pos": [
               -2020,
-              5080
+              5160
             ],
             "size": [
               650,
@@ -575,8 +703,8 @@
             "id": 23,
             "type": "VAEDecodeAudio",
             "pos": [
-              -50,
-              4880
+              -30,
+              4970
             ],
             "size": [
               230,
@@ -620,8 +748,8 @@
             "id": 10,
             "type": "VAEDecode",
             "pos": [
-              -50,
-              4760
+              -30,
+              4850
             ],
             "size": [
               230,
@@ -665,8 +793,8 @@
             "id": 17,
             "type": "KSamplerSelect",
             "pos": [
-              -800,
-              4860
+              -780,
+              4950
             ],
             "size": [
               370,
@@ -697,8 +825,8 @@
             "id": 9,
             "type": "BasicScheduler",
             "pos": [
-              -800,
-              4980
+              -780,
+              5100
             ],
             "size": [
               370,
@@ -738,8 +866,8 @@
             "id": 14,
             "type": "SamplerCustomAdvanced",
             "pos": [
-              -370,
-              4610
+              -360,
+              4860
             ],
             "size": [
               230,
@@ -806,8 +934,8 @@
             "id": 16,
             "type": "BasicGuider",
             "pos": [
-              -800,
-              4750
+              -780,
+              4820
             ],
             "size": [
               360,
@@ -850,7 +978,7 @@
             "type": "UNETLoader",
             "pos": [
               -2020,
-              4660
+              4670
             ],
             "size": [
               640,
@@ -901,7 +1029,7 @@
             "type": "CLIPLoader",
             "pos": [
               -2020,
-              4800
+              4830
             ],
             "size": [
               640,
@@ -918,7 +1046,7 @@
                 "widget": {
                   "name": "clip_name"
                 },
-                "link": 222
+                "link": 227
               }
             ],
             "outputs": [
@@ -935,14 +1063,14 @@
               "Node name for S&R": "CLIPLoader",
               "models": [
                 {
-                  "name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
-                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+                  "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+                  "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
                   "directory": "text_encoders"
                 }
               ]
             },
             "widgets_values": [
-              "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+              "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
               "minimax",
               "default"
             ]
@@ -951,8 +1079,8 @@
             "id": 15,
             "type": "RandomNoise",
             "pos": [
-              -800,
-              4610
+              -780,
+              4660
             ],
             "size": [
               360,
@@ -994,8 +1122,8 @@
             "id": 91,
             "type": "CreateVideo",
             "pos": [
-              260,
-              4790
+              300,
+              4890
             ],
             "size": [
               270,
@@ -1041,12 +1169,12 @@
             "id": 104,
             "type": "MiniMaxH3ImageToVideo",
             "pos": [
-              -1270,
-              4750
+              -1290,
+              4630
             ],
             "size": [
-              400,
-              250
+              430,
+              550
             ],
             "flags": {},
             "order": 12,
@@ -1148,7 +1276,7 @@
             "type": "ComfyMathExpression",
             "pos": [
               -1710,
-              5300
+              5410
             ],
             "size": [
               360,
@@ -1210,7 +1338,7 @@
             "type": "PrimitiveFloat",
             "pos": [
               -2020,
-              5300
+              5410
             ],
             "size": [
               270,
@@ -1257,7 +1385,7 @@
               -2050,
               4540,
               700,
-              670
+              800
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1268,8 +1396,8 @@
             "bounding": [
               -810,
               4540,
-              690,
-              670
+              700,
+              800
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1281,7 +1409,7 @@
               -1320,
               4540,
               480,
-              670
+              800
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1292,8 +1420,8 @@
             "bounding": [
               -90,
               4540,
-              670,
-              670
+              700,
+              800
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1501,14 +1629,6 @@
             "type": "COMBO"
           },
           {
-            "id": 222,
-            "origin_id": -10,
-            "origin_slot": 8,
-            "target_id": 13,
-            "target_slot": 0,
-            "type": "COMBO"
-          },
-          {
             "id": 223,
             "origin_id": -10,
             "origin_slot": 9,
@@ -1539,6 +1659,14 @@
             "target_id": 23,
             "target_slot": 0,
             "type": "LATENT"
+          },
+          {
+            "id": 227,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 13,
+            "target_slot": 0,
+            "type": "COMBO"
           }
         ],
         "extra": {}
@@ -1553,10 +1681,10 @@
     "VHS_MetadataImage": true,
     "VHS_KeepIntermediate": true,
     "ds": {
-      "scale": 0.42954569864382,
+      "scale": 0.3786710638792073,
       "offset": [
-        2468.5059697777347,
-        -3482.5039560818886
+        2587.215435818133,
+        -3485.339172240368
       ]
     }
   },
