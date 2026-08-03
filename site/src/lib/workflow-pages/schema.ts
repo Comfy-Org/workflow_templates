@@ -57,6 +57,8 @@ export interface SeoContent {
   /** 150-160 chars; excluded from body word counts. */
   metaDescription: string;
   faqItems: FaqItem[];
+  about?: { '@type': string; name: string; sameAs?: string }[];
+  mentions?: ({ '@id': string } | { '@type': string; name: string; sameAs?: string })[];
   lastAIGeneration?: string;
 }
 

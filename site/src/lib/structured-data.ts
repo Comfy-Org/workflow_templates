@@ -239,6 +239,7 @@ export function buildSeoGraphJsonLd(params: {
     ? {
         '@type': 'FAQPage',
         '@id': `${params.url}#faq`,
+        isPartOf: { '@id': `${params.url}#webpage` },
         mainEntity: params.faqItems.map((item) => ({
           '@type': 'Question',
           name: item.question,
@@ -253,6 +254,7 @@ export function buildSeoGraphJsonLd(params: {
       ? {
           '@type': 'HowTo',
           '@id': `${params.url}#howto`,
+          isPartOf: { '@id': `${params.url}#webpage` },
           name: params.howTo.name,
           ...(params.howTo.description ? { description: params.howTo.description } : {}),
           step: howToSteps.map((step, i) => ({
