@@ -62,6 +62,12 @@ const props = withDefaults(
     lazyFull?: boolean;
     /** With `lazyFull`, exclude this workflow `name` from the fetched catalog. */
     excludeName?: string;
+    /**
+     * Share ids to keep at the top of the grid in this order, ahead of the
+     * usage/date sort — curated picks (use-case page pins) often have no click
+     * history, so sorting alone buries them.
+     */
+    pinnedShareIds?: string[];
   }>(),
   {
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
@@ -70,6 +76,7 @@ const props = withDefaults(
     facetTemplates: undefined,
     lazyFull: false,
     excludeName: undefined,
+    pinnedShareIds: () => [],
   }
 );
 
@@ -129,7 +136,13 @@ const sortedTemplates = computed(() => {
     });
   }
 
-  return result;
+  if (props.pinnedShareIds.length === 0) return result;
+  const pinRank = new Map(props.pinnedShareIds.map((id, index) => [id, index]));
+  const pinned = result
+    .filter((t) => t.shareId && pinRank.has(t.shareId))
+    .sort((a, b) => pinRank.get(a.shareId!)! - pinRank.get(b.shareId!)!);
+  const rest = result.filter((t) => !t.shareId || !pinRank.has(t.shareId));
+  return [...pinned, ...rest];
 });
 
 const displayedTemplates = computed(() => sortedTemplates.value.slice(0, displayCount.value));

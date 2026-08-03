@@ -4,7 +4,7 @@
  */
 import { SITE_NAME } from '../../config/site';
 import type { SerializedTemplate } from '../hub-api';
-import { firstStillAcross } from '../media-utils';
+import { firstStillAcross, firstVisualAcross } from '../media-utils';
 import { modelPath, useCasePath } from '../routes';
 import { getLogoPath, resolveTemplateLogos } from '../model-logos';
 import type { CardBadge, SeoPageCard } from './schema';
@@ -55,7 +55,8 @@ export function resolveUseCasePageCards(
       href: useCasePath(def.slug, locale),
       title: def.h1,
       count: templates.length,
-      thumbnail: firstStillAcross(templates),
+      // Lead-aware: a video-only pinned app fronts its own card as a video.
+      thumbnail: firstVisualAcross(templates),
       logos: templates[0] ? resolveTemplateLogos(templates[0]) : [],
     };
   }).filter((card) => card.count > 0);

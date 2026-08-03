@@ -11,7 +11,7 @@ import vue from '@astrojs/vue';
 import { INDEXABLE_LOCALES } from './src/lib/i18n/locales.ts';
 import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
-import { resolveUseCasePageTemplates } from './src/lib/workflow-pages/use-case-resolver.ts';
+import { useCasePageHasGrid } from './src/lib/workflow-pages/use-case-resolver.ts';
 import {
   modelContentPasses,
   useCaseContentPasses,
@@ -59,9 +59,7 @@ const indexableModelSlugs = new Set(
 
 const indexableUseCaseSlugs = new Set(
   SEO_PAGES.filter(
-    (def) =>
-      resolveUseCasePageTemplates(def, contentTemplates).length > 0 &&
-      useCaseContentPasses(def.slug)
+    (def) => useCasePageHasGrid(def, contentTemplates) && useCaseContentPasses(def.slug)
   ).map((def) => def.slug)
 );
 

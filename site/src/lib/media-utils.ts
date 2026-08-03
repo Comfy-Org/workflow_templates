@@ -47,10 +47,35 @@ export function firstStillAcross(templates: { thumbnails?: string[] }[]): string
   return null;
 }
 
-/** First template with a usable still thumbnail — the shared hero pick, so a page's
- *  reserved-hero exclusion can't diverge from what LandingHero actually renders. */
+/** Lead-aware visual for a template list: when the lead template (a curated
+ *  page's pinned app) has no still at all, its video thumbnail represents the
+ *  list rather than yielding the visual to a later template's still. */
+export function firstVisualAcross(templates: { thumbnails?: string[] }[]): string | null {
+  const lead = templates[0];
+  if (lead && !hasStillThumbnail(lead.thumbnails)) {
+    const video = lead.thumbnails?.find((thumb) => isVideoFile(thumb));
+    if (video) return video;
+  }
+  return firstStillAcross(templates);
+}
+
+/** First template with a usable still thumbnail. */
 export function firstTemplateWithStill<T extends { thumbnails?: string[] }>(
   templates: T[]
 ): T | undefined {
   return templates.find((template) => hasStillThumbnail(template.thumbnails));
+}
+
+/** The hero template a page renders and reserves: a curated page's video-only
+ *  lead (Hub app thumbnails are often video-only) fronts its own page; otherwise
+ *  the first template with a still. Shared by LandingHero and the pages' rail
+ *  reservation so the reserved hero can't diverge from what actually renders. */
+export function heroTemplateFor<T extends { thumbnails?: string[] }>(
+  templates: T[]
+): T | undefined {
+  const lead = templates[0];
+  if (lead && !hasStillThumbnail(lead.thumbnails) && lead.thumbnails?.some((thumb) => isVideoFile(thumb))) {
+    return lead;
+  }
+  return firstTemplateWithStill(templates);
 }

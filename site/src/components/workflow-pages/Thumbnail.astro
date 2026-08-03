@@ -10,6 +10,7 @@
  * absolute fill, etc.); the placeholder always fills its positioned parent.
  */
 import { COMFY_GLYPH } from './comfy-glyph';
+import { isVideoFile } from '../../lib/media-utils';
 
 interface Props {
   src?: string | null;
@@ -18,19 +19,32 @@ interface Props {
 }
 
 const { src, alt, class: imgClass } = Astro.props;
+const isVideo = Boolean(src && isVideoFile(src));
 ---
 
 {
-  src && (
-    <img
-      src={src}
-      alt={alt}
-      class={imgClass}
-      loading="lazy"
-      decoding="async"
-      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
-    />
-  )
+  src &&
+    (isVideo ? (
+      <video
+        src={src}
+        class={imgClass}
+        autoplay
+        muted
+        loop
+        playsinline
+        aria-label={alt}
+        onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+      />
+    ) : (
+      <img
+        src={src}
+        alt={alt}
+        class={imgClass}
+        loading="lazy"
+        decoding="async"
+        onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+      />
+    ))
 }
 <span
   hidden={Boolean(src)}
