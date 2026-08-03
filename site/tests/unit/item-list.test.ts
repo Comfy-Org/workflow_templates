@@ -113,4 +113,19 @@ describe('buildTemplateItemListEntries', () => {
       url: 'https://comfy.org/workflows/comfyuser/',
     });
   });
+
+  it('uses username as display name fallback and URL-encodes special characters', () => {
+    const [entry] = buildTemplateItemListEntries([
+      template({
+        name: 'test_workflow',
+        shareId: 'test123',
+        username: 'comfy user@123',
+        creatorDisplayName: '',
+      }),
+    ]);
+    expect(entry.creator).toEqual({
+      name: 'comfy user@123',
+      url: 'https://comfy.org/workflows/comfy%20user%40123/',
+    });
+  });
 });
