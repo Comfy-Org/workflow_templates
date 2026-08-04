@@ -346,6 +346,14 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
+    // Face swapping is the narrow form of character replacement, so this page
+    // is the single home for face-swap material. Pins only: the keywords above
+    // must never gain face-swap terms (the governance denylist fails the build
+    // on them), and both workflows run outside the model filter above.
+    pins: [
+      { shareId: 'bed989744195' }, // Video Face Swap
+      { shareId: 'c2aae816fe63' }, // Face Swap (image)
+    ],
     // Model matches that aren't character replacement: a comedy inflation
     // effect and a pose-control tutorial.
     excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
@@ -429,6 +437,9 @@ export const SEO_PAGES: SeoPageDef[] = [
       { shareId: 'cd929d504424' }, // Topaz: Image Enhance
       { shareId: '81643690b5e9' }, // Magnific: Skin Enhancer
       { shareId: '68f726502f5a' }, // Nano Banana Pro: AI Image Enhancement
+      // Expand Image (outpainting) has no dedicated page; this is the closest
+      // existing category. Move it if an image-extender page ships.
+      { shareId: 'f8cf4feac2e9' }, // Expand Image
     ],
   },
   {
@@ -450,7 +461,13 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
-    pins: [{ shareId: 'fffa07892f17' }], // Hairstyle Changer
+    pins: [
+      { shareId: 'fffa07892f17' }, // Hairstyle Changer
+      // Clothes Changer shares the try-on-a-new-look intent, and this is the
+      // site's only other appearance-changer page. Move it if a dedicated
+      // clothes-changer page ships.
+      { shareId: '8ce4aa90e8af' }, // Clothes Changer (virtual try-on)
+    ],
   },
   {
     slug: 'image-to-3d',
