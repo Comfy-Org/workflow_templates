@@ -74,6 +74,7 @@ jobs:
           cp -R "$site_output_dir" "$root_output_dir"
 
           if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --prod --yes \
+            --archive=tgz \
             --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
             cat "$stderr_file" >&2
             cat "$stdout_file"
