@@ -1,0 +1,104 @@
+name: Deploy Preview
+
+on:
+  workflow_run:
+    workflows: ['Preview Site']
+    types: [completed]
+
+concurrency:
+  group: deploy-preview-${{ github.event.workflow_run.head_repository.full_name }}-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  actions: read
+  pull-requests: write
+
+jobs:
+  deploy:
+    if: >
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download prebuilt output
+        uses: actions/download-artifact@v4
+        with:
+          name: vercel-preview-output
+          path: artifact
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve PR number
+        id: pr
+        run: |
+          number="$(tr -d '[:space:]' < artifact/preview-meta/pr-number)"
+          if [ -z "$number" ]; then
+            echo "No PR number in artifact; nothing to deploy."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+            echo "number=$number" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for preview label
+        id: gate
+        if: steps.pr.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          labels="$(gh pr view "${{ steps.pr.outputs.number }}" --repo "${{ github.repository }}" --json labels --jq '.labels[].name')"
+          if printf '%s\n' "$labels" | grep -qx 'preview'; then
+            echo "approved=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "approved=false" >> "$GITHUB_OUTPUT"
+            echo "PR #${{ steps.pr.outputs.number }} has no 'preview' label — skipping deploy."
+          fi
+
+      - name: Deploy preview to Vercel
+        id: deploy
+        if: steps.gate.outputs.approved == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          stdout_file="$RUNNER_TEMP/vercel-preview.stdout"
+          stderr_file="$RUNNER_TEMP/vercel-preview.stderr"
+          output_dir="$GITHUB_WORKSPACE/.vercel/output"
+
+          if [ ! -d "artifact/site/.vercel/output" ]; then
+            echo "Prebuilt output missing from artifact" >&2
+            exit 1
+          fi
+
+          mkdir -p "$GITHUB_WORKSPACE/.vercel"
+          rm -rf "$output_dir"
+          cp -R "artifact/site/.vercel/output" "$output_dir"
+
+          if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --yes \
+            --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+
+            preview_url="$(tail -n 1 "$stdout_file" | tr -d '\r')"
+            if [[ ! "$preview_url" =~ ^https?:// ]]; then
+              echo "Could not parse preview URL from Vercel CLI output" >&2
+              exit 1
+            fi
+
+            echo "preview-url=$preview_url" >> "$GITHUB_OUTPUT"
+          else
+            cat "$stderr_file" >&2
+            cat "$stdout_file"
+            exit 1
+          fi
+
+      - name: Comment preview URL
+        if: steps.deploy.outputs.preview-url != ''
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          number: ${{ steps.pr.outputs.number }}
+          header: vercel-preview
+          message: |
+            🚀 **Preview deployed:** ${{ steps.deploy.outputs.preview-url }}
