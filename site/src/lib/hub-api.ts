@@ -7,6 +7,7 @@
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
+import { resolveIsApp } from './hub-app-mode';
 import { applyRanking, fetchRankingMap, type RankingMap } from './ranking';
 
 const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(
@@ -362,7 +363,7 @@ export function serializeIndexEntry(
     username,
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: entry.isApp ?? entry.name.endsWith('.app'),
+    isApp: resolveIsApp(entry),
     thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
@@ -461,7 +462,9 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTe
     username: workflow.profile.username,
     creatorDisplayName: workflow.profile.display_name || workflow.profile.username,
     creatorAvatarUrl: workflow.profile.avatar_url || '',
-    isApp: workflow.isApp ?? workflow.name.endsWith('.app'),
+    // `workflow.name` is the display title here, not a filename, so only the
+    // share id can identify an app.
+    isApp: resolveIsApp({ isApp: workflow.isApp, shareId: workflow.share_id }),
   };
 }
 
