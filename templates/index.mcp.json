@@ -98,7 +98,10 @@
         "recommend": "highly_recommended",
         "description": "Generate cinematic videos from up to four reference images and a text prompt using Seedance 2.0 via API. The model preserves subject identity, composition, and style while adding expressive motion, smooth camera movement, and optionally synchronized audio.",
         "io": {
-          "inputs": ["image×4: Reference images to guide video generation (subject, style, composition)", "text: Text prompt describing desired motion, camera movement, and scene"],
+          "inputs": [
+            "image×4: Reference images to guide video generation (subject, style, composition)",
+            "text: Text prompt describing desired motion, camera movement, and scene"
+          ],
           "outputs": ["video: Generated cinematic video with synchronized audio"]
         },
         "capabilities": {
@@ -768,7 +771,7 @@
         "capabilities": {
           "workflow": ["api", "character-reference"],
           "model_options": {
-            "GrokVideoReferenceNode": ["grok-imagine-video"]
+            "GrokVideoReferenceNode": ["grok-imagine-video-1.5", "grok-imagine-video"]
           }
         }
       },
@@ -1277,7 +1280,11 @@
         "recommend": "not_recommended",
         "description": "This workflow transforms a source video using Kling O1’s Video‑to‑Video API, accepting a video, a reference image for character or style guidance, and a text prompt. It outputs a transformed video with modified content, style, or characters, leveraging the model’s support for up to 10 reference images with tags. Execution depends on server‑side response as it calls a third‑party API.",
         "io": {
-          "inputs": ["video: Source video to transform", "image: Reference image for style or character guidance", "text: Text prompt describing the desired transformation"],
+          "inputs": [
+            "video: Source video to transform",
+            "image: Reference image for style or character guidance",
+            "text: Text prompt describing the desired transformation"
+          ],
           "outputs": ["video: Transformed output video"]
         },
         "capabilities": {
@@ -2320,7 +2327,10 @@
         "recommend": "not_recommended",
         "description": "This workflow generates a video from a text prompt using Wan2.5 model variants (wan2.5-t2v-preview, wan2.6-t2v). Optionally, you can sync an audio file (3–30 seconds, under 15MB) to enhance motion quality. The output is a video with synchronized audio. This workflow uses a third‑party API, so execution time depends on server‑side response.",
         "io": {
-          "inputs": ["text: Text prompt describing the desired video content", "audio: Optional audio input to synchronize with generated video (3-30 seconds, under 15MB)"],
+          "inputs": [
+            "text: Text prompt describing the desired video content",
+            "audio: Optional audio input to synchronize with generated video (3-30 seconds, under 15MB)"
+          ],
           "outputs": ["video: Generated video with synchronized audio and enhanced motion quality"]
         },
         "capabilities": {
@@ -4039,40 +4049,6 @@
         }
       },
       {
-        "name": "api_reve_image_create",
-        "title": "Reve: Text to Image",
-        "task": "Text to Image",
-        "model": "Reve",
-        "freshness": "current",
-        "usage": 15,
-        "recommend": "not_recommended",
-        "description": "This workflow creates high-quality images from text prompts using Reve’s image generation model, which delivers detailed aesthetics and accurate text rendering. It takes a text description as input and outputs a generated image. Execution uses a third-party API, so response time depends on server-side processing.",
-        "io": {
-          "inputs": ["text: Text prompt describing the desired image"],
-          "outputs": ["image: Generated image"]
-        },
-        "capabilities": {
-          "workflow": ["api", "text-to-image"]
-        }
-      },
-      {
-        "name": "api_reve_image_edit",
-        "title": "Reve: Image Edit",
-        "task": "Image Edit",
-        "model": "Reve",
-        "freshness": "current",
-        "usage": 15,
-        "recommend": "not_recommended",
-        "description": "Upload an image with text instructions to edit it using Reve's editing model. It supports object removal, restoration, and recomposition with optional upscaling. This workflow calls a third-party API, so execution time depends on server-side response.",
-        "io": {
-          "inputs": ["image: Input image to be edited", "text: Text instructions describing the desired edits"],
-          "outputs": ["image: Edited output image"]
-        },
-        "capabilities": {
-          "workflow": ["api", "image-edit"]
-        }
-      },
-      {
         "name": "Image_capybara_v0_1_text_to_image",
         "title": "Capybara: Text to Image",
         "task": "Text to Image",
@@ -4121,23 +4097,6 @@
         },
         "capabilities": {
           "workflow": ["image-edit"]
-        }
-      },
-      {
-        "name": "api_reve_image_remix",
-        "title": "Reve: Image Remix And Edit",
-        "task": "Image Edit",
-        "model": "Reve",
-        "freshness": "current",
-        "usage": 10,
-        "recommend": "not_recommended",
-        "description": "Remix and edit images by combining up to three reference images into a single output using the Reve model. This workflow calls a third-party API, so execution time depends on server‑side response. Input: three reference images. Output: one blended, remixed image.",
-        "io": {
-          "inputs": ["image×3: Reference images to combine and remix into a single output"],
-          "outputs": ["image: Remixed image combining elements from all inputs"]
-        },
-        "capabilities": {
-          "workflow": ["image-edit", "api"]
         }
       },
       {
@@ -5475,7 +5434,10 @@
         "recommend": "low",
         "description": "Upload an input video and a text prompt specifying the object to remove (e.g., \"Remove the red car from the foreground\"). The fast, high-quality LTX-2.3 model, designed for fast video generation with native audio and start/end frame support, applies the Obscura Remova LoRA to erase the target from every frame, outputting a clean edited video.",
         "io": {
-          "inputs": ["video: Input video containing the object to remove", "text: Text prompt specifying which object to remove (e.g. 'Remove the {object} from the foreground.')"],
+          "inputs": [
+            "video: Input video containing the object to remove",
+            "text: Text prompt specifying which object to remove (e.g. 'Remove the {object} from the foreground.')"
+          ],
           "outputs": ["video: Output video with the object removed"]
         },
         "capabilities": {
@@ -5935,7 +5897,11 @@
         "recommend": "low",
         "description": "This workflow seamlessly swaps a product into a reference scene while preserving the original composition and lighting. You provide a reference scene image and a product image; an optional text prompt can guide scene description. The model outputs a product video that naturally integrates the placed item into the scene.",
         "io": {
-          "inputs": ["image: Reference scene image for product placement", "image: Product image to place into the scene", "text: Optional text prompt for scene description"],
+          "inputs": [
+            "image: Reference scene image for product placement",
+            "image: Product image to place into the scene",
+            "text: Optional text prompt for scene description"
+          ],
           "outputs": ["video: Product video with the placed item in the scene"]
         },
         "capabilities": {
@@ -6066,7 +6032,11 @@
         "recommend": "low",
         "description": "Use Kling 3.0’s image-to-video and native audio to create a multi-shot product commercial. Upload a start frame and reference images, then set duration and shot count—Gemini nodes automatically generate tailored prompts for each segment. The model outputs a coherent video sequence with up to 15 seconds of high-quality footage.",
         "io": {
-          "inputs": ["image: Start frame / reference image for the video", "image: Product reference image", "text: Total duration and number of shots for the multishot video"],
+          "inputs": [
+            "image: Start frame / reference image for the video",
+            "image: Product reference image",
+            "text: Total duration and number of shots for the multishot video"
+          ],
           "outputs": ["video: Generated multishot product video with multiple scenes"]
         },
         "capabilities": {
@@ -6163,7 +6133,10 @@
         "recommend": "medium",
         "description": "One-click workflow that generates a character portrait, refines skin details, and upscales to 4K in under 60 seconds. Leverages Z-Image-Turbo’s fast inference to enhance facial textures while upscaling the input image with sharp, realistic results.",
         "io": {
-          "inputs": ["image: Face or person reference image for portrait generation", "text: Text prompt describing desired facial features (e.g. freckles, blush, facial hair)"],
+          "inputs": [
+            "image: Face or person reference image for portrait generation",
+            "text: Text prompt describing desired facial features (e.g. freckles, blush, facial hair)"
+          ],
           "outputs": ["image: Generated refined and upscaled portrait image"]
         },
         "capabilities": {
@@ -7246,7 +7219,7 @@
         "title": "Seed Audio 1.0: Text to Audio",
         "task": "Audio Generation",
         "model": "Seed Audio 1.0",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 383,
         "recommend": "medium",
         "description": "Seed Audio 1.0 generates audio from text prompts, producing speech, dialogue, background music, and sound effects in a single file. Describe voices, emotions, and scene details to create multi-speaker audio up to 2 minutes. This workflow uses the text-to-audio API capability.",
@@ -7266,9 +7239,9 @@
         "title": "Seed Audio 1.0: Text + Audio to Audio",
         "task": "Audio Editing",
         "model": "Seed Audio 1.0",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 166,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "This workflow uses Seed Audio 1.0 to transform an uploaded reference audio clip into new audio based on a text prompt. It leverages the model's audio-to-audio and text-conditioned editing capabilities. Executed via API, the output is a generated audio file matching the prompt and reference style.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -7286,9 +7259,9 @@
         "title": "Seed Audio 1.0: Text + Image to Audio",
         "task": "Audio Generation",
         "model": "Seed Audio 1.0",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 69,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "This workflow generates audio from a text prompt and an image reference, using the model’s text-to-audio and audio transformation capabilities to derive voice or style from the image. Execution is via the Seed Audio API.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -8399,7 +8372,7 @@
         "title": "SeedVR2: Image Upscale",
         "task": "Image Upscale",
         "model": "SeedVR2",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 692,
         "recommend": "high",
         "description": "Upload an image to upscale it with SeedVR2, a fast upscaling model from ByteDance for enhanced resolution. This workflow accepts any image as input and produces an upscaled high-definition output.",
@@ -8521,7 +8494,7 @@
         "title": "SeedVR2: Video Upscaling",
         "task": "Video Upscale",
         "model": "SeedVR2",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 248,
         "recommend": "medium",
         "description": "SeedVR2 rapidly upscales input videos to high resolution, supporting up to 4K output. Developed by ByteDance, it delivers fast, enhanced video quality. This utility workflow takes a video and returns an upscaled version for improved clarity and detail.",
@@ -8577,7 +8550,11 @@
         "recommend": "low",
         "description": "Upload a source video and a reference image, then describe the desired edits with a text prompt using Beeble SwitchX. The workflow outputs an edited video where masked regions follow your prompt and reference, while unmasked areas preserve original pixels and motion, and includes an alpha matte for compositing. This workflow calls a third-party API, so execution time depends on server response.",
         "io": {
-          "inputs": ["video: Source video to edit", "image: Optional reference image for style, lighting, and background guidance", "text: Text prompt describing desired edits and environment"],
+          "inputs": [
+            "video: Source video to edit",
+            "image: Optional reference image for style, lighting, and background guidance",
+            "text: Text prompt describing desired edits and environment"
+          ],
           "outputs": ["video: Edited video with prompt-guided regions and preserved original areas"]
         },
         "capabilities": {
@@ -9199,7 +9176,15 @@
         "capabilities": {
           "workflow": ["video-upscale", "api"],
           "model_options": {
-            "HitPawVideoEnhance": ["Portrait Restore Model (1x)", "Portrait Restore Model (2x)", "General Restore Model (1x)", "General Restore Model (2x)", "General Restore Model (4x)", "Ultra HD Model (2x)", "Generative Model (1x)"]
+            "HitPawVideoEnhance": [
+              "Portrait Restore Model (1x)",
+              "Portrait Restore Model (2x)",
+              "General Restore Model (1x)",
+              "General Restore Model (2x)",
+              "General Restore Model (4x)",
+              "Ultra HD Model (2x)",
+              "Generative Model (1x)"
+            ]
           }
         }
       },
