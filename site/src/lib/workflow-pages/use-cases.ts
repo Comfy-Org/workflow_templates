@@ -346,6 +346,14 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
+    // PROPOSAL, pending sign-off on the sheet's face-swap gate. Face swapping is
+    // the narrow form of character replacement, and without these the page has no
+    // App at all. Pins only: the keywords above must never gain face-swap terms,
+    // because the governance denylist fails the build on them.
+    pins: [
+      { shareId: 'bed989744195' }, // Video Face Swap
+      { shareId: 'c2aae816fe63' }, // Face Swap (image)
+    ],
     // Model matches that aren't character replacement: a comedy inflation
     // effect and a pose-control tutorial.
     excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
@@ -450,7 +458,13 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
-    pins: [{ shareId: 'fffa07892f17' }], // Hairstyle Changer
+    pins: [
+      { shareId: 'fffa07892f17' }, // Hairstyle Changer
+      // PROPOSAL, pending sign-off on the sheet's GATED-LITE ("outfit/try-on
+      // framing only") note. Same try-on-a-new-look intent, and this is the
+      // site's only other appearance-changer page.
+      { shareId: '8ce4aa90e8af' }, // Clothes Changer (virtual try-on)
+    ],
   },
   {
     slug: 'image-to-3d',
