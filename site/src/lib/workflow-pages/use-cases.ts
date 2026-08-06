@@ -433,10 +433,31 @@ export const SEO_PAGES: SeoPageDef[] = [
       { shareId: 'cd929d504424' }, // Topaz: Image Enhance
       { shareId: '81643690b5e9' }, // Magnific: Skin Enhancer
       { shareId: '68f726502f5a' }, // Nano Banana Pro: AI Image Enhancement
-      // Expand Image (outpainting) has no dedicated page; this is the closest
-      // existing category. Move it if an image-extender page ships.
-      { shareId: 'f8cf4feac2e9' }, // Expand Image
     ],
+  },
+  {
+    slug: 'ai-image-extender',
+    title: 'AI Image Extender | Comfy Workflows',
+    h1: 'AI Image Extender Workflows',
+    // "image extender" is the searched term; outpainting is what practitioners
+    // call it, so both vocabularies ride the same page.
+    keywords: {
+      primary: 'ai image extender',
+      secondary: [
+        'image extender',
+        'ai outpainting',
+        'extend image background',
+        'expand image ai',
+        'change image aspect ratio',
+        'uncrop photo',
+      ],
+    },
+    // The Outpainting tag is on-topic end to end. Video outpainting rides along
+    // for the same reason ai-image-upscaler carries Video Upscale: same
+    // capability, and searchers land on the image term for both.
+    filters: { tags: ['Outpainting'] },
+    appShareId: 'f8cf4feac2e9',
+    pins: [{ shareId: 'f8cf4feac2e9' }], // Expand Image (the App the CTA opens)
   },
   {
     slug: 'ai-hairstyle-changer',
