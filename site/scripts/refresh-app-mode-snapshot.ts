@@ -22,6 +22,9 @@ import type { HubWorkflowDetail, HubWorkflowTemplateEntry } from '../src/lib/hub
 /** Concurrent detail requests, to keep a full catalog pass to about a minute. */
 const CONCURRENCY = 16;
 
+/** Per-request deadline; workflow graphs are large, so this is generous. */
+const REQUEST_TIMEOUT_MS = 30_000;
+
 const HUB_API_BASE = (process.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(
   /\/$/,
   ''
@@ -38,7 +41,13 @@ interface AppModeWorkflow {
 }
 
 async function hubGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${HUB_API_BASE}${path}`, { headers: { Accept: 'application/json' } });
+  const res = await fetch(`${HUB_API_BASE}${path}`, {
+    headers: { Accept: 'application/json' },
+    // Without a deadline a single stalled connection hangs the whole pass, and
+    // the script aborts rather than writing a short snapshot, so a hang would
+    // block the refresh indefinitely instead of failing.
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
   if (!res.ok) throw new Error(`${res.status} ${res.statusText} — ${path}`);
   return (await res.json()) as T;
 }
