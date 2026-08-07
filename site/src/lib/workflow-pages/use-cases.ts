@@ -503,3 +503,16 @@ export const SEO_PAGES: SeoPageDef[] = [
     excludeShareIds: ['2030b1e2fb72'],
   },
 ];
+
+/**
+ * Every share id carrying a brand-safety gate, across all pages.
+ *
+ * A gate declared on one page's pin has to hold everywhere, not just on that
+ * page's grid. The landing-page image matcher draws from a whole-catalog
+ * fallback pool, so without a global set a gated workflow can still surface as a
+ * capability card (with a live CTA to it) on a page that never pinned it. That
+ * is how `8ce4aa90e8af` reached `ai-hairstyle-changer`.
+ */
+export const GATED_SHARE_IDS: ReadonlySet<string> = new Set(
+  SEO_PAGES.flatMap((def) => (def.pins ?? []).filter((pin) => pin.gate).map((pin) => pin.shareId))
+);
