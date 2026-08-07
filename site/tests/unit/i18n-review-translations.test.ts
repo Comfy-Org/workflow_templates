@@ -535,7 +535,11 @@ describe('loadReviewState (reads a committed, therefore corruptible, file)', () 
 
   it('defaults to the real review directory when no dir is given', () => {
     // Guards the injection itself: the default must still resolve under src/i18n/review.
-    expect(reviewStatePath('zh')).toContain(path.join('src', 'i18n', 'review'));
+    // Exact, not toContain: a redirect to src/i18n/review-backup would satisfy a
+    // substring check while silently pointing production at the wrong directory.
+    expect(reviewStatePath('zh')).toBe(
+      path.join(process.cwd(), 'src', 'i18n', 'review', 'zh.json')
+    );
     expect(reviewStatePath('zh', dir)).toBe(path.join(dir, 'zh.json'));
   });
 });
