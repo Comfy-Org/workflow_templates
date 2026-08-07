@@ -12,6 +12,7 @@ import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { slugify } from '../../lib/slugify';
 import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
+import { isBillableWorkflow } from '../../lib/partner-nodes';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
 import { featureFlags } from '../../config/featureFlags';
 import { buttonVariants } from '../ui/button';
@@ -52,7 +53,11 @@ const authorAvatarUrl = profile?.avatar_url || null;
 const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
-const isApiTemplate = data.tags?.includes('API') ?? false;
+// Drives the hero CTA label, so a wrong answer here promises a free run on a
+// workflow that charges credits. The `API` tag alone was not enough: it is
+// applied by hand at publish time and 103 approved workflows that call partner
+// nodes carry no tag, so they advertised "Try free on Comfy Cloud".
+const isApiTemplate = isBillableWorkflow(data.tags, data.shareId);
 const cloudTemplateId = data.shareId || data.name;
 const downloadUrl = data.shareId
   ? getWorkflowDownloadUrl(data.shareId, data.name)
