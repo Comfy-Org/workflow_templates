@@ -1,4 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   PROMPT_VERSION,
   buildSystemPrompt,
@@ -7,7 +9,10 @@ import {
   parseFindings,
   pruneOrphanedVerdicts,
   reviewViolations,
+  loadReviewState,
+  parsePositiveInt,
   reviewLocale,
+  sanitizeFindings,
   selectEntriesForReview,
   summarize,
   type Finding,
@@ -338,11 +343,13 @@ describe('reviewLocale (end-to-end orchestration, no network)', () => {
     ) as Record<string, WorkflowContent>;
     let inFlight = 0;
     let peak = 0;
+    const seenIds: Record<string, true> = {};
     await reviewLocale(
       many,
       manyEn,
       { promptVersion: PROMPT_VERSION, entries: {} },
-      async () => {
+      async (shareId) => {
+        seenIds[shareId] = true;
         inFlight += 1;
         peak = Math.max(peak, inFlight);
         await new Promise((r) => setTimeout(r, 5));
@@ -351,7 +358,11 @@ describe('reviewLocale (end-to-end orchestration, no network)', () => {
       },
       3
     );
+    // Lower bound matters as much as the upper: without it this passes when the
+    // pool builds zero runners and nothing is reviewed at all.
+    expect(peak).toBeGreaterThan(1);
     expect(peak).toBeLessThanOrEqual(3);
+    expect(Object.keys(many).every((k) => k in seenIds)).toBe(true);
   });
 
   it('drops verdicts for archived workflows while reviewing the rest', async () => {
@@ -359,5 +370,166 @@ describe('reviewLocale (end-to-end orchestration, no network)', () => {
     const afterArchive = { wf1: two.wf1! }; // wf2 archived
     const result = await reviewLocale(afterArchive, englishTwo, primed.state, async () => []);
     expect(Object.keys(result.state.entries)).toEqual(['wf1']);
+  });
+});
+
+describe('reviewViolations freshness (stale verdicts must not prune fresh text)', () => {
+  const finding: Finding = {
+    field: 'title',
+    category: 'terminology',
+    severity: 'critical',
+    span: 'x',
+    suggestion: 'y',
+    reason: 'Model name translated.',
+  };
+
+  it('prunes when the verdict matches the current translation', () => {
+    const state = stateWith([finding]);
+    expect(reviewViolations('zh', state, english, target)).toHaveLength(1);
+  });
+
+  it('does NOT prune once the translation has been re-translated since the verdict', () => {
+    // The dangerous case: a verdict about old text would otherwise prune a
+    // translation that may have fixed the very problem the verdict describes.
+    const state = stateWith([finding]);
+    const fixed = { wf1: { ...target.wf1!, title: 'Wan2.5 文生图 (corrected)' } };
+    expect(reviewViolations('zh', state, english, fixed)).toEqual([]);
+  });
+
+  it('does NOT prune when the English source changed under a stored verdict', () => {
+    const state = stateWith([finding]);
+    const newEnglish = { wf1: { ...english.wf1!, title: 'Rewritten source title' } };
+    expect(reviewViolations('zh', state, newEnglish, target)).toEqual([]);
+  });
+
+  it('keeps the old behaviour when no content is supplied (caller vouches for freshness)', () => {
+    expect(reviewViolations('zh', stateWith([finding]))).toHaveLength(1);
+  });
+});
+
+describe('parsePositiveInt (env guards)', () => {
+  it('falls back for unset or blank', () => {
+    expect(parsePositiveInt(undefined, 4, 'X')).toBe(4);
+    expect(parsePositiveInt('', 4, 'X')).toBe(4);
+  });
+
+  it('falls back for values that would silently disable a guard', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // NaN concurrency builds zero runners and writes the locale as reviewed-and-clean.
+    expect(parsePositiveInt('abc', 4, 'X')).toBe(4);
+    expect(parsePositiveInt('0', 4, 'X')).toBe(4);
+    expect(parsePositiveInt('-2', 4, 'X')).toBe(4);
+    expect(parsePositiveInt('2.5', 4, 'X')).toBe(4);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it('honours a valid override', () => {
+    expect(parsePositiveInt('12', 4, 'X')).toBe(12);
+  });
+});
+
+describe('sanitizeFindings (stored state may be truncated or hand-edited)', () => {
+  it('drops entries with an unknown severity or category', () => {
+    expect(sanitizeFindings([{ field: 'title', category: 'vibes', severity: 'critical' }])).toEqual(
+      []
+    );
+    expect(sanitizeFindings([{ field: 'title', category: 'accuracy', severity: 'huge' }])).toEqual(
+      []
+    );
+  });
+
+  it('survives junk without throwing', () => {
+    expect(sanitizeFindings([null, 42, 'x', {}])).toEqual([]);
+  });
+
+  it('keeps a well-formed finding even when the field is absent from the translation', () => {
+    // Unlike parseFindings: stored verdicts legitimately outlive a field's presence.
+    expect(
+      sanitizeFindings([
+        {
+          field: 'extendedDescription',
+          category: 'fluency',
+          severity: 'minor',
+          span: 'a',
+          suggestion: 'b',
+          reason: 'c',
+        },
+      ])
+    ).toHaveLength(1);
+  });
+});
+
+describe('loadReviewState (reads a committed, therefore corruptible, file)', () => {
+  const dir = path.join(process.cwd(), 'src', 'i18n', 'review');
+  const file = path.join(dir, 'zh.json');
+  const write = (data: unknown) => {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(file, JSON.stringify(data));
+  };
+  afterEach(() =>
+    fs.rmSync(path.join(process.cwd(), 'src', 'i18n', 'review'), { recursive: true, force: true })
+  );
+
+  it('returns an empty state when the file is absent', () => {
+    expect(loadReviewState('zh')).toEqual({ promptVersion: PROMPT_VERSION, entries: {} });
+  });
+
+  it('discards everything when the rubric version differs', () => {
+    // Verdicts from another rubric are not comparable to current ones.
+    write({ promptVersion: PROMPT_VERSION + 1, entries: { wf1: { hash: 'h', findings: [] } } });
+    expect(loadReviewState('zh').entries).toEqual({});
+  });
+
+  it('drops malformed verdicts instead of throwing', () => {
+    write({
+      promptVersion: PROMPT_VERSION,
+      entries: {
+        good: { hash: 'h', findings: [] },
+        noHash: { findings: [] },
+        findingsNotArray: { hash: 'h', findings: 'nope' },
+        nullVerdict: null,
+      },
+    });
+    expect(Object.keys(loadReviewState('zh').entries)).toEqual(['good']);
+  });
+
+  it('strips findings with an unknown severity, which would report NaN in the summary', () => {
+    write({
+      promptVersion: PROMPT_VERSION,
+      entries: {
+        wf1: {
+          hash: 'h',
+          findings: [
+            {
+              field: 'title',
+              category: 'accuracy',
+              severity: 'apocalyptic',
+              span: '',
+              suggestion: '',
+              reason: '',
+            },
+            {
+              field: 'title',
+              category: 'accuracy',
+              severity: 'minor',
+              span: '',
+              suggestion: '',
+              reason: '',
+            },
+          ],
+        },
+      },
+    });
+    const findings = loadReviewState('zh').entries.wf1!.findings;
+    expect(findings).toHaveLength(1);
+    expect(findings[0]!.severity).toBe('minor');
+    expect(summarize(loadReviewState('zh')).bySeverity.minor).toBe(1);
+  });
+
+  it('survives a truncated / unparseable file', () => {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(file, '{"promptVersion": 1, "entries": {');
+    expect(loadReviewState('zh').entries).toEqual({});
   });
 });

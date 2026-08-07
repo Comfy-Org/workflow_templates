@@ -46,11 +46,41 @@ export const PROMPT_VERSION = 1;
  *  ten target languages, which is where the reported weakness is (ar/tr/ko fluency). */
 const MODEL = process.env.I18N_REVIEW_MODEL ?? 'claude-sonnet-5';
 
+/**
+ * Read a positive integer from an env string, falling back when it is not one.
+ *
+ * A bare `Number()` here fails silently and dangerously. `NaN` for the entry
+ * ceiling makes `totalReviewed > NaN` false forever, so the cost guard stops
+ * guarding. `NaN` (or 0) for concurrency is worse: the pool builds zero runners,
+ * every locale finishes with no calls made and no failures recorded, and the
+ * state file is written as though the locale had been reviewed and found clean.
+ */
+export function parsePositiveInt(raw: string | undefined, fallback: number, name: string): number {
+  if (raw == null || raw.trim() === '') return fallback;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed < 1) {
+    console.warn(
+      `[i18n] review: ignoring invalid ${name}=${JSON.stringify(raw)} ` +
+        `(want a positive integer) — using ${fallback}.`
+    );
+    return fallback;
+  }
+  return parsed;
+}
+
 /** Ceiling so a runaway loop fails loudly instead of quietly running up a bill. */
-const MAX_ENTRIES_PER_RUN = Number(process.env.I18N_REVIEW_MAX_ENTRIES ?? '2000');
+const MAX_ENTRIES_PER_RUN = parsePositiveInt(
+  process.env.I18N_REVIEW_MAX_ENTRIES,
+  2000,
+  'I18N_REVIEW_MAX_ENTRIES'
+);
 
 /** Concurrent in-flight requests. Low enough to stay under standard rate limits. */
-const CONCURRENCY = Number(process.env.I18N_REVIEW_CONCURRENCY ?? '4');
+const CONCURRENCY = parsePositiveInt(
+  process.env.I18N_REVIEW_CONCURRENCY,
+  4,
+  'I18N_REVIEW_CONCURRENCY'
+);
 
 export type FindingCategory = 'terminology' | 'accuracy' | 'fluency' | 'context';
 export type FindingSeverity = 'critical' | 'major' | 'minor';
@@ -239,16 +269,13 @@ export function buildUserPrompt(
  * translation. A model that hallucinates a field or an unknown severity must not be
  * able to prune real content, so anything unrecognised is dropped rather than trusted.
  */
-export function parseFindings(raw: unknown, target: Partial<WorkflowContent>): Finding[] {
-  const list = (raw as { findings?: unknown })?.findings;
-  if (!Array.isArray(list)) return [];
+export function sanitizeFindings(list: readonly unknown[]): Finding[] {
   const out: Finding[] = [];
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
     const f = item as Record<string, unknown>;
     const field = f.field as TranslatableField;
     if (!TRANSLATABLE_FIELDS.includes(field)) continue;
-    if (target[field] == null) continue;
     if (!CATEGORIES.includes(f.category as FindingCategory)) continue;
     if (!SEVERITIES.includes(f.severity as FindingSeverity)) continue;
     out.push({
@@ -263,14 +290,41 @@ export function parseFindings(raw: unknown, target: Partial<WorkflowContent>): F
   return out;
 }
 
+export function parseFindings(raw: unknown, target: Partial<WorkflowContent>): Finding[] {
+  const list = (raw as { findings?: unknown })?.findings;
+  if (!Array.isArray(list)) return [];
+  // Drop findings about a field absent from the translation: that field already
+  // renders English, so pruning it is a no-op that only inflates the systemic ratio.
+  return sanitizeFindings(list).filter((f) => target[f.field] != null);
+}
+
 /**
  * Convert stored verdicts into the validator's own `Violation` shape so the
  * existing prune consumes them unchanged. Only pruning severities cross over —
  * minors stay in the report where a human can weigh them.
  */
-export function reviewViolations(locale: Locale, state: ReviewState): Violation[] {
+export function reviewViolations(
+  locale: Locale,
+  state: ReviewState,
+  /**
+   * Current content. A verdict describes one exact (source, translation) pair, so
+   * one whose hash no longer matches is about text that has since been replaced —
+   * acting on it would prune a translation that may well have fixed the very
+   * problem the verdict describes. Omitting these is only safe when the caller has
+   * already established freshness; enforcement passes them.
+   */
+  english?: Record<string, WorkflowContent>,
+  localeContent?: Record<string, Partial<WorkflowContent>>
+): Violation[] {
   const violations: Violation[] = [];
   for (const [shareId, verdict] of Object.entries(state.entries)) {
+    if (english && localeContent) {
+      const en = english[shareId];
+      const target = localeContent[shareId];
+      // Unreviewed-since-change: leave it to the deterministic checks until the
+      // next run re-reviews it, rather than pruning on a verdict about old text.
+      if (!en || !target || verdict.hash !== entryHash(en, target)) continue;
+    }
     for (const finding of verdict.findings) {
       if (!PRUNING_SEVERITIES.has(finding.severity)) continue;
       violations.push({
@@ -315,6 +369,14 @@ export function reviewStatePath(locale: Locale): string {
   return path.join(REVIEW_DIR, `${locale}.json`);
 }
 
+/**
+ * Load stored verdicts, discarding anything malformed.
+ *
+ * The file is generated, but it is also committed, so it can arrive truncated or
+ * hand-edited. Trusting its shape lets a bad severity reach `summarize` (which
+ * would report NaN) or a non-array `findings` reach a `for…of` (which throws and
+ * takes down the run). Both are avoidable by validating once, here.
+ */
 export function loadReviewState(locale: Locale): ReviewState {
   const state = readJson<ReviewState>(reviewStatePath(locale), {
     promptVersion: PROMPT_VERSION,
@@ -322,10 +384,17 @@ export function loadReviewState(locale: Locale): ReviewState {
   });
   // A rubric change makes every stored verdict incomparable, so discard them all
   // rather than mixing verdicts from two different rubrics in one report.
-  if (state.promptVersion !== PROMPT_VERSION) {
+  if (state?.promptVersion !== PROMPT_VERSION) {
     return { promptVersion: PROMPT_VERSION, entries: {} };
   }
-  return { promptVersion: PROMPT_VERSION, entries: state.entries ?? {} };
+  const entries: Record<string, EntryVerdict> = {};
+  for (const [shareId, verdict] of Object.entries(state.entries ?? {})) {
+    if (!verdict || typeof verdict.hash !== 'string' || !Array.isArray(verdict.findings)) continue;
+    // Reuse the same validation the model output goes through, with no field
+    // filter — a stored finding names a field that may legitimately be absent now.
+    entries[shareId] = { hash: verdict.hash, findings: sanitizeFindings(verdict.findings) };
+  }
+  return { promptVersion: PROMPT_VERSION, entries };
 }
 
 /** Run `worker` over `items` with a bounded number in flight. */
@@ -490,7 +559,10 @@ async function main(): Promise<void> {
         // entry stays unreviewed rather than being recorded as clean. Log why:
         // a silent null here is indistinguishable from a transient network blip,
         // and these two causes need opposite responses (retry vs raise the budget).
-        if (response.stop_reason === 'refusal' || response.stop_reason === 'max_tokens') {
+        // Any stop reason that means the answer was cut short or withheld: the
+        // body is not a complete verdict, so it must not reach JSON.parse.
+        const incomplete = ['refusal', 'max_tokens', 'model_context_window_exceeded'];
+        if (incomplete.includes(response.stop_reason ?? '')) {
           console.warn(
             `[i18n] review: ${shareId} unreviewed (stop_reason=${response.stop_reason})`
           );

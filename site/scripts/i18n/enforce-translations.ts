@@ -190,7 +190,14 @@ function main(): void {
     // Quality findings from the AI reviewer prune through the same path. Absent
     // review state (reviewer not run, or no findings) contributes nothing, so the
     // deterministic floor keeps working exactly as before on its own.
-    const reviewFindings = reviewViolations(locale, loadReviewState(locale));
+    // Pass the current content so verdicts about text that has since been
+    // re-translated are ignored rather than pruning a fresher translation.
+    const reviewFindings = reviewViolations(
+      locale,
+      loadReviewState(locale),
+      english,
+      localeContent
+    );
 
     const result = pruneViolatingFields(
       localeContent,

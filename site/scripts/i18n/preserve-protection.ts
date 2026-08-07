@@ -47,6 +47,23 @@ function escapeRegExp(literal: string): string {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * A term guarded so it cannot match inside a longer run of LETTERS, while still
+ * matching a family name that runs straight into a version number.
+ *
+ * The two cases pull in opposite directions: "Wan" must still match in "Wan2.1"
+ * (family plus version), but a short word term must not match inside a camelCase
+ * identifier — bare "Fun" otherwise fires inside "WanFunInpaintToVideo" and
+ * "Functionality", splitting a node name into two sentinels and handing the model
+ * "{{PT12}}{{PT40}}InpaintToVideo" to translate. Guarding on letters only draws
+ * exactly that line: a digit after the term still counts as a match, a letter does not.
+ */
+function boundedAlternative(term: string): string {
+  const prefix = /^[A-Za-z]/.test(term) ? '(?<![A-Za-z])' : '';
+  const suffix = /[A-Za-z]$/.test(term) ? '(?![A-Za-z])' : '';
+  return `${prefix}${escapeRegExp(term)}${suffix}`;
+}
+
 export interface TermMap {
   /** Preserve-terms longest-first, so "ComfyUI" is replaced before "Comfy". */
   ordered: string[];
@@ -67,7 +84,9 @@ export function buildTermMap(terms: string[]): TermMap {
   });
   // Terms are escaped literals, so the alternation is safe (no ReDoS). Longest-first
   // ordering makes "ComfyUI" win over "Comfy" at the same position.
-  const matcher = ordered.length ? new RegExp(ordered.map(escapeRegExp).join('|'), 'g') : null;
+  const matcher = ordered.length
+    ? new RegExp(ordered.map(boundedAlternative).join('|'), 'g')
+    : null;
   return { ordered, sentinelByTerm, termByIndex, matcher };
 }
 
@@ -189,10 +208,20 @@ function main(): void {
     // Checked before writing anything, so a refusal leaves the tree untouched.
     const contentByFile: Record<string, unknown> = {};
     for (const name of fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json'))) {
-      contentByFile[name] =
-        name === 'en.json'
-          ? source
-          : JSON.parse(fs.readFileSync(path.join(CONTENT_DIR, name), 'utf-8'));
+      if (name === 'en.json') {
+        contentByFile[name] = source;
+        continue;
+      }
+      // Name the file: a bare parse error here reports only "Unexpected token",
+      // which is little help when eleven locale files could be the culprit.
+      try {
+        contentByFile[name] = JSON.parse(fs.readFileSync(path.join(CONTENT_DIR, name), 'utf-8'));
+      } catch (error) {
+        console.error(
+          `[i18n] protect: could not parse content/${name}: ${(error as Error).message}`
+        );
+        process.exit(1);
+      }
     }
     const collisions = findCollisionsAcrossFiles(contentByFile);
     if (collisions.length > 0) {

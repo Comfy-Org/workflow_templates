@@ -161,3 +161,43 @@ describe('findCollisionsAcrossFiles (restore rewrites every file, so check every
     ).toEqual([]);
   });
 });
+
+describe('letter-boundary matching (a short word term must not split identifiers)', () => {
+  const map = buildTermMap([...TERMS, 'Fun', 'Wan']);
+
+  it('does not match a term inside a longer word', () => {
+    // Bare "Fun" previously fired inside camelCase node names, handing the model
+    // "{{PT}}{{PT}}InpaintToVideo" and splitting a proper noun into two sentinels.
+    const prot = protectText('Use the WanFunInpaintToVideo node', map);
+    expect(prot).toContain('WanFunInpaintToVideo');
+    expect(restoreText(prot, map)).toBe('Use the WanFunInpaintToVideo node');
+  });
+
+  it('does not match inside an ordinary word that merely starts the same way', () => {
+    expect(protectText('Functionality of the sampler', map)).toBe('Functionality of the sampler');
+  });
+
+  it('still protects the standalone product name', () => {
+    const prot = protectText('Wan 2.2 5B Fun Inpaint', map);
+    expect(prot).not.toContain('Fun');
+    expect(restoreText(prot, map)).toBe('Wan 2.2 5B Fun Inpaint');
+  });
+
+  it('still matches a family name that runs straight into a version number', () => {
+    // The guard is on letters, not digits, so "Wan2.1" keeps its protection —
+    // a plain \b word boundary would have regressed exactly this case.
+    const prot = protectText('Wan2.1 and Wan2.2 models', map);
+    expect(prot).not.toContain('Wan2.1');
+    expect(restoreText(prot, map)).toBe('Wan2.1 and Wan2.2 models');
+  });
+
+  it('is unaffected for terms bounded by punctuation', () => {
+    const m = buildTermMap(['LoRA']);
+    expect(restoreText(protectText('Use ID-LoRA here', m), m)).toBe('Use ID-LoRA here');
+    expect(protectText('Use ID-LoRA here', m)).not.toContain('LoRA');
+  });
+
+  it('lowercase prose is untouched (matching is case-sensitive)', () => {
+    expect(protectText('this is a fun workflow', map)).toBe('this is a fun workflow');
+  });
+});
