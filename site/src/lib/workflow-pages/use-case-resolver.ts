@@ -44,7 +44,7 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
     const found = catalog.find((template) => template.shareId === pin.shareId);
     if (!found) return [];
     seen.add(pin.shareId);
-    return [pin.isApp ? ({ ...found, isApp: true } as T) : found];
+    return [found];
   });
   if (pinned.length === 0) return matched;
 

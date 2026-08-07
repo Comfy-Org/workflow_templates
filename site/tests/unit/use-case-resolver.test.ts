@@ -71,15 +71,12 @@ describe('resolveUseCasePageTemplates', () => {
     expect(out.map((t) => t.shareId)).toEqual(['m']);
   });
 
-  it('applies the isApp override without mutating the catalog entry', () => {
-    const entry = tpl('p', ['b']);
+  it('preserves the catalog classification for pinned entries', () => {
+    const entry = { ...tpl('p', ['b']), isApp: true };
     const catalog = [entry];
-    const out = resolveUseCasePageTemplates(
-      page({ pins: [{ shareId: 'p', isApp: true }] }),
-      catalog
-    );
+    const out = resolveUseCasePageTemplates(page({ pins: [{ shareId: 'p' }] }), catalog);
     expect(out[0].isApp).toBe(true);
-    expect(entry.isApp).toBeUndefined();
+    expect(out[0]).toBe(entry);
   });
 
   it('pins bypass the exclude list', () => {

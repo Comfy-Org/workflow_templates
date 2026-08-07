@@ -21,6 +21,7 @@ const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy
 export type MediaType = 'image' | 'video' | 'audio' | '3d';
 export type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
 export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'deprecated';
+export type DefaultView = 'workflow' | 'app';
 
 export interface LabelRef {
   name: string;
@@ -39,6 +40,7 @@ export interface HubWorkflowSummary {
   share_id: string;
   name: string;
   status: WorkflowStatus;
+  default_view?: DefaultView;
   description?: string;
   tags: LabelRef[];
   models: LabelRef[];
@@ -48,7 +50,6 @@ export interface HubWorkflowSummary {
   thumbnail_comparison_url?: string;
   publish_time?: string;
   usage?: number;
-  isApp?: boolean;
   profile: HubProfile;
 }
 
@@ -96,6 +97,7 @@ export interface HubWorkflowListResponse {
 export interface HubWorkflowTemplateEntry {
   name: string;
   title: string;
+  defaultView?: DefaultView;
   description?: string;
   tags?: string[];
   models?: string[];
@@ -117,7 +119,6 @@ export interface HubWorkflowTemplateEntry {
     inputs?: Record<string, unknown>[];
     outputs?: Record<string, unknown>[];
   };
-  isApp?: boolean;
   includeOnDistributions?: string[];
   thumbnailUrl?: string;
   thumbnailComparisonUrl?: string;
@@ -335,6 +336,10 @@ export function getCreatorsList(profiles: Map<string, HubProfile>): CreatorEntry
 // Serializers — single source of truth for mapping API data → Vue props
 // ---------------------------------------------------------------------------
 
+function isAppView(defaultView: DefaultView | undefined, legacyName: string): boolean {
+  return defaultView === undefined ? legacyName.endsWith('.app') : defaultView === 'app';
+}
+
 /**
  * Convert a HubWorkflowTemplateEntry (from index endpoint) to the shared
  * SerializedTemplate shape used by Vue grid/search islands.
@@ -362,7 +367,7 @@ export function serializeIndexEntry(
     username,
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: entry.isApp ?? entry.name.endsWith('.app'),
+    isApp: isAppView(entry.defaultView, entry.name),
     thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
@@ -461,7 +466,7 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTe
     username: workflow.profile.username,
     creatorDisplayName: workflow.profile.display_name || workflow.profile.username,
     creatorAvatarUrl: workflow.profile.avatar_url || '',
-    isApp: workflow.isApp ?? workflow.name.endsWith('.app'),
+    isApp: isAppView(workflow.default_view, workflow.name),
   };
 }
 

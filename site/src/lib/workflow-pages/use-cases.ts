@@ -25,9 +25,6 @@ export interface SeoPageFilters {
 export interface SeoPagePin {
   /** Catalog share id to force-include at the top of the page's grid. */
   shareId: string;
-  /** Files the pin under the "Comfy Apps" tab when the catalog hasn't flagged
-   *  it. Set only after verifying App Mode in cloud.comfy.org. */
-  isApp?: boolean;
 }
 
 export interface SeoPageDef {
@@ -70,7 +67,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: { tags: ['Portrait'] },
     // Headshot Generator app (untagged on the hub, so pinned not tag-matched).
     appShareId: 'd70243b6fc64',
-    pins: [{ shareId: 'd70243b6fc64', isApp: true }],
+    pins: [{ shareId: 'd70243b6fc64' }],
     // Portrait-tagged non-headshot tools: ref-to-video, miniature stylizer, product placement.
     excludeShareIds: ['5a3df986f9f8', '364e72458b36', '163ff33fc4a7'],
   },
@@ -121,7 +118,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Photo to Cartoon Style Caricature app. App Mode verified in cloud.comfy.org.
     appShareId: 'd5ce59e59ff3',
     pins: [
-      { shareId: 'd5ce59e59ff3', isApp: true },
+      { shareId: 'd5ce59e59ff3' },
       { shareId: '1043317e75c9' }, // 1 input, multiple styles from prompt
       { shareId: '452e68e4a484' }, // Seedream 5.0 Lite: Image Edit
       { shareId: '4ab928487496' }, // SYSTMS ACTION: Qwen Image Edit 2511 (toy style)
@@ -148,7 +145,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Purz's dedicated Tattoo Generator app, pinned atop the grid.
     // App Mode verified in cloud.comfy.org, so it files under the Comfy Apps tab.
     appShareId: '90d086fef9e3',
-    pins: [{ shareId: '90d086fef9e3', isApp: true }],
+    pins: [{ shareId: '90d086fef9e3' }],
     // Non-line-art ControlNet matches: generic editors, depth/pose demos, and
     // union-control t2i demos whose only tattoo link is a canny option.
     excludeShareIds: [
@@ -186,12 +183,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Image app, so the CTA matches the image-side hero (video app stays a grid pin).
     appShareId: 'b3bbbf217b89',
     // Video Upscale (0740bf78b7b6) is untagged on the hub, so only a pin can
-    // surface it. Its isApp stays unset until App Mode is verified in cloud.
-    pins: [
-      { shareId: 'c1959fdc5642' },
-      { shareId: 'b3bbbf217b89', isApp: true },
-      { shareId: '0740bf78b7b6' },
-    ],
+    // surface it. App classification still comes from Cloud's default_view.
+    pins: [{ shareId: 'c1959fdc5642' }, { shareId: 'b3bbbf217b89' }, { shareId: '0740bf78b7b6' }],
     // Upscale-tagged non-upscalers: virtual try-on, ad viz, variations apps, event demo.
     excludeShareIds: [
       '5652fbe7f479',
@@ -248,7 +241,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     appShareId: '201003c6d79c',
     // Free-tier anchors lead: LTX 2.3 (the CTA app's source), then Wan 2.2 14B,
     // then the dedicated Image to Video workflow (usage sorting buries it).
-    // Its pin's isApp stays unset until App Mode is verified in cloud.comfy.org.
+    // App classification still comes from Cloud's default_view.
     pins: [{ shareId: '7cc1d3bd2802' }, { shareId: '8c7511104c80' }, { shareId: '3515c5083027' }],
     // Image-to-Video-tagged non-generators: shot annotation, character-swap
     // (brand-safety pending), ByteDance real-human (KYC-gated), and two
@@ -283,7 +276,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Dedicated Restore Old Photos workflow. App Mode verified in cloud.comfy.org.
     appShareId: '69850664cf89',
     pins: [
-      { shareId: '69850664cf89', isApp: true },
+      { shareId: '69850664cf89' },
       { shareId: 'b594a01df1d6' }, // Seedream 5.0 Pro: Image Edit
       { shareId: 'cd929d504424' }, // Topaz: Image Enhance
       { shareId: 'f6e9d07c02fd' }, // Image Relight
@@ -314,7 +307,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Cloud-save app, not hub-published — CTA-only, so the hero can't match it yet.
     appShareId: '3ec117b8333d',
     // Hub-published Anime Generator workflow, pinned so usage sorting can't bury
-    // it. Its isApp stays unset until App Mode is verified in cloud.comfy.org.
+    // it. App classification still comes from Cloud's default_view.
     // Anima Base v1 + the Illustration LoRA lack the Anime tag, so they need pins.
     pins: [
       { shareId: '9f0b568bf8a1' }, // Anime Generator
