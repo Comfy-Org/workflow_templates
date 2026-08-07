@@ -7,12 +7,22 @@ function tpl(shareId: string, usage = 100): SerializedTemplate {
   return { shareId, title: shareId, thumbnails: [`${shareId}-1.webp`], usage } as SerializedTemplate;
 }
 
+// The three the keyword sheet gates today: Video Face Swap, Face Swap and
+// Clothes Changer. Named literally rather than derived, so deleting a `gate`
+// field fails this test instead of quietly passing. Publishing one is meant to be
+// a deliberate, reviewable change, so updating this list is part of that change.
+const EXPECTED_GATED_SHARE_IDS = ['8ce4aa90e8af', 'bed989744195', 'c2aae816fe63'];
+
 describe('GATED_SHARE_IDS', () => {
-  it('collects every gated pin across all pages', () => {
-    const expected = SEO_PAGES.flatMap((def) =>
+  it('holds exactly the share ids gated today', () => {
+    expect([...GATED_SHARE_IDS].sort()).toEqual(EXPECTED_GATED_SHARE_IDS);
+  });
+
+  it('stays in step with the gate declarations in SEO_PAGES', () => {
+    const declared = SEO_PAGES.flatMap((def) =>
       (def.pins ?? []).filter((pin) => pin.gate).map((pin) => pin.shareId)
     );
-    expect([...GATED_SHARE_IDS].sort()).toEqual([...new Set(expected)].sort());
+    expect([...GATED_SHARE_IDS].sort()).toEqual([...new Set(declared)].sort());
   });
 });
 
@@ -38,9 +48,8 @@ describe('buildFallbackPool', () => {
   });
 
   it('drops a gated id even when it is the only candidate', () => {
-    const first = [...GATED_SHARE_IDS][0];
-    // Skips itself once every gate is lifted, which is the intended end state.
-    if (!first) return;
-    expect(buildFallbackPool([tpl(first)])).toEqual([]);
+    for (const id of EXPECTED_GATED_SHARE_IDS) {
+      expect(buildFallbackPool([tpl(id)])).toEqual([]);
+    }
   });
 });
