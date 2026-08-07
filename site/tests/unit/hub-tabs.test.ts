@@ -129,3 +129,16 @@ describe('badgesAvailableIn', () => {
     expect(badgesAvailableIn(badges, templatesInTab(catalog(), 'all'))).toEqual(badges);
   });
 });
+
+describe('badgesAvailableIn, prototype safety', () => {
+  // A plain object literal would resolve these to Object.prototype members and
+  // throw on .has(), instead of keeping the badge as documented.
+  it.each(['constructor', 'toString', 'hasOwnProperty', '__proto__'])(
+    'keeps a badge whose type is %s rather than throwing',
+    (type) => {
+      const badges = [{ type, value: 'anything' }];
+      expect(() => badgesAvailableIn(badges, templatesInTab(catalog(), 'all'))).not.toThrow();
+      expect(badgesAvailableIn(badges, templatesInTab(catalog(), 'all'))).toEqual(badges);
+    }
+  );
+});

@@ -49,13 +49,15 @@ export function badgesAvailableIn<T extends FacetedTemplate>(
 ): ScopedBadge[] {
   if (badges.length === 0) return badges;
 
-  const available: Record<string, Set<string>> = {
-    model: new Set(scopedTemplates.flatMap((t) => t.models ?? [])),
-    tag: new Set(scopedTemplates.flatMap((t) => t.tags ?? [])),
-  };
+  // A Map, not an object literal: a badge type of "constructor" or "toString"
+  // would hit Object.prototype on a plain object and throw on .has().
+  const available = new Map<string, Set<string>>([
+    ['model', new Set(scopedTemplates.flatMap((t) => t.models ?? []))],
+    ['tag', new Set(scopedTemplates.flatMap((t) => t.tags ?? []))],
+  ]);
 
   return badges.filter((b) => {
-    const values = available[b.type];
+    const values = available.get(b.type);
     return values ? values.has(b.value) : true;
   });
 }
