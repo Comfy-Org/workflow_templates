@@ -32,7 +32,32 @@ const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
 
 /** A locale failing more than this fraction of its translated fields is systemic,
  *  not a tail — fail the build rather than silently English-fallback most of it. */
-const MAX_PRUNE_FRACTION = Number(process.env.I18N_MAX_PRUNE_FRACTION ?? '0.15');
+export const DEFAULT_MAX_PRUNE_FRACTION = 0.15;
+
+/**
+ * Read the systemic threshold from an env string, falling back to the default for
+ * anything that is not a usable fraction.
+ *
+ * A bare `Number()` here fails silently in two opposite directions: an empty
+ * variable becomes 0, so every prune counts as systemic and the build always
+ * fails; a typo becomes NaN, and since every `>` comparison against NaN is false
+ * the guard stops guarding without saying so. Both are worse than the default.
+ */
+export function parsePruneFraction(raw: string | undefined): number {
+  if (raw == null || raw.trim() === '') return DEFAULT_MAX_PRUNE_FRACTION;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) {
+    // Loud: someone deliberately set this and it did not take effect.
+    console.warn(
+      `[i18n] enforce: ignoring invalid I18N_MAX_PRUNE_FRACTION=${JSON.stringify(raw)} ` +
+        `(want a number between 0 and 1) — using ${DEFAULT_MAX_PRUNE_FRACTION}.`
+    );
+    return DEFAULT_MAX_PRUNE_FRACTION;
+  }
+  return parsed;
+}
+
+const MAX_PRUNE_FRACTION = parsePruneFraction(process.env.I18N_MAX_PRUNE_FRACTION);
 
 function readJson<T>(file: string, fallback: T): T {
   try {

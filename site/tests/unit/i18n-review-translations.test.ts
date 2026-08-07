@@ -7,6 +7,7 @@ import {
   parseFindings,
   pruneOrphanedVerdicts,
   reviewViolations,
+  reviewLocale,
   selectEntriesForReview,
   summarize,
   type Finding,
@@ -230,5 +231,133 @@ describe('buildUserPrompt', () => {
   it('omits fields missing from the translation, which already render English', () => {
     const prompt = buildUserPrompt('wf1', english.wf1!, { title: 'x' });
     expect(prompt).not.toContain('## description');
+  });
+});
+
+describe('reviewLocale (end-to-end orchestration, no network)', () => {
+  const two: Record<string, Partial<WorkflowContent>> = {
+    wf1: { title: 'Wan2.5 文生图' },
+    wf2: { title: '另一个工作流' },
+  };
+  const englishTwo: Record<string, WorkflowContent> = {
+    wf1: english.wf1!,
+    wf2: { ...english.wf1!, title: 'Another workflow' } as WorkflowContent,
+  };
+  const empty: ReviewState = { promptVersion: PROMPT_VERSION, entries: {} };
+
+  const finding: Finding = {
+    field: 'title',
+    category: 'terminology',
+    severity: 'critical',
+    span: '万相',
+    suggestion: 'Wan2.5',
+    reason: 'Model name translated.',
+  };
+
+  it('reviews every stale entry and stores each verdict', async () => {
+    const seen: string[] = [];
+    const result = await reviewLocale(two, englishTwo, empty, async (shareId) => {
+      seen.push(shareId);
+      return [];
+    });
+    expect(seen.sort()).toEqual(['wf1', 'wf2']);
+    expect(result.reviewed).toBe(2);
+    expect(Object.keys(result.state.entries).sort()).toEqual(['wf1', 'wf2']);
+  });
+
+  it('does not call the reviewer at all when nothing is stale — the cost saving', async () => {
+    const primed = await reviewLocale(two, englishTwo, empty, async () => []);
+    let calls = 0;
+    const second = await reviewLocale(two, englishTwo, primed.state, async () => {
+      calls += 1;
+      return [];
+    });
+    expect(calls).toBe(0);
+    expect(second.reviewed).toBe(0);
+  });
+
+  it('re-reviews only the entry whose translation changed', async () => {
+    const primed = await reviewLocale(two, englishTwo, empty, async () => []);
+    const edited = { ...two, wf2: { title: '改过的标题' } };
+    const seen: string[] = [];
+    await reviewLocale(edited, englishTwo, primed.state, async (shareId) => {
+      seen.push(shareId);
+      return [];
+    });
+    expect(seen).toEqual(['wf2']);
+  });
+
+  it('records a failed entry as unreviewed rather than as clean', async () => {
+    // The dangerous bug this guards: treating an API failure as "no findings"
+    // would mark a locale reviewed-and-clean when it was never actually read.
+    const result = await reviewLocale(two, englishTwo, empty, async (shareId) =>
+      shareId === 'wf1' ? null : []
+    );
+    expect(result.failures).toEqual(['wf1']);
+    expect(result.state.entries.wf1).toBeUndefined(); // no verdict stored
+    expect(result.state.entries.wf2).toBeDefined();
+    expect(result.reviewed).toBe(1);
+  });
+
+  it('retries a previously failed entry on the next run', async () => {
+    const first = await reviewLocale(two, englishTwo, empty, async (shareId) =>
+      shareId === 'wf1' ? null : []
+    );
+    const retried: string[] = [];
+    await reviewLocale(two, englishTwo, first.state, async (shareId) => {
+      retried.push(shareId);
+      return [];
+    });
+    expect(retried).toEqual(['wf1']);
+  });
+
+  it('survives a reviewer that throws, without losing the other entries', async () => {
+    const result = await reviewLocale(two, englishTwo, empty, async (shareId) => {
+      if (shareId === 'wf1') throw new Error('429 rate limited');
+      return [];
+    });
+    expect(result.failures[0]).toContain('429');
+    expect(result.state.entries.wf2).toBeDefined();
+  });
+
+  it('carries findings through to prunable violations — the full path', async () => {
+    const result = await reviewLocale(two, englishTwo, empty, async (shareId) =>
+      shareId === 'wf1' ? [finding] : []
+    );
+    const violations = reviewViolations('zh', result.state);
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toMatchObject({ shareId: 'wf1', field: 'title' });
+  });
+
+  it('respects the concurrency limit', async () => {
+    const many = Object.fromEntries(
+      Array.from({ length: 10 }, (_, i) => [`w${i}`, { title: `t${i}` }])
+    );
+    const manyEn = Object.fromEntries(
+      Array.from({ length: 10 }, (_, i) => [`w${i}`, { ...english.wf1!, title: `en${i}` }])
+    ) as Record<string, WorkflowContent>;
+    let inFlight = 0;
+    let peak = 0;
+    await reviewLocale(
+      many,
+      manyEn,
+      { promptVersion: PROMPT_VERSION, entries: {} },
+      async () => {
+        inFlight += 1;
+        peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 5));
+        inFlight -= 1;
+        return [];
+      },
+      3
+    );
+    expect(peak).toBeLessThanOrEqual(3);
+  });
+
+  it('drops verdicts for archived workflows while reviewing the rest', async () => {
+    const primed = await reviewLocale(two, englishTwo, empty, async () => []);
+    const afterArchive = { wf1: two.wf1! }; // wf2 archived
+    const result = await reviewLocale(afterArchive, englishTwo, primed.state, async () => []);
+    expect(Object.keys(result.state.entries)).toEqual(['wf1']);
   });
 });

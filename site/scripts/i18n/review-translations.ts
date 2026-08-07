@@ -340,6 +340,62 @@ async function pooled<T>(items: T[], limit: number, worker: (item: T) => Promise
   await Promise.all(runners);
 }
 
+/**
+ * Reviews one entry. Returns the findings, or `null` when the entry could not be
+ * reviewed at all (API error, refusal, truncation). `null` is deliberately not the
+ * same as `[]`: an empty array is a verdict of "this is clean" and gets stored,
+ * whereas an unreviewed entry must keep its previous verdict and be retried next
+ * run — otherwise a transient outage would silently mark a locale as reviewed.
+ */
+export type ReviewEntryFn = (
+  shareId: string,
+  english: WorkflowContent,
+  target: Partial<WorkflowContent>
+) => Promise<Finding[] | null>;
+
+export interface LocaleReviewResult {
+  state: ReviewState;
+  reviewed: number;
+  failures: string[];
+}
+
+/**
+ * Orchestrate a locale's review: pick the stale entries, review them with bounded
+ * concurrency, and fold the verdicts into the state. Takes the per-entry reviewer
+ * as a parameter so the whole flow is exercised in tests without a network call or
+ * an API key — this function decides what ends up pruned, so it needs real coverage.
+ */
+export async function reviewLocale(
+  localeContent: Record<string, Partial<WorkflowContent>>,
+  english: Record<string, WorkflowContent>,
+  priorState: ReviewState,
+  reviewEntry: ReviewEntryFn,
+  concurrency: number = CONCURRENCY
+): Promise<LocaleReviewResult> {
+  const state = pruneOrphanedVerdicts(priorState, localeContent);
+  const stale = selectEntriesForReview(localeContent, english, state);
+  const failures: string[] = [];
+  let reviewed = 0;
+
+  await pooled(stale, concurrency, async (shareId) => {
+    const en = english[shareId]!;
+    const target = localeContent[shareId]!;
+    try {
+      const findings = await reviewEntry(shareId, en, target);
+      if (findings === null) {
+        failures.push(shareId);
+        return;
+      }
+      state.entries[shareId] = { hash: entryHash(en, target), findings };
+      reviewed += 1;
+    } catch (error) {
+      failures.push(`${shareId} (${(error as Error).message})`);
+    }
+  });
+
+  return { state, reviewed, failures };
+}
+
 async function main(): Promise<void> {
   const english = readJson<Record<string, WorkflowContent>>(path.join(CONTENT_DIR, 'en.json'), {});
   const preserveTerms = readJson<string[]>(path.join(GLOSSARY_DIR, 'preserve-terms.json'), []);
@@ -352,6 +408,18 @@ async function main(): Promise<void> {
   const locales = (requested.length > 0 ? requested : SUPPORTED_HUB_LOCALES).filter(
     (l): l is Locale => l !== 'en' && SUPPORTED_HUB_LOCALES.includes(l as Locale)
   );
+
+  // The reviewer is an ADDITIONAL gate on top of the deterministic floor, never a
+  // dependency of it. With no key configured, skip cleanly instead of failing the
+  // run: the pipeline then behaves exactly as it did before this step existed,
+  // which is what lets the step ship before the org secret is provisioned.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    console.warn(
+      '[i18n] review: ANTHROPIC_API_KEY is not set — skipping AI review. ' +
+        'Deterministic glossary/structure checks still apply.'
+    );
+    return;
+  }
 
   const { default: Anthropic } = await import('@anthropic-ai/sdk');
   const client = new Anthropic();
@@ -372,13 +440,19 @@ async function main(): Promise<void> {
       ),
     };
 
-    const state = pruneOrphanedVerdicts(loadReviewState(locale), localeContent);
-    const stale = selectEntriesForReview(localeContent, english, state);
-    if (stale.length === 0) {
-      console.log(`[i18n] review: [${locale}] up to date (${Object.keys(state.entries).length}).`);
+    const priorState = loadReviewState(locale);
+    const pending = selectEntriesForReview(
+      localeContent,
+      english,
+      pruneOrphanedVerdicts(priorState, localeContent)
+    ).length;
+    if (pending === 0) {
+      console.log(
+        `[i18n] review: [${locale}] up to date (${Object.keys(priorState.entries).length}).`
+      );
       continue;
     }
-    totalReviewed += stale.length;
+    totalReviewed += pending;
     if (totalReviewed > MAX_ENTRIES_PER_RUN) {
       console.error(
         `[i18n] review: run would exceed the ${MAX_ENTRIES_PER_RUN}-entry ceiling ` +
@@ -388,13 +462,13 @@ async function main(): Promise<void> {
     }
 
     const system = buildSystemPrompt(locale, preserveTerms, terminology);
-    console.log(`[i18n] review: [${locale}] reviewing ${stale.length} entr(ies) with ${MODEL}…`);
+    console.log(`[i18n] review: [${locale}] reviewing ${pending} entr(ies) with ${MODEL}…`);
 
-    const failures: string[] = [];
-    await pooled(stale, CONCURRENCY, async (shareId) => {
-      const en = english[shareId]!;
-      const target = localeContent[shareId]!;
-      try {
+    const { state, failures } = await reviewLocale(
+      localeContent,
+      english,
+      priorState,
+      async (shareId, en, target) => {
         const response = await client.messages.create({
           model: MODEL,
           max_tokens: 4096,
@@ -407,25 +481,16 @@ async function main(): Promise<void> {
           },
           messages: [{ role: 'user', content: buildUserPrompt(shareId, en, target) }],
         });
-        // A refusal or a truncated answer is not a verdict — record nothing rather
-        // than storing an empty finding list that would read as "this is clean".
+        // A refusal or a truncated answer is not a verdict — return null so the
+        // entry stays unreviewed rather than being recorded as clean.
         if (response.stop_reason === 'refusal' || response.stop_reason === 'max_tokens') {
-          failures.push(`${shareId} (${response.stop_reason})`);
-          return;
+          return null;
         }
         const text = response.content.find((b) => b.type === 'text');
-        if (!text || text.type !== 'text') {
-          failures.push(`${shareId} (no text block)`);
-          return;
-        }
-        state.entries[shareId] = {
-          hash: entryHash(en, target),
-          findings: parseFindings(JSON.parse(text.text), target),
-        };
-      } catch (error) {
-        failures.push(`${shareId} (${(error as Error).message})`);
+        if (!text || text.type !== 'text') return null;
+        return parseFindings(JSON.parse(text.text), target);
       }
-    });
+    );
 
     fs.mkdirSync(REVIEW_DIR, { recursive: true });
     fs.writeFileSync(reviewStatePath(locale), JSON.stringify(state, null, 2) + '\n');

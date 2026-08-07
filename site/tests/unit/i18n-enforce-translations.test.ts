@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { pruneViolatingFields, isEmptyTranslation } from '../../scripts/i18n/enforce-translations';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  DEFAULT_MAX_PRUNE_FRACTION,
+  isEmptyTranslation,
+  parsePruneFraction,
+  pruneViolatingFields,
+} from '../../scripts/i18n/enforce-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 
 const PRESERVE = ['ComfyUI', 'VAE'];
@@ -158,6 +163,39 @@ describe('pruneViolatingFields with AI-review findings', () => {
       },
     ]);
     expect(prunedFieldCount).toBe(1);
+  });
+});
+
+describe('parsePruneFraction (systemic-threshold config)', () => {
+  it('uses the default when the variable is unset or blank', () => {
+    expect(parsePruneFraction(undefined)).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    // Blank would become 0 under a bare Number(), making EVERY prune systemic so
+    // the build could never pass.
+    expect(parsePruneFraction('')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    expect(parsePruneFraction('   ')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+  });
+
+  it('falls back on a non-numeric value instead of silently disabling the guard', () => {
+    // Number('abc') is NaN, and `fraction > NaN` is always false — the guard would
+    // stop guarding without a word. This is the bug being fixed.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(parsePruneFraction('abc')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    expect(parsePruneFraction('O.3')).toBe(DEFAULT_MAX_PRUNE_FRACTION); // letter O typo
+    expect(warn).toHaveBeenCalled(); // and it says so, rather than failing silently
+    warn.mockRestore();
+  });
+
+  it('rejects out-of-range fractions', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(parsePruneFraction('-0.1')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    expect(parsePruneFraction('1.5')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    warn.mockRestore();
+  });
+
+  it('honours a valid override, including the permissive extremes', () => {
+    expect(parsePruneFraction('0.3')).toBe(0.3);
+    expect(parsePruneFraction('0')).toBe(0); // deliberately strict: any prune is systemic
+    expect(parsePruneFraction('1')).toBe(1); // deliberately permissive: never systemic
   });
 });
 
