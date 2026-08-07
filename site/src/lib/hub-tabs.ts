@@ -19,3 +19,43 @@ export function templatesInTab<T extends TabbableTemplate>(templates: T[], tab: 
   if (tab === 'nodeGraphs') return templates.filter((t) => !t.isApp);
   return templates;
 }
+
+/** A selected filter value, as held in the store. */
+export interface ScopedBadge {
+  type: string;
+  value: string;
+}
+
+/** The fields a badge can select on. */
+export interface FacetedTemplate {
+  models?: string[];
+  tags?: string[];
+}
+
+/**
+ * Badges that still match something in the given (already tab-scoped) templates.
+ *
+ * Scoping the facet list to the tab is not enough on its own. A badge selected on
+ * one tab stays applied after switching while its option vanishes from the scoped
+ * list, so "All, filter Wan, then Comfy Apps" left `Wan` active with no visible
+ * way to clear it and an empty grid. Badges that still exist in the new tab are
+ * kept, so switching does not silently discard a filter that still means
+ * something. A badge of an unrecognised type is kept rather than dropped, since
+ * this cannot know what it selects on.
+ */
+export function badgesAvailableIn<T extends FacetedTemplate>(
+  badges: ScopedBadge[],
+  scopedTemplates: T[]
+): ScopedBadge[] {
+  if (badges.length === 0) return badges;
+
+  const available: Record<string, Set<string>> = {
+    model: new Set(scopedTemplates.flatMap((t) => t.models ?? [])),
+    tag: new Set(scopedTemplates.flatMap((t) => t.tags ?? [])),
+  };
+
+  return badges.filter((b) => {
+    const values = available[b.type];
+    return values ? values.has(b.value) : true;
+  });
+}

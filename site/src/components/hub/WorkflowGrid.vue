@@ -10,7 +10,7 @@ import HubWorkflowCard from './HubWorkflowCard.vue';
 import BrowseToolbar from './BrowseToolbar.vue';
 import { useHubStore } from '@/composables/useHubStore';
 import { loadCatalog } from '@/lib/catalog';
-import { templatesInTab } from '@/lib/hub-tabs';
+import { badgesAvailableIn, templatesInTab } from '@/lib/hub-tabs';
 import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 
 export type HubThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
@@ -121,6 +121,22 @@ const facetSource = computed(() =>
 // Reset pagination when the inputs that change the result set change.
 watch([workingSet, store.activeTab, store.sortBy], () => {
   displayCount.value = 30;
+});
+
+/**
+ * Drop badges the new tab cannot satisfy.
+ *
+ * Scoping the facet list to the tab is not enough on its own: a badge selected
+ * on one tab stays active after switching, while its option disappears from the
+ * scoped list. "All, filter Wan, then Comfy Apps" left `Wan` applied with no
+ * visible way to clear it and an empty grid. Badges that still exist in the new
+ * tab are kept, so switching tabs does not silently throw away a filter that
+ * still means something.
+ */
+watch(store.activeTab, () => {
+  const badges = store.filterBadges.value;
+  const kept = badgesAvailableIn(badges, facetSource.value);
+  if (kept.length !== badges.length) store.filterBadges.value = kept;
 });
 
 const tabbedTemplates = computed(() => templatesInTab(workingSet.value, store.activeTab.value));

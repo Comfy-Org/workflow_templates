@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   isBillableWorkflow,
   usesPartnerNodes,
+  wasScannedForPartnerNodes,
   PARTNER_NODE_SNAPSHOT_META,
 } from '../../src/lib/partner-nodes';
 import snapshot from '../../src/data/partner-node-workflows.snapshot.json';
@@ -41,9 +42,34 @@ describe('isBillableWorkflow', () => {
     expect(isBillableWorkflow(undefined, snapshot.shareIds[0])).toBe(true);
   });
 
-  it('leaves a genuinely free workflow free', () => {
-    expect(isBillableWorkflow(['Image'], 'ffffffffffff')).toBe(false);
-    expect(isBillableWorkflow(undefined, undefined)).toBe(false);
+  it('leaves a scanned, clean, untagged workflow free', () => {
+    const clean = snapshot.scannedShareIds.find((id) => !snapshot.shareIds.includes(id));
+    expect(clean).toBeDefined();
+    expect(isBillableWorkflow(['Image'], clean)).toBe(false);
+  });
+
+  // dante01yoon on #1100: absence from a positive-only list was treated as proof
+  // of being free, so anything published after the snapshot claimed a free run.
+  // He found a live example, 0309de53eb52.
+  it('treats a workflow the snapshot never saw as billable', () => {
+    expect(wasScannedForPartnerNodes('ffffffffffff')).toBe(false);
+    expect(isBillableWorkflow([], 'ffffffffffff')).toBe(true);
+    expect(isBillableWorkflow(undefined, 'ffffffffffff')).toBe(true);
+  });
+
+  it('treats a missing share id as billable rather than free', () => {
+    expect(isBillableWorkflow(undefined, undefined)).toBe(true);
+  });
+});
+
+describe('the scanned list', () => {
+  it('covers every workflow flagged as using partner nodes', () => {
+    const scanned = new Set(snapshot.scannedShareIds);
+    for (const id of snapshot.shareIds) expect(scanned.has(id)).toBe(true);
+  });
+
+  it('is larger than the partner-node list, so free claims are earned not assumed', () => {
+    expect(snapshot.scannedShareIds.length).toBeGreaterThan(snapshot.shareIds.length);
   });
 });
 

@@ -81,6 +81,7 @@ if (shareIds.length === 0) {
 }
 
 const withPartnerNodes: string[] = [];
+const scanned: string[] = [];
 let cursor = 0;
 
 // A read failure aborts the whole run. Skipping a workflow would silently
@@ -90,6 +91,7 @@ async function worker(): Promise<void> {
   while (cursor < shareIds.length) {
     const shareId = shareIds[cursor++];
     const detail = await getWorkflow(shareId);
+    scanned.push(shareId);
     if (partnerNodesIn(detail.workflow_json).length > 0) withPartnerNodes.push(shareId);
   }
 }
@@ -99,6 +101,9 @@ await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 const snapshot = {
   fetchedAt: new Date().toISOString(),
   apiNodeCount: apiNodes.size,
+  // Every workflow this run actually inspected. A share id missing from here was
+  // published after the snapshot, so the site cannot claim it is free.
+  scannedShareIds: scanned.sort(),
   shareIds: withPartnerNodes.sort(),
 };
 

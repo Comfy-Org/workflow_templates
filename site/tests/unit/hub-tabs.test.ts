@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { ref } from 'vue';
-import { templatesInTab, type TabbableTemplate } from '../../src/lib/hub-tabs';
+import { badgesAvailableIn, templatesInTab, type TabbableTemplate } from '../../src/lib/hub-tabs';
 import { useFacets, type FacetTemplate } from '../../src/composables/useFacets';
 import { useHubStore } from '../../src/composables/useHubStore';
 
@@ -88,5 +88,44 @@ describe('facet counts scoped to the active tab', () => {
         }
       }
     }
+  });
+});
+
+describe('badgesAvailableIn', () => {
+  // dante01yoon on #1100: "All, Filter, Wan, Comfy Apps" left `Wan` active, hid it
+  // from the scoped facet list, and still rendered "Showing 0 of 0". Scoping the
+  // options is not enough; the retained badge has to be reconciled too.
+  it('drops a badge the new tab cannot satisfy', () => {
+    const apps = templatesInTab(catalog(), 'comfyApps');
+    const kept = badgesAvailableIn([{ type: 'model', value: 'Wan' }], apps);
+    expect(kept).toEqual([]);
+  });
+
+  it('keeps a badge that still matches in the new tab', () => {
+    const apps = templatesInTab(catalog(), 'comfyApps');
+    const kept = badgesAvailableIn([{ type: 'model', value: 'Nano Banana Pro' }], apps);
+    expect(kept).toEqual([{ type: 'model', value: 'Nano Banana Pro' }]);
+  });
+
+  it('reconciles tag badges the same way', () => {
+    const apps = templatesInTab(catalog(), 'comfyApps');
+    const kept = badgesAvailableIn(
+      [
+        { type: 'tag', value: 'Video' },
+        { type: 'tag', value: 'Image Edit' },
+      ],
+      apps
+    );
+    expect(kept).toEqual([{ type: 'tag', value: 'Image Edit' }]);
+  });
+
+  it('keeps a badge of an unknown type rather than silently dropping it', () => {
+    const kept = badgesAvailableIn([{ type: 'mode', value: 'app' }], templatesInTab(catalog(), 'all'));
+    expect(kept).toEqual([{ type: 'mode', value: 'app' }]);
+  });
+
+  it('returns the same list when nothing needs dropping', () => {
+    const badges = [{ type: 'model', value: 'Wan' }];
+    expect(badgesAvailableIn(badges, templatesInTab(catalog(), 'all'))).toEqual(badges);
   });
 });
