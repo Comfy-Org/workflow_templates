@@ -25,6 +25,7 @@ import { pathToFileURL } from 'node:url';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import type { Locale, WorkflowContent } from '../../src/lib/i18n/schema';
 import { collectViolations, type Violation } from './validate-translations';
+import { loadReviewState, reviewViolations } from './review-translations';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
@@ -62,12 +63,26 @@ export function pruneViolatingFields(
   english: Record<string, WorkflowContent>,
   locale: Locale,
   preserveTerms: string[],
-  overrides: Record<string, string>
+  overrides: Record<string, string>,
+  /**
+   * Extra violations from a non-deterministic source (the AI reviewer), merged in
+   * so quality findings prune through this same path. Keeping one prune means a
+   * field dropped for bad grammar behaves exactly like one dropped for a lost
+   * brand name: English fallback, non-indexable page, one systemic threshold.
+   */
+  extraViolations: readonly Violation[] = []
 ): PruneResult {
   const pruned: Violation[] = [];
   let prunedFieldCount = 0;
   let fieldsInspected = 0;
   const content: Record<string, Partial<WorkflowContent>> = {};
+
+  const extraByShareId = new Map<string, Violation[]>();
+  for (const violation of extraViolations) {
+    const list = extraByShareId.get(violation.shareId);
+    if (list) list.push(violation);
+    else extraByShareId.set(violation.shareId, [violation]);
+  }
 
   for (const [shareId, localized] of Object.entries(localeContent)) {
     const en = english[shareId];
@@ -78,7 +93,12 @@ export function pruneViolatingFields(
       continue;
     }
     fieldsInspected += Object.values(localized).filter((v) => v != null).length;
-    const violations = collectViolations(shareId, locale, en, localized, preserveTerms, overrides);
+    const violations = [
+      ...collectViolations(shareId, locale, en, localized, preserveTerms, overrides),
+      // Only findings about a field still present can prune; one about an
+      // already-absent field would inflate the systemic ratio for a no-op.
+      ...(extraByShareId.get(shareId) ?? []).filter((v) => localized[v.field] != null),
+    ];
     if (violations.length === 0) {
       content[shareId] = localized;
       continue;
@@ -142,7 +162,19 @@ function main(): void {
       {}
     );
 
-    const result = pruneViolatingFields(localeContent, english, locale, preserveTerms, overrides);
+    // Quality findings from the AI reviewer prune through the same path. Absent
+    // review state (reviewer not run, or no findings) contributes nothing, so the
+    // deterministic floor keeps working exactly as before on its own.
+    const reviewFindings = reviewViolations(locale, loadReviewState(locale));
+
+    const result = pruneViolatingFields(
+      localeContent,
+      english,
+      locale,
+      preserveTerms,
+      overrides,
+      reviewFindings
+    );
     if (result.prunedFieldCount === 0) continue;
 
     fs.writeFileSync(file, JSON.stringify(result.content, null, 2) + '\n');

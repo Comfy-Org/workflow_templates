@@ -86,6 +86,81 @@ describe('pruneViolatingFields', () => {
   });
 });
 
+describe('pruneViolatingFields with AI-review findings', () => {
+  // A translation that passes every deterministic check but is bad on quality —
+  // the exact case the reviewer exists for. Deterministically it looks fine.
+  const cleanZh: Record<string, Partial<WorkflowContent>> = {
+    wf1: {
+      description: '使用 ComfyUI 和 VAE 解码器运行以获得清晰的输出。',
+      extendedDescription: '此 ComfyUI 工作流使用 VAE。',
+    },
+  };
+
+  it('leaves clean content untouched when no review findings are supplied', () => {
+    const { prunedFieldCount } = pruneViolatingFields(cleanZh, english, 'zh', PRESERVE, {});
+    expect(prunedFieldCount).toBe(0);
+  });
+
+  it('prunes a field the reviewer flagged even though it passes every regex check', () => {
+    const { content, prunedFieldCount } = pruneViolatingFields(
+      cleanZh,
+      english,
+      'zh',
+      PRESERVE,
+      {},
+      [
+        {
+          shareId: 'wf1',
+          locale: 'zh',
+          field: 'description',
+          kind: 'glossary',
+          detail: 'ai-review/accuracy/critical: Claims a model the English never mentions.',
+        },
+      ]
+    );
+    expect(content.wf1).not.toHaveProperty('description'); // pruned on quality
+    expect(content.wf1.extendedDescription).toBeDefined(); // untouched
+    expect(prunedFieldCount).toBe(1);
+  });
+
+  it('ignores a finding about a field that is already absent, so it cannot inflate the systemic ratio', () => {
+    const { prunedFieldCount } = pruneViolatingFields(
+      { wf1: { description: '使用 ComfyUI 和 VAE 解码器运行以获得清晰的输出。' } },
+      english,
+      'zh',
+      PRESERVE,
+      {},
+      [
+        {
+          shareId: 'wf1',
+          locale: 'zh',
+          // Not present in the content above -> already English fallback.
+          field: 'extendedDescription',
+          kind: 'glossary',
+          detail: 'ai-review/fluency/major: unnatural phrasing',
+        },
+      ]
+    );
+    expect(prunedFieldCount).toBe(0);
+  });
+
+  it('counts a deterministic and a review violation on one field as a single prune', () => {
+    const zh: Record<string, Partial<WorkflowContent>> = {
+      wf1: { description: '运行以获得清晰的输出。' }, // drops ComfyUI + VAE
+    };
+    const { prunedFieldCount } = pruneViolatingFields(zh, english, 'zh', PRESERVE, {}, [
+      {
+        shareId: 'wf1',
+        locale: 'zh',
+        field: 'description',
+        kind: 'glossary',
+        detail: 'ai-review/accuracy/major: also inaccurate',
+      },
+    ]);
+    expect(prunedFieldCount).toBe(1);
+  });
+});
+
 describe('isEmptyTranslation (wholesale-failure guard)', () => {
   it('flags a run where every target locale is empty but English is populated', () => {
     expect(isEmptyTranslation(582, [0])).toBe(true); // the OpenAI-quota case: zh came back {}
