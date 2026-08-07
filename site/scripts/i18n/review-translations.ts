@@ -471,7 +471,12 @@ async function main(): Promise<void> {
       async (shareId, en, target) => {
         const response = await client.messages.create({
           model: MODEL,
-          max_tokens: 4096,
+          // Thinking is on by default on this model and its tokens count against
+          // max_tokens, so the budget covers reasoning AND the findings. At 4096
+          // the entries with the most to report starved their own answer and came
+          // back truncated — i.e. the worst translations were the ones that failed
+          // to review. Sized well clear of that; unused budget is not billed.
+          max_tokens: 16000,
           // Cached: the rubric + glossary are identical for every entry in this
           // locale, so ~600 calls read it back at a tenth of the write price.
           system: [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }],
@@ -482,12 +487,20 @@ async function main(): Promise<void> {
           messages: [{ role: 'user', content: buildUserPrompt(shareId, en, target) }],
         });
         // A refusal or a truncated answer is not a verdict — return null so the
-        // entry stays unreviewed rather than being recorded as clean.
+        // entry stays unreviewed rather than being recorded as clean. Log why:
+        // a silent null here is indistinguishable from a transient network blip,
+        // and these two causes need opposite responses (retry vs raise the budget).
         if (response.stop_reason === 'refusal' || response.stop_reason === 'max_tokens') {
+          console.warn(
+            `[i18n] review: ${shareId} unreviewed (stop_reason=${response.stop_reason})`
+          );
           return null;
         }
         const text = response.content.find((b) => b.type === 'text');
-        if (!text || text.type !== 'text') return null;
+        if (!text || text.type !== 'text') {
+          console.warn(`[i18n] review: ${shareId} unreviewed (no text block in response)`);
+          return null;
+        }
         return parseFindings(JSON.parse(text.text), target);
       }
     );
