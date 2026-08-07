@@ -167,7 +167,12 @@ python scripts/sync/sync_bundles.py
 npm run sync
 ```
 
-This step must be run before committing; CI will fail if the manifest/bundles are out of sync.
+This step must be run before committing, and the regenerated
+`packages/core/src/comfyui_workflow_templates_core/manifest.json` must be committed with your
+change. Two workflows enforce it against the **committed** manifest — the `Validate Manifests`
+job (`.github/workflows/validate-manifests.yml`) and the pre-sync check in
+`.github/workflows/build-test.yml` — both of which fail with a SHA256 mismatch if you skip it.
+Neither runs the sync first, so a stale manifest cannot pass by being silently regenerated.
 
 ### 8 — Add Entry to `index.json`
 
