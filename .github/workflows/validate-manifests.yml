@@ -1,5 +1,18 @@
 name: Validate Manifests
 
+# Validates the manifest **as committed**.
+#
+# This workflow deliberately does NOT run scripts/sync/sync_bundles.py before
+# validating. It used to, and that made the whole job tautological: the sync
+# rewrites manifest.json from whatever is on disk, so validate_manifests.py was
+# always handed a freshly generated manifest and could never observe drift.
+# https://github.com/Comfy-Org/workflow_templates/issues/1091 is what that blind
+# spot produced — 13 stale index sha256 values shipped on main for weeks.
+#
+# If this job fails with SHA256 mismatches, run:
+#   python scripts/sync/sync_bundles.py
+# and commit packages/core/src/comfyui_workflow_templates_core/manifest.json.
+
 on:
   pull_request:
     types: [opened, synchronize]
@@ -9,8 +22,10 @@ on:
       - 'packages/*/src/*/manifest.json'
       - 'packages/*/src/*/*.json'
       - 'scripts/validate/validate_manifests.py'
+      - 'scripts/validate/list_pip_excluded.py'
       - 'scripts/sync/sync_bundles.py'
       - 'scripts/sync/sync_blueprints.py'
+      - '.github/workflows/validate-manifests.yml'
   push:
     branches: [main]
     paths:
@@ -18,40 +33,48 @@ on:
       - 'blueprints/**'
       - 'packages/*/src/*/manifest.json'
       - 'packages/*/src/*/*.json'
+      - 'scripts/validate/validate_manifests.py'
+      - 'scripts/validate/list_pip_excluded.py'
+      - '.github/workflows/validate-manifests.yml'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-    
+
     steps:
+      # templates/ must be checked out in full, not just templates/*.json.
+      # validate_manifests.py hashes every asset the manifest references, and a
+      # missing .webp is indistinguishable from a deleted one — with a partial
+      # checkout the job would fail on files that are simply not there.
+      # The mirrored media under packages/media_*/ is not needed here (nothing
+      # in this job reads it), so only the two committed manifests are fetched.
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           sparse-checkout: |
-            templates/*.json
-            templates/logo/
+            templates/
             blueprints/
             bundles.json
             blueprints_bundles.json
             scripts/
-            packages/
+            packages/core/src/comfyui_workflow_templates_core/manifest.json
+            packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
-      
-      - name: Sync manifests first
+          python-version: '3.12'
+
+      - name: Validate committed manifest against committed template files
         run: |
-          python scripts/sync/sync_bundles.py
-          python scripts/sync/sync_blueprints.py
-          
-      - name: Validate manifest entries
-        run: |
-          cd ${{ github.workspace }}
-          python scripts/validate/validate_manifests.py
-      
+          echo "🔍 Validating packages/core/.../manifest.json as committed."
+          echo "   No sync is run first — stale sha256 entries must fail here."
+          if ! python scripts/validate/validate_manifests.py; then
+            echo "::error file=packages/core/src/comfyui_workflow_templates_core/manifest.json::Manifest is out of sync with templates/. Run 'python scripts/sync/sync_bundles.py' and commit the regenerated manifest."
+            exit 1
+          fi
+
       - name: Check for orphaned templates
         run: |
           echo "🔍 Checking for templates without manifest entries..."
