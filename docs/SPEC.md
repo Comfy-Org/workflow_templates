@@ -53,6 +53,7 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `size` | number | ❌ | Size of the template in bytes |
 | `vram` | number | ❌ | VRAM requirement in bytes |
 | `openSource` | boolean | ❌ | Whether the template is open source |
+| `isApp` | boolean | ❌ | Opens in App Mode rather than as a node graph. Derived from the workflow's own `extra.linearMode`; regenerate with `python scripts/sync/sync_is_app.py`. Omitted when false. Do not infer this from a `.app` filename, which is wrong in both directions |
 | `status` | string | ❌ | Lifecycle status: "active", "archived", "deprecated" |
 | `requiresCustomNodes` | array of strings | ❌ | Custom node package IDs from the Custom Node Registry |
 | `usage` | number | ❌ | Usage count |
