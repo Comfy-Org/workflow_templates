@@ -115,6 +115,26 @@
         }
       },
       {
+        "name": "api_seedance2_5_flf2v",
+        "title": "Seedance 2.5: FLF2V",
+        "task": "FLF2V",
+        "model": "Seedance 2.5",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a smooth video transition between a user-provided start frame and end frame with Seedance 2.5, which automatically interpolates the motion, camera movement, and visual evolution while locking both endpoints. Ideal for shot transitions, storyboard previz, and before-and-after scene showcases like empty-to-packed or day-to-night shifts.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "flf2v"],
+          "model_options": {
+            "ByteDance2FirstLastFrameNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
         "name": "video_ltx2_3_i2v",
         "title": "LTX-2.3: Image to Video",
         "task": "Image to Video",
@@ -169,22 +189,22 @@
         }
       },
       {
-        "name": "api_seedance2_0_mini_t2v",
-        "title": "Seedance 2.0 Mini: Text to Video",
-        "task": "Text to Video",
+        "name": "api_seedance2_0_flf2v",
+        "title": "Seedance2.0: First-Last-Frame to Video",
+        "task": "FLF2V",
         "model": "Seedance 2.0",
-        "freshness": "recent",
-        "usage": 285,
-        "recommend": "medium",
-        "description": "Generate cinematic videos from text prompts using Dreamina’s Seedance 2.0 Mini via API. This workflow takes only a text prompt and outputs a generated video with smooth motion and consistent character generation. Supports AI camera controls and real human identity verification. Ideal for AI filmmaking, branded content, and multi-shot storytelling.",
+        "freshness": "current",
+        "usage": 641,
+        "recommend": "high",
+        "description": "Provide the first and last frames of a video, and Seedance 2.0 generates a cinematic sequence interpolating between them. This workflow uses a third-party API and offers a choice between the standard or Fast variant for faster inference. The model produces smooth, film-like motion from the two keyframes.",
         "io": {
-          "inputs": ["text: Video prompt"],
-          "outputs": ["video: Generated video"]
+          "inputs": ["image×2: First and last frames to define the video sequence"],
+          "outputs": ["video: Generated video interpolating between the first and last frames"]
         },
         "capabilities": {
-          "workflow": ["api", "text-to-video"],
+          "workflow": ["api", "flf2v"],
           "model_options": {
-            "ByteDance2TextToVideoNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+            "ByteDance2FirstLastFrameNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
           }
         }
       },
@@ -205,6 +225,26 @@
           "workflow": ["api", "image-to-video", "reference-to-video"],
           "model_options": {
             "ByteDance2ReferenceNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_0_mini_t2v",
+        "title": "Seedance 2.0 Mini: Text to Video",
+        "task": "Text to Video",
+        "model": "Seedance 2.0",
+        "freshness": "recent",
+        "usage": 285,
+        "recommend": "medium",
+        "description": "Generate cinematic videos from text prompts using Dreamina’s Seedance 2.0 Mini via API. This workflow takes only a text prompt and outputs a generated video with smooth motion and consistent character generation. Supports AI camera controls and real human identity verification. Ideal for AI filmmaking, branded content, and multi-shot storytelling.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-video"],
+          "model_options": {
+            "ByteDance2TextToVideoNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
           }
         }
       },
@@ -249,22 +289,22 @@
         }
       },
       {
-        "name": "api_seedance2_0_flf2v",
-        "title": "Seedance2.0: First-Last-Frame to Video",
-        "task": "FLF2V",
-        "model": "Seedance 2.0",
-        "freshness": "current",
-        "usage": 641,
-        "recommend": "high",
-        "description": "Provide the first and last frames of a video, and Seedance 2.0 generates a cinematic sequence interpolating between them. This workflow uses a third-party API and offers a choice between the standard or Fast variant for faster inference. The model produces smooth, film-like motion from the two keyframes.",
+        "name": "api_minimax_h3_t2v",
+        "title": "MiniMax H3: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video directly from text using the MiniMax H3 model, producing a 5-15 second clip with native stereo audio. Ideal for rapid concept visualization, short-form social media content, and pre-visualization for film or advertising projects.",
         "io": {
-          "inputs": ["image×2: First and last frames to define the video sequence"],
-          "outputs": ["video: Generated video interpolating between the first and last frames"]
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
         },
         "capabilities": {
-          "workflow": ["api", "flf2v"],
+          "workflow": ["text-to-video", "api"],
           "model_options": {
-            "ByteDance2FirstLastFrameNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+            "MinimaxHailuo03TextToVideoNode": ["MiniMax H3"]
           }
         }
       },
@@ -340,6 +380,23 @@
         }
       },
       {
+        "name": "video_wan2_2_14B_i2v",
+        "title": "Wan 2.2 14B Image to Video",
+        "task": "Image to Video",
+        "model": "Wan",
+        "freshness": "established",
+        "usage": 1091,
+        "recommend": "top",
+        "description": "This workflow turns a static image into a video by following a text prompt’s motion or style cues, using Wan 2.2’s 14B-parameter model. It keeps the original image’s structure and appearance while generating coherent animation. Input is an image and a text description; output is an animated video.",
+        "io": {
+          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
+          "outputs": ["video: Animated video from the reference image"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video"]
+        }
+      },
+      {
         "name": "video_wan21_scail2_character_replacement",
         "title": "SCAIL-2: Character Replacement",
         "task": "Video Generation",
@@ -354,26 +411,6 @@
         },
         "capabilities": {
           "workflow": ["character-replacement"]
-        }
-      },
-      {
-        "name": "api_minimax_h3_t2v",
-        "title": "MiniMax H3: Text to Video",
-        "task": "Text to Video",
-        "model": "MiniMax H3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate video directly from text using the MiniMax H3 model, producing a 5-15 second clip with native stereo audio. Ideal for rapid concept visualization, short-form social media content, and pre-visualization for film or advertising projects.",
-        "io": {
-          "inputs": ["text: Video prompt"],
-          "outputs": ["video: Generated video"]
-        },
-        "capabilities": {
-          "workflow": ["text-to-video", "api"],
-          "model_options": {
-            "MinimaxHailuo03TextToVideoNode": ["MiniMax H3"]
-          }
         }
       },
       {
@@ -565,23 +602,6 @@
           "model_options": {
             "SyncLipSyncNode": ["sync-3"]
           }
-        }
-      },
-      {
-        "name": "video_wan2_2_14B_i2v",
-        "title": "Wan 2.2 14B Image to Video",
-        "task": "Image to Video",
-        "model": "Wan",
-        "freshness": "established",
-        "usage": 1091,
-        "recommend": "top",
-        "description": "This workflow turns a static image into a video by following a text prompt’s motion or style cues, using Wan 2.2’s 14B-parameter model. It keeps the original image’s structure and appearance while generating coherent animation. Input is an image and a text description; output is an animated video.",
-        "io": {
-          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
-          "outputs": ["video: Animated video from the reference image"]
-        },
-        "capabilities": {
-          "workflow": ["image-to-video"]
         }
       },
       {
