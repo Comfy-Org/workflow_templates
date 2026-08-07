@@ -365,8 +365,9 @@ export function summarize(state: ReviewState): {
   return { entries: Object.keys(state.entries).length, findings, bySeverity, byCategory };
 }
 
-export function reviewStatePath(locale: Locale): string {
-  return path.join(REVIEW_DIR, `${locale}.json`);
+/** `dir` is injectable so tests never touch the real, committed review directory. */
+export function reviewStatePath(locale: Locale, dir: string = REVIEW_DIR): string {
+  return path.join(dir, `${locale}.json`);
 }
 
 /**
@@ -377,8 +378,8 @@ export function reviewStatePath(locale: Locale): string {
  * would report NaN) or a non-array `findings` reach a `for…of` (which throws and
  * takes down the run). Both are avoidable by validating once, here.
  */
-export function loadReviewState(locale: Locale): ReviewState {
-  const state = readJson<ReviewState>(reviewStatePath(locale), {
+export function loadReviewState(locale: Locale, dir: string = REVIEW_DIR): ReviewState {
+  const state = readJson<ReviewState>(reviewStatePath(locale, dir), {
     promptVersion: PROMPT_VERSION,
     entries: {},
   });

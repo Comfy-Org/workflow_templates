@@ -1,6 +1,7 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import os from 'node:os';
 import {
   PROMPT_VERSION,
   buildSystemPrompt,
@@ -10,6 +11,7 @@ import {
   pruneOrphanedVerdicts,
   reviewViolations,
   loadReviewState,
+  reviewStatePath,
   parsePositiveInt,
   reviewLocale,
   sanitizeFindings,
@@ -461,24 +463,23 @@ describe('sanitizeFindings (stored state may be truncated or hand-edited)', () =
 });
 
 describe('loadReviewState (reads a committed, therefore corruptible, file)', () => {
-  const dir = path.join(process.cwd(), 'src', 'i18n', 'review');
-  const file = path.join(dir, 'zh.json');
-  const write = (data: unknown) => {
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(file, JSON.stringify(data));
-  };
-  afterEach(() =>
-    fs.rmSync(path.join(process.cwd(), 'src', 'i18n', 'review'), { recursive: true, force: true })
-  );
+  // A temp directory, never the real src/i18n/review: that path is committed by the
+  // pipeline, so a test that cleans it up would delete real review state.
+  let dir: string;
+  beforeEach(() => {
+    dir = fs.mkdtempSync(path.join(os.tmpdir(), 'i18n-review-'));
+  });
+  afterEach(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const write = (data: unknown) =>
+    fs.writeFileSync(path.join(dir, 'zh.json'), JSON.stringify(data));
 
   it('returns an empty state when the file is absent', () => {
-    expect(loadReviewState('zh')).toEqual({ promptVersion: PROMPT_VERSION, entries: {} });
+    expect(loadReviewState('zh', dir)).toEqual({ promptVersion: PROMPT_VERSION, entries: {} });
   });
 
   it('discards everything when the rubric version differs', () => {
-    // Verdicts from another rubric are not comparable to current ones.
     write({ promptVersion: PROMPT_VERSION + 1, entries: { wf1: { hash: 'h', findings: [] } } });
-    expect(loadReviewState('zh').entries).toEqual({});
+    expect(loadReviewState('zh', dir).entries).toEqual({});
   });
 
   it('drops malformed verdicts instead of throwing', () => {
@@ -491,7 +492,7 @@ describe('loadReviewState (reads a committed, therefore corruptible, file)', () 
         nullVerdict: null,
       },
     });
-    expect(Object.keys(loadReviewState('zh').entries)).toEqual(['good']);
+    expect(Object.keys(loadReviewState('zh', dir).entries)).toEqual(['good']);
   });
 
   it('strips findings with an unknown severity, which would report NaN in the summary', () => {
@@ -521,15 +522,20 @@ describe('loadReviewState (reads a committed, therefore corruptible, file)', () 
         },
       },
     });
-    const findings = loadReviewState('zh').entries.wf1!.findings;
+    const findings = loadReviewState('zh', dir).entries.wf1!.findings;
     expect(findings).toHaveLength(1);
     expect(findings[0]!.severity).toBe('minor');
-    expect(summarize(loadReviewState('zh')).bySeverity.minor).toBe(1);
+    expect(summarize(loadReviewState('zh', dir)).bySeverity.minor).toBe(1);
   });
 
   it('survives a truncated / unparseable file', () => {
-    fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(file, '{"promptVersion": 1, "entries": {');
-    expect(loadReviewState('zh').entries).toEqual({});
+    fs.writeFileSync(path.join(dir, 'zh.json'), '{"promptVersion": 1, "entries": {');
+    expect(loadReviewState('zh', dir).entries).toEqual({});
+  });
+
+  it('defaults to the real review directory when no dir is given', () => {
+    // Guards the injection itself: the default must still resolve under src/i18n/review.
+    expect(reviewStatePath('zh')).toContain(path.join('src', 'i18n', 'review'));
+    expect(reviewStatePath('zh', dir)).toBe(path.join(dir, 'zh.json'));
   });
 });
