@@ -10,6 +10,7 @@ import HubWorkflowCard from './HubWorkflowCard.vue';
 import BrowseToolbar from './BrowseToolbar.vue';
 import { useHubStore } from '@/composables/useHubStore';
 import { loadCatalog } from '@/lib/catalog';
+import { templatesInTab } from '@/lib/hub-tabs';
 import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 
 export type HubThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
@@ -106,21 +107,23 @@ watch(
   }
 );
 
-const facetSource = computed(() => props.facetTemplates ?? workingSet.value);
-
 const store = useHubStore();
 const displayCount = ref(30);
+
+// Counts deliberately ignore the badge selection so they stay stable while a
+// filter is applied, but they must still honour the tab. Counting the whole
+// catalogue here advertised totals the tab could never return: on Comfy Apps,
+// "Wan 37" produced an empty grid because none of those 37 are apps.
+const facetSource = computed(() =>
+  templatesInTab(props.facetTemplates ?? workingSet.value, store.activeTab.value)
+);
 
 // Reset pagination when the inputs that change the result set change.
 watch([workingSet, store.activeTab, store.sortBy], () => {
   displayCount.value = 30;
 });
 
-const tabbedTemplates = computed(() => {
-  if (store.activeTab.value === 'comfyApps') return workingSet.value.filter((t) => t.isApp);
-  if (store.activeTab.value === 'nodeGraphs') return workingSet.value.filter((t) => !t.isApp);
-  return workingSet.value;
-});
+const tabbedTemplates = computed(() => templatesInTab(workingSet.value, store.activeTab.value));
 
 const sortedTemplates = computed(() => {
   const result = [...tabbedTemplates.value];

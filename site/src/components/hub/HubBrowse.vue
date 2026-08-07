@@ -76,7 +76,9 @@ const filteredTemplates = computed(() => {
   <div class="pb-32">
     <!-- WorkflowGrid mounts the shared toolbar (tabs + filter + sort). It renders
          the badge-filtered set, but facet counts read the full `templates` so
-         they stay stable as filters are applied. -->
+         they stay stable as filters are applied. The grid narrows that to the
+         active tab before counting, so the counts still describe the tab you are
+         looking at. -->
     <WorkflowGrid
       :templates="filteredTemplates"
       :facet-templates="templates"
