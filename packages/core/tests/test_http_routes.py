@@ -7,22 +7,25 @@ from aiohttp.test_utils import make_mocked_request
 from comfyui_workflow_templates_core import iter_assets
 
 
+# Sampled templates per bundle. These ids must stay in sync with what the bundles
+# actually ship: archiving a template removes its assets, so an id left here after
+# an archive fails this test even though nothing is wrong with the handler.
 BUNDLE_SAMPLES = {
     "media-api": [
         "api_bfl_flux_1_kontext_max_image",
         "api_bfl_flux_1_kontext_multiple_images_input",
     ],
     "media-image": [
-        "01_get_started_text_to_image",
-        "02_qwen_Image_edit_subgraphed",
+        "3d_hunyuan3d-v2.1",
+        "3d_hunyuan3d_image_to_model",
     ],
     "media-other": [
-        "04_hunyuan_3d_2.1_subgraphed",
-        "05_audio_ace_step_1_t2a_song_subgraphed",
+        "3d_moge_panorama_to_mesh",
+        "3d_moge_perspective_to_mesh",
     ],
     "media-video": [
-        "03_video_wan2_2_14B_i2v_subgraphed",
         "hunyuan_video_text_to_video",
+        "api_google_gemini_omni_flash_i2v",
     ],
 }
 
