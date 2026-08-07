@@ -66,32 +66,38 @@ def workflow_is_app(templates_dir: Path, name: str) -> bool:
     return extra.get("linearMode") is True
 
 
-def collect_changes(
+def plan_changes(
     templates_dir: Path, categories: List[Dict[str, Any]]
-) -> List[Tuple[str, bool, bool]]:
-    """Return (name, current, desired) for every entry whose isApp is wrong."""
+) -> Tuple[List[Tuple[str, bool, bool]], Dict[int, bool]]:
+    """Read every workflow once and return the diff plus the desired values.
+
+    The desired value is keyed by `id()` of the template dict so the write pass
+    can reuse it. Reading the files twice (once to report, once to write) parsed
+    all 574 workflows twice on every run.
+    """
     changes: List[Tuple[str, bool, bool]] = []
+    desired_by_entry: Dict[int, bool] = {}
     for category in categories:
         for template in category.get("templates", []):
             name = template.get("name")
             if not name:
                 continue
             desired = workflow_is_app(templates_dir, name)
+            desired_by_entry[id(template)] = desired
             current = bool(template.get("isApp", False))
             if current != desired:
                 changes.append((name, current, desired))
-    return changes
+    return changes, desired_by_entry
 
 
-def apply_changes(categories: List[Dict[str, Any]], templates_dir: Path) -> int:
-    """Write isApp onto every entry. Returns the number of entries changed."""
+def apply_changes(categories: List[Dict[str, Any]], desired_by_entry: Dict[int, bool]) -> int:
+    """Write isApp onto every entry from the already-computed plan."""
     changed = 0
     for category in categories:
         for template in category.get("templates", []):
-            name = template.get("name")
-            if not name:
+            desired = desired_by_entry.get(id(template))
+            if desired is None:
                 continue
-            desired = workflow_is_app(templates_dir, name)
             current = bool(template.get("isApp", False))
             if desired:
                 # Only written when true, to keep the index diff small and match
@@ -99,10 +105,9 @@ def apply_changes(categories: List[Dict[str, Any]], templates_dir: Path) -> int:
                 if not current:
                     changed += 1
                 template["isApp"] = True
-            else:
-                if "isApp" in template:
-                    changed += 1
-                    del template["isApp"]
+            elif "isApp" in template:
+                changed += 1
+                del template["isApp"]
     return changed
 
 
@@ -159,7 +164,7 @@ def main() -> int:
     with index_path.open(encoding="utf-8") as handle:
         categories = json.load(handle)
 
-    changes = collect_changes(templates_dir, categories)
+    changes, desired_by_entry = plan_changes(templates_dir, categories)
 
     if args.check or args.dry_run:
         for name, current, desired in changes:
@@ -170,7 +175,7 @@ def main() -> int:
         print(f"{len(changes)} entr{'y' if len(changes) == 1 else 'ies'} out of date")
         return 1 if args.check else 0
 
-    changed = apply_changes(categories, templates_dir)
+    changed = apply_changes(categories, desired_by_entry)
     if changed == 0:
         print("index.json is up to date")
         return 0
