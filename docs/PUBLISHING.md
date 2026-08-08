@@ -165,6 +165,6 @@ The publish workflow includes **automatic recovery mode**:
 
 ## Related Documentation
 
-- [CLAUDE.md](../CLAUDE.md) - Repository overview
+- [AGENTS.md](../AGENTS.md) - Repository overview and agent instructions
 - [SPEC.md](SPEC.md) - Template specification
 - [I18N_GUIDE.md](I18N_GUIDE.md) - Translation workflow

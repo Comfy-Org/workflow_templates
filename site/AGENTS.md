@@ -230,6 +230,7 @@ When generating content, select appropriate template based on:
 - **Content template selection**: Automatically selects tutorial/showcase/comparison/breakthrough based on template metadata
 - **Tutorial context injection**: Matches templates to relevant docs.comfy.org tutorials for better AI context
 - **Quality validation**: Checks word count, step count, FAQ count, keyword presence, and meta description length
+- **Human overrides**: Edit `overrides/templates/{name}.json` and set `humanEdited: true` so the content survives AI regeneration (see the `/editing-site-content` skill)
 - **Smart caching with versioning**:
   - Cache manifest tracks template hash, prompt version hash, generation timestamp, and model used
   - Prompt changes automatically invalidate affected cache entries

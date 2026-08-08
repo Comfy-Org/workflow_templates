@@ -1,5 +1,9 @@
 # AGENTS.md
 
+Monorepo for **ComfyUI workflow templates**: the same template data ships as
+Python/PyPI packages AND powers the public Astro hub site at templates.comfy.org.
+`templates/` is the source of truth for both.
+
 ## Build & Run Commands
 - `npm run sync` — Sync template bundles (run after editing templates/ or bundles.json)
 - `npm run sync:templates` / `npm run i18n` — Hub i18n: `index.json` → `index.{locale}.json` (NOT MCP)
@@ -45,6 +49,11 @@ The script moves the workflow JSON and thumbnails to `archived/`, removes the en
 - `packages/` — Python packages: core (loader + manifest), json (all workflow JSON), media_* (legacy frozen assets), media_assets_* (new assets)
 - `site/` — Astro static site (independently managed; see below)
 - `scripts/` — Python validation/sync scripts for CI and local dev (see `scripts/README.md`)
+- `blueprints/` + `blueprints_bundles.json` — reusable subgraph blueprint definitions (spec: `docs/BLUEPRINTS.md`)
+- `bundles.json` — maps template names → Python package bundles
+- `docs/` — specs and guides; `.claude/skills/` — Claude skill definitions; root `pyproject.toml` holds the PyPI version
+
+**Data flow:** `templates/` → `scripts/sync/sync_bundles.py` → `packages/media_*`; and `templates/` → `site/scripts/sync-templates.ts` → site content → AI enrichment → `astro build` → Vercel.
 
 ## Root `scripts/` layout (Python)
 
@@ -123,6 +132,43 @@ For full site-specific instructions, see `site/AGENTS.md`.
 - Each `client:load` Vue component is a separate Vue app — `provide`/`inject`/`$emit` don't cross islands
 - Cross-island state: shared composables in `site/src/composables/` with module-level `ref()` singletons
 - Astro→Vue bridge: Vue island attaches `addEventListener` to Astro DOM elements by ID in `onMounted()` — no `<script>` tags with `dispatchEvent` in `.astro` files
+
+## Template Structure
+
+Formal schema: [`docs/SPEC.md`](docs/SPEC.md). Quick reference:
+
+- `templates/index.json` — English manifest. Per entry: `name` (must match the workflow JSON filename, snake_case), `title`, `description`, `mediaType` (`image`|`video`|`audio`|`3d`), `mediaSubtype`, `thumbnailVariant`, `tags`, `models`, `logos`, `date`, `usage`, `size`, `vram`, `searchRank`, `tutorialUrl`, `openSource`, `requiresCustomNodes`, `io`.
+- Workflow JSON — standard ComfyUI format; embeds model metadata in `properties.models[]` (download URL, SHA256, target dir) and pins nodes via `properties.cnr_id` + `properties.ver`.
+- Thumbnails — `{name}-1.webp` (primary), `{name}-2.webp` (comparison); WebP, target <1MB, 512×512 or 768×768.
+- Bundle assignment lives in `bundles.json`; the legacy `media-*` bundles are frozen and new assets go to `media-assets-*` — see [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md).
+
+## Internationalization
+
+11 languages: en (default), zh, zh-TW, ja, ko, es, fr, ru, tr, ar, pt-BR.
+
+- **Template strings:** master `templates/index.json` → locales `templates/index.{locale}.json`; tracking `scripts/data/i18n.json`; sync with `npm run i18n` (or `python scripts/sync/sync_data.py --templates-dir templates`). Full workflow: [`docs/I18N_GUIDE.md`](docs/I18N_GUIDE.md).
+- **Site i18n** (URL patterns, hreflang, UI strings): see `site/AGENTS.md`.
+
+## Claude Skills
+
+- `/adding-templates` — add new workflow templates (full workflow)
+- `/managing-bundles` — move templates between bundles, reorder
+- `/managing-thumbnails` — add/replace/audit thumbnails
+- `/managing-mcp-index` — sync + AI-enhance `index.mcp.json` for MCP tools
+- `/managing-translations` — sync/check translations across the 11 languages
+- `/editing-site-content` — edit site page content via overrides
+- `/regenerating-ai-content` — regenerate AI descriptions, manage cache
+
+## CI/CD
+
+- **Template changes** (`templates/`) trigger `validate-templates.yml`, `validate-blueprints.yml`, `validate-manifests.yml`, and `link-checker.yml`.
+- **Site changes** (`site/**`) trigger the site workflows (lint, e2e, visual regression, SEO audit, Lighthouse, deploy) — see `site/AGENTS.md`.
+
+## Reference Docs
+
+- `docs/SPEC.md` — template JSON schema · `docs/BLUEPRINTS.md` — subgraph blueprint spec · `docs/I18N_GUIDE.md` — translation workflow · `docs/PUBLISHING.md` — publishing
+- `scripts/README.md` — scripts index + CI mapping · `scripts/docs/frozen_bundles.md` — frozen bundles · `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md` — MCP pipeline
+- `site/AGENTS.md` — site instructions; `site/docs/` — site PRD/TDD/design-integration guide
 
 ## Code Style
 - **Python**: Ruff linter, line-length 100, target py312. Select rules: E, F
