@@ -346,6 +346,10 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
+    // Face-swap workflows (Video Face Swap bed989744195, Face Swap c2aae816fe63)
+    // would fit this page's intent, but the keyword sheet gates them pending the
+    // consent flow, celebrity-preset block, filters and C2PA. They stay off the
+    // site until that ships; the governance denylist already blocks the terms.
     // Model matches that aren't character replacement: a comedy inflation
     // effect and a pose-control tutorial.
     excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
@@ -432,6 +436,30 @@ export const SEO_PAGES: SeoPageDef[] = [
     ],
   },
   {
+    slug: 'ai-image-extender',
+    title: 'AI Image Extender | Comfy Workflows',
+    h1: 'AI Image Extender Workflows',
+    // "image extender" is the searched term; outpainting is what practitioners
+    // call it, so both vocabularies ride the same page.
+    keywords: {
+      primary: 'ai image extender',
+      secondary: [
+        'image extender',
+        'ai outpainting',
+        'extend image background',
+        'expand image ai',
+        'change image aspect ratio',
+        'uncrop photo',
+      ],
+    },
+    // The Outpainting tag is on-topic end to end. Video outpainting rides along
+    // for the same reason ai-image-upscaler carries Video Upscale: same
+    // capability, and searchers land on the image term for both.
+    filters: { tags: ['Outpainting'] },
+    appShareId: 'f8cf4feac2e9',
+    pins: [{ shareId: 'f8cf4feac2e9' }], // Expand Image (the App the CTA opens)
+  },
+  {
     slug: 'ai-hairstyle-changer',
     title: 'AI Hairstyle Changer | Comfy Workflows',
     h1: 'AI Hairstyle Changer Workflows',
@@ -450,6 +478,8 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
+    // Clothes Changer (8ce4aa90e8af) shares the try-on intent, but the keyword
+    // sheet gates it to outfit/try-on framing only, so it waits for sign-off.
     pins: [{ shareId: 'fffa07892f17' }], // Hairstyle Changer
   },
   {
