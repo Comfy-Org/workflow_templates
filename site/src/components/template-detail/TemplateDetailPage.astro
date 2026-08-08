@@ -13,6 +13,7 @@ import { slugify } from '../../lib/slugify';
 import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
+import { isVideoFile } from '../../lib/media-utils';
 import { featureFlags } from '../../config/featureFlags';
 import { buttonVariants } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -51,6 +52,11 @@ const authorName = profile?.display_name || data.username || 'ComfyUI';
 const authorAvatarUrl = profile?.avatar_url || null;
 const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
+// Video previews get their intrinsic aspect ratio instead of being force-fit into
+// the landscape media-frame box below — object-cover on a portrait video in a
+// fixed aspect-4/3 box crops most of the frame, which reads as broken/incomplete.
+const isVideoPreview =
+  data.mediaType === 'video' || (thumbnails[0] ? isVideoFile(thumbnails[0]) : false);
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const isApiTemplate = data.tags?.includes('API') ?? false;
 const cloudTemplateId = data.shareId || data.name;
@@ -245,13 +251,19 @@ function formatRelativeDate(dateStr: string): string {
 
       {
         thumbnails.length > 0 && (
-          <div class="order-1 lg:order-2 lg:col-start-2 media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg">
+          <div
+            class={cn(
+              'order-1 lg:order-2 lg:col-start-2 media-frame relative w-full max-w-full overflow-hidden rounded-lg',
+              isVideoPreview ? 'media-frame--natural h-auto' : 'aspect-4/3'
+            )}
+          >
             <ThumbnailDisplay
               thumbnails={thumbnails}
               title={data.title || data.name}
               variant={data.thumbnailVariant}
               mediaSubtype={data.mediaSubtype}
-              class="absolute inset-0 h-full w-full"
+              class={isVideoPreview ? 'w-full' : 'absolute inset-0 h-full w-full'}
+              naturalAspect={isVideoPreview}
               loading="eager"
               fetchpriority="high"
               sizes="(min-width: 1024px) 65vw, 100vw"
@@ -367,13 +379,13 @@ function formatRelativeDate(dateStr: string): string {
 </script>
 
 <style>
-  .media-frame :global(.video-thumb),
-  .media-frame :global(.video-fallback-wrapper) {
+  .media-frame:not(.media-frame--natural) :global(.video-thumb),
+  .media-frame:not(.media-frame--natural) :global(.video-fallback-wrapper) {
     width: 100%;
     height: 100%;
   }
-  .media-frame :global(img),
-  .media-frame :global(video) {
+  .media-frame:not(.media-frame--natural) :global(img),
+  .media-frame:not(.media-frame--natural) :global(video) {
     width: 100%;
     height: 100%;
     object-fit: cover;
