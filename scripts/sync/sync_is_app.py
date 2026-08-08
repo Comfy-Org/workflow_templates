@@ -41,6 +41,10 @@ from paths import TEMPLATES_DIR  # noqa: E402
 
 INDEX_FILENAME = "index.json"
 
+# Distinguishes "no isApp key" from "isApp: null" when reporting. `.get("isApp")`
+# returns None for both, which would print an explicit null as "absent".
+ABSENT = object()
+
 
 def workflow_is_app(templates_dir: Path, name: str) -> bool:
     """Whether the workflow file for `name` opens in App Mode.
@@ -97,7 +101,9 @@ def plan_changes(
 
     Each change carries the raw stored value rather than a coerced boolean, so a
     stale `false` or an invalid `"yes"` is visible in the report instead of being
-    flattened into the same output as an absent field.
+    flattened into the same output as an absent field. A missing key reports as
+    `ABSENT` rather than None, so an explicit `isApp: null` is not disguised as
+    an absent one.
     """
     changes: List[Tuple[str, Any, bool]] = []
     desired_by_entry: Dict[int, bool] = {}
@@ -109,7 +115,7 @@ def plan_changes(
             desired = workflow_is_app(templates_dir, name)
             desired_by_entry[id(template)] = desired
             if not entry_is_canonical(template, desired):
-                changes.append((name, template.get("isApp"), desired))
+                changes.append((name, template.get("isApp", ABSENT), desired))
     return changes, desired_by_entry
 
 
@@ -188,7 +194,7 @@ def main() -> int:
 
     if args.check or args.dry_run:
         for name, current, desired in changes:
-            stored = "absent" if current is None else json.dumps(current)
+            stored = "absent" if current is ABSENT else json.dumps(current)
             print(f"  {name}: isApp {stored} -> {desired}")
         if not changes:
             print("index.json is up to date")

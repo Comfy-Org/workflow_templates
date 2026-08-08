@@ -74,6 +74,8 @@ def test_workflow_is_app_tolerates_unreadable_json(tmp_path):
         ({"isApp": "yes"}, True, False),  # truthy non-boolean is never canonical
         ({"isApp": "yes"}, False, False),
         ({"isApp": 1}, True, False),
+        ({"isApp": None}, False, False),  # an explicit null is present, so not absent
+        ({"isApp": None}, True, False),
     ],
 )
 def test_entry_is_canonical(stored, desired, canonical):
@@ -179,3 +181,26 @@ def test_check_passes_on_a_canonical_index(tmp_path, monkeypatch):
 
 def test_check_reports_a_missing_index(tmp_path, monkeypatch):
     assert _run_check(monkeypatch, tmp_path) == 1
+
+
+@pytest.mark.parametrize(
+    "stored,reported",
+    [
+        ({"name": "demo"}, "absent"),
+        ({"name": "demo", "isApp": None}, "null"),
+        ({"name": "demo", "isApp": False}, "false"),
+        ({"name": "demo", "isApp": "yes"}, '"yes"'),
+    ],
+)
+def test_check_reports_the_stored_value_as_written(tmp_path, monkeypatch, capsys, stored, reported):
+    """An explicit null must not be reported as an absent key.
+
+    Both read back as None through `.get`, so the report distinguishes them with
+    a sentinel. Getting this wrong tells someone reading a dry run that a key
+    they can see in the file is not there.
+    """
+    _write_workflow(tmp_path, "demo", True)
+    (tmp_path / "index.json").write_text(json.dumps(_categories(stored)), encoding="utf-8")
+
+    assert _run_check(monkeypatch, tmp_path) == 1
+    assert f"demo: isApp {reported} -> True" in capsys.readouterr().out
