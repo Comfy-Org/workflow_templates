@@ -66,16 +66,40 @@ def workflow_is_app(templates_dir: Path, name: str) -> bool:
     return extra.get("linearMode") is True
 
 
+def entry_is_canonical(template: Dict[str, Any], desired: bool) -> bool:
+    """Whether the entry already stores `desired` in its canonical form.
+
+    Canonical is `isApp: true` present for an App and the key absent otherwise,
+    so the index diff stays small and matches how the other optional booleans
+    here behave. An explicit `isApp: false` and any non-boolean value are both
+    non-canonical and count as out of date.
+
+    `plan_changes` and `apply_changes` both decide through this. When they read
+    the stored field independently they can disagree: `bool(...)` accepted an
+    explicit `isApp: false`, so `--check` reported the index clean while the
+    write pass would still have deleted the field, and a truthy non-boolean such
+    as `"yes"` was left in place because the write pass counted no change and
+    returned before writing.
+    """
+    if desired:
+        return template.get("isApp") is True
+    return "isApp" not in template
+
+
 def plan_changes(
     templates_dir: Path, categories: List[Dict[str, Any]]
-) -> Tuple[List[Tuple[str, bool, bool]], Dict[int, bool]]:
+) -> Tuple[List[Tuple[str, Any, bool]], Dict[int, bool]]:
     """Read every workflow once and return the diff plus the desired values.
 
     The desired value is keyed by `id()` of the template dict so the write pass
     can reuse it. Reading the files twice (once to report, once to write) parsed
     all 574 workflows twice on every run.
+
+    Each change carries the raw stored value rather than a coerced boolean, so a
+    stale `false` or an invalid `"yes"` is visible in the report instead of being
+    flattened into the same output as an absent field.
     """
-    changes: List[Tuple[str, bool, bool]] = []
+    changes: List[Tuple[str, Any, bool]] = []
     desired_by_entry: Dict[int, bool] = {}
     for category in categories:
         for template in category.get("templates", []):
@@ -84,9 +108,8 @@ def plan_changes(
                 continue
             desired = workflow_is_app(templates_dir, name)
             desired_by_entry[id(template)] = desired
-            current = bool(template.get("isApp", False))
-            if current != desired:
-                changes.append((name, current, desired))
+            if not entry_is_canonical(template, desired):
+                changes.append((name, template.get("isApp"), desired))
     return changes, desired_by_entry
 
 
@@ -98,15 +121,12 @@ def apply_changes(categories: List[Dict[str, Any]], desired_by_entry: Dict[int, 
             desired = desired_by_entry.get(id(template))
             if desired is None:
                 continue
-            current = bool(template.get("isApp", False))
+            if entry_is_canonical(template, desired):
+                continue
+            changed += 1
             if desired:
-                # Only written when true, to keep the index diff small and match
-                # how the other optional booleans here behave.
-                if not current:
-                    changed += 1
                 template["isApp"] = True
-            elif "isApp" in template:
-                changed += 1
+            else:
                 del template["isApp"]
     return changed
 
@@ -168,7 +188,8 @@ def main() -> int:
 
     if args.check or args.dry_run:
         for name, current, desired in changes:
-            print(f"  {name}: isApp {current} -> {desired}")
+            stored = "absent" if current is None else json.dumps(current)
+            print(f"  {name}: isApp {stored} -> {desired}")
         if not changes:
             print("index.json is up to date")
             return 0
