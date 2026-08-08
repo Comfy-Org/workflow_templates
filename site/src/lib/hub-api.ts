@@ -7,12 +7,11 @@
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
-import { applyRanking, fetchRankingMap, type RankingMap } from './ranking';
+import { applyRanking, fetchRankingMap, readEnv, type RankingMap } from './ranking';
 
-const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(
-  /\/$/,
-  ''
-);
+// readEnv, not import.meta.env directly: `scripts/` runs this module under plain
+// Node, where import.meta.env is undefined and a direct read throws.
+const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(/\/$/, '');
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
@@ -261,7 +260,7 @@ export async function getProfile(username: string): Promise<HubProfile> {
 
 let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
 
-const APPROVED_ONLY = import.meta.env.PUBLIC_APPROVED_ONLY === 'true';
+const APPROVED_ONLY = readEnv('PUBLIC_APPROVED_ONLY') === 'true';
 
 /** All status values — used when preview builds need unfiltered results. */
 const ALL_STATUSES: WorkflowStatus[] = ['pending', 'approved', 'rejected', 'deprecated'];
@@ -559,7 +558,7 @@ export async function loadSerializedTemplates(
     const entries = await listWorkflowIndex();
     return entries.map((e) => serializeIndexEntry(e, profiles, rankingMap));
   } catch (err) {
-    if (import.meta.env.PUBLIC_HUB_API_URL) {
+    if (readEnv('PUBLIC_HUB_API_URL')) {
       throw new Error(`Hub API failed during build: ${err}`);
     }
     console.warn('Hub API error, falling back to content collection:', err);
