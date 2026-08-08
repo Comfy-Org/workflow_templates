@@ -14,10 +14,11 @@ import { absoluteUrl, SITE_NAME } from '../../config/site';
 import { resolveAbsoluteThumbnail } from '../../lib/routes';
 import { isVideoFile } from '../../lib/media-utils';
 import {
-  buildCollectionPageJsonLd,
-  buildWorkflowBreadcrumb,
-  serializeJsonLdForScript,
+  buildSeoGraphJsonLd,
+  type StructuredDataAbout,
+  type StructuredDataMention,
 } from '../../lib/structured-data';
+import { t } from '../../i18n/ui';
 
 interface Props {
   locale: Locale;
@@ -27,9 +28,14 @@ interface Props {
   heading: string;
   description: string;
   cards: SeoPageCard[];
+  /** Optional name for the ItemList entity (e.g. "Use Case Categories") */
+  itemListName?: string;
+  about?: StructuredDataAbout;
+  mentions?: StructuredDataMention;
 }
 
-const { locale, basePath, heading, description, cards } = Astro.props;
+const { locale, basePath, heading, description, cards, itemListName, about, mentions } =
+  Astro.props;
 
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
 const name = `${heading} | ${SITE_NAME}`;
@@ -42,10 +48,28 @@ const items = cards.map((card) => ({
     card.thumbnail && isVideoFile(card.thumbnail)
       ? undefined
       : resolveAbsoluteThumbnail(card.thumbnail),
+  itemType: card.itemType || 'CollectionPage',
+  description: `${card.count} ${t(card.count === 1 ? 'template.countOne' : 'template.count', locale)}`,
 }));
 
-const structuredData = buildCollectionPageJsonLd({ name, description, url: canonicalUrl, items });
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: heading });
+const structuredData = buildSeoGraphJsonLd({
+  name: heading,
+  description,
+  url: canonicalUrl,
+  inLanguage: locale,
+  breadcrumbItems: [
+    { name: t('breadcrumb.home', locale), item: absoluteUrl(localizeUrl('/', locale)) },
+    {
+      name: t('breadcrumb.workflows', locale),
+      item: absoluteUrl(localizeUrl('/workflows/', locale)),
+    },
+    { name: heading },
+  ],
+  items,
+  itemListName: itemListName || heading,
+  about,
+  mentions,
+});
 ---
 
 <BaseLayout
@@ -66,12 +90,6 @@ const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: heading
 
     <IndexCard cards={cards} locale={locale} />
   </div>
-
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
 
   <Fragment slot="footer">
     <SiteFooter />

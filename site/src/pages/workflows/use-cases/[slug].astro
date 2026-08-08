@@ -38,14 +38,7 @@ import { buildUseCasePageMeta, isUseCasePageIndexable } from '../../../lib/workf
 import { assertNoOrphanedContent } from '../../../lib/workflow-pages/landing-content';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
 import { resolveRailImages } from '../../../lib/workflow-pages/card-images';
-import {
-  buildCollectionPageJsonLd,
-  buildWorkflowBreadcrumb,
-  buildFaqJsonLd,
-  buildHowToJsonLd,
-  buildSoftwareApplicationJsonLd,
-  serializeJsonLdForScript,
-} from '../../../lib/structured-data';
+import { buildSeoGraphJsonLd } from '../../../lib/structured-data';
 
 export async function getStaticPaths() {
   const catalog = await loadSerializedTemplates(() => getCollection('templates'));
@@ -124,43 +117,35 @@ const breadcrumbTrail = [
   { label: t('template.useCases', locale), href: useCasesIndexPath(locale) },
 ];
 
-const structuredData = buildCollectionPageJsonLd({
-  name: title,
-  description,
-  url: canonicalUrl,
-  items: noindex ? undefined : buildTemplateItemListEntries(templates, locale),
-});
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
-  {
-    name: t('breadcrumb.workflows', locale),
-    item: absoluteUrl(localizeUrl('/workflows/', locale)),
-  },
-  { name: t('template.useCases', locale), item: useCasesUrl },
-]);
-// Gate on rich content like the model page, so a noindex/thin page never ships FAQ rich-results.
-const faqStructuredData = qualityContent ? buildFaqJsonLd(qualityContent.faqItems) : null;
-
-const howToStructuredData = qualityContent
-  ? buildHowToJsonLd({
-      name: `How to create ${titleCaseKeyword(keyword)} with ComfyUI`,
-      steps: qualityContent.howToUse,
-      description: subheading,
-    })
-  : null;
-const softwareAppStructuredData = qualityContent
-  ? buildSoftwareApplicationJsonLd({
-      name: h1,
+const structuredData = noindex
+  ? undefined
+  : buildSeoGraphJsonLd({
+      name: title,
       description,
-      featureList: qualityContent.styles?.map((style) => style.title),
-    })
-  : null;
-
-const jsonLdBlocks = [
-  breadcrumbStructuredData,
-  faqStructuredData,
-  howToStructuredData,
-  softwareAppStructuredData,
-].filter(Boolean);
+      url: canonicalUrl,
+      inLanguage: locale,
+      breadcrumbItems: [
+        { name: t('breadcrumb.home', locale), item: absoluteUrl(localizeUrl('/', locale)) },
+        {
+          name: t('breadcrumb.workflows', locale),
+          item: absoluteUrl(localizeUrl('/workflows/', locale)),
+        },
+        { name: t('template.useCases', locale), item: useCasesUrl },
+        { name: h1 },
+      ],
+      items: buildTemplateItemListEntries(templates, locale),
+      faqItems: qualityContent?.faqItems,
+      howTo:
+        qualityContent && qualityContent.howToUse?.length && locale === 'en'
+          ? {
+              name: `How to create ${titleCaseKeyword(keyword)} with ComfyUI`,
+              steps: qualityContent.howToUse,
+              description: subheading,
+            }
+          : undefined,
+      about: qualityContent?.about,
+      mentions: qualityContent?.mentions,
+    });
 
 const workflowsMeta = (count: number): string =>
   `${count} ${t(count === 1 ? 'useCase.workflowsCountOne' : 'useCase.workflowsCount', locale)}`;
@@ -279,12 +264,6 @@ const relatedCards = resolveRailImages(
 
     <ClosingCta locale={locale} href={footerCtaUrl} analytics={{ useCase: def.slug }} />
   </article>
-
-  {
-    jsonLdBlocks.map((data) => (
-      <script is:inline type="application/ld+json" set:html={serializeJsonLdForScript(data)} />
-    ))
-  }
 
   <Fragment slot="footer">
     <SiteFooter />
