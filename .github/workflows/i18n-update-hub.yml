@@ -125,6 +125,10 @@ jobs:
         continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Repo variable, so the translation model can be changed (and reverted)
+          # without a code change. Unset falls back to the model we have actually
+          # run all ten locales through — see site/.i18nrc.cjs.
+          HUB_I18N_MODEL: ${{ vars.HUB_I18N_MODEL }}
         run: |
           set -uo pipefail
           for loc in $TRANSLATE_LOCALES; do
@@ -148,6 +152,25 @@ jobs:
         if: always()
         working-directory: site
         run: pnpm i18n:restore
+
+      # Judgement layer. The deterministic checks below answer "did the model break
+      # a rule we wrote down"; they cannot answer "is this good Korean", which is
+      # what native reviewers actually flagged (untracked brand names, statements the
+      # English never made, poor fluency, wording wrong for its place on the page).
+      # Findings are stored per locale and the critical/major ones are picked up by
+      # the enforce step, so a bad field falls back to English on a non-indexable
+      # page. Runs after restore so it reads the real terms, not sentinels.
+      #
+      # continue-on-error + an in-script skip when ANTHROPIC_API_KEY is absent: the
+      # reviewer must never be able to break the translation pipeline. Without the
+      # secret, or on an API outage, this degrades to exactly the previous behaviour.
+      - name: AI translation review
+        if: always()
+        continue-on-error: true
+        working-directory: site
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: pnpm i18n:review
 
       # always(): prune before validate even after a tolerated translate failure.
       # The model preserves brand names only probabilistically, so a small tail of

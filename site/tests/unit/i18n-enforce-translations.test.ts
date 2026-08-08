@@ -1,5 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { pruneViolatingFields, isEmptyTranslation } from '../../scripts/i18n/enforce-translations';
+import { describe, expect, it, vi } from 'vitest';
+import {
+  DEFAULT_MAX_PRUNE_FRACTION,
+  isEmptyTranslation,
+  parsePruneFraction,
+  pruneViolatingFields,
+} from '../../scripts/i18n/enforce-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 
 const PRESERVE = ['ComfyUI', 'VAE'];
@@ -83,6 +88,114 @@ describe('pruneViolatingFields', () => {
     );
     expect(fieldsInspected).toBe(2);
     expect(prunedFieldCount).toBe(1); // 50% -> main() would flag systemic at this scale
+  });
+});
+
+describe('pruneViolatingFields with AI-review findings', () => {
+  // A translation that passes every deterministic check but is bad on quality —
+  // the exact case the reviewer exists for. Deterministically it looks fine.
+  const cleanZh: Record<string, Partial<WorkflowContent>> = {
+    wf1: {
+      description: '使用 ComfyUI 和 VAE 解码器运行以获得清晰的输出。',
+      extendedDescription: '此 ComfyUI 工作流使用 VAE。',
+    },
+  };
+
+  it('leaves clean content untouched when no review findings are supplied', () => {
+    const { prunedFieldCount } = pruneViolatingFields(cleanZh, english, 'zh', PRESERVE, {});
+    expect(prunedFieldCount).toBe(0);
+  });
+
+  it('prunes a field the reviewer flagged even though it passes every regex check', () => {
+    const { content, prunedFieldCount } = pruneViolatingFields(
+      cleanZh,
+      english,
+      'zh',
+      PRESERVE,
+      {},
+      [
+        {
+          shareId: 'wf1',
+          locale: 'zh',
+          field: 'description',
+          kind: 'glossary',
+          detail: 'ai-review/accuracy/critical: Claims a model the English never mentions.',
+        },
+      ]
+    );
+    expect(content.wf1).not.toHaveProperty('description'); // pruned on quality
+    expect(content.wf1.extendedDescription).toBeDefined(); // untouched
+    expect(prunedFieldCount).toBe(1);
+  });
+
+  it('ignores a finding about a field that is already absent, so it cannot inflate the systemic ratio', () => {
+    const { prunedFieldCount } = pruneViolatingFields(
+      { wf1: { description: '使用 ComfyUI 和 VAE 解码器运行以获得清晰的输出。' } },
+      english,
+      'zh',
+      PRESERVE,
+      {},
+      [
+        {
+          shareId: 'wf1',
+          locale: 'zh',
+          // Not present in the content above -> already English fallback.
+          field: 'extendedDescription',
+          kind: 'glossary',
+          detail: 'ai-review/fluency/major: unnatural phrasing',
+        },
+      ]
+    );
+    expect(prunedFieldCount).toBe(0);
+  });
+
+  it('counts a deterministic and a review violation on one field as a single prune', () => {
+    const zh: Record<string, Partial<WorkflowContent>> = {
+      wf1: { description: '运行以获得清晰的输出。' }, // drops ComfyUI + VAE
+    };
+    const { prunedFieldCount } = pruneViolatingFields(zh, english, 'zh', PRESERVE, {}, [
+      {
+        shareId: 'wf1',
+        locale: 'zh',
+        field: 'description',
+        kind: 'glossary',
+        detail: 'ai-review/accuracy/major: also inaccurate',
+      },
+    ]);
+    expect(prunedFieldCount).toBe(1);
+  });
+});
+
+describe('parsePruneFraction (systemic-threshold config)', () => {
+  it('uses the default when the variable is unset or blank', () => {
+    expect(parsePruneFraction(undefined)).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    // Blank would become 0 under a bare Number(), making EVERY prune systemic so
+    // the build could never pass.
+    expect(parsePruneFraction('')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    expect(parsePruneFraction('   ')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+  });
+
+  it('falls back on a non-numeric value instead of silently disabling the guard', () => {
+    // Number('abc') is NaN, and `fraction > NaN` is always false — the guard would
+    // stop guarding without a word. This is the bug being fixed.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(parsePruneFraction('abc')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    expect(parsePruneFraction('O.3')).toBe(DEFAULT_MAX_PRUNE_FRACTION); // letter O typo
+    expect(warn).toHaveBeenCalled(); // and it says so, rather than failing silently
+    warn.mockRestore();
+  });
+
+  it('rejects out-of-range fractions', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(parsePruneFraction('-0.1')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    expect(parsePruneFraction('1.5')).toBe(DEFAULT_MAX_PRUNE_FRACTION);
+    warn.mockRestore();
+  });
+
+  it('honours a valid override, including the permissive extremes', () => {
+    expect(parsePruneFraction('0.3')).toBe(0.3);
+    expect(parsePruneFraction('0')).toBe(0); // deliberately strict: any prune is systemic
+    expect(parsePruneFraction('1')).toBe(1); // deliberately permissive: never systemic
   });
 });
 

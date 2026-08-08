@@ -75,6 +75,22 @@ export const PRESERVE_TERMS: string[] = [
   'Nano Banana Pro',
   'Nano Banana',
   'Hunyuan3D',
+  'ACE-Step',
+  'Dall-E',
+  // Variant names whose parent family is already listed above. Listing only the
+  // family leaves the rest of the name exposed: "Wan" was protected inside
+  // "Wan 2.2 5B Fun Inpaint" while "Fun" was not, and zh rendered it 趣味
+  // ("playful"), turning a product name into an adjective. Likewise
+  // "Qwen-Image" protected the head of "Qwen-Image-Layered" and left "Layered"
+  // to be translated.
+  //
+  // "Fun" is deliberately listed bare rather than as each variant
+  // (Fun Inpaint / Fun Inp / Fun Control / Fun Camera Control / Fun Union):
+  // every one of its 38 occurrences in the English content is a model name and
+  // none is the ordinary adjective, and matching is case-sensitive, so lowercase
+  // "fun" in prose is untouched.
+  'Fun',
+  'Qwen-Image-Layered',
 ];
 
 /** Longest glossary term to harvest from UI strings (skip full sentences). */

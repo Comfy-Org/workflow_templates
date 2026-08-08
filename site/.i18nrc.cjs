@@ -73,7 +73,13 @@ Tone: direct, factual, creator-first. The human directs the model; never phrase 
 Chinese: for 'zh' use ONLY Simplified Chinese characters; for 'zh-TW' use ONLY Traditional Chinese with Taiwan terminology. Never mix Simplified and Traditional within one locale.`;
 
 module.exports = defineConfig({
-  modelName: 'gpt-4.1',
+  // Translation model. Overridable by env so the model can be changed from a repo
+  // variable without a code change — a wrong model id fails every translation run,
+  // so being able to switch back instantly matters more than hardcoding a newer
+  // default here. gpt-4.1 stays the fallback because it is the one we have actually
+  // run all ten locales through; raising it is a deliberate, measured change (the
+  // AI reviewer now scores the output, so an upgrade can be judged on evidence).
+  modelName: process.env.HUB_I18N_MODEL || 'gpt-4.1',
   // Larger chunks send the system prompt fewer times (less token overhead).
   splitToken: 6000,
   // Serial: paced for the org's OpenAI tier (30k TPM). Raise once the tier is bumped.
