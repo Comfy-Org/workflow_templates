@@ -93,3 +93,46 @@ describe('listWorkflows status param', () => {
     expect(calledUrl).not.toContain('status');
   });
 });
+
+describe('Hub workflow classification', () => {
+  it('uses the canonical index defaultView instead of the filename', async () => {
+    const { serializeIndexEntry } = await import('../../src/lib/hub-api');
+
+    const app = serializeIndexEntry(
+      { name: 'plain-name', title: 'App', status: 'approved', defaultView: 'app' },
+      new Map()
+    );
+    const workflow = serializeIndexEntry(
+      { name: 'legacy.app', title: 'Workflow', status: 'approved', defaultView: 'workflow' },
+      new Map()
+    );
+
+    expect(app.isApp).toBe(true);
+    expect(workflow.isApp).toBe(false);
+  });
+
+  it('uses the canonical summary default_view instead of the display name', async () => {
+    const { toSerializedTemplate } = await import('../../src/lib/hub-api');
+    const template = toSerializedTemplate({
+      share_id: 'share-1',
+      name: 'not-an-app-name',
+      status: 'approved',
+      default_view: 'app',
+      tags: [],
+      models: [],
+      profile: { username: 'alice' },
+    });
+
+    expect(template.isApp).toBe(true);
+  });
+
+  it('keeps the .app fallback for legacy API responses', async () => {
+    const { serializeIndexEntry } = await import('../../src/lib/hub-api');
+    const template = serializeIndexEntry(
+      { name: 'legacy.app', title: 'Legacy', status: 'approved' },
+      new Map()
+    );
+
+    expect(template.isApp).toBe(true);
+  });
+});
