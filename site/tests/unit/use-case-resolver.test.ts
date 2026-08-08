@@ -35,6 +35,24 @@ describe('resolveUseCasePageTemplates', () => {
     expect(out.map((t) => t.shareId)).toEqual(['keep']);
   });
 
+  it('never renders a pin carrying a brand-safety gate', () => {
+    const catalog = [tpl('m', ['a']), tpl('gated', ['b'])];
+    const out = resolveUseCasePageTemplates(
+      page({ pins: [{ shareId: 'gated', gate: 'GATED' }] }),
+      catalog
+    );
+    expect(out.map((t) => t.shareId)).toEqual(['m']);
+  });
+
+  it('drops a GATED-LITE pin too, and keeps the ungated pins beside it', () => {
+    const catalog = [tpl('m', ['a']), tpl('ok', ['b']), tpl('lite', ['b'])];
+    const out = resolveUseCasePageTemplates(
+      page({ pins: [{ shareId: 'ok' }, { shareId: 'lite', gate: 'GATED-LITE' }] }),
+      catalog
+    );
+    expect(out.map((t) => t.shareId)).toEqual(['ok', 'm']);
+  });
+
   it('prepends pins ahead of matches', () => {
     const catalog = [tpl('m', ['a']), tpl('p', ['b'])];
     const out = resolveUseCasePageTemplates(page({ pins: [{ shareId: 'p' }] }), catalog);

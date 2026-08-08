@@ -37,9 +37,11 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
     .filter((template) => !template.shareId || !excluded.has(template.shareId))
     .sort(byUsageDesc);
 
-  // Pins bypass excludes; first id wins.
+  // Pins bypass excludes; first id wins. A pin carrying a brand-safety gate is
+  // dropped here, because pins are the one route that skips `assertBrandSafe`.
   const seen = new Set<string>();
   const pinned = (def.pins ?? []).flatMap((pin) => {
+    if (pin.gate) return [];
     if (seen.has(pin.shareId)) return [];
     const found = catalog.find((template) => template.shareId === pin.shareId);
     if (!found) return [];

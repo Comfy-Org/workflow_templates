@@ -103,6 +103,12 @@ const qualityContent = hasQualityContent ? content : null;
 
 const noindex = !isUseCasePageIndexable(templates.length, content);
 
+// Gated pins are dropped here as well as in the resolver. The resolver keeps them
+// out of the grid, but this list is serialized into the island props, so passing
+// them through would publish the share ids of deliberately withheld workflows in
+// the page source even though nothing renders from them.
+const pinnedShareIds = (def.pins ?? []).filter((pin) => !pin.gate).map((pin) => pin.shareId);
+
 // The template LandingHero renders as the hero, reserved so no section reuses it
 // (lead-aware, so a video-led hero is the one excluded, not a later still).
 const heroTemplate = heroTemplateFor(templates);
@@ -236,7 +242,7 @@ const relatedCards = resolveRailImages(
           locale={locale}
           toolbarLabels={buildToolbarLabels(locale)}
           gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          pinnedShareIds={(def.pins ?? []).map((pin) => pin.shareId)}
+          pinnedShareIds={pinnedShareIds}
         />
       </div>
     </section>
