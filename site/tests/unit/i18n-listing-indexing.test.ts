@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { listingIndexing } from '../../src/lib/i18n/listing-indexing';
+import { alternatesFor, listingIndexing } from '../../src/lib/i18n/listing-indexing';
 import { INDEXABLE_LOCALES } from '../../src/lib/i18n/locales';
 import type { Locale } from '../../src/lib/i18n/schema';
 
@@ -85,5 +85,41 @@ describe('listingIndexing — invariants', () => {
     // Pins the production default so a flip in locales.ts flows through here.
     const expected = INDEXABLE_LOCALES.includes('zh' as Locale);
     expect(listingIndexing(BASE, 'zh' as Locale).indexable).toBe(expected);
+  });
+});
+
+describe('alternatesFor — pages withheld for a reason beyond the locale gate', () => {
+  // The model page is also withheld when it is too thin to index, decided after
+  // its content loads. Reading hreflangLocales straight off the locale gate would
+  // then advertise a cluster for a page the same render marks noindex.
+  const flipped = ['zh'] as readonly Locale[];
+
+  it('advertises nothing when the page is noindexed despite a flipped locale', () => {
+    const indexing = listingIndexing('/workflows/model/wan/', 'zh' as Locale, flipped);
+    expect(indexing.noindex).toBe(false); // the locale gate alone would allow it
+    expect(indexing.hreflangLocales).toEqual(['en', 'zh']);
+
+    // ...but the page itself is withheld for its own reason.
+    expect(alternatesFor(indexing, true)).toEqual([]);
+  });
+
+  it('keeps the cluster when nothing withholds the page', () => {
+    const indexing = listingIndexing('/workflows/model/wan/', 'zh' as Locale, flipped);
+    expect(alternatesFor(indexing, false)).toEqual(['en', 'zh']);
+  });
+
+  it('stays empty for a gated locale whatever the page-level decision is', () => {
+    const indexing = listingIndexing('/workflows/model/wan/', 'zh' as Locale, []);
+    expect(alternatesFor(indexing, true)).toEqual([]);
+    expect(alternatesFor(indexing, false)).toEqual([]);
+  });
+
+  it('never advertises alternates from a noindexed page, across every combination', () => {
+    for (const locales of [[], ['zh'], ['zh', 'ja']] as readonly Locale[][]) {
+      for (const locale of ['zh', 'ja', 'en'] as Locale[]) {
+        const indexing = listingIndexing('/workflows/model/wan/', locale, locales);
+        expect(alternatesFor(indexing, true)).toEqual([]);
+      }
+    }
   });
 });

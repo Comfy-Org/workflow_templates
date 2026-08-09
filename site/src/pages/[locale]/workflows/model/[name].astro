@@ -28,7 +28,7 @@ import {
   buildWorkflowBreadcrumb,
   serializeJsonLdForScript,
 } from '../../../../lib/structured-data';
-import { listingIndexing } from '../../../../lib/i18n/listing-indexing';
+import { listingIndexing, alternatesFor } from '../../../../lib/i18n/listing-indexing';
 
 const buildGroups = async () =>
   deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
@@ -91,6 +91,9 @@ const { h1, title, description } = buildModelPageMeta({
 // index, or its locale has not been reviewed yet. Either alone is sufficient.
 const noindex =
   indexing.noindex || !isModelPageIndexable(family, matchingTemplates.length, content);
+// Alternates follow the final decision, not just the locale gate: a page withheld
+// for thin content must not advertise a cluster the same render is noindexing.
+const hreflangLocales = alternatesFor(indexing, noindex);
 
 const countLabel =
   matchingTemplates.length === 1
@@ -125,7 +128,7 @@ const serialized = matchingTemplates;
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}
-  hreflangLocales={indexing.hreflangLocales}
+  hreflangLocales={hreflangLocales}
   noindex={noindex}
   theme="dark"
   hideDefaultFooter

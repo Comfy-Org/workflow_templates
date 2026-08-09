@@ -63,3 +63,19 @@ export function listingIndexing(
       : [],
   };
 }
+
+/**
+ * The alternates a page may advertise once every reason to withhold it is known.
+ *
+ * The locale gate is not always the only one. A model page is also withheld when
+ * it is too thin to be worth indexing, and that decision is made further down the
+ * page, after its content has loaded. Reading `hreflangLocales` straight off the
+ * locale gate in that case would advertise a cluster for a page the very same
+ * render is marking `noindex` — two contradictory signals about one URL.
+ *
+ * Passing the page's final `noindex` through here keeps them in step by
+ * construction, so a caller cannot forget to reconcile them by hand.
+ */
+export function alternatesFor(indexing: ListingIndexing, noindex: boolean): Locale[] {
+  return noindex ? [] : indexing.hreflangLocales;
+}
