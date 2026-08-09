@@ -47,6 +47,19 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip build pytest ruff aiohttp twine
 
+      # Must run BEFORE the sync below. sync_bundles.py rewrites manifest.json
+      # from whatever is on disk, so anything that validates after it can only
+      # ever see a freshly generated manifest — never the committed one. That
+      # ordering is how the stale hashes in
+      # https://github.com/Comfy-Org/workflow_templates/issues/1091 reached main.
+      - name: Verify committed manifest is not stale
+        run: |
+          echo "🔍 Validating packages/core/.../manifest.json as committed (pre-sync)."
+          if ! python scripts/validate/validate_manifests.py; then
+            echo "::error file=packages/core/src/comfyui_workflow_templates_core/manifest.json::Manifest is out of sync with templates/. Run 'python scripts/sync/sync_bundles.py' and commit the regenerated manifest."
+            exit 1
+          fi
+
       - name: Sync manifest and bundle assets
         run: |
           source .venv/bin/activate

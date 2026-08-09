@@ -1,4 +1,6 @@
 import asyncio
+import importlib.util
+import json
 from pathlib import Path
 
 from aiohttp import web
@@ -6,28 +8,39 @@ from aiohttp.test_utils import make_mocked_request
 
 from comfyui_workflow_templates_core import iter_assets
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
+BUNDLES_CONFIG = REPO_ROOT / "bundles.json"
 
-# Sampled templates per bundle. These ids must stay in sync with what the bundles
-# actually ship: archiving a template removes its assets, so an id left here after
-# an archive fails this test even though nothing is wrong with the handler.
-BUNDLE_SAMPLES = {
-    "media-api": [
-        "api_bfl_flux_1_kontext_max_image",
-        "api_bfl_flux_1_kontext_multiple_images_input",
-    ],
-    "media-image": [
-        "3d_hunyuan3d-v2.1",
-        "3d_hunyuan3d_image_to_model",
-    ],
-    "media-other": [
-        "3d_moge_panorama_to_mesh",
-        "3d_moge_perspective_to_mesh",
-    ],
-    "media-video": [
-        "hunyuan_video_text_to_video",
-        "api_google_gemini_omni_flash_i2v",
-    ],
-}
+# Load get_pip_excluded_template_names from sync_bundles.py without adding the
+# scripts/ directory permanently to sys.path (same pattern as
+# test_templates_repo.py).
+_spec = importlib.util.spec_from_file_location(
+    "sync_bundles", REPO_ROOT / "scripts" / "sync" / "sync_bundles.py"
+)
+_sync_bundles = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_sync_bundles)
+get_pip_excluded_template_names = _sync_bundles.get_pip_excluded_template_names
+
+SAMPLES_PER_BUNDLE = 2
+
+
+def bundle_samples(per_bundle: int = SAMPLES_PER_BUNDLE) -> dict[str, list[str]]:
+    """Pick a few shipped template ids per bundle, straight from bundles.json.
+
+    These used to be hard-coded, which meant archiving a template silently broke
+    this test: https://github.com/Comfy-Org/workflow_templates/pull/1088 archived
+    six of the eight sampled ids and left main red on Build & Test. Deriving the
+    sample from the same config sync_bundles.py reads keeps it correct by
+    construction.
+    """
+    excluded = get_pip_excluded_template_names()
+    bundles = json.loads(BUNDLES_CONFIG.read_text(encoding="utf-8"))
+    samples: dict[str, list[str]] = {}
+    for bundle, template_ids in bundles.items():
+        picked = [t for t in sorted(template_ids) if t not in excluded][:per_bundle]
+        if picked:
+            samples[bundle] = picked
+    return samples
 
 
 def build_handler(asset_map):
@@ -52,7 +65,10 @@ def test_static_handler_serves_samples():
     assert assets, "Expected bundled assets to be available"
     handler = build_handler(assets)
 
-    for bundle, template_ids in BUNDLE_SAMPLES.items():
+    samples = bundle_samples()
+    assert samples, "Expected bundles.json to yield at least one sampled template"
+
+    for bundle, template_ids in samples.items():
         for template_id in template_ids:
             variants = [name for name in assets if name.startswith(template_id)]
             assert variants, f"No assets found for template {template_id} in {bundle}"
