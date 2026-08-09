@@ -164,17 +164,22 @@ describe('reviewViolations', () => {
   });
 
   it('converts critical and major findings into prunable violations', () => {
-    const violations = reviewViolations('zh', stateWith([finding('critical'), finding('major')]));
+    const violations = reviewViolations(
+      'zh',
+      stateWith([finding('critical'), finding('major')]),
+      english,
+      target
+    );
     expect(violations).toHaveLength(2);
     expect(violations[0]).toMatchObject({ shareId: 'wf1', locale: 'zh', field: 'title' });
   });
 
   it('does NOT prune on a minor finding — a nit should not cost the whole field', () => {
-    expect(reviewViolations('zh', stateWith([finding('minor')]))).toEqual([]);
+    expect(reviewViolations('zh', stateWith([finding('minor')]), english, target)).toEqual([]);
   });
 
   it('labels the detail so a pruned field is traceable to the AI reviewer', () => {
-    const [violation] = reviewViolations('zh', stateWith([finding('critical')]));
+    const [violation] = reviewViolations('zh', stateWith([finding('critical')]), english, target);
     expect(violation!.detail).toContain('ai-review/terminology/critical');
   });
 });
@@ -331,7 +336,7 @@ describe('reviewLocale (end-to-end orchestration, no network)', () => {
     const result = await reviewLocale(two, englishTwo, empty, async (shareId) =>
       shareId === 'wf1' ? [finding] : []
     );
-    const violations = reviewViolations('zh', result.state);
+    const violations = reviewViolations('zh', result.state, englishTwo, two);
     expect(violations).toHaveLength(1);
     expect(violations[0]).toMatchObject({ shareId: 'wf1', field: 'title' });
   });
@@ -365,6 +370,52 @@ describe('reviewLocale (end-to-end orchestration, no network)', () => {
     expect(peak).toBeGreaterThan(1);
     expect(peak).toBeLessThanOrEqual(3);
     expect(Object.keys(many).every((k) => k in seenIds)).toBe(true);
+  });
+
+  it('runs strictly serially at a concurrency of 1', async () => {
+    // Pins the lower bound of the clamp. `>1 and <=3` above cannot catch a pool
+    // that ignores the limit and runs everything at once when the limit is 1.
+    const many = Object.fromEntries(
+      Array.from({ length: 5 }, (_, i) => [`w${i}`, { title: `t${i}` }])
+    );
+    const manyEn = Object.fromEntries(
+      Array.from({ length: 5 }, (_, i) => [`w${i}`, { ...english.wf1!, title: `en${i}` }])
+    ) as Record<string, WorkflowContent>;
+    let inFlight = 0;
+    let peak = 0;
+    await reviewLocale(
+      many,
+      manyEn,
+      { promptVersion: PROMPT_VERSION, entries: {} },
+      async () => {
+        inFlight += 1;
+        peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 1));
+        inFlight -= 1;
+        return [];
+      },
+      1
+    );
+    expect(peak).toBe(1);
+  });
+
+  it('never calls the reviewer when there is nothing to review', async () => {
+    // The empty-input path: the pool must return rather than build a runner that
+    // waits on an entry that will never arrive.
+    let calls = 0;
+    const result = await reviewLocale(
+      {},
+      {},
+      { promptVersion: PROMPT_VERSION, entries: {} },
+      async () => {
+        calls += 1;
+        return [];
+      },
+      3
+    );
+    expect(calls).toBe(0);
+    expect(result.state.entries).toEqual({});
+    expect(result.failures).toEqual([]);
   });
 
   it('drops verdicts for archived workflows while reviewing the rest', async () => {
@@ -404,8 +455,11 @@ describe('reviewViolations freshness (stale verdicts must not prune fresh text)'
     expect(reviewViolations('zh', state, newEnglish, target)).toEqual([]);
   });
 
-  it('keeps the old behaviour when no content is supplied (caller vouches for freshness)', () => {
-    expect(reviewViolations('zh', stateWith([finding]))).toHaveLength(1);
+  it('does NOT prune an entry that is missing from the current content entirely', () => {
+    // An archived or renamed workflow: the verdict outlives the entry it describes.
+    const state = stateWith([finding]);
+    expect(reviewViolations('zh', state, english, {})).toEqual([]);
+    expect(reviewViolations('zh', state, {}, target)).toEqual([]);
   });
 });
 

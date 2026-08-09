@@ -307,24 +307,23 @@ export function reviewViolations(
   locale: Locale,
   state: ReviewState,
   /**
-   * Current content. A verdict describes one exact (source, translation) pair, so
-   * one whose hash no longer matches is about text that has since been replaced —
-   * acting on it would prune a translation that may well have fixed the very
-   * problem the verdict describes. Omitting these is only safe when the caller has
-   * already established freshness; enforcement passes them.
+   * Current content, required. A verdict describes one exact (source, translation)
+   * pair, so one whose hash no longer matches is about text that has since been
+   * replaced — acting on it would prune a translation that may well have fixed the
+   * very problem the verdict describes. These are mandatory rather than optional so
+   * the freshness check cannot be skipped: a caller that omitted them would silently
+   * prune on stale verdicts, which is the failure this check exists to prevent.
    */
-  english?: Record<string, WorkflowContent>,
-  localeContent?: Record<string, Partial<WorkflowContent>>
+  english: Record<string, WorkflowContent>,
+  localeContent: Record<string, Partial<WorkflowContent>>
 ): Violation[] {
   const violations: Violation[] = [];
   for (const [shareId, verdict] of Object.entries(state.entries)) {
-    if (english && localeContent) {
-      const en = english[shareId];
-      const target = localeContent[shareId];
-      // Unreviewed-since-change: leave it to the deterministic checks until the
-      // next run re-reviews it, rather than pruning on a verdict about old text.
-      if (!en || !target || verdict.hash !== entryHash(en, target)) continue;
-    }
+    const en = english[shareId];
+    const target = localeContent[shareId];
+    // Unreviewed-since-change: leave it to the deterministic checks until the
+    // next run re-reviews it, rather than pruning on a verdict about old text.
+    if (!en || !target || verdict.hash !== entryHash(en, target)) continue;
     for (const finding of verdict.findings) {
       if (!PRUNING_SEVERITIES.has(finding.severity)) continue;
       violations.push({

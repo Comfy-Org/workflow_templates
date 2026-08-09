@@ -5,6 +5,13 @@ import {
   parsePruneFraction,
   pruneViolatingFields,
 } from '../../scripts/i18n/enforce-translations';
+import {
+  PROMPT_VERSION,
+  entryHash,
+  reviewViolations,
+  type Finding,
+  type ReviewState,
+} from '../../scripts/i18n/review-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 
 const PRESERVE = ['ComfyUI', 'VAE'];
@@ -213,5 +220,66 @@ describe('isEmptyTranslation (wholesale-failure guard)', () => {
   it('never fires when there is no English source or no targets were attempted', () => {
     expect(isEmptyTranslation(0, [0])).toBe(false); // nothing to translate against
     expect(isEmptyTranslation(582, [])).toBe(false); // TRANSLATE_LOCALES unset (e.g. local run)
+  });
+});
+
+describe('AI review -> enforcement wiring (the composed path that runs in production)', () => {
+  // Each half is covered in isolation elsewhere: reviewViolations() drops stale
+  // verdicts, and pruneViolatingFields() honours extraViolations. Neither proves
+  // they are wired together correctly, which is the only form that ships — a
+  // regression in main()'s call would leave both unit suites green.
+  const finding: Finding = {
+    field: 'description',
+    category: 'fluency',
+    severity: 'critical',
+    span: 'x',
+    suggestion: 'y',
+    reason: 'Unnatural phrasing.',
+  };
+
+  // Keeps both preserve terms, so nothing here is prunable by the deterministic
+  // checks; any pruning observed is attributable to the AI verdict alone.
+  const clean: Record<string, Partial<WorkflowContent>> = {
+    wf1: { description: '使用 ComfyUI 和 VAE 解码器运行以获得清晰的输出。' },
+  };
+
+  const stateFor = (content: Record<string, Partial<WorkflowContent>>): ReviewState => ({
+    promptVersion: PROMPT_VERSION,
+    entries: { wf1: { hash: entryHash(english.wf1!, content.wf1!), findings: [finding] } },
+  });
+
+  it('prunes the field when the verdict still describes the current translation', () => {
+    const violations = reviewViolations('zh', stateFor(clean), english, clean);
+    const { content, prunedFieldCount } = pruneViolatingFields(
+      clean,
+      english,
+      'zh',
+      PRESERVE,
+      {},
+      violations
+    );
+    expect(prunedFieldCount).toBe(1);
+    expect(content.wf1!.description).toBeUndefined();
+  });
+
+  it('does NOT prune once the translation changed after the verdict was written', () => {
+    // The regression this guards: a stale verdict pruning a translation that may
+    // have already fixed the very problem the verdict describes.
+    const retranslated: Record<string, Partial<WorkflowContent>> = {
+      wf1: { description: '使用 ComfyUI 和 VAE 解码器运行，输出更清晰。' },
+    };
+    const violations = reviewViolations('zh', stateFor(clean), english, retranslated);
+    expect(violations).toEqual([]);
+
+    const { content, prunedFieldCount } = pruneViolatingFields(
+      retranslated,
+      english,
+      'zh',
+      PRESERVE,
+      {},
+      violations
+    );
+    expect(prunedFieldCount).toBe(0);
+    expect(content.wf1!.description).toBe(retranslated.wf1!.description);
   });
 });

@@ -170,6 +170,12 @@ jobs:
         working-directory: site
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Repo variable, mirroring HUB_I18N_MODEL above, so the reviewer model can
+          # be changed (and reverted) without a code change. The reviewer and the
+          # translator are deliberately separate knobs: swapping the model that
+          # writes the translations should not silently swap the one that judges
+          # them. Unset falls back to the model in review-translations.ts.
+          I18N_REVIEW_MODEL: ${{ vars.HUB_I18N_REVIEW_MODEL }}
         run: pnpm i18n:review
 
       # always(): prune before validate even after a tolerated translate failure.
