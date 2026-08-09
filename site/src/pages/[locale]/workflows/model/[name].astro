@@ -28,6 +28,7 @@ import {
   buildWorkflowBreadcrumb,
   serializeJsonLdForScript,
 } from '../../../../lib/structured-data';
+import { listingIndexing } from '../../../../lib/i18n/listing-indexing';
 
 const buildGroups = async () =>
   deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
@@ -72,7 +73,9 @@ if (family.slug !== name) {
 
 const matchingTemplates = family.templates;
 const basePath = modelPath(family.slug);
-const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
+// Gated until this locale completes native review — see listing-indexing.
+const indexing = listingIndexing(basePath, typedLocale);
+const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 
 // Localized pages carry no editorial copy of their own, but title/meta/noindex
 // resolve through the same helper as the English route so the hreflang cluster
@@ -84,7 +87,10 @@ const { h1, title, description } = buildModelPageMeta({
   locale: typedLocale,
   templateCount: matchingTemplates.length,
 });
-const noindex = !isModelPageIndexable(family, matchingTemplates.length, content);
+// Two independent reasons to withhold this page: the model page is too thin to
+// index, or its locale has not been reviewed yet. Either alone is sufficient.
+const noindex =
+  indexing.noindex || !isModelPageIndexable(family, matchingTemplates.length, content);
 
 const countLabel =
   matchingTemplates.length === 1
@@ -119,6 +125,7 @@ const serialized = matchingTemplates;
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}
+  hreflangLocales={indexing.hreflangLocales}
   noindex={noindex}
   theme="dark"
   hideDefaultFooter
