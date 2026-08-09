@@ -219,8 +219,22 @@ jobs:
           STABLE_BRANCH="i18n/hub-translations"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          # Stage first — the generated content/ files are new/untracked on the
-          # initial run, which `git diff` alone would miss.
+          # Stage first, because the generated content/ files are new and untracked
+          # on the initial run, which `git diff` alone would miss.
+          #
+          # This path holds two different kinds of file, and the PR diff will show
+          # both. `content/` and `locales/` are the translation output a reviewer is
+          # being asked to judge. `review/` is machine state: one verdict per entry,
+          # keyed by a hash of the exact English and translated text it describes.
+          #
+          # They are staged and restored together on purpose. A verdict is only
+          # meaningful next to the text it was written about, so carrying the
+          # translations forward without the verdicts would invalidate every hash
+          # and re-review (and re-pay for) the whole corpus on the next run, while
+          # carrying verdicts forward without their translations would leave
+          # findings pointing at text that no longer exists. Keeping them in one
+          # subtree makes that restore atomic rather than something the next editor
+          # of this file has to remember.
           git add site/src/i18n
           if git diff --cached --quiet; then
             echo "No translation changes vs main."
