@@ -55,12 +55,92 @@
         }
       },
       {
+        "name": "api_seedance2_5_video_editing",
+        "title": "Seedance2.5: Video Editing",
+        "task": "Video Edit",
+        "model": "Seedance 2.5",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Edit existing video clips with Seedance 2.5 by describing changes in natural language, enabling local object removal, background swaps, scene replacements, and style transfers while preserving the original composition and motion. Feed in 1 video and receive 1 edited video output with temporally consistent results across frames. Ideal for e-commerce background replacement, stylized remakes of footage, and ad re-editing with targeted retouching.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "video-edit"],
+          "model_options": {
+            "ByteDance2ReferenceNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_5_r2v",
+        "title": "Seedance 2.5: Reference to Video",
+        "task": "Reference to Video",
+        "model": "Seedance 2.5",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate reference-driven videos with Seedance 2.5 by supplying up to 20 images, 6 video clips, and 6 audio clips to control character consistency, visual style, and motion rhythm in a single 4–30 second output with synchronized sound and lip-synced dialogue. Ideal for e-commerce product showcases, brand advertising, and character-driven short series.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "reference-to-video"],
+          "model_options": {
+            "ByteDance2ReferenceNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_5_t2v",
+        "title": "Seedance 2.5: Text to Video",
+        "task": "Text to Video",
+        "model": "Seedance 2.5",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate 30-second cinematic videos from text prompts with Seedance 2.5, producing synchronized sound and music alongside the footage. Input a single text prompt to create one video with precise camera control and multi-shot storytelling. Ideal for brand films, episodic series, and e-commerce content where quality matters more than budget.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-video"],
+          "model_options": {
+            "ByteDance2TextToVideoNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_5_flf2v",
+        "title": "Seedance 2.5: FLF2V",
+        "task": "FLF2V",
+        "model": "Seedance 2.5",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a smooth video transition between a user-provided start frame and end frame with Seedance 2.5, which automatically interpolates the motion, camera movement, and visual evolution while locking both endpoints. Ideal for shot transitions, storyboard previz, and before-and-after scene showcases like empty-to-packed or day-to-night shifts.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "flf2v"],
+          "model_options": {
+            "ByteDance2FirstLastFrameNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
         "name": "video_ltx2_3_i2v",
         "title": "LTX-2.3: Image to Video",
         "task": "Image to Video",
         "model": "LTX-2.3",
         "freshness": "current",
-        "usage": 1208,
+        "usage": 1179,
         "recommend": "top",
         "description": "Upload an image to generate a video with improved motion consistency and fine details, including enhanced support for portrait formats and audio quality.",
         "io": {
@@ -77,7 +157,7 @@
         "task": "Image to Video",
         "model": "LTX-2.3",
         "freshness": "current",
-        "usage": 1304,
+        "usage": 1181,
         "recommend": "top",
         "description": "Generate a high-quality video with synchronized lip movements by providing an image and an audio file to LTX-2.3. The model combines audio with an input image to produce a video with accurate lip sync, leveraging its native audio support and fast generation capabilities. Output is a rendered video.",
         "io": {
@@ -94,18 +174,55 @@
         "task": "Image to Video",
         "model": "Seedance 2.0",
         "freshness": "recent",
-        "usage": 40268,
+        "usage": 38255,
         "recommend": "highly_recommended",
         "description": "Generate cinematic videos from up to four reference images and a text prompt using Seedance 2.0 via API. The model preserves subject identity, composition, and style while adding expressive motion, smooth camera movement, and optionally synchronized audio.",
         "io": {
-          "inputs": [
-            "image×4: Reference images to guide video generation (subject, style, composition)",
-            "text: Text prompt describing desired motion, camera movement, and scene"
-          ],
+          "inputs": ["image×4: Reference images to guide video generation (subject, style, composition)", "text: Text prompt describing desired motion, camera movement, and scene"],
           "outputs": ["video: Generated cinematic video with synchronized audio"]
         },
         "capabilities": {
           "workflow": ["api", "image-to-video"],
+          "model_options": {
+            "ByteDance2ReferenceNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_0_flf2v",
+        "title": "Seedance2.0: First-Last-Frame to Video",
+        "task": "FLF2V",
+        "model": "Seedance 2.0",
+        "freshness": "current",
+        "usage": 641,
+        "recommend": "high",
+        "description": "Provide the first and last frames of a video, and Seedance 2.0 generates a cinematic sequence interpolating between them. This workflow uses a third-party API and offers a choice between the standard or Fast variant for faster inference. The model produces smooth, film-like motion from the two keyframes.",
+        "io": {
+          "inputs": ["image×2: First and last frames to define the video sequence"],
+          "outputs": ["video: Generated video interpolating between the first and last frames"]
+        },
+        "capabilities": {
+          "workflow": ["api", "flf2v"],
+          "model_options": {
+            "ByteDance2FirstLastFrameNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_0_mini_r2v",
+        "title": "Seedance 2.0 Mini: Reference to Video",
+        "task": "Image to Video",
+        "model": "Seedance 2.0",
+        "freshness": "recent",
+        "usage": 1451,
+        "recommend": "top",
+        "description": "Generate cinematic video from a reference image and text prompt using Seedance 2.0 Mini via API. The model produces a short animated clip with AI-driven camera motion and consistent character generation, ideal for storytelling and branded content.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-to-video", "reference-to-video"],
           "model_options": {
             "ByteDance2ReferenceNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
           }
@@ -132,32 +249,12 @@
         }
       },
       {
-        "name": "api_seedance2_0_mini_r2v",
-        "title": "Seedance 2.0 Mini: Reference to Video",
-        "task": "Image to Video",
-        "model": "Seedance 2.0",
-        "freshness": "recent",
-        "usage": 1451,
-        "recommend": "top",
-        "description": "Generate cinematic video from a reference image and text prompt using Seedance 2.0 Mini via API. The model produces a short animated clip with AI-driven camera motion and consistent character generation, ideal for storytelling and branded content.",
-        "io": {
-          "inputs": ["image: Reference image", "text: Motion or style prompt"],
-          "outputs": ["video: Animated video"]
-        },
-        "capabilities": {
-          "workflow": ["api", "image-to-video", "reference-to-video"],
-          "model_options": {
-            "ByteDance2ReferenceNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
-          }
-        }
-      },
-      {
         "name": "api_grok_video",
         "title": "Grok: Video generation",
         "task": "Image to Video",
         "model": "Grok",
         "freshness": "established",
-        "usage": 10693,
+        "usage": 10295,
         "recommend": "highly_recommended",
         "description": "Use Grok via API to generate up to 15‑second videos with synchronized audio. Provide a text prompt or initial image; the workflow handles both text‑to‑video and image‑to‑video tasks. Fast, high‑quality output is delivered through the Grok model’s API capabilities.",
         "io": {
@@ -172,22 +269,62 @@
         }
       },
       {
-        "name": "api_seedance2_0_flf2v",
-        "title": "Seedance2.0: First-Last-Frame to Video",
-        "task": "FLF2V",
-        "model": "Seedance 2.0",
-        "freshness": "current",
-        "usage": 794,
-        "recommend": "high",
-        "description": "Provide the first and last frames of a video, and Seedance 2.0 generates a cinematic sequence interpolating between them. This workflow uses a third-party API and offers a choice between the standard or Fast variant for faster inference. The model produces smooth, film-like motion from the two keyframes.",
+        "name": "api_minimax_h3_r2v",
+        "title": "MiniMax H3: Reference to Video",
+        "task": "Reference to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video from a reference image or set of multimodal inputs using MiniMax H3, which interprets text, images, video, and audio together to produce coherent 5–15 second clips with native stereo audio. Input up to 2 images for first/last frame control, or up to 9 images, 3 video clips, and 3 audio clips in Omni Reference mode, and output a single video in your chosen aspect ratio. Ideal for commercial content creation, character-driven storytelling, and rapid visual concept validation.",
         "io": {
-          "inputs": ["image×2: First and last frames to define the video sequence"],
-          "outputs": ["video: Generated video interpolating between the first and last frames"]
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "reference-to-video", "image-to-video"],
+          "model_options": {
+            "MinimaxHailuo03ReferenceNode": ["MiniMax H3"]
+          }
+        }
+      },
+      {
+        "name": "api_minimax_h3_t2v",
+        "title": "MiniMax H3: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video directly from text using the MiniMax H3 model, producing a 5-15 second clip with native stereo audio. Ideal for rapid concept visualization, short-form social media content, and pre-visualization for film or advertising projects.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "MinimaxHailuo03TextToVideoNode": ["MiniMax H3"]
+          }
+        }
+      },
+      {
+        "name": "api_minimax_h3_flf2v",
+        "title": "MiniMax H3: FLF2V",
+        "task": "FLF2V",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a video from a first and last frame using MiniMax H3, producing a smooth animation between the two images. You provide 2 images, and the workflow outputs a single video clip. Ideal for creating seamless transitions in animation, visualizing before-and-after transformations, and generating consistent motion for character or scene sequences.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "capabilities": {
           "workflow": ["api", "flf2v"],
           "model_options": {
-            "ByteDance2FirstLastFrameNode": ["Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+            "MinimaxHailuo03FirstLastFrameNode": ["MiniMax H3"]
           }
         }
       },
@@ -226,6 +363,40 @@
         }
       },
       {
+        "name": "video_wan_animate2",
+        "title": "Wan Animate 2: Motion Transfer",
+        "task": "Motion Control",
+        "model": "Wan Animate",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Animate a still character using a driving video with Wan Animate 2, transferring motion directly from video frames without any pose extraction or skeleton preprocessing. The output preserves the reference character's identity while generating a fresh background and camera movement from your text prompt. Ideal for motion transfer, action mimicry, and character animation replacement projects.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["motion-control"]
+        }
+      },
+      {
+        "name": "video_wan2_2_14B_i2v",
+        "title": "Wan 2.2 14B Image to Video",
+        "task": "Image to Video",
+        "model": "Wan",
+        "freshness": "established",
+        "usage": 1091,
+        "recommend": "top",
+        "description": "This workflow turns a static image into a video by following a text prompt’s motion or style cues, using Wan 2.2’s 14B-parameter model. It keeps the original image’s structure and appearance while generating coherent animation. Input is an image and a text description; output is an animated video.",
+        "io": {
+          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
+          "outputs": ["video: Animated video from the reference image"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video"]
+        }
+      },
+      {
         "name": "video_wan21_scail2_character_replacement",
         "title": "SCAIL-2: Character Replacement",
         "task": "Video Generation",
@@ -240,106 +411,6 @@
         },
         "capabilities": {
           "workflow": ["character-replacement"]
-        }
-      },
-      {
-        "name": "api_sync_so_lip_sync_video",
-        "title": "Sync 3: Video Lip-Sync",
-        "task": "Lip Sync",
-        "model": "Sync 3",
-        "freshness": "new",
-        "usage": 10,
-        "recommend": "medium",
-        "description": "Sync 3 creates lip-synced videos by taking a video and an audio input, then adjusting the speaker's mouth movements to match the new audio track. This api-ready workflow outputs a single synced video, ideal for dubbing, dialogue correction, or animating a static portrait to speak.",
-        "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
-        },
-        "capabilities": {
-          "workflow": ["api", "lip-sync"],
-          "model_options": {
-            "SyncLipSyncNode": ["sync-3"]
-          }
-        }
-      },
-      {
-        "name": "api_minimax_h3_flf2v",
-        "title": "MiniMax H3: FLF2V",
-        "task": "FLF2V",
-        "model": "MiniMax H3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate a video from a first and last frame using MiniMax H3, producing a smooth animation between the two images. You provide 2 images, and the workflow outputs a single video clip. Ideal for creating seamless transitions in animation, visualizing before-and-after transformations, and generating consistent motion for character or scene sequences.",
-        "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
-        },
-        "capabilities": {
-          "workflow": ["api", "flf2v"],
-          "model_options": {
-            "MinimaxHailuo03FirstLastFrameNode": ["MiniMax H3"]
-          }
-        }
-      },
-      {
-        "name": "api_minimax_h3_t2v",
-        "title": "MiniMax H3: Text to Video",
-        "task": "Text to Video",
-        "model": "MiniMax H3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate video directly from text using the MiniMax H3 model, producing a 5-15 second clip with native stereo audio. Ideal for rapid concept visualization, short-form social media content, and pre-visualization for film or advertising projects.",
-        "io": {
-          "inputs": ["text: Video prompt"],
-          "outputs": ["video: Generated video"]
-        },
-        "capabilities": {
-          "workflow": ["text-to-video", "api"],
-          "model_options": {
-            "MinimaxHailuo03TextToVideoNode": ["MiniMax H3"]
-          }
-        }
-      },
-      {
-        "name": "api_minimax_h3_r2v",
-        "title": "MiniMax H3: Reference to Video",
-        "task": "Reference to Video",
-        "model": "MiniMax H3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate video from a reference image or set of multimodal inputs using MiniMax H3, which interprets text, images, video, and audio together to produce coherent 5–15 second clips with native stereo audio. Input up to 2 images for first/last frame control, or up to 9 images, 3 video clips, and 3 audio clips in Omni Reference mode, and output a single video in your chosen aspect ratio. Ideal for commercial content creation, character-driven storytelling, and rapid visual concept validation.",
-        "io": {
-          "inputs": ["image: Reference image", "text: Motion or style prompt"],
-          "outputs": ["video: Animated video"]
-        },
-        "capabilities": {
-          "workflow": ["api", "reference-to-video", "image-to-video"],
-          "model_options": {
-            "MinimaxHailuo03ReferenceNode": ["MiniMax H3"]
-          }
-        }
-      },
-      {
-        "name": "api_sync_so_talking_image",
-        "title": "Sync 3: Talking Image",
-        "task": "Lip Sync",
-        "model": "Sync 3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate a talking-head video from a single face photo and an audio clip, with lips and lower-face motion perfectly synchronized to the speech. Each image-audio pair produces one video while keeping the background and any objects unchanged. Ideal for product demos, e-commerce introductions, and marketing videos.",
-        "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
-        },
-        "capabilities": {
-          "workflow": ["api", "lip-sync"],
-          "model_options": {
-            "SyncTalkingImageNode": ["sync-3"]
-          }
         }
       },
       {
@@ -365,7 +436,7 @@
         "task": "Image to Video",
         "model": "Kling 3.0",
         "freshness": "current",
-        "usage": 743,
+        "usage": 623,
         "recommend": "high",
         "description": "Generate up to 15-second video sequences from text prompts or optional reference images using the Kling 3.0 frontier model via API. Supports native audio, multi-shot compositions, and complex camera movements. Input an image and/or text prompt; outputs a generated video. This workflow calls a third-party API; execution time depends on server-side response.",
         "io": {
@@ -385,7 +456,7 @@
         "task": "Text to Video",
         "model": "Seedance 2.0",
         "freshness": "current",
-        "usage": 888,
+        "usage": 729,
         "recommend": "high",
         "description": "This workflow uses Seedance 2.0 via API to generate cinematic video from a text prompt. Provide a text description of the scene, motion, and style; the model outputs smooth, film-like motion with optional synchronized audio. You can select the Seedance 2.0 Fast variant for lower latency.",
         "io": {
@@ -442,7 +513,7 @@
         "task": "FLF2V",
         "model": "LTX-2.3",
         "freshness": "current",
-        "usage": 115,
+        "usage": 109,
         "recommend": "low",
         "description": "This workflow uses LTX-2.3 to generate a short video from a starting image, with optional end frame and text prompt. It produces a consistent, motion-smooth sequence with native audio, leveraging the model’s fast generation and frame control capabilities.",
         "io": {
@@ -494,37 +565,43 @@
         }
       },
       {
-        "name": "api_heygen_avatar_video",
-        "title": "HeyGen: Avatar Video",
+        "name": "api_sync_so_talking_image",
+        "title": "Sync 3: Talking Image",
         "task": "Lip Sync",
-        "model": "HeyGen",
+        "model": "Sync 3",
         "freshness": "new",
         "usage": 0,
         "recommend": "medium",
-        "description": "Generate a talking‑head avatar video from a text prompt using the HeyGen API, with realistic lip‑sync animation. This API‑only workflow takes a text input and outputs a short clip suitable for digital presenters or social media content.",
+        "description": "Generate a talking-head video from a single face photo and an audio clip, with lips and lower-face motion perfectly synchronized to the speech. Each image-audio pair produces one video while keeping the background and any objects unchanged. Ideal for product demos, e-commerce introductions, and marketing videos.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
         "capabilities": {
-          "workflow": ["api", "lip-sync"]
+          "workflow": ["api", "lip-sync"],
+          "model_options": {
+            "SyncTalkingImageNode": ["sync-3"]
+          }
         }
       },
       {
-        "name": "video_wan2_2_14B_i2v",
-        "title": "Wan 2.2 14B Image to Video",
-        "task": "Image to Video",
-        "model": "Wan",
-        "freshness": "established",
-        "usage": 1108,
-        "recommend": "top",
-        "description": "This workflow turns a static image into a video by following a text prompt’s motion or style cues, using Wan 2.2’s 14B-parameter model. It keeps the original image’s structure and appearance while generating coherent animation. Input is an image and a text description; output is an animated video.",
+        "name": "api_sync_so_lip_sync_video",
+        "title": "Sync 3: Video Lip-Sync",
+        "task": "Lip Sync",
+        "model": "Sync 3",
+        "freshness": "new",
+        "usage": 10,
+        "recommend": "medium",
+        "description": "Sync 3 creates lip-synced videos by taking a video and an audio input, then adjusting the speaker's mouth movements to match the new audio track. This api-ready workflow outputs a single synced video, ideal for dubbing, dialogue correction, or animating a static portrait to speak.",
         "io": {
-          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
-          "outputs": ["video: Animated video from the reference image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "capabilities": {
-          "workflow": ["image-to-video"]
+          "workflow": ["api", "lip-sync"],
+          "model_options": {
+            "SyncLipSyncNode": ["sync-3"]
+          }
         }
       },
       {
@@ -573,7 +650,7 @@
         "task": "Image to Video",
         "model": "Seedance1.0 Pro",
         "freshness": "established",
-        "usage": 293,
+        "usage": 266,
         "recommend": "medium",
         "description": "This workflow transforms a static input image into a dynamic video using ByteDance’s Seedance 1.0 Pro via a third‑party API call. It accepts an image and generates a video with natural motion and consistent style, supporting model variants like seedance‑1‑0‑pro‑250528. Execution time depends on server‑side response.",
         "io": {
@@ -593,7 +670,7 @@
         "task": "Lip Sync",
         "model": "LTX-2.3",
         "freshness": "current",
-        "usage": 134,
+        "usage": 133,
         "recommend": "low",
         "description": "Generate a lip-sync video by providing a text prompt, a reference image, and a short audio clip. The workflow uses ID-LoRA to adapt the subject’s appearance and voice, while LTX-2.3’s native audio support and frame controls produce a synchronized video with aligned audio.",
         "io": {
@@ -702,23 +779,6 @@
         }
       },
       {
-        "name": "api_heygen_video_translate",
-        "title": "HeyGen: Video Translate",
-        "task": "Lip Sync",
-        "model": "HeyGen",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Translate video content into another language with realistic lip-sync via HeyGen's API. It transcribes speech, translates text, generates a cloned voice, and re-syncs mouth movements. Takes an input video and a target language prompt, outputs a fully dubbed video. Ideal for localizing talking-head presentations.",
-        "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
-        },
-        "capabilities": {
-          "workflow": ["api", "lip-sync"]
-        }
-      },
-      {
         "name": "video_bernini_r_video_editing",
         "title": "Bernini-R: Video Edit",
         "task": "Video Edit",
@@ -736,32 +796,12 @@
         }
       },
       {
-        "name": "api_grok_video_edit",
-        "title": "Grok: Video Edit",
-        "task": "Video Edit",
-        "model": "Grok",
-        "freshness": "established",
-        "usage": 68,
-        "recommend": "low",
-        "description": "Upload a video to edit, provide a text prompt describing desired modifications, and generate an edited video using the fast, high-quality Grok API. This workflow enables video editing through xAI's Grok model, combining text instructions with existing video input.",
-        "io": {
-          "inputs": ["video: Source video to edit", "text: Text instructions describing the modifications"],
-          "outputs": ["video: Edited output video"]
-        },
-        "capabilities": {
-          "workflow": ["api", "video-edit"],
-          "model_options": {
-            "GrokVideoEditNode": ["grok-imagine-video"]
-          }
-        }
-      },
-      {
         "name": "api_grok_reference_to_video",
         "title": "Grok: Reference to Video",
         "task": "Character Reference",
         "model": "Grok",
         "freshness": "current",
-        "usage": 80,
+        "usage": 79,
         "recommend": "low",
         "description": "Generate a video from up to six reference images and a text prompt using the Grok API for fast, high-quality output. It ensures character or subject consistency across frames. Outputs a generated video; execution time depends on the third-party server response.",
         "io": {
@@ -776,12 +816,66 @@
         }
       },
       {
+        "name": "api_grok_video_edit",
+        "title": "Grok: Video Edit",
+        "task": "Video Edit",
+        "model": "Grok",
+        "freshness": "established",
+        "usage": 63,
+        "recommend": "low",
+        "description": "Upload a video to edit, provide a text prompt describing desired modifications, and generate an edited video using the fast, high-quality Grok API. This workflow enables video editing through xAI's Grok model, combining text instructions with existing video input.",
+        "io": {
+          "inputs": ["video: Source video to edit", "text: Text instructions describing the modifications"],
+          "outputs": ["video: Edited output video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "video-edit"],
+          "model_options": {
+            "GrokVideoEditNode": ["grok-imagine-video"]
+          }
+        }
+      },
+      {
+        "name": "api_heygen_avatar_video",
+        "title": "HeyGen: Avatar Video",
+        "task": "Lip Sync",
+        "model": "HeyGen",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a talking‑head avatar video from a text prompt using the HeyGen API, with realistic lip‑sync animation. This API‑only workflow takes a text input and outputs a short clip suitable for digital presenters or social media content.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "lip-sync"]
+        }
+      },
+      {
+        "name": "api_heygen_video_translate",
+        "title": "HeyGen: Video Translate",
+        "task": "Lip Sync",
+        "model": "HeyGen",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Translate video content into another language with realistic lip-sync via HeyGen's API. It transcribes speech, translates text, generates a cloned voice, and re-syncs mouth movements. Takes an input video and a target language prompt, outputs a fully dubbed video. Ideal for localizing talking-head presentations.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "lip-sync"]
+        }
+      },
+      {
         "name": "api_grok_video_extend",
         "title": "Grok: Video Extend",
         "task": "Video Extension",
         "model": "Grok",
         "freshness": "current",
-        "usage": 59,
+        "usage": 52,
         "recommend": "low",
         "description": "Extend a short video by generating a seamless continuation using the fast Grok API from xAI. Upload a source video and a text prompt describing the next scene to produce an extended video output. This workflow calls a third-party API — execution time depends on server-side response.",
         "io": {
@@ -801,7 +895,7 @@
         "task": "Text to Video",
         "model": "LTX-2.3",
         "freshness": "current",
-        "usage": 924,
+        "usage": 846,
         "recommend": "high",
         "description": "Generate video from a text prompt using LTX-2.3, a fast model from Lightricks. The workflow outputs a high-quality video with native audio and support for start/end frame control. It is optimized for portrait or landscape formats.",
         "io": {
@@ -818,7 +912,7 @@
         "task": "Text to Video",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 986,
+        "usage": 892,
         "recommend": "high",
         "description": "Generate videos from text prompts using the Wan 2.2 14B model. This workflow takes a text description and outputs a video with cinematic aesthetics, crisp textures, and realistic colors, though diversity and structural coherence may be limited. It is optimized for fast generation.",
         "io": {
@@ -852,7 +946,7 @@
         "task": "Text to Video",
         "model": "LTX-2",
         "freshness": "established",
-        "usage": 90,
+        "usage": 87,
         "recommend": "low",
         "description": "Create videos from text prompts using the LTX-2 model, leveraging its fast inference and synchronized audio generation. This text-to-video workflow outputs motion and sound from a single prompt, building on LTX-2’s image-to-video strengths for efficient performance.",
         "io": {
@@ -869,7 +963,7 @@
         "task": "Image to Video",
         "model": "Wan2.7",
         "freshness": "current",
-        "usage": 148,
+        "usage": 144,
         "recommend": "low",
         "description": "This workflow uses the Wan2.7 Image-to-Video API, a medium-quality model from Alibaba, to animate a static image based on a text prompt. It outputs a video with natural motion at up to 1080p resolution. Since it calls a third-party API, execution time depends on server-side response.",
         "io": {
@@ -889,7 +983,7 @@
         "task": "Motion Control",
         "model": "Kling 3.0",
         "freshness": "current",
-        "usage": 764,
+        "usage": 709,
         "recommend": "high",
         "description": "Transfer motion from a reference video to a character image using Kling 3.0's motion control API. The latest frontier model from Kling supports durations up to 15 seconds with native audio. This workflow requires a character image and a motion reference video, and execution depends on server-side response.",
         "io": {
@@ -1057,7 +1151,7 @@
         "task": "Video Edit",
         "model": "Wan2.7",
         "freshness": "current",
-        "usage": 68,
+        "usage": 70,
         "recommend": "low",
         "description": "Edit and replace characters or scenes in a video using the Wan2.7 model. Upload a source video and two reference images, then provide text instructions describing the edits. The workflow outputs the edited video and relies on a third‑party API execution; response time depends on the server.",
         "io": {
@@ -1077,7 +1171,7 @@
         "task": "Lip Sync",
         "model": "Wan2.7",
         "freshness": "current",
-        "usage": 74,
+        "usage": 73,
         "recommend": "low",
         "description": "Generate medium-quality videos from text prompts using the Wan2.7 model from Alibaba. This workflow optionally accepts an audio reference to create lip-synced video via API. Input: text prompt; output: generated video.",
         "io": {
@@ -1117,7 +1211,7 @@
         "task": "Lip Sync",
         "model": "Kling",
         "freshness": "current",
-        "usage": 85,
+        "usage": 87,
         "recommend": "low",
         "description": "This workflow uses the Kling Avatar 2.0 API to generate a talking avatar video from a portrait image and audio file. It produces synchronized lip movements and natural facial expressions by leveraging Kling's top-tier video generation capabilities. Execution goes through a third-party API, so response time depends on server-side processing.",
         "io": {
@@ -1134,7 +1228,7 @@
         "task": "Video to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 149,
+        "usage": 140,
         "recommend": "low",
         "description": "This workflow performs video-to-video generation using Wan2.1, a legacy model optimized for fast, lower-quality output with video LoRA support. It takes an input video and a text prompt, then produces a processed video guided by the prompt and optional reference images.",
         "io": {
@@ -1151,7 +1245,7 @@
         "task": "Video Generation",
         "model": "LTX-2",
         "freshness": "current",
-        "usage": 69,
+        "usage": 66,
         "recommend": "low",
         "description": "Upload an audio file and an optional starting image to generate a short video with native synchronized audio using the fast, cost-effective LTX-2 model. The model handles both video generation and audio-video alignment, outputting a video clip driven by your prompt.",
         "io": {
@@ -1168,7 +1262,7 @@
         "task": "Image to Video",
         "model": "Google",
         "freshness": "established",
-        "usage": 199,
+        "usage": 192,
         "recommend": "low",
         "description": "This workflow uses Google’s Veo 3 API to generate an 8‑second video from a text prompt or an image, with optional audio and prompt enhancement. It supports multiple model versions for speed or quality. The primary input is a prompt; the output is a video file.",
         "io": {
@@ -1188,7 +1282,7 @@
         "task": "FLF2V",
         "model": "Kling 3.0",
         "freshness": "current",
-        "usage": 87,
+        "usage": 79,
         "recommend": "low",
         "description": "This Kling 3.0 First-Last Frame to Video workflow takes a beginning and ending image, then generates a continuous video sequence that smoothly interpolates between them. It supports multi-shot generation, precise element control, and multilingual prompts at up to 4K resolution. As a third-party API workflow, execution time depends on server-side processing.",
         "io": {
@@ -1225,8 +1319,8 @@
         "task": "Video Edit",
         "model": "Kling O3",
         "freshness": "current",
-        "usage": 51,
-        "recommend": "low",
+        "usage": 47,
+        "recommend": "not_recommended",
         "description": "This workflow edits a source video using Kling O3’s video generation and image editing features. It takes a video and a reference image as inputs to produce a professionally edited output video with precise subject and scene adjustments. Execution is handled by a third-party API.",
         "io": {
           "inputs": ["video: Source video to edit", "image: Reference image for subject or style guidance"],
@@ -1276,15 +1370,11 @@
         "task": "Character Reference",
         "model": "Kling O1",
         "freshness": "established",
-        "usage": 43,
+        "usage": 39,
         "recommend": "not_recommended",
         "description": "This workflow transforms a source video using Kling O1’s Video‑to‑Video API, accepting a video, a reference image for character or style guidance, and a text prompt. It outputs a transformed video with modified content, style, or characters, leveraging the model’s support for up to 10 reference images with tags. Execution depends on server‑side response as it calls a third‑party API.",
         "io": {
-          "inputs": [
-            "video: Source video to transform",
-            "image: Reference image for style or character guidance",
-            "text: Text prompt describing the desired transformation"
-          ],
+          "inputs": ["video: Source video to transform", "image: Reference image for style or character guidance", "text: Text prompt describing the desired transformation"],
           "outputs": ["video: Transformed output video"]
         },
         "capabilities": {
@@ -1297,7 +1387,7 @@
         "task": "Image to Video",
         "model": "Wan",
         "freshness": "established",
-        "usage": 222,
+        "usage": 208,
         "recommend": "medium",
         "description": "This workflow uses Wan’s image-to-video capability for character animation and replacement. It takes a text prompt and generates an animated video with precise motion and expression replication. Wan’s strengths in motion coherence ensure smooth results.",
         "io": {
@@ -1314,7 +1404,7 @@
         "task": "Image to Video",
         "model": "LTX-2",
         "freshness": "current",
-        "usage": 10,
+        "usage": 9,
         "recommend": "not_recommended",
         "description": "Upload an image and a motion prompt to create a squished animation using the LTX-2 I2V model with the Squish It LoRA effect. LTX-2 delivers fast, cost-effective image-to-video generation with native synchronized sound, turning stills into short animated clips.",
         "io": {
@@ -1331,7 +1421,7 @@
         "task": "Character Reference",
         "model": "Kling O3",
         "freshness": "current",
-        "usage": 55,
+        "usage": 50,
         "recommend": "low",
         "description": "Upload a reference image and optional text prompt to generate a character-consistent video using Kling O3. This image-to-video workflow supports native audio output and precise storyboard control via a third-party API, so execution time depends on server-side response.",
         "io": {
@@ -1368,7 +1458,7 @@
         "task": "FLF2V",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 170,
+        "usage": 171,
         "recommend": "low",
         "description": "This workflow uses Alibaba’s Wan2.2 model for first-last frame to video (FLF2V), generating smooth transitions between defined start and end frames. You provide a text prompt describing the scene, and the output is a video. The model delivers fast, cinematic textures with a realistic color palette, though structure and diversity may be limited.",
         "io": {
@@ -1385,7 +1475,7 @@
         "task": "Video to Video",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 61,
+        "usage": 59,
         "recommend": "low",
         "description": "Generates videos guided by pose, depth, or edge control maps using the Wan 2.2 Fun Control workflow. It takes a control image and text prompt to produce structurally conditioned video outputs. Built on Alibaba’s Wan2.2 model, it delivers crisp textures and a realistic color palette, though diversity and structure can be limited.",
         "io": {
@@ -1402,7 +1492,7 @@
         "task": "Text to Video",
         "model": "Vidu",
         "freshness": "established",
-        "usage": 27,
+        "usage": 25,
         "recommend": "not_recommended",
         "description": "Generate anime-style videos from a text prompt using Vidu Q3 via a third-party API. This workflow produces a 1–16 second video with synchronized audio and automatic scene transitions, supporting viduq3-pro and viduq3-turbo model options.",
         "io": {
@@ -1422,7 +1512,7 @@
         "task": "Image to Video",
         "model": "Vidu",
         "freshness": "established",
-        "usage": 81,
+        "usage": 73,
         "recommend": "low",
         "description": "Use a reference image and text prompt to generate a 1–16 second anime-style video with synchronized audio, leveraging the Vidu Q3 model (viduq3-pro or turbo) for quality output. This workflow executes via a third-party API, so generation time depends on server response.",
         "io": {
@@ -1442,7 +1532,7 @@
         "task": "Image to Video",
         "model": "Wan2.6",
         "freshness": "established",
-        "usage": 273,
+        "usage": 256,
         "recommend": "medium",
         "description": "This workflow turns a reference image into a high-quality video using Wan2.6, with smoother motion and up to 1080P resolution. It is executed via a third-party API, so runtime depends on server-side response.",
         "io": {
@@ -1462,7 +1552,7 @@
         "task": "Motion Control",
         "model": "Kling 2.6",
         "freshness": "established",
-        "usage": 587,
+        "usage": 552,
         "recommend": "high",
         "description": "Apply precise character actions and expressions from a reference video to your character image using Kling 2.6 motion control. Inputs include a character image and a reference video; the output is a result video with synchronized motion transferred from the reference. This workflow calls a third-party API, so execution time depends on server-side response.",
         "io": {
@@ -1482,7 +1572,7 @@
         "task": "Image to Video",
         "model": "Kling 2.6",
         "freshness": "established",
-        "usage": 46,
+        "usage": 44,
         "recommend": "not_recommended",
         "description": "Upload a static reference image to generate an animated video with synchronized audio using Kling 2.6. This image-to-video workflow calls a third-party API, so execution time depends on server response. Output is a video file containing the animated scene and corresponding sound effects or dialogue.",
         "io": {
@@ -1499,7 +1589,7 @@
         "task": "Image to Video",
         "model": "Vidu Q2",
         "freshness": "established",
-        "usage": 16,
+        "usage": 17,
         "recommend": "not_recommended",
         "description": "Transform a static image into a dynamic 1080p video with cinematic camera control and multi-subject consistency using the high-quality Vidu Q2 model. This image-to-video workflow runs via a third-party API and supports model variants viduq2-pro-fast, viduq2-pro, and viduq2-turbo. Accepts a reference image as input and outputs a generated video.",
         "io": {
@@ -1519,7 +1609,7 @@
         "task": "Image to Video",
         "model": "LTX-2",
         "freshness": "established",
-        "usage": 74,
+        "usage": 79,
         "recommend": "low",
         "description": "Turn a static image and a motion prompt into a short animated video using the fast, cost-effective LTX-2 distilled model. The generated clip includes native synchronized sound with expressive lip sync and natural motion, ideal for quick image-to-video workflows.",
         "io": {
@@ -1536,7 +1626,7 @@
         "task": "Video Generation",
         "model": "LTX-2",
         "freshness": "established",
-        "usage": 30,
+        "usage": 29,
         "recommend": "not_recommended",
         "description": "Use LTX-2 to generate videos with synchronized audio from pose guidance. This workflow applies ControlNet for precise pose control, transforming still images into animated clips with expressive motion. It offers fast and cost-effective video generation with native audio-video sync.",
         "io": {
@@ -1570,7 +1660,7 @@
         "task": "Video Generation",
         "model": "LTX-2",
         "freshness": "established",
-        "usage": 10,
+        "usage": 9,
         "recommend": "not_recommended",
         "description": "LTX-2 Canny to Video generates short animated clips with synchronized audio from edge detection (Canny) guidance and a text prompt. This fast, cost-effective workflow leverages LTX-2's native audio-video sync for structurally consistent results.",
         "io": {
@@ -1604,7 +1694,7 @@
         "task": "Motion Control",
         "model": "Wan2.1 SCAIL",
         "freshness": "established",
-        "usage": 184,
+        "usage": 165,
         "recommend": "low",
         "description": "Wan2.1 SCAIL enables consistent character identity swapping in video editing while preserving original motion and pose. This workflow transfers pose from a reference image based on a text prompt, outputting a generated image or video frame that maintains the target’s composition and movement.",
         "io": {
@@ -1621,7 +1711,7 @@
         "task": "Image to Video",
         "model": "Hunyuan Video",
         "freshness": "established",
-        "usage": 218,
+        "usage": 214,
         "recommend": "medium",
         "description": "This workflow uses Tencent's Hunyuan Video 1.5 to animate a still reference image into a short video. You provide an image and a text prompt describing motion or style. The model generates a video that maintains visual consistency with the original image while bringing it to life.",
         "io": {
@@ -1638,7 +1728,7 @@
         "task": "Video Edit",
         "model": "Kling",
         "freshness": "established",
-        "usage": 39,
+        "usage": 36,
         "recommend": "not_recommended",
         "description": "Edit videos by combining a text prompt with a reference clip—Kling’s cinematic fluidity and style adaptation enable high-quality style transfers, element additions, and background modifications. The template outputs a generated video and supports both text-to-video and image-to-video inputs via the API.",
         "io": {
@@ -1655,7 +1745,7 @@
         "task": "Character Reference",
         "model": "Kling O1",
         "freshness": "established",
-        "usage": 19,
+        "usage": 13,
         "recommend": "not_recommended",
         "description": "Generate a dynamic video from three reference images using Kling Omni, preserving character identity through character reference. Motion and camera effects are added based on text prompts. This workflow runs via a third-party API, so response time depends on server-side load.",
         "io": {
@@ -1672,7 +1762,7 @@
         "task": "Image to Video",
         "model": "Wan2.5",
         "freshness": "established",
-        "usage": 185,
+        "usage": 176,
         "recommend": "low",
         "description": "Transform an input image into a video with optional synchronized audio (3–30 seconds, under 15MB) using Wan2.5. The workflow accepts a reference image and an audio clip, then generates a video with synced motion and sound. This workflow calls a third-party API; execution time depends on server-side response.",
         "io": {
@@ -1752,8 +1842,8 @@
         "task": "Text to Video",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 200,
-        "recommend": "medium",
+        "usage": 195,
+        "recommend": "low",
         "description": "This text-to-video workflow uses the Wan2.2 5B model to generate a short clip from a plain text prompt. It accepts a text description and outputs a video file. The model delivers cinematic visuals with crisp textures and a realistic color palette, though output diversity and structural consistency are limited.",
         "io": {
           "inputs": ["text: Text prompt describing the video"],
@@ -1786,7 +1876,7 @@
         "task": "Image Inpainting",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 93,
+        "usage": 90,
         "recommend": "low",
         "description": "This workflow uses the Wan2.1 model for video inpainting, enabling precise edits to specific regions while preserving the surrounding content. It takes a text prompt and outputs the modified video, leveraging fast generation and video LoRA support for efficient object removal or replacement.",
         "io": {
@@ -1823,7 +1913,7 @@
         "task": "Character Reference",
         "model": "Vidu Q2",
         "freshness": "established",
-        "usage": 18,
+        "usage": 17,
         "recommend": "not_recommended",
         "description": "Generate a video from two reference images using the Vidu Q2 model to preserve character identity and style continuity. This character-reference workflow supports cinematic camera movements and relies on a third-party API, so execution time depends on the server response.",
         "io": {
@@ -1843,7 +1933,7 @@
         "task": "Text to Video",
         "model": "Kling O1",
         "freshness": "established",
-        "usage": 9,
+        "usage": 8,
         "recommend": "not_recommended",
         "description": "Kling O1, an image model with support for up to 10 reference images, generates videos from text descriptions. This workflow calls a third-party API — execution time depends on server-side response. Input a text prompt describing the desired video content and mood, and receive a generated video.",
         "io": {
@@ -1860,7 +1950,7 @@
         "task": "Image to Video",
         "model": "LTX-2",
         "freshness": "established",
-        "usage": 185,
+        "usage": 184,
         "recommend": "low",
         "description": "Transform a static image into a dynamic cinematic video using the LTX‑2 model (Pro or Fast variant). The workflow accepts a reference image and generates a video with natural motion and optional synchronized audio. This workflow calls a third‑party API, so execution time depends on server‑side response.",
         "io": {
@@ -1880,8 +1970,8 @@
         "task": "FLF2V",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 50,
-        "recommend": "low",
+        "usage": 42,
+        "recommend": "not_recommended",
         "description": "This workflow uses Wan 2.2 Fun Inp to generate a video from start and end frames, guided by a text prompt. It produces cinematic outputs with crisp textures and realistic color, though diversity and structure can be weak. The model is fast but offers lower overall fidelity compared to higher-quality alternatives.",
         "io": {
           "inputs": ["text: Input prompt"],
@@ -1897,7 +1987,7 @@
         "task": "Image to Video",
         "model": "Runway",
         "freshness": "established",
-        "usage": 16,
+        "usage": 14,
         "recommend": "not_recommended",
         "description": "This workflow generates a short video from a reference image using Runway’s Gen4 Turbo model via a third-party API. Execution time depends on server-side processing. It leverages Runway’s latest frontier video generation to produce cinematic, dynamic animations from a static source.",
         "io": {
@@ -1914,7 +2004,7 @@
         "task": "Image to Video",
         "model": "LTX-0.9.5",
         "freshness": "established",
-        "usage": 52,
+        "usage": 53,
         "recommend": "low",
         "description": "This workflow generates a short video from a static reference image, guided by a text prompt describing motion or style. It uses the LTX-0.9.5 model from Lightricks, a fast text-to-video generation model repurposed for image-to-video tasks. Inputs are an image and text; output is an animated video.",
         "io": {
@@ -1931,7 +2021,7 @@
         "task": "Text to Video",
         "model": "Wan2.6",
         "freshness": "established",
-        "usage": 25,
+        "usage": 22,
         "recommend": "not_recommended",
         "description": "Generate high-quality videos from text prompts using the Wan2.6 model, with support for 1080P resolution and smoother motion. This text-to-video workflow calls a third-party API—execution depends on server response—and accepts a single text prompt describing the desired scene, outputting a generated video.",
         "io": {
@@ -1968,7 +2058,7 @@
         "task": "Video to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 32,
+        "usage": 30,
         "recommend": "not_recommended",
         "description": "This workflow performs video-to-video generation using Wan 2.1 ControlNet, accepting a text prompt as input and outputting an image. It relies on a fast, low-quality legacy model with video LoRA support, making it suitable for quick previews guided by pose, depth, or edge controls.",
         "io": {
@@ -1985,7 +2075,7 @@
         "task": "Image to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 34,
+        "usage": 30,
         "recommend": "not_recommended",
         "description": "This workflow uses Wan2.1 to animate a reference image based on a text prompt, producing a short video that matches the original image's style and content. As a legacy model, it prioritizes speed with video LoRA support, running on Comfy Cloud for quick results. Inputs are a reference image and a text prompt; output is an animated video.",
         "io": {
@@ -2002,7 +2092,7 @@
         "task": "Lip Sync",
         "model": "Wan2.1 InfiniteTalk",
         "freshness": "established",
-        "usage": 131,
+        "usage": 129,
         "recommend": "low",
         "description": "This workflow generates a full-body dubbed video from a source portrait image and target audio, synchronizing lip movements with the speech while preserving the original identity, background, and camera motion. It uses Wan2.1 InfiniteTalk for accurate audio-to-video lip-sync.",
         "io": {
@@ -2019,7 +2109,7 @@
         "task": "Image to Video",
         "model": "Wan",
         "freshness": "established",
-        "usage": 127,
+        "usage": 121,
         "recommend": "low",
         "description": "This image-to-video workflow animates a reference image using Wan-Move, which provides fine-grained point-level motion control via trajectory guidance. The workflow leverages the Wan-Move model for precise trajectory-based animation. It accepts an image and a text prompt describing motion or style, then outputs an animated video.",
         "io": {
@@ -2053,7 +2143,7 @@
         "task": "Character Reference",
         "model": "Wan2.6",
         "freshness": "established",
-        "usage": 24,
+        "usage": 20,
         "recommend": "not_recommended",
         "description": "This identity-preserving video workflow uses two reference videos—one for identity and one for motion guidance—to generate cinematic output with natural movement. It relies on the Wan2.6 model and executes via a third-party API, with response time depending on server load.",
         "io": {
@@ -2073,7 +2163,7 @@
         "task": "Video Generation",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 39,
+        "usage": 43,
         "recommend": "not_recommended",
         "description": "This workflow uses Wan2.1 to extend videos by outpainting, expanding the frame beyond original boundaries. It takes a text prompt and produces a generated video (output listed as image in metadata). As a legacy low-quality model, it prioritizes speed and supports video LoRAs.",
         "io": {
@@ -2090,7 +2180,7 @@
         "task": "Text to Video",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 35,
+        "usage": 33,
         "recommend": "not_recommended",
         "description": "This text-to-video workflow generates cinematic videos from a text prompt using Wan2.2 5B with multi-condition ControlNet guidance for pose, depth, and edge control. It accepts a text description and outputs a video, prioritizing crisp textures and realistic color over diversity for rapid prototyping on Comfy Cloud.",
         "io": {
@@ -2144,7 +2234,7 @@
         "task": "Text to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 98,
+        "usage": 99,
         "recommend": "low",
         "description": "Wan 2.1 Text to Video generates a video from a text prompt using the fast, low-quality Wan2.1 legacy model with video LoRA support. The workflow runs on Comfy Cloud, processing the input text to produce a video output.",
         "io": {
@@ -2195,7 +2285,7 @@
         "task": "Image to Video",
         "model": "Vidu Q1",
         "freshness": "established",
-        "usage": 13,
+        "usage": 16,
         "recommend": "not_recommended",
         "description": "Generate an animated video from a reference image using Vidu Q1. Provide an image and a motion or style prompt to drive the animation. The model outputs high-resolution 1080p video, and this workflow is designed for API-based execution.",
         "io": {
@@ -2215,7 +2305,7 @@
         "task": "Text to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 359,
+        "usage": 370,
         "recommend": "medium",
         "description": "This text-to-video workflow uses the Wan2.1 legacy model to generate short videos quickly from a text prompt. It is optimized for speed, producing low-quality output suitable for rapid prototyping. The workflow takes a single text input and outputs a generated video.",
         "io": {
@@ -2232,7 +2322,7 @@
         "task": "Text to Video",
         "model": "Kling",
         "freshness": "established",
-        "usage": 29,
+        "usage": 28,
         "recommend": "not_recommended",
         "description": "This workflow uses Kling 2.6 to generate storytelling videos with synchronized audio from text prompts. It accepts a structured input describing the scene, subject, movement, and audio, then outputs a video with dialogue or sound effects. Execution relies on a third-party API, so response time depends on the server.",
         "io": {
@@ -2266,7 +2356,7 @@
         "task": "Image to Video",
         "model": "Kandinsky",
         "freshness": "established",
-        "usage": 16,
+        "usage": 14,
         "recommend": "not_recommended",
         "description": "This workflow generates a short video from a reference image and a text prompt using a lightweight 2B-parameter Kandinsky model. It accepts an image to animate and a textual description of motion or style, outputting the resulting video. The model supports both English and Russian prompts.",
         "io": {
@@ -2283,7 +2373,7 @@
         "task": "Text to Video",
         "model": "Vidu Q2",
         "freshness": "established",
-        "usage": 12,
+        "usage": 14,
         "recommend": "not_recommended",
         "description": "Generate high-quality video from a text prompt using the Vidu Q2 model via a third-party API. The model is known for quality and supports reference images, but this workflow uses only text. Execution time depends on server-side response.",
         "io": {
@@ -2303,7 +2393,7 @@
         "task": "Image to Video",
         "model": "Veo",
         "freshness": "established",
-        "usage": 23,
+        "usage": 24,
         "recommend": "not_recommended",
         "description": "Generate a video from an input image using the Google Veo2 API. This workflow controls aspect ratio, duration, and other parameters, and its execution time depends on server-side response. It uses the veo-2.0-generate-001 model to animate a reference image into a video output.",
         "io": {
@@ -2327,10 +2417,7 @@
         "recommend": "not_recommended",
         "description": "This workflow generates a video from a text prompt using Wan2.5 model variants (wan2.5-t2v-preview, wan2.6-t2v). Optionally, you can sync an audio file (3–30 seconds, under 15MB) to enhance motion quality. The output is a video with synchronized audio. This workflow uses a third‑party API, so execution time depends on server‑side response.",
         "io": {
-          "inputs": [
-            "text: Text prompt describing the desired video content",
-            "audio: Optional audio input to synchronize with generated video (3-30 seconds, under 15MB)"
-          ],
+          "inputs": ["text: Text prompt describing the desired video content", "audio: Optional audio input to synchronize with generated video (3-30 seconds, under 15MB)"],
           "outputs": ["video: Generated video with synchronized audio and enhanced motion quality"]
         },
         "capabilities": {
@@ -2346,7 +2433,7 @@
         "task": "FLF2V",
         "model": "Vidu Q1",
         "freshness": "established",
-        "usage": 19,
+        "usage": 20,
         "recommend": "not_recommended",
         "description": "This workflow uses the Vidu Q1 model to generate a smooth video transition between a provided start frame and an end frame. It accepts two images as input and outputs a video with natural motion interpolation and consistent visual quality. The workflow executes via a third-party API, so response time depends on server-side processing.",
         "io": {
@@ -2366,7 +2453,7 @@
         "task": "FLF2V",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 24,
+        "usage": 21,
         "recommend": "not_recommended",
         "description": "Generate smooth video transitions by defining start and end frames, using the efficient Wan2.1 model. Supports video LoRAs and custom keyframe sequences for lightweight, high-speed video-to-video generation. Outputs a sequence of frames from a text prompt and two boundary images.",
         "io": {
@@ -2400,7 +2487,7 @@
         "task": "Video Edit",
         "model": "Capybara",
         "freshness": "current",
-        "usage": 11,
+        "usage": 10,
         "recommend": "not_recommended",
         "description": "Capybara edits an uploaded video based on a text instruction, leveraging its vision-language capabilities for instruction-based video editing. The workflow accepts a video and a text prompt, then generates a modified version of the video that reflects the requested changes. It outputs a video result aligning with the editing guidance.",
         "io": {
@@ -2434,7 +2521,7 @@
         "task": "Text to Video",
         "model": "PixVerse",
         "freshness": "established",
-        "usage": 10,
+        "usage": 8,
         "recommend": "not_recommended",
         "description": "Generate videos from text descriptions using PixVerse, with accurate prompt interpretation and stylized dynamics. This workflow takes a text prompt as input and outputs a generated video. It calls a third-party API, so execution time depends on server-side response.",
         "io": {
@@ -2451,7 +2538,7 @@
         "task": "Text to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 18,
+        "usage": 14,
         "recommend": "not_recommended",
         "description": "Generate text-to-video with alpha channel support for transparent backgrounds using Wan2.1, a legacy model noted for its fast generation and video LoRA compatibility, though output quality is lower than newer alternatives. It takes a text prompt and produces a video.",
         "io": {
@@ -2468,7 +2555,7 @@
         "task": "Text to Video",
         "model": "SVD",
         "freshness": "established",
-        "usage": 55,
+        "usage": 58,
         "recommend": "low",
         "description": "This text-to-video workflow generates an image from a text prompt, then animates it into a video using Stable Video Diffusion. It takes a single text description as input and outputs a synthesized video clip.",
         "io": {
@@ -2485,7 +2572,7 @@
         "task": "Image to Video",
         "model": "Luma",
         "freshness": "established",
-        "usage": 16,
+        "usage": 13,
         "recommend": "not_recommended",
         "description": "This workflow uses Luma’s legacy model to animate a static image into a video. It accepts a reference image and outputs an animated video, with API-based execution so response time depends on server-side processing.",
         "io": {
@@ -2502,7 +2589,7 @@
         "task": "Motion Control",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 3,
+        "usage": 2,
         "recommend": "not_recommended",
         "description": "Wan2.1 ATI is a video generation workflow using the Wan2.1 model for trajectory-controlled synthesis. It accepts a text prompt and outputs an image. This legacy model executes quickly and supports video LoRA for customization.",
         "io": {
@@ -2539,7 +2626,7 @@
         "task": "Text to Video",
         "model": "Vidu Q1",
         "freshness": "established",
-        "usage": 21,
+        "usage": 19,
         "recommend": "not_recommended",
         "description": "Generate 1080p videos from text prompts using Vidu Q1. Provide a text description, and the workflow returns a video with adjustable movement amplitude and duration control. Execution relies on a third-party API, so response time depends on server-side processing.",
         "io": {
@@ -2579,7 +2666,7 @@
         "task": "Image to Video",
         "model": "Vidu Q1",
         "freshness": "established",
-        "usage": 15,
+        "usage": 12,
         "recommend": "not_recommended",
         "description": "Use the Vidu Q1 model to convert a static input image into a dynamic 1080p video animation. This workflow requires a single reference image and outputs a generated video. It executes as a third-party API call, so response time depends on server-side availability.",
         "io": {
@@ -2599,7 +2686,7 @@
         "task": "Text to Video",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 33,
+        "usage": 29,
         "recommend": "not_recommended",
         "description": "This text-to-video workflow uses the Wan2.2 5B model to generate short videos from a text prompt. It produces cinematic clips with crisp textures and a realistic color palette, but diversity and structural coherence are limited. Designed for fast prototyping and quick iterations, it takes a text prompt as input and outputs a video file.",
         "io": {
@@ -2616,7 +2703,7 @@
         "task": "Text to Video",
         "model": "LTX-0.9.5",
         "freshness": "established",
-        "usage": 25,
+        "usage": 24,
         "recommend": "not_recommended",
         "description": "This workflow generates a video from a text prompt using the LTX-0.9.5 model by Lightricks, designed for fast text-to-video generation. It takes a text description as input and outputs a short video clip, running efficiently on Comfy Cloud.",
         "io": {
@@ -2650,7 +2737,7 @@
         "task": "Image to Video",
         "model": "PixVerse",
         "freshness": "established",
-        "usage": 15,
+        "usage": 14,
         "recommend": "not_recommended",
         "description": "Generate dynamic videos from static images with motion and effects using PixVerse. The workflow takes a reference image as input and returns a generated video, with optional template selection. This workflow calls a third-party API, so execution time depends on the server-side response.",
         "io": {
@@ -2701,7 +2788,7 @@
         "task": "Text to Video",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 23,
+        "usage": 24,
         "recommend": "not_recommended",
         "description": "This workflow generates a short video from a text prompt using the Wan2.1 VACE-14B model. It is optimized for fast execution and supports video LoRA customization, though output quality is lower. Accepts a text description and returns a generated video.",
         "io": {
@@ -2735,7 +2822,7 @@
         "task": "Video Generation",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 36,
+        "usage": 30,
         "recommend": "not_recommended",
         "description": "This Wan 2.1 inpainting workflow edits an input image based on text instructions, using a legacy video generation model optimized for fast, low-quality output with video Lora support. It takes an image and text prompt, then returns the edited image via inpainting.",
         "io": {
@@ -2775,7 +2862,7 @@
         "task": "Text to Image",
         "model": "Z-Image-Turbo",
         "freshness": "established",
-        "usage": 14241,
+        "usage": 13603,
         "recommend": "highly_recommended",
         "description": "Generate an image from a text prompt using the fast Z-Image-Turbo model, an efficient single-stream diffusion transformer supporting both English and Chinese. Input is a text prompt; output is the generated image.",
         "io": {
@@ -2809,7 +2896,7 @@
         "task": "Image Edit",
         "model": "Google",
         "freshness": "current",
-        "usage": 1792,
+        "usage": 1681,
         "recommend": "top",
         "description": "Edit an image using natural language instructions with Google’s Nano Banana 2 model. Provide an input image and a text prompt describing the desired modification; the workflow generates an edited image that preserves subject consistency and high visual fidelity. This workflow executes via a third-party API.",
         "io": {
@@ -2829,8 +2916,8 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 208,
-        "recommend": "medium",
+        "usage": 185,
+        "recommend": "low",
         "description": "Replace materials in objects (e.g., furniture) by combining a reference image with user-provided text prompts. This image editing workflow leverages Qwen-Image-Edit’s material editing and style transfer capabilities. The output is a modified image reflecting the specified material or appearance change.",
         "io": {
           "inputs": ["image×2: Reference images: the object and the target material to apply"],
@@ -2846,8 +2933,8 @@
         "task": "Image Edit",
         "model": "FireRed Image Edit 1.1",
         "freshness": "current",
-        "usage": 533,
-        "recommend": "high",
+        "usage": 492,
+        "recommend": "medium",
         "description": "Use FireRed Image Edit 1.1 to edit uploaded images with a text prompt. It performs precise local edits, inpainting, and text-guided modifications for high-fidelity results. The workflow outputs a modified image with enhanced identity consistency, multi-element fusion, or professional photo restoration.",
         "io": {
           "inputs": ["image: Input reference image to edit", "text: Text prompt describing the desired edit"],
@@ -2896,9 +2983,9 @@
         "title": "Krea-2 Int8: Text to Image",
         "task": "Text to Image",
         "model": "Krea 2",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 165,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate images with the Krea-2 Turbo distilled text-to-image model using the high-performance Int8 Convrot format, which delivers better quality than FP8 while generally running faster across most GPUs. This workflow accepts no file inputs and produces a single image output, with optional style LoRA support for creative customization. Ideal for rapid concept art iteration, batch asset generation for games or marketing, and exploring the speed-quality sweet spot of the Convrot Int8 quantization.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -2934,7 +3021,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image",
         "freshness": "established",
-        "usage": 320,
+        "usage": 312,
         "recommend": "medium",
         "description": "Qwen Image Edit 2509 enables advanced image editing via text prompts, leveraging the model's semi-realistic quality and strong prompt adherence. It supports multi-image consistency and ControlNet integration for guided edits, making it suitable for detailed modifications and inpainting tasks.",
         "io": {
@@ -2950,7 +3037,7 @@
         "title": "Seedream 5.0 Pro: Image Edit",
         "task": "Image Edit",
         "model": "Seedream 5.0 Pro",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 5333,
         "recommend": "highly_recommended",
         "description": "Edit images with precision using Seedream 5.0 Pro via API, targeting specific regions while preserving lighting, depth, and texture. The workflow takes a text prompt as input and outputs a generated image, ideal for product photography edits, portrait consistency adjustments, and structured layouts with multilingual text.",
@@ -2971,7 +3058,7 @@
         "task": "Image Edit",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 905,
+        "usage": 839,
         "recommend": "high",
         "description": "This workflow performs image editing using Google’s latest image model, supporting brand design, style references, and multiple angles. Users provide one or two reference images to generate or edit a studio-quality 4K output with enhanced text and character consistency. Execution requires a third-party API call.",
         "io": {
@@ -3026,12 +3113,46 @@
         }
       },
       {
+        "name": "api_qwen3_image_edit",
+        "title": "Qwen Image 3.0 Pro: Image Edit",
+        "task": "Image Edit",
+        "model": "Qwen Image 3.0 Pro",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Qwen Image 3.0 Pro performs advanced image editing with rich multi-image input, generating complex layouts like newspapers, storyboards, menus, and exam papers in a single pass while preserving fine details down to 10px text, micro-expressions, and individual hairs. Supports native rendering across 12 languages with realistic simulation of web pages, games, and live streams. Ideal for professional content production, interface mockups, and high-fidelity commercial imagery requiring authentic detail.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-edit"]
+        }
+      },
+      {
+        "name": "api_qwen3_t2i",
+        "title": "Qwen Image 3.0 Pro: Text to Image",
+        "task": "Text to Image",
+        "model": "Qwen Image 3.0 Pro",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate detailed, production-ready images from text prompts using the Qwen Image 3.0 Pro model, supporting up to 4.5k tokens for complex layouts like posters, infographics, and storyboards. It renders crisp 10px text, realistic textures, and native support for 12 languages and over 100 art styles, with optional 1-3 reference images for fusion editing. Ideal for marketing materials, educational diagrams, and UI design mockups.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated image"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
         "name": "api_grok_text_to_image",
         "title": "Grok: Text to Image",
         "task": "Text to Image",
         "model": "Grok",
         "freshness": "established",
-        "usage": 384,
+        "usage": 342,
         "recommend": "medium",
         "description": "Use the Grok API to generate high-quality images from text prompts. This workflow takes a text description as input and produces a generated image. Grok enables fast inference and versatile image creation directly through the API.",
         "io": {
@@ -3050,7 +3171,7 @@
         "title": "Seedream 5.0 Pro: Text to Image",
         "task": "Text to Image",
         "model": "Seedream 5.0 Pro",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 2533,
         "recommend": "highly_recommended",
         "description": "Generate images from text prompts using Seedream 5.0 Pro via API, producing one high-quality output. Ideal for creative concept art, marketing visual mockups, and rapid design ideation.",
@@ -3071,7 +3192,7 @@
         "task": "Image Edit",
         "model": "ByteDance",
         "freshness": "established",
-        "usage": 274,
+        "usage": 247,
         "recommend": "medium",
         "description": "This API-based workflow uses ByteDance's Seedream model for text-to-image generation and image editing, supporting versions 4.0 through 5.0 Lite. It accepts an optional reference image and a text prompt to produce a 2K resolution output. Execution depends on the third-party API's response time.",
         "io": {
@@ -3091,7 +3212,7 @@
         "task": "Image Edit",
         "model": "Seedream 5.0 Lite",
         "freshness": "current",
-        "usage": 580,
+        "usage": 538,
         "recommend": "high",
         "description": "Edit an image using a text prompt with ByteDance's Seedream 5.0 Lite. The model employs deep reasoning and web search to understand your edit instructions. This API workflow takes an image and prompt as input, producing a modified image that aligns with your description.",
         "io": {
@@ -3219,7 +3340,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 1114,
+        "usage": 1031,
         "recommend": "top",
         "description": "This workflow edits or generates images from a text prompt using the Flux model. The model is fast and LoRA-friendly, supporting high customization, though colors and textures may be less realistic. It handles both text-to-image and image editing tasks.",
         "io": {
@@ -3256,7 +3377,7 @@
         "task": "Image Edit",
         "model": "Gemini-2.5-Flash",
         "freshness": "established",
-        "usage": 409,
+        "usage": 384,
         "recommend": "medium",
         "description": "This workflow uses Google Gemini 2.5 Flash via API to perform image editing with consistency. It accepts a text prompt describing the edit and outputs an image. The model's fast generation and multimodal understanding enable dynamic visual content creation.",
         "io": {
@@ -3413,7 +3534,7 @@
         "task": "Text to Image",
         "model": "Flux",
         "freshness": "established",
-        "usage": 116,
+        "usage": 115,
         "recommend": "low",
         "description": "Generate images from text prompts using Flux.2 Dev, a fast and highly customizable model optimized for LoRA training, though colors and textures may be less realistic. Input a text prompt and receive a generated image. This workflow supports text-to-image only.",
         "io": {
@@ -3464,7 +3585,7 @@
         "task": "Text to Image",
         "model": "Z-Image",
         "freshness": "established",
-        "usage": 430,
+        "usage": 398,
         "recommend": "medium",
         "description": "Generate images from text prompts using Z-Image, a budget-friendly model optimized for speed and photorealistic textures. Ideal for fast prototyping with medium-quality output, though image diversity is limited. The workflow accepts a text prompt and outputs a generated image.",
         "io": {
@@ -3498,7 +3619,7 @@
         "task": "Text to Image",
         "model": "Anima",
         "freshness": "established",
-        "usage": 825,
+        "usage": 814,
         "recommend": "high",
         "description": "Input a text prompt to generate high-quality anime-style illustrations using the Anima model. The workflow transforms your description into vibrant, detailed artwork with accurate style and composition. Adjust steps and CFG scale to refine the output.",
         "io": {
@@ -3566,7 +3687,7 @@
         "task": "Text to Image",
         "model": "Qwen",
         "freshness": "established",
-        "usage": 254,
+        "usage": 242,
         "recommend": "medium",
         "description": "This ComfyUI workflow template uses Qwen to generate high-quality images from text prompts. It delivers enhanced human realism, natural details, and accurate layout. The model excels at producing realistic scenes with fine textures and supports additional capabilities like lighting transfer and LoRA fine-tuning.",
         "io": {
@@ -3691,7 +3812,7 @@
         "task": "Image Edit",
         "model": "Kling O3",
         "freshness": "current",
-        "usage": 61,
+        "usage": 50,
         "recommend": "low",
         "description": "This workflow uses the Kling O3 model to generate or edit an image from up to 10 reference images, supporting image-guided synthesis. Execution via a third-party API yields a single output based on your visual inputs. Kling O3 also offers video generation, outpainting, and character reference capabilities.",
         "io": {
@@ -3708,7 +3829,7 @@
         "task": "Text to Image",
         "model": "Flux",
         "freshness": "established",
-        "usage": 161,
+        "usage": 156,
         "recommend": "low",
         "description": "This workflow generates images from text prompts using the Flux.2 [Klein] 9B model. It is optimized for fast inference and highly customizable, especially for LoRA fine-tuning. Output images may have slightly less realistic colors and textures. Ideal for rapid prototyping and experimentation.",
         "io": {
@@ -3725,7 +3846,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 232,
+        "usage": 225,
         "recommend": "medium",
         "description": "This workflow performs image editing using two reference images and a text prompt. It uses the fast, LoRA-friendly Flux.2 Klein model, optimized for local deployment and fine-tuning, though colors and textures may be less realistic. The output is a single edited image.",
         "io": {
@@ -3759,7 +3880,7 @@
         "task": "Text to Image",
         "model": "Recraft",
         "freshness": "current",
-        "usage": 17,
+        "usage": 18,
         "recommend": "not_recommended",
         "description": "Generate high-resolution images from a text prompt using Recraft’s V4 model, delivering sharp, detailed outputs with enhanced realism. Choose between the standard `recraftv4` (1024x1024) or `recraftv4_pro` (2048x2048) variant. This workflow calls a third-party API, so response time depends on server availability.",
         "io": {
@@ -3779,7 +3900,7 @@
         "task": "Image Generation",
         "model": "Qwen-Image 2512",
         "freshness": "current",
-        "usage": 36,
+        "usage": 37,
         "recommend": "not_recommended",
         "description": "Upload an image and select a control type from Canny, HED, Depth, Pose, MLSD, Scribble, or Grayscale. The Qwen-Image 2512 model then generates a new image guided by that structural condition, leveraging enhanced human realism, finer landscape detail, and improved text composition.",
         "io": {
@@ -3796,7 +3917,7 @@
         "task": "Text to Image",
         "model": "LongCat",
         "freshness": "current",
-        "usage": 30,
+        "usage": 26,
         "recommend": "not_recommended",
         "description": "Generate an image from a text prompt using the LongCat model. Input your desired scene description and the model performs a direct text-to-image conversion. This is a straightforward workflow suitable for simple image generation tasks, optimized for ease of use and quick results.",
         "io": {
@@ -3813,7 +3934,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 95,
+        "usage": 85,
         "recommend": "low",
         "description": "This workflow uses FLUX.2 [max], a fast model for high‑precision object swapping. It accepts three images—a scene and two objects—and outputs a single edited image with the objects replaced while preserving lighting and perspective. Execution requires a third‑party API call.",
         "io": {
@@ -3830,7 +3951,7 @@
         "task": "Text to Image",
         "model": "Kling",
         "freshness": "current",
-        "usage": 36,
+        "usage": 35,
         "recommend": "not_recommended",
         "description": "Generate an image from a text prompt using the Kling 3.0 model via a third-party API. Describe your desired scene in natural language, and the workflow returns a high-quality image matching the prompt. Execution time depends on server-side processing.",
         "io": {
@@ -3847,7 +3968,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 534,
+        "usage": 508,
         "recommend": "high",
         "description": "This text-guided image editing workflow uses Flux.2 [Klein] 9B Base, a fast, LoRA-friendly model for creative control. It takes two reference images and outputs a single edited image, leveraging the model's customizability. Colors and textures may be less realistic.",
         "io": {
@@ -3881,7 +4002,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 32,
+        "usage": 29,
         "recommend": "not_recommended",
         "description": "Upload a reference image and specify a subject to generate an inflated version using the INFL8 LoRA. This workflow leverages Qwen-Image-Edit's advanced image editing capabilities, including material replacement and style transfer, for a creative inflation effect.",
         "io": {
@@ -3935,7 +4056,7 @@
         "task": "Text to Image",
         "model": "Qwen-Image 2512",
         "freshness": "established",
-        "usage": 76,
+        "usage": 72,
         "recommend": "low",
         "description": "Generate images from text prompts using Qwen-Image 2512 with a fast 2-step Turbo LoRA workflow. This delivers the model’s enhanced human realism, detailed textures, and improved text rendering at higher speed, though with some quality trade-off. Accepts a text prompt and outputs a generated image.",
         "io": {
@@ -3952,7 +4073,7 @@
         "task": "Image Edit",
         "model": "Flux.1 Kontext",
         "freshness": "established",
-        "usage": 110,
+        "usage": 111,
         "recommend": "low",
         "description": "This workflow uses the Flux.1 Kontext Dev model, a frontier image editing model with advanced reasoning and style transfer, to edit a reference image while preserving character consistency and original style. Unaffected areas remain unchanged. It runs on Comfy Cloud for quick execution.",
         "io": {
@@ -3969,7 +4090,7 @@
         "task": "Text to Image",
         "model": "Flux",
         "freshness": "established",
-        "usage": 39,
+        "usage": 38,
         "recommend": "not_recommended",
         "description": "This workflow generates images from text prompts using the Flux.2 [Klein] 4B model, which is fast, LoRA-friendly, and highly customizable, though colors and textures may be less realistic. It supports text-to-image with a single prompt input and outputs the resulting image.",
         "io": {
@@ -3986,7 +4107,7 @@
         "task": "Image Edit",
         "model": "Flux.2",
         "freshness": "established",
-        "usage": 104,
+        "usage": 101,
         "recommend": "low",
         "description": "Generate photorealistic images at up to 4MP resolution using Flux.2 Pro, with enhanced realism and crisper text. Accepts a text prompt and up to four optional reference images for multi-consistency; returns one generated image. Workflow executes via a third-party API, so processing time varies with server response.",
         "io": {
@@ -4003,7 +4124,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 116,
+        "usage": 107,
         "recommend": "low",
         "description": "This workflow performs image editing using the fast Flux.2 [Klein] 4B Distilled model, optimized for real-time previews and interactive use. It accepts two reference images for content and style guidance, producing an edited image with low latency. The highly customizable model supports LoRA integration, though colors and textures may be less realistic.",
         "io": {
@@ -4020,7 +4141,7 @@
         "task": "Image Inpainting",
         "model": "Flux",
         "freshness": "established",
-        "usage": 174,
+        "usage": 173,
         "recommend": "low",
         "description": "Fill missing or masked areas using Flux.1 Fill Dev inpainting. Provide a reference image and mask; the workflow regenerates content for the masked region. This fast, Comfy Cloud template is optimized for quick inpainting tasks with the Flux model.",
         "io": {
@@ -4037,7 +4158,7 @@
         "task": "Style Reference",
         "model": "Flux",
         "freshness": "established",
-        "usage": 153,
+        "usage": 148,
         "recommend": "low",
         "description": "This workflow uses Flux to generate images from a text prompt while referencing a provided image to control both style and subject. The model’s fast inference and LoRA-friendly design enable quick, customizable outputs. The result is a single generated image.",
         "io": {
@@ -4054,7 +4175,7 @@
         "task": "Text to Image",
         "model": "Capybara",
         "freshness": "current",
-        "usage": 11,
+        "usage": 10,
         "recommend": "not_recommended",
         "description": "Input a text prompt to generate an image using Capybara, a unified vision-language model supporting text-to-image synthesis. This workflow leverages Capybara’s capability to create visuals directly from descriptive text, outputting a single image.",
         "io": {
@@ -4071,7 +4192,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 135,
+        "usage": 127,
         "recommend": "low",
         "description": "Edit reference images using Qwen-Image-Edit's 20B MMDiT model, which supports precise bilingual text instructions and dual semantic/appearance editing. The workflow takes an uploaded input image and a user-provided text instruction, then returns the edited image. This template runs on Comfy Cloud for fast execution.",
         "io": {
@@ -4088,7 +4209,7 @@
         "task": "Image Edit",
         "model": "Capybara",
         "freshness": "current",
-        "usage": 25,
+        "usage": 22,
         "recommend": "not_recommended",
         "description": "Use Capybara’s instruction-based editing to modify a reference image according to a text prompt, supporting tasks like style changes or object replacement. The model takes the input image and your edit instruction, then produces the edited image as output.",
         "io": {
@@ -4139,7 +4260,7 @@
         "task": "Image Generation",
         "model": "Quiver",
         "freshness": "current",
-        "usage": 31,
+        "usage": 34,
         "recommend": "not_recommended",
         "description": "Convert an input image into a scalable SVG vector graphic using Quiver’s image-to-vector model. The workflow supports multiple quality tiers for varying fidelity. Quiver specializes in text-to-SVG and image-to-SVG generation, producing clean, resolution-independent vector output.",
         "io": {
@@ -4173,7 +4294,7 @@
         "task": "Text to Image",
         "model": "Chroma",
         "freshness": "established",
-        "usage": 57,
+        "usage": 58,
         "recommend": "low",
         "description": "Use a text prompt to generate vibrant, high-quality images with the Chroma1-HD model, optimized for chroma key compositing and seamless integration into video or graphic design projects. This workflow outputs a single image ready for further compositing and layer extraction.",
         "io": {
@@ -4190,7 +4311,7 @@
         "task": "Text to Image",
         "model": "Flux",
         "freshness": "established",
-        "usage": 108,
+        "usage": 105,
         "recommend": "low",
         "description": "This workflow generates images from text prompts using Flux.1 Krea Dev, a fast model optimized for LoRA customization. It produces less realistic colors and textures but is highly customizable and runs quickly on Comfy Cloud.",
         "io": {
@@ -4207,7 +4328,7 @@
         "task": "Text to Image",
         "model": "Flux.1",
         "freshness": "established",
-        "usage": 176,
+        "usage": 172,
         "recommend": "low",
         "description": "Generate images from text prompts using a quantized version of Black Forest Lab's high-quality text-to-image model. The user provides a text prompt, and the workflow outputs a generated image with slightly lower quality due to quantization, but requires less memory and only one model file. This workflow is optimized for devices with limited VRAM.",
         "io": {
@@ -4224,7 +4345,7 @@
         "task": "Text to Image",
         "model": "Flux.2 Dev",
         "freshness": "established",
-        "usage": 35,
+        "usage": 33,
         "recommend": "not_recommended",
         "description": "Create product mockups by applying design patterns to packaging, mugs, and other items with Flux.2 Dev FP8. Provide two reference images—one for the design and one for the product shape—and the workflow generates a mockup that combines both with multi-reference consistency. This text-to-image and image-edit workflow runs on Comfy Cloud for fast execution.",
         "io": {
@@ -4241,7 +4362,7 @@
         "task": "Text to Image",
         "model": "SDXL",
         "freshness": "established",
-        "usage": 154,
+        "usage": 149,
         "recommend": "low",
         "description": "Generate high-quality images from text prompts using the SDXL model. The user provides a positive prompt and optional negative prompt; the workflow outputs a detailed, high-resolution image via Stable Diffusion XL. This workflow leverages SDXL's strong aesthetic performance for general-purpose text-to-image generation.",
         "io": {
@@ -4258,7 +4379,7 @@
         "task": "Text to Image",
         "model": "Flux",
         "freshness": "established",
-        "usage": 134,
+        "usage": 126,
         "recommend": "low",
         "description": "Generate images from text prompts using the full Flux.1 Dev model, optimized for LoRA support and fast execution with highly customizable but less realistic colors and textures. This text-to-image workflow takes a text prompt as input and outputs a detailed image, requiring larger VRAM and multiple model files.",
         "io": {
@@ -4275,7 +4396,7 @@
         "task": "Image Generation",
         "model": "Flux.1",
         "freshness": "established",
-        "usage": 56,
+        "usage": 55,
         "recommend": "low",
         "description": "This ComfyUI workflow performs outpainting using Flux.1, extending an uploaded reference image beyond its original boundaries to generate new content that blends with the existing scene. The model—Black Forest Lab's highest quality text-to-image model—fills the expanded canvas with plausible details, enabling image extension in any direction.",
         "io": {
@@ -4292,7 +4413,7 @@
         "task": "Image Generation",
         "model": "Qwen-Image",
         "freshness": "established",
-        "usage": 33,
+        "usage": 32,
         "recommend": "not_recommended",
         "description": "Generate images with Qwen-Image InstantX Union ControlNet, supporting canny, soft edge, depth, and pose inputs. The semi-realistic model excels at following detailed prompts and generating text. This workflow takes a text prompt and optional control conditions to produce a controlled image output.",
         "io": {
@@ -4309,7 +4430,7 @@
         "task": "Text to Image",
         "model": "Qwen-Image",
         "freshness": "established",
-        "usage": 105,
+        "usage": 100,
         "recommend": "low",
         "description": "This workflow generates images from text prompts using Qwen-Image, a semi-realistic 20B MMDiT model known for excellent text rendering and prompt adherence. It accepts a detailed text description and outputs a high-quality image with strong text accuracy. The workflow runs on Comfy Cloud for efficient execution.",
         "io": {
@@ -4326,7 +4447,7 @@
         "task": "Text to Image",
         "model": "Kandinsky",
         "freshness": "established",
-        "usage": 12,
+        "usage": 10,
         "recommend": "not_recommended",
         "description": "Generate an image from a text prompt using the lightweight Kandinsky 5.0 Image Lite model. This workflow accepts English or Russian prompts and outputs a high-quality generated image. No API execution is involved—this runs locally within ComfyUI.",
         "io": {
@@ -4411,7 +4532,7 @@
         "task": "Text to Image",
         "model": "Chroma",
         "freshness": "established",
-        "usage": 34,
+        "usage": 32,
         "recommend": "not_recommended",
         "description": "Generate images from text prompts using the Chroma1-Radiance model, which operates directly on image pixels instead of compressed latents for higher quality and reduced artifacts. This workflow accepts a text description and produces a vivid, detailed image, leveraging Chroma's advanced text-to-image capabilities. It runs on Comfy Cloud for efficient execution.",
         "io": {
@@ -4428,8 +4549,8 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 51,
-        "recommend": "low",
+        "usage": 49,
+        "recommend": "not_recommended",
         "description": "Relight images using Qwen-Image-Edit, which excels at relighting and color adjustment. Provide a reference image and an edit prompt describing the desired lighting, and the model outputs the relit image with ControlNet compatibility for finer control.",
         "io": {
           "inputs": ["image: Input reference image to relight"],
@@ -4462,7 +4583,7 @@
         "task": "Image Edit",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 83,
+        "usage": 84,
         "recommend": "low",
         "description": "Transform a real building photo into an architectural blueprint and then into a detailed miniature physical model using Google’s Gemini 3 Pro Image Preview. This image-editing workflow runs via third‑party API and outputs a generated miniature model image, providing a complete architectural visualization pipeline.",
         "io": {
@@ -4539,7 +4660,7 @@
         "task": "Image Edit",
         "model": "Wan2.1",
         "freshness": "established",
-        "usage": 23,
+        "usage": 22,
         "recommend": "not_recommended",
         "description": "This workflow uses the Wan2.1 model (a fast low-quality legacy model with video Lora support) to perform image editing. The user provides a reference image, and the workflow outputs an edited version. Execution runs on Comfy Cloud.",
         "io": {
@@ -4556,7 +4677,7 @@
         "task": "Image Generation",
         "model": "Flux.1",
         "freshness": "established",
-        "usage": 14,
+        "usage": 16,
         "recommend": "not_recommended",
         "description": "This workflow uses Black Forest Lab's Flux.1 model to edit images via inpainting or outpainting based on a text prompt. It takes an input image and edit instructions, then outputs the modified image. Designed for tasks like object removal or canvas extension, it executes efficiently on Comfy Cloud.",
         "io": {
@@ -4590,7 +4711,7 @@
         "task": "Text to Image",
         "model": "Wan2.5",
         "freshness": "established",
-        "usage": 21,
+        "usage": 20,
         "recommend": "not_recommended",
         "description": "Generate images from text prompts using Wan2.5 (wan2.5-t2i-preview), offering strong prompt adherence and visual quality. This workflow relies on a third-party API, so execution time depends on server-side response. The only input is a text description; the output is the generated image.",
         "io": {
@@ -4627,7 +4748,7 @@
         "task": "Text to Image",
         "model": "OmniGen",
         "freshness": "established",
-        "usage": 256,
+        "usage": 249,
         "recommend": "medium",
         "description": "Generate anime-style images from text prompts using the OmniGen unified multi-modal model. This workflow takes a text prompt as input and outputs a high-quality generated image, leveraging fine-tuned character understanding and detailed textures.",
         "io": {
@@ -4661,7 +4782,7 @@
         "task": "Depth Estimation",
         "model": "Flux",
         "freshness": "established",
-        "usage": 44,
+        "usage": 49,
         "recommend": "not_recommended",
         "description": "Generate images guided by depth information using Flux.1 and a depth LoRA. The workflow takes a control image (depth map) and text prompt, then outputs an image with structural control via ControlNet. Flux delivers fast, highly customizable generation with less realistic colors and textures.",
         "io": {
@@ -4678,7 +4799,7 @@
         "task": "Image Edit",
         "model": "GPT-Image-1.5",
         "freshness": "established",
-        "usage": 26,
+        "usage": 25,
         "recommend": "not_recommended",
         "description": "Create professional mall billboard advertisements with realistic fashion models from a text prompt. This API workflow leverages GPT-Image-1.5’s exceptional prompt adherence and image editing strengths, including virtual try-on and product mockup capabilities, to output a polished billboard advertisement.",
         "io": {
@@ -4698,7 +4819,7 @@
         "task": "Text to Image",
         "model": "SDXL",
         "freshness": "established",
-        "usage": 102,
+        "usage": 96,
         "recommend": "low",
         "description": "A text-to-image workflow using SDXL Turbo, a high-resolution model with strong aesthetics, to produce images from text prompts. It accepts a text prompt and returns the generated image, optimized for fast generation with high visual quality.",
         "io": {
@@ -4749,7 +4870,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 33,
+        "usage": 32,
         "recommend": "not_recommended",
         "description": "Edit images with text instructions using Flux.1 Kontext Pro. This workflow accepts an input image and a text prompt describing the desired edit, then returns the edited output. Flux is a fast, highly customizable model, though with less realistic colors and textures. This workflow calls a third-party API.",
         "io": {
@@ -4766,7 +4887,7 @@
         "task": "Text to Image",
         "model": "NewBie",
         "freshness": "established",
-        "usage": 177,
+        "usage": 173,
         "recommend": "low",
         "description": "Generate anime-style images from text prompts using NewBie Exp0.1. This workflow leverages Next-DiT architecture for detailed character art and scenes, supporting XML structured prompts for better multi-character and attribute control.",
         "io": {
@@ -4783,7 +4904,7 @@
         "task": "Text to Image",
         "model": "Runway",
         "freshness": "established",
-        "usage": 5,
+        "usage": 3,
         "recommend": "not_recommended",
         "description": "Generate a high-quality image from a text prompt using Runway’s text-to-image model. The workflow accepts a text description and outputs the resulting image via a third-party API call, with execution time dependent on server response.",
         "io": {
@@ -4800,7 +4921,7 @@
         "task": "Image Edit",
         "model": "Luma",
         "freshness": "established",
-        "usage": 10,
+        "usage": 9,
         "recommend": "not_recommended",
         "description": "This workflow uses Luma’s legacy Photon model (Photon Flash 1 for speed or Photon 1 for quality) to generate an image from a reference image and a text prompt. It relies on a third‑party API, so run time depends on server response. The model is an older medium model with natural motion capabilities.",
         "io": {
@@ -4851,7 +4972,7 @@
         "task": "Image Edit",
         "model": "Flux.1 Kontext",
         "freshness": "established",
-        "usage": 63,
+        "usage": 62,
         "recommend": "low",
         "description": "This workflow uses Flux.1 Kontext to edit images by combining up to three reference images with a text instruction for style transfer, character consistency, or stitching. It outputs a single edited image and calls a third-party API for execution.",
         "io": {
@@ -4868,7 +4989,7 @@
         "task": "Image Generation",
         "model": "Flux.1",
         "freshness": "established",
-        "usage": 27,
+        "usage": 37,
         "recommend": "not_recommended",
         "description": "This workflow uses Flux.1, Black Forest Lab's highest quality text-to-image model, to generate images with precise structural control via ControlNet. You provide a control image (edge map, pose, or depth) and a text prompt, producing an output that follows the input structure while matching the prompt. It also supports style transfer from reference images.",
         "io": {
@@ -4885,7 +5006,7 @@
         "task": "Text to Image",
         "model": "Flux.1",
         "freshness": "established",
-        "usage": 53,
+        "usage": 55,
         "recommend": "low",
         "description": "Quickly generate high-quality images from text prompts using Flux.1 Schnell FP8, requiring only 4 sampling steps for efficient inference. This text-to-image workflow takes a text prompt as input and returns a generated image as output.",
         "io": {
@@ -4902,7 +5023,7 @@
         "task": "Text to Image",
         "model": "Flux.1",
         "freshness": "established",
-        "usage": 28,
+        "usage": 30,
         "recommend": "not_recommended",
         "description": "This text-to-image workflow uses Flux.1 Schnell (full version) to generate images from a text prompt with only 4 sampling steps, delivering fast results while preserving strong image quality. Input is a text prompt; output is the generated image. The workflow runs on Comfy Cloud for quick execution.",
         "io": {
@@ -4919,7 +5040,7 @@
         "task": "Image Edit",
         "model": "Flux",
         "freshness": "established",
-        "usage": 9,
+        "usage": 8,
         "recommend": "not_recommended",
         "description": "This workflow generates images from text prompts using the Flux model, known for its speed and customizability, though textures may appear less realistic. It outputs a generated image and relies on a third-party API for execution, making it suitable for rapid generation and LoRA integration.",
         "io": {
@@ -4970,8 +5091,8 @@
         "task": "Image Edit",
         "model": "HiDream",
         "freshness": "established",
-        "usage": 52,
-        "recommend": "low",
+        "usage": 47,
+        "recommend": "not_recommended",
         "description": "Edit images with the HiDream E1.1 text-to-image diffusion model by providing an input image and text instructions. The model produces an edited output with superior image quality and editing accuracy compared to earlier versions.",
         "io": {
           "inputs": ["image: Input image to edit", "text: Edit instructions"],
@@ -5004,7 +5125,7 @@
         "task": "Text to Image",
         "model": "HiDream",
         "freshness": "established",
-        "usage": 13,
+        "usage": 12,
         "recommend": "not_recommended",
         "description": "Generate high-quality images from text prompts using the HiDream I1 Full model — the complete version with 50 inference steps for highest quality output. This text-to-image diffusion workflow executes on Comfy Cloud and produces detailed images based on your input text.",
         "io": {
@@ -5038,7 +5159,7 @@
         "task": "Image Edit",
         "model": "GPT-Image-1",
         "freshness": "established",
-        "usage": 42,
+        "usage": 38,
         "recommend": "not_recommended",
         "description": "Generate images from an input reference image and text prompt using OpenAI's GPT-Image-1 API. This intelligent model provides sharp semi-realistic output with strong prompt adherence. Supported model variants include gpt-image-1, gpt-image-1.5, and gpt-image-2. Note this workflow executes via a third-party API.",
         "io": {
@@ -5058,7 +5179,7 @@
         "task": "Image Edit",
         "model": "OmniGen",
         "freshness": "established",
-        "usage": 45,
+        "usage": 48,
         "recommend": "not_recommended",
         "description": "Edit images with natural language instructions using OmniGen2, a unified multi-modal generation model for image and video tasks. This workflow accepts an input image and a text prompt, then outputs the edited result. It supports image editing through a simple text-driven interface.",
         "io": {
@@ -5075,7 +5196,7 @@
         "task": "Text to Image",
         "model": "SDXL",
         "freshness": "established",
-        "usage": 18,
+        "usage": 17,
         "recommend": "not_recommended",
         "description": "This workflow generates high-resolution images from text prompts using SDXL, Stability AI's model known for strong aesthetics. It accepts a single text input and outputs a generated image, executing text-to-image tasks with consistent quality.",
         "io": {
@@ -5149,7 +5270,7 @@
         "task": "Text to Image",
         "model": "OpenAI",
         "freshness": "established",
-        "usage": 20,
+        "usage": 19,
         "recommend": "not_recommended",
         "description": "Generate high-quality images from text prompts using OpenAI's DALL-E 3 API. This workflow takes a user-provided text description and returns a generated image, supporting configurable size and HD quality. API access is required, with response time dependent on the server.",
         "io": {
@@ -5166,7 +5287,7 @@
         "task": "Text to Image",
         "model": "Ovis-Image",
         "freshness": "established",
-        "usage": 36,
+        "usage": 33,
         "recommend": "not_recommended",
         "description": "Ovis-Image generates images from text prompts, with a specialization in accurately rendering text within the output. This workflow takes a textual prompt as input and produces a corresponding generated image. It supports standard text-to-image synthesis tasks.",
         "io": {
@@ -5200,7 +5321,7 @@
         "task": "Text to Image",
         "model": "Recraft",
         "freshness": "established",
-        "usage": 26,
+        "usage": 27,
         "recommend": "not_recommended",
         "description": "Generate high-quality SVG vector graphics from text prompts using Recraft's AI vector generation model. The workflow accepts a text prompt and outputs an SVG image, with configurable color control. It relies on a third-party API call, so execution time depends on server-side response. Recraft produces sharp, detailed images with Standard and Pro quality modes.",
         "io": {
@@ -5251,7 +5372,7 @@
         "task": "Image Edit",
         "model": "Flux.1 Kontext",
         "freshness": "established",
-        "usage": 26,
+        "usage": 25,
         "recommend": "not_recommended",
         "description": "Edit images using the Flux.1 Kontext Max model via a third-party API. This workflow takes an input image and natural language instructions to perform edits like color changes and style transfer, preserving composition and visual style.",
         "io": {
@@ -5268,7 +5389,7 @@
         "task": "Text to Image",
         "model": "GPT-Image-1",
         "freshness": "established",
-        "usage": 11,
+        "usage": 10,
         "recommend": "not_recommended",
         "description": "Generate images from text prompts using OpenAI's GPT-Image-1 API. This workflow leverages the model's intelligent prompt adherence and sharp semi-realistic output for text-to-image generation via ComfyUI.",
         "io": {
@@ -5288,7 +5409,7 @@
         "task": "Text to Image",
         "model": "OmniGen",
         "freshness": "established",
-        "usage": 9,
+        "usage": 10,
         "recommend": "not_recommended",
         "description": "Generate images from text prompts using OmniGen's unified multi-modal generation model. This text-to-image workflow takes a user-provided text description and outputs a single generated image. Designed for standard image creation without additional editing or video features.",
         "io": {
@@ -5305,7 +5426,7 @@
         "task": "Image Edit",
         "model": "SD3.5",
         "freshness": "established",
-        "usage": 13,
+        "usage": 11,
         "recommend": "not_recommended",
         "description": "This workflow generates an image from a text prompt using Stability AI’s SD3.5 model, then applies a blur effect to the output. It runs on Comfy Cloud and is optimized for quick execution.",
         "io": {
@@ -5362,7 +5483,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 886,
+        "usage": 858,
         "recommend": "high",
         "description": "Generate multiple camera angle variations of a reference image using Qwen-Image-Edit's built-in 3D camera node. Upload a single input image and the workflow outputs consistent multi-view perspectives as if captured from different angles. This technique leverages the model's advanced 3D and image editing capabilities for quick product or character exploration.",
         "io": {
@@ -5434,10 +5555,7 @@
         "recommend": "low",
         "description": "Upload an input video and a text prompt specifying the object to remove (e.g., \"Remove the red car from the foreground\"). The fast, high-quality LTX-2.3 model, designed for fast video generation with native audio and start/end frame support, applies the Obscura Remova LoRA to erase the target from every frame, outputting a clean edited video.",
         "io": {
-          "inputs": [
-            "video: Input video containing the object to remove",
-            "text: Text prompt specifying which object to remove (e.g. 'Remove the {object} from the foreground.')"
-          ],
+          "inputs": ["video: Input video containing the object to remove", "text: Text prompt specifying which object to remove (e.g. 'Remove the {object} from the foreground.')"],
           "outputs": ["video: Output video with the object removed"]
         },
         "capabilities": {
@@ -5555,7 +5673,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 374,
+        "usage": 327,
         "recommend": "medium",
         "description": "Upload a character image and generate multiple angle views in a single output. Qwen-Image-Edit uses its 3D and style transfer capabilities to produce consistent, varied perspectives. This image-edit workflow runs quickly on Comfy Cloud, requiring only a reference character image as input.",
         "io": {
@@ -5592,7 +5710,7 @@
         "task": "Video Edit",
         "model": "wan2.2 Animate",
         "freshness": "current",
-        "usage": 703,
+        "usage": 627,
         "recommend": "high",
         "description": "Upload a video and a character reference image, then enter a prompt. Wan2.2 Animate automatically replaces the character in the video using the reference for consistent insertion. The model edits the video frames to integrate the new character based on your description.",
         "io": {
@@ -5609,7 +5727,7 @@
         "task": "Lip Sync",
         "model": "Wan2.1 InfiniteTalk",
         "freshness": "current",
-        "usage": 251,
+        "usage": 236,
         "recommend": "medium",
         "description": "Use Wan2.1 InfiniteTalk to generate a lip-sync video from a single character portrait and an audio file. The model accurately synchronizes mouth movements to the provided speech or music track, producing a talking character animation that matches the audio input.",
         "io": {
@@ -5626,7 +5744,7 @@
         "task": "Image to Video",
         "model": "wan2.2 Animate",
         "freshness": "current",
-        "usage": 292,
+        "usage": 282,
         "recommend": "medium",
         "description": "This workflow replaces a character throughout an input video using a reference image, preserving the original motion. It first generates a clean reference from the first frame with Nano Banana 2, then applies Wan 2.2 Animate for full scene swapping, optimized for human subjects. Execution runs via a third-party API, so completion depends on server response.",
         "io": {
@@ -5663,7 +5781,7 @@
         "task": "Motion Control",
         "model": "Wan ATI",
         "freshness": "current",
-        "usage": 16,
+        "usage": 15,
         "recommend": "low",
         "description": "Upload a reference image and draw custom motion paths using the Animate Path node. The Wan ATI model generates a short video that follows the drawn trajectories, producing smooth, path-based animation. This creates viral, social‑media style looping clips from a single image.",
         "io": {
@@ -5680,7 +5798,7 @@
         "task": "FLF2V",
         "model": "LTX-2.3",
         "freshness": "current",
-        "usage": 55,
+        "usage": 51,
         "recommend": "low",
         "description": "This workflow uses the LTX-2.3 model with a dedicated LoRA to create smooth style and scene transitions from a text prompt. The model’s start/end frame control ensures coherent blending of visual elements, outputting a continuous image sequence. Fast generation allows rapid experimentation.",
         "io": {
@@ -5731,7 +5849,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "current",
-        "usage": 52,
+        "usage": 49,
         "recommend": "low",
         "description": "Provide character, scene, and product reference images plus a text description. Nano Banana Pro’s superior prompt adherence and image editing composite them into a fashion editorial photo. This workflow executes via a third-party API, so response time depends on server load.",
         "io": {
@@ -5751,7 +5869,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "current",
-        "usage": 64,
+        "usage": 59,
         "recommend": "low",
         "description": "This Step 2 contact sheet workflow uses Nano Banana Pro’s superior prompt adherence and image‑editing intelligence to generate 8 distinct angle variations from two input images—a fashion editorial and a product shot. Provide both images plus a text prompt describing the desired angles; the model outputs a consistent product across all variations via third‑party API.",
         "io": {
@@ -5788,7 +5906,7 @@
         "task": "Relight",
         "model": "Nano Banana Pro",
         "freshness": "current",
-        "usage": 28,
+        "usage": 25,
         "recommend": "low",
         "description": "Upload a character portrait and a text description of your desired lighting. Nano Banana Pro's superior prompt adherence and intelligent image editing applies cinematic relighting while preserving identity. This workflow calls a third-party API, so execution time depends on server response—ideal for quickly exploring mood and atmosphere.",
         "io": {
@@ -5842,7 +5960,7 @@
         "task": "Lip Sync",
         "model": "ElevenLabs",
         "freshness": "current",
-        "usage": 116,
+        "usage": 110,
         "recommend": "low",
         "description": "Create a user-generated video with accurate lip sync using ElevenLabs. Provide a text prompt and optionally an image; the model clones a voice and generates speech synced to the video. This workflow runs via ElevenLabs API and LTX Video for a polished result.",
         "io": {
@@ -5859,7 +5977,7 @@
         "task": "Image to Video",
         "model": "Qwen-Image-Edit",
         "freshness": "current",
-        "usage": 598,
+        "usage": 568,
         "recommend": "high",
         "description": "Generate 5 alternate 3D-aware angles from a single input image and prompt using Qwen-Image-Edit’s multi-view capability. These frames are intended as start points for Wan2.2 video synthesis; the workflow outputs a horizontally stacked composite image of the angles.",
         "io": {
@@ -5876,7 +5994,7 @@
         "task": "Image Edit",
         "model": "None",
         "freshness": "current",
-        "usage": 6,
+        "usage": 5,
         "recommend": "low",
         "description": "This workflow applies customizable glitch and distortion effects to any input image, letting you control intensity, chromatic aberration, and pattern randomness. No generative model is needed; it runs as a lightweight utility, producing a stylistically distorted output from your uploaded image.",
         "io": {
@@ -5893,15 +6011,11 @@
         "task": "Image Edit",
         "model": "Gemini-3.1-Pro",
         "freshness": "current",
-        "usage": 49,
+        "usage": 46,
         "recommend": "low",
         "description": "This workflow seamlessly swaps a product into a reference scene while preserving the original composition and lighting. You provide a reference scene image and a product image; an optional text prompt can guide scene description. The model outputs a product video that naturally integrates the placed item into the scene.",
         "io": {
-          "inputs": [
-            "image: Reference scene image for product placement",
-            "image: Product image to place into the scene",
-            "text: Optional text prompt for scene description"
-          ],
+          "inputs": ["image: Reference scene image for product placement", "image: Product image to place into the scene", "text: Optional text prompt for scene description"],
           "outputs": ["video: Product video with the placed item in the scene"]
         },
         "capabilities": {
@@ -5914,7 +6028,7 @@
         "task": "Text to Image",
         "model": "Qwen-Image",
         "freshness": "current",
-        "usage": 89,
+        "usage": 86,
         "recommend": "low",
         "description": "Apply this Qwen-Image style LoRA to generate illustrations in diverse aesthetics: cute anime, European bande dessinee, risograph prints, storybook watercolor, retro shoujo manga, or graphic novel art. The semi-realistic model follows detailed prompts faithfully while producing sharp, styled images with strong text generation.",
         "io": {
@@ -5931,7 +6045,7 @@
         "task": "Image Generation",
         "model": "Qwen-Image",
         "freshness": "current",
-        "usage": 10,
+        "usage": 12,
         "recommend": "low",
         "description": "Use the Qwen-Image model to apply a LoRA that turns any animal into a sour gummy candy-style character. Enter an animal name in the prompt; the model follows detailed text to produce a stylized, edible-looking creature with semi-realistic texture and strong prompt adherence.",
         "io": {
@@ -5968,7 +6082,7 @@
         "task": "Image to Video",
         "model": "Kling 2.6",
         "freshness": "current",
-        "usage": 116,
+        "usage": 108,
         "recommend": "low",
         "description": "This workflow takes a text prompt, generates a cinematic-style image using Gemini models, enhances it with Nano Banana Pro, and produces a video via Kling 2.6 Image-to-Video. It requires only a text input and outputs a stylized video clip. Execution relies on a third-party API, so response times vary.",
         "io": {
@@ -6008,7 +6122,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "current",
-        "usage": 259,
+        "usage": 262,
         "recommend": "medium",
         "description": "Upload a character photo and a flatlay outfit image. Nano Banana Pro – the smartest model with best prompt adherence and image editing – generates four virtual try-on photos in one run, no manual compositing needed. Executes via third-party API, so response time depends on server load.",
         "io": {
@@ -6028,15 +6142,11 @@
         "task": "Text to Video",
         "model": "Kling 3.0",
         "freshness": "current",
-        "usage": 41,
+        "usage": 37,
         "recommend": "low",
         "description": "Use Kling 3.0’s image-to-video and native audio to create a multi-shot product commercial. Upload a start frame and reference images, then set duration and shot count—Gemini nodes automatically generate tailored prompts for each segment. The model outputs a coherent video sequence with up to 15 seconds of high-quality footage.",
         "io": {
-          "inputs": [
-            "image: Start frame / reference image for the video",
-            "image: Product reference image",
-            "text: Total duration and number of shots for the multishot video"
-          ],
+          "inputs": ["image: Start frame / reference image for the video", "image: Product reference image", "text: Total duration and number of shots for the multishot video"],
           "outputs": ["video: Generated multishot product video with multiple scenes"]
         },
         "capabilities": {
@@ -6052,7 +6162,7 @@
         "task": "Image Upscale",
         "model": "Grok",
         "freshness": "current",
-        "usage": 253,
+        "usage": 246,
         "recommend": "medium",
         "description": "Upload a reference image and enter a text prompt. Grok automatically captions the image, then generates multiple realistic variations while applying a fast 2x upscale that enhances fine details. The result is a set of high-quality, diverse images ready for further use.",
         "io": {
@@ -6072,7 +6182,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "established",
-        "usage": 90,
+        "usage": 86,
         "recommend": "low",
         "description": "Generate multiple consistent shots of a subject from a single reference image using Nano Banana Pro’s multi-angle consistency. You provide a text prompt describing the subject and desired angles; the model outputs a set of images with consistent appearance. Works via API execution.",
         "io": {
@@ -6092,7 +6202,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "current",
-        "usage": 47,
+        "usage": 51,
         "recommend": "low",
         "description": "Upload a target portrait and a reference lighting image. Qwen-Image-Edit applies a Light Migration LoRA to relight the target, matching the reference's illumination. The technique transfers lighting from one image to another, producing a naturally relighted portrait.",
         "io": {
@@ -6109,7 +6219,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "current",
-        "usage": 73,
+        "usage": 72,
         "recommend": "low",
         "description": "Upload a product image and a cinematic style reference, then describe your desired ad style with a text prompt. Nano Banana Pro applies its intelligent prompt adherence to generate a stylized product advertisement that preserves the product identity while applying the cinematic look. This workflow calls a third-party API for generation.",
         "io": {
@@ -6129,14 +6239,11 @@
         "task": "Image Upscale",
         "model": "Z-Image-Turbo",
         "freshness": "current",
-        "usage": 439,
+        "usage": 428,
         "recommend": "medium",
         "description": "One-click workflow that generates a character portrait, refines skin details, and upscales to 4K in under 60 seconds. Leverages Z-Image-Turbo’s fast inference to enhance facial textures while upscaling the input image with sharp, realistic results.",
         "io": {
-          "inputs": [
-            "image: Face or person reference image for portrait generation",
-            "text: Text prompt describing desired facial features (e.g. freckles, blush, facial hair)"
-          ],
+          "inputs": ["image: Face or person reference image for portrait generation", "text: Text prompt describing desired facial features (e.g. freckles, blush, facial hair)"],
           "outputs": ["image: Generated refined and upscaled portrait image"]
         },
         "capabilities": {
@@ -6149,7 +6256,7 @@
         "task": "Image to Video",
         "model": "wan2.2 Animate",
         "freshness": "current",
-        "usage": 33,
+        "usage": 31,
         "recommend": "low",
         "description": "Upload a character image and a text prompt describing the desired expansion. The Wan2.2 Animate model generates an animated video where the character inflates, using its animation capabilities to drive the effect. This produces a quick, purpose-built result.",
         "io": {
@@ -6166,7 +6273,7 @@
         "task": "Style Reference",
         "model": "Nano Banana Pro",
         "freshness": "current",
-        "usage": 97,
+        "usage": 98,
         "recommend": "low",
         "description": "Generate two clean 2D sprites by supplying an outline and a style reference. The Nano Banana Pro model's intelligent prompt adherence ensures precise art direction matching, while Recraft background removal yields ready-to-use game assets. This workflow calls a third-party API, so execution time depends on server-side response.",
         "io": {
@@ -6240,7 +6347,7 @@
         "task": "Image to Video",
         "model": "Google Gemini",
         "freshness": "current",
-        "usage": 30,
+        "usage": 27,
         "recommend": "low",
         "description": "Use Google Gemini to convert a text prompt into a descriptive script, then send that script to the Kling 3.0 Omni API for video generation. The workflow outputs the resulting video, showcasing Gemini's strong script understanding and third‑party API integration.",
         "io": {
@@ -6257,7 +6364,7 @@
         "task": "Image Upscale",
         "model": "Grok",
         "freshness": "current",
-        "usage": 103,
+        "usage": 95,
         "recommend": "low",
         "description": "Upload an image to create realistic 2K variations. Grok’s image editing capability generates a new version from the input, then the workflow upscales with Z-image for sharp textures. Requires only a text prompt describing the desired variation.",
         "io": {
@@ -6277,7 +6384,7 @@
         "task": "Character Reference",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 63,
+        "usage": 64,
         "recommend": "low",
         "description": "Upload a character or outfit reference to generate a stitched 360° full-body turnaround sheet with close-up views. Gemini3 Pro Image Preview’s multi-angle support ensures consistent perspectives across the sheet. The workflow runs through a third-party API, so response time depends on server availability.",
         "io": {
@@ -6297,7 +6404,7 @@
         "task": "Relight",
         "model": "Qwen",
         "freshness": "established",
-        "usage": 33,
+        "usage": 30,
         "recommend": "low",
         "description": "Upload a character portrait and a reference lighting image to produce a relighted portrait that applies the reference light source while preserving character identity. This workflow uses Qwen with a dedicated Light Migration LoRA to achieve consistent, directed relighting.",
         "io": {
@@ -6314,7 +6421,7 @@
         "task": "Style Transfer",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 63,
+        "usage": 61,
         "recommend": "low",
         "description": "Transform an illustration into a hyper-realistic photo using Qwen Image Edit's style transfer. Provide a descriptive text prompt to guide the output. The model applies its advanced editing and material capabilities to preserve composition while converting artistic style into photorealistic detail.",
         "io": {
@@ -6331,7 +6438,7 @@
         "task": "Image Edit",
         "model": "Nano Banana 2",
         "freshness": "current",
-        "usage": 24,
+        "usage": 22,
         "recommend": "low",
         "description": "Use this workflow to adapt any source image to a target aspect ratio via outpainting. Upload your image and specify dimensions; Nano Banana 2 (Gemini 3.1 Flash Image) intelligently generates new content to fill gaps, producing a seamless result at up to 4K. Note: execution requires a third-party API call, so response time depends on server load.",
         "io": {
@@ -6351,7 +6458,7 @@
         "task": "Style Transfer",
         "model": "None",
         "freshness": "current",
-        "usage": 83,
+        "usage": 76,
         "recommend": "low",
         "description": "Apply a pixel sorting algorithm to transform your image into a glitch art piece. Upload any photo and control the effect's direction, threshold, and blend with the original. This utility workflow runs quickly without a generative AI model, producing a stylized, smeared version of your input.",
         "io": {
@@ -6368,7 +6475,7 @@
         "task": "Video Edit",
         "model": "Wan2.1 VACE",
         "freshness": "current",
-        "usage": 69,
+        "usage": 77,
         "recommend": "low",
         "description": "Upload a video clip and provide a text prompt to guide the edit. Wan2.1 VACE applies its video editing and loop-generation strengths to produce a seamless, infinitely looping video output that matches your description.",
         "io": {
@@ -6385,7 +6492,7 @@
         "task": "Image Generation",
         "model": "Nano Banana 2",
         "freshness": "current",
-        "usage": 160,
+        "usage": 163,
         "recommend": "low",
         "description": "User uploads a single image; the fast, intelligent Nano Banana 2 (Gemini 3.1 Flash Image) generates a multi-frame sprite sheet at up to 4K resolution. Outputs include the sprite sheet plus animated GIF and WebM files for game or motion graphics use. Processing runs via third-party API.",
         "io": {
@@ -6405,7 +6512,7 @@
         "task": "Image to Video",
         "model": "SD1.5",
         "freshness": "current",
-        "usage": 81,
+        "usage": 79,
         "recommend": "low",
         "description": "This workflow creates a seamless looping animation from three input images using AnimateDiff with Weighted IPAdapters on Stable Diffusion 1.5. Each image smoothly morphs into the next, producing a continuous video loop. Simply supply three images; the workflow outputs the animated video.",
         "io": {
@@ -6422,7 +6529,7 @@
         "task": "Video to Video",
         "model": "Wan2.1 VACE",
         "freshness": "current",
-        "usage": 41,
+        "usage": 38,
         "recommend": "low",
         "description": "Restyle any video by combining a base video with a stylized reference image using Wan2.1 VACE, which adds video editing and inpainting capabilities. The workflow preserves the original video structure through depth or canny conditioning while applying the chosen style. Provide a video and a style image; the output is a seamlessly restyled video.",
         "io": {
@@ -6459,7 +6566,7 @@
         "task": "Image Generation",
         "model": "SAM3",
         "freshness": "current",
-        "usage": 79,
+        "usage": 72,
         "recommend": "low",
         "description": "Replace specific objects in videos using text prompts and optional reference images. SAM3 performs zero-shot segmentation to mask target objects, then Wan2.1 VACE inpainting seamlessly fills the region based on your prompt. Provide a video and a text prompt; optionally include a reference image for guidance. The output is a modified video with the objects changed.",
         "io": {
@@ -6476,7 +6583,7 @@
         "task": "Image to 3D",
         "model": "Hunyuan3D",
         "freshness": "current",
-        "usage": 117,
+        "usage": 115,
         "recommend": "low",
         "description": "Use one frontal image to generate a high-quality 3D mesh with PBR textures via Hunyuan3D’s image-to-3D capability. The model produces detailed geometry and realistic materials from the single view. This workflow can be run via API for efficient 3D asset pipeline.",
         "io": {
@@ -6496,7 +6603,7 @@
         "task": "FLF2V",
         "model": "Wan2.2",
         "freshness": "current",
-        "usage": 25,
+        "usage": 23,
         "recommend": "low",
         "description": "Generate a unique, looping AI video by providing a text prompt. The FLF2V workflow leverages Wan2.2’s fast text-to-video capabilities to create a cinematic clip with crisp textures and realistic colors, then stitches frames into a seamless loop.",
         "io": {
@@ -6550,7 +6657,7 @@
         "task": "Style Transfer",
         "model": "Recraft",
         "freshness": "current",
-        "usage": 14,
+        "usage": 11,
         "recommend": "low",
         "description": "Upload 1–5 style reference images to define a visual brand style via the Recraft API. The model learns a style ID and generates new, sharp, detailed images matching that style using Standard or Pro modes. You supply references and a text prompt; the system returns a consistent, on‑brand image in seconds.",
         "io": {
@@ -6567,7 +6674,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 37,
+        "usage": 34,
         "recommend": "low",
         "description": "Upload a scene image and a text prompt; Qwen-Image-Edit generates multiple 3D-aware angles of that scene in one click. It applies its multi-view generation strength to produce varied perspectives, giving you quick visual exploration without manual camera work.",
         "io": {
@@ -6604,7 +6711,7 @@
         "task": "Image to Video",
         "model": "Seedream",
         "freshness": "established",
-        "usage": 63,
+        "usage": 60,
         "recommend": "low",
         "description": "Upload a phone photo of a shoe to generate three studio-grade product videos using the Seedream model via a third-party API. The workflow produces clips showcasing detailed texture, a cinematic pan, and a 360-degree rotation. Seedream's high-quality generation with flexible resolution support delivers professional-looking product visuals.",
         "io": {
@@ -6624,7 +6731,7 @@
         "task": "FLF2V",
         "model": "Wan2.2",
         "freshness": "established",
-        "usage": 71,
+        "usage": 68,
         "recommend": "low",
         "description": "This workflow takes a source video, extracts six key frames, and uses Wan2.2's fast generation to fill in motion between them, stitching smooth, cinematic output. You supply the video; Wan2.2 applies its crisp textures and realistic colors to create seamlessly interpolated results.",
         "io": {
@@ -6641,7 +6748,7 @@
         "task": "Image Edit",
         "model": "Flux.2 Dev",
         "freshness": "current",
-        "usage": 31,
+        "usage": 30,
         "recommend": "low",
         "description": "Upload one input image and a text prompt, then select multiple editing models including Flux.2 Dev. It applies its design-focused image editing to generate side-by-side outputs, directly comparing model effects and quality. Supports efficient FP8 inference and API execution for product mockup tasks.",
         "io": {
@@ -6678,7 +6785,7 @@
         "task": "Image Edit",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 215,
+        "usage": 205,
         "recommend": "medium",
         "description": "Use Google’s Gemini 3 Pro Image Preview model to swap a product held by a character with your brand’s item. Provide two images: the character holding the original product and a standalone shot of the new product. The output seamlessly places your product into the character’s hand, preserving the UGC style. Note: execution uses a third-party API, so response time may vary.",
         "io": {
@@ -6698,7 +6805,7 @@
         "task": "Image Edit",
         "model": "ByteDance",
         "freshness": "established",
-        "usage": 39,
+        "usage": 38,
         "recommend": "low",
         "description": "Upload a product image and a background scene to blend them realistically using ByteDance's Seedream 4.5 model. The workflow composites the two images and adjusts lighting and shadows for a cohesive product mockup. It executes via a third-party API.",
         "io": {
@@ -6718,7 +6825,7 @@
         "task": "Image Edit",
         "model": "Google",
         "freshness": "established",
-        "usage": 455,
+        "usage": 456,
         "recommend": "medium",
         "description": "Generate a sprite sheet animation sequence from a text description. Provide a prompt describing your character or object and the model outputs individual frames for idle, attack, walk, and jump poses. This workflow runs via API using Google Gemini image models.",
         "io": {
@@ -6738,7 +6845,7 @@
         "task": "FLF2V",
         "model": "Google Gemini",
         "freshness": "current",
-        "usage": 15,
+        "usage": 11,
         "recommend": "low",
         "description": "Generate a looping AI-driven video from a text prompt using Google Gemini's multi-modal API. The user provides a descriptive prompt, and Gemini's capabilities produce coherent, high-quality video output. This API workflow leverages Gemini's text-to-video generation to create the final clip.",
         "io": {
@@ -6775,7 +6882,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "established",
-        "usage": 42,
+        "usage": 41,
         "recommend": "low",
         "description": "Upload a product image and enter prompts for each cell in a 3×3 grid. The Nano Banana Pro model, with best-in-class prompt adherence and image editing, generates nine distinct ad variations. Select your favorites and upscale to 4K. Executes via Comfy Cloud API.",
         "io": {
@@ -6795,7 +6902,7 @@
         "task": "Brand Design",
         "model": "ByteDance",
         "freshness": "established",
-        "usage": 31,
+        "usage": 30,
         "recommend": "low",
         "description": "Upload a vector logo and describe your desired texture; the workflow generates a 3D textured first and last frame, then automatically prompts and produces the full logo animation. ByteDance’s brand design model handles the textured 3D rendering, while its first‑last‑frame‑to‑video capability creates the seamless motion.",
         "io": {
@@ -6812,7 +6919,7 @@
         "task": "Image to Video",
         "model": "Google Gemini Image",
         "freshness": "established",
-        "usage": 41,
+        "usage": 38,
         "recommend": "low",
         "description": "Upload a character image and clothing items, then prompt the model to generate a fashion photograph base. Using multi-keyframe video stitching and image-to-video capabilities, the workflow creates an 8-frame video contact sheet that maintains outfit and character consistency throughout the sequence.",
         "io": {
@@ -6832,7 +6939,7 @@
         "task": "Image to Video",
         "model": "Seedream",
         "freshness": "established",
-        "usage": 20,
+        "usage": 19,
         "recommend": "low",
         "description": "Upload a single vehicle photo to generate a professional multi‑angle product video for marketing. Leveraging the Seedream high‑quality model, it provides flexible resolution support and studio‑quality output. This workflow uses third‑party API execution via Seedream to produce multiple camera angle clips of your car.",
         "io": {
@@ -6872,7 +6979,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "established",
-        "usage": 5,
+        "usage": 6,
         "recommend": "low",
         "description": "Generate 64 stylized variations of your profile picture in an 8×8 grid using Nano Banana Pro. Upload a single image; the model leverages its superior prompt adherence and image editing intelligence through a third-party API to create a cohesive set of themed avatars or brand personas. Ideal for personalizing social media profiles or generating consistent character concepts.",
         "io": {
@@ -6909,7 +7016,7 @@
         "task": "Brand Design",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 33,
+        "usage": 31,
         "recommend": "low",
         "description": "Upload a logo, texture reference, and decorative elements. Gemini3 Pro Image Preview composites these into an animated brand asset, then ByteDance Image-to-Video generates the final textured logo video. This workflow preserves brand identity while adding depth, and relies on a third-party API so execution time varies with server response.",
         "io": {
@@ -6943,7 +7050,7 @@
         "task": "Image Generation",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 81,
+        "usage": 80,
         "recommend": "low",
         "description": "Upload a character portrait and a product image; Gemini 3 Pro Image Preview generates a realistic UGC-style image of the character naturally holding the product. This workflow supports brand design, product mockups, and style reference. It uses a third-party API, so response time varies—switch to Nano Banana 2 (Gemini 3.1 Flash Image) for faster results.",
         "io": {
@@ -6963,7 +7070,7 @@
         "task": "Brand Design",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 12,
+        "usage": 11,
         "recommend": "low",
         "description": "Upload your logotype and a texture reference image to generate a short animated brand video. Google's Gemini3 Pro Image Preview transfers the texture for brand design, and the FLF2V model produces the animation. Two images are required: the logo and a texture to apply.",
         "io": {
@@ -6980,7 +7087,7 @@
         "task": "Image Edit",
         "model": "Google",
         "freshness": "established",
-        "usage": 36,
+        "usage": 32,
         "recommend": "low",
         "description": "Upload a packaging dieline template and convert it into a realistic 3D package visualization. This workflow uses Google Gemini models (gemini-3-pro-image-preview or Nano Banana 2) via third-party API to intelligently edit the flat template into a fully assembled product mockup. Perfect for brand packaging design previews.",
         "io": {
@@ -7040,7 +7147,7 @@
         "task": "Image Edit",
         "model": "Qwen-Image-Edit",
         "freshness": "established",
-        "usage": 16,
+        "usage": 14,
         "recommend": "low",
         "description": "Upload a composited image of your product, draw a mask in the mask editor, and enter a text prompt describing the desired lighting. The model applies its advanced relighting capability to adjust illumination and shadows, making the product blend naturally into the scene.",
         "io": {
@@ -7057,7 +7164,7 @@
         "task": "Image Edit",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 42,
+        "usage": 41,
         "recommend": "low",
         "description": "This workflow colorizes black-and-white line art using Gemini 3 Pro Image Preview, preserving original strokes while adding full color. It runs via third-party API, requiring no local GPU. An alternative model, Nano Banana 2, is also selectable.",
         "io": {
@@ -7137,7 +7244,7 @@
         "task": "Brand Design",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 11,
+        "usage": 10,
         "recommend": "low",
         "description": "Upload a reference icon image and describe your brand; this workflow generates nine brand-styled icons arranged in a 3×3 grid. Google Gemini3 Pro Image Preview applies its brand design and style reference capabilities to produce consistent, ready‑to‑use assets. The workflow runs via third‑party API on Comfy Cloud for fast results.",
         "io": {
@@ -7157,7 +7264,7 @@
         "task": "Image Edit",
         "model": "Nano Banana Pro",
         "freshness": "established",
-        "usage": 8,
+        "usage": 7,
         "recommend": "low",
         "description": "Upload a poster design and a brief brand description to generate four realistic scene mockups in different environments. Powered by Nano Banana Pro—the most intelligent model with best prompt adherence—it creates context-aware placements showcasing your design. This workflow executes via a third‑party API, so output depends on server‑side response.",
         "io": {
@@ -7177,7 +7284,7 @@
         "task": "Image Edit",
         "model": "ByteDance",
         "freshness": "established",
-        "usage": 34,
+        "usage": 33,
         "recommend": "low",
         "description": "Upload your product image and a text prompt for the poster or ad layout. ByteDance Seedream’s high-resolution image editing seamlessly integrates your product into two generated assets, letting you iterate on the design. The result is a ready-to-use poster or ad mockup.",
         "io": {
@@ -7365,7 +7472,7 @@
         "task": "Text to Music",
         "model": "ACE-Step",
         "freshness": "current",
-        "usage": 38,
+        "usage": 39,
         "recommend": "not_recommended",
         "description": "This workflow generates music from a text prompt using the ACE-Step 1.5XL Turbo model. It produces high-quality audio output in just 8 inference steps, leveraging the fast Turbo variant for efficient music generation. The key input is a descriptive text prompt, and the output is a waveform image of the generated audio.",
         "io": {
@@ -7439,7 +7546,7 @@
         "task": "Audio Generation",
         "model": "ElevenLabs",
         "freshness": "current",
-        "usage": 31,
+        "usage": 29,
         "recommend": "not_recommended",
         "description": "Convert a source audio file into speech with a different voice or a cloned voice using ElevenLabs. The workflow accepts two audio inputs: source audio to transform and an optional voice clone sample. Output is the converted speech audio. This workflow executes via the ElevenLabs API and supports models like `eleven_multilingual_sts_v2`.",
         "io": {
@@ -7496,7 +7603,7 @@
         "task": "Audio Generation",
         "model": "ElevenLabs",
         "freshness": "current",
-        "usage": 16,
+        "usage": 15,
         "recommend": "not_recommended",
         "description": "Generate custom sound effects and ambient audio from text descriptions using ElevenLabs. Provide a text prompt as input; the API workflow returns a generated audio file. This is a third-party API call, so execution time depends on server-side response. The model supports sound effects generation.",
         "io": {
@@ -7516,7 +7623,7 @@
         "task": "Audio Editing",
         "model": "None",
         "freshness": "current",
-        "usage": 20,
+        "usage": 19,
         "recommend": "not_recommended",
         "description": "Load an audio file and separate it into vocal and instrumental stems using the MelBandRoFormer model. The workflow outputs two MP3 files: isolated vocals and background music. This voice-isolation template runs on Comfy Cloud for audio separation tasks.",
         "io": {
@@ -7533,7 +7640,7 @@
         "task": "Text Generation",
         "model": "ACE-Step",
         "freshness": "current",
-        "usage": 14,
+        "usage": 12,
         "recommend": "not_recommended",
         "description": "This workflow uses ACE-Step with an external LLM (e.g., Gemini) to first generate lyrics from a music style and optional user prompt, then produces a complete song with AI-created lyrics and audio. It supports text-to-audio generation for full songs or instrumentals via API execution.",
         "io": {
@@ -7553,8 +7660,8 @@
         "task": "Audio Generation",
         "model": "ACE-Step",
         "freshness": "established",
-        "usage": 57,
-        "recommend": "low",
+        "usage": 48,
+        "recommend": "not_recommended",
         "description": "Generate music from a text prompt using the ACE-Step 4B LLM variant for stronger audio understanding and composition. This workflow outputs an image visualisation of the generated audio, accepting only a text description as input. The model produces high-quality instrumental or lyrical music based solely on your prompt.",
         "io": {
           "inputs": ["text: Audio description prompt"],
@@ -7570,7 +7677,7 @@
         "task": "Audio Generation",
         "model": "ACE-Step",
         "freshness": "established",
-        "usage": 12,
+        "usage": 14,
         "recommend": "not_recommended",
         "description": "Input a text prompt describing music style and optional lyrics. ACE-Step generates high-quality audio from the prompt, leveraging its fast Turbo or quality SFT variant. The workflow outputs an image representation of the generated audio.",
         "io": {
@@ -7655,7 +7762,7 @@
         "task": "Audio Editing",
         "model": "Chatter Box",
         "freshness": "established",
-        "usage": 44,
+        "usage": 42,
         "recommend": "not_recommended",
         "description": "Chatter Box Voice Cloning Audio Conversion clones a target voice from a short reference audio clip while preserving the original timing and performance. It accepts a text prompt and an audio clip as inputs and outputs a generated image representing the converted audio. This workflow leverages Chatter Box's high-quality voice cloning and audio-to-audio conversion.",
         "io": {
@@ -7746,7 +7853,7 @@
         "task": "3D Generation",
         "model": "Hunyuan3D",
         "freshness": "recent",
-        "usage": 153,
+        "usage": 148,
         "recommend": "low",
         "description": "Generate a 3D mesh with PBR textures from one or more reference images via Hunyuan3D’s API. Input a required front view with optional left, right, and back images. Outputs a complete GLB model. Execution depends on server-side response; supports versions 3.0 and 3.1.",
         "io": {
@@ -7765,7 +7872,7 @@
         "title": "Tripo H3.1: Image to Model",
         "task": "Image to 3D",
         "model": "Tripo",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 201,
         "recommend": "medium",
         "description": "Generate a 3D model from a reference image using Tripo H3.1. The output is a high-detail model with dense geometry and PBR-ready materials in GLB format. This workflow calls a third-party API; execution time depends on server response.",
@@ -7868,8 +7975,8 @@
         "task": "3D Generation",
         "model": "Meshy",
         "freshness": "established",
-        "usage": 51,
-        "recommend": "low",
+        "usage": 48,
+        "recommend": "not_recommended",
         "description": "Upload a reference image to generate a 3D model via the Meshy 6 API. This workflow creates characters, objects, or mechanical parts with production-quality geometry, clean topology, auto-texture, auto-rig, and optional animation. It outputs a GLB 3D model file. Because this workflow calls a third-party API, execution time depends on server-side response.",
         "io": {
           "inputs": ["image: Reference image to generate the 3D model from"],
@@ -7919,7 +8026,7 @@
         "task": "3D Generation",
         "model": "Hunyuan3D",
         "freshness": "current",
-        "usage": 47,
+        "usage": 46,
         "recommend": "not_recommended",
         "description": "This workflow decomposes a 3D model (FBX, under 100MB and 30,000 faces) into separated parts using Tencent’s Hunyuan3D model. It outputs a segmented GLB asset ready for reuse and editing. Execution runs via a third-party API, so response time depends on the server.",
         "io": {
@@ -7936,7 +8043,7 @@
         "task": "3D Generation",
         "model": "Hunyuan3D",
         "freshness": "established",
-        "usage": 46,
+        "usage": 44,
         "recommend": "not_recommended",
         "description": "Generate a detailed 3D model from a text prompt using Tencent's Hunyuan3D model. The workflow accepts a textual description and outputs a GLB mesh with support for normal/low-poly modes and optional PBR materials. Execution relies on a third-party API; completion time depends on server-side processing.",
         "io": {
@@ -7972,7 +8079,7 @@
         "title": "Tripo H3.1: Text to Model",
         "task": "3D Generation",
         "model": "Tripo",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 7,
         "recommend": "not_recommended",
         "description": "Input a text prompt with Tripo H3.1 to generate production-ready 3D hero assets featuring high-density geometry and PBR materials. Outputs detailed GLB meshes with auto-refine, auto-rig, and auto-texture, suitable for game assets and close-up renders. This is a third-party API workflow—response time depends on server load.",
@@ -7989,7 +8096,7 @@
         "title": "Tripo H3.1: Multiview to Model",
         "task": "Image to 3D",
         "model": "Tripo",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 45,
         "recommend": "not_recommended",
         "description": "This workflow takes four multi-view images (front, left, back, right) and generates a high-detail 3D model using Tripo H3.1. It outputs a GLB file with dense geometry, PBR materials, auto-refine, auto-rig, and auto-texture. Since it calls a third-party API, execution time depends on server-side response.",
@@ -8007,7 +8114,7 @@
         "task": "3D Generation",
         "model": "Tripo",
         "freshness": "established",
-        "usage": 22,
+        "usage": 20,
         "recommend": "not_recommended",
         "description": "Transform a reference image or sketch into a production-ready 3D model using Tripo 3.0 via API. The workflow outputs GLB format with sharp geometry and PBR textures, supporting auto-refine, auto-rig, and auto-texture. Execution time depends on server-side response.",
         "io": {
@@ -8024,7 +8131,7 @@
         "task": "Image to 3D",
         "model": "Meshy",
         "freshness": "current",
-        "usage": 154,
+        "usage": 158,
         "recommend": "low",
         "description": "This workflow converts a single reference image into a textured 3D model by first generating orthographic views via Gemini and Nano Banana, then calling the Meshy API to produce the final model and a video of the scene. Execution depends on third-party API response time.",
         "io": {
@@ -8044,7 +8151,7 @@
         "task": "3D Generation",
         "model": "Meshy",
         "freshness": "established",
-        "usage": 16,
+        "usage": 15,
         "recommend": "not_recommended",
         "description": "Generate a 3D model from a text prompt using Meshy 6. This API workflow takes a descriptive text input and returns a textured GLB model file. Execution time depends on the third-party server response.",
         "io": {
@@ -8061,7 +8168,7 @@
         "task": "3D Generation",
         "model": "Tripo",
         "freshness": "established",
-        "usage": 5,
+        "usage": 4,
         "recommend": "not_recommended",
         "description": "Generate a 3D model from a text prompt using Tripo 3.0, producing a GLB file with ultra‑high resolution geometry and PBR materials. This workflow relies on a third‑party API, so response time depends on server‑side processing.",
         "io": {
@@ -8112,7 +8219,7 @@
         "task": "Image to 3D",
         "model": "Tripo",
         "freshness": "established",
-        "usage": 50,
+        "usage": 51,
         "recommend": "low",
         "description": "Use Tripo's API to generate a 3D model in GLB format from two or more multi-view images (front view plus at least one additional angle). The workflow supports auto-refine, auto-rig, auto-texture, conversion, and retargeting. Because this workflow calls a third-party API, execution time depends on server-side response.",
         "io": {
@@ -8129,7 +8236,7 @@
         "task": "Image to 3D",
         "model": "Rodin",
         "freshness": "established",
-        "usage": 14,
+        "usage": 15,
         "recommend": "not_recommended",
         "description": "This workflow uses Rodin Gen2 to convert a single reference photo into a 3D model in GLB format with 4× mesh quality. It executes via a third-party API, requiring no local model. The output is a detailed digital 3D asset suitable for further use.",
         "io": {
@@ -8163,7 +8270,7 @@
         "task": "Image to 3D",
         "model": "Rodin",
         "freshness": "established",
-        "usage": 11,
+        "usage": 12,
         "recommend": "not_recommended",
         "description": "Use Rodin's image-to-3D capability to generate a detailed 3D model from multiple photos taken at different angles. This workflow accepts three input images and produces a model with regular, sketch, detail, and smooth refinement levels. It executes via a third‑party API, so response times depend on server availability.",
         "io": {
@@ -8180,7 +8287,7 @@
         "task": "Image to 3D",
         "model": "Hunyuan3D",
         "freshness": "established",
-        "usage": 119,
+        "usage": 123,
         "recommend": "low",
         "description": "This workflow generates a 3D mesh from a single reference image using Tencent’s Hunyuan3D 2.1 model. It takes an image as input and outputs a 3D model, running as a standard image-to-3D task in ComfyUI.",
         "io": {
@@ -8214,7 +8321,7 @@
         "task": "Image to 3D",
         "model": "Hunyuan3D",
         "freshness": "established",
-        "usage": 47,
+        "usage": 48,
         "recommend": "not_recommended",
         "description": "This workflow generates a 3D mesh from a single reference image using Tencent's Hunyuan3D 2.0 MV, a multiview-to-3D model. It takes an image as input and outputs a ready-to-use 3D model.",
         "io": {
@@ -8248,7 +8355,7 @@
         "task": "3D Generation",
         "model": "Hunyuan3D",
         "freshness": "current",
-        "usage": 39,
+        "usage": 40,
         "recommend": "not_recommended",
         "description": "Input a dense 3D mesh (from AI generation or photogrammetry) and use Hunyuan3D to produce a lightweight, retopologized GLB model with unwrapped UVs. This workflow optimizes topology and UVs for game asset use. Execution calls a third-party API, so response time depends on the server.",
         "io": {
@@ -8265,7 +8372,7 @@
         "task": "3D Generation",
         "model": "Hunyuan3D",
         "freshness": "current",
-        "usage": 10,
+        "usage": 11,
         "recommend": "not_recommended",
         "description": "Upload a 3D model (FBX, OBJ, or GLB) to perform UV unwrapping via Hunyuan3D. The workflow outputs a processed GLB model with an optimized UV layout for texturing. This task runs through a third-party API, so response time depends on server availability.",
         "io": {
@@ -8317,6 +8424,23 @@
     "description": "Tooling and utility workflows for supporting tasks such as upscaling, background removal, image preprocessing, and other image or video processing helpers.",
     "templates": [
       {
+        "name": "api_bytedance_seedream_5_0_layer_separation",
+        "title": "Seedream5.0 Pro: Layer Separation",
+        "task": "Image Generation",
+        "model": "Seedream 5.0 Pro",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Split any image into independent, editable layers — subject, product, background, and text — with a single text instruction using Seedream 5.0 Pro. A single poster can yield 10+ layers, with design-grade text separation supporting multilingual headlines and CJK fonts. Ideal for brand design, e-commerce asset creation, and layout iteration.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "layer-decompose"]
+        }
+      },
+      {
         "name": "api_topaz_image_enhance_wonder3_5",
         "title": "Topaz: Image Enhance Wonder 3.5",
         "task": "Image Upscale",
@@ -8356,7 +8480,7 @@
         "task": "Image Upscale",
         "model": "Z-Image-Turbo",
         "freshness": "current",
-        "usage": 207,
+        "usage": 211,
         "recommend": "medium",
         "description": "Upload an image to upscale it to 2K resolution using the fast Z-Image-Turbo model. This workflow leverages the model’s efficient inference for high-quality image upscaling while supporting batch processing if needed.",
         "io": {
@@ -8373,7 +8497,7 @@
         "task": "Image Upscale",
         "model": "SeedVR2",
         "freshness": "established",
-        "usage": 692,
+        "usage": 675,
         "recommend": "high",
         "description": "Upload an image to upscale it with SeedVR2, a fast upscaling model from ByteDance for enhanced resolution. This workflow accepts any image as input and produces an upscaled high-definition output.",
         "io": {
@@ -8390,7 +8514,7 @@
         "task": "Image Upscale",
         "model": "Google",
         "freshness": "established",
-        "usage": 125,
+        "usage": 121,
         "recommend": "low",
         "description": "Upload an AI-generated image to upscale and enhance details using the Nano Banana Pro model, powered by Google Gemini. This workflow generates a 4K output with improved sharpness and coherence, helping fix common AI generation artifacts. Execution relies on a third-party API, so completion time depends on server-side response.",
         "io": {
@@ -8410,7 +8534,7 @@
         "task": "Video Upscale",
         "model": "Topaz",
         "freshness": "current",
-        "usage": 102,
+        "usage": 106,
         "recommend": "low",
         "description": "Upload a video to enhance its resolution using the Topaz Starlight Precise 2.5 model. This workflow produces sharper 4K output with reduced artifacts compared to previous versions.",
         "io": {
@@ -8427,7 +8551,7 @@
         "task": "Image Upscale",
         "model": "Magnific",
         "freshness": "current",
-        "usage": 126,
+        "usage": 131,
         "recommend": "low",
         "description": "Use this workflow to creatively upscale an image up to 16×, adding detail and texture through the Magnific model’s enhancement capabilities. It accepts an input image and outputs a high‑resolution version with improved clarity and style. This workflow executes via a third‑party API, so response time depends on server availability.",
         "io": {
@@ -8495,7 +8619,7 @@
         "task": "Video Upscale",
         "model": "SeedVR2",
         "freshness": "established",
-        "usage": 248,
+        "usage": 250,
         "recommend": "medium",
         "description": "SeedVR2 rapidly upscales input videos to high resolution, supporting up to 4K output. Developed by ByteDance, it delivers fast, enhanced video quality. This utility workflow takes a video and returns an upscaled version for improved clarity and detail.",
         "io": {
@@ -8529,7 +8653,7 @@
         "task": "Image Upscale",
         "model": "Magnific",
         "freshness": "current",
-        "usage": 102,
+        "usage": 100,
         "recommend": "low",
         "description": "This workflow precisely upsamples an input image using the Magnific model, producing a high-resolution version with enhanced detail while preserving the original structure. It accepts a single image and returns the upscaled output. Execution relies on a third-party API call, so response time depends on server-side processing.",
         "io": {
@@ -8550,11 +8674,7 @@
         "recommend": "low",
         "description": "Upload a source video and a reference image, then describe the desired edits with a text prompt using Beeble SwitchX. The workflow outputs an edited video where masked regions follow your prompt and reference, while unmasked areas preserve original pixels and motion, and includes an alpha matte for compositing. This workflow calls a third-party API, so execution time depends on server response.",
         "io": {
-          "inputs": [
-            "video: Source video to edit",
-            "image: Optional reference image for style, lighting, and background guidance",
-            "text: Text prompt describing desired edits and environment"
-          ],
+          "inputs": ["video: Source video to edit", "image: Optional reference image for style, lighting, and background guidance", "text: Text prompt describing desired edits and environment"],
           "outputs": ["video: Edited video with prompt-guided regions and preserved original areas"]
         },
         "capabilities": {
@@ -8879,7 +8999,7 @@
         "task": "Image Generation",
         "model": "SDPose-OOD",
         "freshness": "current",
-        "usage": 27,
+        "usage": 24,
         "recommend": "not_recommended",
         "description": "This workflow detects human poses from an uploaded image using SDPose-OOD, generating a reliable pose map. It supports multi-person detection and handles out-of-distribution poses and varying body orientations, ensuring accurate keypoint extraction.",
         "io": {
@@ -8896,7 +9016,7 @@
         "task": "Image Generation",
         "model": "SDPose-OOD",
         "freshness": "current",
-        "usage": 31,
+        "usage": 32,
         "recommend": "not_recommended",
         "description": "Upload an image to extract multi-person pose keypoints and generate a reliable pose map. The SDPose-OOD model handles out-of-distribution poses and varying body orientations for accurate pose estimation.",
         "io": {
@@ -8964,7 +9084,7 @@
         "task": "Image Generation",
         "model": "Flux.2 Klein",
         "freshness": "current",
-        "usage": 150,
+        "usage": 151,
         "recommend": "low",
         "description": "Use this outpainting workflow to intelligently extend and expand images using the Flux.2 Klein 4B model. It takes an input image and text prompt, producing seamless extended compositions at up to 2K resolution. This lightweight variant is optimized for speed while maintaining quality.",
         "io": {
@@ -9015,7 +9135,7 @@
         "task": "Image Upscale",
         "model": "Topaz",
         "freshness": "established",
-        "usage": 38,
+        "usage": 31,
         "recommend": "not_recommended",
         "description": "This workflow accepts a landscape image and uses Topaz Reimagine to upscale the content, enhancing fine details while reducing artifacts. The result is a high-resolution output optimized for natural scenery, leveraging the model’s super-resolution and texture preservation strengths.",
         "io": {
@@ -9035,7 +9155,7 @@
         "task": "Image Upscale",
         "model": "Nano Banana Pro",
         "freshness": "established",
-        "usage": 23,
+        "usage": 21,
         "recommend": "not_recommended",
         "description": "Upload a product image to enhance detail and sharpness with the Nano Banana Pro model, known for complex image editing. The workflow generates an upscaled, high-quality output with improved typography and realistic coherence for e-commerce use. This workflow calls a third-party API, with execution time depending on server response.",
         "io": {
@@ -9055,7 +9175,7 @@
         "task": "Image Upscale",
         "model": "Reimagine",
         "freshness": "established",
-        "usage": 83,
+        "usage": 74,
         "recommend": "low",
         "description": "Upload an image for professional enhancement using Topaz's Reimagine model, which applies face enhancement and detail restoration to improve overall quality and sharpness. The workflow outputs an enhanced image. This workflow calls a third-party API, so execution time depends on server-side response.",
         "io": {
@@ -9109,7 +9229,7 @@
         "task": "Video Upscale",
         "model": "Topaz",
         "freshness": "established",
-        "usage": 64,
+        "usage": 56,
         "recommend": "low",
         "description": "Enhance videos with Topaz AI. Supports resolution upscaling using Starlight (Astra) Fast model and frame interpolation with apo-8 model.",
         "io": {
@@ -9126,7 +9246,7 @@
         "task": "Image Upscale",
         "model": "Topaz",
         "freshness": "established",
-        "usage": 17,
+        "usage": 16,
         "recommend": "not_recommended",
         "description": "Upscale illustrations using Topaz Image Enhance with the Reimagine option, producing a smooth, stylized result with accurate colors while preserving the hand-drawn look. This workflow calls a third-party API; execution time depends on server response. Output is a higher-resolution illustration, though some artifacts may appear.",
         "io": {
@@ -9146,7 +9266,7 @@
         "task": "Image Upscale",
         "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
-        "usage": 35,
+        "usage": 33,
         "recommend": "not_recommended",
         "description": "Upload a stylized art or illustration to creatively upscale using the Nano Banana Pro model powered by Gemini 3 Pro. The workflow generates a 4K output with enhanced detail, ideal for marketing or gaming assets. This workflow calls a third-party API.",
         "io": {
@@ -9176,15 +9296,7 @@
         "capabilities": {
           "workflow": ["video-upscale", "api"],
           "model_options": {
-            "HitPawVideoEnhance": [
-              "Portrait Restore Model (1x)",
-              "Portrait Restore Model (2x)",
-              "General Restore Model (1x)",
-              "General Restore Model (2x)",
-              "General Restore Model (4x)",
-              "Ultra HD Model (2x)",
-              "Generative Model (1x)"
-            ]
+            "HitPawVideoEnhance": ["Portrait Restore Model (1x)", "Portrait Restore Model (2x)", "General Restore Model (1x)", "General Restore Model (2x)", "General Restore Model (4x)", "Ultra HD Model (2x)", "Generative Model (1x)"]
           }
         }
       },
@@ -9214,7 +9326,7 @@
         "task": "Image Upscale",
         "model": "Recraft",
         "freshness": "established",
-        "usage": 62,
+        "usage": 61,
         "recommend": "low",
         "description": "Upload an image to creatively upscale using the Recraft API. The AI reconstructs details and improves textures for a higher-quality output. Input limited to 5MB and 2048x2048 resolution. This workflow calls a third-party API, so execution time depends on server response.",
         "io": {
@@ -9231,7 +9343,7 @@
         "task": "Image Upscale",
         "model": "Recraft",
         "freshness": "established",
-        "usage": 26,
+        "usage": 27,
         "recommend": "not_recommended",
         "description": "Upload a low-resolution or noisy image to the Recraft Crisp Upscale API for restoration and upscaling. It produces a high-resolution output with enhanced details, reduced artifacts, and a natural look. Input must be under 5MB and 2048×2048; execution time depends on the API response.",
         "io": {
@@ -9268,7 +9380,7 @@
         "task": "Video Upscale",
         "model": "FlashVSR",
         "freshness": "established",
-        "usage": 53,
+        "usage": 51,
         "recommend": "low",
         "description": "Upload a video to upscale it to 720p, 1080p, 2K, or 4K using the WaveSpeed FlashVSR model, a fast video super-resolution and restoration model. This workflow enhances detail, reduces artifacts, and ensures consistent motion for a high-quality output. It calls a third-party API, so execution time depends on server-side response.",
         "io": {
@@ -9285,7 +9397,7 @@
         "task": "Image Generation",
         "model": "Qwen-Image-Layered",
         "freshness": "established",
-        "usage": 36,
+        "usage": 35,
         "recommend": "not_recommended",
         "description": "A text-to-image workflow that generates multi-element layered compositions using Qwen-Image-Layered. It produces a single RGBA image with separated layers for easy editing and recombining. Designed for rapid image generation on Comfy Cloud.",
         "io": {
@@ -9302,7 +9414,7 @@
         "task": "Image Generation",
         "model": "Qwen-Image-Layered",
         "freshness": "established",
-        "usage": 19,
+        "usage": 22,
         "recommend": "not_recommended",
         "description": "This workflow uses the Qwen-Image-Layered model to generate an image by decomposing a text prompt into multiple compositional layers, giving precise control over each element. It takes a textual description as input and produces a single image output, suitable for utility tasks requiring fine-grained layer-based generation.",
         "io": {
@@ -9319,7 +9431,7 @@
         "task": "Video Extension",
         "model": "Vidu Q2",
         "freshness": "established",
-        "usage": 28,
+        "usage": 27,
         "recommend": "not_recommended",
         "description": "Use the Vidu Q2 high-quality model to extend a video up to 7 seconds and enhance it to 1080p. The workflow appends generated content seamlessly to the original clip. This utility workflow calls a third-party API; execution time depends on server-side response.",
         "io": {
@@ -9356,7 +9468,7 @@
         "task": "Image Generation",
         "model": "Magnific",
         "freshness": "established",
-        "usage": 116,
+        "usage": 117,
         "recommend": "low",
         "description": "This workflow enhances skin in portrait images using the Magnific AI model, adjusting lighting, color grading, and realism for improved textures and overall quality. It calls a third-party API for processing, with execution time depending on server-side response.",
         "io": {
@@ -9373,7 +9485,7 @@
         "task": "Frame Interpolation",
         "model": "none",
         "freshness": "established",
-        "usage": 68,
+        "usage": 65,
         "recommend": "low",
         "description": "This utility workflow smooths low frame-rate videos by generating intermediate frames between existing ones using frame interpolation techniques. It accepts a video input and outputs an interpolated video with increased frame count. Executes on Comfy Cloud.",
         "io": {
@@ -9407,7 +9519,7 @@
         "task": "Video Upscale",
         "model": "Real-ESRGAN",
         "freshness": "established",
-        "usage": 56,
+        "usage": 57,
         "recommend": "low",
         "description": "This workflow upscales video frames using Real-ESRGAN, a practical GAN super-resolution model that handles artifacts robustly. It accepts single frames as input and produces high-quality upscaled images. API execution is supported for server-side upscaling at the chosen scale factor (e.g., 2x or 4x).",
         "io": {
@@ -9424,8 +9536,8 @@
         "task": "Depth Estimation",
         "model": "Depth Anything v2",
         "freshness": "established",
-        "usage": 484,
-        "recommend": "medium",
+        "usage": 626,
+        "recommend": "high",
         "description": "Generate a temporally stable depth map from a video using Depth Anything v2’s monocular depth estimation. This utility takes image frames as input and outputs a consistent relative depth map sequence.",
         "io": {
           "inputs": ["text: Input prompt"],
@@ -9458,8 +9570,8 @@
         "task": "Image Generation",
         "model": "DWPose",
         "freshness": "established",
-        "usage": 50,
-        "recommend": "low",
+        "usage": 47,
+        "recommend": "not_recommended",
         "description": "This workflow converts a video into a temporally stable pose control map using DWPose, a pose estimation model that extracts skeleton keypoints from images. It accepts a text prompt for guidance and outputs a pose map image. The workflow runs efficiently on Comfy Cloud.",
         "io": {
           "inputs": ["text: Input prompt"],
@@ -9475,7 +9587,7 @@
         "task": "Image Generation",
         "model": "",
         "freshness": "established",
-        "usage": 160,
+        "usage": 166,
         "recommend": "low",
         "description": "Utility workflow that converts a video into a temporally stable normal map. It accepts a text prompt to guide the generation and outputs images suitable for texturing or rendering. Designed for efficient execution on Comfy Cloud.",
         "io": {
@@ -9509,7 +9621,7 @@
         "task": "Text to Image",
         "model": "SD1.5",
         "freshness": "established",
-        "usage": 19,
+        "usage": 20,
         "recommend": "not_recommended",
         "description": "A text-to-image workflow using SD1.5 to generate images from text prompts. It takes a text description as input and outputs a corresponding image. This workflow runs quickly on Comfy Cloud.",
         "io": {
