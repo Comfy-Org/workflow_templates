@@ -12,6 +12,7 @@
 - `npm run validate:manifests` — Validate package manifests
 - `npm run validate:comfyui-nodes` — Compare templates to ComfyUI node baseline (local: live `/object_info`)
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
+- `python scripts/sync/sync_is_app.py` — Write `isApp` into `index.json` from each workflow's `extra.linearMode` (`--dry-run` to report, `--check` for the CI gate)
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
 - `python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail` — CI-style static compat scan
 - `python scripts/sync/sync_frozen_inventory.py` — Regenerate frozen bundle template inventory from `bundles.json`
