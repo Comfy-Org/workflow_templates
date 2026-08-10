@@ -442,7 +442,23 @@ function formatRelativeDate(dateStr: string): string {
       backdrop.setAttribute('aria-hidden', 'true');
       backdrop.tabIndex = -1;
       video!.parentElement?.prepend(backdrop);
-      void backdrop.play().catch(() => backdrop.remove());
+
+      // A backdrop that cannot play is dropped, but the foreground is still a
+      // portrait video, so `contain` remains the right treatment for it.
+      const dropBackdrop = () => backdrop.remove();
+
+      // If the foreground fails, ThumbnailDisplay swaps in its fallback image.
+      // The ambient copy would otherwise keep playing behind it, and
+      // `data-portrait` also restyles the frame and `.video-thumb` on mobile, so
+      // the whole portrait treatment has to come off, not just the backdrop.
+      const revertPortrait = () => {
+        backdrop.remove();
+        frame.removeAttribute('data-portrait');
+      };
+
+      video!.addEventListener('error', revertPortrait, { once: true });
+      backdrop.addEventListener('error', dropBackdrop, { once: true });
+      void backdrop.play().catch(dropBackdrop);
     }
 
     if (video.readyState >= 1) applyIfPortrait();
