@@ -13,6 +13,7 @@ import { slugify } from '../../lib/slugify';
 import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
+import { isVideoFile } from '../../lib/media-utils';
 import { featureFlags } from '../../config/featureFlags';
 import { buttonVariants } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -51,6 +52,9 @@ const authorName = profile?.display_name || data.username || 'ComfyUI';
 const authorAvatarUrl = profile?.avatar_url || null;
 const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
+// Only video heroes can turn out to be portrait; the client script below measures
+// the loaded file and opts those pages out of the cover crop.
+const heroIsVideo = thumbnails.length > 0 && isVideoFile(thumbnails[0]);
 const showCloudCta = !data.includeOnDistributions || data.includeOnDistributions.includes('cloud');
 const isApiTemplate = data.tags?.includes('API') ?? false;
 const cloudTemplateId = data.shareId || data.name;
@@ -245,7 +249,10 @@ function formatRelativeDate(dateStr: string): string {
 
       {
         thumbnails.length > 0 && (
-          <div class="order-1 lg:order-2 lg:col-start-2 media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg">
+          <div
+            class="order-1 lg:order-2 lg:col-start-2 media-frame relative aspect-4/3 w-full max-w-full overflow-hidden rounded-lg"
+            data-portrait-aware={heroIsVideo ? '' : undefined}
+          >
             <ThumbnailDisplay
               thumbnails={thumbnails}
               title={data.title || data.name}
@@ -378,4 +385,67 @@ function formatRelativeDate(dateStr: string): string {
     height: 100%;
     object-fit: cover;
   }
+  /* Portrait videos only: a 4:3 cover crop would discard most of a 9:16 frame,
+     so the sharp video is contained over a blurred ambient copy of itself.
+     Landscape and square videos keep the cover crop above. */
+  .media-frame[data-portrait] :global(video:not(.video-backdrop)) {
+    position: relative;
+    z-index: 1;
+    object-fit: contain;
+  }
+  .media-frame[data-portrait] :global(.video-backdrop) {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    object-fit: cover;
+    filter: blur(48px) brightness(0.55);
+    transform: scale(1.2);
+  }
+  @media (max-width: 1023px) {
+    .media-frame[data-portrait] {
+      aspect-ratio: auto;
+    }
+    .media-frame[data-portrait] :global(.video-thumb) {
+      position: static;
+      height: auto;
+    }
+    .media-frame[data-portrait] :global(video:not(.video-backdrop)) {
+      height: auto;
+      max-height: min(70vh, 42rem);
+      margin-inline: auto;
+    }
+    .media-frame[data-portrait] :global(.video-backdrop) {
+      display: none;
+    }
+  }
 </style>
+
+<script>
+  // The hub index carries no video dimensions, so portrait heroes can only be
+  // identified once metadata loads. Landscape and square videos are left alone.
+  document.querySelectorAll<HTMLElement>('.media-frame[data-portrait-aware]').forEach((frame) => {
+    const video = frame.querySelector<HTMLVideoElement>('video:not(.video-backdrop)');
+    if (!video) return;
+
+    function applyIfPortrait() {
+      if (!video!.videoWidth || video!.videoHeight <= video!.videoWidth) return;
+      frame.setAttribute('data-portrait', '');
+
+      const backdrop = document.createElement('video');
+      backdrop.src = video!.currentSrc || video!.src;
+      backdrop.className = 'video-backdrop';
+      backdrop.muted = true;
+      backdrop.loop = true;
+      backdrop.autoplay = true;
+      backdrop.playsInline = true;
+      backdrop.setAttribute('aria-hidden', 'true');
+      backdrop.tabIndex = -1;
+      video!.parentElement?.prepend(backdrop);
+      void backdrop.play().catch(() => backdrop.remove());
+    }
+
+    if (video.readyState >= 1) applyIfPortrait();
+    else video.addEventListener('loadedmetadata', applyIfPortrait, { once: true });
+  });
+</script>
