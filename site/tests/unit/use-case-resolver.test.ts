@@ -193,6 +193,27 @@ describe('useCasePageHasGrid', () => {
     expect(useCasePageHasGrid(page({ filters: {} }), snapshotWithoutShareIds)).toBe(false);
   });
 
+  // resolveUseCasePageTemplates drops gated pins, so counting them here would put a
+  // page in the sitemap as indexable while it renders an empty grid. That is the
+  // mismatch verify-sitemap-indexability exists to catch.
+  it('rejects a curated page whose only pin is gated', () => {
+    expect(
+      useCasePageHasGrid(
+        page({ filters: {}, pins: [{ shareId: 'aaaa', gate: 'GATED' }] }),
+        snapshotWithoutShareIds
+      )
+    ).toBe(false);
+  });
+
+  it('counts a curated page that still has an ungated pin', () => {
+    expect(
+      useCasePageHasGrid(
+        page({ filters: {}, pins: [{ shareId: 'aaaa', gate: 'GATED' }, { shareId: 'bbbb' }] }),
+        snapshotWithoutShareIds
+      )
+    ).toBe(true);
+  });
+
   it('still judges a filtered page on its filters, so a stale tag is not masked', () => {
     expect(
       useCasePageHasGrid(

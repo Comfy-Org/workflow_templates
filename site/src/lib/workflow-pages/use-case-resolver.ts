@@ -71,7 +71,11 @@ export function useCasePageHasGrid(def: SeoPageDef, snapshot: FilterableTemplate
   // filters is still judged on whether those filters match, so this cannot mask
   // a tag filter that has gone stale.
   const hasFilters = (def.filters.tags?.length ?? 0) > 0 || (def.filters.models?.length ?? 0) > 0;
-  return !hasFilters && (def.pins?.length ?? 0) > 0;
+  // Gated pins are excluded here for the same reason the resolver drops them: a
+  // page whose only pins are gated renders an empty grid, and counting them would
+  // advertise it in the sitemap as indexable.
+  const ungatedPins = (def.pins ?? []).filter((pin) => !pin.gate).length;
+  return !hasFilters && ungatedPins > 0;
 }
 
 const SHARE_ID_RE = /^[0-9a-f]+$/;

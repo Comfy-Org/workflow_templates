@@ -529,14 +529,41 @@ export const SEO_PAGES: SeoPageDef[] = [
 ];
 
 /**
- * Every share id carrying a brand-safety gate, across all pages.
+ * Every share id withheld for brand safety, catalog-wide.
  *
- * A gate declared on one page's pin has to hold everywhere, not just on that
- * page's grid. The landing-page image matcher draws from a whole-catalog
- * fallback pool, so without a global set a gated workflow can still surface as a
- * capability card (with a live CTA to it) on a page that never pinned it. That
- * is how `8ce4aa90e8af` reached `ai-hairstyle-changer`.
+ * Declared here rather than derived from the pins that happen to carry a `gate`.
+ * Those are two different statements: a pin's `gate` says "do not render on this
+ * page", and this set says "withhold everywhere". Deriving one from the other
+ * meant a workflow was only withheld if some page happened to pin it, so one
+ * nobody pinned stayed in the whole-catalog fallback pool and could still surface
+ * as a capability card with a live CTA. It also meant removing a pin as editorial
+ * cleanup silently republished the workflow.
+ *
+ * `assertGatedPinsAreWithheld` keeps the two in step: every gated pin must appear
+ * here. Removing an id is a deliberate publish, reviewed on its own.
  */
-export const GATED_SHARE_IDS: ReadonlySet<string> = new Set(
-  SEO_PAGES.flatMap((def) => (def.pins ?? []).filter((pin) => pin.gate).map((pin) => pin.shareId))
-);
+export const GATED_SHARE_IDS: ReadonlySet<string> = new Set([
+  '8ce4aa90e8af', // Clothes Changer (virtual try-on): outfit/try-on framing only
+  'bed989744195', // Video Face Swap: pending consent flow, celebrity block, C2PA
+  'c2aae816fe63', // Face Swap (image): same hold as the video variant
+]);
+
+/**
+ * Every gated pin must also be withheld catalog-wide.
+ *
+ * Guards the one direction that can go wrong silently: gating a pin on a page
+ * while leaving the workflow in the fallback pool, which puts it back on the site
+ * through a different surface. Exported so a test can assert it rather than
+ * running at import time.
+ */
+export function gatedPinsMissingFromWithheldSet(): string[] {
+  return [
+    ...new Set(
+      SEO_PAGES.flatMap((def) =>
+        (def.pins ?? [])
+          .filter((pin) => pin.gate && !GATED_SHARE_IDS.has(pin.shareId))
+          .map((pin) => pin.shareId)
+      )
+    ),
+  ];
+}
