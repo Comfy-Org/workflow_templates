@@ -37,8 +37,8 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
     .filter((template) => !template.shareId || !excluded.has(template.shareId))
     .sort(byUsageDesc);
 
-  // Pins bypass excludes; first id wins. A pin carrying a brand-safety gate is
-  // dropped here, because pins are the one route that skips `assertBrandSafe`.
+  // Pins bypass excludes; first id wins. Gated pins are dropped: pins are the one
+  // route that skips `assertBrandSafe`.
   const seen = new Set<string>();
   const pinned = (def.pins ?? []).flatMap((pin) => {
     if (pin.gate) return [];
@@ -71,9 +71,7 @@ export function useCasePageHasGrid(def: SeoPageDef, snapshot: FilterableTemplate
   // filters is still judged on whether those filters match, so this cannot mask
   // a tag filter that has gone stale.
   const hasFilters = (def.filters.tags?.length ?? 0) > 0 || (def.filters.models?.length ?? 0) > 0;
-  // Gated pins are excluded here for the same reason the resolver drops them: a
-  // page whose only pins are gated renders an empty grid, and counting them would
-  // advertise it in the sitemap as indexable.
+  // Ungated only: counting a gated pin advertises a grid the resolver will not render.
   const ungatedPins = (def.pins ?? []).filter((pin) => !pin.gate).length;
   return !hasFilters && ungatedPins > 0;
 }

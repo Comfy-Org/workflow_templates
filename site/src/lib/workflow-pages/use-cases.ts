@@ -352,12 +352,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
-    // Face swapping is the narrow form of character replacement, and without
-    // these the page has no App at all. Both stay inert while `gate` is set:
-    // the sheet holds them for a consent flow, a celebrity-preset block,
-    // filters and C2PA. Drop the `gate` field once those ship. The keywords
-    // above must never gain face-swap terms regardless, because the governance
-    // denylist fails the build on them.
+    // Held pending the consent flow, celebrity-preset block, filters and C2PA.
+    // The keywords above must never gain face-swap terms: the governance denylist
+    // fails the build on them.
     pins: [
       { shareId: 'bed989744195', gate: 'GATED' }, // Video Face Swap
       { shareId: 'c2aae816fe63', gate: 'GATED' }, // Face Swap (image)
@@ -492,9 +489,7 @@ export const SEO_PAGES: SeoPageDef[] = [
     filters: {},
     pins: [
       { shareId: 'fffa07892f17' }, // Hairstyle Changer
-      // Same try-on-a-new-look intent, and this is the site's only other
-      // appearance-changer page. Inert while `gate` is set: the sheet allows it
-      // under outfit/try-on framing only.
+      // Held: the sheet allows it under outfit/try-on framing only.
       { shareId: '8ce4aa90e8af', gate: 'GATED-LITE' }, // Clothes Changer (virtual try-on)
     ],
   },

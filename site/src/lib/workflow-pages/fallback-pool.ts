@@ -26,11 +26,12 @@ const MATCHER_FIELDS: Record<keyof MatcherTemplate, true> = {
 const MATCHER_KEYS = Object.keys(MATCHER_FIELDS) as (keyof MatcherTemplate)[];
 
 export function buildFallbackPool(catalog: SerializedTemplate[]): MatcherTemplate[] {
-  return catalog
-    .filter((t) => hasStillThumbnail(t.thumbnails))
-    // Gated workflows are dropped from the pool itself, so no section on any
-    // landing page can draw one as a card image or link to it.
-    .filter((t) => !t.shareId || !GATED_SHARE_IDS.has(t.shareId))
-    .sort(byUsageDesc)
-    .map((t) => Object.fromEntries(MATCHER_KEYS.map((k) => [k, t[k]])) as MatcherTemplate);
+  return (
+    catalog
+      .filter((t) => hasStillThumbnail(t.thumbnails))
+      // Dropped from the pool itself, so no section can draw one as a card or link.
+      .filter((t) => !t.shareId || !GATED_SHARE_IDS.has(t.shareId))
+      .sort(byUsageDesc)
+      .map((t) => Object.fromEntries(MATCHER_KEYS.map((k) => [k, t[k]])) as MatcherTemplate)
+  );
 }
