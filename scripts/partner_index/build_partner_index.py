@@ -14,7 +14,8 @@ Usage:
   python3 scripts/partner_index/build_partner_index.py --verify   # run self-check after build
 
 Output:
-  templates/index.partner_node.json
+  index.partner_node.json (repo root; NOT under templates/ so CI template
+  scanners / bundles sync do not treat it as a template)
 """
 import argparse
 import json
@@ -28,7 +29,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 SCRIPTS = ROOT / "scripts" / "partner_index"
 DATA = SCRIPTS / "data"  # data lives with the scripts (self-contained module)
 SCAN_SNAPSHOT = SCRIPTS / "data" / "partner_nodes_scan.json"
-OUT = ROOT / "templates" / "index.partner_node.json"
+OUT = ROOT / "index.partner_node.json"  # repo root: CI template scanners only scan templates/
 
 CJK = re.compile(r"[\u4e00-\u9fff]")
 
