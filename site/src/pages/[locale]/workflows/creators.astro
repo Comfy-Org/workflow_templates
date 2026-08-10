@@ -14,6 +14,7 @@ import BackButton from '../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { creatorPath } from '../../../lib/routes';
 import { absoluteUrl } from '../../../config/site';
+import { listingIndexing } from '../../../lib/i18n/listing-indexing';
 import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../../lib/hub-api';
 import { fetchRankingMap } from '../../../lib/ranking';
 
@@ -64,7 +65,9 @@ const sortedCreators = Array.from(creatorMap.values()).sort(
   (a, b) => b.templates.length - a.templates.length
 );
 
-const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
+// Gated until this locale completes native review — see listing-indexing.
+const indexing = listingIndexing('/workflows/creators/', typedLocale);
+const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 ---
 
 <BaseLayout
@@ -72,6 +75,9 @@ const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
   description="Discover the world's top ComfyUI workflow creators and their best templates."
   canonicalUrl={canonicalUrl}
   locale={typedLocale}
+  hreflangBasePath="/workflows/creators/"
+  hreflangLocales={indexing.hreflangLocales}
+  noindex={indexing.noindex}
   theme="dark"
   hideDefaultFooter
 >
