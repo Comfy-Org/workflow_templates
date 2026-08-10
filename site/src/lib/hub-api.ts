@@ -21,7 +21,8 @@ const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy
 
 export type MediaType = 'image' | 'video' | 'audio' | '3d';
 export type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
-export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'deprecated';
+export type { WorkflowStatus } from './hub-status';
+import { ALL_STATUSES, type WorkflowStatus } from './hub-status';
 
 export interface LabelRef {
   name: string;
@@ -263,9 +264,6 @@ export async function getProfile(username: string): Promise<HubProfile> {
 let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
 
 const APPROVED_ONLY = import.meta.env.PUBLIC_APPROVED_ONLY === 'true';
-
-/** All status values — used when preview builds need unfiltered results. */
-const ALL_STATUSES: WorkflowStatus[] = ['pending', 'approved', 'rejected', 'deprecated'];
 
 /**
  * Fetch and cache the workflow index. Called many times across pages during

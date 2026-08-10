@@ -18,6 +18,7 @@ import { renameSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import type { HubWorkflowDetail, HubWorkflowTemplateEntry } from '../src/lib/hub-api';
+import { ALL_STATUSES } from '../src/lib/hub-status';
 
 /** Concurrent detail requests, to keep a full catalog pass to about a minute. */
 const CONCURRENCY = 16;
@@ -76,8 +77,12 @@ async function mapWithConcurrency<T, R>(
   return results;
 }
 
+// Every status, matching what a non-production build asks the index for. A
+// preview renders pending workflows, so scanning only approved ones leaves a
+// pending app out of the snapshot and showing under Node Graphs, on the very
+// surface used to review it before approval.
 const entries = await hubGet<HubWorkflowTemplateEntry[]>(
-  '/api/hub/workflows/index?status=approved'
+  `/api/hub/workflows/index?status=${ALL_STATUSES.join(',')}`
 );
 const withShareId = entries.filter((entry) => Boolean(entry.shareId));
 console.log(`Checking ${withShareId.length} workflows for App Mode…`);

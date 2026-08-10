@@ -18,15 +18,22 @@ const APP_MODE_SHARE_IDS: ReadonlySet<string> = new Set(
 /**
  * Whether a catalog entry belongs under the "Comfy Apps" tab.
  *
- * An `isApp` from the hub takes precedence, so the snapshot stops being
- * consulted once the API returns the field. The `.app` name suffix is a legacy
- * naming convention retained for templates uploaded before the snapshot.
+ * Either signal alone is enough, and neither can veto the other.
+ *
+ * A hub `false` is not treated as authority. The hub column is written at
+ * publish time, so every workflow published before it existed reads `false`
+ * until the backfill runs. Letting that win would empty the tab during the
+ * window between the field shipping and the backfill completing.
+ *
+ * The `.app` filename suffix is gone. It was the original guess and it is wrong
+ * in both directions: it misses apps not named that way, and
+ * `templates_all_in_one_image_edit_models.app` carries the suffix with
+ * `linearMode: false`. The snapshot reads `extra.linearMode` from every
+ * workflow, so it already covers everything the suffix caught, minus that one
+ * false positive.
  */
 export function resolveIsApp(entry: { isApp?: boolean; shareId?: string; name?: string }): boolean {
-  return (
-    entry.isApp ??
-    (APP_MODE_SHARE_IDS.has(entry.shareId ?? '') || Boolean(entry.name?.endsWith('.app')))
-  );
+  return entry.isApp === true || APP_MODE_SHARE_IDS.has(entry.shareId ?? '');
 }
 
 export { APP_MODE_SHARE_IDS };
