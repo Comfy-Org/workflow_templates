@@ -73,13 +73,21 @@ Tone: direct, factual, creator-first. The human directs the model; never phrase 
 Chinese: for 'zh' use ONLY Simplified Chinese characters; for 'zh-TW' use ONLY Traditional Chinese with Taiwan terminology. Never mix Simplified and Traditional within one locale.`;
 
 module.exports = defineConfig({
-  // Translation model. Overridable by env so the model can be changed from a repo
-  // variable without a code change — a wrong model id fails every translation run,
-  // so being able to switch back instantly matters more than hardcoding a newer
-  // default here. gpt-4.1 stays the fallback because it is the one we have actually
-  // run all ten locales through; raising it is a deliberate, measured change (the
-  // AI reviewer now scores the output, so an upgrade can be judged on evidence).
-  modelName: process.env.HUB_I18N_MODEL || 'gpt-4.1',
+  // Translation model, still overridable by env so a bad id can be reverted from a
+  // repo variable without a code change. A wrong id fails every translation call,
+  // so the ability to switch back instantly is the reason the override stays.
+  //
+  // gpt-4.1 was the previous default because it was the one all ten locales had
+  // actually been run through. It is now safe to raise it on evidence rather than
+  // hope: the AI reviewer scores the output, so a regression shows up as findings
+  // instead of going unnoticed. Revert to 'gpt-4.1' if this model regresses.
+  modelName: process.env.HUB_I18N_MODEL || 'gpt-5.6-terra',
+  // GPT-5.x reasoning models accept only the default temperature and reject any
+  // explicit value with a 400. lobe-i18n defaults this to 0 and always sends it,
+  // so without pinning it to 1 here every translation call fails on the newer
+  // model. Determinism now comes from the reference prompt and the deterministic
+  // enforcement pass rather than from a zero temperature.
+  temperature: 1,
   // Larger chunks send the system prompt fewer times (less token overhead).
   splitToken: 6000,
   // Serial: paced for the org's OpenAI tier (30k TPM). Raise once the tier is bumped.
