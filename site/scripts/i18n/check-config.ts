@@ -5,7 +5,25 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { assertLocaleSets } from '../../src/lib/i18n/locales';
+import { readCliContextWindows, effectiveSplitToken } from './cli-context-windows';
+
+const require = createRequire(import.meta.url);
+
+/** Only the two fields this check reads; `.i18nrc.cjs` carries many more. */
+interface I18nConfig {
+  modelName: string;
+  splitToken: number;
+}
+
+/**
+ * Generous allowance for the reference prompt, which carries the glossary and,
+ * in single-locale runs, that locale's terminology block on top. Deliberately
+ * high: the point is to reject a context window too small to be workable, not to
+ * predict the exact prompt size.
+ */
+const PROMPT_TOKEN_ALLOWANCE = 8000;
 
 const errors: string[] = [];
 
@@ -22,8 +40,42 @@ try {
   errors.push(err instanceof Error ? err.message : String(err));
 }
 
+// 3. The model actually about to be used must be one the CLI can size requests
+// for. The unit test covers the committed default, but the model is also
+// settable from a repo variable that overrides it at run time, and a wrong value
+// there degrades silently: batching collapses to one key per request while every
+// call still succeeds. This is the only place that sees the resolved value, so
+// it is the only place that can catch it. Checked before translating, so a bad
+// override costs one failed step rather than a night of oversized bills.
+const contextWindows = readCliContextWindows();
+if (!contextWindows) {
+  // Unreadable table means the CLI's bundle changed shape, which says nothing
+  // about the model. Blocking the pipeline on a parsing heuristic would be worse
+  // than the risk it guards, so this is loud but not fatal.
+  console.warn(
+    '[i18n] config check: could not read the context-window table from @lobehub/i18n-cli. ' +
+      'Request sizing is unverified; re-check how the CLI batches before trusting a model change.'
+  );
+} else {
+  const { modelName, splitToken } = require(
+    path.join(process.cwd(), '.i18nrc.cjs')
+  ) as I18nConfig;
+  if (!(modelName in contextWindows)) {
+    errors.push(
+      `translator model "${modelName}" has no context window in the installed @lobehub/i18n-cli. ` +
+        'It would batch one key per request instead of honouring splitToken. Pick a model the CLI ' +
+        'knows, or upgrade it to a version that knows this one.'
+    );
+  } else if (effectiveSplitToken(contextWindows[modelName], PROMPT_TOKEN_ALLOWANCE, splitToken) < 1) {
+    errors.push(
+      `translator model "${modelName}" has a context window of ${contextWindows[modelName]}, too ` +
+        'small to leave room for the reference prompt. Requests would be split past the point of use.'
+    );
+  }
+}
+
 if (errors.length > 0) {
   for (const e of errors) console.error(`[i18n] config check: ${e}`);
   process.exit(1);
 }
-console.log('[i18n] config check: entry present, locale sets valid.');
+console.log('[i18n] config check: entry present, locale sets valid, translator model sizable.');
