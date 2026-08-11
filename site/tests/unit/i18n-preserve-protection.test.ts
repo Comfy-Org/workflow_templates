@@ -5,6 +5,7 @@ import {
   restoreText,
   protectContent,
   restoreContent,
+  findCollisionsAcrossFiles,
   findSentinelCollisions,
   sentinelFor,
 } from '../../scripts/i18n/preserve-protection';
@@ -44,13 +45,34 @@ describe('protect + restore round-trip', () => {
     expect(restoreText(prot, m)).toBe(s);
   });
 
-  it('the exact failure case: ComfyUI/Comfy survive a "translation" that drops originals', () => {
+  it('the exact failure case: ComfyUI/Comfy survive a translation that rewrites all prose', () => {
     const en = '在 ComfyUI 中使用 Comfy 工作流'; // English brand names embedded in zh prose
     const prot = protectText(en, map);
-    // Simulate the model translating everything it can but leaving sentinels intact.
-    const modelOutput = prot.replace('在', '在').replace('中使用', '中使用');
-    expect(restoreText(modelOutput, map)).toContain('ComfyUI');
-    expect(restoreText(modelOutput, map)).toContain('Comfy');
+
+    // Protection must have removed both brand names before the model ever sees them.
+    const comfyUiToken = map.sentinelByTerm.get('ComfyUI')!;
+    const comfyToken = map.sentinelByTerm.get('Comfy')!;
+    expect(prot).toContain(comfyUiToken);
+    expect(prot).toContain(comfyToken);
+    expect(prot).not.toContain('ComfyUI');
+
+    // Simulate a REAL translation: every non-sentinel word is rewritten (as a model
+    // would when moving to another language) while the sentinels pass through. The
+    // sentinels are therefore the only thing carrying the terms across, which is the
+    // property under test — rewriting prose to itself would prove nothing.
+    const modelOutput = prot
+      .split(/(\{\{PT\d+\}\})/)
+      .map((segment) =>
+        /^\{\{PT\d+\}\}$/.test(segment) ? segment : segment.replace(/\S+/g, 'translated')
+      )
+      .join('');
+    expect(modelOutput).not.toContain('工作流'); // prose really did change
+
+    const restored = restoreText(modelOutput, map);
+    expect(restored).toContain('ComfyUI');
+    // Standalone "Comfy" came back as its own term, not merely as the tail of "ComfyUI".
+    expect(restored.replace(/ComfyUI/g, '')).toContain('Comfy');
+    expect(restored).not.toMatch(/\{\{PT\d+\}\}/); // no sentinel residue left behind
   });
 });
 
@@ -107,5 +129,75 @@ describe('protectContent / restoreContent walk nested structures', () => {
     const prot = JSON.stringify(protectContent(content, map));
     expect(prot).not.toContain('ControlNet');
     expect(prot).not.toContain('ComfyUI');
+  });
+});
+
+describe('findCollisionsAcrossFiles (restore rewrites every file, so check every file)', () => {
+  it('finds a collision hiding in a locale file, not just in English', () => {
+    // The regression this guards: protect only inspected en.json, but restore
+    // rewrites every content file, so this zh string would have been silently
+    // turned into a preserve-term.
+    const collisions = findCollisionsAcrossFiles({
+      'en.json': { a: { title: 'clean english' } },
+      'zh.json': { a: { title: '包含 {{PT0}} 的文本' } },
+    });
+    expect(collisions).toEqual([{ file: 'zh.json', text: '包含 {{PT0}} 的文本' }]);
+  });
+
+  it('labels each collision with its file so the error names where to look', () => {
+    const collisions = findCollisionsAcrossFiles({
+      'en.json': { a: { title: 'see {{PT1}}' } },
+      'ja.json': { a: { title: '{{PT2}} を使う' } },
+    });
+    expect(collisions.map((c) => c.file).sort()).toEqual(['en.json', 'ja.json']);
+  });
+
+  it('passes clean content across every file', () => {
+    expect(
+      findCollisionsAcrossFiles({
+        'en.json': { a: { title: 'Use ComfyUI' } },
+        'zh.json': { a: { title: '使用 ComfyUI' } },
+      })
+    ).toEqual([]);
+  });
+});
+
+describe('letter-boundary matching (a short word term must not split identifiers)', () => {
+  const map = buildTermMap([...TERMS, 'Fun', 'Wan']);
+
+  it('does not match a term inside a longer word', () => {
+    // Bare "Fun" previously fired inside camelCase node names, handing the model
+    // "{{PT}}{{PT}}InpaintToVideo" and splitting a proper noun into two sentinels.
+    const prot = protectText('Use the WanFunInpaintToVideo node', map);
+    expect(prot).toContain('WanFunInpaintToVideo');
+    expect(restoreText(prot, map)).toBe('Use the WanFunInpaintToVideo node');
+  });
+
+  it('does not match inside an ordinary word that merely starts the same way', () => {
+    expect(protectText('Functionality of the sampler', map)).toBe('Functionality of the sampler');
+  });
+
+  it('still protects the standalone product name', () => {
+    const prot = protectText('Wan 2.2 5B Fun Inpaint', map);
+    expect(prot).not.toContain('Fun');
+    expect(restoreText(prot, map)).toBe('Wan 2.2 5B Fun Inpaint');
+  });
+
+  it('still matches a family name that runs straight into a version number', () => {
+    // The guard is on letters, not digits, so "Wan2.1" keeps its protection —
+    // a plain \b word boundary would have regressed exactly this case.
+    const prot = protectText('Wan2.1 and Wan2.2 models', map);
+    expect(prot).not.toContain('Wan2.1');
+    expect(restoreText(prot, map)).toBe('Wan2.1 and Wan2.2 models');
+  });
+
+  it('is unaffected for terms bounded by punctuation', () => {
+    const m = buildTermMap(['LoRA']);
+    expect(restoreText(protectText('Use ID-LoRA here', m), m)).toBe('Use ID-LoRA here');
+    expect(protectText('Use ID-LoRA here', m)).not.toContain('LoRA');
+  });
+
+  it('lowercase prose is untouched (matching is case-sensitive)', () => {
+    expect(protectText('this is a fun workflow', map)).toBe('this is a fun workflow');
   });
 });
