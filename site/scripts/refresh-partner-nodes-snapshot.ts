@@ -8,13 +8,19 @@
  * request per workflow, far too slow for every build, so it runs here and the
  * result is committed.
  *
- * The node list comes from `scripts/data/mcp/api_node_model_options.json`, which
- * `scripts/mcp/scan_api_nodes.py` generates from ComfyUI's `object_info.json`
- * (`api_node: true`). That file is itself a committed snapshot and goes stale, so
- * a newly shipped vendor is missed until it is regenerated. Detection therefore
- * fails open on unknown node types, which is why the `API` tag stays the other
- * half of the signal. The durable fix is the hub deriving the tag at publish
- * time, where the classifier already lives.
+ * The node list comes from `scripts/data/mcp/api_node_ids.json`, which
+ * `scripts/mcp/scan_api_nodes.py` generates from every node declared in ComfyUI's
+ * `comfy_api_nodes` directory. Living in that directory is what makes a node
+ * billable, so the list is complete by construction rather than by upkeep.
+ *
+ * It is deliberately not `api_node_model_options.json`, next to it. That file
+ * indexes model dropdowns and drops any node without one, so it held 93 of 234
+ * API nodes and could not be fixed by regenerating it.
+ *
+ * The list is still a committed snapshot, so a vendor shipped after the last
+ * regeneration is missed until someone reruns the scan. The `API` tag stays the
+ * other half of the signal for that window. The durable fix is the hub deciding
+ * this at publish time, where the classifier already lives.
  *
  * Usage: pnpm partner-nodes:refresh-snapshot
  */
@@ -29,13 +35,13 @@ const snapshotPath = fileURLToPath(
   new URL('../src/data/partner-node-workflows.snapshot.json', import.meta.url)
 );
 const nodeListPath = fileURLToPath(
-  new URL('../../scripts/data/mcp/api_node_model_options.json', import.meta.url)
+  new URL('../../scripts/data/mcp/api_node_ids.json', import.meta.url)
 );
 
 const nodeList = JSON.parse(readFileSync(nodeListPath, 'utf8')) as {
-  nodes: Record<string, unknown>;
+  node_ids: string[];
 };
-const apiNodes = new Set(Object.keys(nodeList.nodes ?? {}));
+const apiNodes = new Set(nodeList.node_ids ?? []);
 
 if (apiNodes.size === 0) {
   console.error(`Refusing to write a snapshot: no API node classes in ${nodeListPath}.`);
@@ -59,8 +65,8 @@ interface Graph {
  */
 function allNodes(workflowJson: Record<string, unknown>): GraphNode[] {
   const root = (workflowJson?.nodes ?? []) as GraphNode[];
-  const subgraphs = ((workflowJson?.definitions as { subgraphs?: Graph[] } | undefined)?.subgraphs ??
-    []) as Graph[];
+  const subgraphs = ((workflowJson?.definitions as { subgraphs?: Graph[] } | undefined)
+    ?.subgraphs ?? []) as Graph[];
   return [...root, ...subgraphs.flatMap((sub) => sub?.nodes ?? [])];
 }
 
