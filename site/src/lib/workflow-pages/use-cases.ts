@@ -28,6 +28,12 @@ export interface SeoPagePin {
   /** Files the pin under the "Comfy Apps" tab when the catalog hasn't flagged
    *  it. Set only after verifying App Mode in cloud.comfy.org. */
   isApp?: boolean;
+  /** Brand-safety gate carried over from the keyword sheet. A pin that declares
+   *  one never reaches the grid: `assertBrandSafe` only inspects the slug,
+   *  keywords and title, so without this a pin is the one way gated material
+   *  could reach a page. Recorded here rather than deleted so the intended
+   *  placement survives; delete the field once the gate's conditions ship. */
+  gate?: 'GATED' | 'GATED-LITE';
 }
 
 export interface SeoPageDef {
@@ -346,10 +352,13 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
-    // Face-swap workflows (Video Face Swap bed989744195, Face Swap c2aae816fe63)
-    // would fit this page's intent, but the keyword sheet gates them pending the
-    // consent flow, celebrity-preset block, filters and C2PA. They stay off the
-    // site until that ships; the governance denylist already blocks the terms.
+    // Held pending the consent flow, celebrity-preset block, filters and C2PA.
+    // The keywords above must never gain face-swap terms: the governance denylist
+    // fails the build on them.
+    pins: [
+      { shareId: 'bed989744195', gate: 'GATED' }, // Video Face Swap
+      { shareId: 'c2aae816fe63', gate: 'GATED' }, // Face Swap (image)
+    ],
     // Model matches that aren't character replacement: a comedy inflation
     // effect and a pose-control tutorial.
     excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
@@ -478,9 +487,11 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
-    // Clothes Changer (8ce4aa90e8af) shares the try-on intent, but the keyword
-    // sheet gates it to outfit/try-on framing only, so it waits for sign-off.
-    pins: [{ shareId: 'fffa07892f17' }], // Hairstyle Changer
+    pins: [
+      { shareId: 'fffa07892f17' }, // Hairstyle Changer
+      // Held: the sheet allows it under outfit/try-on framing only.
+      { shareId: '8ce4aa90e8af', gate: 'GATED-LITE' }, // Clothes Changer (virtual try-on)
+    ],
   },
   {
     slug: 'image-to-3d',
@@ -511,3 +522,43 @@ export const SEO_PAGES: SeoPageDef[] = [
     excludeShareIds: ['2030b1e2fb72'],
   },
 ];
+
+/**
+ * Every share id withheld for brand safety, catalog-wide.
+ *
+ * Declared here rather than derived from the pins that happen to carry a `gate`.
+ * Those are two different statements: a pin's `gate` says "do not render on this
+ * page", and this set says "withhold everywhere". Deriving one from the other
+ * meant a workflow was only withheld if some page happened to pin it, so one
+ * nobody pinned stayed in the whole-catalog fallback pool and could still surface
+ * as a capability card with a live CTA. It also meant removing a pin as editorial
+ * cleanup silently republished the workflow.
+ *
+ * `assertGatedPinsAreWithheld` keeps the two in step: every gated pin must appear
+ * here. Removing an id is a deliberate publish, reviewed on its own.
+ */
+export const GATED_SHARE_IDS: ReadonlySet<string> = new Set([
+  '8ce4aa90e8af', // Clothes Changer (virtual try-on): outfit/try-on framing only
+  'bed989744195', // Video Face Swap: pending consent flow, celebrity block, C2PA
+  'c2aae816fe63', // Face Swap (image): same hold as the video variant
+]);
+
+/**
+ * Every gated pin must also be withheld catalog-wide.
+ *
+ * Guards the one direction that can go wrong silently: gating a pin on a page
+ * while leaving the workflow in the fallback pool, which puts it back on the site
+ * through a different surface. Exported so a test can assert it rather than
+ * running at import time.
+ */
+export function gatedPinsMissingFromWithheldSet(): string[] {
+  return [
+    ...new Set(
+      SEO_PAGES.flatMap((def) =>
+        (def.pins ?? [])
+          .filter((pin) => pin.gate && !GATED_SHARE_IDS.has(pin.shareId))
+          .map((pin) => pin.shareId)
+      )
+    ),
+  ];
+}
