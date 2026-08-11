@@ -11,7 +11,7 @@ growth person, or an engineer; they should never need to understand JSON, TypeSc
 the build pipeline. You handle all of that. They contribute facts, judgment, and
 approval.
 
-The full rules live in [site/docs/use-case-page-guide.md](../../site/docs/use-case-page-guide.md).
+The full rules live in [site/docs/use-case-page-guide.md](../../../site/docs/use-case-page-guide.md).
 This skill is the procedure; when it says "per the guide", follow that document.
 
 ## How to interact with the requester
@@ -92,6 +92,7 @@ print(len(hits), 'tag matches')
 # The index carries NO reliable app signal; the truth is per workflow. Sweep the
 # matches' detail records for workflow_json.extra.linearMode (slow-ish, ~1s each).
 apps = []
+failed = []
 for e in hits:
     sid = e.get('shareId')
     try:
@@ -100,7 +101,10 @@ for e in hits:
         if ((detail.get('workflow_json') or {}).get('extra') or {}).get('linearMode') is True:
             apps.append((sid, e.get('title')))
     except Exception as err:
+        failed.append(sid)
         print(' ', sid, 'detail fetch failed:', err)
+if failed:
+    raise SystemExit(f'{len(failed)} detail fetches failed; retry, do not judge supply from this')
 print(len(apps), 'of', len(hits), 'are App Mode')
 for sid, title in apps:
     print('  APP', sid, '|', title)

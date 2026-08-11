@@ -122,7 +122,7 @@ Exactly two files. Nothing else changes when a page is added.
 | `filters.tags` / `filters.models` | yes (may be `{}`) | selects the grid from the live catalog. OR semantics, usage-sorted. Exact tag/model strings |
 | `appShareId` | no | App Mode share the hero and closing CTAs open. Only after human verification in cloud (see [quality bar](#the-quality-bar)) |
 | `pins` | no | share ids force-included at the top of the grid; `isApp: true` additionally files the pin under the "Comfy Apps" tab, again only after human verification |
-| `excludeShareIds` | no | filter matches dropped because they do not serve the page |
+| `excludeShareIds` | no | filter matches dropped because they do not serve the page. **Pins bypass excludes**: listing the same share id in both still renders it, so drop the pin rather than trying to exclude it |
 
 A page whose filters and pins resolve to **zero** live workflows is silently skipped: not
 routed, not in the sitemap. That is a build-time supply check, and it is why the supply
@@ -198,9 +198,15 @@ A page ships only if all of these hold:
 1. **On-topic grid.** Every visible workflow serves the keyword. Tighten filters and use
    `excludeShareIds` rather than accepting drift. An off-topic grid is worse than a
    smaller grid.
-2. **At least one App and at least one node graph** in the grid. Pages that cannot meet
-   this are blocked on supply, not on page work; do not pad with adjacent topics to fake
-   it.
+2. **At least one App and at least one node graph** in the grid, as the target. Do not
+   pad with adjacent topics to fake it.
+
+   This one is a target rather than a hard gate, and the difference matters: several
+   live pages ship with no App because none exists on-topic yet. So a page with node
+   graphs and no App is a **requester decision**, not an automatic block. Ship it with an
+   honestly empty "Comfy Apps" tab and say so in the PR, or hold it until the Hub
+   workflow team publishes one. What is never acceptable is implying an App exists when
+   it does not. Zero on-topic workflows of any kind remains a hard stop.
 3. **Verified CTAs.** `appShareId` and `isApp: true` are set only after a human opened
    the share in Comfy Cloud and saw a working App Mode form with bundled samples. If no
    verified app exists, omit `appShareId` (the grid's top item leads the CTA) and say so
