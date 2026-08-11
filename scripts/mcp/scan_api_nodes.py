@@ -71,6 +71,14 @@ def main() -> int:
             print(f"    ... and {with_model - 8} more")
         return 0
 
+    node_ids = scan_api_node_ids(api_nodes_dir)
+    # A wrong or partial COMFYUI_REPO_PATH scans clean and yields nothing, which
+    # would replace both committed files with empty ones. Nothing downstream can
+    # tell that apart from "no API nodes exist", so refuse before writing.
+    if not node_ids:
+        print(f"Refusing to write: no API nodes found in {api_nodes_dir}", file=sys.stderr)
+        return 1
+
     payload = {
         "source": str(api_nodes_dir),
         "node_count": len(index),
@@ -79,7 +87,6 @@ def main() -> int:
     OUTPUT_FILE.write_text(dumps_compact_arrays(payload), encoding="utf-8")
     print(f"Written: {OUTPUT_FILE}")
 
-    node_ids = scan_api_node_ids(api_nodes_dir)
     ids_payload = {
         # The directory, not the absolute path: where it sits is per machine.
         "source": api_nodes_dir.name,
