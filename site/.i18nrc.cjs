@@ -81,7 +81,17 @@ module.exports = defineConfig({
   // actually been run through. It is now safe to raise it on evidence rather than
   // hope: the AI reviewer scores the output, so a regression shows up as findings
   // instead of going unnoticed. Revert to 'gpt-4.1' if this model regresses.
-  modelName: process.env.HUB_I18N_MODEL || 'gpt-5.6-terra',
+  //
+  // The choice is bounded by the CLI, not just by model quality. lobe-i18n sizes
+  // each request from a context-window table it ships internally, computing the
+  // chunk limit as (contextWindow[modelName] - promptTokens) / 3 and applying
+  // `splitToken` below only when it is smaller than that. A model missing from
+  // that table makes the limit NaN, every `<=` comparison false, and the splitter
+  // emit one key per request plus a leading empty chunk, which multiplies calls
+  // and prompt overhead and would push us straight into the rate limit. So the id
+  // set here MUST be one the installed CLI knows about; `i18n-translator-model`
+  // asserts exactly that, and is the check to run before raising this again.
+  modelName: process.env.HUB_I18N_MODEL || 'gpt-5.2',
   // GPT-5.x reasoning models accept only the default temperature and reject any
   // explicit value with a 400. lobe-i18n defaults this to 0 and always sends it,
   // so without pinning it to 1 here every translation call fails on the newer
