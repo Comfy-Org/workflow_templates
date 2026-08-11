@@ -125,6 +125,10 @@ jobs:
         continue-on-error: true
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Repo variable, so the translation model can be changed (and reverted)
+          # without a code change. Unset falls back to the model we have actually
+          # run all ten locales through — see site/.i18nrc.cjs.
+          HUB_I18N_MODEL: ${{ vars.HUB_I18N_MODEL }}
         run: |
           set -uo pipefail
           for loc in $TRANSLATE_LOCALES; do
@@ -148,6 +152,31 @@ jobs:
         if: always()
         working-directory: site
         run: pnpm i18n:restore
+
+      # Judgement layer. The deterministic checks below answer "did the model break
+      # a rule we wrote down"; they cannot answer "is this good Korean", which is
+      # what native reviewers actually flagged (untracked brand names, statements the
+      # English never made, poor fluency, wording wrong for its place on the page).
+      # Findings are stored per locale and the critical/major ones are picked up by
+      # the enforce step, so a bad field falls back to English on a non-indexable
+      # page. Runs after restore so it reads the real terms, not sentinels.
+      #
+      # continue-on-error + an in-script skip when ANTHROPIC_API_KEY is absent: the
+      # reviewer must never be able to break the translation pipeline. Without the
+      # secret, or on an API outage, this degrades to exactly the previous behaviour.
+      - name: AI translation review
+        if: always()
+        continue-on-error: true
+        working-directory: site
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Repo variable, mirroring HUB_I18N_MODEL above, so the reviewer model can
+          # be changed (and reverted) without a code change. The reviewer and the
+          # translator are deliberately separate knobs: swapping the model that
+          # writes the translations should not silently swap the one that judges
+          # them. Unset falls back to the model in review-translations.ts.
+          I18N_REVIEW_MODEL: ${{ vars.HUB_I18N_REVIEW_MODEL }}
+        run: pnpm i18n:review
 
       # always(): prune before validate even after a tolerated translate failure.
       # The model preserves brand names only probabilistically, so a small tail of
@@ -190,8 +219,22 @@ jobs:
           STABLE_BRANCH="i18n/hub-translations"
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
-          # Stage first — the generated content/ files are new/untracked on the
-          # initial run, which `git diff` alone would miss.
+          # Stage first, because the generated content/ files are new and untracked
+          # on the initial run, which `git diff` alone would miss.
+          #
+          # This path holds two different kinds of file, and the PR diff will show
+          # both. `content/` and `locales/` are the translation output a reviewer is
+          # being asked to judge. `review/` is machine state: one verdict per entry,
+          # keyed by a hash of the exact English and translated text it describes.
+          #
+          # They are staged and restored together on purpose. A verdict is only
+          # meaningful next to the text it was written about, so carrying the
+          # translations forward without the verdicts would invalidate every hash
+          # and re-review (and re-pay for) the whole corpus on the next run, while
+          # carrying verdicts forward without their translations would leave
+          # findings pointing at text that no longer exists. Keeping them in one
+          # subtree makes that restore atomic rather than something the next editor
+          # of this file has to remember.
           git add site/src/i18n
           if git diff --cached --quiet; then
             echo "No translation changes vs main."
