@@ -53,12 +53,27 @@ Also check whether an existing page already serves this keyword: read the
 `site/src/lib/workflow-pages/use-cases.ts`. If one matches, propose extending that page
 instead of creating a near-duplicate.
 
+Keyword overlap is not the only kind of duplicate, and it is the one that reads clean.
+Once you know which workflows the new page would show (Step 3), grep those share ids
+against the same file: if the candidate lead is already another page's `appShareId` or
+lead pin, the two pages would front the identical workflow and compete with each other.
+Propose extending that page instead, and say which one it is.
+
 ### Step 2: Gate check (hard stop)
 
 If `gate` is anything other than `OK`, or clearance cannot be confirmed, stop and tell
-the requester the keyword needs the SEO owner's sign-off first. Additionally run the guide's
-brand-safety denylist against the keyword yourself and stop on a hit; the build would
-fail on it anyway, but fail early and explain why.
+the requester the keyword needs the brand-safety approver's sign-off first. Additionally
+run the guide's brand-safety denylist against the keyword yourself and stop on a hit; the
+build would fail on it anyway, but fail early and explain why.
+
+`GATED` and `GATED-LITE` each have their own clearing conditions (guide, "Brand Safety").
+Name the outstanding condition rather than saying only "it is gated", and never treat a
+workflow being publicly browsable on the Hub as evidence that it is cleared for a page.
+
+The same stop applies to an **individual pin**, not only the page's keyword: a cleared
+keyword can still pin a gated workflow. Check every candidate pin against
+`GATED_SHARE_IDS` in `site/src/lib/workflow-pages/use-cases.ts` before proposing it, and
+if one is gated, pin it with its `gate` value so the intent is recorded but not rendered.
 
 ### Step 3: Supply check (hard stop on zero)
 
@@ -94,8 +109,19 @@ for e in hits[:15]:
 EOF
 ```
 
-Try the tags that plausibly match the keyword (tags are exact strings; list the catalog's
-tags if unsure). Rules:
+Tags are exact strings and the catalog carries far more of them than the obvious ones, so
+list them before guessing:
+
+```bash
+python3 -c "
+import json,collections
+e=json.load(open('$HUB_INDEX'))
+c=collections.Counter(t for x in e for t in (x.get('tags') or []))
+print(len(c),'distinct tags'); [print(f'{n:4d}  {t}') for t,n in c.most_common()]
+"
+```
+
+Then try the tags that plausibly match the keyword. Rules:
 
 - **Zero on-topic matches**: no page is possible. The build silently drops a page with an
   empty grid. Report "blocked on workflow supply, this needs the Hub workflow team" and

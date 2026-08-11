@@ -217,12 +217,34 @@ Two layers, and the second one is on you:
    swap, deepfake, nsfw, and the rest of `BRAND_SAFETY_DENY` in that file, which is the
    authoritative list) fails the build. This is a hard stop by design.
 2. **The keyword gate.** A `gate` value other than `OK` (gated, skip, review, or
-   blank/unknown) means the keyword must not ship without the SEO owner's explicit
-   clearance, whatever the denylist says. The denylist only inspects the page's own
-   metadata, so a **pinned workflow** with problematic content is the author's
-   responsibility to catch until gate enforcement lands in the resolver itself.
+   blank/unknown) means the keyword must not ship without the brand-safety approver's
+   explicit clearance, whatever the denylist says. The denylist only inspects the page's
+   own metadata, so it cannot see a **pinned workflow** whose content is the problem.
 
-If you are unsure whether something is gated, it is. Ask the SEO owner.
+   The two gate values in use, and what each requires before anything ships:
+
+   | Value | Meaning | Condition to clear |
+   | --- | --- | --- |
+   | `GATED` | the use case is blocked outright | a consent flow, no celebrity presets, output filters, and C2PA provenance |
+   | `GATED-LITE` | the use case ships only in a narrowed framing | outfit / try-on framing only |
+
+   A pin may carry that value so the page records the intent without rendering it:
+
+   ```ts
+   pins: [{ shareId: '<id>', gate: 'GATED' }], // recorded, not rendered
+   ```
+
+   A gated pin must also appear in the catalog-wide `GATED_SHARE_IDS` set in the same
+   file. That pairing is asserted by the resolver tests, so gating a pin without
+   withholding it fails; withholding something no page pins is fine. Deleting the `gate`
+   field is what publishes the pin, so treat its removal as the approval step itself.
+
+**A gate is about the keyword and the workflow, not about whether the workflow is
+reachable.** A gated workflow can be publicly browsable on the Hub and still be barred
+from a curated page, because a page endorses and ranks for a search term in a way that
+browsing does not.
+
+If you are unsure whether something is gated, it is. Ask the brand-safety approver.
 
 ## Assets
 
@@ -231,6 +253,9 @@ Use-case pages own no image files, and there is no upload step:
 - The **hero** is the grid's lead workflow's own thumbnail: its still image if it has
   one, or its video when the lead only has a video thumbnail. For curated pages the lead
   is the first pin (provided it has a thumbnail), so choosing pin order chooses the hero.
+  A video hero currently renders with no poster frame, so a heavy file leaves the hero
+  blank while it downloads. If the intended lead's thumbnail is a large video and another
+  on-topic workflow has a still, leading with the still gives a faster first paint.
 - **Grid cards** show their own workflows' Hub thumbnails.
 - A **broken or missing thumbnail** is a Hub-side problem: flag it to the Hub workflow
   team; never work around it in page code.
