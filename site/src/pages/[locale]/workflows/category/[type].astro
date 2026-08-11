@@ -21,6 +21,7 @@ import { loadSerializedTemplates, type MediaType } from '../../../../lib/hub-api
 import { buildToolbarLabels } from '../../../../lib/toolbar';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../lib/structured-data';
 import { listingIndexing } from '../../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../../lib/i18n/localize-cards';
 
 const validTypes: MediaType[] = ['image', 'video', 'audio', '3d'];
 
@@ -60,7 +61,13 @@ const categoryName = t(categoryTranslationKeys[mediaType], typedLocale);
 const title = `${categoryName} Workflows - ${t('meta.title', typedLocale)}`;
 const description = t('meta.description', typedLocale);
 
-const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
+// Cards come from the hub index, which is English only. Resolve the same text
+// the detail page will show, so a localized listing is not a translated page
+// sitting above a grid of English cards.
+const allSerialized = localizeCards(
+  await loadSerializedTemplates(() => getCollection('templates')),
+  typedLocale
+);
 const templates = allSerialized.filter((tmpl) => tmpl.mediaType === mediaType);
 
 if (templates.length === 0) {
