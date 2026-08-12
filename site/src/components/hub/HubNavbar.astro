@@ -1,11 +1,12 @@
 ---
 import { getCollection } from 'astro:content';
-import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { getLocaleFromPath } from '../../i18n/utils';
 import HeaderMain from './nav/HeaderMain.vue';
 import SearchPopover from './SearchPopover.vue';
 import { getProfileCache, getCreatorsList, loadSerializedTemplates } from '../../lib/hub-api';
 import { buildDiscoveryData, type DiscoveryData } from '../../lib/search-discovery';
 import { fetchGitHubStars, formatStarCount } from '../../lib/github';
+import { creatorPath } from '../../lib/routes';
 
 interface Props {
   /** Render the search bar in the header. Index pages set false (render it in-body). */
@@ -28,7 +29,7 @@ const creatorLinks = Array.from(profiles.entries())
   .map(([username, profile]) => ({
     username,
     displayName: profile.display_name || username,
-    href: localizeUrl(`/workflows/creators/${username}/`, locale),
+    href: creatorPath(username, locale),
   }));
 
 // Precompute the small discovery slices (popular, creators, facets) only when

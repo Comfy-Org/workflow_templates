@@ -54,6 +54,7 @@ onUnmounted(() => {
   <div>
     <Sheet v-model:open="isOpen">
       <SheetTrigger
+        data-testid="mobile-nav-toggle"
         :aria-label="t('nav.toggleMenu', locale)"
         class="bg-primary-comfy-yellow grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-primary-comfy-ink hover:opacity-90"
       >
@@ -115,6 +116,7 @@ onUnmounted(() => {
               <a
                 v-for="creator in creators"
                 :key="creator.username"
+                data-testid="mobile-nav-creator-link"
                 :href="creator.href"
                 class="text-primary-comfy-canvas text-xl font-medium"
               >
