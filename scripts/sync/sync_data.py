@@ -113,7 +113,8 @@ class TemplateSyncer:
             "searchRank",
             "includeOnDistributions",
             "logos",
-            "io"
+            "io",
+            "isApp"
         }
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}

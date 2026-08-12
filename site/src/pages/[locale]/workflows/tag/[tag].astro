@@ -10,17 +10,16 @@ import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
 import WorkflowGrid from '../../../../components/hub/WorkflowGrid.vue';
-import HreflangTags from '../../../../components/HreflangTags.astro';
 import BackButton from '../../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
 import { t } from '../../../../i18n/ui';
-import { localizeUrl } from '../../../../i18n/utils';
 import { tagSlug, tagDisplayName } from '../../../../lib/tag-aliases';
 import { absoluteUrl, SITE_NAME } from '../../../../config/site';
 import { badgeVariants } from '../../../../components/ui/badge';
 import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../../lib/structured-data';
+import { listingIndexing } from '../../../../lib/i18n/listing-indexing';
 
 const { locale, tag } = Astro.params;
 
@@ -58,7 +57,9 @@ const firstMatchingTag =
 const tagName = tagDisplayName(firstMatchingTag);
 
 const basePath = `/workflows/tag/${tag}/`;
-const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
+// Gated until this locale completes native review — see listing-indexing.
+const indexing = listingIndexing(basePath, typedLocale);
+const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 
 const title = `${tagName} ${SITE_NAME} - ${t('nav.templates', typedLocale)}`;
 // Localized (falls back to English until the CI locale step translates the new
@@ -90,10 +91,11 @@ const serialized = matchingTemplates;
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}
+  hreflangLocales={indexing.hreflangLocales}
+  noindex={indexing.noindex}
   theme="dark"
   hideDefaultFooter
 >
-  <HreflangTags basePath={basePath} slot="head" />
   <script
     is:inline
     type="application/ld+json"
