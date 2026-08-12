@@ -60,16 +60,26 @@ if (!contextWindows) {
   const { modelName, splitToken } = require(
     path.join(process.cwd(), '.i18nrc.cjs')
   ) as I18nConfig;
-  if (!(modelName in contextWindows)) {
+  // Own keys only. `in` would also match everything on Object.prototype, so a
+  // model literally named `toString` or `constructor` would pass the lookup and
+  // then yield a function as its context window.
+  const contextWindow = Object.hasOwn(contextWindows, modelName)
+    ? contextWindows[modelName]
+    : undefined;
+  const limit = effectiveSplitToken(contextWindow, PROMPT_TOKEN_ALLOWANCE, splitToken);
+  if (contextWindow === undefined) {
     errors.push(
       `translator model "${modelName}" has no context window in the installed @lobehub/i18n-cli. ` +
         'It would batch one key per request instead of honouring splitToken. Pick a model the CLI ' +
         'knows, or upgrade it to a version that knows this one.'
     );
-  } else if (effectiveSplitToken(contextWindows[modelName], PROMPT_TOKEN_ALLOWANCE, splitToken) < 1) {
+  } else if (!Number.isFinite(limit) || limit < 1) {
+    // Tested for finiteness rather than `< 1`: a non-finite limit is the exact
+    // shape of the bug being guarded, and `NaN < 1` is false, so a bare
+    // comparison would wave it through.
     errors.push(
-      `translator model "${modelName}" has a context window of ${contextWindows[modelName]}, too ` +
-        'small to leave room for the reference prompt. Requests would be split past the point of use.'
+      `translator model "${modelName}" has a context window of ${contextWindow}, too small to ` +
+        'leave room for the reference prompt. Requests would be split past the point of use.'
     );
   }
 }

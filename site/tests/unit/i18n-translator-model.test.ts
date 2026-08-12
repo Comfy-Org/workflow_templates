@@ -26,6 +26,9 @@ function committedConfig(): { modelName: string; splitToken: number } {
     return require(CONFIG_PATH);
   } finally {
     if (previous !== undefined) process.env.HUB_I18N_MODEL = previous;
+    // The config reads env at require time, so leaving it cached would hand the
+    // next caller in this worker a config built with the override stripped.
+    delete require.cache[require.resolve(CONFIG_PATH)];
   }
 }
 
