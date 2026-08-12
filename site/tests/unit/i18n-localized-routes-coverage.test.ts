@@ -52,7 +52,9 @@ describe('localized workflows routes', () => {
   it('localizes card text wherever it loads workflow data', () => {
     const unlocalized = routes
       .filter(({ source }) => TEMPLATE_SOURCES.some((fn) => source.includes(fn)))
-      .filter(({ source }) => !source.includes('localizeCards'))
+      // An invocation, not a mention: the bare name is also satisfied by the
+      // import line alone, or by a comment promising to add the call later.
+      .filter(({ source }) => !/\blocalizeCards\s*\(/.test(source))
       .map(({ route }) => route);
 
     expect(

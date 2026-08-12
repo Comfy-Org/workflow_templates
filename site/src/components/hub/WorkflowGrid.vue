@@ -86,7 +86,9 @@ const workingSet = ref<WorkflowTemplate[]>([...props.templates]);
 
 onMounted(() => {
   if (!props.lazyFull) return;
-  loadCatalog()
+  // Locale-scoped: the embedded slice is already translated, so swapping in the
+  // English catalog would revert the cards in front of the reader.
+  loadCatalog(props.locale)
     .then((catalog) => {
       workingSet.value = props.excludeName
         ? catalog.filter((t) => t.name !== props.excludeName)
