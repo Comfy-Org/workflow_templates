@@ -125,3 +125,25 @@ describe('the committed snapshot', () => {
     expect(PARTNER_NODE_SNAPSHOT_META.apiNodeCount).toBeGreaterThan(0);
   });
 });
+
+/**
+ * The two sides of the freshness check come from different endpoints and arrive
+ * in different shapes. The index gives `2025-07-29`; a detail page passes
+ * `publish_time`, which is `2025-07-29T00:00:00Z`. Comparing raw strings matched
+ * nothing and billed every scanned workflow, which reached production.
+ */
+describe('publish dates from different endpoints', () => {
+  const cleanEntry = scannedEntries.find(([id]) => !snapshot.shareIds.includes(id))!;
+
+  it('accepts the detail endpoint timestamp for the same day', () => {
+    const [id, scannedDate] = cleanEntry;
+    expect(wasScannedForPartnerNodes(id, `${scannedDate}T00:00:00Z`)).toBe(true);
+    expect(isBillableWorkflow(['Image'], id, `${scannedDate}T00:00:00Z`)).toBe(false);
+  });
+
+  it('still rejects a different day in either shape', () => {
+    const [id] = cleanEntry;
+    expect(wasScannedForPartnerNodes(id, '2099-01-01')).toBe(false);
+    expect(wasScannedForPartnerNodes(id, '2099-01-01T00:00:00Z')).toBe(false);
+  });
+});
