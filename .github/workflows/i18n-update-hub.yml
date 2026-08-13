@@ -104,6 +104,12 @@ jobs:
 
       - name: Check pipeline config
         working-directory: site
+        env:
+          # The same override the translate step below runs on. Without it the
+          # check resolves the committed default in .i18nrc.cjs and passes, while
+          # the translator uses the override, so the guard could never fail on the
+          # mismatch it exists to catch.
+          HUB_I18N_MODEL: ${{ vars.HUB_I18N_MODEL }}
         run: pnpm i18n:check
 
       # Deterministically shield preserve-terms: swap brand/model names in the
