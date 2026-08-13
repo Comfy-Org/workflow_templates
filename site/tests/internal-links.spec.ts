@@ -54,11 +54,12 @@ test.describe('Internal link integrity — nav & hub routes', () => {
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
 
     await page.getByTestId('mobile-nav-toggle').click();
 
     const creatorLinks = page.getByTestId('mobile-nav-creator-link');
+    await creatorLinks.first().waitFor({ state: 'attached' });
     test.skip(
       (await creatorLinks.count()) === 0,
       'No creators returned by the Hub API for this build'
@@ -79,7 +80,7 @@ test.describe('Internal link integrity — nav & hub routes', () => {
     page,
   }) => {
     for (const path of ['/', '/workflows/', '/workflows/creators/']) {
-      await page.goto(path);
+      await page.goto(path, { waitUntil: 'domcontentloaded' });
       const hrefs = await collectHrefs(page, 'header a[href], footer a[href]');
       await expectAllResolve(page, hrefs, `${path} header/footer`);
     }
@@ -88,14 +89,14 @@ test.describe('Internal link integrity — nav & hub routes', () => {
   test('creators index links to every listed creator profile and each one resolves', async ({
     page,
   }) => {
-    await page.goto('/workflows/creators/');
+    await page.goto('/workflows/creators/', { waitUntil: 'domcontentloaded' });
     const hrefs = await collectHrefs(page, 'main a[href^="/workflows/"]');
     test.skip(hrefs.length === 0, 'No creators returned by the Hub API for this build');
     await expectAllResolve(page, hrefs, '/workflows/creators/ listing');
   });
 
   test('sample creator profile page loads and its nav/footer links resolve', async ({ page }) => {
-    await page.goto('/workflows/creators/');
+    await page.goto('/workflows/creators/', { waitUntil: 'domcontentloaded' });
     const firstCreatorLink = page.locator('main a[href^="/workflows/"]').first();
     test.skip(
       (await firstCreatorLink.count()) === 0,
@@ -105,7 +106,7 @@ test.describe('Internal link integrity — nav & hub routes', () => {
     const href = await firstCreatorLink.getAttribute('href');
     expect(href).toBeTruthy();
 
-    const response = await page.goto(href!);
+    const response = await page.goto(href!, { waitUntil: 'domcontentloaded' });
     expect(response?.status(), `${href} should resolve`).toBeLessThan(400);
 
     const hrefs = await collectHrefs(page, 'header a[href], footer a[href]');
@@ -113,14 +114,14 @@ test.describe('Internal link integrity — nav & hub routes', () => {
   });
 
   test('sample template detail page loads and its nav/footer links resolve', async ({ page }) => {
-    await page.goto('/workflows/');
+    await page.goto('/workflows/', { waitUntil: 'domcontentloaded' });
     const firstCard = page.locator('main a[data-testid="workflow-card-link"]').first();
     await expect(firstCard).toBeAttached({ timeout: 10000 });
 
     const href = await firstCard.getAttribute('href');
     expect(href).toBeTruthy();
 
-    const response = await page.goto(href!);
+    const response = await page.goto(href!, { waitUntil: 'domcontentloaded' });
     expect(response?.status(), `${href} should resolve`).toBeLessThan(400);
 
     const hrefs = await collectHrefs(page, 'header a[href], footer a[href]');
