@@ -1,0 +1,45 @@
+# The preview deploy runs `vercel deploy --cwd <repo root> --prebuilt --archive=tgz`
+# (.github/workflows/preview-site.yml). `--archive=tgz` tars the whole working
+# directory, while a prebuilt deploy needs only `.vercel/output`, so without this
+# file every preview uploads gigabytes of repository content. That upload dies
+# intermittently with "Error: fetch failed" partway through, which reads on a PR
+# as broken code rather than as a transfer too large to be reliable.
+#
+# Every pattern is anchored with a leading slash on purpose. An unanchored rule
+# matches at any depth, so a bare `output` would also exclude `.vercel/output`
+# and deploy nothing at all.
+#
+# Listed explicitly rather than ignoring everything and re-including the output,
+# so a rule here can never exclude the artifact being deployed.
+
+# Fixtures and generated artifacts. The two largest directories in the repo.
+/input
+/output
+/archived
+
+# Template payload: the site loads thumbnails from the CDN, not from these.
+/templates
+/thumbnail
+/blueprints
+
+# Python packaging and tooling, unrelated to the built site.
+/packages
+/scripts
+/tools
+/setup.py
+/pyproject.toml
+/MANIFEST.in
+/run_full_validation.sh
+
+# Documentation and repo meta.
+/docs
+/.github
+/.claude
+/AGENTS.md
+/CLAUDE.md
+/README.md
+
+# Sources and dependencies. The build already ran, and its output was copied to
+# the repo-root .vercel/output before this deploy step.
+/site
+node_modules
