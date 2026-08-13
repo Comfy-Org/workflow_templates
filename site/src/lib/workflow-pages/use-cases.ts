@@ -521,6 +521,38 @@ export const SEO_PAGES: SeoPageDef[] = [
     // on ai-anime-generator via its Anime tag).
     excludeShareIds: ['2030b1e2fb72'],
   },
+  {
+    slug: 'sprite-sheet-generator',
+    title: 'Sprite Sheet Generator | Comfy Workflows',
+    h1: 'Sprite Sheet Generator Workflows',
+    keywords: {
+      primary: 'sprite sheet generator',
+      secondary: [
+        'ai sprite sheet generator',
+        'sprite sheet maker',
+        'animated sprite sheet generator',
+        'character sprite generator',
+        'game sprite generator',
+        '2d game asset generator',
+      ],
+    },
+    // `Sprite Sheet` and `Game` are the catalog vocabulary for this cluster;
+    // OR semantics keep the grid self-maintaining as new game-art workflows land.
+    filters: { tags: ['Sprite Sheet', 'Game'] },
+    // Game Asset Style Transfer app, App Mode verified in cloud. It reaches the
+    // grid via its Game tag, so no pin is needed.
+    appShareId: '0b8d28f4cfa3',
+    pins: [
+      // The keyword's namesake workflow leads and carries the hero: tagged only
+      // `Video` on the hub, so the filters cannot reach it. Its thumbnail is a
+      // poster-less video, but a light one, and the on-topic stills in this
+      // cluster are compare-slider input photos that misrepresent the page.
+      { shareId: 'fe5600667e2c' }, // Sprite Sheet Generator
+      { shareId: '5cef286d4c51' }, // Single Image to Animated Sprite Sheet
+    ],
+    // Skybox generator matches `Game` but makes HDR environments, not sprites.
+    excludeShareIds: ['f5199b5121f3'],
+  },
 ];
 
 /**
