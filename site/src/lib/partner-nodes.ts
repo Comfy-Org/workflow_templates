@@ -56,7 +56,21 @@ export function wasScannedForPartnerNodes(
   const scannedDate = SCANNED_AT.get(shareId);
   if (scannedDate === undefined) return false;
   // No date to compare means the claim cannot be checked, so it is not made.
-  return !!publishedDate && scannedDate === publishedDate;
+  if (!publishedDate) return false;
+  return publishDay(scannedDate) === publishDay(publishedDate);
+}
+
+/**
+ * The calendar day of a publish date, whichever endpoint it came from.
+ *
+ * The two sides of this comparison are populated from different endpoints and
+ * arrive in different shapes: the snapshot records the index's `date`
+ * (`2025-07-29`), while a detail page passes `publish_time` (`2025-07-29T00:00:00Z`).
+ * Comparing the raw strings matches nothing, which silently bills every scanned
+ * workflow instead of only re-published ones.
+ */
+function publishDay(value: string): string {
+  return value.slice(0, 10);
 }
 
 /**
