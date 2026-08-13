@@ -1,5 +1,6 @@
-# The preview deploy runs `vercel deploy --cwd <repo root> --prebuilt --archive=tgz`
-# (.github/workflows/preview-site.yml). `--archive=tgz` tars the whole working
+# Both preview deploys run `vercel deploy --cwd <repo root> --prebuilt --archive=tgz`:
+# .github/workflows/preview-site.yml (per pull request) and preview-cron.yml
+# (nightly). They share this ignore list. `--archive=tgz` tars the whole working
 # directory, while a prebuilt deploy needs only `.vercel/output`, so without this
 # file every preview uploads gigabytes of repository content. That upload dies
 # intermittently with "Error: fetch failed" partway through, which reads on a PR
@@ -40,6 +41,8 @@
 /README.md
 
 # Sources and dependencies. The build already ran, and its output was copied to
-# the repo-root .vercel/output before this deploy step.
+# the repo-root .vercel/output before this deploy step. `/site` already covers
+# site/node_modules, so this rule is anchored too rather than left to match at
+# any depth, where it could strike a bundled dependency inside .vercel/output.
 /site
-node_modules
+/node_modules
