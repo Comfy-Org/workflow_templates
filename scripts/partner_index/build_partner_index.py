@@ -104,6 +104,165 @@ def run_scan(force: bool):
 
 
 # ---------- 2. merge ----------
+def load_source_snippets() -> dict:
+    """Parse comfy_api_nodes/*.py via AST and return {node_id: source snippet}.
+
+    Used for node-level capability inference and description filling.
+    """
+    import ast as _ast
+
+    comfyui = Path.home() / "Documents/Github/ComfyUI/comfy_api_nodes"
+    if not comfyui.exists():
+        return {}
+    snippets = {}
+    for f in sorted(comfyui.glob("nodes_*.py")):
+        source = f.read_text(encoding="utf-8", errors="replace")
+        try:
+            tree = _ast.parse(source)
+        except SyntaxError:
+            continue
+        lines = source.splitlines()
+        for node in _ast.walk(tree):
+            if not isinstance(node, _ast.ClassDef):
+                continue
+            if node.name in snippets:
+                continue
+            snippets[node.name] = "\n".join(lines[node.lineno - 1:node.end_lineno])
+    return snippets
+
+
+def model_key(name: str) -> str:
+    """Normalize a model name for fuzzy matching (lowercase, alnum only)."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+def build_model_info(extracts: list) -> dict:
+    """model name -> enriched info, with fuzzy aliases so scan option names that
+    differ in case/spacing (e.g. 'seedream 5.0 pro' vs 'Seedream 5.0 Pro') or are
+    API ids inside extract display names (e.g. 'kling-v3' in 'Kling 3.0 (kling-v3)')
+    still match. Returns a dict keyed by exact name plus '_aliases'."""
+    model_info = {}
+    for e in extracts:
+        for m in e.get("models", []):
+            name = m.get("name")
+            if not name:
+                continue
+            if name not in model_info:
+                model_info[name] = m
+    # alias map: normalized key -> first extract name
+    aliases = {}
+    for name in model_info:
+        k = model_key(name)
+        aliases.setdefault(k, name)
+        # also index API ids inside parentheses: "Kling 3.0 (kling-v3)" -> kling-v3
+        pm = re.findall(r"\(([^)]+)\)", name)
+        for grp in pm:
+            for token in grp.split("/"):
+                tk = model_key(token)
+                if len(tk) >= 4:
+                    aliases.setdefault(tk, name)
+    # manual aliases for option names that do not share a normalized key with
+    # the extract display name (aggregate names vs per-task API ids)
+    MANUAL_ALIASES = {
+        "happyhorse-1.1-i2v": "HappyHorse 1.1 (t2v/i2v/r2v)",
+        "happyhorse-1.1-r2v": "HappyHorse 1.1 (t2v/i2v/r2v)",
+        "happyhorse-1.1-t2v": "HappyHorse 1.1 (t2v/i2v/r2v)",
+        "happyhorse-1.0-i2v": "HappyHorse 1.0 (t2v/i2v/r2v/video-edit)",
+        "happyhorse-1.0-r2v": "HappyHorse 1.0 (t2v/i2v/r2v/video-edit)",
+        "happyhorse-1.0-t2v": "HappyHorse 1.0 (t2v/i2v/r2v/video-edit)",
+        "happyhorse-1.0-video-edit": "HappyHorse 1.0 (t2v/i2v/r2v/video-edit)",
+        "wan2.7-i2v": "Wan 2.7 (t2v/i2v/videoedit/r2v)",
+        "wan2.7-r2v": "Wan 2.7 (t2v/i2v/videoedit/r2v)",
+        "wan2.7-t2v": "Wan 2.7 (t2v/i2v/videoedit/r2v)",
+        "wan2.7-videoedit": "Wan 2.7 (t2v/i2v/videoedit/r2v)",
+        "viduq3-turbo": "Vidu Q3 (viduq3-pro/turbo)",
+        "viduq3-pro": "Vidu Q3 (viduq3-pro/turbo)",
+        "viduq2-turbo": "Vidu Q2 (viduq2/pro/turbo/pro-fast)",
+        "viduq2-pro": "Vidu Q2 (viduq2/pro/turbo/pro-fast)",
+        "kling-3.0-turbo": "Kling 3.0 Turbo (kling-3.0-turbo)",
+        # API id date-code variants
+        "seedream-4-5-251128": "Seedream 4.5",
+        "seedream-4-0-250828": "Seedream 4.0",
+        "seedance-1-0-pro-250528": "Seedance 1.0 Pro/Lite",
+        "seedance-1-0-lite-i2v-250428": "Seedance 1.0 Pro/Lite",
+        "seedance-1-0-lite-t2v-250428": "Seedance 1.0 Pro/Lite",
+        "seedance-1-0-pro-fast-251015": "Seedance 1.0 Pro/Lite",
+        "seedance-1-5-pro-251215": "Seedance 1.5 Pro",
+        # per-task API ids inside aggregate extract names
+        "ray-2": "Ray 2 / Ray Flash 2",
+        "ray-flash-2": "Ray 2 / Ray Flash 2",
+        "ray-1-6": "Ray 1.6 (Dream Machine)",
+        "sora-2": "Sora 2 / Sora 2 Pro",
+        "sora-2-pro": "Sora 2 / Sora 2 Pro",
+        "veo-3.1-generate": "Veo 3.1 (generate/fast/lite)",
+        "veo-3.1-fast-generate": "Veo 3.1 (generate/fast/lite)",
+        "veo-3.1-lite": "Veo 3.1 (generate/fast/lite)",
+        "veo-3.0-generate-001": "Veo 3.0 (generate/fast)",
+        "veo-3.0-fast-generate-001": "Veo 3.0 (generate/fast)",
+        "veo-2.0-generate-001": "Veo 2.0",
+        "T2V-01": "T2V-01 / T2V-01-Director",
+        "T2V-01-Director": "T2V-01 / T2V-01-Director",
+        "I2V-01": "I2V-01 / I2V-01-Director / I2V-01-live",
+        "I2V-01-Director": "I2V-01 / I2V-01-Director / I2V-01-live",
+        "I2V-01-live": "I2V-01 / I2V-01-Director / I2V-01-live",
+        "S2V-01": "S2V-01",
+        "kling-video-o1": "Kling 3.0 (kling-v3)",
+        "kling-image-o1": "Kling 3.0 (kling-v3)",
+        "kling-v3-omni": "Kling 3.0 (kling-v3)",
+        "kling-v2-6": "Kling 2.6 (kling-v2-6)",
+        "kling-v2-5-turbo": "Kling 2.5 Turbo (kling-v2-5-turbo)",
+        "kling-v2": "Kling 2.5 Turbo (kling-v2-5-turbo)",
+        "gpt-image-1": "gpt-image-1",
+        "gpt-image-1.5": "gpt-image-1.5",
+        "gpt-image-2": "gpt-image-2",
+        "qwen-image-3.0": "Qwen Image 3.0",
+        "qwen-image-3.0-pro": "Qwen Image 3.0 Pro",
+        "generative_portrait": "Generative Model (1x)",
+        "seed-audio-1.0": "Seed Audio 1.0",
+        "seed-audio-1.0-multilingual": "Seed Audio 1.0 Multilingual",
+        "reve-create@20250915": "Reve Image Create",
+        "reve-edit@20250915": "Reve Image Edit",
+        "reve-edit-fast@20251030": "Reve Image Edit",
+        "reve-remix@20250915": "Reve Image Remix",
+        "reve-remix-fast@20251030": "Reve Image Remix",
+        "gemini-2.5-pro": "Gemini 3.1 Pro",
+        "gemini-2.5-flash": "Gemini 3.1 Flash-Lite",
+        "gemini-3-pro-preview": "Gemini 3.5 Flash",
+        "gemini-3-1-pro": "Gemini 3.1 Pro",
+        "gemini-3-1-flash-lite": "Gemini 3.1 Flash-Lite",
+        "wan2.5-t2v-preview": "Wan 2.5 preview",
+        "wan2.5-i2v-preview": "Wan 2.5 preview",
+        "wan2.5-t2i-preview": "Wan 2.5 preview",
+        "wan2.5-i2i-preview": "Wan 2.5 preview",
+        "wan2.6-t2v": "Wan 2.6 (t2v/i2v/r2v)",
+        "wan2.6-i2v": "Wan 2.6 (t2v/i2v/r2v)",
+        "wan2.6-r2v": "Wan 2.6 (t2v/i2v/r2v)",
+    }
+    for opt, name in MANUAL_ALIASES.items():
+        if name in model_info:
+            aliases.setdefault(model_key(opt), name)
+    model_info["_aliases"] = aliases
+    return model_info
+
+
+def lookup_model(model_info: dict, opt: str):
+    """Resolve a scan option name to enriched info via exact / fuzzy / alias match."""
+    if opt in model_info:
+        return model_info[opt], "exact"
+    aliases = model_info.get("_aliases", {})
+    k = model_key(opt)
+    if k in aliases:
+        return model_info[aliases[k]], "alias"
+    # substring fallback: option name contained in an extract name or vice versa.
+    # Both keys must be long enough to avoid nonsense matches (e.g. "3.1" hitting
+    # "gemini31pro"); exact-digit keys are never substring-matched.
+    if len(k) >= 6:
+        for key, name in aliases.items():
+            if len(key) >= 6 and (k in key or key in k):
+                return model_info[name], "substring"
+    return None, None
+
+
 def run_merge() -> dict:
     """Build a node-centric index: each ComfyUI node is an entry; models are
     the options of that node's model dropdown (enriched from subagent data)."""
@@ -120,16 +279,8 @@ def run_merge() -> dict:
         + load(DATA / "extract_other.en.json")
     )
 
-    # 1. Build a lookup: model name -> enriched info (capabilities/recommended/released/best_for/notes)
-    model_info = {}
-    for e in extracts:
-        for m in e.get("models", []):
-            name = m.get("name")
-            if not name:
-                continue
-            # keep first occurrence; prefer entries that already have verified enrichments
-            if name not in model_info:
-                model_info[name] = m
+    # 1. Build a lookup: model name -> enriched info with fuzzy aliases
+    model_info = build_model_info(extracts)
 
     # 2. Node-centric entries
     result = {
@@ -139,11 +290,19 @@ def run_merge() -> dict:
         "nodes": [],
     }
 
+    sources = load_source_snippets()
+
     for n in sorted(scan.get("nodes", []), key=lambda x: (x.get("category", ""), x.get("node_id", ""))):
+        # Drop deprecated nodes: they may still exist in the product UI for a
+        # grace period, but the capability index must not advertise them.
+        if n.get("deprecated"):
+            log(f"skip deprecated node: {n.get('node_id')}")
+            continue
         models_out = []
         recommended_models = []
+        model_caps = []
         for opt in n.get("models", []):
-            info = model_info.get(opt)
+            info, how = lookup_model(model_info, opt)
             entry = {"name": opt}
             if info:
                 entry["capabilities"] = info.get("capabilities", [])
@@ -157,6 +316,7 @@ def run_merge() -> dict:
                     entry["notes"] = info["notes"]
                 if info.get("recommended") is True:
                     recommended_models.append(opt)
+                model_caps.extend(info.get("capabilities", []))
             else:
                 entry["enriched"] = False
             models_out.append(entry)
@@ -168,8 +328,16 @@ def run_merge() -> dict:
             "added_date": n.get("added_date", ""),
             "models": models_out,
         }
+        if n.get("pricing"):
+            entry["pricing"] = n["pricing"]
         if recommended_models:
             entry["recommended_models"] = recommended_models
+
+        # Node-level capabilities (from display_name/IO/model caps)
+        if sources:
+            from node_capabilities import enrich_nodes
+
+            enrich_nodes([entry], sources, model_caps_by_node={n["node_id"]: model_caps})
         result["nodes"].append(entry)
     return result
 
@@ -195,11 +363,41 @@ def clean_notes(m: dict):
     m["notes"] = notes
 
 
+def clean_text_urls(text: str) -> str:
+    """Strip URLs and leftover source/verified markers from free text
+    (node descriptions), keeping the surrounding sentences."""
+    if not text:
+        return text
+    text = re.sub(r"\[verified:[^\]]*\]", "", text)
+    text = re.sub(r",?\s*sources:\s*[^\]]*", "", text)
+    text = re.sub(r"https?://[^\s,\]]+", "", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+\.", ".", text)
+    text = text.rstrip(" ,.")
+    return text
+
+
 def enhance(d: dict) -> dict:
-    """Add is_latest / pricing / best_for to each model option under each node."""
+    """Add is_latest / pricing / best_for to each model option under each node.
+    Node descriptions prefer official docs (official_descriptions.py), falling
+    back to rule-based descriptions already merged in."""
+    try:
+        import official_descriptions as od
+    except ImportError:
+        od = None
+
     for n in d.get("nodes", []):
+        if od is not None:
+            official = od.get_node_description(n.get("node_id", ""))
+            if official:
+                n["description"] = official
+        n["description"] = clean_text_urls(n.get("description", ""))
         for m in n.get("models", []):
             clean_notes(m)
+            if od is not None:
+                official_note = od.get_model_note(m.get("name", ""))
+                if official_note:
+                    m["notes"] = official_note
             notes = m.get("notes", "")
             hints = NEW_OLD_RE.findall(notes)
             outdated = any(w in hints for w in
@@ -229,8 +427,11 @@ def enhance(d: dict) -> dict:
 def verify(d: dict) -> bool:
     ok = True
     nodes = d.get("nodes", [])
-    if len(nodes) != 227:
-        log(f"FAIL: node count {len(nodes)} != 227")
+    if len(nodes) != 216:
+        log(f"FAIL: node count {len(nodes)} != 216 (232 scanned minus 16 deprecated)")
+        ok = False
+    if any(n.get("deprecated") for n in nodes):
+        log("FAIL: deprecated node slipped into the index")
         ok = False
     models = [m for n in nodes for m in n.get("models", [])]
     if any(not m.get("name") for m in models):
@@ -238,6 +439,36 @@ def verify(d: dict) -> bool:
         ok = False
     if any(not n.get("node_id") for n in nodes):
         log("FAIL: a node lacks node_id")
+        ok = False
+    no_caps = [n["node_id"] for n in nodes if not n.get("capabilities")]
+    if no_caps:
+        log(f"FAIL: {len(no_caps)} nodes lack capabilities: {no_caps[:10]}")
+        ok = False
+    # Pricing sanity: usd_range must be [min, max] with min > 0 and max <= 100
+    # (no per-run price reaches three figures; 0 means the extractor missed).
+    bad_price = []
+    for n in nodes:
+        p = n.get("pricing")
+        if not p:
+            continue
+        r = p.get("usd_range")
+        if not (isinstance(r, list) and len(r) == 2 and r[0] > 0 and r[0] <= r[1] and r[1] <= 100):
+            bad_price.append((n["node_id"], p))
+        if p.get("kind") not in ("fixed", "tiered", "dynamic", "range", "credits"):
+            bad_price.append((n["node_id"], p))
+    if bad_price:
+        log(f"FAIL: {len(bad_price)} nodes have invalid pricing: {bad_price[:5]}")
+        ok = False
+    with_price = [n["node_id"] for n in nodes if n.get("pricing")]
+    log(f"info: {len(with_price)}/{len(nodes)} nodes have pricing "
+        f"({sum(1 for n in nodes if n.get('pricing', {}).get('kind') == 'fixed')} fixed, "
+        f"{sum(1 for n in nodes if n.get('pricing', {}).get('kind') == 'tiered')} tiered, "
+        f"{sum(1 for n in nodes if n.get('pricing', {}).get('kind') == 'dynamic')} dynamic, "
+        f"{sum(1 for n in nodes if n.get('pricing', {}).get('kind') == 'range')} range, "
+        f"{sum(1 for n in nodes if n.get('pricing', {}).get('kind') == 'credits')} credits)")
+    empty_desc = [n["node_id"] for n in nodes if not n.get("description", "").strip()]
+    if empty_desc:
+        log(f"FAIL: {len(empty_desc)} nodes lack description: {empty_desc[:10]}")
         ok = False
     raw = OUT.read_text(encoding="utf-8") if OUT.exists() else ""
     if CJK.search(raw):
