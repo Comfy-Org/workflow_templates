@@ -35,7 +35,6 @@ import os
 import logging
 import argparse
 import sys
-import csv
 import subprocess
 import tempfile
 from typing import Dict, List, Any, Optional, Tuple
@@ -76,7 +75,6 @@ except ImportError:
 
 from locale_index_files import LANGUAGE_FILES  # noqa: E402
 from paths import I18N_FILE  # noqa: E402
-from run_click_coverage import log_run_click_coverage  # noqa: E402
 
 
 def _io_entry_has_nonempty_file(entry: Any) -> bool:
@@ -127,8 +125,6 @@ class TemplateSyncer:
         
         # Load i18n data
         self.i18n_data = self.load_i18n()
-        # Load usage data from CSV file (if exists)
-        self.usage_data = self.load_usage_data()
         self.new_tags = set()  # Track new tags discovered during sync
         self.used_tags = set()  # Track tags that are actually used in templates
         self.used_categories = set()  # Track categories that are actually used
@@ -218,41 +214,6 @@ class TemplateSyncer:
                 "categories": {}
             }
     
-    def load_usage_data(self) -> Dict[str, int]:
-        """Load usage data from CSV file if it exists"""
-        # CSV file is in temp directory (sibling to templates directory)
-        temp_dir = self.templates_dir.parent / "temp"
-        usage_csv_file = temp_dir / "usage.csv"
-        
-        usage_data = {}
-        
-        if not usage_csv_file.exists():
-            self.logger.info(f"Usage CSV file not found: {usage_csv_file} (skipping usage data sync)")
-            return usage_data
-        
-        try:
-            with open(usage_csv_file, 'r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                # Skip header row
-                next(reader, None)
-                
-                for row in reader:
-                    if len(row) >= 3:
-                        # Format: Metric,workflow_name,usage_count
-                        workflow_name = row[1].strip()
-                        try:
-                            usage_count = int(row[2].strip())
-                            usage_data[workflow_name] = usage_count
-                        except (ValueError, IndexError):
-                            # Skip invalid rows
-                            continue
-            
-            self.logger.info(f"Loaded usage data for {len(usage_data)} templates from {usage_csv_file}")
-        except Exception as e:
-            self.logger.warning(f"Failed to load usage data from {usage_csv_file}: {e} (continuing without usage data)")
-        
-        return usage_data
-            
     def save_i18n(self):
         """Save i18n data to JSON file"""
         if self.dry_run:
@@ -1310,11 +1271,12 @@ class TemplateSyncManager:
             self.syncer.logger.info("  ✅ No io entries without filenames to remove")
 
     def fix_master_vram_data(self):
+        """Fix vram data in the master index.json file before synchronization.
+
+        ``usage`` is hand-maintained (Datadog sync) and is never rewritten here.
+        Locale indexes still copy the field from master via auto_sync_fields.
         """
-        Fix vram data in the master index.json file before synchronization
-        Also syncs usage data from CSV if available
-        """
-        self.syncer.logger.info("\n🔧 Step 0: Fixing vram data and syncing usage data in master file...")
+        self.syncer.logger.info("\n🔧 Step 0: Fixing vram data in master file...")
         
         # Load master data
         master_data = self.syncer.load_json_file(self.syncer.master_file)
@@ -1346,21 +1308,6 @@ class TemplateSyncManager:
                             changes_made = True
                             fixed_templates.append(template_name)
                             self.syncer.logger.info(f"  ✓ Set vram to 0 for '{template_name}' (size is 0)")
-                
-                # Sync usage from CSV. A 0 is "no signal" (a record can exist before
-                # run-clicks are backfilled), so it never overwrites an existing usage.
-                usage_value = self.syncer.usage_data.get(template_name, 0)
-                if usage_value > 0:
-                    if template.get("usage") != usage_value:
-                        template["usage"] = usage_value
-                        changes_made = True
-                        self.syncer.logger.info(f"  📊 Updated usage for '{template_name}': {usage_value}")
-                elif "usage" not in template:
-                    template["usage"] = 0
-                    changes_made = True
-                    self.syncer.logger.info(f"  📊 Filled missing usage with 0 for '{template_name}'")
-
-        log_run_click_coverage(master_data, self.syncer.usage_data)
 
         # Save the fixed master file
         if changes_made:
@@ -1776,8 +1723,9 @@ Translation System:
         '--index-only',
         action='store_true',
         help=(
-            'Sync index.json to locale index files only: apply usage and other technical '
-            'fields without workflow I/O generation, i18n bookkeeping, bundles, or validation'
+            'Sync index.json to locale index files only: copy technical '
+            'fields without workflow I/O generation, i18n bookkeeping, bundles, or validation. '
+            'Does not rewrite usage on the master index.'
         ),
     )
     
