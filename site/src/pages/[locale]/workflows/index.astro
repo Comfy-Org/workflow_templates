@@ -22,6 +22,7 @@ import { loadSerializedTemplates } from '../../../lib/hub-api';
 import { getFeatured, featuredPreloadImage } from '../../../lib/featured';
 import { buildToolbarLabels, buildFacetsConfig } from '../../../lib/toolbar';
 import { listingIndexing } from '../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../lib/i18n/localize-cards';
 
 const { locale } = Astro.params;
 
@@ -32,7 +33,13 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-const serialized = await loadSerializedTemplates(() => getCollection('templates'));
+// Cards come from the hub index, which is English only. Resolve the same text
+// the detail page will show, so a localized listing is not a translated page
+// sitting above a grid of English cards.
+const serialized = localizeCards(
+  await loadSerializedTemplates(() => getCollection('templates')),
+  typedLocale
+);
 
 const featured = getFeatured(serialized);
 const featuredLcpImage = featuredPreloadImage(featured);

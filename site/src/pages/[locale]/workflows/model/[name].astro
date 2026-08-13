@@ -29,6 +29,7 @@ import {
   serializeJsonLdForScript,
 } from '../../../../lib/structured-data';
 import { listingIndexing, alternatesFor } from '../../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../../lib/i18n/localize-cards';
 
 const buildGroups = async () =>
   deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
@@ -71,7 +72,11 @@ if (family.slug !== name) {
   return Astro.redirect(localizeUrl(modelPath(family.slug), typedLocale), 301);
 }
 
-const matchingTemplates = family.templates;
+// Localize here rather than inside `buildGroups`: the groups are memoized in a
+// module-level cache shared by every locale, so translating before it would let
+// whichever locale rendered first decide the text for all of them. Grouping keys
+// off the template name, never the title, so it is unaffected either way.
+const matchingTemplates = localizeCards(family.templates, typedLocale);
 const basePath = modelPath(family.slug);
 // Gated until this locale completes native review — see listing-indexing.
 const indexing = listingIndexing(basePath, typedLocale);
