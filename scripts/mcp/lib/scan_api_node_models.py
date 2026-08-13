@@ -18,6 +18,8 @@ DYNAMIC_COMBO_MODEL_RE = re.compile(
 )
 FOR_DICT_LOOP_RE = re.compile(r"""for\s+\w+\s+in\s+(\w+)\s*:""")
 DYNAMIC_OPTION_RE = re.compile(r"""IO\.DynamicCombo\.Option\(\s*["']([^"']+)["']""")
+NODE_MAPPINGS_RE = re.compile(r"""NODE_CLASS_MAPPINGS\s*[:=][^{]*\{(.*?)\}""", re.S)
+MAPPING_KEY_RE = re.compile(r"""["']([A-Za-z0-9_]+)["']\s*:""")
 
 
 def _string_dict_keys(source: str) -> dict[str, list[str]]:
@@ -197,6 +199,31 @@ def scan_api_nodes_dir(api_nodes_dir: Path) -> dict[str, dict[str, Any]]:
         for node_id, meta in parse_api_node_file(path).items():
             index[node_id] = meta
     return index
+
+
+def api_node_ids_in_file(path: Path) -> set[str]:
+    """Every API node class id declared in one comfy_api_nodes source file.
+
+    Covers both node styles: `node_id=` inside an IO.Schema, and the legacy
+    NODE_CLASS_MAPPINGS dict keys.
+    """
+    source = path.read_text(encoding="utf-8")
+    ids = set(NODE_ID_RE.findall(source))
+    for block in NODE_MAPPINGS_RE.findall(source):
+        ids.update(MAPPING_KEY_RE.findall(block))
+    return {node_id for node_id in ids if node_id}
+
+
+def scan_api_node_ids(api_nodes_dir: Path) -> list[str]:
+    """Every API node id in the directory, whether or not it has a model dropdown.
+
+    `scan_api_nodes_dir` keeps only nodes with a dropdown, so it holds a subset
+    (93 of 234 at the time of writing) and cannot answer "does this node charge".
+    """
+    ids: set[str] = set()
+    for path in sorted(api_nodes_dir.glob("nodes_*.py")):
+        ids |= api_node_ids_in_file(path)
+    return sorted(ids)
 
 
 def model_options_for_workflow(
