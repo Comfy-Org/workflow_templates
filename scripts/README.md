@@ -66,6 +66,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py` (static scan; PR comment only) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
+| `sync-template-index.yml` | `sync/sync_data.py --index-only` (locale field sync; does not rewrite `usage`) |
 | `validate-is-app.yml` | `sync/sync_is_app.py --check` |
 | `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `ci/check_frozen_policy.py`, `sync/sync_bundles.py`, `sync/sync_frozen_inventory.py`, `ci/*` |
 | `build-test.yml` | `sync/sync_bundles.py` |
