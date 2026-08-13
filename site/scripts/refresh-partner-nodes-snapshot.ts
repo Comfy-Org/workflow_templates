@@ -80,6 +80,9 @@ function partnerNodesIn(workflowJson: Record<string, unknown>): string[] {
 
 const entries = await listWorkflowIndex();
 const shareIds = entries.map((e) => e.shareId).filter((id): id is string => Boolean(id));
+const dateByShareId = new Map(
+  entries.filter((e) => e.shareId).map((e) => [e.shareId as string, e.date ?? ''])
+);
 
 if (shareIds.length === 0) {
   console.error('Refusing to write a snapshot: the hub index returned no workflows.');
@@ -87,7 +90,12 @@ if (shareIds.length === 0) {
 }
 
 const withPartnerNodes: string[] = [];
-const scanned: string[] = [];
+// shareId -> the publish date the scan saw, not a bare list. A share id is not a
+// stable handle on a graph: re-publishing keeps the id and repoints it at a new
+// published_workflow_version, so a workflow scanned clean can gain a paid node
+// under the same id. Recording the version's date lets the site notice that its
+// scan describes a different graph and fall back to billable.
+const scannedAt = new Map<string, string>();
 let cursor = 0;
 
 // A read failure aborts the whole run. Skipping a workflow would silently
@@ -97,7 +105,7 @@ async function worker(): Promise<void> {
   while (cursor < shareIds.length) {
     const shareId = shareIds[cursor++];
     const detail = await getWorkflow(shareId);
-    scanned.push(shareId);
+    scannedAt.set(shareId, dateByShareId.get(shareId) ?? '');
     if (partnerNodesIn(detail.workflow_json).length > 0) withPartnerNodes.push(shareId);
   }
 }
@@ -107,9 +115,11 @@ await Promise.all(Array.from({ length: CONCURRENCY }, worker));
 const snapshot = {
   fetchedAt: new Date().toISOString(),
   apiNodeCount: apiNodes.size,
-  // Every workflow this run actually inspected. A share id missing from here was
-  // published after the snapshot, so the site cannot claim it is free.
-  scannedShareIds: scanned.sort(),
+  // Every workflow this run inspected, against the publish date it had at the
+  // time. A share id missing from here was published after the snapshot; a share
+  // id whose date has since moved was re-published, and the scan describes the
+  // previous graph. Either way the site cannot claim it is free.
+  scannedAt: Object.fromEntries([...scannedAt].sort(([a], [b]) => a.localeCompare(b))),
   shareIds: withPartnerNodes.sort(),
 };
 

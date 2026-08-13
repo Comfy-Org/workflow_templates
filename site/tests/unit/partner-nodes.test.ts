@@ -14,6 +14,9 @@ import snapshot from '../../src/data/partner-node-workflows.snapshot.json';
  * ByteDance carried no tag and advertised a free run that charges credits.
  */
 
+const scannedEntries = Object.entries(snapshot.scannedAt);
+const dateOf = (shareId: string) => snapshot.scannedAt[shareId as keyof typeof snapshot.scannedAt];
+
 describe('usesPartnerNodes', () => {
   it('recognises a workflow in the snapshot', () => {
     const known = snapshot.shareIds[0];
@@ -33,43 +36,77 @@ describe('usesPartnerNodes', () => {
 
 describe('isBillableWorkflow', () => {
   it('honours the curated API tag on its own', () => {
-    expect(isBillableWorkflow(['API'], 'ffffffffffff')).toBe(true);
+    expect(isBillableWorkflow(['API'], 'ffffffffffff', '2026-01-01')).toBe(true);
   });
 
   // The reported bug: no tag, but the graph calls a paid partner node.
   it('catches an untagged workflow that calls a partner node', () => {
-    expect(isBillableWorkflow([], snapshot.shareIds[0])).toBe(true);
-    expect(isBillableWorkflow(undefined, snapshot.shareIds[0])).toBe(true);
+    const paid = snapshot.shareIds[0];
+    expect(isBillableWorkflow([], paid, dateOf(paid))).toBe(true);
+    expect(isBillableWorkflow(undefined, paid, dateOf(paid))).toBe(true);
   });
 
-  it('leaves a scanned, clean, untagged workflow free', () => {
-    const clean = snapshot.scannedShareIds.find((id) => !snapshot.shareIds.includes(id));
+  it('leaves a scanned, clean, unchanged workflow free', () => {
+    const clean = scannedEntries.find(([id]) => !snapshot.shareIds.includes(id));
     expect(clean).toBeDefined();
-    expect(isBillableWorkflow(['Image'], clean)).toBe(false);
+    const [id, date] = clean!;
+    expect(isBillableWorkflow(['Image'], id, date)).toBe(false);
   });
 
   // dante01yoon on #1100: absence from a positive-only list was treated as proof
   // of being free, so anything published after the snapshot claimed a free run.
-  // He found a live example, 0309de53eb52.
   it('treats a workflow the snapshot never saw as billable', () => {
-    expect(wasScannedForPartnerNodes('ffffffffffff')).toBe(false);
-    expect(isBillableWorkflow([], 'ffffffffffff')).toBe(true);
-    expect(isBillableWorkflow(undefined, 'ffffffffffff')).toBe(true);
+    expect(wasScannedForPartnerNodes('ffffffffffff', '2026-01-01')).toBe(false);
+    expect(isBillableWorkflow([], 'ffffffffffff', '2026-01-01')).toBe(true);
+    expect(isBillableWorkflow(undefined, 'ffffffffffff', '2026-01-01')).toBe(true);
   });
 
   it('treats a missing share id as billable rather than free', () => {
-    expect(isBillableWorkflow(undefined, undefined)).toBe(true);
+    expect(isBillableWorkflow(undefined, undefined, undefined)).toBe(true);
+  });
+});
+
+/**
+ * dante01yoon on #1100, second round: the backend preserves `share_id` across
+ * re-publishes and repoints it at a new `published_workflow_version`, so a
+ * workflow scanned clean can gain a paid node under the same id. A positive
+ * scan is only evidence about the graph that was scanned.
+ */
+describe('re-publish under the same share id', () => {
+  const cleanEntry = scannedEntries.find(([id]) => !snapshot.shareIds.includes(id))!;
+
+  it('stops vouching for a workflow whose publish date has moved', () => {
+    const [id, scannedDate] = cleanEntry;
+    expect(wasScannedForPartnerNodes(id, scannedDate)).toBe(true);
+    expect(wasScannedForPartnerNodes(id, '2099-01-01')).toBe(false);
+  });
+
+  it('bills a scanned-clean workflow that has since been re-published', () => {
+    const [id] = cleanEntry;
+    expect(isBillableWorkflow(['Image'], id, '2099-01-01')).toBe(true);
+  });
+
+  it('bills a scanned workflow arriving with no date to check', () => {
+    const [id] = cleanEntry;
+    expect(isBillableWorkflow(['Image'], id, undefined)).toBe(true);
+    expect(isBillableWorkflow(['Image'], id, '')).toBe(true);
   });
 });
 
 describe('the scanned list', () => {
   it('covers every workflow flagged as using partner nodes', () => {
-    const scanned = new Set(snapshot.scannedShareIds);
-    for (const id of snapshot.shareIds) expect(scanned.has(id)).toBe(true);
+    for (const id of snapshot.shareIds) {
+      expect(Object.prototype.hasOwnProperty.call(snapshot.scannedAt, id)).toBe(true);
+    }
   });
 
   it('is larger than the partner-node list, so free claims are earned not assumed', () => {
-    expect(snapshot.scannedShareIds.length).toBeGreaterThan(snapshot.shareIds.length);
+    expect(scannedEntries.length).toBeGreaterThan(snapshot.shareIds.length);
+  });
+
+  it('records a publish date for every scanned workflow', () => {
+    const undated = scannedEntries.filter(([, date]) => !date);
+    expect(undated).toEqual([]);
   });
 });
 
