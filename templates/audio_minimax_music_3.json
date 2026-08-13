@@ -13,7 +13,7 @@
       ],
       "size": [
         750,
-        194
+        160
       ],
       "flags": {},
       "order": 3,
@@ -58,7 +58,7 @@
       "mode": 0,
       "inputs": [
         {
-          "label": "use_tiled_decoder",
+          "label": "tiled_decode",
           "name": "switch",
           "type": "BOOLEAN",
           "widget": {
@@ -111,7 +111,7 @@
       "title": "Note: MiniMax Music 3",
       "properties": {},
       "widgets_values": [
-        "## MiniMax Music 3\n\nA music generation model by MiniMax that creates complete songs up to 5 minutes long with stable structure and high audio quality. Two inputs drive it: **Caption** (structured music description: style, mood, vocals, arrangement) and **Lyrics** (with `[intro]` `[verse]` `[chorus]` `[bridge]` `[outro]` tags controlling song structure).\n\n### Parameters\n\n| Parameter | Description |\n|---|---|\n| Caption | Music description. Write it in three sections — Global Metadata → Vocal Details → Arrangement. The more specific, the closer the result. |\n| Lyrics | Song lyrics + section tags. Tags are the only executable structural instructions; the lyric text itself only conveys mood. |\n| steps | Sampling steps (currently 60). Higher = more detail, slower. |\n| seed | Random seed (currently 42). Keep it fixed to reproduce the same song. |\n| Model files | diffusion model / text encoder / VAE. Use int8 for low VRAM, fp16 otherwise. |\n\n### Prompt Writing Guide\n\nYou can find an official [Music Caption Rewriter Skill here](https://github.com/MiniMax-AI/MiniMax-Music3)"
+        "## MiniMax Music 3\n\nA music generation model by MiniMax that creates complete songs up to 5 minutes long with stable structure and high audio quality. Two inputs drive it: **Caption** (structured music description: style, mood, vocals, arrangement) and **Lyrics** (with `[intro]` `[verse]` `[chorus]` `[bridge]` `[outro]` tags controlling song structure).\n\n### Parameters\n\n| Parameter | Description |\n|---|---|\n| Caption | Music description. Write it in three sections — Global Metadata → Vocal Details → Arrangement. The more specific, the closer the result. |\n| Lyrics | Song lyrics + section tags. Tags are the only executable structural instructions; the lyric text itself only conveys mood. |\n| max_duration | Target song length in seconds (default 120 = 2 minutes; the model supports up to ~300 s / 5 minutes). Longer songs take more time and VRAM. |\n| steps | Sampling steps (currently 60). Higher = more detail, slower. |\n| seed | Random seed for the generation. Keep it fixed to reproduce the same song; change it to get a different take. |\n| Model files | diffusion model / text encoder / VAE.|\n| Tiled decode | Decode the audio VAE in overlapping tiles to drastically cut VRAM usage — helpful for long songs on low-VRAM GPUs. Slightly slower, with a small risk of seams at tile boundaries; turn it off on high-VRAM GPUs for the best quality. |\n\n### Prompt Writing Guide\n\nYou can find an official [Music Caption Rewriter Skill here](https://github.com/MiniMax-AI/MiniMax-Music3)"
       ],
       "color": "#222",
       "bgcolor": "#000"
@@ -170,7 +170,7 @@
           "bounding": [
             320,
             820,
-            150.708984375,
+            128,
             208
           ]
         },
@@ -192,7 +192,7 @@
               45
             ],
             "pos": [
-              446.708984375,
+              424,
               844
             ]
           },
@@ -204,7 +204,7 @@
               46
             ],
             "pos": [
-              446.708984375,
+              424,
               864
             ]
           },
@@ -216,7 +216,7 @@
               47
             ],
             "pos": [
-              446.708984375,
+              424,
               884
             ]
           },
@@ -228,7 +228,7 @@
               54
             ],
             "pos": [
-              446.708984375,
+              424,
               904
             ]
           },
@@ -240,7 +240,7 @@
               55
             ],
             "pos": [
-              446.708984375,
+              424,
               924
             ]
           },
@@ -252,7 +252,7 @@
               56
             ],
             "pos": [
-              446.708984375,
+              424,
               944
             ]
           },
@@ -264,7 +264,7 @@
               57
             ],
             "pos": [
-              446.708984375,
+              424,
               964
             ]
           },
@@ -275,9 +275,9 @@
             "linkIds": [
               63
             ],
-            "label": "use_tiled_decoder",
+            "label": "tiled_decode",
             "pos": [
-              446.708984375,
+              424,
               984
             ]
           }
@@ -1107,10 +1107,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.27693524934371394,
+      "scale": 0.7901285864132895,
       "offset": [
-        628.682840644888,
-        1195.5083494658472
+        -390.5963888708135,
+        -245.41184011189858
       ]
     },
     "frontendVersion": "1.48.7",
