@@ -47,6 +47,11 @@ try {
 // call still succeeds. This is the only place that sees the resolved value, so
 // it is the only place that can catch it. Checked before translating, so a bad
 // override costs one failed step rather than a night of oversized bills.
+//
+// That holds only while the workflow step passes `HUB_I18N_MODEL` through. Without
+// it this reads the committed default, passes, and the translator runs on the
+// override anyway, so the check would pass precisely when it should not. Keep the
+// env block on "Check pipeline config" in step with the translate step's.
 const contextWindows = readCliContextWindows();
 if (!contextWindows) {
   // Unreadable table means the CLI's bundle changed shape, which says nothing
@@ -57,9 +62,7 @@ if (!contextWindows) {
       'Request sizing is unverified; re-check how the CLI batches before trusting a model change.'
   );
 } else {
-  const { modelName, splitToken } = require(
-    path.join(process.cwd(), '.i18nrc.cjs')
-  ) as I18nConfig;
+  const { modelName, splitToken } = require(path.join(process.cwd(), '.i18nrc.cjs')) as I18nConfig;
   // Own keys only. `in` would also match everything on Object.prototype, so a
   // model literally named `toString` or `constructor` would pass the lookup and
   // then yield a function as its context window.
