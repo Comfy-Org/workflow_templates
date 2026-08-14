@@ -542,6 +542,45 @@
       }
     ]
   },
+  "04479f67187d": {
+    "title": "MiniMax Music 3: Text to Music",
+    "description": "Create full-length songs from text prompts with MiniMax Music 3, generating complete 5-minute tracks with stable structure and high-fidelity audio. Input a structured caption describing lyrics, style, mood, and arrangement, and receive a finished song as output. Ideal for music producers prototyping demos, and content creators needing original background tracks.",
+    "metaDescription": "Generate 5-minute songs from text captions and lyrics in ComfyUI using MiniMax Music 3. Includes structured prompts and SaveAudioAdvanced export.",
+    "extendedDescription": "This ComfyUI tutorial workflow turns structured text into full-length music using MiniMax Music 3. At its core is the MiniMax Music 3 generator node (UUID: ac99f841-a3de-4329-9564-953b81cf9e16), which accepts two key inputs: a Caption describing style, mood, tempo, instrumentation, and arrangement, and optional Lyrics formatted with section tags like [intro], [verse], [chorus], [bridge], and [outro]. The node renders a complete track—up to five minutes—with stable song structure and high-fidelity audio. A MarkdownNote block in the graph documents the prompt schema so you can quickly copy, tweak, and version your captions and lyrics inside the UI.\n\nUnder the hood, you can choose between two model weights: minimax_music3_dit_fp16.safetensors (recommended when VRAM allows) and minimax_music3_dit_int8_convrot.safetensors (optimized for lower VRAM). The generator node produces an audio tensor that is written to disk via SaveAudioAdvanced, where you control filename, format, and sample rate. The result is a finished, arranged song suitable for prototypes, background scores, and content production without leaving ComfyUI.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and open the MarkdownNote to review the prompt schema for Caption and Lyrics (section tags like [intro], [verse], [chorus]).",
+      "Download one model file and place it where the node expects (e.g., ComfyUI/models/diffusion_models): minimax_music3_dit_fp16.safetensors (higher fidelity, more VRAM) or minimax_music3_dit_int8_convrot.safetensors (low VRAM).",
+      "In the MiniMax Music 3 generator node (UUID: ac99f841-a3de-4329-9564-953b81cf9e16), paste a well-structured Caption describing genre, mood, tempo, key instruments, and arrangement. Optionally paste Lyrics with section tags.",
+      "Set generation controls on the node: song duration (up to 300 seconds), and any available seed/reproducibility options. Keep sections in your lyrics aligned with the requested duration.",
+      "Configure SaveAudioAdvanced: choose output path/filename, audio format (e.g., WAV/FLAC), and sample rate. This node will write the rendered track to disk.",
+      "Queue and run the workflow. If the structure or mix needs refinement, iterate: adjust the Caption (e.g., instrument balance, energy per section) or edit Lyrics, then re-run."
+    ],
+    "suggestedUseCases": [
+      "Rapid demo prototyping for producers and songwriters using structured captions and lyrics.",
+      "Original background music for video, podcasts, or livestreams with clear, stable sections.",
+      "Advertising and social clips that need on-brief genre, mood, and arrangement quickly.",
+      "Temp tracks for film/game previsualization before studio recording.",
+      "Instrumental stems for practice or rehearsal by omitting the Lyrics input."
+    ],
+    "faqItems": [
+      {
+        "question": "Which model variant should I use: fp16 or int8?",
+        "answer": "Use minimax_music3_dit_fp16.safetensors if you have enough GPU VRAM for best fidelity and stability. Choose minimax_music3_dit_int8_convrot.safetensors when VRAM is limited; it’s more memory-efficient with a potential slight quality trade-off."
+      },
+      {
+        "question": "How should I structure the Caption and Lyrics for best results?",
+        "answer": "Keep the Caption explicit: genre, mood, tempo/BPM, key instruments, production style, and arrangement (e.g., intro–verse–chorus–bridge–outro). For Lyrics, include clear section tags like [intro], [verse], [chorus], [bridge], [outro]. Keep lines concise and align section lengths with your requested duration."
+      },
+      {
+        "question": "Can it generate vocals or is it instrumental only?",
+        "answer": "If you provide Lyrics with section tags, the model will attempt to render vocal-like parts following your text and structure. If you leave Lyrics empty and supply only a Caption, it will generate instrumental music."
+      },
+      {
+        "question": "What is the maximum song length and how do I set it?",
+        "answer": "The workflow supports up to about 5 minutes (300 seconds). Set the duration parameter on the MiniMax Music 3 generator node and keep your arrangement (in Caption/Lyrics) sized to fit that length."
+      }
+    ]
+  },
   "04bae0edf048": {
     "title": "ChronoEdit 14B: Image Edit",
     "description": "Image editing powered by video models' dynamic understanding, creating physically plausible results while preserving character and style consistency.",
@@ -2927,6 +2966,45 @@
       {
         "question": "How do I get more accurate results (especially for text in images)?",
         "answer": "Use clear, specific prompts (e.g., \"Transcribe all legible text exactly, line by line\"), provide sufficiently large, sharp images, and reduce temperature for factual tasks. If the scene is busy, crop to the relevant area before running LoadImage so the model focuses on what matters."
+      }
+    ]
+  },
+  "23226868cf80": {
+    "title": "Grok Imagine Image 2.0: Image Edit",
+    "description": "Grok Imagine Image 2.0 performs precise image editing and text rendering using xAI's Aurora engine, letting you modify specific elements, swap backgrounds, or restyle scenes through natural language with crisp short-text output. It takes up to 3 reference images and generates at 1K or 2K resolution across 14 aspect ratios, with strong character consistency across scenes. Ideal for poster and cover design, product and brand visuals, or multi-scene character workflows.\n",
+    "metaDescription": "ComfyUI tutorial: precise image edits and short-text rendering with Grok Imagine 2.0 (Aurora). Use up to 3 references, 1K/2K output, and 14 aspect ratios.",
+    "extendedDescription": "This ComfyUI tutorial walks you through Grok Imagine Image 2.0: Image Edit, a prompt-based image editing workflow powered by xAI’s Aurora engine. The workflow is intentionally simple: LoadImage brings in your source and up to three optional reference images, GrokImageEditNodeV2 interprets your natural-language instructions to apply precise edits (like background swaps, restyling, or adding short text), and SaveImage writes the final render to disk. You can target 1K or 2K output and pick from 14 aspect ratios, making it easy to generate poster-ready or platform-specific visuals.\n\nUnder the hood, GrokImageEditNodeV2 conditions the edit on the provided base image plus any reference images to maintain visual identity and style. This enables strong character consistency across scenes, reliable product look alignment, and crisp short-text rendering for cover titles or label callouts—without manual masking. Because the node centralizes key settings (prompt, aspect ratio, and resolution), you can iterate quickly: refine the prompt, swap a reference, and re-render until the composition and typography meet your needs.",
+    "howToUse": [
+      "Load the workflow in ComfyUI, then add your base image with a LoadImage node. Optionally add up to three more LoadImage nodes for reference images (e.g., character, product, or style).",
+      "Connect the base image (and any reference images) to GrokImageEditNodeV2. In the node, write a clear prompt describing the desired changes (e.g., “Swap to a sunset beach background, cinematic lighting, preserve subject identity”).",
+      "Set output parameters in GrokImageEditNodeV2: choose 1K or 2K resolution and select an aspect ratio from the 14 available options that matches your target use (poster, cover, widescreen, square, etc.).",
+      "For text rendering, include exact wording in your prompt and be specific about placement and styling (e.g., “Add title ‘DAWN RISING’ in bold uppercase, centered at top, high contrast”). Keep text short for best legibility.",
+      "Execute the graph. Review the preview output and adjust the prompt or references to refine composition, identity, style, or text clarity.",
+      "When satisfied, connect the GrokImageEditNodeV2 output to SaveImage and run to export the final image to your output directory."
+    ],
+    "suggestedUseCases": [
+      "Poster and cover design with crisp, short titles and strong subject presence",
+      "Product photography updates (background swaps, lighting/style harmonization) for e-commerce",
+      "Brand and campaign visuals that maintain consistent color, style, and iconography",
+      "Multi-scene character workflows where identity must remain consistent across settings",
+      "Social media and ad creatives that need fast aspect-ratio variants at 1K or 2K quality"
+    ],
+    "faqItems": [
+      {
+        "question": "How many reference images can I use, and what are they for?",
+        "answer": "You can connect up to three reference images to GrokImageEditNodeV2. Use them to preserve subject identity, transfer style, or anchor product/brand details so the edit remains consistent across scenes."
+      },
+      {
+        "question": "Do I need a mask to swap backgrounds or restyle part of the image?",
+        "answer": "No mask is required. GrokImageEditNodeV2 applies edits from natural-language instructions. For tighter control, use precise prompts (e.g., describe the subject and the background separately) and start from a well-framed base image."
+      },
+      {
+        "question": "What resolutions and aspect ratios are supported?",
+        "answer": "The node renders at 1K or 2K resolution and offers 14 aspect ratios. Choose the aspect ratio that matches your output target (e.g., poster, square, vertical) to avoid unwanted cropping later."
+      },
+      {
+        "question": "How do I get the best text rendering quality?",
+        "answer": "Keep text short (titles, labels, or brief slogans), specify the exact string, case, and placement in the prompt, and request high contrast against the background. If needed, generate a clean background or reserved space first, then iterate on type styling."
       }
     ]
   },
@@ -18717,6 +18795,45 @@
       {
         "question": "How can I improve the relevance of the generated images to my text prompts?",
         "answer": "To improve relevance, ensure that your text prompts are clear and detailed. Including context, specific visual cues, and intended styles can help the Grok model produce more aligned results."
+      }
+    ]
+  },
+  "d23f62e48d10": {
+    "title": "Grok Imagine Image 2.0: Text to Image",
+    "description": "Generate images from text prompts using Grok Imagine Image 2.0, an Aurora-engine model that excels at crisp short-text rendering and 1K or 2K outputs across 14 aspect ratios. Enter one text prompt and receive one generated image, with low or medium quality options to control cost. Ideal for poster and cover design, product and brand visuals, and character-driven scenes where consistency matters.",
+    "metaDescription": "ComfyUI tutorial: Generate 1K/2K images from text with Grok Imagine Image 2.0 using GrokImageNode and SaveImageAdvanced. Learn prompts, aspect ratios, and quality.",
+    "extendedDescription": "This ComfyUI workflow turns a single text prompt into a finished image using Grok Imagine Image 2.0, an Aurora‑engine model optimized for crisp short‑text rendering and high‑quality 1K or 2K outputs across 14 aspect ratios. The GrokImageNode handles the API call to the Grok model, and the SaveImageAdvanced node writes the result to disk with your chosen filename pattern and location.\n\nTechnically, the GrokImageNode packages your prompt and generation settings—such as quality (low or medium to control cost), target resolution (1K or 2K), and aspect ratio—then submits them to the Grok service and returns the generated image to the ComfyUI graph. SaveImageAdvanced then saves that image to your output folder with predictable naming, making it easy to iterate. The workflow is ideal for poster and cover design, product and brand visuals, and character‑driven scenes where consistent looks matter, especially when you need sharp, readable short text in the composition.",
+    "howToUse": [
+      "Load the workflow into ComfyUI and open it in the graph view.",
+      "Open the GrokImageNode and configure access (e.g., add your API key or credentials if required by your setup).",
+      "Enter your prompt. For text-in-image tasks, include the exact phrase you want rendered (you can use quotes) and add brief style or subject cues.",
+      "Choose generation settings in GrokImageNode: select quality (low for quick drafts, medium for better fidelity), pick a target resolution (1K or 2K), and select one of the supported aspect ratios.",
+      "Configure SaveImageAdvanced to set the output folder and a filename pattern so each run is saved consistently.",
+      "Queue the workflow. Review the result, then refine your prompt or settings (quality, aspect ratio, resolution) and run again until you achieve the desired look."
+    ],
+    "suggestedUseCases": [
+      "Poster, flyer, and cover mockups where titles and short taglines must remain sharp and legible.",
+      "Product and brand visuals featuring brief slogans, model numbers, or logotype-like text elements.",
+      "Social banners and ad creative generated across multiple aspect ratios for different placements.",
+      "Character-driven scenes or story beats where you want a consistent look across iterations.",
+      "Editorial or blog illustrations that call for bold typography and clean compositions."
+    ],
+    "faqItems": [
+      {
+        "question": "When should I use low vs. medium quality?",
+        "answer": "Use low for quick, low-cost drafts and concept exploration. Switch to medium for improved detail and more reliable text legibility. Medium may take longer and cost more, but it’s a better choice for final outputs."
+      },
+      {
+        "question": "How do I get crisp, readable text in the image?",
+        "answer": "Keep prompts concise and include the exact text you want (use quotes if helpful). Specify typography cues like 'clean, bold type' and ensure a simple, high-contrast background. Avoid very long strings; short phrases render more cleanly."
+      },
+      {
+        "question": "What aspect ratios and sizes can I generate?",
+        "answer": "The GrokImageNode exposes 14 preset aspect ratios and supports 1K or 2K outputs. Pick an aspect ratio that matches the destination (e.g., square for profiles, wide for banners). Choose 2K for higher detail or print-ready work, and 1K for web or fast iteration."
+      },
+      {
+        "question": "How can I keep characters or styles consistent across runs?",
+        "answer": "Reuse the same core prompt and descriptors. Keep character attributes stable (e.g., clothing, colors, scene). If your GrokImageNode build exposes a seed field, set and reuse the same seed between runs to reduce variation."
       }
     ]
   },
