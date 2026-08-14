@@ -14,7 +14,6 @@ import { BreadthumbIcon } from '@/components/ui/icons';
 import { getMainNavigation } from '@/config/main-navigation';
 import { navRoutes } from '@/config/nav-routes';
 import { lockScroll, unlockScroll } from '@/composables/scrollLock';
-import { localizeUrl } from '@/i18n/utils';
 import type { Locale } from '@/i18n/config';
 import { t } from '@/i18n/ui';
 import { Badge } from '@/components/ui/badge';
@@ -25,7 +24,6 @@ const { locale = 'en' } = defineProps<{
 }>();
 
 const mainNavigation = getMainNavigation(locale);
-const creatorsHref = localizeUrl('/workflows/creators/', locale);
 
 const isOpen = ref(false);
 const activeSection = ref<string | null>(null);
@@ -102,16 +100,6 @@ onUnmounted(() => {
                 </Button>
               </li>
             </ul>
-
-            <div class="mt-12 flex flex-col gap-y-4">
-              <a
-                :href="creatorsHref"
-                class="text-primary-warm-gray flex items-center gap-2 text-sm font-bold uppercase tracking-wider"
-              >
-                {{ t('hub.topCreators', locale) }}
-                <ChevronRight class="size-3.5" />
-              </a>
-            </div>
           </nav>
 
           <div
