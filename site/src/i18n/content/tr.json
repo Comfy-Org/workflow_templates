@@ -542,6 +542,45 @@
     ],
     "title": "Seedance 1.5 Pro: FLF2V"
   },
+  "04479f67187d": {
+    "description": "MiniMax Music 3 ile metin istemlerinden tam uzunlukta şarkılar oluşturun: sağlam bir yapı ve yüksek kaliteli sesle eksiksiz 5 dakikalık parçalar üretir. Şarkı sözlerini, tarzı, ruh halini ve düzenlemeyi anlatan yapılandırılmış bir açıklama girin ve çıktıda bitmiş bir şarkı alın. Demo prototiplemesi yapan müzik prodüktörleri ve orijinal arka plan parçasına ihtiyaç duyan içerik üreticileri için idealdir.",
+    "extendedDescription": "Bu ComfyUI eğitim iş akışı, MiniMax Music 3 kullanarak yapılandırılmış metni tam uzunlukta müziğe dönüştürür. Merkezde, iki temel girdiyi kabul eden MiniMax Music 3 generator node'u (UUID: ac99f841-a3de-4329-9564-953b81cf9e16) bulunur: tarzı, ruh halini, tempoyu, enstrümantasyonu ve düzenlemeyi tanımlayan bir Caption ve [intro], [verse], [chorus], [bridge] ve [outro] gibi bölüm etiketleriyle biçimlendirilmiş isteğe bağlı Lyrics. Düğüm, stabil şarkı yapısı ve yüksek kaliteli sesle beş dakikaya kadar eksiksiz bir parça oluşturur. Grafikteki bir MarkdownNote bloğu, istem şemasını belgelendirir; böylece açıklamalarınızı ve sözlerinizi arayüz içinde hızlıca kopyalayıp düzenleyebilir ve sürümleyebilirsiniz.\n\nArka planda iki model ağırlığı arasından seçim yapabilirsiniz: minimax_music3_dit_fp16.safetensors (VRAM uygunsa önerilir) ve minimax_music3_dit_int8_convrot.safetensors (daha düşük VRAM için optimize edilmiştir). Generator node'u bir ses tensörü üretir; bu tensör SaveAudioAdvanced ile diske yazılır ve burada dosya adı, format ve örnekleme hızını kontrol edersiniz. Sonuç, ComfyUI dışına çıkmadan prototipler, arka plan müzikleri ve içerik üretimi için uygun, düzenlenmiş bitmiş bir şarkıdır.",
+    "faqItems": [
+      {
+        "answer": "En iyi kalite ve stabilite için yeterli GPU VRAM'iniz varsa minimax_music3_dit_fp16.safetensors kullanın. VRAM sınırlıysa minimax_music3_dit_int8_convrot.safetensors seçin; bellek açısından daha verimlidir ancak kalite tarafında küçük bir ödün olabilir.",
+        "question": "Hangi model varyantını kullanmalıyım: fp16 mı int8 mi?"
+      },
+      {
+        "answer": "Caption'ı net tutun: tür, ruh hali, tempo/BPM, ana enstrümanlar, prodüksiyon tarzı ve düzenleme (ör. intro–verse–chorus–bridge–outro). Lyrics için [intro], [verse], [chorus], [bridge], [outro] gibi açık bölüm etiketleri ekleyin. Satırları kısa tutun ve bölüm uzunluklarını istediğiniz süreyle hizalayın.",
+        "question": "En iyi sonuçlar için Caption ve Lyrics'i nasıl yapılandırmalıyım?"
+      },
+      {
+        "answer": "Bölüm etiketleriyle Lyrics sağlarsanız model, metninizi ve yapıyı izleyen vokal benzeri bölümler oluşturmaya çalışır. Lyrics'i boş bırakıp yalnızca Caption verirseniz enstrümantal müzik üretir.",
+        "question": "Vokal üretebilir mi, yoksa sadece enstrümantal mi?"
+      },
+      {
+        "answer": "İş akışı yaklaşık 5 dakikaya (300 saniye) kadar destekler. Süre parametresini MiniMax Music 3 generator node'unda ayarlayın ve düzenlemenizi (Caption/Lyrics içinde) bu uzunluğa sığacak şekilde planlayın.",
+        "question": "Maksimum şarkı uzunluğu nedir ve nasıl ayarlanır?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI içinde yükleyin ve Caption ile Lyrics için istem şemasını ( [intro], [verse], [chorus] gibi bölüm etiketleri) incelemek üzere MarkdownNote'u açın.",
+      "Bir model dosyası indirin ve düğümün beklediği konuma koyun (ör. ComfyUI/models/diffusion_models): minimax_music3_dit_fp16.safetensors (daha yüksek kalite, daha fazla VRAM) veya minimax_music3_dit_int8_convrot.safetensors (düşük VRAM).",
+      "MiniMax Music 3 generator node'unda (UUID: ac99f841-a3de-4329-9564-953b81cf9e16) tür, ruh hali, tempo, ana enstrümanlar ve düzenlemeyi tarif eden iyi yapılandırılmış bir Caption yapıştırın. İsterseniz bölüm etiketleriyle Lyrics de yapıştırın.",
+      "Düğümde üretim kontrollerini ayarlayın: şarkı süresi (300 saniyeye kadar) ve varsa seed/yeniden üretilebilirlik seçenekleri. Sözlerdeki bölümleri istenen süreyle uyumlu tutun.",
+      "SaveAudioAdvanced'i yapılandırın: çıktı yolu/dosya adı, ses formatı (ör. WAV/FLAC) ve örnekleme hızı. Bu düğüm oluşturulan parçayı diske yazacaktır.",
+      "Kuyruğa alın ve iş akışını çalıştırın. Yapı veya miks iyileştirme istiyorsa yineleyin: Caption'ı (ör. enstrüman dengesi, bölüm başına enerji) ayarlayın veya Lyrics'i düzenleyin, ardından yeniden çalıştırın."
+    ],
+    "metaDescription": "ComfyUI içinde MiniMax Music 3 ile metin açıklamalarından ve şarkı sözlerinden 5 dakikalık şarkılar üretin. Yapılandırılmış istemler ve SaveAudioAdvanced dışa aktarma dahildir.",
+    "suggestedUseCases": [
+      "Yapılandırılmış açıklamalar ve şarkı sözleriyle prodüktörler ve söz yazarları için hızlı demo prototipleme.",
+      "Net ve stabil bölümlerle video, podcast veya canlı yayınlar için orijinal arka plan müziği.",
+      "Kısa sürede brief'e uygun tür, ruh hali ve düzenleme gerektiren reklam ve sosyal içerikler.",
+      "Stüdyo kaydı öncesi film/oyun ön görselleştirmesi için geçici parçalar.",
+      "Lyrics girdisini boş bırakarak prova veya repertuvar çalışması için enstrümantal parçalar."
+    ],
+    "title": "MiniMax Music 3: Metinden Müziğe"
+  },
   "04bae0edf048": {
     "description": "Video modellerinin dinamik anlayışıyla güçlendirilmiş görsel düzenleme; karakter ve stil tutarlılığını korurken fiziksel olarak gerçekçi sonuçlar üretir.",
     "extendedDescription": "ChronoEdit 14B: Görsel Düzenleme, bir video modelinin dinamik anlayışını tek görsel düzenlemeleri için kullanan bir ComfyUI iş akışıdır. Böylece fiziksel olarak gerçekçi görünen, karakter ve stil tutarlılığını koruyan düzenlemeler yapılır. Temel yol basittir—LoadImage, kaynağınızı ChronoEdit alt grafiğine (düğüm id 2b61e18f-9327-49e6-98af-da8e557c2336) aktarır ve sonuç SaveImage ile kaydedilir. Asıl iş, bu alt grafikte gerçekleşir: Wan 2.1/ChronoEdit ağırlıkları yüklenir, isteminiz büyük bir metin kodlayıcı (UMT5 XXL) ile kodlanır ve yapı, ışık ve kimliği korumaya odaklı bir gürültü azaltma geçişi çalıştırılır.\n\nTeknik olarak, tek kare için video modeli kullanmak, örnekleyicinin normalde zamansal stabiliteyi sağlayan önceliklerinden yararlanmasını sağlar—burada bu öncelikler düzenleme sırasında geometri ve stili korumaya yardımcı olur. İstemler, güçlü dil yönlendirmesi için UMT5 XXL metin kodlayıcı (ör. umt5_xxl_fp8_e4m3fn_scaled.safetensors) ile işlenir. Grafikteki MarkdownNote, yerinde rehberlik sunar; Alt Grafik ise pozitif/negatif istem metni, düzenleme gücü, adım sayısı, CFG rehberliği, tohum ve çözünürlük gibi tipik kontrolleri kapsar. Sonuç, kimlik veya kompozisyonu bozmadan hafif-orta değişikliklerde başarılı, pratik, istem odaklı bir görsel düzenleyicidir.",
@@ -2929,6 +2968,45 @@
       "Görsellerdeki tabelalardan, menülerden ve posterlerden hızlı OCR tarzı transkripsiyon."
     ],
     "title": "AI on the Lot 2026 - QwenVL - i2t"
+  },
+  "23226868cf80": {
+    "description": "Grok Imagine Image 2.0, xAI'nin Aurora motorunu kullanarak hassas görsel düzenleme ve metin render'ı yapar; doğal dille belirli öğeleri değiştirmenize, arka planları değiştirmenize veya sahneleri yeniden stilize etmenize olanak tanır ve kısa metin çıktısını net üretir. En fazla 3 referans görsel alır ve 14 en-boy oranında 1K veya 2K çözünürlükte üretir; sahneler arasında güçlü karakter tutarlılığı sağlar. Poster ve kapak tasarımı, ürün ve marka görselleri veya çok sahneli karakter iş akışları için idealdir.\n",
+    "extendedDescription": "Bu ComfyUI eğitimi, xAI’nin Aurora motoruyla çalışan istem tabanlı bir görsel düzenleme iş akışı olan Grok Imagine Image 2.0: Image Edit’i adım adım anlatır. İş akışı bilinçli olarak basittir: LoadImage kaynak görselinizi ve isteğe bağlı en fazla üç referans görseli içe alır, GrokImageEditNodeV2 doğal dil talimatlarınızı yorumlayarak hassas düzenlemeler uygular (ör. arka plan değiştirme, yeniden stilize etme veya kısa metin ekleme) ve SaveImage son render'ı diske yazar. 1K veya 2K çıktı hedefleyebilir ve 14 en-boy oranından seçim yapabilirsiniz; bu da poster hazır ya da platforma özel görseller üretmeyi kolaylaştırır.\n\nTeknik olarak GrokImageEditNodeV2, düzenlemeyi sağlanan temel görsel ve varsa referans görseller üzerinden koşullandırarak görsel kimliği ve stili korur. Bu; sahneler arasında güçlü karakter tutarlılığı, ürün görünümünün güvenilir şekilde eşleşmesi ve kapak başlıkları veya etiket çağrıları için net kısa metin render'ı sağlar—manuel maskeleme olmadan. Düğüm temel ayarları (istem, en-boy oranı ve çözünürlük) tek yerde topladığı için hızlıca yineleyebilirsiniz: istemi iyileştirin, bir referansı değiştirin ve kompozisyon ile tipografi ihtiyacınızı karşılayana kadar yeniden render alın.",
+    "faqItems": [
+      {
+        "answer": "GrokImageEditNodeV2'ye en fazla üç referans görsel bağlayabilirsiniz. Düzenlemenin sahneler arasında tutarlı kalması için özne kimliğini korumak, stili aktarmak veya ürün/marka detaylarını sabitlemek amacıyla kullanın.",
+        "question": "Kaç referans görsel kullanabilirim ve ne işe yararlar?"
+      },
+      {
+        "answer": "Hayır, maske gerekmez. GrokImageEditNodeV2 düzenlemeleri doğal dil talimatlarından uygular. Daha sıkı kontrol için daha kesin istemler kullanın (ör. özneyi ve arka planı ayrı ayrı tarif edin) ve iyi kadrajlanmış bir temel görselle başlayın.",
+        "question": "Arka plan değiştirmek veya görselin bir kısmını yeniden stilize etmek için maske gerekir mi?"
+      },
+      {
+        "answer": "Düğüm 1K veya 2K çözünürlükte render alır ve 14 en-boy oranı sunar. Sonradan istenmeyen kırpma olmaması için çıktı hedefinize (ör. poster, kare, dikey) uyan en-boy oranını seçin.",
+        "question": "Hangi çözünürlükler ve en-boy oranları destekleniyor?"
+      },
+      {
+        "answer": "Metni kısa tutun (başlık, etiket veya kısa slogan), istemde tam dizgeyi/büyük-küçük harfi ve yerleşimi belirtin ve arka plana karşı yüksek kontrast isteyin. Gerekirse önce temiz bir arka plan veya boş bir alan oluşturup ardından tip stilini yineleyin.",
+        "question": "En iyi metin render kalitesini nasıl alırım?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI içinde yükleyin, ardından bir LoadImage düğümüyle temel görselinizi ekleyin. İsteğe bağlı olarak referans görseller için (ör. karakter, ürün veya stil) üç adede kadar ek LoadImage düğümü ekleyin.",
+      "Temel görseli (ve varsa referans görselleri) GrokImageEditNodeV2'ye bağlayın. Düğüm içinde istenen değişiklikleri tarif eden net bir istem yazın (ör. “Arka planı gün batımı sahiline çevir, sinematik ışık, öznenin kimliğini koru”).",
+      "GrokImageEditNodeV2 içinde çıktı parametrelerini ayarlayın: 1K veya 2K çözünürlük seçin ve hedef kullanımınıza uygun 14 seçenekten bir en-boy oranı seçin (poster, kapak, geniş ekran, kare vb.).",
+      "Metin render'ı için, isteminizde tam ifadeyi yazın ve yerleşim ile stil konusunda spesifik olun (ör. “Üste ortalı, kalın büyük harflerle ‘DAWN RISING’ başlığı ekle, yüksek kontrast”). En iyi okunabilirlik için metni kısa tutun.",
+      "Grafiği çalıştırın. Önizleme çıktısını inceleyin ve kompozisyonu, kimliği, stili veya metin netliğini iyileştirmek için istemi ya da referansları güncelleyin.",
+      "Memnun kaldığınızda, GrokImageEditNodeV2 çıktısını SaveImage'e bağlayın ve son görseli çıktı dizininize aktarmak için çalıştırın."
+    ],
+    "metaDescription": "ComfyUI eğitimi: Grok Imagine 2.0 (Aurora) ile hassas görsel düzenleme ve kısa metin render'ı. 3 referansa kadar, 1K/2K çıktı ve 14 en-boy oranı kullanın.",
+    "suggestedUseCases": [
+      "Net, kısa başlıklar ve güçlü özne vurgusuyla poster ve kapak tasarımı",
+      "E-ticaret için ürün fotoğrafı güncellemeleri (arka plan değiştirme, ışık/stil uyumlama)",
+      "Renk, stil ve ikonografiyi tutarlı tutan marka ve kampanya görselleri",
+      "Kimliğin farklı ortamlarda tutarlı kalması gereken çok sahneli karakter iş akışları",
+      "1K veya 2K kalitede hızlı en-boy oranı varyantları gereken sosyal medya ve reklam kreatifleri"
+    ],
+    "title": "Grok Imagine Image 2.0: Görsel Düzenleme"
   },
   "234798f9a5cd": {
     "description": "Nano-banana (Gemini-2.5-Flash Image) - tutarlı görsel düzenleme.",
@@ -18719,6 +18797,45 @@
       "Mimari görselleştirmede, metinsel tasarım özetlerini görsellere dönüştürerek yardımcı olmak."
     ],
     "title": "Grok: Metinden Görsele"
+  },
+  "d23f62e48d10": {
+    "description": "Grok Imagine Image 2.0 ile metin istemlerinden görsel üretin. Aurora motorlu bu model, net kısa metin render'ında ve 14 en-boy oranında 1K veya 2K çıktılarda öne çıkar. Tek bir metin istemi girin ve tek bir üretilmiş görsel alın; maliyeti kontrol etmek için düşük veya orta kalite seçenekleri vardır. Poster ve kapak tasarımı, ürün ve marka görselleri ve tutarlılığın önemli olduğu karakter odaklı sahneler için idealdir.",
+    "extendedDescription": "Bu ComfyUI iş akışı, Aurora motorlu ve net kısa metin render'ı ile 14 en-boy oranında yüksek kaliteli 1K veya 2K çıktılar için optimize edilmiş Grok Imagine Image 2.0 kullanarak tek bir metin istemini bitmiş bir görsele dönüştürür. GrokImageNode, Grok modeline API çağrısını yapar; SaveImageAdvanced ise sonucu seçtiğiniz dosya adı şablonu ve konumla diske yazar.\n\nTeknik olarak GrokImageNode; isteminizi ve üretim ayarlarınızı—kalite (maliyeti kontrol etmek için düşük veya orta), hedef çözünürlük (1K veya 2K) ve en-boy oranı gibi—paketler, Grok hizmetine gönderir ve üretilen görseli ComfyUI grafiğine geri döndürür. SaveImageAdvanced daha sonra bu görseli tahmin edilebilir bir adlandırmayla çıktı klasörünüze kaydeder; böylece yineleme yapmak kolaylaşır. İş akışı; poster ve kapak tasarımı, ürün ve marka görselleri ve özellikle kompozisyonda keskin, okunabilir kısa metne ihtiyaç duyduğunuz, tutarlı görünümün önemli olduğu karakter odaklı sahneler için uygundur.",
+    "faqItems": [
+      {
+        "answer": "Hızlı, düşük maliyetli taslaklar ve konsept keşfi için düşük kaliteyi kullanın. Daha iyi detay ve daha güvenilir metin okunabilirliği için orta kaliteye geçin. Orta kalite daha uzun sürebilir ve daha maliyetli olabilir, ancak nihai çıktılar için daha iyi bir seçimdir.",
+        "question": "Düşük kalite ile orta kaliteyi ne zaman kullanmalıyım?"
+      },
+      {
+        "answer": "İstemleri kısa tutun ve istediğiniz tam metni ekleyin (gerekirse tırnak kullanın). 'temiz, kalın yazı' gibi tipografi ipuçları verin ve arka planın sade, yüksek kontrastlı olmasını isteyin. Çok uzun dizgelerden kaçının; kısa ifadeler daha temiz render edilir.",
+        "question": "Görselde net, okunabilir metni nasıl elde ederim?"
+      },
+      {
+        "answer": "GrokImageNode 14 hazır en-boy oranı sunar ve 1K veya 2K çıktıları destekler. Hedefe uygun en-boy oranını seçin (ör. profil için kare, banner için geniş). Daha yüksek detay veya baskıya daha uygun işler için 2K, web veya hızlı yineleme için 1K seçin.",
+        "question": "Hangi en-boy oranları ve boyutları üretebilirim?"
+      },
+      {
+        "answer": "Aynı temel istemi ve tanımlayıcıları yeniden kullanın. Karakter özelliklerini sabit tutun (ör. kıyafet, renkler, sahne). GrokImageNode sürümünüz seed alanı sunuyorsa, varyasyonu azaltmak için aynı seed'i ayarlayıp tekrar kullanın.",
+        "question": "Çalıştırmalar arasında karakterleri veya stilleri nasıl tutarlı tutabilirim?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI içine yükleyin ve graf görünümünde açın.",
+      "GrokImageNode'u açın ve erişimi yapılandırın (ör. kurulumunuz gerektiriyorsa API anahtarınızı veya kimlik bilgilerinizi ekleyin).",
+      "İsteminizi girin. Görsel içinde metin görevleri için, render edilmesini istediğiniz tam ifadeyi ekleyin (tırnak kullanabilirsiniz) ve kısa stil/konu ipuçları yazın.",
+      "GrokImageNode'da üretim ayarlarını seçin: kaliteyi seçin (hızlı taslaklar için düşük, daha iyi kalite için orta), hedef çözünürlüğü (1K veya 2K) belirleyin ve desteklenen en-boy oranlarından birini seçin.",
+      "SaveImageAdvanced'i, çıktı klasörünü ve her çalıştırmanın tutarlı şekilde kaydedilmesi için bir dosya adı şablonu ayarlayacak şekilde yapılandırın.",
+      "İş akışını kuyruğa alın. Sonucu inceleyin; ardından istediğiniz görünümü yakalayana kadar isteminizi veya ayarlarınızı (kalite, en-boy oranı, çözünürlük) iyileştirip yeniden çalıştırın."
+    ],
+    "metaDescription": "ComfyUI eğitimi: Grok Imagine Image 2.0 ile GrokImageNode ve SaveImageAdvanced kullanarak metinden 1K/2K görseller üretin. İstemler, en-boy oranları ve kaliteyi öğrenin.",
+    "suggestedUseCases": [
+      "Başlıkların ve kısa sloganların keskin ve okunabilir kalması gereken poster, el ilanı ve kapak maketleri.",
+      "Kısa sloganlar, model numaraları veya logotype benzeri metin öğeleri içeren ürün ve marka görselleri.",
+      "Farklı yerleşimler için çoklu en-boy oranında üretilen sosyal banner ve reklam kreatifleri.",
+      "Yinelemeler boyunca tutarlı bir görünüm istediğiniz karakter odaklı sahneler veya hikâye anları.",
+      "Cesur tipografi ve temiz kompozisyon isteyen editoryal veya blog illüstrasyonları."
+    ],
+    "title": "Grok Imagine Image 2.0: Metinden Görsele"
   },
   "d25788ed5d19": {
     "description": "Sentezi yönlendirmek için en fazla 10 referans görsel yükleyin. Sağladığınız görsel girdilere dayalı olarak Kling O3 modeliyle yeni bir görsel oluşturun.",

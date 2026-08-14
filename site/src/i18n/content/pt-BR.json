@@ -542,6 +542,45 @@
     ],
     "title": "Seedance 1.5 Pro: FLF2V"
   },
+  "04479f67187d": {
+    "description": "Crie músicas completas a partir de prompts de texto com o MiniMax Music 3, gerando faixas completas de 5 minutos com estrutura estável e áudio de alta fidelidade. Insira uma legenda estruturada descrevendo letra, estilo, clima e arranjo e receba uma música finalizada como saída. Ideal para produtores musicais prototiparem demos e para criadores de conteúdo que precisam de trilhas originais de fundo.",
+    "extendedDescription": "Este workflow de tutorial no ComfyUI transforma texto estruturado em música de duração completa usando MiniMax Music 3. No centro está o nó gerador MiniMax Music 3 (UUID: ac99f841-a3de-4329-9564-953b81cf9e16), que aceita duas entradas principais: uma Caption descrevendo estilo, clima, tempo, instrumentação e arranjo, e Lyrics opcionais formatadas com tags de seção como [intro], [verse], [chorus], [bridge] e [outro]. O nó renderiza uma faixa completa — até cinco minutos — com estrutura musical estável e áudio de alta fidelidade. Um bloco MarkdownNote no grafo documenta o esquema do prompt para você copiar, ajustar e versionar rapidamente suas captions e letras dentro da UI.\n\nPor baixo do capô, você pode escolher entre dois pesos de modelo: minimax_music3_dit_fp16.safetensors (recomendado quando a VRAM permite) e minimax_music3_dit_int8_convrot.safetensors (otimizado para menos VRAM). O nó gerador produz um tensor de áudio que é gravado em disco via SaveAudioAdvanced, onde você controla nome do arquivo, formato e taxa de amostragem. O resultado é uma música finalizada e arranjada, adequada para protótipos, trilhas de fundo e produção de conteúdo sem sair do ComfyUI.",
+    "faqItems": [
+      {
+        "answer": "Use minimax_music3_dit_fp16.safetensors se você tiver VRAM de GPU suficiente para melhor fidelidade e estabilidade. Escolha minimax_music3_dit_int8_convrot.safetensors quando a VRAM for limitada; ele é mais eficiente em memória, com possível pequena perda de qualidade.",
+        "question": "Qual variante do modelo devo usar: fp16 ou int8?"
+      },
+      {
+        "answer": "Mantenha a Caption explícita: gênero, clima, tempo/BPM, instrumentos principais, estilo de produção e arranjo (por exemplo, intro–verse–chorus–bridge–outro). Para Lyrics, inclua tags de seção claras como [intro], [verse], [chorus], [bridge], [outro]. Mantenha as linhas concisas e alinhe o tamanho das seções com a duração solicitada.",
+        "question": "Como devo estruturar a Caption e as Lyrics para melhores resultados?"
+      },
+      {
+        "answer": "Se você fornecer Lyrics com tags de seção, o modelo tentará renderizar partes tipo vocal seguindo seu texto e sua estrutura. Se você deixar Lyrics vazio e fornecer apenas uma Caption, ele gerará música instrumental.",
+        "question": "Ele pode gerar vocais ou é apenas instrumental?"
+      },
+      {
+        "answer": "O workflow suporta até cerca de 5 minutos (300 segundos). Defina o parâmetro de duração no nó gerador MiniMax Music 3 e mantenha seu arranjo (na Caption/Lyrics) dimensionado para caber nesse tempo.",
+        "question": "Qual é o tempo máximo da música e como eu defino isso?"
+      }
+    ],
+    "howToUse": [
+      "Carregue o workflow no ComfyUI e abra o MarkdownNote para revisar o esquema do prompt para Caption e Lyrics (tags de seção como [intro], [verse], [chorus]).",
+      "Baixe um arquivo de modelo e coloque onde o nó espera (por exemplo, ComfyUI/models/diffusion_models): minimax_music3_dit_fp16.safetensors (maior fidelidade, mais VRAM) ou minimax_music3_dit_int8_convrot.safetensors (baixa VRAM).",
+      "No nó gerador MiniMax Music 3 (UUID: ac99f841-a3de-4329-9564-953b81cf9e16), cole uma Caption bem estruturada descrevendo gênero, clima, tempo, instrumentos principais e arranjo. Opcionalmente, cole Lyrics com tags de seção.",
+      "Ajuste os controles de geração no nó: duração da música (até 300 segundos) e quaisquer opções disponíveis de seed/reprodutibilidade. Mantenha as seções da sua letra alinhadas com a duração solicitada.",
+      "Configure o SaveAudioAdvanced: escolha caminho/nome do arquivo de saída, formato de áudio (por exemplo, WAV/FLAC) e taxa de amostragem. Este nó gravará a faixa renderizada em disco.",
+      "Enfileire e execute o workflow. Se a estrutura ou a mix precisar de ajustes, itere: ajuste a Caption (por exemplo, equilíbrio de instrumentos, energia por seção) ou edite as Lyrics e execute novamente."
+    ],
+    "metaDescription": "Gere músicas de 5 minutos a partir de legendas de texto e letras no ComfyUI usando MiniMax Music 3. Inclui prompts estruturados e exportação com SaveAudioAdvanced.",
+    "suggestedUseCases": [
+      "Prototipagem rápida de demos para produtores e compositores usando captions e letras estruturadas.",
+      "Música de fundo original para vídeo, podcasts ou lives com seções claras e estáveis.",
+      "Anúncios e clipes sociais que precisam de gênero, clima e arranjo dentro do briefing rapidamente.",
+      "Trilhas temporárias para pré-visualização de filme/jogo antes de gravação em estúdio.",
+      "Stems instrumentais para prática ou ensaio omitindo a entrada de Lyrics."
+    ],
+    "title": "MiniMax Music 3: Texto para Música"
+  },
   "04bae0edf048": {
     "description": "Edição de imagem baseada na compreensão dinâmica de modelos de vídeo, criando resultados fisicamente plausíveis enquanto preserva consistência de personagem e estilo.",
     "extendedDescription": "ChronoEdit 14B: Edição de Imagem é um fluxo de trabalho ComfyUI que reaproveita a compreensão dinâmica de um modelo de vídeo para realizar edições em uma única imagem que parecem fisicamente plausíveis, mantendo a consistência de personagem e estilo. O caminho principal é simples—LoadImage alimenta sua fonte em um subgrafo ChronoEdit (id do nó 2b61e18f-9327-49e6-98af-da8e557c2336), e o resultado é salvo com SaveImage. O processamento pesado ocorre dentro desse subgrafo: ele carrega os pesos Wan 2.1/ChronoEdit, codifica seu prompt com um encoder de texto grande (UMT5 XXL) e executa uma passagem de denoising orientada para edição, projetada para manter estrutura, iluminação e identidade intactas.\n\nTecnicamente, usar um modelo de vídeo para um único quadro significa que o sampler se beneficia de priors que normalmente garantem estabilidade temporal—neste caso, ajudam a manter geometria e estilo durante as edições. Os prompts são tratados por um encoder de texto UMT5 XXL (por exemplo, umt5_xxl_fp8_e4m3fn_scaled.safetensors), que oferece orientação linguística forte para mudanças sutis. Um MarkdownNote no grafo fornece dicas inline, enquanto o Subgraph encapsula controles típicos como prompt positivo/negativo, força da edição, passos, orientação CFG, seed e resolução. O resultado é um editor de imagens prático, guiado por prompt, que se destaca em mudanças suaves a moderadas sem perder identidade ou composição.",
@@ -2929,6 +2968,45 @@
       "Transcrição rápida no estilo OCR de placas, cardápios e cartazes em imagens."
     ],
     "title": "AI on the Lot 2026 - QwenVL - i2t"
+  },
+  "23226868cf80": {
+    "description": "Grok Imagine Image 2.0 faz edição precisa de imagens e renderização de texto usando o engine Aurora da xAI, permitindo modificar elementos específicos, trocar fundos ou reestilizar cenas por linguagem natural com saída nítida para textos curtos. Ele aceita até 3 imagens de referência e gera em resolução 1K ou 2K em 14 proporções, com forte consistência de personagem entre cenas. Ideal para design de pôster e capa, visuais de produto e marca ou workflows de personagem em múltiplas cenas.\n",
+    "extendedDescription": "Este tutorial no ComfyUI mostra o Grok Imagine Image 2.0: Image Edit, um workflow de edição de imagens por prompt com o engine Aurora da xAI. O workflow é intencionalmente simples: LoadImage carrega sua imagem de origem e até três imagens de referência opcionais, GrokImageEditNodeV2 interpreta suas instruções em linguagem natural para aplicar edições precisas (como troca de fundo, reestilização ou adição de texto curto) e SaveImage grava o render final em disco. Você pode escolher saída 1K ou 2K e selecionar entre 14 proporções, facilitando gerar visuais prontos para pôster ou específicos por plataforma.\n\nPor baixo do capô, o GrokImageEditNodeV2 condiciona a edição na imagem base fornecida mais quaisquer imagens de referência para manter identidade visual e estilo. Isso permite forte consistência de personagem entre cenas, alinhamento confiável do visual do produto e renderização nítida de texto curto para títulos de capa ou chamadas em rótulos — sem máscara manual. Como o nó centraliza as configurações principais (prompt, proporção e resolução), dá para iterar rapidamente: refine o prompt, troque uma referência e renderize de novo até a composição e a tipografia atenderem ao seu objetivo.",
+    "faqItems": [
+      {
+        "answer": "Você pode conectar até três imagens de referência ao GrokImageEditNodeV2. Use-as para preservar a identidade do sujeito, transferir estilo ou ancorar detalhes de produto/marca para que a edição permaneça consistente entre cenas.",
+        "question": "Quantas imagens de referência posso usar e para que servem?"
+      },
+      {
+        "answer": "Não. Não é necessário usar máscara. O GrokImageEditNodeV2 aplica edições a partir de instruções em linguagem natural. Para maior controle, use prompts precisos (por exemplo, descreva o sujeito e o fundo separadamente) e comece com uma imagem base bem enquadrada.",
+        "question": "Eu preciso de uma máscara para trocar o fundo ou reestilizar parte da imagem?"
+      },
+      {
+        "answer": "O nó renderiza em resolução 1K ou 2K e oferece 14 proporções. Escolha a proporção que corresponde ao seu destino (por exemplo, pôster, quadrado, vertical) para evitar cortes indesejados depois.",
+        "question": "Quais resoluções e proporções são suportadas?"
+      },
+      {
+        "answer": "Mantenha o texto curto (títulos, rótulos ou slogans breves), especifique a string exata, caixa e posicionamento no prompt e peça alto contraste contra o fundo. Se necessário, gere primeiro um fundo limpo ou um espaço reservado e então itere no estilo da tipografia.",
+        "question": "Como conseguir a melhor qualidade de renderização de texto?"
+      }
+    ],
+    "howToUse": [
+      "Carregue o workflow no ComfyUI e adicione sua imagem base com um nó LoadImage. Opcionalmente, adicione até mais três nós LoadImage para imagens de referência (por exemplo, personagem, produto ou estilo).",
+      "Conecte a imagem base (e quaisquer referências) ao GrokImageEditNodeV2. No nó, escreva um prompt claro descrevendo as mudanças desejadas (por exemplo, “Trocar para um fundo de praia ao pôr do sol, iluminação cinematográfica, preservar a identidade do sujeito”).",
+      "Defina os parâmetros de saída no GrokImageEditNodeV2: escolha resolução 1K ou 2K e selecione uma proporção entre as 14 opções disponíveis que combine com seu uso-alvo (pôster, capa, widescreen, quadrado etc.).",
+      "Para renderização de texto, inclua a redação exata no prompt e seja específico sobre posicionamento e estilo (por exemplo, “Adicionar o título ‘DAWN RISING’ em caixa alta, negrito, centralizado no topo, alto contraste”). Mantenha o texto curto para melhor legibilidade.",
+      "Execute o grafo. Revise a prévia e ajuste o prompt ou as referências para refinar composição, identidade, estilo ou clareza do texto.",
+      "Quando estiver satisfeito, conecte a saída do GrokImageEditNodeV2 ao SaveImage e execute para exportar a imagem final para seu diretório de saída."
+    ],
+    "metaDescription": "Tutorial no ComfyUI: edições precisas e renderização de texto curto com Grok Imagine 2.0 (Aurora). Use até 3 referências, saída 1K/2K e 14 proporções.",
+    "suggestedUseCases": [
+      "Design de pôster e capa com títulos curtos nítidos e forte presença do sujeito",
+      "Atualizações de fotografia de produto (troca de fundo, harmonização de iluminação/estilo) para e-commerce",
+      "Visuais de marca e campanha que mantêm cor, estilo e iconografia consistentes",
+      "Workflows de personagem em múltiplas cenas em que a identidade precisa permanecer consistente entre cenários",
+      "Criativos para redes sociais e anúncios que precisam de variações rápidas de proporção em qualidade 1K ou 2K"
+    ],
+    "title": "Grok Imagine Image 2.0: Edição de Imagem"
   },
   "234798f9a5cd": {
     "description": "Nano-banana (Gemini-2.5-Flash Image) - edição de imagens com consistência.",
@@ -18719,6 +18797,45 @@
       "Auxiliar em visualização arquitetônica convertendo briefings textuais em imagens."
     ],
     "title": "Grok: Texto para Imagem"
+  },
+  "d23f62e48d10": {
+    "description": "Gere imagens a partir de prompts de texto usando Grok Imagine Image 2.0, um modelo com engine Aurora que se destaca em renderização nítida de texto curto e saídas 1K ou 2K em 14 proporções. Insira um prompt de texto e receba uma imagem gerada, com opções de qualidade baixa ou média para controlar o custo. Ideal para design de pôster e capa, visuais de produto e marca e cenas com foco em personagens em que consistência importa.",
+    "extendedDescription": "Este workflow no ComfyUI transforma um único prompt de texto em uma imagem finalizada usando Grok Imagine Image 2.0, um modelo com engine Aurora otimizado para renderização nítida de texto curto e saídas 1K ou 2K de alta qualidade em 14 proporções. O GrokImageNode faz a chamada de API para o modelo Grok, e o nó SaveImageAdvanced grava o resultado em disco com o padrão de nome de arquivo e local que você escolher.\n\nTecnicamente, o GrokImageNode empacota seu prompt e as configurações de geração — como qualidade (baixa ou média para controlar custo), resolução-alvo (1K ou 2K) e proporção —, envia para o serviço Grok e retorna a imagem gerada ao grafo do ComfyUI. Em seguida, o SaveImageAdvanced salva essa imagem na sua pasta de saída com nomes previsíveis, facilitando iterar. O workflow é ideal para design de pôster e capa, visuais de produto e marca e cenas guiadas por personagens em que um visual consistente importa, especialmente quando você precisa de texto curto nítido e legível na composição.",
+    "faqItems": [
+      {
+        "answer": "Use baixa para rascunhos rápidos e de baixo custo e para explorar conceitos. Troque para média para mais detalhes e melhor legibilidade do texto. A média pode demorar mais e custar mais, mas é uma escolha melhor para outputs finais.",
+        "question": "Quando devo usar qualidade baixa vs. média?"
+      },
+      {
+        "answer": "Mantenha os prompts concisos e inclua o texto exato que você quer (use aspas se ajudar). Especifique dicas tipográficas como 'tipo limpo e em negrito' e garanta um fundo simples e de alto contraste. Evite strings muito longas; frases curtas renderizam de forma mais limpa.",
+        "question": "Como conseguir texto nítido e legível na imagem?"
+      },
+      {
+        "answer": "O GrokImageNode expõe 14 proporções predefinidas e suporta saídas 1K ou 2K. Escolha uma proporção que combine com o destino (por exemplo, quadrado para perfis, wide para banners). Escolha 2K para mais detalhe ou trabalho pronto para impressão e 1K para web ou iteração rápida.",
+        "question": "Quais proporções e tamanhos posso gerar?"
+      },
+      {
+        "answer": "Reutilize o mesmo prompt base e descritores. Mantenha estáveis os atributos do personagem (por exemplo, roupas, cores, cena). Se a sua versão do GrokImageNode expuser um campo de seed, defina e reutilize o mesmo seed entre execuções para reduzir variação.",
+        "question": "Como posso manter personagens ou estilos consistentes entre execuções?"
+      }
+    ],
+    "howToUse": [
+      "Carregue o workflow no ComfyUI e abra-o na visualização de grafo.",
+      "Abra o GrokImageNode e configure o acesso (por exemplo, adicione sua chave de API ou credenciais, se exigido pela sua configuração).",
+      "Digite seu prompt. Para tarefas de texto na imagem, inclua a frase exata que você quer renderizar (você pode usar aspas) e adicione dicas breves de estilo ou assunto.",
+      "Escolha as configurações de geração no GrokImageNode: selecione a qualidade (baixa para rascunhos rápidos, média para melhor fidelidade), escolha a resolução-alvo (1K ou 2K) e selecione uma das proporções suportadas.",
+      "Configure o SaveImageAdvanced para definir a pasta de saída e um padrão de nome de arquivo para que cada execução seja salva de forma consistente.",
+      "Enfileire o workflow. Revise o resultado e refine o prompt ou as configurações (qualidade, proporção, resolução) e execute novamente até atingir o visual desejado."
+    ],
+    "metaDescription": "Tutorial no ComfyUI: gere imagens 1K/2K a partir de texto com Grok Imagine Image 2.0 usando GrokImageNode e SaveImageAdvanced. Aprenda prompts, proporções e qualidade.",
+    "suggestedUseCases": [
+      "Mockups de pôster, flyer e capa em que títulos e taglines curtas precisam permanecer nítidos e legíveis.",
+      "Visuais de produto e marca com slogans breves, números de modelo ou elementos de texto tipo logotipo.",
+      "Banners sociais e criativos de anúncio gerados em várias proporções para diferentes posicionamentos.",
+      "Cenas guiadas por personagens ou momentos de história em que você quer um visual consistente entre iterações.",
+      "Ilustrações editoriais ou para blog que pedem tipografia forte e composições limpas."
+    ],
+    "title": "Grok Imagine Image 2.0: Texto para Imagem"
   },
   "d25788ed5d19": {
     "description": "Envie até 10 imagens de referência para guiar a síntese. Gere uma nova imagem usando o modelo Kling O3 com base nos seus insumos visuais.",
