@@ -1600,6 +1600,44 @@
     ],
     "title": "OpenAI : Dall-E 2 Texte en Image"
   },
+  "13ba3af78782": {
+    "description": "Générez une vidéo cinématographique à partir d'une invite texte avec LTX-2.5, un modèle de diffusion prêt pour la production qui produit un fichier vidéo unique avec un suréchantillonnage spatial optionnel pour une résolution améliorée. Idéal pour la prévisualisation de films, les storyboards commerciaux et les pipelines de création de contenu à haut volume.\n\n",
+    "extendedDescription": "Ce workflow ComfyUI transforme une simple invite texte en vidéo cinématographique grâce à LTX-2.5 de Lightricks, un modèle de diffusion prêt pour la production. Le cœur du graphe est le nœud texte-en-vidéo LTX-2.5 (UUID : 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970), qui utilise votre invite, la résolution et les paramètres de génération pour synthétiser un clip cohérent. Un nœud ResolutionSelector fournit les valeurs de largeur et hauteur alignées sur les multiples de 32 préférés du modèle, et un nœud SaveVideo encode le résultat en un fichier vidéo unique. Un MarkdownNote est inclus dans le graphe pour afficher des astuces rapides et des conseils de résolution directement dans ComfyUI.\n\nSous le capot, LTX-2.5 utilise une approche Pixel Diffusion, keyframes-first : il établit des points d'ancrage visuels forts puis diffuse le mouvement entre eux, ce qui aide à maintenir la cohérence temporelle et le rythme cinématographique. Vous pouvez ajuster la fidélité et l'utilisation de la mémoire GPU en combinant ResolutionSelector avec les paramètres du modèle. Par exemple, 0,5 mégapixels en 16:9 correspond à 960x544, tandis que 0,3 MP correspond à 736x416 ; les deux sont de bons points de départ sur des GPU modestes. Si vous avez besoin de plus de détails, activez le suréchantillonnage spatial optionnel du nœud pour augmenter la résolution sans régénérer le mouvement, puis finalisez avec SaveVideo à la fréquence d'images et au chemin de fichier souhaités.",
+    "faqItems": [
+      {
+        "answer": "LTX-2.5 fonctionne au mieux avec des dimensions multiples de 32. ResolutionSelector convertit des cibles en mégapixels pratiques en tailles valides (par exemple, 0,5 MP en 16:9 → 960x544), ce qui vous aide à équilibrer détail, rapidité et VRAM sans tâtonner.",
+        "question": "Pourquoi le workflow utilise-t-il un ResolutionSelector au lieu de saisir manuellement la largeur et la hauteur ?"
+      },
+      {
+        "answer": "Le modèle utilise une stratégie Pixel Diffusion, keyframes-first pour établir des points d'ancrage visuels forts puis diffuser le mouvement entre eux. Cela réduit la dérive temporelle et améliore la cohérence dans les scènes complexes.",
+        "question": "Comment LTX-2.5 maintient-il la cohérence du mouvement entre les images ?"
+      },
+      {
+        "answer": "La résolution et le nombre d'images sont les facteurs principaux. Commencez avec de faibles mégapixels (0,3–0,6 MP) et des clips courts pour itérer, puis augmentez. Activer le suréchantillonnage spatial augmente l'utilisation mémoire ; ne l'augmentez qu'après être satisfait du mouvement et de la composition.",
+        "question": "Quels contrôles influencent le plus la performance et la mémoire ?"
+      },
+      {
+        "answer": "SaveVideo écrit un fichier vidéo unique sur le disque à partir du clip généré. Vous pouvez définir la fréquence d'images dans le nœud pour correspondre au rythme souhaité et garantir que le fichier sauvegardé respecte les spécifications de livraison de votre projet.",
+        "question": "Que produit SaveVideo et puis-je changer la fréquence d'images ?"
+      }
+    ],
+    "howToUse": [
+      "Chargez le workflow LTX-2.5 : Texte en vidéo (JSON) dans ComfyUI et vérifiez que le nœud LTX-2.5 (UUID : 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970) est présent sans avertissement de modèle manquant.",
+      "Dans ResolutionSelector, choisissez le format d'image et le nombre de mégapixels pour remplir automatiquement la largeur et la hauteur (multiples de 32). Commencez autour de 0,4–0,6 MP pour des aperçus rapides.",
+      "Ouvrez le nœud LTX-2.5 et saisissez votre invite texte. Définissez les options de génération comme la seed (pour la reproductibilité), le nombre d'images ou la durée, et la fréquence d'images (FPS) pour contrôler la longueur du clip et le rythme du mouvement.",
+      "Activez éventuellement le suréchantillonnage spatial dans le nœud LTX-2.5 pour améliorer le détail. Ajustez le facteur de suréchantillonnage ou la taille cible si disponible, en surveillant l'utilisation de la VRAM.",
+      "Configurez SaveVideo avec la fréquence d'images et le chemin de sortie souhaités, puis Queue Prompt. Vérifiez le clip sauvegardé, ajustez l'invite ou la résolution, et relancez jusqu'à satisfaction."
+    ],
+    "metaDescription": "Générez une vidéo cinématographique à partir d'un texte avec LTX-2.5 dans ComfyUI. Sélectionnez la résolution, affinez les paramètres, suréchantillonnez si besoin, et exportez un fichier vidéo unique.",
+    "suggestedUseCases": [
+      "Prévisualisation de films et animatiques pour planifier les prises de vue et mouvements de caméra.",
+      "Storyboards commerciaux et plans produits pour transmettre l'intention de mouvement aux clients.",
+      "Concepts animés et boucles pour réseaux sociaux afin de valider rapidement des idées.",
+      "Concept art animé pour communiquer ambiance, éclairage et rythme.",
+      "Génération rapide de contenu pour des pipelines à haut volume nécessitant des exécutions locales cohérentes."
+    ],
+    "title": "LTX-2.5 : Texte en vidéo"
+  },
   "1446c7f47aee": {
     "description": "Musique en entrée → Séparez voix / basse / batterie / autres",
     "extendedDescription": "Ce workflow ComfyUI est conçu pour les passionnés et professionnels de l’audio qui souhaitent séparer différents composants d’un morceau, comme la voix, la basse, la batterie et d’autres éléments. Le workflow utilise une série de nœuds, dont LoadAudio, AudioStemSeparate et SaveAudioMP3, pour traiter et isoler efficacement ces composants. Grâce aux nœuds personnalisés comfyui-videohelpersuite et comfyui_controlnet_aux, ce workflow propose une approche simplifiée de la séparation audio, ce qui en fait un outil précieux pour le remix, le sampling ou l’amélioration de pistes audio.\n\nTechniquement, le workflow commence par le nœud LoadAudio, qui importe le morceau dans le système. Le nœud AudioStemSeparate analyse et divise ensuite l’audio en ses différentes parties. Ce nœud est particulièrement performant grâce à des algorithmes avancés permettant de distinguer précisément les éléments audio. Enfin, le nœud SaveAudioMP3 permet d’exporter chaque composant séparé au format MP3, assurant la compatibilité avec la plupart des logiciels d’édition audio. Ce workflow est particulièrement utile pour les producteurs, DJs et ingénieurs du son qui ont besoin d’un contrôle précis sur chaque élément audio.",
@@ -6666,6 +6704,7 @@
     "title": "HunYuan3D : Texte vers Modèle"
   },
   "4f8b62bfd681": {
+    "description": "Modifiez des chansons existantes pour changer le style et les paroles avec ACE-Step v1 M2M.",
     "extendedDescription": "Le workflow ACE Step v1 M2M Editing dans ComfyUI est conçu pour transformer des chansons existantes en modifiant leur style et leurs paroles. Ce processus utilise le modèle ACE-Step, particulièrement performant pour les tâches d'édition audio. Le workflow intègre plusieurs nœuds clés, tels que TextEncodeAceStepAudio pour encoder les modifications souhaitées des paroles et du style, et VAEDecodeAudio pour décoder l'audio modifié dans un format lisible. Grâce à ces nœuds, il est possible d'appliquer facilement des modifications complexes à des fichiers audio, ce qui en fait un outil précieux pour les producteurs de musique et les ingénieurs du son souhaitant expérimenter de nouveaux sons ou adapter des morceaux existants à différents genres.\n\nTechniquement, le workflow commence par le chargement du fichier audio avec le nœud LoadAudio, suivi de l'encodage de l'audio avec VAEEncodeAudio. L'audio encodé est ensuite traité par divers nœuds, tels que LatentApplyOperationCFG et LatentOperationTonemapReinhard, pour ajuster et affiner les caractéristiques de l'audio. Le nœud ModelSamplingSD3 est utilisé pour échantillonner l'audio, tandis que le nœud KSampler garantit une sortie de haute qualité. Enfin, l'audio édité est enregistré au format MP3 à l'aide du nœud SaveAudioMP3. Cette approche complète permet un contrôle précis du processus d'édition audio, ce qui en fait un outil incontournable pour les professionnels de la création.",
     "faqItems": [
       {
@@ -6684,6 +6723,14 @@
         "answer": "Oui, vous pouvez utiliser la fonction de lecture dans ComfyUI pour écouter l'audio modifié avant de finaliser l'enregistrement.",
         "question": "Est-il possible de prévisualiser les modifications avant d'enregistrer ?"
       }
+    ],
+    "howToUse": [
+      "Chargez le workflow ACE Step v1 M2M Editing dans ComfyUI.",
+      "Téléchargez et placez le modèle ACE-Step dans le dossier ComfyUI/models/checkpoints.",
+      "Utilisez le nœud LoadAudio pour importer la chanson à modifier.",
+      "Configurez le nœud TextEncodeAceStepAudio pour spécifier le style et les changements de paroles souhaités.",
+      "Exécutez le workflow pour traiter l'audio à travers les nœuds et appliquer les modifications.",
+      "Enregistrez la chanson modifiée avec le nœud SaveAudioMP3."
     ],
     "metaDescription": "Transformez le style et les paroles d'une chanson avec ACE Step v1 M2M Editing dans ComfyUI. Idéal pour l'édition audio créative.",
     "suggestedUseCases": [
@@ -6810,6 +6857,45 @@
       "Valoriser du contenu vidéo pour les réseaux sociaux avec des esthétiques personnalisées."
     ],
     "title": "Wan 2.1 ControlNet"
+  },
+  "527ecf1f2eb4": {
+    "description": "Générez une vidéo à partir de deux images de référence avec LTX-2.5, en fusionnant le contenu des deux images dans une séquence animée unique. Idéal pour créer des transitions, des morphings entre deux sujets ou scènes, et construire des narrations multi-plans à partir de références fixes.\n\n",
+    "extendedDescription": "Ce workflow transforme deux images fixes en une transition vidéo fluide grâce à l'API image-en-vidéo LTX-2.5. Deux nœuds LoadImage fournissent vos images de départ et d'arrivée, transmises à LtxApi25ImageToVideo. Le nœud fusionne les indices structurels des deux entrées pour synthétiser une séquence intermédiaire qui fait la transition de la première image vers la seconde, produisant une transition, révélation ou morphing naturelle. Enfin, SaveVideo encode les images générées en un fichier vidéo à visionner ou à intégrer dans un montage.\n\nTechniquement, le nœud LtxApi25ImageToVideo effectue un appel API vers le backend LTX-2.5, qui analyse les deux images, aligne les principaux éléments et interpole le mouvement sur une durée et une fréquence d'images spécifiées. Comme le traitement est distant, vous devrez généralement configurer une clé/endpoint API dans le nœud et choisir les paramètres clés comme la durée de sortie et le FPS. Garder les deux images d'entrée similaires en format, cadrage et échelle du sujet aide le modèle à établir une « trajectoire » propre entre elles, réduisant les artefacts et assurant un morphing plus fluide. SaveVideo écrit ensuite le résultat sur disque à la fréquence d'images choisie, prêt à être lu ou édité.",
+    "faqItems": [
+      {
+        "answer": "C'est fortement recommandé. Le nœud ou l'API peut redimensionner automatiquement, mais des tailles/formats différents causent souvent des étirements ou des déformations. Alignez le format et l'échelle du sujet pour une transition propre.",
+        "question": "Mes deux images doivent-elles avoir la même taille et le même format ?"
+      },
+      {
+        "answer": "Utilisez les options de durée et de fréquence d'images dans LtxApi25ImageToVideo pour définir la longueur totale et la résolution temporelle. Si le nœud propose des contrôles de fusion ou de transition, ajustez-les pour un passage plus doux ou plus marqué entre les images. Des durées plus longues et un cadrage cohérent donnent généralement un rendu plus fluide.",
+        "question": "Comment contrôler la vitesse et la fluidité du morphing ?"
+      },
+      {
+        "answer": "SaveVideo écrit la séquence générée à l'emplacement défini dans le nœud (dossier de sortie ComfyUI par défaut). Choisissez la fréquence d'images cible ici ; le conteneur/codec exact dépend de votre environnement et de la configuration SaveVideo.",
+        "question": "Où la vidéo est-elle enregistrée et dans quel format ?"
+      },
+      {
+        "answer": "Oui. LtxApi25ImageToVideo utilise une API pour exécuter LTX-2.5 à distance, donc vos images sont téléversées pour traitement. Assurez-vous d'avoir configuré vos identifiants API et vérifié la politique de confidentialité et de conservation des données du fournisseur avant utilisation.",
+        "question": "Mes images sont-elles envoyées à un service externe ?"
+      }
+    ],
+    "howToUse": [
+      "Chargez le workflow dans ComfyUI et vérifiez la présence des trois nœuds clés : deux nœuds LoadImage alimentant LtxApi25ImageToVideo, suivi de SaveVideo.",
+      "Ouvrez chaque nœud LoadImage et sélectionnez vos images de départ (première) et d'arrivée (seconde). Pour de meilleurs résultats, utilisez des images avec le même format et un cadrage similaire du sujet.",
+      "Ouvrez LtxApi25ImageToVideo et configurez les paramètres API requis (clé/endpoint) si besoin. Définissez les options principales comme la durée de sortie et la fréquence d'images ; ajustez les contrôles de fusion/transition exposés par le nœud pour doser l'animation entre chaque image.",
+      "Définissez éventuellement les paramètres de SaveVideo (chemin/nom de sortie et FPS) pour correspondre à votre livrable cible. Assurez-vous que le FPS ici correspond à celui choisi dans LtxApi25ImageToVideo.",
+      "Mettez en file d'attente et exécutez le workflow. Le nœud téléversera les images vers le service LTX-2.5, générera les images intermédiaires, puis les transmettra à SaveVideo pour l'encodage.",
+      "Vérifiez la vidéo produite. Si vous observez des étirements ou des saccades, essayez d'aligner l'échelle du sujet entre les deux images, de faire correspondre les formats ou d'ajuster la durée/FPS, puis relancez."
+    ],
+    "metaDescription": "Créez des morphings fluides entre deux images dans ComfyUI avec LTX-2.5 : chargez deux images, générez une vidéo de transition via l'API, et sauvegardez le résultat avec SaveVideo.",
+    "suggestedUseCases": [
+      "Transitions de scène fluides : passer d'un plan d'ensemble à un autre sans coupe franche.",
+      "Morphings de personnage ou produit : transformer un sujet en un autre pour des révélations ou comparaisons.",
+      "Récits avant/après : animer entre deux états (ex : restauration, relooking, itérations de design).",
+      "Ponts narratifs : relier des images clés fixes en une courte séquence animée entre deux coupes.",
+      "Moodboard animé : transformer deux images de style en une exploration animée rapide."
+    ],
+    "title": "LTX-2.5 (Pro) : FLF2V"
   },
   "52a2be6f1c65": {
     "description": "Apprenez à charger des images, à générer une vidéo et à trouver un nœud avec Wan 2.2.",
@@ -8098,6 +8184,45 @@
       "Sélectionner en lot de bonnes images pour tester plusieurs variantes de miniatures."
     ],
     "title": "Miniature Comfy de Marque"
+  },
+  "615266189e02": {
+    "description": "Générez une vidéo à partir d'une seule image avec le modèle distillé rapide LTX-2.5, produisant des séquences multi-plans cinématographiques avec des personnages, un éclairage et un style cohérents à travers les coupes. Le workflow produit un fichier vidéo avec support natif multi-plans et prédiction automatique de la durée. Idéal pour le storyboard rapide, la création de contenu pour les réseaux sociaux et la prévisualisation dans les pipelines de production commerciale.\n\n",
+    "extendedDescription": "Ce workflow ComfyUI transforme une image de référence en vidéo multi-plans cinématographique grâce au modèle distillé rapide LTX-2.5. Il relie trois nœuds : LoadImage pour importer votre image source, LtxApi25ImageToVideo pour envoyer cette image à l'API LTX-2.5 pour la synthèse du mouvement et la génération des plans, et SaveVideo pour enregistrer le clip retourné sur disque. Comme LTX-2.5 prend en charge la génération multi-plans native et la prédiction automatique de la durée, le résultat ressemble à une séquence montée plutôt qu'à un simple panoramique ou zoom continu.\n\nTechniquement, le nœud LtxApi25ImageToVideo conditionne tous les plans sur la même image d'entrée, ce qui aide à maintenir la cohérence des personnages, de l'éclairage et du style à travers les coupes. Le nœud gère la requête/réponse avec le service distant, met en file d'attente la génération et produit une vidéo prête à être sauvegardée. SaveVideo encode ensuite le résultat au nom de fichier et à la fréquence d'images choisis. Ce workflow est idéal pour le storyboard rapide, les posts sociaux et la prévisualisation : déposez une image de référence propre, laissez l'API inférer le rythme et les mouvements de caméra, et exportez un clip multi-plans cohérent en quelques minutes.",
+    "faqItems": [
+      {
+        "answer": "LtxApi25ImageToVideo fait appel à un service distant ; la plupart des déploiements nécessitent une clé API. Votre image source et les paramètres sont envoyés au fournisseur pour la génération. Vérifiez le champ d'identifiants du nœud et la documentation/conditions du fournisseur avant utilisation.",
+        "question": "Ai-je besoin d'une clé API et le traitement est-il local ?"
+      },
+      {
+        "answer": "Le nœud prend en charge le multi-plans natif et la prédiction automatique de la durée. Si votre template propose des options, vous pouvez définir une durée cible et/ou un nombre de plans ; sinon, laissez la durée auto activée pour un rythme optimal.",
+        "question": "Puis-je contrôler la durée et le nombre de plans ?"
+      },
+      {
+        "answer": "Utilisez une image propre et de haute qualité avec une bonne séparation du sujet et un éclairage cohérent. Gardez les visages dégagés, évitez le flou de mouvement, et composez selon le format d'export souhaité (16:9 est un bon choix par défaut).",
+        "question": "Quelle image fonctionne le mieux en entrée ?"
+      },
+      {
+        "answer": "Tous les plans sont conditionnés sur la même image d'entrée dans le modèle LTX-2.5 via le nœud LtxApi25ImageToVideo. Ce conditionnement partagé aide à préserver l'identité du personnage, l'éclairage et le style général d'un plan à l'autre.",
+        "question": "Comment le workflow maintient-il la cohérence des personnages et du style entre les plans ?"
+      }
+    ],
+    "howToUse": [
+      "Ouvrez le workflow dans ComfyUI et localisez les trois nœuds principaux : LoadImage -> LtxApi25ImageToVideo -> SaveVideo.",
+      "Dans LoadImage, sélectionnez une image source propre et bien éclairée montrant clairement votre sujet et le style général de la scène. Une composition 16:9 donne de bons résultats cinématographiques.",
+      "Ouvrez LtxApi25ImageToVideo et ajoutez vos identifiants API si nécessaire. Configurez les options de génération exposées par le nœud (ex : activez le multi-plans natif, gardez la durée automatique activée ou définissez une durée cible si vous préférez un contrôle manuel).",
+      "Affinez éventuellement les paramètres qui influencent le rythme et le rendu si disponibles dans votre template (nombre de plans, intensité du mouvement, format, ou contrôles de répétabilité). Gardez les valeurs par défaut pour un premier essai rapide.",
+      "Exécutez le workflow. Le nœud téléversera votre image et vos paramètres, générera une séquence multi-plans via le modèle LTX-2.5, et retournera un clip vidéo.",
+      "Dans SaveVideo, choisissez le chemin de sortie, le nom de fichier et la fréquence d'images. Exécutez pour écrire le fichier vidéo final sur disque, puis révisez et ajustez l'image d'entrée ou les paramètres du nœud si besoin."
+    ],
+    "metaDescription": "Tutoriel ComfyUI : Transformez une image en vidéo multi-plans cinématographique avec LTX-2.5. Multi-plans natif, durée auto, style cohérent.",
+    "suggestedUseCases": [
+      "Storyboard rapide : visualisez le découpage et le rythme à partir d'une seule image concept.",
+      "Teasers ou reels pour réseaux sociaux nécessitant des personnages et un style cohérents à travers des coupes rapides.",
+      "Prévisualisation pour publicités ou spots produits à partir d'une image clé pour explorer les mouvements de caméra.",
+      "Développement visuel : tester l'éclairage, la couleur et le langage du mouvement avant une production complète.",
+      "Mood films ou vidéos de présentation générées rapidement à partir d'un visuel clé."
+    ],
+    "title": "LTX-2.5 (Pro) : Image en vidéo"
   },
   "62cb2b168265": {
     "description": "Modifiez une image avec Nano Banana 2 Lite, le modèle de génération d’images le plus rapide de la série Gemini de Google, produisant une comparaison côte à côte de l’original et du résultat édité.",
@@ -12584,6 +12709,45 @@
     ],
     "title": "Wan Animate 2 : Transfert de Mouvement"
   },
+  "93c182d3aefb": {
+    "description": "Générez une vidéo à partir d'un texte avec LTX 2.5, un modèle vidéo conçu pour la production rapide et de haute qualité. Saisissez une invite et obtenez un clip cinématographique avec des détails nets, un mouvement précis et un support natif des scènes multi-plans qui conservent le style et les personnages à travers les coupes.",
+    "extendedDescription": "Ce workflow ComfyUI transforme une invite texte en clip vidéo finalisé grâce au modèle LTX 2.5 via le nœud LtxApi25TextToVideo. Votre invite (et la structure multi-plans optionnelle) est envoyée à l'API LTX 2.5, qui retourne une vidéo générée avec des détails nets et un mouvement cohérent. Le nœud SaveVideo en aval écrit ensuite le résultat dans votre dossier de sortie ComfyUI sous forme de fichier prêt à partager.\n\nTechniquement, le nœud LtxApi25TextToVideo est le générateur principal : il emballe votre invite et vos paramètres, les soumet au service LTX 2.5 distant, et fournit le clip résultant au graphe. LTX 2.5 prend en charge les scènes multi-plans natives, ce qui permet de maintenir le style et les personnages à travers les coupes si vous structurez votre invite en conséquence. Le nœud SaveVideo gère l'assemblage final et l'export, vous permettant de choisir un nom de fichier et une fréquence d'images tout en gardant le workflow simple et rapide.",
+    "faqItems": [
+      {
+        "answer": "Le nœud LtxApi25TextToVideo fait appel à l'API LTX 2.5, donc une connexion Internet et un accès API valide sont nécessaires. SaveVideo fonctionne localement pour écrire le fichier final.",
+        "question": "Ce workflow fonctionne-t-il localement ou nécessite-t-il Internet ?"
+      },
+      {
+        "answer": "Structurez votre invite en plusieurs plans avec des descripteurs clairs et cohérents pour les personnages, les costumes, l'éclairage et le style. Si votre version de nœud propose un champ multi-plans ou une liste de plans, utilisez-le ; sinon, séparez les plans dans le texte de l'invite. Réutilisez les mêmes indices de style et de personnage à travers les plans.",
+        "question": "Comment créer des scènes multi-plans qui gardent les personnages cohérents ?"
+      },
+      {
+        "answer": "Ajustez les contrôles exposés par votre nœud LtxApi25TextToVideo. Certaines versions incluent des paramètres comme la durée, des indications de format/résolution, et une seed ou un paramètre d'aléatoire. Si un contrôle n'est pas visible, il se peut qu'il ne soit pas pris en charge par votre build ou votre plan API.",
+        "question": "Puis-je contrôler la durée, la résolution ou l'aléatoire ?"
+      },
+      {
+        "answer": "SaveVideo écrit le clip généré dans votre dossier de sortie ComfyUI avec le nom de fichier ou préfixe défini, à la fréquence d'images choisie. Le conteneur/codec exact dépend de votre configuration SaveVideo.",
+        "question": "Où la vidéo est-elle enregistrée et sous quel format ?"
+      }
+    ],
+    "howToUse": [
+      "Chargez le workflow dans ComfyUI. Vérifiez que vous voyez le nœud LtxApi25TextToVideo alimentant le nœud SaveVideo.",
+      "Ouvrez LtxApi25TextToVideo. Saisissez votre invite texte. Si votre version de nœud le permet, ajoutez une structure multi-plans (ex : séparez les plans dans votre invite) pour garder le style et les personnages cohérents à travers les coupes. Ajoutez vos identifiants API ou endpoint si besoin.",
+      "Ajustez éventuellement les paramètres de génération disponibles dans LtxApi25TextToVideo (par exemple, durée, format d'image, ou seed/aléatoire si exposé). Utilisez un langage visuel concis et des descripteurs de personnage cohérents pour de meilleurs résultats.",
+      "Ouvrez SaveVideo et définissez un nom de fichier ou préfixe clair et la fréquence d'images souhaitée. Vérifiez que le dossier de sortie est correct.",
+      "Mettez en file d'attente et exécutez le workflow. Le nœud LtxApi25TextToVideo contactera le service LTX 2.5, générera la vidéo, puis la transmettra à SaveVideo pour l'export.",
+      "Vérifiez la vidéo produite. Itérez en affinant votre invite ou les paramètres du nœud, puis relancez. Pour les scènes multi-plans, gardez les descriptions de plans concises et réutilisez les mêmes indices de style et de personnage pour assurer la continuité."
+    ],
+    "metaDescription": "Tutoriel ComfyUI : Générez des clips texte-en-vidéo cinématographiques avec LTX 2.5 via LtxApi25TextToVideo et SaveVideo, avec support natif multi-plans.",
+    "suggestedUseCases": [
+      "Storyboards et animatiques avec continuité multi-plans pour la planification de pré-production.",
+      "Plans produits et clips promotionnels courts avec des indications claires de caméra et de mouvement.",
+      "Scènes centrées sur les personnages qui conservent le style et l'apparence à travers des coupes rapides.",
+      "Teasers et mood pieces pour réseaux sociaux nécessitant un rendu rapide.",
+      "Visualisation de concepts pour réalisateurs, clients ou présentations."
+    ],
+    "title": "LTX-2.5 (Pro) : Texte en vidéo"
+  },
   "93f286fbc2c8": {
     "description": "Un workflow ComfyUI pour le rajeunissement et/ou le remplacement de visage combinant masquage IA, transfert d'identité par référence et inpainting pour des résultats naturels et cohérents dans le temps. Conçu pour les VFX, il permet aux artistes de remplacer ou rajeunir rapidement des visages tout en préservant la performance, l'éclairage et l'intégration avec la prise originale.",
     "extendedDescription": "Le Workflow d'Échange de Visage dans ComfyUI est un outil sophistiqué destiné aux artistes d'effets visuels qui doivent effectuer du rajeunissement ou des remplacements de visage dans des séquences vidéo. Ce workflow combine masquage IA, transfert d'identité et techniques d'inpainting pour garantir des résultats naturels et cohérents d'une image à l'autre. Des nœuds clés comme WanVideoVAELoader et WanVideoModelLoader servent à charger et gérer les données vidéo, tandis que des nœuds comme DrawMaskOnImage et GrowMask permettent de créer des masques précis pour l'échange de visage. Le workflow intègre également des modèles de détection avancés via OnnxDetectionModelLoader et CLIPVisionLoader pour identifier et manipuler précisément les traits du visage. L'intégration de ces composants assure que le nouveau visage s'intègre parfaitement à la séquence d'origine, en maintenant l'éclairage et la performance.",
@@ -15692,6 +15856,45 @@
       "Upscaler et affiner des images générées par IA où le texte est déformé."
     ],
     "title": "Grok Imagine Image Quality : Édition"
+  },
+  "b37902cee452": {
+    "description": "Générez une vidéo à partir d'une seule image avec LTX-2.5, produisant un clip haute fidélité avec une qualité de pixel de pointe et une capacité multi-plans native qui conserve le personnage, l'environnement et l'éclairage à travers les scènes connectées. Idéal pour la production cinématographique, la création de plans VFX et les pipelines de contenu nécessitant une génération vidéo rapide et locale.",
+    "extendedDescription": "Ce workflow ComfyUI transforme une image fixe en vidéo fluide et haute fidélité grâce à LTX-2.5, le modèle vidéo ouvert de Lightricks. Le pipeline est volontairement simple et orienté production : LoadImage importe votre image source, ResolutionSelector verrouille une taille adaptée au modèle (multiples de 32) et un format d'image, le nœud générateur LTX-2.5 (UUID : 6e397a2b-68f7-48f6-8930-f3a5491a163c) synthétise une séquence de mouvement cohérente, et SaveVideo encode les images en un MP4 prêt à l'emploi. Un MarkdownNote dans le graphe fournit des conseils et des liens dans l'interface.\n\nSous le capot, LTX-2.5 utilise une approche « Pixel Diffusion » keyframes-first pour propager le détail et la structure de façon cohérente dans le temps. Cela aide à préserver l'identité du sujet, l'éclairage et la composition de la scène à partir de votre image source tout en introduisant un mouvement contrôlable. ResolutionSelector garantit que vos dimensions 16:9 respectent le stride du modèle (multiples de 32), ce qui est crucial pour la stabilité et l'efficacité VRAM. Comme il fonctionne localement, vous pouvez itérer rapidement, ajuster la durée (images/FPS) et l'intensité du mouvement selon les besoins de la prévisualisation, du lookdev VFX et des pipelines de contenu.",
+    "faqItems": [
+      {
+        "answer": "LTX-2.5 (comme beaucoup de modèles de diffusion) fonctionne sur des dimensions alignées sur le stride. Utiliser des multiples de 32 évite les artefacts de padding/redimensionnement, améliore la stabilité et optimise la VRAM. Le nœud ResolutionSelector vous aide à choisir des tailles 16:9 valides (ex : 1056x608 pour ~0,6 MP).",
+        "question": "Pourquoi le workflow utilise-t-il ResolutionSelector et des multiples de 32 ?"
+      },
+      {
+        "answer": "La durée du clip est images ÷ FPS (ex : 96 images à 24 FPS ≈ 4 secondes). Le temps de rendu et la mémoire dépendent de la résolution, du nombre d'images et de la complexité du mouvement. Commencez avec des réglages modestes (ex : 0,6–0,8 MP, 64–96 images, 16–24 FPS) et augmentez selon votre VRAM et le temps d'itération.",
+        "question": "Quelle longueur pour mon clip, et qu'est-ce qui influence le temps de rendu ?"
+      },
+      {
+        "answer": "Utilisez une image source propre et haute résolution avec un sujet clair et un bon éclairage. Gardez la sortie alignée sur le stride, réduisez l'intensité du mouvement pour moins de déplacement, et augmentez le FPS tout en gardant un mouvement modéré. Changez la seed si vous voyez des artefacts ; la stabilité s'améliore souvent après quelques essais.",
+        "question": "Comment garder le sujet stable et éviter les saccades ?"
+      },
+      {
+        "answer": "Ce template se concentre sur un clip image-en-vidéo unique. LTX-2.5 est conçu pour maintenir le style et l'identité à travers les plans, mais pour créer une timeline multi-plans dans ComfyUI, dupliquez ce bloc avec Subgraph, rendez chaque plan, puis assemblez les clips dans votre éditeur (ou via une étape de combinaison séparée).",
+        "question": "Ce workflow prend-il en charge les timelines multi-plans ?"
+      }
+    ],
+    "howToUse": [
+      "Chargez le workflow dans ComfyUI, puis lisez le MarkdownNote pour un aperçu et des conseils.",
+      "Ouvrez le nœud LoadImage et sélectionnez votre image source (ex : input/neon_cyborg_portrait.png) ou parcourez vos propres fichiers.",
+      "Définissez la taille de sortie dans ResolutionSelector. Choisissez un préréglage 16:9 adapté à votre VRAM (ex : 0,6 MP -> 1056x608). Les dimensions doivent être des multiples de 32.",
+      "Sur le nœud LTX-2.5 (UUID 6e397a2b-68f7-48f6-8930-f3a5491a163c), définissez la longueur et le tempo du clip en ajustant le nombre d'images et le FPS. Ajustez éventuellement la seed et l'intensité du mouvement pour plus ou moins de mouvement caméra/sujet.",
+      "Vérifiez les paramètres de SaveVideo (chemin de sortie et FPS doivent correspondre au générateur). Mettez en file d'attente et exécutez le workflow.",
+      "Une fois le job terminé, récupérez le MP4 dans le dossier de sortie SaveVideo et vérifiez le résultat. Ajustez la résolution, le nombre d'images/FPS ou les paramètres de mouvement si besoin."
+    ],
+    "metaDescription": "Tutoriel ComfyUI : convertissez une image en vidéo haute qualité avec LTX-2.5. Chargez, définissez la résolution, rendez les images et sauvegardez en MP4 — entièrement local.",
+    "suggestedUseCases": [
+      "Prévisualisation cinématographique : générez rapidement des plans animés à partir de frames de style pour évaluer ambiance, éclairage et mouvements caméra.",
+      "Lookdev VFX : créez des études de mouvement à partir d'art conceptuel clé pour tester la continuité des matériaux et de la lumière.",
+      "Plans produits : transformez un packshot en orbite subtile ou clip parallaxe pour promos et landing pages.",
+      "Boucles et shorts sociaux : produisez des micro-animations accrocheuses à partir de photos pour reels, stories et pubs.",
+      "Blocs animatiques : assemblez rapidement des séquences animées à partir de boards avant la production complète."
+    ],
+    "title": "LTX-2.5 : Image en vidéo"
   },
   "b3a950cbe689": {
     "description": "Téléchargez une image pour l’upscaler rapidement en 4x via l’API Stability AI, idéal pour améliorer des images de faible qualité ou compressées.",
@@ -19066,6 +19269,45 @@
       "Développer des éléments graphiques cohérents pour l’identité de marque."
     ],
     "title": "Luma Photon : Référence de style"
+  },
+  "d78377cf53f4": {
+    "description": "Générez une vidéo à partir d'images de référence de première et dernière image avec LTX-2.5, en fusionnant les deux images dans une séquence animée unique. Idéal pour créer des transitions, des morphings entre deux sujets ou scènes, et construire des narrations multi-plans à partir de références fixes.",
+    "extendedDescription": "LTX-2.5 : FLF2V est un workflow ComfyUI dédié à la transformation de deux images fixes — vos images de première et dernière frame — en une vidéo cohérente. Idéal pour créer des transitions fluides, des morphings entre sujets, ou relier des plans dans une séquence à partir de simples références. Deux nœuds LoadImage fournissent les visuels de départ et d'arrivée, qui alimentent un nœud générateur LTX-2.5 FLF2V (cf70afc4-5a03-47ce-8210-734b1de6c6bc). Les images résultantes sont transmises à SaveVideo pour l'encodage en clip lisible. Un MarkdownNote est inclus avec des astuces intégrées.\n\nSous le capot, le nœud LTX-2.5 exploite le modèle vidéo ouvert de Lightricks et son approche « Pixel Diffusion » keyframes-first pour synthétiser les images intermédiaires à partir de vos images de début et de fin. Les contrôles typiques sont la résolution cible, le nombre d'images (ou la durée), la fréquence d'images et une seed pour la reproductibilité. Beaucoup de versions proposent aussi des options de blending/easing pour orienter le mouvement vers la première ou la dernière image. SaveVideo encode ensuite la sortie au FPS choisi (MP4/WebM selon votre configuration ffmpeg).\n\nPour de meilleurs résultats, faites correspondre le format et l'éclairage/composition générale de vos deux images de référence. Un nombre d'images élevé et un contenu cohérent entre la première et la dernière image produisent généralement un mouvement plus fluide. Si vous observez des étirements ou du recadrage, pré-recadrez vos entrées à la même taille avant de les charger dans le workflow.",
+    "faqItems": [
+      {
+        "answer": "Faire correspondre les formats est fortement recommandé. Le générateur redimensionnera les entrées à sa résolution de travail, mais des formats différents peuvent causer des étirements ou du recadrage. Pré-recadrez ou complétez les deux images à la même dimension avant de les charger pour un résultat optimal.",
+        "question": "Mes deux images doivent-elles avoir la même taille ou le même format ?"
+      },
+      {
+        "answer": "La durée perçue est images ÷ FPS. Pour ralentir la transition et la rendre plus fluide, augmentez le nombre d'images en gardant le même FPS. Certaines versions incluent un contrôle de blend/easing — utilisez-le pour un effet ease-in ou ease-out pour un rendu plus naturel.",
+        "question": "Comment contrôler le rythme et la fluidité de la transition ?"
+      },
+      {
+        "answer": "Oui. Définissez une seed fixe dans le nœud LTX-2.5 FLF2V (si disponible). Utiliser les mêmes entrées et paramètres avec la même seed produira les mêmes images vidéo, ce qui est utile pour des ajustements itératifs.",
+        "question": "Puis-je obtenir des résultats reproductibles ?"
+      },
+      {
+        "answer": "Réduisez la résolution cible et/ou le nombre d'images, et assurez-vous que les deux images sont pré-dimensionnées au format de travail du modèle pour éviter des redimensionnements inutiles. Un GPU moderne est recommandé pour une génération locale fluide ; si vous avez encore des erreurs de mémoire, baissez encore la résolution et itérez.",
+        "question": "Que faire en cas de problème de performance ou de mémoire ?"
+      }
+    ],
+    "howToUse": [
+      "Chargez le workflow LTX-2.5 : FLF2V (JSON) dans ComfyUI et lisez le MarkdownNote pour les astuces ou valeurs par défaut.",
+      "Ouvrez les deux nœuds LoadImage et sélectionnez votre image de départ (première frame) et d'arrivée (dernière frame). Assurez-vous qu'elles ont le même format pour une interpolation propre.",
+      "Dans le nœud LTX-2.5 FLF2V (cf70afc4-5a03-47ce-8210-734b1de6c6bc), définissez la résolution cible, le nombre d'images (ou la durée), la fréquence d'images et une seed si vous souhaitez des résultats reproductibles. Si le nœud propose un contrôle de blend/easing, ajustez-le pour une transition linéaire ou un effet ease-in/ease-out.",
+      "Configurez le nœud SaveVideo : vérifiez que le FPS correspond à celui du générateur, choisissez un nom de fichier/chemin de sortie et le conteneur souhaité (MP4/WebM selon votre configuration ffmpeg).",
+      "Cliquez sur Queue Prompt pour générer. Vérifiez la sortie ; si le mouvement est trop rapide ou brusque, augmentez le nombre d'images ou ajustez le blend/easing, puis relancez.",
+      "Une fois satisfait, laissez SaveVideo écrire le clip final sur disque. Vérifiez-le dans votre lecteur média et ajustez les paramètres si besoin."
+    ],
+    "metaDescription": "Générez des transitions fluides à partir de deux images avec LTX-2.5 dans ComfyUI. Chargez deux images, synthétisez les intermédiaires et exportez en MP4/WebM.",
+    "suggestedUseCases": [
+      "Transitions cinématographiques entre deux images de storyboard ou plans fixes.",
+      "Morphings de portrait ou personnage pour contenu social et visualisation de concepts.",
+      "Révélations produit avant/après en interpolant en douceur entre deux images.",
+      "Relier deux environnements fixes pour créer une séquence de transition dans un montage.",
+      "Transitions logo-vers-scène ou icône-vers-produit pour titres et génériques."
+    ],
+    "title": "LTX-2.5 : FLF2V"
   },
   "d82f4527c76a": {
     "description": "Téléchargez une image cible et une image de référence de style. Générez une nouvelle image qui fusionne le style artistique de la référence avec la structure de votre cible.",

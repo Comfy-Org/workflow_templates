@@ -1600,6 +1600,44 @@
       }
     ]
   },
+  "13ba3af78782": {
+    "title": "LTX-2.5: Text to Video",
+    "description": "Generate cinematic video from a text prompt using LTX-2.5, a production-ready diffusion model that outputs a single video file with optional spatial upscaling for enhanced resolution. Ideal for film previsualization, commercial storyboards, and high-volume content creation pipelines.\n\n",
+    "metaDescription": "Generate cinematic text-to-video with LTX-2.5 in ComfyUI. Select resolution, refine settings, optionally upscale, and export a single video file.",
+    "extendedDescription": "This ComfyUI workflow turns a plain text prompt into a cinematic video using Lightricks' LTX-2.5, a production-ready diffusion model. The core of the graph is the LTX-2.5 text-to-video node (UUID: 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970), which consumes your prompt, resolution, and generation settings to synthesize a coherent clip. A ResolutionSelector node feeds width and height values that are aligned to the model’s preferred multiples-of-32, and a SaveVideo node encodes the result as a single video file. A MarkdownNote is included in the graph to surface quick tips and resolution guidance right inside ComfyUI.\n\nUnder the hood, LTX-2.5 uses a Pixel Diffusion, keyframes-first approach: it establishes strong visual anchors and then diffuses motion between them, helping maintain temporal consistency and cinematic pacing. You can steer fidelity and GPU memory use by pairing the ResolutionSelector with the model’s parameters. For example, 0.5 megapixels at 16:9 maps to 960x544, while 0.3 MP maps to 736x416; both are safe starting points on modest GPUs. When you need extra detail, enable the node’s optional spatial upscaling to boost resolution without re-generating motion from scratch, then finalize with SaveVideo at your target FPS and file path.",
+    "howToUse": [
+      "Load the LTX-2.5: Text to Video workflow JSON in ComfyUI and confirm the LTX-2.5 node (UUID: 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970) is present without missing-model warnings.",
+      "In ResolutionSelector, choose your aspect ratio and target megapixels to auto-fill width and height (multiples of 32). Start around 0.4–0.6 MP for quicker previews.",
+      "Open the LTX-2.5 node and enter your text prompt. Set generation options such as seed (for reproducibility), the number of frames or duration, and FPS to control clip length and motion cadence.",
+      "Optionally enable spatial upscaling in the LTX-2.5 node to enhance detail. Adjust upscale factor or target size if available, keeping an eye on VRAM usage.",
+      "Configure SaveVideo with the desired FPS and output path, then Queue Prompt. Review the saved clip, iterate on prompt or resolution, and re-run until you’re satisfied."
+    ],
+    "suggestedUseCases": [
+      "Film previsualization and animatics for planning shots and camera moves.",
+      "Commercial storyboards and product hero shots to convey motion intent to clients.",
+      "Social media motion concepts and loops to validate ideas quickly.",
+      "Concept art with motion to communicate mood, lighting, and pacing.",
+      "Rapid content generation for high-volume pipelines needing consistent, local runs."
+    ],
+    "faqItems": [
+      {
+        "question": "Why does the workflow use a ResolutionSelector instead of typing width and height manually?",
+        "answer": "LTX-2.5 performs best with dimensions that are multiples of 32. ResolutionSelector maps practical megapixel targets to valid sizes (for example, 0.5 MP at 16:9 → 960x544), helping you balance detail, speed, and VRAM without guesswork."
+      },
+      {
+        "question": "How does LTX-2.5 keep motion consistent across frames?",
+        "answer": "The model uses a Pixel Diffusion, keyframes-first strategy to establish strong visual anchors and then diffuse motion between them. This reduces temporal drift and improves coherence in complex scenes."
+      },
+      {
+        "question": "What controls affect performance and memory use the most?",
+        "answer": "Resolution and frame count are the biggest factors. Start with lower megapixels (0.3–0.6 MP) and shorter clips to iterate, then scale up. Enabling spatial upscaling increases memory use; raise it only after you are happy with motion and composition."
+      },
+      {
+        "question": "What does SaveVideo output, and can I change FPS?",
+        "answer": "SaveVideo writes a single video file to disk from the generated clip. You can set FPS in the node to match your target pacing and ensure the saved file aligns with your project’s delivery specs."
+      }
+    ]
+  },
   "1446c7f47aee": {
     "title": "Audio Separation",
     "description": "Input Music → Separate Vocals / Bass / Drums / Other",
@@ -6820,6 +6858,45 @@
       }
     ]
   },
+  "527ecf1f2eb4": {
+    "title": "LTX-2.5 (Pro): FLF2V",
+    "description": "Generate a video from two reference images using LTX-2.5, blending the content of both frames into a single animated sequence. Ideal for creating transition shots, morphing between two subjects or scenes, and building multi-shot narratives from still references.\n\n",
+    "metaDescription": "Create smooth two-image morphs in ComfyUI with LTX-2.5: load two frames, generate an API-driven transition video, and save the result with SaveVideo.",
+    "extendedDescription": "This workflow turns two still images into a single, fluid video transition using the LTX-2.5 image-to-video API. Two LoadImage nodes supply your start and end reference frames, which are passed into LtxApi25ImageToVideo. The node blends structural cues from both inputs to synthesize an in-between sequence that morphs from the first image toward the second, producing a natural-looking transition, reveal, or morph. Finally, SaveVideo encodes the generated frames to a video file you can review or drop into an edit.\n\nTechnically, the LtxApi25ImageToVideo node makes an API call to the LTX-2.5 backend, which analyzes both images, aligns major features, and interpolates motion across a specified duration and frame rate. Because the processing happens remotely, you’ll typically configure an API key/endpoint in the node and choose key parameters like output length and FPS. Keeping both input images similar in aspect ratio, framing, and subject scale helps the model establish a clean “path” between them, reducing artifacts and ensuring a smoother morph. SaveVideo then writes the result to disk at your chosen frame rate, ready for playback or further editing.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and confirm you see the three key nodes: two LoadImage nodes feeding into LtxApi25ImageToVideo, followed by SaveVideo.",
+      "Open each LoadImage node and select your start (first) and end (second) reference images. For best results, use images with matching aspect ratios and similar subject framing.",
+      "Open LtxApi25ImageToVideo and configure required API settings (key/endpoint) if needed. Set core options such as output duration and frame rate; adjust any blend/transition controls the node exposes to tune how strongly the animation leans toward each image.",
+      "Optionally set SaveVideo parameters (output path/filename and FPS) to match your target deliverable. Ensure the FPS here matches what you chose in the LtxApi25ImageToVideo node.",
+      "Queue and execute the workflow. The node will upload the images to the LTX-2.5 service, generate intermediate frames, and pass them to SaveVideo for encoding.",
+      "Review the output video. If you see stretching or jitter, try aligning subject scale between the two images, matching aspect ratios, or adjusting duration/FPS, then re-run."
+    ],
+    "suggestedUseCases": [
+      "Seamless scene transitions: move from one establishing shot to another without a hard cut.",
+      "Character or product morphs: transform one subject into another for reveals and comparisons.",
+      "Before/after storytelling: animate between two states (e.g., restoration, makeover, design iterations).",
+      "Narrative bridges: connect still keyframes into a short motion beat between cuts.",
+      "Mood board to motion: turn two style frames into a quick animated exploration."
+    ],
+    "faqItems": [
+      {
+        "question": "Do my two images need to be the same size and aspect ratio?",
+        "answer": "It’s strongly recommended. The node or API may auto-resize, but mismatched sizes/aspects often cause stretching or warped motion. Align aspect ratio and approximate subject scale for the cleanest transition."
+      },
+      {
+        "question": "How do I control speed and smoothness of the morph?",
+        "answer": "Use the duration and frame rate options in LtxApi25ImageToVideo to set total length and temporal resolution. If the node exposes blend or transition controls, adjust them to favor a gentler or more aggressive move between frames. Longer durations and consistent subject framing usually look smoother."
+      },
+      {
+        "question": "Where is the video saved and in what format?",
+        "answer": "SaveVideo writes the generated sequence to a file path you set in the node (ComfyUI’s output directory by default). Choose your target frame rate there; the exact container/codec options depend on your environment and SaveVideo configuration."
+      },
+      {
+        "question": "Does this send my images to an external service?",
+        "answer": "Yes. LtxApi25ImageToVideo uses an API to run LTX-2.5 remotely, so your images are uploaded for processing. Ensure you’ve configured your API credentials and reviewed the provider’s privacy and data-retention policies before use."
+      }
+    ]
+  },
   "52a2be6f1c65": {
     "title": "1.2 Starter - Image to Video",
     "description": "Learn how to load images,  generate a video and how to find a node using Wan 2.2.",
@@ -8105,6 +8182,45 @@
       {
         "question": "What is the GeminiNanoBanana2 node doing here?",
         "answer": "It’s an auxiliary helper for generating on-brand caption ideas or keywords you can use in titles, descriptions, or filenames. It does not overlay text onto the thumbnail in this version."
+      }
+    ]
+  },
+  "615266189e02": {
+    "title": "LTX-2.5 (Pro): Image to Video",
+    "description": "Generate video from a single image using LTX-2.5's fast distilled model, delivering cinematic multi-shot sequences with consistent characters, lighting, and style across cuts. The workflow outputs a video file with native multishot support and automatic duration prediction. Ideal for rapid storyboarding, social media content creation, and pre-visualization in commercial production pipelines.\n\n",
+    "metaDescription": "ComfyUI tutorial: Turn one image into a cinematic multi-shot video with LTX-2.5. Native multishot, auto duration, and consistent style across cuts.",
+    "extendedDescription": "This ComfyUI workflow turns a single reference image into a cinematic, multi-shot video using the LTX-2.5 fast distilled model. It links three nodes end-to-end: LoadImage brings your source still into the graph, LtxApi25ImageToVideo sends that image to the LTX-2.5 API for motion synthesis and shot generation, and SaveVideo writes the returned clip to disk. Because LTX-2.5 supports native multishot generation and automatic duration prediction, the result feels like a short edited sequence rather than a single continuous pan or zoom.\n\nTechnically, the LtxApi25ImageToVideo node conditions all shots on the same input frame, which helps maintain character, lighting, and style consistency across cuts. The node handles request/response with the remote service, queues generation, and outputs a ready-to-save video. SaveVideo then encodes the result at your chosen filename and frame rate. This makes the workflow ideal for rapid storyboarding, social posts, and pre-visualization: drop in one clean reference image, let the API infer pacing and camera moves, and export a cohesive multi-shot clip in minutes.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and locate the three core nodes: LoadImage -> LtxApi25ImageToVideo -> SaveVideo.",
+      "In LoadImage, select a clean, well-lit source image that clearly shows your subject and overall scene style. A 16:9 composition works well for cinematic results.",
+      "Open LtxApi25ImageToVideo and add your API credentials if required. Configure generation options as exposed by the node (e.g., enable native multishot, keep automatic duration on, or set a target duration if you prefer manual control).",
+      "Optionally refine settings that affect pacing and look if available in your template (such as number of shots, motion intensity, aspect, or repeatability controls). Keep defaults for a fast first pass.",
+      "Run the workflow. The node will upload your image and settings, generate a multi-shot sequence via the LTX-2.5 model, and return a video clip.",
+      "In SaveVideo, choose the output path, filename, and frame rate. Execute to write the final video file to disk, then review and iterate on the input image or node settings as needed."
+    ],
+    "suggestedUseCases": [
+      "Rapid storyboarding: visualize coverage and pacing from a single concept frame.",
+      "Social media teasers or reels that need consistent character and style across quick cuts.",
+      "Pre-visualization for ads or product spots using one hero image to explore camera moves.",
+      "Look development: test lighting, color, and motion language before a full production.",
+      "Mood films or pitch videos generated swiftly from key art."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need an API key and is processing local?",
+        "answer": "LtxApi25ImageToVideo calls a remote service; most deployments require an API key. Your source image and parameters are sent to the provider for generation. Check the node’s credentials field and the provider’s documentation and terms before use."
+      },
+      {
+        "question": "Can I control duration and the number of shots?",
+        "answer": "The node supports native multishot and automatic duration prediction. If your template exposes overrides, you can set a target duration and/or shot count; otherwise, leave auto duration enabled for best pacing."
+      },
+      {
+        "question": "What image works best as input?",
+        "answer": "Use a clean, high-quality image with clear subject separation and coherent lighting. Keep faces unobstructed, avoid heavy motion blur, and compose for the aspect ratio you plan to export (16:9 is a solid default)."
+      },
+      {
+        "question": "How does the workflow keep characters and style consistent across cuts?",
+        "answer": "All shots are conditioned on the same input image inside the LTX-2.5 model via the LtxApi25ImageToVideo node. This shared conditioning helps preserve character identity, lighting, and overall style from shot to shot."
       }
     ]
   },
@@ -12593,6 +12709,45 @@
       }
     ]
   },
+  "93c182d3aefb": {
+    "title": "LTX-2.5 (Pro): Text to Video",
+    "description": "Generate video from text with LTX 2.5, a video model built for fast, high-quality production work. Type a prompt and get a cinematic clip with sharp detail, accurate motion, and support for native multishot scenes that hold character and style across cuts.",
+    "metaDescription": "ComfyUI tutorial: Generate cinematic text-to-video clips with LTX 2.5 using LtxApi25TextToVideo and SaveVideo, including native multi-shot scene support.",
+    "extendedDescription": "This ComfyUI workflow turns a text prompt into a finished video clip using the LTX 2.5 model via the LtxApi25TextToVideo node. Your prompt (and optional multi-shot structure) is sent to the LTX 2.5 API, which returns generated video content with sharp detail and coherent motion. The downstream SaveVideo node then writes the result to your ComfyUI output folder as a ready-to-share file.\n\nTechnically, the LtxApi25TextToVideo node is the core generator: it packages your prompt and settings, submits them to the remote LTX 2.5 service, and provides the resulting clip to the graph. LTX 2.5 supports native multi-shot scenes, making it possible to maintain character and style across cuts when you structure your prompt appropriately. The SaveVideo node handles final assembly and export, letting you choose a filename and frame rate while keeping the workflow simple and fast.",
+    "howToUse": [
+      "Load the workflow in ComfyUI. Confirm you can see the LtxApi25TextToVideo node feeding into the SaveVideo node.",
+      "Open LtxApi25TextToVideo. Enter your text prompt. If your node version supports it, add multi-shot structure (e.g., separate shots in your prompt) to keep characters and style consistent across cuts. Add your API credentials or endpoint if required.",
+      "Optionally adjust any available generation settings in LtxApi25TextToVideo (for example, duration, aspect ratio, or randomness/seed if exposed). Use concise, visual language and consistent character descriptors for best results.",
+      "Open SaveVideo and set a clear filename or prefix and your desired FPS. Confirm the output directory is correct.",
+      "Queue the workflow and run it. The LtxApi25TextToVideo node will contact the LTX 2.5 service, generate the video, and pass it to SaveVideo for export.",
+      "Review the output video. Iterate by refining your prompt or node settings, then re-run. For multi-shot scenes, keep shot descriptions tight and reuse character and style cues to maintain continuity."
+    ],
+    "suggestedUseCases": [
+      "Storyboards and animatics with multi-shot continuity for pre-production planning.",
+      "Product b-roll and short promotional clips with clear camera and motion cues.",
+      "Character-driven scenes that maintain look and style across quick cuts.",
+      "Social media teasers and mood pieces requiring fast turnaround.",
+      "Concept visualization for directors, clients, or pitch decks."
+    ],
+    "faqItems": [
+      {
+        "question": "Does this workflow run locally or require the internet?",
+        "answer": "The LtxApi25TextToVideo node calls the LTX 2.5 API, so you need an internet connection and valid API access. SaveVideo runs locally to write the final file."
+      },
+      {
+        "question": "How do I create multi-shot scenes that keep characters consistent?",
+        "answer": "Structure your prompt as multiple shots with clear, consistent descriptors for characters, wardrobe, lighting, and style. If your node version exposes a multi-shot field or shot list, use it; otherwise, separate shots within the prompt text. Reuse the same character and style cues across shots."
+      },
+      {
+        "question": "Can I control duration, resolution, or randomness?",
+        "answer": "Adjust whatever controls your LtxApi25TextToVideo node exposes. Some versions include parameters like duration, aspect ratio/resolution hints, and a seed or randomness setting. If a control is not visible, it may not be supported by your build or API plan."
+      },
+      {
+        "question": "Where is the video saved and what format is it?",
+        "answer": "SaveVideo writes the rendered clip to your ComfyUI output folder using the filename or prefix you set, at the FPS you choose. The exact container/codec depends on your SaveVideo configuration."
+      }
+    ]
+  },
   "93f286fbc2c8": {
     "title": "Face Swap Workflow",
     "description": "A ComfyUI workflow for de-aging and/or face replacements that combines AI-driven masking, reference-based identity transfer, and inpainting to produce natural, temporally consistent results. Designed for VFX use, it allows artists to quickly swap or rejuvenate faces while preserving performance, lighting, and integration with the original plate.",
@@ -15699,6 +15854,45 @@
       {
         "question": "What file formats are supported?",
         "answer": "LoadImage typically supports common formats like PNG and JPG. SaveImage saves PNG by default in standard ComfyUI setups; adjust the node settings if your installation offers alternate formats."
+      }
+    ]
+  },
+  "b37902cee452": {
+    "title": "LTX-2.5: Image to Video",
+    "description": "Generate video from a single image using LTX-2.5, producing a high-fidelity clip with industry-leading pixel quality and native multishot capability that holds character, environment, and lighting across connected scenes. Ideal for cinematic production, VFX shot creation, and content pipelines requiring fast, locally deployable video generation.",
+    "metaDescription": "ComfyUI tutorial: convert a single image into a high-quality video with LTX-2.5. Load, set resolution, render frames, and save to MP4—fully local.",
+    "extendedDescription": "This ComfyUI workflow turns a single still image into a smooth, high-fidelity video using LTX-2.5, Lightricks’ open video generation model. The pipeline is intentionally simple and production-minded: LoadImage ingests your source frame, ResolutionSelector locks in a model-friendly size (multiples of 32) and aspect ratio, the LTX-2.5 generator node (UUID: 6e397a2b-68f7-48f6-8930-f3a5491a163c) synthesizes a coherent motion sequence, and SaveVideo encodes the frames to a ready-to-use MP4. A MarkdownNote in the graph provides in-UI guidance and links.\n\nUnder the hood, LTX-2.5 uses a keyframes-first \"Pixel Diffusion\" approach to propagate detail and structure consistently across time. This helps preserve subject identity, lighting, and scene composition from your source image while introducing controllable motion. ResolutionSelector ensures your chosen 16:9 dimensions conform to model stride (multiples of 32), which is critical for stability and VRAM efficiency. Because it runs locally, you can iterate quickly, tune duration (frames/fps), and adjust motion strength to meet the needs of previz, VFX look development, and content pipelines.",
+    "howToUse": [
+      "Load the workflow in ComfyUI, then read the MarkdownNote for an overview and tips.",
+      "Open the LoadImage node and select your source image (e.g., input/neon_cyborg_portrait.png) or browse to your own asset.",
+      "Set output size in ResolutionSelector. Choose a 16:9 preset that matches your VRAM (e.g., 0.6 MP -> 1056x608). Keeping dimensions as multiples of 32 is required.",
+      "On the LTX-2.5 node (UUID 6e397a2b-68f7-48f6-8930-f3a5491a163c), set clip length and tempo by adjusting frame count and FPS. Optionally tune seed and motion intensity for more or less camera/subject movement.",
+      "Confirm SaveVideo settings (output path and FPS should match the generator). Queue the workflow and run.",
+      "When the job completes, retrieve the MP4 from the SaveVideo output folder and review. Iterate on resolution, frames/FPS, or motion settings as needed."
+    ],
+    "suggestedUseCases": [
+      "Cinematic previz: generate quick moving plates from style frames to evaluate mood, lighting, and camera feel.",
+      "VFX look development: create motion studies from key concept art to test continuity of materials and lighting.",
+      "Product hero shots: turn a single packshot into a subtle orbit or parallax clip for promos and landing pages.",
+      "Social shorts and loops: produce eye-catching micro-animations from stills for reels, stories, and ads.",
+      "Animatic building blocks: rapidly assemble moving beats from boards before committing to full production."
+    ],
+    "faqItems": [
+      {
+        "question": "Why does the workflow use ResolutionSelector and multiples of 32?",
+        "answer": "LTX-2.5 (like many diffusion models) operates on stride-aligned dimensions. Using multiples of 32 prevents internal padding/resize artifacts, improves stability, and is more VRAM-efficient. The ResolutionSelector node helps you pick valid 16:9 sizes (e.g., 1056x608 for ~0.6 MP)."
+      },
+      {
+        "question": "How long can my clip be, and what affects render time?",
+        "answer": "Clip duration is frames ÷ FPS (e.g., 96 frames at 24 FPS ≈ 4 seconds). Render time and memory scale with resolution, frame count, and motion complexity. Start with modest settings (e.g., 0.6–0.8 MP, 64–96 frames, 16–24 FPS) and increase as your VRAM and iteration time allow."
+      },
+      {
+        "question": "How do I keep the subject stable and avoid jitter?",
+        "answer": "Use a clean, high-resolution source image with a clear subject and lighting. Keep output resolution stride-aligned, reduce motion intensity for more conservative movement, and consider raising FPS while keeping motion moderate. Re-seed if you see unwanted artifacts; stability often improves after a few trials."
+      },
+      {
+        "question": "Does this support multishot timelines?",
+        "answer": "This template focuses on a single image-to-video clip. LTX-2.5 is designed to maintain coherent style and identity across shots, but to build a multishot timeline in ComfyUI, duplicate this block with Subgraph, render each shot, and stitch the resulting clips in your editor (or a separate combine step)."
       }
     ]
   },
@@ -19073,6 +19267,45 @@
       {
         "question": "Do I need a secure network environment to use this workflow?",
         "answer": "Yes, to use the API, you must be in a secure network environment that allows access from '127.0.0.1' or 'localhost'."
+      }
+    ]
+  },
+  "d78377cf53f4": {
+    "title": "LTX-2.5: FLF2V",
+    "description": "Generate a video from first and last frame reference images using LTX-2.5, blending both frames into a single animated sequence. Ideal for creating transition shots, morphing between two subjects or scenes, and building multi-shot narratives from still references.",
+    "metaDescription": "Generate smooth transitions from first and last images using LTX-2.5 in ComfyUI. Load two frames, synthesize in-betweens, and export to MP4/WebM.",
+    "extendedDescription": "LTX-2.5: FLF2V is a focused ComfyUI workflow for turning two still images—your intended first and last frames—into a single, coherent video. It’s ideal for creating smooth transitions, morphs between subjects, or bridging shots in a sequence when you only have still references. Two LoadImage nodes supply the start and end visuals, which feed into a single LTX-2.5 FLF2V generator node (cf70afc4-5a03-47ce-8210-734b1de6c6bc). The resulting frames are handed to SaveVideo for encoding to a playable clip. A MarkdownNote is included with inline tips.\n\nUnder the hood, the LTX-2.5 node leverages Lightricks’ open video generation model and its keyframes-first “Pixel Diffusion” approach to synthesize in-between frames from your bookend images. Typical controls you’ll use are target resolution, number of frames (or duration), frames-per-second, and a random seed for reproducibility. Many builds also expose blending/easing options to bias the motion toward the first or last frame. SaveVideo then encodes the output at your chosen fps (MP4/WebM, depending on your ffmpeg setup).\n\nFor best results, match the aspect ratio and general lighting/composition of your two reference images. Larger frame counts and consistent content between the first and last frames usually produce smoother motion. If you see stretching or cropping, pre-crop your inputs to the same size before loading them into the workflow.",
+    "howToUse": [
+      "Load the LTX-2.5: FLF2V workflow JSON in ComfyUI and read the MarkdownNote for any inline tips or defaults.",
+      "Open the two LoadImage nodes and select your starting image (first frame) and ending image (last frame). Ensure they share the same aspect ratio for clean interpolation.",
+      "In the LTX-2.5 FLF2V node (cf70afc4-5a03-47ce-8210-734b1de6c6bc), set your target resolution, number of frames (or duration), frames-per-second, and a seed if you want repeatable results. If the node exposes a blend/easing control, adjust it to favor a linear transition or an ease-in/ease-out feel.",
+      "Configure the SaveVideo node: confirm the fps matches your generator settings, choose a filename/output path, and select the desired container (MP4/WebM, depending on your ffmpeg setup).",
+      "Click Queue Prompt to generate. Inspect the output; if the motion is too fast or abrupt, increase the frame count or tweak the blend/easing, then re-run.",
+      "When satisfied, let SaveVideo write the final clip to disk. Review it in your media player and iterate on parameters as needed."
+    ],
+    "suggestedUseCases": [
+      "Cinematic transitions between two storyboard frames or scene stills.",
+      "Portrait or character morphs for social content and concept visualization.",
+      "Before/after product reveals that smoothly interpolate between two shots.",
+      "Bridging two environment stills to create a connective sequence in an edit.",
+      "Logo-to-scene or icon-to-product transitions for titles and openers."
+    ],
+    "faqItems": [
+      {
+        "question": "Do my two images need to be the same size or aspect ratio?",
+        "answer": "Matching aspect ratios is strongly recommended. The generator will resize inputs to its working resolution, but mismatched aspects can introduce stretching or unwanted cropping. Pre-crop or pad both images to the same dimensions before loading for the cleanest results."
+      },
+      {
+        "question": "How do I control the pace and smoothness of the transition?",
+        "answer": "The perceived duration is frames ÷ fps. To slow the transition and make it smoother, increase the number of frames while keeping fps the same. Some builds also include a blend/easing control—use it to ease-in or ease-out of the start/end frame for a more natural feel."
+      },
+      {
+        "question": "Can I get repeatable results?",
+        "answer": "Yes. Set a fixed seed in the LTX-2.5 FLF2V node (if exposed). Using the same inputs and parameters with the same seed will reproduce the same video frames, which is useful for iterative tweaks."
+      },
+      {
+        "question": "What if I run into performance or memory issues?",
+        "answer": "Reduce the target resolution and/or the number of frames, and ensure both images are pre-sized to the model’s working aspect to avoid extra scaling. A modern GPU is recommended for smooth local generation; if you still see out-of-memory errors, lower the resolution further and iterate."
       }
     ]
   },
