@@ -361,7 +361,7 @@ export function serializeIndexEntry(
     username,
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: entry.isApp ?? entry.name.endsWith('.app'),
+    isApp: entry.isApp === true,
     thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
@@ -460,7 +460,9 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTe
     username: workflow.profile.username,
     creatorDisplayName: workflow.profile.display_name || workflow.profile.username,
     creatorAvatarUrl: workflow.profile.avatar_url || '',
-    isApp: workflow.isApp ?? workflow.name.endsWith('.app'),
+    // `workflow.name` is the display title here, not a filename, so only the
+    // share id can identify an app.
+    isApp: workflow.isApp === true,
   };
 }
 
