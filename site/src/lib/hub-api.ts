@@ -7,7 +7,6 @@
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
-import { resolveIsApp } from './hub-app-mode';
 import { applyRanking, fetchRankingMap, readEnv, type RankingMap } from './ranking';
 
 // readEnv, not import.meta.env directly: `scripts/` runs this module under plain
@@ -20,8 +19,7 @@ const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org'
 
 export type MediaType = 'image' | 'video' | 'audio' | '3d';
 export type ThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
-export type { WorkflowStatus } from './hub-status';
-import { ALL_STATUSES, type WorkflowStatus } from './hub-status';
+export type WorkflowStatus = 'pending' | 'approved' | 'rejected' | 'deprecated';
 
 export interface LabelRef {
   name: string;
@@ -264,6 +262,9 @@ let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
 
 const APPROVED_ONLY = readEnv('PUBLIC_APPROVED_ONLY') === 'true';
 
+/** All status values — used when preview builds need unfiltered results. */
+const ALL_STATUSES: WorkflowStatus[] = ['pending', 'approved', 'rejected', 'deprecated'];
+
 /**
  * Fetch and cache the workflow index. Called many times across pages during
  * a single build; the actual HTTP request fires only once.
@@ -360,7 +361,7 @@ export function serializeIndexEntry(
     username,
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: resolveIsApp(entry),
+    isApp: entry.isApp === true,
     thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
@@ -461,7 +462,7 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTe
     creatorAvatarUrl: workflow.profile.avatar_url || '',
     // `workflow.name` is the display title here, not a filename, so only the
     // share id can identify an app.
-    isApp: resolveIsApp({ isApp: workflow.isApp, shareId: workflow.share_id }),
+    isApp: workflow.isApp === true,
   };
 }
 
