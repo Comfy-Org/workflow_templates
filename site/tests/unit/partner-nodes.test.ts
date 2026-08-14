@@ -125,3 +125,45 @@ describe('the committed snapshot', () => {
     expect(PARTNER_NODE_SNAPSHOT_META.apiNodeCount).toBeGreaterThan(0);
   });
 });
+
+/**
+ * The two sides of the freshness check come from different endpoints and arrive
+ * in different shapes. The index gives `2025-07-29`; a detail page passes
+ * `publish_time`, which is `2025-07-29T00:00:00Z`. Comparing raw strings matched
+ * nothing and billed every scanned workflow, which reached production.
+ */
+describe('publish dates from different endpoints', () => {
+  const cleanEntry = scannedEntries.find(([id]) => !snapshot.shareIds.includes(id))!;
+
+  it('accepts the detail endpoint timestamp for the same day', () => {
+    const [id, scannedDate] = cleanEntry;
+    expect(wasScannedForPartnerNodes(id, `${scannedDate}T00:00:00Z`)).toBe(true);
+    expect(isBillableWorkflow(['Image'], id, `${scannedDate}T00:00:00Z`)).toBe(false);
+  });
+
+  // The day after the scan, not a far-future date. A distant year passes even if
+  // the comparison is truncated to the year, so it would not notice normalising
+  // away more than the time component.
+  const nextDay = (iso: string) => {
+    const d = new Date(`${iso.slice(0, 10)}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  };
+
+  it('still rejects a different day in either shape', () => {
+    const [id, scannedDate] = cleanEntry;
+    const stale = nextDay(scannedDate);
+    expect(stale.slice(0, 4)).toBe(scannedDate.slice(0, 4));
+    expect(wasScannedForPartnerNodes(id, stale)).toBe(false);
+    expect(wasScannedForPartnerNodes(id, `${stale}T00:00:00Z`)).toBe(false);
+  });
+
+  // Through the public entry point too, in both shapes: that is the one the page
+  // calls, and normalising the day must not soften the stale-date verdict.
+  it('bills a re-published workflow whichever shape the date arrives in', () => {
+    const [id, scannedDate] = cleanEntry;
+    const stale = nextDay(scannedDate);
+    expect(isBillableWorkflow(['Image'], id, stale)).toBe(true);
+    expect(isBillableWorkflow(['Image'], id, `${stale}T00:00:00Z`)).toBe(true);
+  });
+});

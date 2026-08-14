@@ -1,6 +1,7 @@
 {
   "00d3d57a5195": {
     "description": "Başlangıç ve bitiş karelerinden verimli video boyama. 5B model, iş akışlarını test etmek için hızlı yinelemeler sunar.",
+    "extendedDescription": "'Wan 2.2 5B Fun Inpaint' iş akışı, Wan2.2 modelinin gücünden yararlanarak verimli video boyama (inpainting) için tasarlanmıştır. Bu iş akışı, başlangıç ve bitiş kareleri arasında enterpolasyon yaparak video içeriği üretmek için özellikle kullanışlıdır ve video üretim tekniklerinin yaratıcı şekilde keşfedilmesine ve test edilmesine olanak tanır. İş akışı, örnekleme için KSampler, metin istemini kodlamak için CLIPTextEncode ve gizli değişkenleri görsel çıktılara dönüştürmek için VAEDecode gibi bir dizi düğüm kullanır. Wan2.2 modeli sayesinde, bu iş akışı hızlı yineleme süreleriyle yüksek kaliteli video üretimi sağlar ve hem deneme hem de üretim senaryoları için idealdir.\n\nTeknik olarak, iş akışı birkaç temel adıma ayrılmıştır. Başlangıçta, UNETLoader ve VAELoader gibi düğümlerle modeller yüklenir ve video üretimi için zemin hazırlanır. Süreç, videonun görsel stilini ve içeriğini yönlendiren CLIPTextEncode düğümüyle istemlerin oluşturulmasıyla devam eder. Ardından, başlangıç görseli ve video parametreleri (boyut, uzunluk gibi) LoadImage ve CreateVideo gibi düğümlerle belirlenir. Son olarak, video üretilir ve SaveVideo düğümüyle kaydedilerek inpainting işlemi tamamlanır. Bu yapılandırılmış yaklaşım, iş akışını hem verimli hem de esnek kılar ve çok çeşitli video üretim ihtiyaçlarına cevap verir.",
     "faqItems": [
       {
         "answer": "İş akışı, video boyama için Wan2.2 modelini ve kod çözme ile örnekleme için VAE ve UNET bileşenlerini kullanır.",
@@ -19,6 +20,14 @@
         "question": "Özel bir başlangıç görseli nasıl eklerim?"
       }
     ],
+    "howToUse": [
+      "Wan 2.2 5B Fun Inpaint iş akışını ComfyUI'te yükleyin.",
+      "Gerekli modelleri yüklemek için UNETLoader ve VAELoader düğümlerini kullanın.",
+      "Video içeriğini yönlendirmek için CLIPTextEncode düğümüyle istediğiniz metin istemini girin.",
+      "Başlangıç görselini belirleyin ve LoadImage ile CreateVideo düğümleriyle video parametrelerini (boyut, uzunluk) ayarlayın.",
+      "Inpainting tekniğiyle videoyu üretmek için iş akışını çalıştırın.",
+      "Oluşturulan videoyu SaveVideo düğümüyle kaydedin."
+    ],
     "metaDescription": "Wan2.2 modeliyle yaratıcı video üretimi ve hızlı yinelemeler için verimli video boyama iş akışı.",
     "suggestedUseCases": [
       "Sanatsal boyama efektleriyle time-lapse videolar oluşturmak.",
@@ -26,7 +35,8 @@
       "Benzersiz görsel stillere sahip video sanat enstalasyonları üretmek.",
       "Video üretim tekniklerini hızlıca test etmek ve yinelemek.",
       "Dinamik görsel öğelerle eğitim içerikleri geliştirmek."
-    ]
+    ],
+    "title": "Wan 2.2 5B Fun Inpaint"
   },
   "011974792e13": {
     "description": "Derinlik haritalarından yüksek kaliteli videolar üretin; LTX-2 ile senkronize ses-video üretimi. Hassas derinlik kontrolü, mekansal farkındalık ve verimli performans sunar.",
@@ -263,6 +273,7 @@
   },
   "02bd87067503": {
     "description": "Bir görsel yükleyin ve Canny, HED, Depth, Pose, MLSD, Scribble veya Grayscale kontrol türlerinden birini seçin. Seçilen yapısal koşula göre yönlendirilen yeni bir görsel oluşturun.",
+    "extendedDescription": "Qwen-Image 2512: Fun Union ControlNet iş akışı, Canny, HED, Depth, Pose, MLSD, Scribble veya Grayscale gibi çeşitli kontrol türlerine dayalı yapılandırılmış yönlendirme uygulayarak görselleri dönüştürmek için tasarlanmıştır. Bu iş akışı, Qwen-Image 2512 modelini kullanarak, giriş görselinin yapısal bütünlüğünü korurken yaratıcı değişikliklere olanak tanıyan yeni görseller üretir. Süreç, bir görselin yüklenmesi ve yeni görselin hangi yapısal koşullarda üretileceğini belirleyen bir kontrol türünün seçilmesiyle başlar.\n\nTeknik olarak, bu iş akışı giriş görselini ön işlemek ve seçilen kontrol türünü uygulamak için bir dizi düğüm kullanır. Örneğin, kenar tespiti için Canny düğümü, görselin mekansal yapısını anlamak için ise Depth düğümü kullanılır. ResizeImageMaskNode ve GetImageSize düğümleri, görsel boyutlarının işleme için optimize edilmesini sağlar. PreviewImage düğümü, sonuçları kaydetmeden önce önizlemenize olanak tanır; SaveImage düğümüyle ise nihai görsel kaydedilir. Bu iş akışı, özellikle sanatçılar ve tasarımcılar için, temel yapısal unsurları koruyarak görsellerinin farklı stilistik yorumlarını keşfetmek isteyenler için faydalıdır.",
     "faqItems": [
       {
         "answer": "Portreler veya mimari fotoğraflar gibi belirgin yapısal ögelere sahip görseller en iyi sonucu verir; çünkü Canny ve Depth gibi kontrol türlerinden faydalanır.",
@@ -281,6 +292,14 @@
         "question": "En iyi çıktı kalitesini nasıl elde edebilirim?"
       }
     ],
+    "howToUse": [
+      "Qwen-Image 2512: Fun Union ControlNet iş akışını ComfyUI'te yükleyin.",
+      "LoadImage düğümüyle görselinizi yükleyin.",
+      "Canny, HED veya Depth gibi kontrol türlerinden birini seçin.",
+      "Seçilen kontrol türüne göre yönlendirilen yeni görseli üretmek için iş akışını çalıştırın.",
+      "PreviewImage düğümüyle oluşturulan görseli önizleyin.",
+      "Nihai görseli SaveImage düğümüyle kaydedin."
+    ],
     "metaDescription": "Qwen-Image 2512 ile Canny, HED ve diğer ControlNet tekniklerini kullanarak görselleri yaratıcı ve yapısal olarak dönüştürün.",
     "suggestedUseCases": [
       "Sanatsal projeler için fotoğrafların stilize edilmiş versiyonlarını oluşturmak.",
@@ -288,7 +307,8 @@
       "Mimari görselleştirmelerde yapısal ögeleri vurgulayarak görselleri geliştirmek.",
       "Görsel tutarlılık gerektiren eğitim materyalleri geliştirmek.",
       "Pazarlama için ürün tasarımlarının yaratıcı varyasyonlarını keşfetmek."
-    ]
+    ],
+    "title": "Qwen-Image 2512: Fun Union ControlNet"
   },
   "02c118b50bc2": {
     "description": "Telefonunuzla bir fotoğraf çekin, yükleyin ve stüdyo kalitesinde ürün videosu oluşturun.",
@@ -1579,6 +1599,44 @@
       "Sosyal medya etkileşimi için görsel varlıklar üretme."
     ],
     "title": "OpenAI: Dall-E 2 Metinden Görsele"
+  },
+  "13ba3af78782": {
+    "description": "LTX-2.5'i kullanarak bir metin isteminden sinematik video üretin; bu üretime hazır difüzyon modeli, gelişmiş çözünürlük için isteğe bağlı uzamsal yükseltme ile tek bir video dosyası çıktısı sunar. Film ön görselleştirme, ticari storyboard'lar ve yüksek hacimli içerik üretim hatları için idealdir.\n\n",
+    "extendedDescription": "Bu ComfyUI iş akışı, düz bir metin istemini Lightricks'in LTX-2.5'i ile sinematik bir videoya dönüştürür. Grafiğin çekirdeğinde, isteminizi, çözünürlüğü ve üretim ayarlarını alıp tutarlı bir klip sentezleyen LTX-2.5 metinden videoya düğümü (UUID: 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970) bulunur. ResolutionSelector düğümü, modelin tercih ettiği 32'nin katları olan genişlik ve yükseklik değerlerini sağlar ve SaveVideo düğümü sonucu tek bir video dosyası olarak kodlar. Grafikte, ComfyUI içinde hızlı ipuçları ve çözünürlük rehberliği sunan bir MarkdownNote da bulunur.\n\nTeknik olarak, LTX-2.5 bir Piksel Difüzyon, anahtar kareler-önce yaklaşımı kullanır: güçlü görsel sabitler oluşturur ve ardından aralarındaki hareketi difüze eder, bu da zamansal tutarlılığı ve sinematik tempoyu korumaya yardımcı olur. ResolutionSelector'u model parametreleriyle eşleştirerek ayrıntı ve GPU belleği kullanımını yönlendirebilirsiniz. Örneğin, 16:9'da 0,5 megapiksel 960x544'e, 0,3 MP ise 736x416'ya karşılık gelir; her ikisi de mütevazı GPU'lar için güvenli başlangıç noktalarıdır. Ekstra ayrıntı gerektiğinde, düğümün isteğe bağlı uzamsal yükseltmesini etkinleştirerek hareketi baştan üretmeden çözünürlüğü artırabilir, ardından SaveVideo ile hedef FPS ve dosya yolunda sonlandırabilirsiniz.",
+    "faqItems": [
+      {
+        "answer": "LTX-2.5, 32'nin katı olan boyutlarda en iyi performansı gösterir. ResolutionSelector, pratik megapiksel hedeflerini geçerli boyutlara eşler (örneğin, 16:9'da 0,5 MP → 960x544) ve ayrıntı, hız ve VRAM dengesini tahmin gerektirmeden sağlar.",
+        "question": "İş akışı neden ResolutionSelector kullanıyor, genişlik ve yükseklik elle girilmiyor?"
+      },
+      {
+        "answer": "Model, güçlü görsel sabitler oluşturup ardından aralarındaki hareketi difüze eden Piksel Difüzyon, anahtar kareler-önce stratejisini kullanır. Bu, zamansal kaymayı azaltır ve karmaşık sahnelerde tutarlılığı artırır.",
+        "question": "LTX-2.5 kareler arasında hareketi nasıl tutarlı tutuyor?"
+      },
+      {
+        "answer": "Çözünürlük ve kare sayısı en büyük etkenlerdir. Düşük megapiksel (0,3–0,6 MP) ve kısa kliplerle başlayıp yineleme yapın, ardından ölçeği artırın. Uzamsal yükseltmeyi etkinleştirmek bellek kullanımını artırır; yalnızca hareket ve kompozisyondan memnun kaldıktan sonra yükseltin.",
+        "question": "Performansı ve bellek kullanımını en çok hangi kontroller etkiler?"
+      },
+      {
+        "answer": "SaveVideo, oluşturulan klipten tek bir video dosyasını diske yazar. Düğümde FPS ayarlayarak hedef temponuza uygun kaydedilmiş dosya elde edebilirsiniz.",
+        "question": "SaveVideo neyi dışa aktarır, FPS değiştirilebilir mi?"
+      }
+    ],
+    "howToUse": [
+      "LTX-2.5: Metinden Videoya iş akışı JSON'unu ComfyUI'te yükleyin ve LTX-2.5 düğümünün (UUID: 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970) eksik model uyarısı olmadan mevcut olduğundan emin olun.",
+      "ResolutionSelector'da, en-boy oranınızı ve hedef megapikselinizi seçin; genişlik ve yükseklik otomatik doldurulur (32'nin katları). Hızlı önizlemeler için 0,4–0,6 MP civarında başlayın.",
+      "LTX-2.5 düğümünü açın ve metin isteminizi girin. Üretim seçeneklerini (tekrarlanabilirlik için tohum, kare sayısı veya süre, FPS gibi) ayarlayın.",
+      "Ayrıntıyı artırmak için LTX-2.5 düğümünde uzamsal yükseltmeyi isteğe bağlı olarak etkinleştirin. Yükseltme faktörünü veya hedef boyutu ayarlayın, VRAM kullanımını gözlemleyin.",
+      "SaveVideo'yu istenen FPS ve çıktı yolu ile yapılandırın, ardından Kuyruğa Ekle'ye tıklayın. Kaydedilen klibi inceleyin, istem veya çözünürlük üzerinde yineleme yapın ve memnun kalana kadar tekrar çalıştırın."
+    ],
+    "metaDescription": "ComfyUI ile LTX-2.5 kullanarak sinematik metinden videoya üretin. Çözünürlük seçin, ayarları iyileştirin, isteğe bağlı olarak yükseltin ve tek bir video dosyası olarak dışa aktarın.",
+    "suggestedUseCases": [
+      "Çekim planlama ve kamera hareketleri için film ön görselleştirme ve animatikler.",
+      "Müşterilere hareket niyetini aktarmak için ticari storyboard'lar ve ürün tanıtım çekimleri.",
+      "Fikirleri hızlıca doğrulamak için sosyal medya hareket konseptleri ve döngüler.",
+      "Duygu, ışık ve tempoyu iletmek için hareketli konsept sanat.",
+      "Tutarlı, yerel çalıştırmalar gerektiren yüksek hacimli hatlar için hızlı içerik üretimi."
+    ],
+    "title": "LTX-2.5: Metinden Videoya"
   },
   "1446c7f47aee": {
     "description": "Müzik Yükle → Vokal / Bas / Davul / Diğerleri Ayrıştır",
@@ -6800,6 +6858,45 @@
     ],
     "title": "Wan 2.1 ControlNet"
   },
+  "527ecf1f2eb4": {
+    "description": "İki referans görselden LTX-2.5 ile bir video oluşturun; her iki kareyi tek bir animasyonlu sekansa harmanlayın. Geçiş çekimleri, iki konu veya sahne arasında morflama ve durağan referanslardan çoklu çekimli anlatılar oluşturmak için idealdir.\n\n",
+    "extendedDescription": "Bu iş akışı, iki durağan görseli tek, akıcı bir video geçişine dönüştürmek için LTX-2.5 görüntüden videoya API'sini kullanır. İki LoadImage düğümü, başlangıç ve bitiş referans karelerinizi sağlar ve bunlar LtxApi25ImageToVideo'ya aktarılır. Düğüm, her iki girdiden yapısal ipuçlarını harmanlayarak ilk görselden ikinciye doğru morflayan bir ara sekans sentezler ve doğal görünümlü bir geçiş, ortaya çıkış veya morf üretir. Son olarak, SaveVideo oluşturulan kareleri bir video dosyasına kodlar; bu dosyayı inceleyebilir veya bir düzenlemeye ekleyebilirsiniz.\n\nTeknik olarak, LtxApi25ImageToVideo düğümü LTX-2.5 arka ucuna bir API çağrısı yapar; her iki görseli analiz eder, ana özellikleri hizalar ve belirli bir süre ve kare hızında hareketi enterpole eder. İşlem uzaktan gerçekleştiğinden, genellikle düğümde bir API anahtarı/endpoint yapılandırırsınız ve çıktı uzunluğu ile FPS gibi temel parametreleri seçersiniz. Her iki giriş görselinin de en-boy oranı, kadraj ve konu ölçeği açısından benzer olması, modelin aralarında temiz bir \"yol\" oluşturmasına yardımcı olur, bu da artefaktları azaltır ve daha düzgün bir morf sağlar. SaveVideo ise sonucu seçtiğiniz kare hızında diske yazar, oynatmaya veya düzenlemeye hazır hale getirir.",
+    "faqItems": [
+      {
+        "answer": "Şiddetle tavsiye edilir. Düğüm veya API otomatik yeniden boyutlandırma yapabilir, ancak uyumsuz boyutlar/en-boy oranları genellikle gerilme veya bozulmuş hareketlere neden olur. Temiz bir geçiş için en-boy oranı ve yaklaşık konu ölçeğini hizalayın.",
+        "question": "İki görselim aynı boyut ve en-boy oranında mı olmalı?"
+      },
+      {
+        "answer": "LtxApi25ImageToVideo'daki süre ve kare hızı seçeneklerini kullanarak toplam uzunluk ve zamansal çözünürlüğü ayarlayın. Düğümde harmanlama veya geçiş kontrolleri varsa, bunları kareler arası geçişin yumuşak veya daha hızlı olmasını sağlamak için ayarlayın. Daha uzun süreler ve tutarlı konu kadrajı genellikle daha akıcı görünür.",
+        "question": "Morfun hızını ve akıcılığını nasıl kontrol edebilirim?"
+      },
+      {
+        "answer": "SaveVideo, oluşturulan sekansı düğümde belirlediğiniz dosya yoluna yazar (varsayılan olarak ComfyUI'ün çıktı dizini). Hedef kare hızını burada seçin; tam kapsayıcı/kodek seçenekleri ortamınıza ve SaveVideo yapılandırmasına bağlıdır.",
+        "question": "Video nereye kaydediliyor ve hangi formatta?"
+      },
+      {
+        "answer": "Evet. LtxApi25ImageToVideo, LTX-2.5'i uzaktan çalıştırmak için bir API kullanır, bu nedenle görselleriniz işlenmek üzere yüklenir. Kullanmadan önce API kimlik bilgilerinizi yapılandırdığınızdan ve sağlayıcının gizlilik ve veri saklama politikalarını incelediğinizden emin olun.",
+        "question": "Görsellerim harici bir servise mi gönderiliyor?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI'te yükleyin ve üç ana düğümü gördüğünüzden emin olun: iki LoadImage düğümü LtxApi25ImageToVideo'ya, ardından SaveVideo'ya bağlı.",
+      "Her LoadImage düğümünü açın ve başlangıç (ilk) ve bitiş (ikinci) referans görsellerinizi seçin. En iyi sonuç için, en-boy oranı ve konu kadrajı eşleşen görseller kullanın.",
+      "LtxApi25ImageToVideo'yu açın ve gerekirse API ayarlarını (anahtar/endpoint) yapılandırın. Çıktı süresi ve kare hızı gibi temel seçenekleri ayarlayın; düğümdeki harmanlama/geçiş kontrollerini kullanarak animasyonun her görsele ne kadar yakın olacağını ayarlayın.",
+      "İsteğe bağlı olarak SaveVideo parametrelerini (çıktı yolu/dosya adı ve FPS) hedef çıktınıza göre ayarlayın. Buradaki FPS'nin LtxApi25ImageToVideo'dakiyle eşleştiğinden emin olun.",
+      "İş akışını kuyruğa alın ve çalıştırın. Düğüm, görselleri LTX-2.5 servisine yükler, ara kareleri üretir ve SaveVideo'ya iletir.",
+      "Çıktı videoyu inceleyin. Gerilme veya titreme görürseniz, iki görselde konu ölçeğini hizalamayı, en-boy oranlarını eşleştirmeyi veya süre/FPS'yi ayarlamayı deneyin ve tekrar çalıştırın."
+    ],
+    "metaDescription": "ComfyUI ile LTX-2.5: FLF2V'de iki kare yükleyin, API tabanlı geçiş videosu oluşturun ve sonucu SaveVideo ile kaydedin.",
+    "suggestedUseCases": [
+      "Sert geçiş olmadan bir kurgu çekiminden diğerine geçiş: sahne geçişleri.",
+      "Konu veya ürün morfları: birini diğerine dönüştürerek ortaya çıkış veya karşılaştırma.",
+      "Öncesi/sonrası hikaye anlatımı: iki durum arasında animasyon (ör. restorasyon, makyaj, tasarım iterasyonları).",
+      "Anlatı köprüleri: durağan ana kareleri kısa bir hareketli sekansa bağlama.",
+      "Moodboard'dan harekete: iki stil karesini hızlı bir animasyon keşfine dönüştürme."
+    ],
+    "title": "LTX-2.5 (Pro): FLF2V"
+  },
   "52a2be6f1c65": {
     "description": "Görselleri nasıl yükleyeceğinizi, bir video oluşturmayı ve Wan 2.2 kullanarak bir düğümün nasıl bulunacağını öğrenin.",
     "extendedDescription": "Bu ComfyUI iş akışı, '1.2 Başlangıç - Görselden Videoya' başlığıyla, bir dizi görseli Wan2.2 ve Wan modellerini kullanarak bütünleşik bir videoya dönüştürmek için tasarlanmıştır. Süreci kolaylaştırmak için ComfyUI essentials özel düğümlerinden yararlanır. İş akışı, LoadImage düğümleriyle görselleri yükleyerek başlar ve ardından bu görseller işlenerek bir video oluşturulur. Bu iş akışının temel özelliği, sadeliği ve verimliliğidir; görsellerden video üretimine yeni başlayan kullanıcılar için erişilebilir kılar. Teknik olarak, Create Video ve Save Video gibi düğümlerin bağlanmasıyla, kullanıcıların kare hızı ve çıktı formatı üzerinde etkili bir şekilde kontrol sağlamasına olanak tanır.\n\nBu iş akışını özellikle faydalı kılan, video üretim sürecini yüksek kaliteli çıktılar sağlayacak şekilde geliştiren Wan2.2 modelinin entegrasyonudur. Ayrıca, iş akışında adım adım dokümantasyon ve rehberlik sunan bir MarkdownNote düğümü bulunur, böylece kullanıcılar her adımı kolayca anlayabilir. Saniyede 16 kare (fps) ayarlanarak, görseller arasında akıcı geçişler elde edilir ve profesyonel görünümlü bir video ortaya çıkar. Bu iş akışı, görsel dizilerini hızlıca videoya dönüştürmek isteyen ve ileri düzey teknik bilgiye ihtiyaç duymayan içerik üreticileri için idealdir.",
@@ -8087,6 +8184,45 @@
       "A/B testi için güçlü kareleri toplu seçerek küçük resim varyantları oluşturun."
     ],
     "title": "Markalı Comfy Küçük Resim"
+  },
+  "615266189e02": {
+    "description": "LTX-2.5'in hızlı distile modeliyle tek bir görselden video üretin; kesintisiz karakter, ışık ve stil tutarlılığıyla sinematik çoklu çekimli sekanslar sunar. İş akışı, yerleşik çoklu çekim desteği ve otomatik süre tahminiyle bir video dosyası üretir. Hızlı storyboard, sosyal medya içeriği ve ticari prodüksiyon hatlarında ön görselleştirme için idealdir.\n\n",
+    "extendedDescription": "Bu ComfyUI iş akışı, tek bir referans görseli LTX-2.5'in hızlı distile modeliyle sinematik, çoklu çekimli bir videoya dönüştürür. Üç düğüm uç uca bağlanır: LoadImage ile kaynak görsel grafiğe alınır, LtxApi25ImageToVideo ile bu görsel LTX-2.5 API'sine gönderilerek hareket ve çekim üretimi yapılır, SaveVideo ile dönen klip diske yazılır. LTX-2.5 yerleşik çoklu çekim üretimi ve otomatik süre tahmini desteklediğinden, sonuç tek bir sürekli pan veya yakınlaştırmadan ziyade kısa bir kurgu sekansı gibi hissettirir.\n\nTeknik olarak, LtxApi25ImageToVideo düğümü tüm çekimleri aynı giriş karesine koşullandırır; bu, çekimler arasında karakter, ışık ve stil tutarlılığını korumaya yardımcı olur. Düğüm, uzak servisle istek/yanıtı yönetir, üretimi kuyruğa alır ve kayda hazır bir video çıktısı sunar. SaveVideo ise sonucu seçtiğiniz dosya adı ve kare hızında kodlar. Bu iş akışı, hızlı storyboard, sosyal medya gönderileri ve ön görselleştirme için idealdir: temiz bir referans görsel bırakın, API'nin tempoyu ve kamera hareketlerini çıkarmasına izin verin ve dakikalar içinde tutarlı çoklu çekimli bir klip dışa aktarın.",
+    "faqItems": [
+      {
+        "answer": "LtxApi25ImageToVideo uzak bir servisi çağırır; çoğu kurulumda bir API anahtarı gerekir. Kaynak görseliniz ve parametreler üretim için sağlayıcıya gönderilir. Düğümün kimlik bilgileri alanını ve sağlayıcının dokümantasyonunu/kullanım koşullarını kontrol edin.",
+        "question": "API anahtarına ihtiyacım var mı, işlem yerel mi?"
+      },
+      {
+        "answer": "Düğüm yerleşik çoklu çekim ve otomatik süre tahmini destekler. Şablonunuzda geçersiz kılma seçenekleri varsa, hedef süre ve/veya çekim sayısı belirleyebilirsiniz; aksi halde en iyi tempo için otomatik süreyi açık bırakın.",
+        "question": "Süreyi ve çekim sayısını kontrol edebilir miyim?"
+      },
+      {
+        "answer": "Net konu ayrımı ve tutarlı aydınlatmaya sahip, yüksek kaliteli bir görsel kullanın. Yüzler açık olmalı, ağır hareket bulanıklığından kaçının ve dışa aktarmayı planladığınız en-boy oranına göre (varsayılan olarak 16:9) kadrajlayın.",
+        "question": "Girdi olarak hangi görsel en iyi sonucu verir?"
+      },
+      {
+        "answer": "Tüm çekimler, LtxApi25ImageToVideo düğümü aracılığıyla LTX-2.5 modelinde aynı giriş görseline koşullandırılır. Bu ortak koşullandırma, çekimden çekime karakter kimliği, ışık ve genel stilin korunmasına yardımcı olur.",
+        "question": "İş akışı çekimler arasında karakter ve stili nasıl tutarlı tutuyor?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI'te açın ve üç ana düğümü bulun: LoadImage -> LtxApi25ImageToVideo -> SaveVideo.",
+      "LoadImage'da, konunuzu ve genel sahne stilini net gösteren temiz, iyi aydınlatılmış bir kaynak görsel seçin. Sinematik sonuçlar için 16:9 kompozisyon iyi çalışır.",
+      "LtxApi25ImageToVideo'yu açın ve gerekirse API kimlik bilgilerinizi ekleyin. Düğümde sunulan üretim seçeneklerini yapılandırın (ör. yerleşik çoklu çekimi etkinleştirin, otomatik süreyi açık bırakın veya tercihinize göre hedef süre belirleyin).",
+      "Şablonunuzda mevcutsa tempoyu ve görünümü etkileyen ayarları isteğe bağlı olarak iyileştirin (çekim sayısı, hareket yoğunluğu, en-boy oranı, tekrarlanabilirlik gibi). Hızlı bir ilk deneme için varsayılanları kullanın.",
+      "İş akışını çalıştırın. Düğüm, görselinizi ve ayarları yükler, LTX-2.5 modeliyle çoklu çekimli bir sekans üretir ve bir video klip döndürür.",
+      "SaveVideo'da çıktı yolu, dosya adı ve kare hızını seçin. Son video dosyasını diske yazmak için çalıştırın, ardından gerekirse giriş görseli veya düğüm ayarlarında yineleme yapın."
+    ],
+    "metaDescription": "ComfyUI eğitimi: Tek bir görseli LTX-2.5 ile sinematik çoklu çekimli videoya dönüştürün. Yerleşik çoklu çekim, otomatik süre ve kesintisiz stil.",
+    "suggestedUseCases": [
+      "Hızlı storyboard: tek bir konsept karesinden çekim kapsamı ve tempoyu görselleştirin.",
+      "Kısa kesitlerde karakter ve stil tutarlılığı gerektiren sosyal medya teaser'ları veya reels.",
+      "Bir kahraman görseliyle reklam veya ürün spotları için ön görselleştirme.",
+      "Görünüm geliştirme: tam prodüksiyondan önce ışık, renk ve hareket dilini test edin.",
+      "Ana görselden hızlıca üretilen mood film veya sunum videoları."
+    ],
+    "title": "LTX-2.5 (Pro): Görüntüden Videoya"
   },
   "62cb2b168265": {
     "description": "Nano Banana 2 Lite ile bir görseli düzenleyin; Google’ın Gemini serisinin en hızlı görsel üretim modeliyle orijinal ve düzenlenmiş sonucu yan yana karşılaştırın.",
@@ -9647,6 +9783,24 @@
   "71a0edbac544": {
     "description": "OpenAI Dall-E 2 API ile görselleri boyama (inpainting) tekniğiyle düzenleyin.",
     "extendedDescription": "Bu ComfyUI iş akışı, OpenAI Dall-E 2 API'nin gücünden yararlanarak bir görselin belirli bölümlerini düzenleme veya onarma işlemi olan boyama (inpainting) uygular. OpenAIDalle2, PreviewImage ve LoadImage gibi düğümler entegre edilerek, kullanıcıların eksik veya istenmeyen bölümleri bağlama uygun içerikle doldurmasına olanak tanır. OpenAIDalle2 düğümü, OpenAI'nin güçlü API'sine bağlanarak yüksek kaliteli boyama sonuçları üretir. Bu iş akışı, eski fotoğrafları onarmak, istenmeyen nesneleri kaldırmak veya belirli bölümleri yaratıcı şekilde değiştirmek gibi hassas görsel düzenleme gerektiren görevler için özellikle uygundur.",
+    "faqItems": [
+      {
+        "answer": "Evet, inpainting görevleri için Dall-E 2 API'ye erişmek üzere geçerli bir OpenAI API anahtarına ihtiyacınız var.",
+        "question": "Bu iş akışını kullanmak için API anahtarına ihtiyacım var mı?"
+      },
+      {
+        "answer": "Hayır, iş akışı OpenAI API ile iletişim kurmak için internet bağlantısı gerektirir.",
+        "question": "Bu iş akışını çevrimdışı kullanabilir miyim?"
+      },
+      {
+        "answer": "İş akışı, hem giriş hem de çıkış için JPEG ve PNG gibi yaygın görsel formatlarını destekler.",
+        "question": "Hangi görsel formatları destekleniyor?"
+      },
+      {
+        "answer": "Evet, API'nin kısıtlamalarına bağlı olarak boyut sınırlamaları olabilir. Belirli sınırlar için OpenAI dokümantasyonuna bakın.",
+        "question": "Düzenleyebileceğim görsel boyutunda bir sınır var mı?"
+      }
+    ],
     "howToUse": [
       "ComfyUI iş akışını yükleyin ve OpenAI Dall-E 2 API erişiminizin olduğundan emin olun.",
       "Düzenlemek istediğiniz görseli LoadImage düğümüyle içe aktarın.",
@@ -12555,6 +12709,45 @@
     ],
     "title": "Wan Animate 2: Hareket Transferi"
   },
+  "93c182d3aefb": {
+    "description": "LTX 2.5 ile metinden video üretin; hızlı, yüksek kaliteli prodüksiyon için tasarlanmış bir video modeli. Bir istem yazın ve keskin detay, doğru hareket ve çekimler arasında karakter ve stil tutarlılığı sunan sinematik bir klip elde edin.",
+    "extendedDescription": "Bu ComfyUI iş akışı, bir metin istemini LTX 2.5 modeliyle tamamlanmış bir video klibe dönüştürür; LtxApi25TextToVideo düğümüyle çalışır. İsteminiz (ve isteğe bağlı çoklu çekim yapısı) LTX 2.5 API'ye gönderilir ve keskin detaylı, tutarlı hareketli video içeriği döner. Ardından SaveVideo düğümü, sonucu ComfyUI çıktı klasörünüze paylaşmaya hazır bir dosya olarak yazar.\n\nTeknik olarak, LtxApi25TextToVideo düğümü ana üreticidir: isteminizi ve ayarları paketler, bunları uzak LTX 2.5 servisine gönderir ve dönen klibi grafiğe sağlar. LTX 2.5 yerleşik çoklu çekim sahneleri destekler; böylece isteminizi uygun şekilde yapılandırdığınızda çekimler arasında karakter ve stil korunabilir. SaveVideo düğümü ise son montaj ve dışa aktarmayı yönetir; dosya adı ve kare hızını seçmenize olanak tanır ve iş akışını basit ve hızlı tutar.",
+    "faqItems": [
+      {
+        "answer": "LtxApi25TextToVideo düğümü LTX 2.5 API'yi çağırır; bu nedenle internet bağlantısı ve geçerli API erişimi gerekir. SaveVideo, son dosyayı yerel olarak yazar.",
+        "question": "Bu iş akışı yerel mi çalışıyor, internet gerekiyor mu?"
+      },
+      {
+        "answer": "İsteminizi, karakter, kostüm, ışık ve stil için net ve tutarlı tanımlamalarla birden fazla çekim olarak yapılandırın. Düğüm sürümünüzde çoklu çekim alanı veya çekim listesi varsa kullanın; yoksa istem metninde çekimleri ayırın. Çekimler arasında aynı karakter ve stil ipuçlarını tekrar kullanın.",
+        "question": "Çoklu çekim sahnelerde karakter tutarlılığını nasıl sağlarım?"
+      },
+      {
+        "answer": "LtxApi25TextToVideo düğümünüzde sunulan kontrolleri ayarlayın. Bazı sürümlerde süre, en-boy oranı/çözünürlük ipuçları ve tohum veya rastgelelik ayarı gibi parametreler bulunur. Bir kontrol görünmüyorsa, yapınızda veya API planınızda desteklenmiyor olabilir.",
+        "question": "Süre, çözünürlük veya rastgeleliği kontrol edebilir miyim?"
+      },
+      {
+        "answer": "SaveVideo, oluşturulan klibi ComfyUI çıktı klasörünüze, belirlediğiniz dosya adı veya önek ve FPS ile yazar. Tam kapsayıcı/kodek SaveVideo yapılandırmanıza bağlıdır.",
+        "question": "Video nereye kaydediliyor ve hangi formatta?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI'te yükleyin. LtxApi25TextToVideo düğümünün SaveVideo'ya bağlı olduğunu doğrulayın.",
+      "LtxApi25TextToVideo'yu açın. Metin isteminizi girin. Düğüm sürümünüz destekliyorsa, çoklu çekim yapısı ekleyin (ör. istemde çekimleri ayırarak) ve karakter/stil tutarlılığını koruyun. Gerekirse API kimlik bilgilerinizi veya endpoint'i ekleyin.",
+      "LtxApi25TextToVideo'da mevcutsa üretim ayarlarını isteğe bağlı olarak ayarlayın (ör. süre, en-boy oranı veya rastgelelik/tohum). En iyi sonuç için kısa, görsel dil ve tutarlı karakter tanımları kullanın.",
+      "SaveVideo'yu açın ve net bir dosya adı veya önek ile istediğiniz FPS'yi ayarlayın. Çıktı dizininin doğru olduğundan emin olun.",
+      "İş akışını kuyruğa alın ve çalıştırın. LtxApi25TextToVideo düğümü LTX 2.5 servisine bağlanır, videoyu üretir ve SaveVideo'ya iletir.",
+      "Çıktı videoyu inceleyin. İstem veya düğüm ayarlarını iyileştirerek yineleme yapın ve tekrar çalıştırın. Çoklu çekim sahnelerde, çekim açıklamalarını kısa tutun ve karakter/stil ipuçlarını tekrar kullanarak sürekliliği koruyun."
+    ],
+    "metaDescription": "ComfyUI eğitimi: LtxApi25TextToVideo ve SaveVideo ile LTX 2.5 kullanarak sinematik metinden videoya klipler üretin; yerleşik çoklu çekim sahne desteğiyle.",
+    "suggestedUseCases": [
+      "Ön prodüksiyon planlaması için çoklu çekim sürekliliğine sahip storyboard ve animatikler.",
+      "Net kamera ve hareket ipuçlarıyla ürün b-roll ve kısa tanıtım klipleri.",
+      "Kısa kesitlerde görünüm ve stilin korunduğu karakter odaklı sahneler.",
+      "Hızlı geri dönüş gerektiren sosyal medya teaser'ları ve mood parçaları.",
+      "Yönetmenler, müşteriler veya sunumlar için konsept görselleştirme."
+    ],
+    "title": "LTX-2.5 (Pro): Metinden Videoya"
+  },
   "93f286fbc2c8": {
     "description": "Doğal, zamansal olarak tutarlı sonuçlar üretmek için AI tabanlı maskeleme, referans tabanlı kimlik aktarımı ve inpainting'i birleştiren, yaş küçültme ve/veya yüz değiştirme için ComfyUI iş akışı. VFX kullanımı için tasarlanmıştır; sanatçılar, performansı, ışıklandırmayı ve orijinal plaka ile entegrasyonu koruyarak yüzleri hızlıca değiştirebilir veya gençleştirebilir.",
     "extendedDescription": "ComfyUI'deki Yüz Değiştirme İş Akışı, video görüntülerinde yaş küçültme veya yüz değiştirme işlemleri yapması gereken görsel efekt sanatçıları için geliştirilmiş bir araçtır. Bu iş akışı, kareler arasında doğal ve tutarlı sonuçlar elde etmek için AI tabanlı maskeleme, kimlik aktarımı ve inpainting tekniklerinin bir kombinasyonundan yararlanır. WanVideoVAELoader ve WanVideoModelLoader gibi temel düğümler video verilerini yükleyip yönetmek için kullanılırken, DrawMaskOnImage ve GrowMask gibi düğümler yüz değiştirme için hassas maskeler oluşturulmasına yardımcı olur. İş akışı ayrıca OnnxDetectionModelLoader ve CLIPVisionLoader gibi gelişmiş tespit modellerini entegre ederek yüz özelliklerini doğru şekilde tanımlar ve işler. Bu bileşenlerin entegrasyonu sayesinde, yeni yüz orijinal görüntüyle sorunsuzca bütünleşir ve ışıklandırma ile performans ayrıntıları korunur.",
@@ -13599,6 +13792,8 @@
     "title": "Dinamik Hareket Tasarımı"
   },
   "9dac2dae8bfc": {
+    "description": "Wan 2.2 Fun Kamera Kontrolü ile pan, yakınlaştırma ve döndürme gibi kamera hareketi kontrolleriyle videolar üretin.",
+    "extendedDescription": "Bu ComfyUI iş akışı, tek bir durağan görseli Wan 2.2 14B Fun Kamera Kontrolü ile kamera odaklı, akıcı bir videoya dönüştürür. UNETLoader ve ModelSamplingSD3 ile Wan 2.2 modeli yüklenir, metin isteminiz CLIPLoader + CLIPTextEncode ile kodlanır ve WanCameraEmbedding ile bir kamera yolu oluşturulur. WanCameraImageToVideo düğümü, isteminizi, başlangıç görselinizi ve kamera gömülerini birleştirerek pan, yakınlaştırma ve döndürme hareketlerini takip eden zamansal olarak tutarlı kareler üretir. Kareler VAELoader + VAEDecode ile çözülür, CreateVideo ile birleştirilir ve SaveVideo ile dışa aktarılır.\n\nTeknik olarak, iş akışı KSamplerAdvanced ile iki aşamalı bir gürültü azaltma uygular: Hareket, yapı ve paralaksı oluşturmak için Yüksek gürültü aşaması, ardından detayları iyileştirmek ve titremeyi azaltmak için Düşük gürültü aşaması. Bu ayrım, sanal kamera dinamik şekilde hareket ederken konuların sabit kalmasına yardımcı olur. Şablonda, üretimi hızlandırmak için isteğe bağlı bir LightX2V 4 Steps LoRA (LoraLoaderModelOnly ile) bulunur; bu, hareket zenginliği ve ince detay pahasına hız sağlar. Varsayılan (Lightning LoRA olmadan) yol ise en iyi dinamikler için önerilir. Sağlanan fp8_scaled Wan 2.2 kontrol noktası 640×640 için optimize edilmiştir ve bir RTX 4090D 24GB üzerinde genellikle ilk çalıştırmada ~%84 VRAM kullanır ve yaklaşık 536s, sonraki çalıştırmalarda ise ~513s sürer.",
     "faqItems": [
       {
         "answer": "Bu şablon görselden videoya için tasarlanmıştır. İçeriği ve kimliği sabitlemek için LoadImage ile bir başlangıç görseli yükleyin, ardından hareket eklemek için WanCameraEmbedding kullanın.",
@@ -13632,7 +13827,8 @@
       "Ortam konsept sanatı: hafif pan ve zoom ile manzarayı paralaksla ortaya çıkarmak.",
       "UI/mockup sunumları: arayüz bölümlerini yeniden animasyon yapmadan kontrollü yakınlaştırma ve kaydırmalar.",
       "Sosyal medya gönderileri ve tanıtım döngüleri: statik ana görselden hızlı hareketle etkileşimi artırmak."
-    ]
+    ],
+    "title": "Wan 2.2 14B Fun Kamera Kontrolü"
   },
   "9e033fb4e06a": {
     "description": "Hedef görselinizi ve referans ışıklandırma görselinizi yükleyin. Hedef görselinizi yeniden ışıklandırır.\n\n",
@@ -13901,7 +14097,8 @@
       "Bireysel öğelerin bağımsız olarak manipüle edilmesi gereken video oyunu varlıkları geliştirmek.",
       "E-ticaret için ürün görsellerini tüm görseli etkilemeden renk ve konum açısından iyileştirmek.",
       "Belirli alanları izole ederek fotoğrafları onarmak ve rötuşlamak."
-    ]
+    ],
+    "title": "Qwen-Image-Layered Ayrıştırma"
   },
   "a013e57e6d51": {
     "description": "ByteDance'in Seedance modeliyle doğrudan metin istemlerinden yüksek kaliteli videolar üretin. Doğal hareket ve sinematik kaliteyle çoklu çözünürlük ve en-boy oranı desteği.",
@@ -15659,6 +15856,45 @@
       "Metni bozuk çıkan yapay zeka üretimi görselleri büyütmek ve iyileştirmek."
     ],
     "title": "Grok Imagine Görsel Kalitesi: Düzenle"
+  },
+  "b37902cee452": {
+    "description": "LTX-2.5 ile tek bir görselden video üretin; sektör lideri piksel kalitesi ve yerleşik çoklu çekim yeteneğiyle karakter, ortam ve ışığı bağlı sahneler boyunca koruyan yüksek kaliteli bir klip elde edin. Sinematik prodüksiyon, VFX çekim üretimi ve hızlı, yerel video üretimi gerektiren içerik hatları için idealdir.",
+    "extendedDescription": "Bu ComfyUI iş akışı, tek bir durağan görseli Lightricks’in açık video üretim modeli LTX-2.5 ile akıcı, yüksek kaliteli bir videoya dönüştürür. Hat, kasıtlı olarak basit ve üretim odaklıdır: LoadImage ile kaynak kare alınır, ResolutionSelector ile modele uygun boyut (32'nin katları) ve en-boy oranı kilitlenir, LTX-2.5 üretici düğümü (UUID: 6e397a2b-68f7-48f6-8930-f3a5491a163c) tutarlı bir hareket sekansı sentezler ve SaveVideo kareleri kullanıma hazır bir MP4'e kodlar. Grafikte, arayüzde rehberlik ve bağlantılar sunan bir MarkdownNote bulunur.\n\nTeknik olarak, LTX-2.5 anahtar kareler-önce \"Piksel Difüzyon\" yaklaşımı kullanır; bu, ayrıntı ve yapının zaman boyunca tutarlı şekilde yayılmasına yardımcı olur. Bu, kaynak görselinizden konu kimliği, ışık ve sahne kompozisyonunu korurken kontrol edilebilir hareket ekler. ResolutionSelector, seçtiğiniz 16:9 boyutların modelin stride'ına (32'nin katları) uygun olmasını sağlar; bu, stabilite ve VRAM verimliliği için kritiktir. Yerel çalıştığı için hızlıca yineleme yapabilir, süreyi (kare/FPS) ayarlayabilir ve hareket yoğunluğunu ihtiyaca göre optimize edebilirsiniz.",
+    "faqItems": [
+      {
+        "answer": "LTX-2.5 (birçok difüzyon modeli gibi) stride'a hizalı boyutlarda çalışır. 32'nin katlarını kullanmak, iç dolgu/yeniden boyutlandırma artefaktlarını önler, stabiliteyi artırır ve VRAM'i daha verimli kullanır. ResolutionSelector, geçerli 16:9 boyutları seçmenize yardımcı olur (ör. ~0,6 MP için 1056x608).",
+        "question": "İş akışı neden ResolutionSelector ve 32'nin katlarını kullanıyor?"
+      },
+      {
+        "answer": "Klip süresi = kare sayısı ÷ FPS (ör. 96 kare, 24 FPS ≈ 4 saniye). Render süresi ve bellek, çözünürlük, kare sayısı ve hareket karmaşıklığıyla orantılıdır. Orta ayarlarla başlayın (ör. 0,6–0,8 MP, 64–96 kare, 16–24 FPS) ve VRAM ve yineleme sürenize göre artırın.",
+        "question": "Klibim ne kadar uzun olabilir, render süresini ne etkiler?"
+      },
+      {
+        "answer": "Net konu ve ışıkla yüksek çözünürlüklü bir kaynak görsel kullanın. Çıktı çözünürlüğünü stride'a hizalı tutun, daha muhafazakar hareket için hareket yoğunluğunu azaltın ve hareketi makul tutarken FPS'yi artırmayı düşünün. İstenmeyen artefaktlar görürseniz yeniden tohumlayın; stabilite genellikle birkaç denemeden sonra artar.",
+        "question": "Konuyu nasıl sabit tutar ve titremeyi önlerim?"
+      },
+      {
+        "answer": "Bu şablon tek bir görüntüden videoya klibe odaklanır. LTX-2.5, çekimler arasında tutarlı stil ve kimlik korumak için tasarlanmıştır; ancak ComfyUI'te çoklu çekim zaman çizelgesi oluşturmak için bu bloğu Subgraph ile çoğaltın, her çekimi render alın ve klipleri editörünüzde (veya ayrı bir birleştirme adımında) birleştirin.",
+        "question": "Bu şablon çoklu çekim zaman çizelgesini destekliyor mu?"
+      }
+    ],
+    "howToUse": [
+      "İş akışını ComfyUI'te yükleyin, ardından genel bakış ve ipuçları için MarkdownNote'u okuyun.",
+      "LoadImage düğümünü açın ve kaynak görselinizi seçin (ör. input/neon_cyborg_portrait.png) veya kendi varlığınızı seçin.",
+      "Çıktı boyutunu ResolutionSelector'da ayarlayın. VRAM'inize uygun bir 16:9 ön ayarı seçin (ör. 0,6 MP -> 1056x608). Boyutların 32'nin katı olması zorunludur.",
+      "LTX-2.5 düğümünde (UUID 6e397a2b-68f7-48f6-8930-f3a5491a163c), klip uzunluğunu ve temposunu kare sayısı ve FPS ile ayarlayın. Daha fazla veya az kamera/konu hareketi için tohum ve hareket yoğunluğunu isteğe bağlı olarak ayarlayın.",
+      "SaveVideo ayarlarını doğrulayın (çıktı yolu ve FPS üreticiyle eşleşmeli). İş akışını kuyruğa alın ve çalıştırın.",
+      "İş tamamlandığında, MP4'ü SaveVideo çıktı klasöründen alın ve inceleyin. Çözünürlük, kare/FPS veya hareket ayarlarında yineleme yapın."
+    ],
+    "metaDescription": "ComfyUI eğitimi: Tek bir görseli LTX-2.5 ile yüksek kaliteli videoya dönüştürün. Yükle, çözünürlük ayarla, kareleri oluştur ve MP4 olarak kaydet—tamamen yerel.",
+    "suggestedUseCases": [
+      "Sinematik ön görselleştirme: mood, ışık ve kamera hissini değerlendirmek için stil karelerinden hızlı hareketli plakalar üretin.",
+      "VFX görünüm geliştirme: ana konsept sanattan hareket çalışmaları oluşturup malzeme ve ışık sürekliliğini test edin.",
+      "Ürün tanıtım çekimleri: tek bir ürün görselini promosyonlar ve açılış sayfaları için hafif bir yörünge veya paralaks klibe dönüştürün.",
+      "Sosyal kısa videolar ve döngüler: reels, hikayeler ve reklamlar için durağanlardan dikkat çekici mikro animasyonlar üretin.",
+      "Animatik yapı taşları: tam prodüksiyona geçmeden önce panolardan hızlıca hareketli sekanslar oluşturun."
+    ],
+    "title": "LTX-2.5: Görüntüden Videoya"
   },
   "b3a950cbe689": {
     "description": "Bir görsel yükleyin ve Stability AI API ile hızlıca 4 kat büyütün; düşük kaliteli veya sıkıştırılmış görselleri iyileştirmek için idealdir.",
@@ -19034,6 +19270,45 @@
     ],
     "title": "Luma Photon: Stil Referansı"
   },
+  "d78377cf53f4": {
+    "description": "LTX-2.5 ile ilk ve son kare referans görsellerinden bir video üretin; her iki kareyi tek bir animasyonlu sekansa harmanlayın. Geçiş çekimleri, iki konu veya sahne arasında morflama ve durağan referanslardan çoklu çekimli anlatılar oluşturmak için idealdir.",
+    "extendedDescription": "LTX-2.5: FLF2V, iki durağan görselinizi—hedeflediğiniz ilk ve son kareler—tek, tutarlı bir videoya dönüştürmek için odaklanmış bir ComfyUI iş akışıdır. Yalnızca durağan referanslarınız olduğunda akıcı geçişler, konular arasında morflar veya bir sekans içinde köprü çekimleri oluşturmak için idealdir. İki LoadImage düğümü başlangıç ve bitiş görsellerini sağlar, bunlar tek bir LTX-2.5 FLF2V üretici düğümüne (cf70afc4-5a03-47ce-8210-734b1de6c6bc) aktarılır. Ortaya çıkan kareler SaveVideo ile oynatılabilir bir klibe kodlanır. Grafikte satır içi ipuçları içeren bir MarkdownNote bulunur.\n\nTeknik olarak, LTX-2.5 düğümü Lightricks’in açık video üretim modelini ve anahtar kareler-önce “Piksel Difüzyon” yaklaşımını kullanarak iki uç görselinizden ara kareler sentezler. Kullanacağınız tipik kontroller; hedef çözünürlük, kare sayısı (veya süre), saniyedeki kare (FPS) ve tekrarlanabilirlik için rastgele tohumdur. Birçok sürümde hareketi ilk veya son kareye yakınlaştırmak için harmanlama/yumuşatma seçenekleri de bulunur. SaveVideo ise çıktıyı seçtiğiniz FPS’de (MP4/WebM, ffmpeg kurulumunuza bağlı olarak) kodlar.\n\nEn iyi sonuç için iki referans görselinizin en-boy oranı ve genel ışık/kompozisyonunu eşleştirin. Daha fazla kare ve ilk/son kareler arasında tutarlı içerik genellikle daha akıcı hareket üretir. Gerilme veya kırpma görürseniz, girişlerinizi yüklemeden önce aynı boyuta önceden kırpın.",
+    "faqItems": [
+      {
+        "answer": "En-boy oranlarının eşleşmesi şiddetle tavsiye edilir. Üretici, girişleri çalışma çözünürlüğüne yeniden boyutlandırır; ancak uyumsuz oranlar gerilme veya istenmeyen kırpmalara neden olabilir. En temiz sonuç için her iki görseli de yüklemeden önce aynı boyuta önceden kırpın veya kenarlık ekleyin.",
+        "question": "İki görselim aynı boyut veya en-boy oranında mı olmalı?"
+      },
+      {
+        "answer": "Algılanan süre = kare sayısı ÷ FPS. Geçişi yavaşlatmak ve daha akıcı yapmak için FPS sabitken kare sayısını artırın. Bazı sürümlerde harmanlama/yumuşatma kontrolü de bulunur—daha doğal bir his için ease-in veya ease-out kullanın.",
+        "question": "Geçişin hızını ve akıcılığını nasıl kontrol edebilirim?"
+      },
+      {
+        "answer": "Evet. LTX-2.5 FLF2V düğümünde sabit bir tohum ayarlayın (varsa). Aynı girişler ve parametrelerle aynı tohum kullanıldığında aynı video kareleri üretilir; bu, yinelemeli ince ayarlar için faydalıdır.",
+        "question": "Tekrarlanabilir sonuç alabilir miyim?"
+      },
+      {
+        "answer": "Hedef çözünürlüğü ve/veya kare sayısını azaltın ve her iki görseli de modelin çalışma en-boy oranına önceden boyutlandırarak ekstra ölçeklendirmeden kaçının. Sorunsuz yerel üretim için modern bir GPU önerilir; hâlâ bellek hatası alırsanız çözünürlüğü daha da düşürüp yineleme yapın.",
+        "question": "Performans veya bellek sorunları yaşarsam ne yapmalıyım?"
+      }
+    ],
+    "howToUse": [
+      "LTX-2.5: FLF2V iş akışı JSON'unu ComfyUI'te yükleyin ve MarkdownNote'taki satır içi ipuçlarını veya varsayılanları okuyun.",
+      "İki LoadImage düğümünü açın ve başlangıç görselinizi (ilk kare) ve bitiş görselinizi (son kare) seçin. Temiz enterpolasyon için aynı en-boy oranına sahip olmalarına dikkat edin.",
+      "LTX-2.5 FLF2V düğümünde (cf70afc4-5a03-47ce-8210-734b1de6c6bc), hedef çözünürlüğü, kare sayısını (veya süre), saniyedeki kareyi ve tekrarlanabilirlik için tohum ayarlayın. Düğümde harmanlama/yumuşatma kontrolü varsa, doğrusal geçiş veya ease-in/ease-out hissi için ayarlayın.",
+      "SaveVideo düğümünü yapılandırın: FPS'nin üretici ayarlarıyla eşleştiğinden emin olun, dosya adı/çıktı yolu seçin ve kapsayıcıyı belirleyin (MP4/WebM, ffmpeg kurulumunuza bağlı olarak).",
+      "Kuyruğa Ekle'ye tıklayın. Çıktıyı inceleyin; hareket çok hızlı veya ani ise kare sayısını artırın veya harmanlama/yumuşatma ayarını değiştirin ve tekrar çalıştırın.",
+      "Memnun kaldığınızda, SaveVideo ile son klibi diske yazdırın. Medya oynatıcınızda inceleyin ve parametrelerde yineleme yapın."
+    ],
+    "metaDescription": "ComfyUI ile LTX-2.5 kullanarak ilk ve son görsellerden akıcı geçişler üretin. İki kare yükleyin, ara kareleri sentezleyin ve MP4/WebM olarak dışa aktarın.",
+    "suggestedUseCases": [
+      "İki storyboard karesi veya sahne durağanı arasında sinematik geçişler.",
+      "Sosyal içerik ve konsept görselleştirme için portre veya karakter morfları.",
+      "İki çekim arasında akıcı şekilde geçiş yapan öncesi/sonrası ürün tanıtımları.",
+      "Bir düzenlemede iki ortam durağanını bağlayarak köprü sekansı oluşturma.",
+      "Başlık ve açılışlar için logo'dan sahneye veya ikon'dan ürüne geçişler."
+    ],
+    "title": "LTX-2.5: FLF2V"
+  },
   "d82f4527c76a": {
     "description": "Bir hedef görsel ve bir stil referans görseli yükleyin. Referansın sanatsal stilini hedefin yapısıyla birleştiren yeni bir görsel oluşturun.",
     "extendedDescription": "'Magnific: Stil Referansı' iş akışı, bir referans görselin sanatsal stilini bir hedef görselin yapısal unsurlarıyla harmanlayarak benzersiz ve görsel olarak çekici bir sonuç oluşturmak için tasarlanmıştır. Bu iş akışı, stil transferi görevlerinde uzmanlaşmış Magnific modelinin yeteneklerinden yararlanır. Hedef ve stil referans görsellerini yüklemek için LoadImage, gerçek stil birleştirme işlemini gerçekleştirmek için MagnificImageStyleTransferNode ve yeni oluşturulan görseli dışa aktarmak için SaveImage düğümü gibi düğümlerin birleşimini kullanır. Bu süreç, mevcut görsellere yeni stilistik unsurlar katmak isteyen sanatçılar ve tasarımcılar için özellikle faydalıdır ve temel yapıyı değiştirmeden yeni bir stil kazandırır.",
@@ -20299,6 +20574,7 @@
   },
   "e5c914d15241": {
     "description": "Görselde olmasını istediğiniz öğeleri tanımlayın ve görselden hassas şekilde ayrıştırın.",
+    "extendedDescription": "Qwen-Image-Layered Kontrol Ayrıştırma iş akışı, kullanıcıların bir görseli Qwen-Image-Layered modeli kullanarak bileşenlerine ayırmasına yardımcı olmak için tasarlanmıştır. Bu iş akışı, özellikle bir görselin belirli bölümlerini daha fazla düzenleme veya analiz için izole etmesi gereken sanatçılar ve tasarımcılar için faydalıdır. Süreç, LoadImage düğümü ile bir görselin yüklenmesiyle başlar ve ardından ImageScaleToMaxDimension düğümü ile istenen boyutlara ölçeklendirilir. İş akışının temelinde, ayrıştırmayı Qwen-Image-Layered modeliyle gerçekleştiren f754a936-daaf-4b6e-9658-41fdc54d301d düğümü yer alır.\n\nBu iş akışı teknik olarak sağlamdır ve görsel katmanları üzerinde hassas kontrol sağlar; katmanlar SaveImage düğümü ile kaydedilebilir. MarkdownNote düğümü, süreç boyunca dokümantasyon ve rehberlik sağlamak için kullanılır. Bu katmanlı ayrıştırma, grafik tasarım, dijital sanat ve belirli özelliklerin izole edilip analiz edilmesi gereken bilimsel görüntüleme gibi detaylı görsel düzenleme gerektiren senaryolarda faydalıdır.",
     "faqItems": [
       {
         "answer": "Standart kullanım için önerilen giriş boyutu 640px, yüksek çözünürlük ihtiyaçları için ise 1024px'dir.",
@@ -20317,13 +20593,23 @@
         "question": "Bu iş akışında alt grafiklerin kullanımı hakkında daha fazla bilgiyi nereden edinebilirim?"
       }
     ],
+    "howToUse": [
+      "İş akışını ComfyUI içinde yükleyin ve gerekli tüm modellerin hazır olduğundan emin olun.",
+      "Ayrıştırmak istediğiniz görseli içe aktarmak için LoadImage düğümünü kullanın.",
+      "Görsel boyutunu ihtiyacınıza göre, tercihen yüksek çözünürlük için 640px veya 1024px olacak şekilde ImageScaleToMaxDimension düğümüyle ayarlayın.",
+      "Görsel ayrıştırması için f754a936-daaf-4b6e-9658-41fdc54d301d düğümünü kullanarak Qwen-Image-Layered modelini uygulayın.",
+      "Ayrıştırılmış katmanları gözden geçirin ve SaveImage düğümüyle kaydedin.",
+      "Süreç boyunca ek rehberlik ve dokümantasyon için MarkdownNote düğümüne başvurun."
+    ],
+    "metaDescription": "Görselleri katmanlara ayırmak için Qwen-Image-Layered Kontrol ile hassas düzenleme ve analiz. Tasarımcılar ve dijital sanatçılar için ideal.",
     "suggestedUseCases": [
       "Ayrıntılı düzenleme için hassas katman ayrımı gerektiren grafik tasarım projeleri.",
       "Belirli öğelerin izole edilip manipüle edildiği dijital sanat üretimi.",
       "Bir görseldeki belirli özelliklere odaklanmak için bilimsel görüntüleme analizi.",
       "Görsel ayrıştırma tekniklerini göstermek için eğitim amaçlı kullanımlar.",
       "Animasyon veya video oyunu geliştirme için varlık hazırlığı."
-    ]
+    ],
+    "title": "Qwen-Image-Layered Kontrol Ayrıştırma"
   },
   "e5ecf2fd5b30": {
     "description": "Kling O1 ile metin istemlerinden yüksek kaliteli görseller üretin; stil ve içerik yönlendirmesi için 10 adede kadar referans görsel desteği. Esnek oranlar ve 1K/2K çözünürlük seçenekleri sunar.",

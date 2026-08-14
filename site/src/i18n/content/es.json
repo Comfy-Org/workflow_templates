@@ -1,6 +1,7 @@
 {
   "00d3d57a5195": {
     "description": "Relleno de vídeo eficiente a partir de los fotogramas inicial y final. El modelo 5B permite iteraciones rápidas para probar flujos de trabajo.",
+    "extendedDescription": "El flujo de trabajo 'Wan 2.2 5B Fun Inpaint' está diseñado para el inpainting eficiente de video, aprovechando la potencia del modelo Wan2.2. Este flujo de trabajo es especialmente útil para generar contenido de video interpolando entre los fotogramas inicial y final, permitiendo la exploración creativa y la prueba de técnicas de generación de video. El flujo emplea una serie de nodos, incluyendo KSampler para muestreo, CLIPTextEncode para la codificación de la solicitud de texto y VAEDecode para decodificar variables latentes en salidas visuales. Al utilizar el modelo Wan2.2, este flujo de trabajo garantiza una generación de video de alta calidad con tiempos de iteración rápidos, lo que lo hace ideal tanto para experimentación como para escenarios de producción.\n\nTécnicamente, el flujo de trabajo está estructurado en varios pasos clave. Inicialmente, los modelos se cargan usando nodos como UNETLoader y VAELoader, preparando el entorno para la generación de video. El proceso continúa con la creación de solicitudes mediante el nodo CLIPTextEncode, que guía el estilo visual y el contenido del video. Luego, el flujo de trabajo especifica la imagen inicial y los parámetros del video, como tamaño y duración, usando nodos como LoadImage y CreateVideo. Finalmente, el video se genera y guarda usando el nodo SaveVideo, completando el proceso de inpainting. Este enfoque estructurado hace que el flujo de trabajo sea eficiente y flexible, adaptándose a una amplia gama de necesidades de generación de video.",
     "faqItems": [
       {
         "answer": "El flujo utiliza el modelo Wan2.2 para inpainting de vídeo, junto con componentes VAE y UNET para decodificación y muestreo.",
@@ -19,6 +20,14 @@
         "question": "¿Cómo ingreso una imagen inicial personalizada?"
       }
     ],
+    "howToUse": [
+      "Carga el flujo de trabajo Wan 2.2 5B Fun Inpaint en ComfyUI.",
+      "Utiliza los nodos UNETLoader y VAELoader para cargar los modelos necesarios.",
+      "Introduce tu solicitud de texto deseada usando el nodo CLIPTextEncode para guiar el contenido del video.",
+      "Establece la imagen inicial y configura los parámetros del video como tamaño y duración usando los nodos LoadImage y CreateVideo.",
+      "Ejecuta el flujo de trabajo para generar el video utilizando la técnica de inpainting.",
+      "Guarda tu video generado con el nodo SaveVideo."
+    ],
     "metaDescription": "Flujo de trabajo eficiente de inpainting de vídeo usando el modelo Wan2.2 para generación creativa de vídeo e iteraciones rápidas.",
     "suggestedUseCases": [
       "Crear vídeos time-lapse con efectos artísticos de inpainting.",
@@ -26,7 +35,8 @@
       "Producir instalaciones de vídeo artístico con estilos visuales únicos.",
       "Probar e iterar técnicas de generación de vídeo rápidamente.",
       "Desarrollar contenido educativo con elementos visuales dinámicos."
-    ]
+    ],
+    "title": "Wan 2.2 5B Fun Inpaint"
   },
   "011974792e13": {
     "description": "Genera vídeos de alta calidad a partir de mapas de profundidad con generación de audio y vídeo sincronizados usando LTX-2. Ofrece control preciso de profundidad, conciencia espacial y rendimiento eficiente.",
@@ -1589,6 +1599,44 @@
       "Producir recursos visuales para redes sociales."
     ],
     "title": "OpenAI: Dall-E 2 Texto a Imagen"
+  },
+  "13ba3af78782": {
+    "description": "Genera video cinematográfico a partir de una solicitud de texto usando LTX-2.5, un modelo de difusión listo para producción que produce un solo archivo de video con opción de escalado espacial para mejorar la resolución. Ideal para previsualización de películas, storyboards comerciales y flujos de trabajo de creación de contenido de alto volumen.\n\n",
+    "extendedDescription": "Este flujo de trabajo de ComfyUI convierte una simple solicitud de texto en un video cinematográfico usando LTX-2.5 de Lightricks, un modelo de difusión listo para producción. El núcleo del grafo es el nodo de texto a video LTX-2.5 (UUID: 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970), que consume tu solicitud, resolución y parámetros de generación para sintetizar un clip coherente. Un nodo ResolutionSelector proporciona los valores de ancho y alto alineados a los múltiplos de 32 preferidos por el modelo, y un nodo SaveVideo codifica el resultado como un solo archivo de video. Se incluye un nodo MarkdownNote en el grafo para mostrar consejos rápidos y orientación sobre resolución directamente en ComfyUI.\n\nInternamente, LTX-2.5 utiliza una estrategia Pixel Diffusion, primero los fotogramas clave: establece anclas visuales fuertes y luego difunde el movimiento entre ellas, ayudando a mantener la coherencia temporal y el ritmo cinematográfico. Puedes controlar la fidelidad y el uso de memoria de la GPU combinando el ResolutionSelector con los parámetros del modelo. Por ejemplo, 0.5 megapíxeles en 16:9 equivale a 960x544, mientras que 0.3 MP equivale a 736x416; ambos son puntos de partida seguros en GPUs modestas. Cuando necesites más detalle, activa el escalado espacial opcional del nodo para aumentar la resolución sin volver a generar el movimiento desde cero, y finaliza con SaveVideo en tu FPS y ruta de archivo objetivo.",
+    "faqItems": [
+      {
+        "answer": "LTX-2.5 funciona mejor con dimensiones que sean múltiplos de 32. ResolutionSelector asigna objetivos prácticos de megapíxeles a tamaños válidos (por ejemplo, 0.5 MP en 16:9 → 960x544), ayudándote a equilibrar detalle, velocidad y VRAM sin adivinanzas.",
+        "question": "¿Por qué el flujo de trabajo utiliza ResolutionSelector en lugar de escribir ancho y alto manualmente?"
+      },
+      {
+        "answer": "El modelo utiliza una estrategia Pixel Diffusion, primero los fotogramas clave, para establecer anclas visuales fuertes y luego difundir el movimiento entre ellas. Esto reduce la deriva temporal y mejora la coherencia en escenas complejas.",
+        "question": "¿Cómo mantiene LTX-2.5 el movimiento consistente entre fotogramas?"
+      },
+      {
+        "answer": "La resolución y el número de fotogramas son los factores principales. Comienza con megapíxeles bajos (0.3–0.6 MP) y clips cortos para iterar, luego aumenta. Activar el escalado espacial incrementa el uso de memoria; súbelo solo después de estar conforme con el movimiento y la composición.",
+        "question": "¿Qué controles afectan más el rendimiento y el uso de memoria?"
+      },
+      {
+        "answer": "SaveVideo escribe un solo archivo de video en disco a partir del clip generado. Puedes establecer el FPS en el nodo para que coincida con el ritmo objetivo y asegurar que el archivo guardado se ajuste a las especificaciones de entrega de tu proyecto.",
+        "question": "¿Qué produce SaveVideo y puedo cambiar el FPS?"
+      }
+    ],
+    "howToUse": [
+      "Carga el flujo de trabajo LTX-2.5: Texto a Video (JSON) en ComfyUI y confirma que el nodo LTX-2.5 (UUID: 8b4f085c-1bb3-4ecd-aeed-603a8d6d3970) esté presente y sin advertencias de modelo faltante.",
+      "En ResolutionSelector, elige la relación de aspecto y los megapíxeles objetivo para autocompletar ancho y alto (múltiplos de 32). Comienza alrededor de 0.4–0.6 MP para previsualizaciones rápidas.",
+      "Abre el nodo LTX-2.5 e ingresa tu solicitud de texto. Configura opciones de generación como semilla (para reproducibilidad), número de fotogramas o duración, y FPS para controlar la longitud y el ritmo del clip.",
+      "Opcionalmente activa el escalado espacial en el nodo LTX-2.5 para mejorar el detalle. Ajusta el factor de escalado o el tamaño objetivo si está disponible, vigilando el uso de VRAM.",
+      "Configura SaveVideo con el FPS y la ruta de salida deseados, luego encola la solicitud. Revisa el clip guardado, ajusta la solicitud o la resolución y vuelve a ejecutar hasta que estés satisfecho."
+    ],
+    "metaDescription": "Genera texto a video cinematográfico con LTX-2.5 en ComfyUI. Selecciona resolución, ajusta parámetros, escala opcionalmente y exporta un solo archivo de video.",
+    "suggestedUseCases": [
+      "Previsualización de películas y animatics para planificar tomas y movimientos de cámara.",
+      "Storyboards comerciales y tomas de producto para mostrar la intención de movimiento a clientes.",
+      "Conceptos de movimiento para redes sociales y loops para validar ideas rápidamente.",
+      "Arte conceptual con movimiento para comunicar ambiente, iluminación y ritmo.",
+      "Generación rápida de contenido para flujos de trabajo de alto volumen que requieren ejecuciones locales consistentes."
+    ],
+    "title": "LTX-2.5: Texto a Video"
   },
   "1446c7f47aee": {
     "description": "Música de entrada → Separar voces / bajo / batería / otros",
@@ -6810,6 +6858,45 @@
     ],
     "title": "Wan 2.1 ControlNet"
   },
+  "527ecf1f2eb4": {
+    "description": "Genera un video a partir de dos imágenes de referencia usando LTX-2.5, combinando el contenido de ambos fotogramas en una secuencia animada. Ideal para crear tomas de transición, morphing entre dos sujetos o escenas, y construir narrativas multishot a partir de referencias fijas.\n\n",
+    "extendedDescription": "Este flujo de trabajo convierte dos imágenes fijas en una transición de video fluida usando la API de imagen a video de LTX-2.5. Dos nodos LoadImage proporcionan los fotogramas de referencia inicial y final, que se pasan a LtxApi25ImageToVideo. El nodo combina las señales estructurales de ambas entradas para sintetizar una secuencia intermedia que transforma la primera imagen en la segunda, produciendo una transición, revelado o morph natural. Finalmente, SaveVideo codifica los fotogramas generados en un archivo de video que puedes revisar o usar en una edición.\n\nTécnicamente, el nodo LtxApi25ImageToVideo realiza una llamada API al backend de LTX-2.5, que analiza ambas imágenes, alinea las características principales e interpola el movimiento según la duración y el FPS especificados. Como el procesamiento es remoto, normalmente deberás configurar una clave/endpoint API en el nodo y elegir parámetros clave como duración de salida y FPS. Mantener ambas imágenes de entrada con relación de aspecto, encuadre y escala de sujeto similares ayuda al modelo a establecer una “ruta” limpia entre ellas, reduciendo artefactos y asegurando un morph más suave. SaveVideo luego escribe el resultado en disco a la velocidad de fotogramas elegida, listo para reproducir o editar.",
+    "faqItems": [
+      {
+        "answer": "Es muy recomendable. El nodo o API puede redimensionar automáticamente, pero los tamaños/aspectos diferentes suelen causar estiramientos o movimiento distorsionado. Alinea la relación de aspecto y la escala aproximada del sujeto para una transición más limpia.",
+        "question": "¿Mis dos imágenes deben tener el mismo tamaño y relación de aspecto?"
+      },
+      {
+        "answer": "Usa las opciones de duración y FPS en LtxApi25ImageToVideo para definir la longitud total y la resolución temporal. Si el nodo expone controles de mezcla o transición, ajústalos para favorecer un movimiento más suave o más agresivo entre fotogramas. Duraciones más largas y encuadres consistentes suelen verse más suaves.",
+        "question": "¿Cómo controlo la velocidad y suavidad del morph?"
+      },
+      {
+        "answer": "SaveVideo escribe la secuencia generada en la ruta de archivo que configures en el nodo (por defecto, la carpeta de salida de ComfyUI). Elige la velocidad de fotogramas allí; las opciones exactas de contenedor/códec dependen de tu entorno y configuración de SaveVideo.",
+        "question": "¿Dónde se guarda el video y en qué formato?"
+      },
+      {
+        "answer": "Sí. LtxApi25ImageToVideo utiliza una API para ejecutar LTX-2.5 de forma remota, por lo que tus imágenes se suben para su procesamiento. Asegúrate de configurar tus credenciales API y revisar las políticas de privacidad y retención de datos del proveedor antes de usarlo.",
+        "question": "¿Esto envía mis imágenes a un servicio externo?"
+      }
+    ],
+    "howToUse": [
+      "Carga el flujo de trabajo en ComfyUI y confirma que ves los tres nodos clave: dos nodos LoadImage alimentando a LtxApi25ImageToVideo, seguido de SaveVideo.",
+      "Abre cada nodo LoadImage y selecciona tus imágenes de referencia inicial (primera) y final (segunda). Para mejores resultados, usa imágenes con la misma relación de aspecto y encuadre de sujeto similar.",
+      "Abre LtxApi25ImageToVideo y configura los ajustes API requeridos (clave/endpoint) si es necesario. Establece opciones principales como duración de salida y FPS; ajusta cualquier control de mezcla/transición que exponga el nodo para definir la fuerza de la animación hacia cada imagen.",
+      "Opcionalmente ajusta los parámetros de SaveVideo (ruta/nombre de archivo y FPS) para que coincidan con tu entrega objetivo. Asegúrate de que el FPS aquí coincida con el elegido en LtxApi25ImageToVideo.",
+      "Encola y ejecuta el flujo de trabajo. El nodo subirá las imágenes al servicio LTX-2.5, generará los fotogramas intermedios y los pasará a SaveVideo para codificación.",
+      "Revisa el video de salida. Si ves estiramientos o saltos, intenta alinear la escala del sujeto entre ambas imágenes, igualar la relación de aspecto o ajustar duración/FPS, luego vuelve a ejecutar."
+    ],
+    "metaDescription": "Crea morphs suaves de dos imágenes en ComfyUI con LTX-2.5: carga dos fotogramas, genera un video de transición vía API y guarda el resultado con SaveVideo.",
+    "suggestedUseCases": [
+      "Transiciones de escena sin cortes: pasa de una toma de establecimiento a otra sin corte brusco.",
+      "Morphing de personajes o productos: transforma un sujeto en otro para revelados y comparaciones.",
+      "Historias antes/después: anima entre dos estados (por ejemplo, restauración, cambio de look, iteraciones de diseño).",
+      "Puentes narrativos: conecta fotogramas clave fijos en un breve beat de movimiento entre cortes.",
+      "Mood board a movimiento: convierte dos frames de estilo en una exploración animada rápida."
+    ],
+    "title": "LTX-2.5 (Pro): FLF2V"
+  },
   "52a2be6f1c65": {
     "description": "Aprende a cargar imágenes, generar un video y cómo encontrar un nodo usando Wan 2.2.",
     "extendedDescription": "Este flujo de trabajo de ComfyUI, titulado '1.2 Inicial - Imagen a Video', está diseñado para transformar una serie de imágenes en un video cohesivo utilizando los modelos Wan2.2 y Wan. Aprovecha los nodos personalizados esenciales de ComfyUI para simplificar el proceso. El flujo comienza cargando imágenes a través de los nodos LoadImage, que luego se procesan para generar un video. Una característica clave de este flujo de trabajo es su simplicidad y eficiencia, lo que lo hace accesible para usuarios nuevos en la generación de videos a partir de imágenes. La base técnica de este flujo implica conectar nodos como Create Video y Save Video, permitiendo controlar la tasa de fotogramas y el formato de salida de manera efectiva.\n\nLo que hace especialmente útil este flujo de trabajo es su integración con el modelo Wan2.2, que mejora el proceso de generación de video asegurando salidas de alta calidad. El flujo también incluye un nodo MarkdownNote para proporcionar documentación y guía en línea, facilitando la comprensión de cada paso. Al establecer los fotogramas por segundo (fps) en 16, se logra una transición suave entre imágenes, resultando en un video de aspecto profesional. Este flujo es ideal para creadores que buscan convertir rápidamente secuencias de imágenes en videos sin conocimientos técnicos avanzados.",
@@ -8097,6 +8184,45 @@
       "Seleccionar por lotes cuadros fuertes para pruebas A/B de miniaturas."
     ],
     "title": "Miniatura de Marca Comfy"
+  },
+  "615266189e02": {
+    "description": "Genera video a partir de una sola imagen usando el modelo rápido distilado de LTX-2.5, entregando secuencias cinematográficas multishot con personajes, iluminación y estilo consistentes entre cortes. El flujo de trabajo produce un archivo de video con soporte nativo multishot y predicción automática de duración. Ideal para storyboards rápidos, creación de contenido para redes sociales y previsualización en flujos de producción comercial.\n\n",
+    "extendedDescription": "Este flujo de trabajo de ComfyUI convierte una imagen de referencia en un video cinematográfico multishot usando el modelo rápido distilado de LTX-2.5. Conecta tres nodos en secuencia: LoadImage lleva tu imagen fuente al grafo, LtxApi25ImageToVideo envía esa imagen a la API de LTX-2.5 para síntesis de movimiento y generación de tomas, y SaveVideo escribe el clip devuelto en disco. Como LTX-2.5 soporta generación multishot nativa y predicción automática de duración, el resultado se siente como una secuencia editada corta en lugar de un solo paneo o zoom continuo.\n\nTécnicamente, el nodo LtxApi25ImageToVideo condiciona todas las tomas sobre el mismo fotograma de entrada, lo que ayuda a mantener la consistencia de personajes, iluminación y estilo entre cortes. El nodo gestiona la solicitud/respuesta con el servicio remoto, encola la generación y produce un video listo para guardar. SaveVideo luego codifica el resultado con el nombre de archivo y velocidad de fotogramas que elijas. Esto hace que el flujo de trabajo sea ideal para storyboards rápidos, publicaciones sociales y previsualización: solo coloca una imagen de referencia limpia, deja que la API infiera el ritmo y los movimientos de cámara, y exporta un clip multishot cohesivo en minutos.",
+    "faqItems": [
+      {
+        "answer": "LtxApi25ImageToVideo llama a un servicio remoto; la mayoría de las implementaciones requieren una clave API. Tu imagen fuente y parámetros se envían al proveedor para la generación. Consulta el campo de credenciales del nodo y la documentación y términos del proveedor antes de usarlo.",
+        "question": "¿Necesito una clave API y el procesamiento es local?"
+      },
+      {
+        "answer": "El nodo soporta multishot nativo y predicción automática de duración. Si tu plantilla permite sobrescribir, puedes establecer una duración objetivo y/o número de tomas; de lo contrario, deja la duración automática activada para un ritmo óptimo.",
+        "question": "¿Puedo controlar la duración y el número de tomas?"
+      },
+      {
+        "answer": "Usa una imagen limpia y de alta calidad con buena separación del sujeto e iluminación coherente. Mantén los rostros despejados, evita el desenfoque de movimiento y compón para la relación de aspecto que planeas exportar (16:9 es un buen valor predeterminado).",
+        "question": "¿Qué imagen funciona mejor como entrada?"
+      },
+      {
+        "answer": "Todas las tomas se condicionan sobre la misma imagen de entrada dentro del modelo LTX-2.5 a través del nodo LtxApi25ImageToVideo. Este condicionamiento compartido ayuda a preservar la identidad del personaje, la iluminación y el estilo general de una toma a otra.",
+        "question": "¿Cómo mantiene el flujo de trabajo la consistencia de personajes y estilo entre cortes?"
+      }
+    ],
+    "howToUse": [
+      "Abre el flujo de trabajo en ComfyUI y localiza los tres nodos principales: LoadImage -> LtxApi25ImageToVideo -> SaveVideo.",
+      "En LoadImage, selecciona una imagen fuente limpia y bien iluminada que muestre claramente tu sujeto y el estilo general de la escena. Una composición 16:9 funciona bien para resultados cinematográficos.",
+      "Abre LtxApi25ImageToVideo y añade tus credenciales API si es necesario. Configura las opciones de generación que exponga el nodo (por ejemplo, activa multishot nativo, deja la duración automática activada o establece una duración objetivo si prefieres control manual).",
+      "Opcionalmente ajusta parámetros que afecten el ritmo y el aspecto si están disponibles en tu plantilla (como número de tomas, intensidad de movimiento, aspecto o controles de repetibilidad). Mantén los valores predeterminados para una primera pasada rápida.",
+      "Ejecuta el flujo de trabajo. El nodo subirá tu imagen y configuración, generará una secuencia multishot mediante el modelo LTX-2.5 y devolverá un clip de video.",
+      "En SaveVideo, elige la ruta de salida, nombre de archivo y velocidad de fotogramas. Ejecuta para guardar el archivo de video final en disco, luego revisa y ajusta la imagen de entrada o los parámetros del nodo según sea necesario."
+    ],
+    "metaDescription": "Tutorial de ComfyUI: Convierte una imagen en un video multishot cinematográfico con LTX-2.5. Multishot nativo, duración automática y estilo consistente entre cortes.",
+    "suggestedUseCases": [
+      "Storyboards rápidos: visualiza cobertura y ritmo a partir de un solo frame conceptual.",
+      "Teasers o reels para redes sociales que requieren personajes y estilo consistentes entre cortes rápidos.",
+      "Previsualización para anuncios o spots de producto usando una imagen principal para explorar movimientos de cámara.",
+      "Desarrollo de look: prueba iluminación, color y lenguaje de movimiento antes de una producción completa.",
+      "Mood films o videos de pitch generados rápidamente a partir de arte clave."
+    ],
+    "title": "LTX-2.5 (Pro): Imagen a Video"
   },
   "62cb2b168265": {
     "description": "Edita una imagen usando Nano Banana 2 Lite, el modelo de generación de imágenes más rápido de la serie Gemini de Google, produciendo una comparación lado a lado del original y el resultado editado.",
@@ -10005,6 +10131,7 @@
   },
   "7553d92529e0": {
     "description": "ControlNet multicontrol compatible con Canny, HED, Depth, Pose y MLSD para Z-Image-Turbo.",
+    "extendedDescription": "El flujo de trabajo 'Z-Image-Turbo Fun Union ControlNet' es un proceso sofisticado de generación de imágenes que aprovecha múltiples modelos ControlNet para mejorar y manipular imágenes con precisión. Este flujo de trabajo integra varias técnicas de preprocesamiento de imágenes, incluyendo detección de bordes Canny, HED (Holistically-Nested Edge Detection), estimación de profundidad, reconocimiento de pose y MLSD (Multi-Line Segment Detection). Estas técnicas se orquestan para refinar y controlar la salida del modelo Z-Image-Turbo, permitiendo transformaciones de imagen detalladas y matizadas. Al utilizar nodos como SaveImage, MarkdownNote, PreviewImage e ImageScaleToMaxDimension, el flujo de trabajo asegura que las imágenes se procesen de manera eficiente y efectiva.\n\nTécnicamente, este flujo de trabajo destaca por su capacidad para manejar múltiples entradas de control simultáneamente, proporcionando a los usuarios un alto grado de control sobre el proceso de generación de imágenes. La integración de varios modelos ControlNet permite aplicar diferentes técnicas de preprocesamiento a las imágenes de entrada, que luego se escalan y transforman según las especificaciones de salida deseadas. Esto hace que el flujo de trabajo sea especialmente útil para aplicaciones que requieren manipulación precisa de imágenes, como creación de arte digital, realidad aumentada y edición fotográfica avanzada.",
     "faqItems": [
       {
         "answer": "Usar múltiples modelos ControlNet permite mayor flexibilidad y precisión en la manipulación de imágenes, posibilitando aplicar diferentes mejoras y controles simultáneamente.",
@@ -10023,6 +10150,14 @@
         "question": "¿Este flujo de trabajo es adecuado para principiantes?"
       }
     ],
+    "howToUse": [
+      "Carga el flujo de trabajo 'Z-Image-Turbo Fun Union ControlNet' en ComfyUI.",
+      "Importa tu imagen usando el nodo LoadImage para comenzar el preprocesamiento.",
+      "Selecciona los modelos ControlNet deseados (Canny, HED, Depth, Pose, MLSD) para aplicar mejoras específicas.",
+      "Ajusta las dimensiones de la imagen usando el nodo ImageScaleToMaxDimension para un procesamiento óptimo.",
+      "Previsualiza la imagen procesada con el nodo PreviewImage para asegurarte de que cumple tus expectativas.",
+      "Guarda la imagen final usando el nodo SaveImage para completar el flujo de trabajo."
+    ],
     "metaDescription": "Mejora imágenes con ControlNet multicontrol usando Canny, HED, Depth, Pose y MLSD en Z-Image-Turbo para manipulación precisa de imágenes.",
     "suggestedUseCases": [
       "Crear arte digital detallado con control preciso sobre las características de la imagen.",
@@ -10030,7 +10165,8 @@
       "Edición fotográfica avanzada donde la detección de bordes y segmentación son cruciales.",
       "Generar imágenes para proyectos de animación que requieren control consistente de pose y profundidad.",
       "Desarrollar datos de entrenamiento para modelos de aprendizaje automático que requieren imágenes anotadas."
-    ]
+    ],
+    "title": "Z-Image-Turbo Fun Union ControlNet"
   },
   "75fb83052003": {
     "description": "Genera imágenes rápidamente con la versión cuantizada fp8 de Flux.1 Schnell. Ideal para hardware de gama baja, solo requiere 4 pasos para generar imágenes.",
@@ -12573,6 +12709,45 @@
     ],
     "title": "Wan Animate 2: Transferencia de Movimiento"
   },
+  "93c182d3aefb": {
+    "description": "Genera video a partir de texto con LTX 2.5, un modelo de video diseñado para trabajos de producción rápidos y de alta calidad. Escribe una solicitud y obtén un clip cinematográfico con detalle nítido, movimiento preciso y soporte para escenas multishot nativas que mantienen personajes y estilo entre cortes.",
+    "extendedDescription": "Este flujo de trabajo de ComfyUI convierte una solicitud de texto en un clip de video terminado usando el modelo LTX 2.5 a través del nodo LtxApi25TextToVideo. Tu solicitud (y estructura multishot opcional) se envía a la API de LTX 2.5, que devuelve contenido de video generado con detalle nítido y movimiento coherente. El nodo SaveVideo posterior escribe el resultado en tu carpeta de salida de ComfyUI como un archivo listo para compartir.\n\nTécnicamente, el nodo LtxApi25TextToVideo es el generador principal: empaqueta tu solicitud y configuración, las envía al servicio remoto LTX 2.5 y proporciona el clip resultante al grafo. LTX 2.5 soporta escenas multishot nativas, lo que permite mantener personajes y estilo entre cortes cuando estructuras tu solicitud adecuadamente. El nodo SaveVideo gestiona el ensamblaje final y la exportación, permitiéndote elegir nombre de archivo y velocidad de fotogramas, manteniendo el flujo de trabajo simple y rápido.",
+    "faqItems": [
+      {
+        "answer": "El nodo LtxApi25TextToVideo llama a la API de LTX 2.5, por lo que necesitas conexión a internet y acceso API válido. SaveVideo se ejecuta localmente para escribir el archivo final.",
+        "question": "¿Este flujo de trabajo se ejecuta localmente o requiere internet?"
+      },
+      {
+        "answer": "Estructura tu solicitud como varias tomas con descriptores claros y consistentes para personajes, vestuario, iluminación y estilo. Si tu versión del nodo expone un campo multishot o lista de tomas, úsalo; de lo contrario, separa las tomas dentro del texto de la solicitud. Reutiliza los mismos descriptores de personajes y estilo entre tomas.",
+        "question": "¿Cómo creo escenas multishot que mantengan personajes consistentes?"
+      },
+      {
+        "answer": "Ajusta los controles que exponga tu nodo LtxApi25TextToVideo. Algunas versiones incluyen parámetros como duración, relación de aspecto/resolución y una semilla o ajuste de aleatoriedad. Si un control no es visible, puede que no esté soportado por tu versión o plan API.",
+        "question": "¿Puedo controlar duración, resolución o aleatoriedad?"
+      },
+      {
+        "answer": "SaveVideo escribe el clip renderizado en tu carpeta de salida de ComfyUI usando el nombre de archivo o prefijo que configures, al FPS que elijas. El contenedor/códec exacto depende de tu configuración de SaveVideo.",
+        "question": "¿Dónde se guarda el video y en qué formato?"
+      }
+    ],
+    "howToUse": [
+      "Carga el flujo de trabajo en ComfyUI. Confirma que puedes ver el nodo LtxApi25TextToVideo alimentando al nodo SaveVideo.",
+      "Abre LtxApi25TextToVideo. Ingresa tu solicitud de texto. Si tu versión del nodo lo permite, añade estructura multishot (por ejemplo, separa tomas en tu solicitud) para mantener personajes y estilo entre cortes. Añade tus credenciales API o endpoint si es necesario.",
+      "Opcionalmente ajusta cualquier parámetro de generación disponible en LtxApi25TextToVideo (por ejemplo, duración, relación de aspecto o aleatoriedad/semilla si está disponible). Usa lenguaje visual conciso y descriptores consistentes de personajes para mejores resultados.",
+      "Abre SaveVideo y establece un nombre de archivo o prefijo claro y tu FPS deseado. Confirma que la carpeta de salida sea la correcta.",
+      "Encola el flujo de trabajo y ejecútalo. El nodo LtxApi25TextToVideo contactará el servicio LTX 2.5, generará el video y lo pasará a SaveVideo para exportación.",
+      "Revisa el video de salida. Itera refinando tu solicitud o configuración del nodo y vuelve a ejecutar. Para escenas multishot, mantén las descripciones de tomas concisas y reutiliza descriptores de personajes y estilo para mantener la continuidad."
+    ],
+    "metaDescription": "Tutorial de ComfyUI: Genera clips cinematográficos de texto a video con LTX 2.5 usando LtxApi25TextToVideo y SaveVideo, incluyendo soporte nativo para escenas multishot.",
+    "suggestedUseCases": [
+      "Storyboards y animatics con continuidad multishot para planificación de preproducción.",
+      "Tomas de producto y clips promocionales cortos con indicaciones claras de cámara y movimiento.",
+      "Escenas centradas en personajes que mantienen aspecto y estilo entre cortes rápidos.",
+      "Teasers para redes sociales y piezas de ambiente que requieren entrega rápida.",
+      "Visualización de conceptos para directores, clientes o presentaciones."
+    ],
+    "title": "LTX-2.5 (Pro): Texto a Video"
+  },
   "93f286fbc2c8": {
     "description": "Un flujo de trabajo de ComfyUI para rejuvenecimiento y/o reemplazo de rostros que combina enmascaramiento impulsado por IA, transferencia de identidad basada en referencia y inpainting para producir resultados naturales y consistentes en el tiempo. Diseñado para VFX, permite a los artistas intercambiar o rejuvenecer rostros rápidamente mientras se preserva la actuación, la iluminación y la integración con el material original.",
     "extendedDescription": "El Flujo de Trabajo de Intercambio de Rostros en ComfyUI es una herramienta sofisticada diseñada para artistas de efectos visuales que necesitan realizar rejuvenecimiento o reemplazo de rostros en material de video. Este flujo de trabajo combina enmascaramiento impulsado por IA, transferencia de identidad y técnicas de inpainting para ofrecer resultados naturales y consistentes entre fotogramas. Nodos clave como WanVideoVAELoader y WanVideoModelLoader se utilizan para cargar y gestionar datos de video, mientras que nodos como DrawMaskOnImage y GrowMask ayudan a crear máscaras precisas para el intercambio de rostros. El flujo de trabajo también incorpora modelos avanzados de detección a través de OnnxDetectionModelLoader y CLIPVisionLoader para identificar y manipular características faciales con precisión. Al integrar estos componentes, el flujo de trabajo asegura que el nuevo rostro se mezcle perfectamente con el material original, manteniendo matices de iluminación y actuación.",
@@ -13652,7 +13827,8 @@
       "Arte conceptual de entornos: paneo y zoom lento para revelar escenarios con parallax ligero.",
       "Reels de UI/mockup: zooms y paneos controlados para destacar secciones de interfaz sin reanimar en un DCC.",
       "Posts sociales y loops teaser: movimiento rápido desde arte clave estático para aumentar engagement."
-    ]
+    ],
+    "title": "Wan 2.2 14B Fun Camera Control"
   },
   "9e033fb4e06a": {
     "description": "Sube tu imagen objetivo y una imagen de referencia de iluminación. Relight de tu imagen objetivo.\n\n",
@@ -13921,7 +14097,8 @@
       "Desarrollo de recursos para videojuegos donde los elementos individuales deben manipularse de forma independiente.",
       "Mejora de imágenes de productos para e-commerce ajustando colores y posiciones sin afectar toda la imagen.",
       "Restauración y retoque de fotografías aislando y editando áreas específicas."
-    ]
+    ],
+    "title": "Qwen-Image-Layered Decomposition"
   },
   "a013e57e6d51": {
     "description": "Genera videos de alta calidad directamente desde indicaciones de texto usando el modelo Seedance de ByteDance. Soporta múltiples resoluciones y relaciones de aspecto con movimiento natural y calidad cinematográfica.",
@@ -15679,6 +15856,45 @@
       "Escalar y refinar imágenes generadas por IA donde el texto salió distorsionado."
     ],
     "title": "Grok Imagine Image Quality: Editar"
+  },
+  "b37902cee452": {
+    "description": "Genera video a partir de una sola imagen usando LTX-2.5, produciendo un clip de alta fidelidad con calidad de píxel líder en la industria y capacidad multishot nativa que mantiene personaje, entorno e iluminación entre escenas conectadas. Ideal para producción cinematográfica, creación de tomas VFX y flujos de contenido que requieren generación de video rápida y local.",
+    "extendedDescription": "Este flujo de trabajo de ComfyUI convierte una imagen fija en un video fluido y de alta fidelidad usando LTX-2.5, el modelo abierto de generación de video de Lightricks. El pipeline es intencionalmente simple y orientado a producción: LoadImage ingresa tu fotograma fuente, ResolutionSelector fija un tamaño y relación de aspecto compatibles con el modelo (múltiplos de 32), el nodo generador LTX-2.5 (UUID: 6e397a2b-68f7-48f6-8930-f3a5491a163c) sintetiza una secuencia de movimiento coherente y SaveVideo codifica los fotogramas en un MP4 listo para usar. Un nodo MarkdownNote en el grafo proporciona orientación y enlaces dentro de la interfaz.\n\nInternamente, LTX-2.5 utiliza un enfoque “Pixel Diffusion” primero los fotogramas clave para propagar detalle y estructura de manera consistente a lo largo del tiempo. Esto ayuda a preservar la identidad del sujeto, la iluminación y la composición de la escena de tu imagen fuente mientras introduce movimiento controlable. ResolutionSelector asegura que las dimensiones 16:9 elegidas cumplan con el stride del modelo (múltiplos de 32), lo cual es crítico para la estabilidad y eficiencia de VRAM. Como se ejecuta localmente, puedes iterar rápidamente, ajustar duración (fotogramas/fps) y modificar la intensidad del movimiento según las necesidades de previz, desarrollo de look VFX y flujos de contenido.",
+    "faqItems": [
+      {
+        "answer": "LTX-2.5 (como muchos modelos de difusión) opera con dimensiones alineadas al stride. Usar múltiplos de 32 previene artefactos de padding/redimensionamiento interno, mejora la estabilidad y es más eficiente en VRAM. El nodo ResolutionSelector te ayuda a elegir tamaños 16:9 válidos (por ejemplo, 1056x608 para ~0.6 MP).",
+        "question": "¿Por qué el flujo de trabajo usa ResolutionSelector y múltiplos de 32?"
+      },
+      {
+        "answer": "La duración del clip es fotogramas ÷ FPS (por ejemplo, 96 fotogramas a 24 FPS ≈ 4 segundos). El tiempo de renderizado y la memoria escalan con la resolución, el número de fotogramas y la complejidad del movimiento. Comienza con ajustes modestos (por ejemplo, 0.6–0.8 MP, 64–96 fotogramas, 16–24 FPS) y aumenta según tu VRAM y tiempo de iteración.",
+        "question": "¿Cuánto puede durar mi clip y qué afecta el tiempo de renderizado?"
+      },
+      {
+        "answer": "Usa una imagen fuente limpia y de alta resolución con un sujeto y una iluminación claros. Mantén la resolución de salida alineada al stride, reduce la intensidad del movimiento para movimientos más conservadores y considera aumentar el FPS manteniendo el movimiento moderado. Cambia la semilla si ves artefactos no deseados; la estabilidad suele mejorar tras varios intentos.",
+        "question": "¿Cómo mantengo el sujeto estable y evito saltos?"
+      },
+      {
+        "answer": "Esta plantilla se centra en un solo clip de imagen a video. LTX-2.5 está diseñado para mantener estilo e identidad coherentes entre tomas, pero para construir una línea de tiempo multishot en ComfyUI, duplica este bloque con Subgraph, renderiza cada toma y une los clips resultantes en tu editor (o en un paso de combinación separado).",
+        "question": "¿Esto soporta líneas de tiempo multishot?"
+      }
+    ],
+    "howToUse": [
+      "Carga el flujo de trabajo en ComfyUI, luego lee el MarkdownNote para una visión general y consejos.",
+      "Abre el nodo LoadImage y selecciona tu imagen fuente (por ejemplo, input/neon_cyborg_portrait.png) o busca tu propio recurso.",
+      "Establece el tamaño de salida en ResolutionSelector. Elige un preset 16:9 que se ajuste a tu VRAM (por ejemplo, 0.6 MP -> 1056x608). Mantener dimensiones como múltiplos de 32 es obligatorio.",
+      "En el nodo LTX-2.5 (UUID 6e397a2b-68f7-48f6-8930-f3a5491a163c), ajusta la longitud y el ritmo del clip modificando el número de fotogramas y el FPS. Opcionalmente ajusta la semilla y la intensidad del movimiento para más o menos movimiento de cámara/sujeto.",
+      "Confirma la configuración de SaveVideo (la ruta de salida y el FPS deben coincidir con el generador). Encola el flujo de trabajo y ejecútalo.",
+      "Cuando el trabajo termine, recupera el MP4 de la carpeta de salida de SaveVideo y revisa. Itera sobre resolución, fotogramas/FPS o ajustes de movimiento según sea necesario."
+    ],
+    "metaDescription": "Tutorial de ComfyUI: convierte una imagen en un video de alta calidad con LTX-2.5. Carga, ajusta resolución, renderiza fotogramas y guarda en MP4—totalmente local.",
+    "suggestedUseCases": [
+      "Previz cinematográfica: genera placas en movimiento rápidas a partir de frames de estilo para evaluar ambiente, iluminación y sensación de cámara.",
+      "Desarrollo de look VFX: crea estudios de movimiento a partir de arte conceptual clave para probar continuidad de materiales e iluminación.",
+      "Tomas de producto: convierte una sola imagen de producto en un sutil giro u órbita para promos y landing pages.",
+      "Cortos y loops sociales: produce microanimaciones llamativas a partir de imágenes fijas para reels, stories y anuncios.",
+      "Bloques para animatics: ensambla rápidamente beats en movimiento a partir de boards antes de comprometerte con la producción completa."
+    ],
+    "title": "LTX-2.5: Imagen a Video"
   },
   "b3a950cbe689": {
     "description": "Sube una imagen para escalarla rápidamente 4x vía la API Stability AI, ideal para mejorar imágenes de baja calidad o comprimidas.",
@@ -19054,6 +19270,45 @@
     ],
     "title": "Luma Photon: Referencia de Estilo"
   },
+  "d78377cf53f4": {
+    "description": "Genera un video a partir de imágenes de referencia de primer y último fotograma usando LTX-2.5, combinando ambos fotogramas en una secuencia animada. Ideal para crear transiciones, morphing entre sujetos o escenas y construir narrativas multishot a partir de referencias fijas.",
+    "extendedDescription": "LTX-2.5: FLF2V es un flujo de trabajo enfocado de ComfyUI para convertir dos imágenes fijas—tus fotogramas inicial y final—en un solo video coherente. Es ideal para crear transiciones suaves, morphing entre sujetos o unir tomas en una secuencia cuando solo tienes referencias fijas. Dos nodos LoadImage proporcionan los visuales inicial y final, que alimentan a un solo nodo generador LTX-2.5 FLF2V (cf70afc4-5a03-47ce-8210-734b1de6c6bc). Los fotogramas resultantes se entregan a SaveVideo para codificarlos en un clip reproducible. Se incluye un nodo MarkdownNote con consejos integrados.\n\nInternamente, el nodo LTX-2.5 aprovecha el modelo abierto de generación de video de Lightricks y su enfoque “Pixel Diffusion” primero los fotogramas clave para sintetizar fotogramas intermedios a partir de tus imágenes de inicio y fin. Los controles típicos que usarás son resolución objetivo, número de fotogramas (o duración), fotogramas por segundo y una semilla aleatoria para reproducibilidad. Muchas versiones también exponen opciones de mezcla/suavizado para inclinar el movimiento hacia el primer o último fotograma. SaveVideo luego codifica la salida al fps elegido (MP4/WebM, según tu configuración de ffmpeg).\n\nPara mejores resultados, iguala la relación de aspecto y la composición general de tus dos imágenes de referencia. Un mayor número de fotogramas y contenido consistente entre los fotogramas inicial y final suelen producir un movimiento más suave. Si ves estiramientos o recortes, recorta previamente tus entradas al mismo tamaño antes de cargarlas en el flujo de trabajo.",
+    "faqItems": [
+      {
+        "answer": "Se recomienda encarecidamente igualar la relación de aspecto. El generador redimensionará las entradas a su resolución de trabajo, pero los aspectos diferentes pueden causar estiramientos o recortes no deseados. Recorta o rellena ambas imágenes al mismo tamaño antes de cargarlas para obtener los resultados más limpios.",
+        "question": "¿Mis dos imágenes deben tener el mismo tamaño o relación de aspecto?"
+      },
+      {
+        "answer": "La duración percibida es fotogramas ÷ fps. Para ralentizar la transición y hacerla más suave, aumenta el número de fotogramas manteniendo el mismo fps. Algunas versiones también incluyen un control de mezcla/suavizado—úsalo para ease-in o ease-out desde el fotograma inicial/final para un efecto más natural.",
+        "question": "¿Cómo controlo el ritmo y la suavidad de la transición?"
+      },
+      {
+        "answer": "Sí. Establece una semilla fija en el nodo LTX-2.5 FLF2V (si está disponible). Usar las mismas entradas y parámetros con la misma semilla reproducirá los mismos fotogramas de video, útil para ajustes iterativos.",
+        "question": "¿Puedo obtener resultados repetibles?"
+      },
+      {
+        "answer": "Reduce la resolución objetivo y/o el número de fotogramas, y asegúrate de que ambas imágenes estén preajustadas a la relación de aspecto de trabajo del modelo para evitar escalados extra. Se recomienda una GPU moderna para generación local fluida; si aún ves errores de memoria, baja más la resolución y vuelve a intentar.",
+        "question": "¿Qué hago si tengo problemas de rendimiento o memoria?"
+      }
+    ],
+    "howToUse": [
+      "Carga el flujo de trabajo LTX-2.5: FLF2V (JSON) en ComfyUI y lee el MarkdownNote para consejos o valores predeterminados.",
+      "Abre los dos nodos LoadImage y selecciona tu imagen inicial (primer fotograma) y final (último fotograma). Asegúrate de que tengan la misma relación de aspecto para una interpolación limpia.",
+      "En el nodo LTX-2.5 FLF2V (cf70afc4-5a03-47ce-8210-734b1de6c6bc), establece la resolución objetivo, número de fotogramas (o duración), fotogramas por segundo y una semilla si quieres resultados repetibles. Si el nodo expone un control de mezcla/suavizado, ajústalo para favorecer una transición lineal o un efecto ease-in/ease-out.",
+      "Configura el nodo SaveVideo: confirma que el fps coincida con la configuración del generador, elige nombre/ruta de archivo y selecciona el contenedor deseado (MP4/WebM, según tu configuración de ffmpeg).",
+      "Haz clic en Encolar Solicitud para generar. Inspecciona la salida; si el movimiento es muy rápido o brusco, aumenta el número de fotogramas o ajusta la mezcla/suavizado y vuelve a ejecutar.",
+      "Cuando estés satisfecho, deja que SaveVideo escriba el clip final en disco. Reprodúcelo en tu reproductor multimedia y ajusta parámetros según sea necesario."
+    ],
+    "metaDescription": "Genera transiciones suaves entre imágenes inicial y final usando LTX-2.5 en ComfyUI. Carga dos fotogramas, sintetiza intermedios y exporta a MP4/WebM.",
+    "suggestedUseCases": [
+      "Transiciones cinematográficas entre dos frames de storyboard o imágenes de escena.",
+      "Morphing de retratos o personajes para contenido social y visualización conceptual.",
+      "Revelados de producto antes/después que interpolan suavemente entre dos tomas.",
+      "Unir dos imágenes de entorno para crear una secuencia conectiva en una edición.",
+      "Transiciones de logo a escena o de icono a producto para títulos y aperturas."
+    ],
+    "title": "LTX-2.5: FLF2V"
+  },
   "d82f4527c76a": {
     "description": "Sube una imagen objetivo y una imagen de referencia de estilo. Genera una nueva imagen que fusiona el estilo artístico de la referencia con la estructura de tu objetivo.",
     "extendedDescription": "El flujo de trabajo 'Magnific: Referencia de Estilo' está diseñado para combinar el estilo artístico de una imagen de referencia con los elementos estructurales de una imagen objetivo, creando un resultado único y visualmente atractivo. Este flujo aprovecha las capacidades del modelo Magnific, especializado en tareas de transferencia de estilo. Utiliza una combinación de nodos, incluyendo LoadImage para importar tanto la imagen objetivo como la de referencia de estilo, y MagnificImageStyleTransferNode para realizar la fusión de estilos. Finalmente, el nodo SaveImage se utiliza para guardar la imagen generada. Este proceso es especialmente útil para artistas y diseñadores que buscan infundir nuevos elementos estilísticos en imágenes existentes sin alterar su estructura fundamental.",
@@ -20353,7 +20608,8 @@
       "Análisis de imágenes científicas para enfocar características particulares.",
       "Fines educativos para demostrar técnicas de descomposición de imágenes.",
       "Preparación de recursos para animación o desarrollo de videojuegos."
-    ]
+    ],
+    "title": "Qwen-Image-Layered Control Decomposition"
   },
   "e5ecf2fd5b30": {
     "description": "Genera imágenes de alta calidad a partir de prompts de texto usando Kling O1, con soporte para hasta 10 imágenes de referencia para guiar el estilo y contenido. Ofrece relaciones de aspecto flexibles y opciones de resolución 1K/2K.",
