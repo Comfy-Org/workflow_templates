@@ -3,6 +3,7 @@ import {
   buildHowToJsonLd,
   buildSoftwareApplicationJsonLd,
   buildCollectionPageJsonLd,
+  buildWorkflowGraphJsonLd,
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
 
@@ -164,6 +165,96 @@ describe('buildCollectionPageJsonLd', () => {
     });
     expect(result).toHaveProperty('inLanguage', 'ja');
     expect(result.mainEntity).toMatchObject({ '@type': 'ItemList', numberOfItems: 1 });
+  });
+});
+
+describe('buildWorkflowGraphJsonLd', () => {
+  const baseParams = {
+    name: 'LTX-2.5: Image to Video',
+    description: 'Generate video from a single image using LTX-2.5.',
+    url: 'https://comfy.org/workflows/ltx-2-5-i2v-abc123/',
+    breadcrumbItems: [
+      { name: 'Home', item: 'https://comfy.org' },
+      { name: 'Workflows', item: 'https://comfy.org/workflows/' },
+      { name: 'LTX-2.5: Image to Video' },
+    ],
+  };
+
+  it('returns null when there is no entity data', () => {
+    expect(buildWorkflowGraphJsonLd({ ...baseParams, entities: {} })).toBeNull();
+    expect(
+      buildWorkflowGraphJsonLd({ ...baseParams, entities: { about: [], categories: [] } })
+    ).toBeNull();
+  });
+
+  it('builds a @graph with the workflow as mainEntity of the WebPage', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: { about: [{ name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' }] },
+    });
+    expect(result).not.toBeNull();
+    expect(result?.['@context']).toBe('https://schema.org');
+    const graph = result!['@graph'];
+    const webpage = graph.find((n: { '@type': string }) => n['@type'] === 'WebPage');
+    const workflow = graph.find(
+      (n: { '@type': unknown }) =>
+        Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
+    );
+    expect(webpage).toMatchObject({
+      '@id': `${baseParams.url}#webpage`,
+      mainEntity: { '@id': `${baseParams.url}#workflow` },
+      about: [
+        { '@type': 'DefinedTerm', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
+      ],
+    });
+    expect(workflow).toMatchObject({
+      '@id': `${baseParams.url}#workflow`,
+      name: baseParams.name,
+      description: baseParams.description,
+    });
+  });
+
+  it('emits a DefinedTermSet per category with terms cross-referenced via mentions', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        categories: [
+          { name: 'Technology', terms: [{ name: 'API' }, { name: 'Codec' }] },
+          { name: 'Audio & Video', terms: [{ name: 'Frame Rate' }] },
+        ],
+      },
+    });
+    const graph = result!['@graph'];
+    const termSets = graph.filter((n: { '@type': string }) => n['@type'] === 'DefinedTermSet');
+    const terms = graph.filter((n: { '@type': string }) => n['@type'] === 'DefinedTerm');
+    expect(termSets).toHaveLength(2);
+    expect(terms).toHaveLength(3);
+    const webpage = graph.find((n: { '@type': string }) => n['@type'] === 'WebPage');
+    expect(webpage.mentions).toHaveLength(3);
+    // Every mentioned @id must resolve to a DefinedTerm actually present in the graph.
+    const termIds = new Set(terms.map((t: { '@id': string }) => t['@id']));
+    for (const mention of webpage.mentions) {
+      expect(termIds.has(mention['@id'])).toBe(true);
+    }
+  });
+
+  it('includes a FAQPage node only when faqItems are non-empty', () => {
+    const withFaq = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: { about: [{ name: 'Video' }] },
+      faqItems: [{ question: 'Q?', answer: 'A.' }],
+    });
+    expect(withFaq!['@graph'].some((n: { '@type': string }) => n['@type'] === 'FAQPage')).toBe(
+      true
+    );
+
+    const withoutFaq = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: { about: [{ name: 'Video' }] },
+    });
+    expect(withoutFaq!['@graph'].some((n: { '@type': string }) => n['@type'] === 'FAQPage')).toBe(
+      false
+    );
   });
 });
 
