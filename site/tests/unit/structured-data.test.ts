@@ -180,11 +180,20 @@ describe('buildWorkflowGraphJsonLd', () => {
     ],
   };
 
-  it('returns null when there is no entity data', () => {
-    expect(buildWorkflowGraphJsonLd({ ...baseParams, entities: {} })).toBeNull();
-    expect(
-      buildWorkflowGraphJsonLd({ ...baseParams, entities: { about: [], categories: [] } })
-    ).toBeNull();
+  it('always builds the graph, even with no entity data', () => {
+    for (const entities of [undefined, {}, { about: [], categories: [] }]) {
+      const result = buildWorkflowGraphJsonLd({ ...baseParams, entities });
+      expect(result).not.toBeNull();
+      const graph = result!['@graph'];
+      expect(graph.some((n: { '@type': unknown }) => n['@type'] === 'WebPage')).toBe(true);
+      expect(
+        graph.some(
+          (n: { '@type': unknown }) =>
+            Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
+        )
+      ).toBe(true);
+      expect(graph.some((n: { '@type': unknown }) => n['@type'] === 'DefinedTerm')).toBe(false);
+    }
   });
 
   it('builds a @graph with the workflow as mainEntity of the WebPage', () => {

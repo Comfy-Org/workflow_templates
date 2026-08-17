@@ -214,8 +214,9 @@ export interface WorkflowEntities {
  * Mirrors the use-case page graph in `buildCollectionPageJsonLd`'s sibling — same
  * `WebSite`/`Organization`/`SoftwareApplication` root nodes — but with a `WebPage`
  * whose `mainEntity` is the workflow rather than a `CollectionPage` `ItemList`.
- * Returns `null` when there's no entity data, so callers can fall back to the
- * simpler per-type script tags already emitted for every workflow page.
+ * Always builds the graph, replacing the page's old per-type scripts outright —
+ * `entities` is optional structured-data enrichment layered into the same graph
+ * once the backend supplies it, not a gate on whether the graph itself renders.
  */
 export function buildWorkflowGraphJsonLd(params: {
   name: string;
@@ -227,11 +228,10 @@ export function buildWorkflowGraphJsonLd(params: {
   inLanguage?: string;
   keywords?: string;
   breadcrumbItems: BreadcrumbItem[];
-  entities: WorkflowEntities;
+  entities?: WorkflowEntities;
   faqItems?: FaqItem[];
 }) {
-  const { about, categories } = params.entities;
-  if (!about?.length && !categories?.length) return null;
+  const { about, categories } = params.entities || {};
 
   const website = {
     '@type': 'WebSite',
