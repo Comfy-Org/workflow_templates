@@ -12,8 +12,9 @@ from typing import Dict, List, Set, Tuple
 try:
     import jsonschema
 except ImportError:
-    print("Error: jsonschema package not installed. Run: pip install jsonschema")
-    sys.exit(1)
+    # Reported by main() instead of exiting here, so importing this module cannot kill
+    # the interpreter: packages/core/tests imports it, and CI installs no jsonschema.
+    jsonschema = None
 
 _lib_dir = Path(__file__).resolve().parent.parent / "lib"
 if str(_lib_dir) not in sys.path:
@@ -32,7 +33,10 @@ def load_json(file_path: Path) -> Dict:
 def validate_schema(index_data: List[Dict], schema_path: Path) -> Tuple[bool, List[str]]:
     """Validate index.json against JSON schema."""
     errors = []
-    
+
+    if jsonschema is None:
+        return False, ["jsonschema package not installed. Run: pip install jsonschema"]
+
     try:
         schema = load_json(schema_path)
         jsonschema.validate(instance=index_data, schema=schema)
@@ -777,6 +781,10 @@ def check_partner_node_markers(
 
 def main():
     """Main validation function."""
+    if jsonschema is None:
+        print("Error: jsonschema package not installed. Run: pip install jsonschema")
+        return 1
+
     # Check for GitHub Actions environment
     is_github_actions = os.environ.get('GITHUB_ACTIONS') == 'true'
     
