@@ -86,57 +86,64 @@ const modelSlugRedirects = Object.fromEntries(
 // search/backlink traffic and 404 today. Same shadow guard as above: skip a
 // variant that is itself a canonical slug, and let modelSlugRedirects win on
 // overlap once content catches up.
+/**
+ * @param {string} variant
+ * @param {string | null} target
+ * @returns {[string, string | null]}
+ */
+const pair = (variant, target) => [variant, target];
+
+/** @type {[string, string | null][]} */
+const manualModelSlugTargets = [
+  ...[
+    'wan2-1',
+    'wan2-1-infinitetalk',
+    'wan2-1-vace',
+    'wan2-1-scail',
+    'wan2-2',
+    'wan2-2-animate',
+    'wan2-5',
+    'wan2-6',
+    'wan2-7',
+    'wan-ati',
+  ].map((variant) => pair(variant, 'wan')),
+  ...['flux-1', 'flux-1-kontext', 'flux-1-krea-dev', 'flux-2', 'flux-2-dev', 'flux-2-klein'].map(
+    (variant) => pair(variant, 'flux')
+  ),
+  ...['kling-1-6', 'kling-2-0', 'kling-2-6', 'kling-3-0', 'kling-o1', 'kling-o3'].map((variant) =>
+    pair(variant, 'kling')
+  ),
+  ...['ltx-0-9-5', 'ltx-2', 'ltx-2-3'].map((variant) => pair(variant, 'ltx')),
+  ...['seedance1-0-pro', 'seedance-1-5-pro', 'seedance-2-0'].map((variant) =>
+    pair(variant, 'seedance')
+  ),
+  ...['qwen-image-2512', 'qwen-image-layered'].map((variant) => pair(variant, 'qwen-image')),
+  pair('z-image-turbo', 'z-image'),
+  pair('nano-banana-2', 'nano-banana-pro'),
+  // No dedicated page exists for these families yet; land on the model index
+  // rather than a dead end.
+  ...[
+    'sdxl',
+    'sd1-5',
+    'sd3-5',
+    'hunyuan-3d',
+    'gemini3-pro-image-preview',
+    'gpt-image-1',
+    'gpt-image-1-5',
+    'seedream-4-0',
+    'seedream-4-5',
+    'seedream-5-0-lite',
+    'none',
+  ].map((variant) => pair(variant, null)),
+];
+
 const manualModelSlugRedirects = Object.fromEntries(
-  [
-    ...[
-      'wan2-1',
-      'wan2-1-infinitetalk',
-      'wan2-1-vace',
-      'wan2-1-scail',
-      'wan2-2',
-      'wan2-2-animate',
-      'wan2-5',
-      'wan2-6',
-      'wan2-7',
-      'wan-ati',
-    ].map((variant) => [variant, 'wan']),
-    ...['flux-1', 'flux-1-kontext', 'flux-1-krea-dev', 'flux-2', 'flux-2-dev', 'flux-2-klein'].map(
-      (variant) => [variant, 'flux']
-    ),
-    ...['kling-1-6', 'kling-2-0', 'kling-2-6', 'kling-3-0', 'kling-o1', 'kling-o3'].map(
-      (variant) => [variant, 'kling']
-    ),
-    ...['ltx-0-9-5', 'ltx-2', 'ltx-2-3'].map((variant) => [variant, 'ltx']),
-    ...['seedance1-0-pro', 'seedance-1-5-pro', 'seedance-2-0'].map((variant) => [
-      variant,
-      'seedance',
-    ]),
-    ...['qwen-image-2512', 'qwen-image-layered'].map((variant) => [variant, 'qwen-image']),
-    ['z-image-turbo', 'z-image'],
-    ['nano-banana-2', 'nano-banana-pro'],
-    // No dedicated page exists for these families yet; land on the model index
-    // rather than a dead end.
-    ...[
-      'sdxl',
-      'sd1-5',
-      'sd3-5',
-      'hunyuan-3d',
-      'gemini3-pro-image-preview',
-      'gpt-image-1',
-      'gpt-image-1-5',
-      'seedream-4-0',
-      'seedream-4-5',
-      'seedream-5-0-lite',
-      'none',
-    ].map((variant) => [variant, null]),
-  ]
+  manualModelSlugTargets
     .filter(([variant]) => !canonicalModelSlugs.has(variant))
-    .flatMap(([variant, target]) => {
+    .map(([variant, target]) => {
+      /** @type {string} */
       const destination = target ? `/workflows/model/${target}/` : '/workflows/model/';
-      return [
-        [`/workflows/model/${variant}`, destination],
-        [`/workflows/model/${variant}/`, destination],
-      ];
+      return [`/workflows/model/${variant}`, destination];
     })
 );
 
