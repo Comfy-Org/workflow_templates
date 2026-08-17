@@ -55,6 +55,10 @@ export interface SeoPageDef {
   pins?: SeoPagePin[];
   /** Share ids dropped from the grid: filter matches that don't serve the page. */
   excludeShareIds?: string[];
+  /** Other use-case page slugs to prioritize in this page's "Keep exploring" rail,
+   *  in order. Remaining slots (if any) fill automatically as before. Omit to keep
+   *  the fully automatic behavior every other page already has. */
+  relatedSlugs?: string[];
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -523,8 +527,8 @@ export const SEO_PAGES: SeoPageDef[] = [
   },
   {
     slug: 'sprite-sheet-generator',
-    title: 'Sprite Sheet Generator | Comfy Workflows',
-    h1: 'Sprite Sheet Generator Workflows',
+    title: 'AI Sprite Sheet Generator | Comfy Workflows',
+    h1: 'AI Sprite Sheet Generator Workflows',
     keywords: {
       primary: 'sprite sheet generator',
       secondary: [
@@ -552,6 +556,9 @@ export const SEO_PAGES: SeoPageDef[] = [
     ],
     // Skybox generator matches `Game` but makes HDR environments, not sprites.
     excludeShareIds: ['f5199b5121f3'],
+    // SEO review: anchor this page to the other two gaming-adjacent pages instead
+    // of whatever the automatic file-order fill would otherwise surface.
+    relatedSlugs: ['ai-anime-generator', 'image-to-3d'],
   },
 ];
 

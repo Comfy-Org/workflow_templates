@@ -158,6 +158,28 @@ export function relatedModelsForUseCase(
 }
 
 /**
+ * Use-case pages for a page's "Keep exploring" rail: `def.relatedSlugs` first, in
+ * the order given, then any remaining slots fill automatically from the routed
+ * catalog (declaration order) exactly as every page behaved before this field
+ * existed. A page that never sets `relatedSlugs` gets the identical output it
+ * always did.
+ */
+export function relatedUseCasesForPage(
+  def: SeoPageDef,
+  allPages: SeoPageDef[],
+  routedSlugs: string[],
+  limit = 5
+): SeoPageDef[] {
+  const isCandidate = (slug: string) => slug !== def.slug && routedSlugs.includes(slug);
+  const manual = (def.relatedSlugs ?? []).filter(isCandidate);
+  const manualSet = new Set(manual);
+  const auto = allPages
+    .map((p) => p.slug)
+    .filter((slug) => isCandidate(slug) && !manualSet.has(slug));
+  return [...manual, ...auto].slice(0, limit).map((slug) => allPages.find((p) => p.slug === slug)!);
+}
+
+/**
  * Reverse of `relatedModelsForUseCase`: the use-case pages whose grid this model
  * family powers, ranked by overlap. Powers the "use cases featuring this model"
  * rail on a model page, derived rather than read from a hand-typed list.
