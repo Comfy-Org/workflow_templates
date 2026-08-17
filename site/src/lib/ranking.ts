@@ -35,7 +35,7 @@ const HITS_PER_PAGE = 1000;
  * `src/lib` at Astro build) and plain Node scripts (`process.env`, used by
  * `scripts/`). Either may be undefined depending on the caller's context.
  */
-function readEnv(key: string): string {
+export function readEnv(key: string): string {
   const fromVite =
     typeof import.meta !== 'undefined' && import.meta.env
       ? (import.meta.env as Record<string, string | undefined>)[key]

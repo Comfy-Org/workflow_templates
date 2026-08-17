@@ -15,6 +15,7 @@ import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { creatorPath } from '../../../lib/routes';
 import { absoluteUrl } from '../../../config/site';
 import { listingIndexing } from '../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../lib/i18n/localize-cards';
 import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../../lib/hub-api';
 import { fetchRankingMap } from '../../../lib/ranking';
 
@@ -32,7 +33,13 @@ const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankin
 let allTemplates: SerializedTemplate[] = [];
 try {
   const entries = await listWorkflowIndex();
-  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles, rankingMap));
+  // Index entries are English only. Resolve the same text the detail page will
+  // show, so a localized creators page is not a translated page sitting above a
+  // grid of English cards. Done before grouping so every creator's cards agree.
+  allTemplates = localizeCards(
+    entries.map((e) => serializeIndexEntry(e, profiles, rankingMap)),
+    typedLocale
+  );
 } catch (err) {
   console.error('Hub API failed for creators page:', err);
   // API failed — show empty page

@@ -3,6 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import {
+  DEFAULT_REVIEW_MODEL,
+  resolveReviewModel,
   PROMPT_VERSION,
   buildSystemPrompt,
   buildUserPrompt,
@@ -595,5 +597,37 @@ describe('loadReviewState (reads a committed, therefore corruptible, file)', () 
       path.join(process.cwd(), 'src', 'i18n', 'review', 'zh.json')
     );
     expect(reviewStatePath('zh', dir)).toBe(path.join(dir, 'zh.json'));
+  });
+});
+
+describe('resolveReviewModel (blank env is not a model choice)', () => {
+  // The workflow passes this from a repository variable, and GitHub renders an
+  // unset `vars.X` as an empty string rather than omitting it. Read with `??`
+  // that empty string counts as a deliberate choice, the API rejects every
+  // request with "model: String should have at least 1 character", and because
+  // the step is continue-on-error the run still reports success with an entire
+  // locale unreviewed. This happened on the first real zh run.
+  it('falls back when the variable is unset', () => {
+    expect(resolveReviewModel(undefined)).toBe(DEFAULT_REVIEW_MODEL);
+  });
+
+  it('falls back when the variable is set but EMPTY (the CI case)', () => {
+    expect(resolveReviewModel('')).toBe(DEFAULT_REVIEW_MODEL);
+  });
+
+  it('falls back when the variable is only whitespace', () => {
+    expect(resolveReviewModel('   ')).toBe(DEFAULT_REVIEW_MODEL);
+    expect(resolveReviewModel('\n')).toBe(DEFAULT_REVIEW_MODEL);
+  });
+
+  it('honours a real override, trimmed', () => {
+    expect(resolveReviewModel('claude-opus-5')).toBe('claude-opus-5');
+    expect(resolveReviewModel('  claude-opus-5  ')).toBe('claude-opus-5');
+  });
+
+  it('never returns a blank model, whatever it is given', () => {
+    for (const raw of [undefined, '', ' ', '\t', '\n  \n']) {
+      expect(resolveReviewModel(raw).length).toBeGreaterThan(0);
+    }
   });
 });

@@ -13,7 +13,9 @@ name: Version Check and Auto-bump
 #      posts a release distribution summary (pip vs cloud vs custom-nodes),
 #      refreshes the ComfyUI pins cache if stale, and regenerates the
 #      delete-candidates report (PR comment).
-#   7. Commits version-bump + (optionally) cache + report changes back to the PR.
+#   7. Commits regenerated manifests back to the PR even when the root version
+#      is unchanged. If the root version was bumped, also commits version-bump
+#      + (optionally) cache + report changes.
 #
 # Critical: sync_bundles.py validates that ALL templates are assigned to bundles
 # Note: Manifest sync must run BEFORE version detection so core package changes are detected
@@ -296,6 +298,8 @@ jobs:
             }
 
       - name: Commit version bumps, manifest updates, and refreshed cache/report to PR
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
         run: |
           echo "=== Committing automated changes to PR ==="
           git config --local user.email "action@github.com"
@@ -305,37 +309,39 @@ jobs:
           # The PyPI quota check writes its working cache under .github/cache/,
           # which is git-ignored and never staged.
           git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
+            packages/*/src/*/blueprints_manifest.json \
             templates/index.mcp.json scripts/data/mcp/models_registry.json
 
-          # Only commit when root pyproject.toml version was changed (i.e. auto-bump ran).
-          # When version unchanged, ci_version_manager.py skips bump and we skip committing
-          # (including manifest.json) to avoid churn on every template-only PR.
+          # Commit regenerated manifests even when the root version is unchanged.
+          # Skipping that used to leave SHA256 hashes stale on template-only PRs,
+          # which then failed validate-manifests.yml / build-test.yml.
           if git diff --cached --quiet; then
             echo "✅ No package version or manifest changes needed"
             exit 0
           fi
-          if ! git diff --cached --name-only | grep -q 'pyproject\.toml'; then
-            echo "✅ Root version unchanged; skipping commit (no version bump performed)"
-            git reset HEAD
-            exit 0
+          if git diff --cached --name-only | grep -q 'pyproject\.toml'; then
+            COMMIT_MSG="Auto-bump package versions and sync manifests for template changes"
+            echo "📝 Version bump and/or manifest changes - committing to PR branch"
+          else
+            COMMIT_MSG="Auto-sync manifests for template changes"
+            echo "📝 Manifest changes only (no version bump) - committing to PR branch"
           fi
-          echo "📝 Version bump and/or manifest changes - committing to PR branch"
 
           # Commit with retry logic in case of conflicts
-          if ! git commit -m "Auto-bump package versions and sync manifests for template changes"; then
+          if ! git commit -m "$COMMIT_MSG"; then
             echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
+            if ! git pull origin "$PR_HEAD_REF" --rebase; then
               echo "❌ Rebase failed due to conflicts. Manual intervention required."
               git status
               exit 1
             fi
-            git commit -m "Auto-bump package versions and sync manifests for template changes"
+            git commit -m "$COMMIT_MSG"
           fi
 
           # Push with retry logic
           if ! git push origin HEAD; then
             echo "⚠️ Push failed, retrying after pull..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
+            if ! git pull origin "$PR_HEAD_REF" --rebase; then
               echo "❌ Rebase failed due to conflicts. Manual intervention required."
               git status
               exit 1
@@ -343,4 +349,4 @@ jobs:
             git push origin HEAD
           fi
 
-          echo "✅ Package version bumps and manifest updates committed to PR"
+          echo "✅ Automated changes committed to PR"

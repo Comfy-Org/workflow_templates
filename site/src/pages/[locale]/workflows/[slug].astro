@@ -44,6 +44,7 @@ import { buildToolbarLabels } from '../../../lib/toolbar';
 import { localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveLocalizedWorkflow, indexableAlternateLocales } from '../../../lib/i18n/resolver';
+import { localizeCards } from '../../../lib/i18n/localize-cards';
 import { SUPPORTED_HUB_LOCALES, INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 
 export async function getStaticPaths() {
@@ -185,7 +186,13 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   description: data.metaDescription || data.description,
 });
 
-const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
+// Related workflows come from the hub index, which is English only. The page's
+// own text is already resolved above, so without this the translated detail page
+// ends on a grid of English cards linking to pages that are themselves translated.
+const relatedTemplates: SerializedTemplate[] = localizeCards(
+  await listRelatedWorkflows(data.name),
+  locale
+);
 // Embed only the top-30 by usage; the grid lazy-loads the full catalog (grid.json).
 const relatedPreview = [...relatedTemplates].sort(byUsageDesc).slice(0, 30);
 const toolbarLabels = buildToolbarLabels(locale);

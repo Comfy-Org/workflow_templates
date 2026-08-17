@@ -42,9 +42,38 @@ const REVIEW_DIR = path.join(process.cwd(), 'src', 'i18n', 'review');
  */
 export const PROMPT_VERSION = 1;
 
-/** Reviewer model. Sonnet 5 is the quality/cost sweet spot and is strong across all
- *  ten target languages, which is where the reported weakness is (ar/tr/ko fluency). */
-const MODEL = process.env.I18N_REVIEW_MODEL ?? 'claude-sonnet-5';
+/**
+ * Reviewer model. Opus 5 rather than a Sonnet tier because this is a judgement
+ * task in ten languages, which is where the reported weakness is (ar/tr/ko
+ * fluency), and a false verdict here removes a field from a real page.
+ *
+ * Note for anyone tuning `max_tokens` below: thinking is on by default on this
+ * model and its tokens come out of the same budget as the findings. That is the
+ * exact failure that made an earlier run report clean on the entries with the
+ * most to say, so change the two together and check `stop_reason` afterwards.
+ */
+export const DEFAULT_REVIEW_MODEL = 'claude-opus-5';
+
+/**
+ * Resolve the reviewer model from its env override, treating blank as unset.
+ *
+ * The workflow passes this through from a repository variable. GitHub renders an
+ * unset `vars.X` as an empty string rather than omitting the variable, so `??`
+ * accepts `''` as a deliberate choice and every request then fails with
+ * `model: String should have at least 1 character`. Because the review step is
+ * continue-on-error, that failure does not stop the pipeline: it reports every
+ * entry as unreviewable and the run still reports success, so a whole locale can
+ * come back with nothing reviewed and nothing obviously wrong.
+ *
+ * `||` rather than `??` for exactly that reason, and trimmed so a variable set to
+ * whitespace behaves the same as one that was never set. This matches how the
+ * translator's own model knob already reads `HUB_I18N_MODEL` in `.i18nrc.cjs`.
+ */
+export function resolveReviewModel(raw: string | undefined): string {
+  return raw?.trim() || DEFAULT_REVIEW_MODEL;
+}
+
+const MODEL = resolveReviewModel(process.env.I18N_REVIEW_MODEL);
 
 /**
  * Read a positive integer from an env string, falling back when it is not one.
