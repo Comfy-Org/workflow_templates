@@ -10,7 +10,11 @@ on:
       - 'templates/**'
       - 'scripts/validate/validate_templates.py'
       - 'scripts/lib/locale_index_files.py'
+      - 'scripts/lib/paths.py'
       - 'scripts/validate/validate_thumbnails.py'
+      # Regenerating the API node list can newly expose an unmarked Partner Node
+      # template, so the marker check has to re-run when it changes.
+      - 'scripts/data/mcp/api_node_ids.json'
       - '.github/workflows/validate-templates.yml'
       - 'templates/index.schema.json'
 
@@ -29,6 +33,7 @@ jobs:
           scripts/lib/paths.py
           scripts/validate/validate_thumbnails.py
           scripts/validate/list_pip_excluded.py
+          scripts/data/mcp/api_node_ids.json
         sparse-checkout-cone-mode: false
 
     - name: Set up Python
