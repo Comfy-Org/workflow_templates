@@ -83,9 +83,15 @@ const modelSlugRedirects = Object.fromEntries(
 
 // Manual variant → canonical 301s for slugs no template currently tags (so
 // deriveModelGroups has nothing to cluster them from), but that get real
-// search/backlink traffic and 404 today. Same shadow guard as above: skip a
-// variant that is itself a canonical slug, and let modelSlugRedirects win on
-// overlap once content catches up.
+// search/backlink traffic and 404 today. Cross-checked each candidate slug
+// from the 404 report against the actual synced template data (slugify()
+// normalizes casing/punctuation, e.g. "Wan2.1" -> "wan2-1"): the vast
+// majority already have a real template tag and so already get a correct
+// redirect from modelSlugRedirects above — adding them here would only be
+// dead, shadowed weight. These four are the only slugs with no matching
+// template tag today. Same shadow guard as above: skip a variant that is
+// itself a canonical slug, and let modelSlugRedirects win on overlap once
+// content catches up.
 /**
  * @param {string} variant
  * @param {string | null} target
@@ -95,46 +101,13 @@ const pair = (variant, target) => [variant, target];
 
 /** @type {[string, string | null][]} */
 const manualModelSlugTargets = [
-  ...[
-    'wan2-1',
-    'wan2-1-infinitetalk',
-    'wan2-1-vace',
-    'wan2-1-scail',
-    'wan2-2',
-    'wan2-2-animate',
-    'wan2-5',
-    'wan2-6',
-    'wan2-7',
-    'wan-ati',
-  ].map((variant) => pair(variant, 'wan')),
-  ...['flux-1', 'flux-1-kontext', 'flux-1-krea-dev', 'flux-2', 'flux-2-dev', 'flux-2-klein'].map(
-    (variant) => pair(variant, 'flux')
-  ),
-  ...['kling-1-6', 'kling-2-0', 'kling-2-6', 'kling-3-0', 'kling-o1', 'kling-o3'].map((variant) =>
-    pair(variant, 'kling')
-  ),
-  ...['ltx-0-9-5', 'ltx-2', 'ltx-2-3'].map((variant) => pair(variant, 'ltx')),
-  ...['seedance1-0-pro', 'seedance-1-5-pro', 'seedance-2-0'].map((variant) =>
-    pair(variant, 'seedance')
-  ),
-  ...['qwen-image-2512', 'qwen-image-layered'].map((variant) => pair(variant, 'qwen-image')),
-  pair('z-image-turbo', 'z-image'),
-  pair('nano-banana-2', 'nano-banana-pro'),
-  // No dedicated page exists for these families yet; land on the model index
-  // rather than a dead end.
-  ...[
-    'sdxl',
-    'sd1-5',
-    'sd3-5',
-    'hunyuan-3d',
-    'gemini3-pro-image-preview',
-    'gpt-image-1',
-    'gpt-image-1-5',
-    'seedream-4-0',
-    'seedream-4-5',
-    'seedream-5-0-lite',
-    'none',
-  ].map((variant) => pair(variant, null)),
+  pair('kling-1-6', 'kling'),
+  pair('kling-2-0', 'kling'),
+  // Hunyuan3D has no dedicated page yet; land on the model index rather than
+  // a dead end. "none" is explicitly excluded from grouping (NON_MODELS in
+  // model-groups.ts), so it can never be auto-derived even once tagged.
+  pair('hunyuan-3d', null),
+  pair('none', null),
 ];
 
 const manualModelSlugRedirects = Object.fromEntries(
