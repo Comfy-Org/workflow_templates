@@ -48,7 +48,7 @@ const MEDIA = 'https://media.comfy.org/website/nav';
 export const navFeatured = {
   products: {
     image: `${MEDIA}/ltx-card.webp`,
-    cta: `${ORIGIN}/ltx-2.5`,
+    cta: navRoutes.ltx,
   },
   community: {
     image: `${MEDIA}/featured-demo-card.jpg`,
