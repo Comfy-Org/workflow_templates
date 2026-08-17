@@ -68,9 +68,10 @@ describe('resolveRailImages', () => {
   });
 
   it('yields a null image when the pool runs dry', () => {
-    const out = resolveRailImages([{ title: 'X' }, { title: 'Y' }], [
-      { name: 'only', thumbnails: ['one.webp'] },
-    ]);
+    const out = resolveRailImages(
+      [{ title: 'X' }, { title: 'Y' }],
+      [{ name: 'only', thumbnails: ['one.webp'] }]
+    );
     expect(out[0].image).not.toBeNull();
     expect(out[1].image).toBeNull();
   });

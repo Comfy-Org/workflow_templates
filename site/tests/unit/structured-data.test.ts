@@ -194,11 +194,10 @@ describe('buildWorkflowGraphJsonLd', () => {
     });
     expect(result).not.toBeNull();
     expect(result?.['@context']).toBe('https://schema.org');
-    const graph = result!['@graph'];
-    const webpage = graph.find((n: { '@type': string }) => n['@type'] === 'WebPage');
+    const graph: Array<Record<string, unknown>> = result!['@graph'];
+    const webpage = graph.find((n) => n['@type'] === 'WebPage')!;
     const workflow = graph.find(
-      (n: { '@type': unknown }) =>
-        Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
+      (n) => Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
     );
     expect(webpage).toMatchObject({
       '@id': `${baseParams.url}#webpage`,
@@ -224,16 +223,17 @@ describe('buildWorkflowGraphJsonLd', () => {
         ],
       },
     });
-    const graph = result!['@graph'];
-    const termSets = graph.filter((n: { '@type': string }) => n['@type'] === 'DefinedTermSet');
-    const terms = graph.filter((n: { '@type': string }) => n['@type'] === 'DefinedTerm');
+    const graph: Array<Record<string, unknown>> = result!['@graph'];
+    const termSets = graph.filter((n) => n['@type'] === 'DefinedTermSet');
+    const terms = graph.filter((n) => n['@type'] === 'DefinedTerm');
     expect(termSets).toHaveLength(2);
     expect(terms).toHaveLength(3);
-    const webpage = graph.find((n: { '@type': string }) => n['@type'] === 'WebPage');
-    expect(webpage.mentions).toHaveLength(3);
+    const webpage = graph.find((n) => n['@type'] === 'WebPage')!;
+    const mentions = webpage.mentions as Array<{ '@id': string }>;
+    expect(mentions).toHaveLength(3);
     // Every mentioned @id must resolve to a DefinedTerm actually present in the graph.
-    const termIds = new Set(terms.map((t: { '@id': string }) => t['@id']));
-    for (const mention of webpage.mentions) {
+    const termIds = new Set(terms.map((t) => t['@id']));
+    for (const mention of mentions) {
       expect(termIds.has(mention['@id'])).toBe(true);
     }
   });
@@ -244,17 +244,13 @@ describe('buildWorkflowGraphJsonLd', () => {
       entities: { about: [{ name: 'Video' }] },
       faqItems: [{ question: 'Q?', answer: 'A.' }],
     });
-    expect(withFaq!['@graph'].some((n: { '@type': string }) => n['@type'] === 'FAQPage')).toBe(
-      true
-    );
+    expect(withFaq!['@graph'].some((n) => n['@type'] === 'FAQPage')).toBe(true);
 
     const withoutFaq = buildWorkflowGraphJsonLd({
       ...baseParams,
       entities: { about: [{ name: 'Video' }] },
     });
-    expect(withoutFaq!['@graph'].some((n: { '@type': string }) => n['@type'] === 'FAQPage')).toBe(
-      false
-    );
+    expect(withoutFaq!['@graph'].some((n) => n['@type'] === 'FAQPage')).toBe(false);
   });
 });
 

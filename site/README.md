@@ -80,12 +80,12 @@ site/
 
 ## Environment Variables
 
-| Variable                  | Required | Description                                                   |
-| ------------------------- | -------- | ------------------------------------------------------------- |
-| `OPENAI_API_KEY`          | Yes\*    | OpenAI API key for AI content generation                      |
-| `SKIP_AI_GENERATION`      | No       | Set to `true` to skip AI generation                           |
-| `PUBLIC_HUB_API_URL`      | No       | Hub API base URL for local builds and any manual build setup  |
-| `PUBLIC_COMFY_CLOUD_URL`  | No       | Comfy Cloud app URL used for CTA links in local/manual builds |
+| Variable                 | Required | Description                                                   |
+| ------------------------ | -------- | ------------------------------------------------------------- |
+| `OPENAI_API_KEY`         | Yes\*    | OpenAI API key for AI content generation                      |
+| `SKIP_AI_GENERATION`     | No       | Set to `true` to skip AI generation                           |
+| `PUBLIC_HUB_API_URL`     | No       | Hub API base URL for local builds and any manual build setup  |
+| `PUBLIC_COMFY_CLOUD_URL` | No       | Comfy Cloud app URL used for CTA links in local/manual builds |
 
 \*Required for production builds; can skip for local development.
 

@@ -74,7 +74,11 @@ export function heroTemplateFor<T extends { thumbnails?: string[] }>(
   templates: T[]
 ): T | undefined {
   const lead = templates[0];
-  if (lead && !hasStillThumbnail(lead.thumbnails) && lead.thumbnails?.some((thumb) => isVideoFile(thumb))) {
+  if (
+    lead &&
+    !hasStillThumbnail(lead.thumbnails) &&
+    lead.thumbnails?.some((thumb) => isVideoFile(thumb))
+  ) {
     return lead;
   }
   return firstTemplateWithStill(templates);

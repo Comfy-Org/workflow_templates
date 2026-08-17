@@ -9,10 +9,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRequire } from 'node:module';
 import path from 'node:path';
-import {
-  readCliContextWindows,
-  effectiveSplitToken,
-} from '../../scripts/i18n/cli-context-windows';
+import { readCliContextWindows, effectiveSplitToken } from '../../scripts/i18n/cli-context-windows';
 
 const require = createRequire(import.meta.url);
 const CONFIG_PATH = path.join(process.cwd(), '.i18nrc.cjs');
