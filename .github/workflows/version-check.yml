@@ -298,6 +298,8 @@ jobs:
             }
 
       - name: Commit version bumps, manifest updates, and refreshed cache/report to PR
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
         run: |
           echo "=== Committing automated changes to PR ==="
           git config --local user.email "action@github.com"
@@ -328,7 +330,7 @@ jobs:
           # Commit with retry logic in case of conflicts
           if ! git commit -m "$COMMIT_MSG"; then
             echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
+            if ! git pull origin "$PR_HEAD_REF" --rebase; then
               echo "❌ Rebase failed due to conflicts. Manual intervention required."
               git status
               exit 1
@@ -339,7 +341,7 @@ jobs:
           # Push with retry logic
           if ! git push origin HEAD; then
             echo "⚠️ Push failed, retrying after pull..."
-            if ! git pull origin "${{ github.head_ref }}" --rebase; then
+            if ! git pull origin "$PR_HEAD_REF" --rebase; then
               echo "❌ Rebase failed due to conflicts. Manual intervention required."
               git status
               exit 1
