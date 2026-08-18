@@ -32,13 +32,29 @@ export interface SnippetNodes {
 
 const MAX_EXAMPLE_PROMPT_LENGTH = 100;
 
+// Workflow metadata reaches this module from shipped graphs and, on hub-sourced
+// pages, from a fetched payload — so titles, names, node ids and node types are
+// data, never code. JSON string syntax is a valid subset of Python's, which
+// makes quotes, backslashes and newlines safe inside a generated literal.
+function pyString(value: string): string {
+  return JSON.stringify(value);
+}
+
+// Generated comments have to stay on their own line for the same reason.
+function commentSafe(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
 function firstStringWidget(node: WorkflowGraphNode): string | undefined {
   const value = node.widgets_values?.[0];
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
 export function extractSnippetNodes(graph: WorkflowGraph): SnippetNodes {
-  const nodes = graph.nodes ?? [];
+  // A hub payload is whatever the endpoint returns, so the shape is checked here.
+  const nodes = (Array.isArray(graph.nodes) ? graph.nodes : []).filter(
+    (n): n is WorkflowGraphNode => Boolean(n) && typeof n.type === 'string'
+  );
 
   const output = nodes.find((n) => n.type.startsWith('Save') || n.type === 'VHS_VideoCombine');
 
@@ -78,32 +94,34 @@ export function buildSdkSnippet(opts: {
   const lines = [
     INSTALL_LINES,
     '',
-    `# Run "${title}" (Python)`,
+    `# Run "${commentSafe(title)}" (Python)`,
     'from comfy_sdk import Comfy',
     '',
     'client = Comfy(api_key="comfyui-...")',
     '',
     '# This workflow, exported in API format (see note below)',
-    `wf = client.workflows.from_file("${templateName}_api.json")`,
+    `wf = client.workflows.from_file(${pyString(`${templateName}_api.json`)})`,
   ];
 
   if (nodes.imageNode) {
     lines.push(
       '',
       'asset = client.assets.from_file("input.png")',
-      `wf.set_input("${nodes.imageNode.id}", "image", asset)  # LoadImage`
+      `wf.set_input(${pyString(nodes.imageNode.id)}, "image", asset)  # LoadImage`
     );
   }
   if (nodes.promptNode) {
-    // JSON string escaping is valid Python string syntax.
-    const prompt = JSON.stringify(nodes.promptNode.text ?? 'your prompt here');
-    lines.push('', `wf.set_input("${nodes.promptNode.id}", "text", ${prompt})  # CLIPTextEncode`);
+    const prompt = pyString(nodes.promptNode.text ?? 'your prompt here');
+    lines.push(
+      '',
+      `wf.set_input(${pyString(nodes.promptNode.id)}, "text", ${prompt})  # CLIPTextEncode`
+    );
   }
 
   lines.push(
     '',
     'job = client.run(wf)',
-    `for output in job.get_outputs("${nodes.outputNode.id}"):  # ${nodes.outputNode.type}`,
+    `for output in job.get_outputs(${pyString(nodes.outputNode.id)}):  # ${commentSafe(nodes.outputNode.type)}`,
     '    output.to_file(output.name)'
   );
   return lines.join('\n');

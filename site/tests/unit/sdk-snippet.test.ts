@@ -83,6 +83,49 @@ describe('buildSdkSnippet', () => {
     expect(snippet).toContain('wf.set_input("2", "text", "say \\"hi\\"\\nline two")');
   });
 
+  it('keeps hostile metadata as data, not Python code', () => {
+    const snippet = buildSdkSnippet({
+      title: 'evil"\nprint("pwned")\n#',
+      templateName: 'wf"; import os; os.system("rm -rf /") #',
+      nodes: {
+        outputNode: {
+          id: '1"):\n    __import__("os").system("id")\nfor _ in []: #',
+          type: 'Save\nprint("x")',
+        },
+        promptNode: { id: 'a\\b"c', text: 'hi' },
+        imageNode: { id: '2"' },
+      },
+    });
+    // Injection needs a new line to land a statement on, so the shape of the
+    // snippet is the invariant: same line count, no line metadata could start.
+    const lines = snippet.split('\n');
+    expect(lines).toHaveLength(
+      buildSdkSnippet({
+        title: 'T',
+        templateName: 't',
+        nodes: {
+          outputNode: { id: '1', type: 'SaveImage' },
+          promptNode: { id: '2', text: 'hi' },
+          imageNode: { id: '3' },
+        },
+      }).split('\n').length
+    );
+    expect(lines.filter((l) => /^\s*(print|import|__import__|os\.system)\b/.test(l))).toEqual([]);
+    expect(snippet).toContain('# Run "evil" print("pwned") #" (Python)');
+    expect(snippet).toContain(
+      'from_file("wf\\"; import os; os.system(\\"rm -rf /\\") #_api.json")'
+    );
+    expect(snippet).toContain('wf.set_input("a\\\\b\\"c", "text", "hi")');
+    expect(snippet).toContain('# Save print("x")');
+  });
+
+  it('survives a payload whose nodes are not the expected shape', () => {
+    expect(() =>
+      extractSnippetNodes({ nodes: [null, { id: 1 }, { id: 2, type: 5 }] as never })
+    ).not.toThrow();
+    expect(extractSnippetNodes({ nodes: 'nope' as never })).toEqual({});
+  });
+
   it('falls back to the generic documented snippet without an output node', () => {
     const snippet = buildSdkSnippet({ title: 'T', templateName: 't', nodes: {} });
     expect(snippet).toBe(buildGenericSdkSnippet());
