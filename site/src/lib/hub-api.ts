@@ -523,14 +523,17 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function toWorkflowEntities(entities: HubWorkflowMetadata['entities']): WorkflowEntities {
+function toWorkflowEntities(
+  entities: HubWorkflowMetadata['entities']
+): WorkflowEntities | undefined {
+  if (!entities) return undefined;
   return {
-    about: entities?.about?.map((term) => ({ name: term.name, sameAs: term.same_as })),
-    categories: entities?.categories?.map((category) => ({
+    about: entities.about?.map((term) => ({ name: term.name, sameAs: term.same_as })),
+    categories: entities.categories?.map((category) => ({
       name: category.name,
       terms: (category.terms || []).map((term) => ({ name: term.name, sameAs: term.same_as })),
     })),
-    mentions: entities?.mentions?.map((term) => ({ name: term.name, sameAs: term.same_as })),
+    mentions: entities.mentions?.map((term) => ({ name: term.name, sameAs: term.same_as })),
   };
 }
 

@@ -9,6 +9,7 @@ import { t } from '../i18n/ui';
 import type { Locale } from '../i18n/config';
 import { localizeUrl } from '../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../config/site';
+import { categoryPath, tagPath } from './routes';
 
 export interface FaqItem {
   question: string;
@@ -240,11 +241,17 @@ export function buildWorkflowGraphJsonLd(params: {
 }) {
   const { about, categories, mentions } = params.entities || {};
 
+  // Hoisted once so every node that cross-references another (e.g. `webpage.isPartOf`
+  // pointing at `website`) reuses the exact same string — no risk of a hand-typed
+  // template literal drifting from the `@id` it's supposed to match.
+  const websiteId = `${SITE_ORIGIN}/#website`;
   const organizationId = `${SITE_ORIGIN}/#organization`;
+  const comfyuiId = `${SITE_ORIGIN}/#comfyui`;
+  const webpageId = `${params.url}#webpage`;
 
   const website = {
     '@type': 'WebSite',
-    '@id': `${SITE_ORIGIN}/#website`,
+    '@id': websiteId,
     name: 'Comfy',
     url: `${SITE_ORIGIN}/`,
     publisher: { '@id': organizationId },
@@ -277,7 +284,7 @@ export function buildWorkflowGraphJsonLd(params: {
 
   const softwareApp = {
     '@type': 'SoftwareApplication',
-    '@id': `${SITE_ORIGIN}/#comfyui`,
+    '@id': comfyuiId,
     name: 'ComfyUI',
     applicationCategory: 'MultimediaApplication',
     operatingSystem: 'Windows, macOS, Linux',
@@ -348,24 +355,23 @@ export function buildWorkflowGraphJsonLd(params: {
 
   const webpage = {
     '@type': 'WebPage',
-    '@id': `${params.url}#webpage`,
+    '@id': webpageId,
     url: params.url,
     headline: params.headline || params.name,
-    isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
-    publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+    isPartOf: { '@id': websiteId },
+    publisher: { '@id': organizationId },
     ...(params.datePublished ? { datePublished: params.datePublished } : {}),
     ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
     breadcrumb: { '@id': breadcrumbId },
     mainEntity: { '@id': workflowId },
-    ...(aboutTerms.length || termSets.length
-      ? {
-          about: [
-            { '@id': workflowId },
-            ...aboutTerms.map((t) => ({ '@id': t.id })),
-            ...termSets.map((set) => ({ '@id': set.id })),
-          ],
-        }
-      : {}),
+    // Always anchored on the workflow node itself, even with no entity data, so
+    // `about` doesn't silently vanish on the (currently common) pages the backend
+    // hasn't enriched yet — only the entity-term refs are conditional.
+    about: [
+      { '@id': workflowId },
+      ...aboutTerms.map((t) => ({ '@id': t.id })),
+      ...termSets.map((set) => ({ '@id': set.id })),
+    ],
     ...(mentionTerms.length || termSets.length
       ? {
           mentions: [
@@ -389,8 +395,8 @@ export function buildWorkflowGraphJsonLd(params: {
     ...(params.image ? { image: params.image } : {}),
     description: params.description,
     ...(params.keywords ? { keywords: params.keywords } : {}),
-    creator: { '@id': `${SITE_ORIGIN}/#organization` },
-    runtimePlatform: { '@id': `${SITE_ORIGIN}/#comfyui` },
+    creator: { '@id': organizationId },
+    runtimePlatform: { '@id': comfyuiId },
     ...(params.relatedLinks?.length
       ? {
           isRelatedTo: params.relatedLinks.map((link) => ({
@@ -406,7 +412,7 @@ export function buildWorkflowGraphJsonLd(params: {
     ? {
         '@type': 'FAQPage',
         '@id': faqId,
-        isPartOf: { '@id': `${params.url}#webpage` },
+        isPartOf: { '@id': webpageId },
         mainEntity: params.faqItems.map((item) => ({
           '@type': 'Question',
           name: item.question,
@@ -429,5 +435,78 @@ export function buildWorkflowGraphJsonLd(params: {
       ...termSets.flatMap((set) => [set.node, ...set.terms.map((t) => t.node)]),
       ...(faqPage ? [faqPage] : []),
     ],
+  };
+}
+
+/**
+ * Builds the `buildWorkflowGraphJsonLd` params (`relatedLinks`, `keywords`,
+ * `breadcrumbItems`, etc.) from a workflow detail page's own data — shared by the
+ * default-locale and localized `/workflows/[slug]` routes so those fields can't
+ * drift between the two the way hand-duplicated inline objects eventually would.
+ */
+export function buildWorkflowGraphParams(params: {
+  data: {
+    title: string;
+    description: string;
+    metaDescription: string;
+    mediaType: string;
+    tags: string[];
+    models: string[];
+    date: string;
+    shareId: string;
+    faqItems: FaqItem[];
+    entities?: WorkflowEntities;
+  };
+  locale: Locale;
+  /** The page's canonical URL — every graph node's `#fragment` is relative to this. */
+  canonicalUrl: string;
+  /** The page's full `<title>` text (already includes any site suffix) — becomes `WebPage.headline`. */
+  pageTitle: string;
+  image?: string;
+}) {
+  const { data, locale, canonicalUrl, pageTitle, image } = params;
+  const workflowsLabel = t('breadcrumb.workflows', locale);
+
+  // Category/tag listing pages this workflow belongs to, folded into the
+  // workflow node's `isRelatedTo`.
+  const relatedLinks = [
+    {
+      name: `${t(`category.${data.mediaType}`, locale)} ${workflowsLabel}`,
+      url: absoluteUrl(localizeUrl(categoryPath(data.mediaType), locale)),
+    },
+    ...data.tags.map((tag) => ({
+      name: `${tag} ${workflowsLabel}`,
+      url: absoluteUrl(tagPath(tag, locale)),
+    })),
+  ];
+
+  const keywords =
+    [
+      t(`category.${data.mediaType}`, locale),
+      ...data.tags,
+      ...data.models,
+      t('workflow.keywordSuffix', locale),
+    ]
+      .filter(Boolean)
+      .join(', ') || undefined;
+
+  return {
+    name: data.title,
+    headline: pageTitle,
+    description: data.metaDescription || data.description,
+    url: canonicalUrl,
+    image,
+    identifier: data.shareId || undefined,
+    datePublished: data.date || undefined,
+    inLanguage: locale,
+    keywords,
+    breadcrumbItems: [
+      { name: t('breadcrumb.home', locale), item: absoluteUrl('/') },
+      { name: workflowsLabel, item: absoluteUrl(localizeUrl('/workflows/', locale)) },
+      { name: data.title },
+    ],
+    entities: data.entities || {},
+    faqItems: data.faqItems,
+    relatedLinks,
   };
 }
