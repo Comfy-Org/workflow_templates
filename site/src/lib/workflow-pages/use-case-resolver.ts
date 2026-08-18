@@ -170,13 +170,18 @@ export function relatedUseCasesForPage(
   routedSlugs: string[],
   limit = 5
 ): SeoPageDef[] {
-  const isCandidate = (slug: string) => slug !== def.slug && routedSlugs.includes(slug);
+  const routed = new Set(routedSlugs);
+  const bySlug = new Map(allPages.map((page) => [page.slug, page]));
+  // Both gates matter: a routed slug can outlive the definition it came from, and a
+  // definition can exist without a route (the caller drops pages that render no grid).
+  const isCandidate = (slug: string) => slug !== def.slug && routed.has(slug) && bySlug.has(slug);
   const manual = (def.relatedSlugs ?? []).filter(isCandidate);
-  const manualSet = new Set(manual);
-  const auto = allPages
-    .map((p) => p.slug)
-    .filter((slug) => isCandidate(slug) && !manualSet.has(slug));
-  return [...manual, ...auto].slice(0, limit).map((slug) => allPages.find((p) => p.slug === slug)!);
+  const auto = allPages.map((page) => page.slug).filter(isCandidate);
+  // One Set across both lists: a slug repeated in `relatedSlugs`, or one that also
+  // arrives automatically, keeps its first position instead of rendering the same
+  // card twice and burning a slot a genuine relation could have used.
+  const ordered = [...new Set([...manual, ...auto])];
+  return ordered.slice(0, limit).flatMap((slug) => bySlug.get(slug) ?? []);
 }
 
 /**

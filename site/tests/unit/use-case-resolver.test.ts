@@ -262,4 +262,23 @@ describe('relatedUseCasesForPage', () => {
     const out = relatedUseCasesForPage(def, allPages, routedSlugs);
     expect(out.map((p) => p.slug)).toEqual(['e', 'a', 'b', 'd', 'f']);
   });
+
+  it('renders a slug repeated in relatedSlugs once, keeping its first position', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['e', 'b', 'e'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'b', 'a', 'd', 'f']);
+  });
+
+  it('does not let a repeated slug burn a slot the automatic fill could have used', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['e', 'e'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs, 3);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'a', 'b']);
+  });
+
+  it('skips a routed slug that has no page definition, rather than emitting a hole', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['ghost'] });
+    const out = relatedUseCasesForPage(def, allPages, [...routedSlugs, 'ghost']);
+    expect(out.map((p) => p.slug)).toEqual(['a', 'b', 'd', 'e', 'f']);
+    expect(out.every(Boolean)).toBe(true);
+  });
 });
