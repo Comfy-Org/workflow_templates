@@ -1,0 +1,162 @@
+---
+// The workflow's JSON graph, surfaced on the page (fal-style API tab): the
+// exact payload behind the Download button, fetched lazily from the existing
+// download endpoint so page weight stays flat.
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import { buttonVariants } from '../ui/button';
+import { cn } from '../../lib/utils';
+import { eyebrow } from '../workflow-pages/landing-styles';
+
+interface Props {
+  locale: Locale;
+  templateName: string;
+  downloadUrl: string;
+  canonicalJsonUrl: string;
+  cloudUrl?: string;
+}
+
+const { locale, templateName, downloadUrl, canonicalJsonUrl, cloudUrl } = Astro.props;
+---
+
+<section
+  id="api"
+  class="api-payload-section min-w-0 scroll-mt-8"
+  data-download-url={downloadUrl}
+>
+  <p class={eyebrow}>{t('template.api.eyebrow', locale)}</p>
+  <h2 class="mt-3 font-display text-xl font-normal tracking-tight text-content sm:text-2xl">
+    {t('template.api.heading', locale)}
+  </h2>
+  <p class="mt-3 max-w-2xl text-sm text-hub-muted">
+    {t('template.api.body', locale)}
+  </p>
+
+  <div class="mt-5 flex flex-wrap items-center gap-3">
+    <button
+      type="button"
+      class={cn(
+        buttonVariants({ variant: 'brand-outline', size: 'nav' }),
+        'api-copy-btn cursor-pointer uppercase transition-colors'
+      )}
+      data-template={templateName}
+    >
+      <span
+        class="ppformula-text-center-sm api-copy-label"
+        data-copied-text={t('template.api.copied', locale)}>{t('template.api.copy', locale)}</span>
+    </button>
+    <a
+      href={downloadUrl}
+      download
+      class={cn(
+        buttonVariants({ variant: 'brand-outline', size: 'nav' }),
+        'api-download-btn uppercase transition-colors'
+      )}
+      data-template={templateName}
+    >
+      <span class="ppformula-text-center-sm">{t('cta.downloadJson', locale)}</span>
+    </a>
+    {
+      cloudUrl && (
+        <a
+          href={cloudUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class={cn(
+            buttonVariants({ variant: 'brand-solid', size: 'nav' }),
+            'api-run-cloud-btn uppercase transition-opacity'
+          )}
+          data-template={templateName}
+        >
+          <span class="ppformula-text-center-sm font-bold">{t('template.api.runCloud', locale)}</span>
+        </a>
+      )
+    }
+  </div>
+
+  <div class="mt-4 overflow-hidden rounded-2xl border border-white/15">
+    <div class="border-b border-white/15 px-4 py-2.5">
+      <code class="break-all text-xs text-hub-muted">GET {canonicalJsonUrl}</code>
+    </div>
+    <pre
+      class="api-payload-pre max-h-96 overflow-auto p-4 text-xs leading-relaxed text-hub-muted"
+      data-state="idle"
+      data-error-text={t('template.api.error', locale)}>{t('template.api.loading', locale)}</pre>
+  </div>
+</section>
+
+<script>
+  function initApiPayload() {
+    const section = document.querySelector<HTMLElement>('.api-payload-section');
+    if (!section || section.dataset.bound === '1') return;
+    section.dataset.bound = '1';
+
+    const pre = section.querySelector<HTMLPreElement>('.api-payload-pre');
+    const copyBtn = section.querySelector<HTMLButtonElement>('.api-copy-btn');
+    const copyLabel = section.querySelector<HTMLElement>('.api-copy-label');
+    const url = section.dataset.downloadUrl;
+    if (!pre || !url) return;
+
+    let payload: string | null = null;
+    let loading: Promise<string | null> | null = null;
+
+    function load(): Promise<string | null> {
+      if (payload !== null) return Promise.resolve(payload);
+      loading ??= fetch(url as string)
+        .then(async (res) => {
+          if (!res.ok) throw new Error(String(res.status));
+          const text = await res.text();
+          payload = text;
+          if (pre) {
+            pre.textContent = text;
+            pre.dataset.state = 'loaded';
+          }
+          return text;
+        })
+        .catch(() => {
+          if (pre) {
+            pre.textContent = pre.dataset.errorText || 'Could not load the workflow JSON.';
+            pre.dataset.state = 'error';
+          }
+          loading = null;
+          return null;
+        });
+      return loading;
+    }
+
+    // Fetch just before the section scrolls into view; fall back to eager
+    // load when IntersectionObserver is unavailable.
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries.some((e) => e.isIntersecting)) {
+            observer.disconnect();
+            void load();
+          }
+        },
+        { rootMargin: '400px 0px' }
+      );
+      observer.observe(section);
+    } else {
+      void load();
+    }
+
+    copyBtn?.addEventListener('click', async () => {
+      const text = await load();
+      if (text === null) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        if (copyLabel) {
+          const original = copyLabel.textContent;
+          copyLabel.textContent = copyLabel.dataset.copiedText || 'Copied';
+          window.setTimeout(() => {
+            copyLabel.textContent = original;
+          }, 1200);
+        }
+      } catch {
+        /* clipboard unavailable */
+      }
+    });
+  }
+  initApiPayload();
+</script>
