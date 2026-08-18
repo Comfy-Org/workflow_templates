@@ -529,10 +529,16 @@ export const SEO_PAGES: SeoPageDef[] = [
     slug: 'sprite-sheet-generator',
     title: 'AI Sprite Sheet Generator | Comfy Workflows',
     h1: 'AI Sprite Sheet Generator Workflows',
+    // Primary carries the "ai " prefix, matching the other pages and the SEO
+    // review's framing. It is not only metadata: the body heading is built from
+    // it as "What is the {keyword}?", and the bare term renders as "What is the
+    // Sprite Sheet Generator?", which is the exact title of the workflow pinned
+    // first on this page. The bare term stays targeted from `secondary`, the
+    // meta description and the h1.
     keywords: {
-      primary: 'sprite sheet generator',
+      primary: 'ai sprite sheet generator',
       secondary: [
-        'ai sprite sheet generator',
+        'sprite sheet generator',
         'sprite sheet maker',
         'animated sprite sheet generator',
         'character sprite generator',

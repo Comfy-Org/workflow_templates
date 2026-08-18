@@ -4,9 +4,10 @@ import {
   assertCuratedSharesResolve,
   useCasePageHasGrid,
   relatedUseCasesForPage,
+  RELATED_SLUG_BUDGET,
   type FilterableTemplate,
 } from '../../src/lib/workflow-pages/use-case-resolver';
-import type { SeoPageDef } from '../../src/lib/workflow-pages/use-cases';
+import { SEO_PAGES, type SeoPageDef } from '../../src/lib/workflow-pages/use-cases';
 
 function tpl(shareId: string, tags: string[], usage = 100): FilterableTemplate {
   return { shareId, tags, models: [], usage };
@@ -280,5 +281,24 @@ describe('relatedUseCasesForPage', () => {
     const out = relatedUseCasesForPage(def, allPages, [...routedSlugs, 'ghost']);
     expect(out.map((p) => p.slug)).toEqual(['a', 'b', 'd', 'e', 'f']);
     expect(out.every(Boolean)).toBe(true);
+  });
+});
+
+/**
+ * `relatedSlugs` beyond the budget do not error, they silently never render: the
+ * page puts model cards first and truncates the rail, so the extras fall off the
+ * end. Assert the budget here so adding one fails loudly in CI rather than
+ * disappearing from a page nobody re-counts.
+ */
+describe('relatedSlugs budget', () => {
+  it('no page declares more relatedSlugs than the rail can show', () => {
+    const overBudget = SEO_PAGES.filter(
+      (page) => (page.relatedSlugs?.length ?? 0) > RELATED_SLUG_BUDGET
+    ).map((page) => `${page.slug} declares ${page.relatedSlugs?.length}`);
+    expect(overBudget).toEqual([]);
+  });
+
+  it('keeps a budget worth asserting', () => {
+    expect(RELATED_SLUG_BUDGET).toBeGreaterThan(0);
   });
 });
