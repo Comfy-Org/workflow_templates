@@ -158,6 +158,33 @@ export function relatedModelsForUseCase(
 }
 
 /**
+ * Use-case pages for a page's "Keep exploring" rail: `def.relatedSlugs` first, in
+ * the order given, then any remaining slots fill automatically from the routed
+ * catalog (declaration order) exactly as every page behaved before this field
+ * existed. A page that never sets `relatedSlugs` gets the identical output it
+ * always did.
+ */
+export function relatedUseCasesForPage(
+  def: SeoPageDef,
+  allPages: SeoPageDef[],
+  routedSlugs: string[],
+  limit = 5
+): SeoPageDef[] {
+  const routed = new Set(routedSlugs);
+  const bySlug = new Map(allPages.map((page) => [page.slug, page]));
+  // Both gates matter: a routed slug can outlive the definition it came from, and a
+  // definition can exist without a route (the caller drops pages that render no grid).
+  const isCandidate = (slug: string) => slug !== def.slug && routed.has(slug) && bySlug.has(slug);
+  const manual = (def.relatedSlugs ?? []).filter(isCandidate);
+  const auto = allPages.map((page) => page.slug).filter(isCandidate);
+  // One Set across both lists: a slug repeated in `relatedSlugs`, or one that also
+  // arrives automatically, keeps its first position instead of rendering the same
+  // card twice and burning a slot a genuine relation could have used.
+  const ordered = [...new Set([...manual, ...auto])];
+  return ordered.slice(0, limit).flatMap((slug) => bySlug.get(slug) ?? []);
+}
+
+/**
  * Reverse of `relatedModelsForUseCase`: the use-case pages whose grid this model
  * family powers, ranked by overlap. Powers the "use cases featuring this model"
  * rail on a model page, derived rather than read from a hand-typed list.
