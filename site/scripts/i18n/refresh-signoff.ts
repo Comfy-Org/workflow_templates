@@ -102,6 +102,27 @@ export function refreshSignoffRecords(
     droppedGone: [],
   };
 
+  // The wave this refresh extends: the reviewer and scope of the existing
+  // records, taken as the most common value of each. Captured BEFORE the
+  // cleanup below, so the wave survives even if every workflow it originally
+  // covered has since left the catalog — the wave happened either way, and a
+  // new page sealed under it must not come out as reviewer "unknown".
+  const mode = (values: string[]): string => {
+    const counts = new Map<string, number>();
+    for (const v of values) counts.set(v, (counts.get(v) ?? 0) + 1);
+    return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
+  };
+  // A scope's human-authored part is everything before the first automated
+  // marker; stripping it here is what keeps repeated refreshes from stacking
+  // markers on markers.
+  const baseScope = (scope: string | undefined): string =>
+    (scope ?? '').split(/;\s*auto-(?:refresh|sealed)/)[0].trim();
+  const records = Object.values(reviews);
+  const waveReviewer = mode(records.map((r) => r.reviewer)) || 'unknown';
+  const waveScope = mode(records.map((r) => baseScope(r.approvedScope)).filter(Boolean));
+  const withWaveScope = (marker: string, base: string = waveScope): string =>
+    base ? `${base}; ${marker}` : marker;
+
   // The catalog is what English carries. Records for workflows no longer in it
   // point at pages that no longer build, so they are dropped rather than kept
   // as the illusion of coverage.
@@ -111,16 +132,6 @@ export function refreshSignoffRecords(
       summary.droppedGone.push(sid);
     }
   }
-
-  // The wave this refresh extends: the reviewer who made the existing records.
-  const waveReviewer =
-    Object.values(reviews)
-      .map((r) => r.reviewer)
-      .sort(
-        (a, b) =>
-          Object.values(reviews).filter((r) => r.reviewer === b).length -
-          Object.values(reviews).filter((r) => r.reviewer === a).length
-      )[0] ?? 'unknown';
 
   for (const sid of Object.keys(english)) {
     // Resolve as if the locale were flipped: pre-flip, the predicate would stop
@@ -176,7 +187,10 @@ export function refreshSignoffRecords(
         reviewedAt: today,
         reviewedContentHash: currentContentHash,
         reviewedArtifactChecksum: currentChecksum,
-        approvedScope: `auto-refresh ${today}: content changed after sign-off, current text is AI-review clean; under the ${existing.reviewer} wave`,
+        approvedScope: withWaveScope(
+          `auto-refresh ${today}: content changed after sign-off, current text is AI-review clean`,
+          baseScope(existing.approvedScope) || waveScope
+        ),
       };
       summary.refreshed.push(sid);
     } else {
@@ -185,7 +199,9 @@ export function refreshSignoffRecords(
         reviewedAt: today,
         reviewedContentHash: currentContentHash,
         reviewedArtifactChecksum: currentChecksum,
-        approvedScope: `auto-sealed ${today}: published after the last wave, AI-review clean; under the ${waveReviewer} wave`,
+        approvedScope: withWaveScope(
+          `auto-sealed ${today}: published after the last wave, AI-review clean`
+        ),
       };
       summary.sealedNew.push(sid);
     }

@@ -167,6 +167,48 @@ describe('refreshSignoffRecords', () => {
     expect(record.approvedScope).toContain('auto-sealed');
   });
 
+  it('keeps the wave reviewer and scope even when every original record is obsolete', () => {
+    // The one human-reviewed workflow left the catalog; a new one arrived. The
+    // wave still happened, so the new seal must carry its reviewer and scope,
+    // not "unknown".
+    write('content/en.json', { [B]: english });
+    write('content/zh.json', { [B]: { title: '新标题', description: '新描述' } });
+    write('manifest.json', { [B]: { content: 'h-new' } });
+    write('reviews/zh.json', {
+      [A]: { ...staleRecord, approvedScope: 'ai-flagged items (native review sheet 2026-08-14)' },
+    });
+    const summary = run()!;
+    expect(summary.droppedGone).toEqual([A]);
+    expect(summary.sealedNew).toEqual([B]);
+    const record = readReviews()[B];
+    expect(record.reviewer).toBe('zhixiong-lin');
+    expect(record.approvedScope).toContain('native review sheet 2026-08-14');
+    expect(record.approvedScope).toContain('auto-sealed');
+  });
+
+  it('preserves the original wave scope on refresh instead of replacing it', () => {
+    write('reviews/zh.json', {
+      [A]: { ...staleRecord, approvedScope: 'ai-flagged items (native review sheet 2026-08-14)' },
+    });
+    run();
+    const scope = readReviews()[A].approvedScope as string;
+    expect(scope).toContain('native review sheet 2026-08-14');
+    expect(scope).toContain('auto-refresh 2026-08-19');
+  });
+
+  it('does not stack refresh markers across repeated refreshes', () => {
+    write('reviews/zh.json', {
+      [A]: { ...staleRecord, approvedScope: 'ai-flagged items (native review sheet 2026-08-14)' },
+    });
+    run();
+    // break the seal again by changing the translation, then refresh again
+    write('content/zh.json', { [A]: { title: '改了的标题', description: '描述' } });
+    run();
+    const scope = readReviews()[A].approvedScope as string;
+    expect(scope.split('auto-refresh').length - 1).toBe(1);
+    expect(scope).toContain('native review sheet 2026-08-14');
+  });
+
   it('drops the record of a workflow that left the catalog', () => {
     write('reviews/zh.json', { [A]: currentRecord(A, 'h-current'), [B]: staleRecord });
     const summary = run()!;
