@@ -213,6 +213,7 @@ describe('buildWorkflowGraphJsonLd', () => {
       hasPart: [{ '@type': 'Blog', name: 'Comfy Blog', url: 'https://blog.comfy.org' }],
     });
     expect(organization).toMatchObject({
+      sameAs: expect.arrayContaining(['https://www.youtube.com/@comfyorg']),
       contactPoint: [
         { '@type': 'ContactPoint', contactType: 'customer support' },
         { '@type': 'ContactPoint', contactType: 'press' },
@@ -307,6 +308,53 @@ describe('buildWorkflowGraphJsonLd', () => {
     for (const mention of webpage!.mentions) {
       expect(termIds.has(mention['@id'])).toBe(true);
     }
+  });
+
+  it('defaults WebPage headline to name, but uses an explicit headline when provided', () => {
+    const withoutHeadline = buildWorkflowGraphJsonLd(baseParams);
+    const webpageDefault = withoutHeadline!['@graph'].find(
+      (n: { '@type': unknown }) => n['@type'] === 'WebPage'
+    ) as { headline: string };
+    expect(webpageDefault.headline).toBe(baseParams.name);
+
+    const withHeadline = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      headline: `${baseParams.name} - ComfyUI Workflow`,
+    });
+    const webpageCustom = withHeadline!['@graph'].find(
+      (n: { '@type': unknown }) => n['@type'] === 'WebPage'
+    ) as { headline: string };
+    const workflowCustom = withHeadline!['@graph'].find(
+      (n: { '@type': unknown }) =>
+        Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
+    ) as { headline: string };
+    expect(webpageCustom.headline).toBe(`${baseParams.name} - ComfyUI Workflow`);
+    // The workflow node's own headline is unaffected by the WebPage override.
+    expect(workflowCustom.headline).toBe(baseParams.name);
+  });
+
+  it('includes standalone entities.mentions terms in mentions with no DefinedTermSet', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        mentions: [{ name: 'Audio', sameAs: 'https://en.wikipedia.org/wiki/Sound' }],
+        categories: [{ name: 'Technology', terms: [{ name: 'API' }] }],
+      },
+    });
+    const graph = result!['@graph'];
+    const mentionTerm = graph.find(
+      (n: { '@type': unknown; name?: unknown }) =>
+        n['@type'] === 'DefinedTerm' && n.name === 'Audio'
+    ) as { inDefinedTermSet?: unknown; '@id': string };
+    expect(mentionTerm).toBeDefined();
+    expect(mentionTerm).not.toHaveProperty('inDefinedTermSet');
+
+    const webpage = graph.find((n: { '@type': unknown }) => n['@type'] === 'WebPage') as {
+      mentions: Array<{ '@id': string }>;
+    };
+    // Both the standalone mention term and the category term are cross-referenced.
+    expect(webpage.mentions.map((m) => m['@id'])).toContain(mentionTerm['@id']);
+    expect(webpage.mentions).toHaveLength(2);
   });
 
   it('includes a FAQPage node only when faqItems are non-empty', () => {

@@ -83,6 +83,7 @@ export interface HubWorkflowMetadata {
   entities?: {
     about?: HubWorkflowMetadataEntityTerm[];
     categories?: HubWorkflowMetadataEntityCategory[];
+    mentions?: HubWorkflowMetadataEntityTerm[];
   };
 }
 
@@ -529,6 +530,7 @@ function toWorkflowEntities(entities: HubWorkflowMetadata['entities']): Workflow
       name: category.name,
       terms: (category.terms || []).map((term) => ({ name: term.name, sameAs: term.same_as })),
     })),
+    mentions: entities?.mentions?.map((term) => ({ name: term.name, sameAs: term.same_as })),
   };
 }
 

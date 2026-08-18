@@ -203,13 +203,16 @@ export interface WorkflowEntities {
   about?: EntityTerm[];
   /** Narrower entities the page touches on, grouped into `DefinedTermSet`s. */
   categories?: EntityCategory[];
+  /** Ungrouped entities cross-referenced via `mentions` only — no `DefinedTermSet`, unlike `categories`. */
+  mentions?: EntityTerm[];
 }
 
 /**
  * Unified nested `@graph` JSON-LD for a single workflow detail page: `WebSite` →
  * `Organization` → `SoftwareApplication` (ComfyUI) → `WebPage` → the workflow itself
  * (`SoftwareApplication` + `TechArticle`), plus `DefinedTerm`/`DefinedTermSet` nodes
- * for `entities.categories` and a `BreadcrumbList`/`FAQPage` when supplied.
+ * for `entities.categories` and standalone `entities.mentions` terms, and a
+ * `BreadcrumbList`/`FAQPage` when supplied.
  *
  * Unlike `buildCollectionPageJsonLd` (a bare `CollectionPage`, no root nodes of its
  * own), this builds the full `WebSite`/`Organization`/`SoftwareApplication` root
@@ -220,6 +223,8 @@ export interface WorkflowEntities {
  */
 export function buildWorkflowGraphJsonLd(params: {
   name: string;
+  /** `WebPage.headline` — defaults to `name` when omitted (e.g. pass the page's `<title>` to include a site suffix there without affecting the workflow node's own name/headline). */
+  headline?: string;
   description: string;
   url: string;
   image?: string;
@@ -233,7 +238,7 @@ export function buildWorkflowGraphJsonLd(params: {
   /** Category/tag listing pages this workflow belongs to, folded into the workflow node's `isRelatedTo`. */
   relatedLinks?: { name: string; url: string }[];
 }) {
-  const { about, categories } = params.entities || {};
+  const { about, categories, mentions } = params.entities || {};
 
   const organizationId = `${SITE_ORIGIN}/#organization`;
 
@@ -257,6 +262,7 @@ export function buildWorkflowGraphJsonLd(params: {
       'https://x.com/ComfyUI',
       'https://www.linkedin.com/company/comfyui',
       'https://www.instagram.com/comfyui',
+      'https://www.youtube.com/@comfyorg',
     ],
     contactPoint: [
       {
@@ -326,13 +332,25 @@ export function buildWorkflowGraphJsonLd(params: {
     },
   }));
 
+  // Unlike `aboutTerms` and category terms, `mentionTerms` carry no `inDefinedTermSet` —
+  // they're standalone entities cross-referenced only through the WebPage's `mentions`.
+  const mentionTerms = (mentions || []).map((term, i) => ({
+    id: `${params.url}#e-mention-${i}`,
+    node: {
+      '@type': 'DefinedTerm',
+      '@id': `${params.url}#e-mention-${i}`,
+      name: term.name,
+      ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+    },
+  }));
+
   const faqId = `${params.url}#faq`;
 
   const webpage = {
     '@type': 'WebPage',
     '@id': `${params.url}#webpage`,
     url: params.url,
-    headline: params.name,
+    headline: params.headline || params.name,
     isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
     publisher: { '@id': `${SITE_ORIGIN}/#organization` },
     ...(params.datePublished ? { datePublished: params.datePublished } : {}),
@@ -348,8 +366,13 @@ export function buildWorkflowGraphJsonLd(params: {
           ],
         }
       : {}),
-    ...(termSets.length
-      ? { mentions: termSets.flatMap((set) => set.terms.map((t) => ({ '@id': t.id }))) }
+    ...(mentionTerms.length || termSets.length
+      ? {
+          mentions: [
+            ...mentionTerms.map((t) => ({ '@id': t.id })),
+            ...termSets.flatMap((set) => set.terms.map((t) => ({ '@id': t.id }))),
+          ],
+        }
       : {}),
     ...(params.faqItems?.length ? { hasPart: { '@id': faqId } } : {}),
   };
@@ -402,6 +425,7 @@ export function buildWorkflowGraphJsonLd(params: {
       workflow,
       breadcrumbList,
       ...aboutTerms.map((t) => t.node),
+      ...mentionTerms.map((t) => t.node),
       ...termSets.flatMap((set) => [set.node, ...set.terms.map((t) => t.node)]),
       ...(faqPage ? [faqPage] : []),
     ],

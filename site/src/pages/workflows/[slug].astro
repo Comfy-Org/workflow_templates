@@ -157,13 +157,17 @@ const relatedLinks = [
 // whether the graph itself renders.
 const entityGraphStructuredData = buildWorkflowGraphJsonLd({
   name: data.title,
+  headline: title,
   description: data.metaDescription || data.description,
   url: canonicalUrl,
   image: primaryThumbnail || undefined,
   identifier: data.shareId || undefined,
   datePublished: data.date || undefined,
   inLanguage: locale,
-  keywords: [...data.tags, ...data.models].join(', ') || undefined,
+  keywords:
+    [t(`category.${data.mediaType}`, locale), ...data.tags, ...data.models, 'ComfyUI Workflow']
+      .filter(Boolean)
+      .join(', ') || undefined,
   breadcrumbItems: [
     { name: t('breadcrumb.home', locale), item: absoluteUrl('/') },
     {
