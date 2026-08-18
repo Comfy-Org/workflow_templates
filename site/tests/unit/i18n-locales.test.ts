@@ -46,8 +46,18 @@ describe('assertFlippedLocalesIndexable', () => {
     expect(() => assertFlippedLocalesIndexable(new Map(), [])).not.toThrow();
   });
 
-  it('ignores counts for locales that are not flipped', () => {
-    expect(() => assertFlippedLocalesIndexable(new Map([['ja', 0]]), ['zh', 'ja'])).toThrow(/ja/);
-    expect(() => assertFlippedLocalesIndexable(new Map([['zh', 5]]), ['zh'])).not.toThrow();
+  it('ignores an empty locale that is not flipped', () => {
+    // The guard iterates the flipped set, not the counts. A locale nobody flipped
+    // has no canonicals, sitemap entries or hreflang to be wrong about, so its
+    // emptiness is normal — every locale looks like this before its review wave.
+    expect(() =>
+      assertFlippedLocalesIndexable(
+        new Map([
+          ['zh', 519],
+          ['ja', 0],
+        ]),
+        ['zh']
+      )
+    ).not.toThrow();
   });
 });
