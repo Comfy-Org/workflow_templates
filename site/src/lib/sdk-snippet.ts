@@ -50,11 +50,19 @@ function firstStringWidget(node: WorkflowGraphNode): string | undefined {
   return typeof value === 'string' && value.trim() !== '' ? value : undefined;
 }
 
+// A node is only usable if it can be addressed: an id that survives String()
+// as something a caller could pass to the SDK, and a type to recognize it by.
+function isAddressable(node: WorkflowGraphNode | null | undefined): node is WorkflowGraphNode {
+  if (!node || typeof node.type !== 'string') return false;
+  const { id } = node;
+  return (
+    (typeof id === 'number' && Number.isFinite(id)) || (typeof id === 'string' && id.trim() !== '')
+  );
+}
+
 export function extractSnippetNodes(graph: WorkflowGraph): SnippetNodes {
   // A hub payload is whatever the endpoint returns, so the shape is checked here.
-  const nodes = (Array.isArray(graph.nodes) ? graph.nodes : []).filter(
-    (n): n is WorkflowGraphNode => Boolean(n) && typeof n.type === 'string'
-  );
+  const nodes = (Array.isArray(graph.nodes) ? graph.nodes : []).filter(isAddressable);
 
   const output = nodes.find((n) => n.type.startsWith('Save') || n.type === 'VHS_VideoCombine');
 

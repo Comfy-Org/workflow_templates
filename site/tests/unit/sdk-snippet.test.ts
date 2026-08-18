@@ -123,6 +123,20 @@ describe('buildSdkSnippet', () => {
     expect(snippet).toContain('# Save print("x")');
   });
 
+  it('ignores nodes with no usable id rather than emitting "undefined"', () => {
+    const nodes = extractSnippetNodes({
+      nodes: [
+        { type: 'SaveImage' } as never,
+        { id: '  ', type: 'SaveImage' },
+        { id: Number.NaN, type: 'SaveImage' },
+        { id: 0, type: 'SaveWEBM' },
+      ],
+    });
+    expect(nodes.outputNode).toEqual({ id: '0', type: 'SaveWEBM' });
+    const snippet = buildSdkSnippet({ title: 'T', templateName: 't', nodes });
+    expect(snippet).not.toContain('undefined');
+  });
+
   it('survives a payload whose nodes are not the expected shape', () => {
     expect(() =>
       extractSnippetNodes({ nodes: [null, { id: 1 }, { id: 2, type: 5 }] as never })
