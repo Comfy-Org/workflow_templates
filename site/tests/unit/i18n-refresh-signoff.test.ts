@@ -209,6 +209,24 @@ describe('refreshSignoffRecords', () => {
     expect(scope).toContain('native review sheet 2026-08-14');
   });
 
+  it('strips a leading automated marker instead of promoting it to human scope', () => {
+    // A record can carry ONLY an automated marker (sealed under a wave that had
+    // no human scope text). On refresh, that marker must be replaced, not kept
+    // as if it were the human-authored part.
+    write('reviews/zh.json', {
+      [A]: { ...staleRecord, approvedScope: 'auto-sealed 2026-08-14: published after the last wave, AI-review clean' },
+    });
+    run();
+    const scope = readReviews()[A].approvedScope as string;
+    expect(scope).not.toContain('auto-sealed');
+    expect(scope.split('auto-refresh').length - 1).toBe(1);
+    // and refreshing again still leaves exactly one marker
+    write('content/zh.json', { [A]: { title: '又改了', description: '描述' } });
+    run();
+    const scope2 = readReviews()[A].approvedScope as string;
+    expect(scope2.split('auto-').length - 1).toBe(1);
+  });
+
   it('drops the record of a workflow that left the catalog', () => {
     write('reviews/zh.json', { [A]: currentRecord(A, 'h-current'), [B]: staleRecord });
     const summary = run()!;

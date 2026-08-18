@@ -116,7 +116,7 @@ export function refreshSignoffRecords(
   // marker; stripping it here is what keeps repeated refreshes from stacking
   // markers on markers.
   const baseScope = (scope: string | undefined): string =>
-    (scope ?? '').split(/;\s*auto-(?:refresh|sealed)/)[0].trim();
+    (scope ?? '').split(/(?:^|;\s*)auto-(?:refresh|sealed)\b/)[0].trim();
   const records = Object.values(reviews);
   const waveReviewer = mode(records.map((r) => r.reviewer)) || 'unknown';
   const waveScope = mode(records.map((r) => baseScope(r.approvedScope)).filter(Boolean));
