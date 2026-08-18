@@ -15,6 +15,7 @@ import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
 import { AuthorLink } from '@/components/ui/author-link';
+import { cn } from '@/lib/utils';
 
 interface Props {
   name: string;
@@ -394,9 +395,10 @@ function onAuthorClick(event: MouseEvent) {
           avatar-class="size-5"
           name-class="ppformula-text-center-sm text-base"
           :class="
-            creatorUrl
-              ? 'text-content-secondary hover:text-content focus-visible:text-content'
-              : 'text-content-secondary'
+            cn(
+              'text-content-secondary',
+              creatorUrl && 'hover:text-content focus-visible:text-content'
+            )
           "
           @click="onAuthorClick"
         />

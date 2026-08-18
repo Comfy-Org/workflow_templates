@@ -9,13 +9,20 @@
  * cancelled by an equal negative margin, so the highlight never shifts
  * surrounding layout.
  *
+ * The pill background is applied directly on the root via plain `hover:`/
+ * `focus-visible:` (it's reacting to its own pointer/focus state), while the
+ * name and avatar coordinate off that same state via a named Tailwind group
+ * (`group/author` + `group-hover/author:`/`group-focus-visible/author:`) —
+ * named so nesting `AuthorLink` inside another element's own `group` (e.g.
+ * `HubWorkflowCard`'s card-hover group) never cross-triggers either one.
+ *
  * Renders as an `<a>` when `href` is set, so the hover/focus treatment only
  * ever appears on something actually clickable; otherwise renders a plain
  * `<div>` wrapper with no interactive styling (e.g. a creator with no
  * profile page).
  */
 import { computed } from 'vue';
-import type { HTMLAttributes, StyleValue } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
@@ -26,8 +33,13 @@ interface Props {
   avatarUrl?: string | null;
   /** Renders as an `<a href>` when set; otherwise a non-interactive wrapper with no hover treatment. */
   href?: string | null;
-  /** Overrides the hover/focus pill color. Any valid CSS color; defaults to a subtle theme-aware overlay. */
-  highlight?: string | null;
+  /**
+   * Overrides the hover/focus pill background utility classes. Defaults to
+   * the theme's hover-surface token; pass a different `hover:bg-*
+   * focus-visible:bg-*` pair for contexts with a different backdrop (e.g.
+   * the white-on-dark featured carousel).
+   */
+  highlightClass?: HTMLAttributes['class'];
   /** Extra classes for the avatar (size, responsive breakpoints, etc). */
   avatarClass?: HTMLAttributes['class'];
   /** Extra classes for the name text. */
@@ -37,85 +49,60 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   avatarClass: 'size-5',
+  highlightClass: 'hover:bg-hub-surface-hover focus-visible:bg-hub-surface-hover',
 });
 
 const isLink = computed(() => Boolean(props.href));
 const tag = computed(() => (isLink.value ? 'a' : 'div'));
-const rootStyle = computed<StyleValue | undefined>(() =>
-  props.highlight ? { '--author-link-highlight': props.highlight } : undefined
-);
 </script>
 
 <template>
   <component
     :is="tag"
     :href="href || undefined"
-    :style="rootStyle"
     data-testid="author-link"
-    :class="cn('flex items-center gap-2 min-w-0 w-fit', isLink && 'author-link', props.class)"
+    :class="
+      cn(
+        'flex items-center gap-2 min-w-0 w-fit',
+        isLink && [
+          'group/author cursor-pointer rounded-full -mx-1.5 -my-0.5 px-1.5 py-0.5',
+          'transition-colors motion-reduce:transition-none',
+          'outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current',
+          highlightClass,
+        ],
+        props.class
+      )
+    "
   >
     <Avatar
       :src="avatarUrl"
       :name="name"
-      :class="cn('shrink-0', isLink && 'author-link-avatar', avatarClass)"
+      :class="
+        cn(
+          'shrink-0',
+          isLink && [
+            'transition-shadow motion-reduce:transition-none',
+            'group-hover/author:ring-2 group-hover/author:ring-current',
+            'group-focus-visible/author:ring-2 group-focus-visible/author:ring-current',
+          ],
+          avatarClass
+        )
+      "
     />
-    <span :class="cn('truncate', isLink && 'author-link-name', nameClass)">{{ name }}</span>
+    <span
+      :class="
+        cn(
+          'truncate',
+          isLink && [
+            'underline decoration-transparent decoration-1 underline-offset-[3px]',
+            'transition-colors motion-reduce:transition-none',
+            'group-hover/author:decoration-current group-focus-visible/author:decoration-current',
+          ],
+          nameClass
+        )
+      "
+    >
+      {{ name }}
+    </span>
   </component>
 </template>
-
-<style scoped>
-/* Coordinated hover/focus affordance — see the component doc comment above.
-   Only applied when rendering as a link (`.author-link` is added conditionally
-   in the template), so a non-interactive attribution never paints as clickable. */
-.author-link {
-  --author-link-highlight: var(--color-transparency-white-t8);
-  --author-link-ring: currentColor;
-  padding: 0.125rem 0.375rem;
-  margin: -0.125rem -0.375rem;
-  border-radius: 9999px;
-  cursor: pointer;
-  transition:
-    background-color 150ms ease,
-    color 150ms ease;
-}
-
-.author-link:hover,
-.author-link:focus-visible {
-  background-color: var(--author-link-highlight);
-}
-
-.author-link:focus-visible {
-  outline: 2px solid var(--author-link-ring);
-  outline-offset: 2px;
-}
-
-.author-link-name {
-  text-decoration: underline;
-  text-decoration-color: transparent;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 3px;
-  transition: text-decoration-color 150ms ease;
-}
-
-.author-link:hover .author-link-name,
-.author-link:focus-visible .author-link-name {
-  text-decoration-color: currentColor;
-}
-
-.author-link-avatar {
-  transition: box-shadow 150ms ease;
-}
-
-.author-link:hover .author-link-avatar,
-.author-link:focus-visible .author-link-avatar {
-  box-shadow: 0 0 0 2px var(--author-link-ring);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .author-link,
-  .author-link-name,
-  .author-link-avatar {
-    transition: none;
-  }
-}
-</style>

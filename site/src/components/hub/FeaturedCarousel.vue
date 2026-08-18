@@ -204,15 +204,15 @@ onUnmounted(() => {
                 :href="slide.creatorUrl"
                 :avatar-url="slide.creatorAvatarUrl"
                 :name="slide.creatorName"
-                highlight="rgb(255 255 255 / 0.18)"
+                highlight-class="hover:bg-white/18 focus-visible:bg-white/18"
                 avatar-class="size-5 sm:size-6"
                 name-class="ppformula-text-center-sm text-sm sm:text-base"
-                :class="[
-                  'pointer-events-auto relative z-20 min-w-0',
-                  slide.creatorUrl
-                    ? 'text-white/95 hover:text-white focus-visible:text-white'
-                    : 'text-white/95',
-                ]"
+                :class="
+                  cn(
+                    'pointer-events-auto relative z-20 min-w-0 text-white/95',
+                    slide.creatorUrl && 'hover:text-white focus-visible:text-white'
+                  )
+                "
                 @click="(event: MouseEvent) => slide.creatorUrl && event.stopPropagation()"
               />
 
