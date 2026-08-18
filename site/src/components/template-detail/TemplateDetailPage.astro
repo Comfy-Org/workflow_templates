@@ -52,6 +52,9 @@ const profile = data.username ? profiles.get(data.username) : null;
 const authorName = profile?.display_name || data.username || 'ComfyUI';
 const authorAvatarUrl = profile?.avatar_url || null;
 const authorProfileUrl = data.username ? creatorPath(data.username, locale) : null;
+// Render the author block as a link when the creator has a profile page, so the
+// avatar and name share one hover target (see `.author-link` in global.css).
+const AuthorTag = authorProfileUrl ? 'a' : 'div';
 const thumbnails = data.detailImages?.length ? data.detailImages : data.thumbnails || [];
 // Only video heroes can turn out to be portrait; the client script below measures
 // the loaded file and opts those pages out of the cover crop.
@@ -204,49 +207,48 @@ function formatRelativeDate(dateStr: string): string {
           }
 
           <SidebarSection title={t('labels.createdBy', locale)}>
-            <div class="flex items-center gap-3">
-              <div class="size-8 shrink-0 rounded-full overflow-hidden">
-                {
-                  authorAvatarUrl && (
-                    <img
-                      src={authorAvatarUrl}
-                      alt={authorName}
-                      class="w-full h-full object-cover"
-                      loading="lazy"
-                      onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
-                    />
-                  )
-                }
-                <div
-                  hidden={Boolean(authorAvatarUrl)}
-                  class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page"
-                  aria-hidden="true"
-                >
-                  {authorName.charAt(0).toUpperCase()}
+            <div class="flex flex-col gap-1">
+              <AuthorTag
+                href={authorProfileUrl ?? undefined}
+                class:list={[
+                  'flex items-center gap-3 w-fit text-content',
+                  authorProfileUrl && 'author-link',
+                ]}
+                data-astro-prefetch={authorProfileUrl ? '' : undefined}
+              >
+                <div class="author-link-avatar size-8 shrink-0 rounded-full overflow-hidden">
+                  {
+                    authorAvatarUrl && (
+                      <img
+                        src={authorAvatarUrl}
+                        alt={authorName}
+                        class="w-full h-full object-cover"
+                        loading="lazy"
+                        onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
+                      />
+                    )
+                  }
+                  <div
+                    hidden={Boolean(authorAvatarUrl)}
+                    class="w-full h-full rounded-full bg-brand flex items-center justify-center text-xs font-bold text-page"
+                    aria-hidden="true"
+                  >
+                    {authorName.charAt(0).toUpperCase()}
+                  </div>
                 </div>
-              </div>
-              <div class="flex flex-col">
-                {
-                  authorProfileUrl ? (
-                    <a
-                      href={authorProfileUrl}
-                      class="font-semibold text-base text-content hover:opacity-80 transition-opacity"
-                      data-astro-prefetch
-                    >
-                      {authorName}
-                    </a>
-                  ) : (
-                    <span class="font-semibold text-base text-content">{authorName}</span>
-                  )
-                }
-                {
-                  data.date && (
-                    <span class="text-xs text-content-secondary">
-                      {formatRelativeDate(data.date)}
-                    </span>
-                  )
-                }
-              </div>
+                <span
+                  class:list={['font-semibold text-base', authorProfileUrl && 'author-link-name']}
+                >
+                  {authorName}
+                </span>
+              </AuthorTag>
+              {
+                data.date && (
+                  <span class="ml-11 text-xs text-content-secondary">
+                    {formatRelativeDate(data.date)}
+                  </span>
+                )
+              }
             </div>
           </SidebarSection>
         </div>
