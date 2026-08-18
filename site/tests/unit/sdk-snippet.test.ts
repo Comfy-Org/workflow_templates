@@ -1,3 +1,7 @@
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -141,5 +145,13 @@ describe('loadWorkflowGraph', () => {
 
   it('returns null for unknown templates', () => {
     expect(loadWorkflowGraph('does-not-exist')).toBeNull();
+  });
+
+  it('rejects a file whose nodes field is not an array', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wf-graph-'));
+    writeFileSync(join(dir, 'objecty.json'), '{"nodes":{"0":{"type":"SaveImage"}}}');
+    writeFileSync(join(dir, 'listy.json'), '{"nodes":[{"id":1,"type":"SaveImage"}]}');
+    expect(loadWorkflowGraph('objecty', [dir])).toBeNull();
+    expect(loadWorkflowGraph('listy', [dir])?.nodes).toHaveLength(1);
   });
 });

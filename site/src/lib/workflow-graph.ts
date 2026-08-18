@@ -15,12 +15,15 @@ const GRAPH_DIRS = [
   join(process.cwd(), 'public', 'workflows'),
 ];
 
-export function loadWorkflowGraph(templateName: string): WorkflowGraph | null {
-  for (const dir of GRAPH_DIRS) {
+export function loadWorkflowGraph(
+  templateName: string,
+  dirs: readonly string[] = GRAPH_DIRS
+): WorkflowGraph | null {
+  for (const dir of dirs) {
     try {
       const raw = readFileSync(join(dir, `${templateName}.json`), 'utf8');
       const parsed: unknown = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object' && 'nodes' in parsed) {
+      if (parsed && typeof parsed === 'object' && Array.isArray((parsed as WorkflowGraph).nodes)) {
         return parsed as WorkflowGraph;
       }
     } catch {
