@@ -14,7 +14,7 @@ import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
-import { Avatar } from '@/components/ui/avatar';
+import { AuthorLink } from '@/components/ui/author-link';
 
 interface Props {
   name: string;
@@ -181,12 +181,20 @@ function handleCardClick() {
   if (!templateUrl.value) return;
   window.location.href = templateUrl.value;
 }
+
+// Only stop the click from bubbling to the card's own click-through handler
+// when the author block is actually a link — the non-link fallback (no
+// creator profile) should keep falling through to the card navigation.
+function onAuthorClick(event: MouseEvent) {
+  if (creatorUrl.value) event.stopPropagation();
+}
 </script>
 
 <template>
   <div
     class="group/pill-trigger group flex flex-col gap-4 rounded-4xl bg-hub-surface overflow-hidden pt-2 px-2 pb-6 transition-colors duration-200 content-auto hover:bg-hub-surface-hover"
     :class="templateUrl ? 'cursor-pointer' : ''"
+    data-testid="workflow-card"
     @click="handleCardClick"
   >
     <div class="aspect-4/3 bg-hub-surface rounded-[1.75rem] overflow-hidden relative">
@@ -379,21 +387,19 @@ function handleCardClick() {
 
     <div class="flex flex-col gap-4 px-4">
       <div class="flex items-center justify-between gap-2">
-        <a
-          v-if="creatorUrl"
+        <AuthorLink
           :href="creatorUrl"
-          class="creator-link author-link flex items-center gap-2 min-w-0 w-fit text-content-secondary hover:text-content focus-visible:text-content"
-          @click.stop
-        >
-          <Avatar :src="creatorAvatarUrl" :name="authorName" class="author-link-avatar size-5" />
-          <span class="author-link-name ppformula-text-center-sm text-base truncate">{{
-            authorName
-          }}</span>
-        </a>
-        <div v-else class="flex items-center gap-2 min-w-0 text-content-secondary">
-          <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />
-          <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
-        </div>
+          :avatar-url="creatorAvatarUrl"
+          :name="authorName"
+          avatar-class="size-5"
+          name-class="ppformula-text-center-sm text-base"
+          :class="
+            creatorUrl
+              ? 'text-content-secondary hover:text-content focus-visible:text-content'
+              : 'text-content-secondary'
+          "
+          @click="onAuthorClick"
+        />
 
         <ButtonPill
           v-if="templateUrl"
