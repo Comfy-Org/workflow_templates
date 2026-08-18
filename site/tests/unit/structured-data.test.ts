@@ -6,6 +6,7 @@ import {
   buildWorkflowGraphJsonLd,
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
+import { SITE_ORIGIN } from '../../src/config/site';
 
 describe('buildHowToJsonLd', () => {
   it('returns null when there are no steps', () => {
@@ -199,6 +200,55 @@ describe('buildWorkflowGraphJsonLd', () => {
     }
   });
 
+  it('always includes the static org/site/app enrichment fields', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const graph = result!['@graph'];
+    const website = graph.find((n: { '@type': unknown }) => n['@type'] === 'WebSite');
+    const organization = graph.find((n: { '@type': unknown }) => n['@type'] === 'Organization');
+    const softwareApp = graph.find(
+      (n: { '@type': unknown }) => n['@type'] === 'SoftwareApplication'
+    );
+    expect(website).toMatchObject({
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+      hasPart: [{ '@type': 'Blog', name: 'Comfy Blog', url: 'https://blog.comfy.org' }],
+    });
+    expect(organization).toMatchObject({
+      contactPoint: [
+        { '@type': 'ContactPoint', contactType: 'customer support' },
+        { '@type': 'ContactPoint', contactType: 'press' },
+      ],
+    });
+    expect(softwareApp).toMatchObject({
+      sameAs: expect.arrayContaining(['https://en.wikipedia.org/wiki/ComfyUI']),
+      softwareHelp: { '@type': 'CreativeWork', url: 'https://docs.comfy.org' },
+    });
+  });
+
+  it('includes isRelatedTo on the workflow node only when relatedLinks are passed', () => {
+    const withLinks = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      relatedLinks: [{ name: 'Video Workflows', url: 'https://comfy.org/workflows/tag/video/' }],
+    });
+    const workflowWithLinks = withLinks!['@graph'].find(
+      (n: { '@type': unknown }) =>
+        Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
+    ) as { isRelatedTo?: unknown };
+    expect(workflowWithLinks.isRelatedTo).toEqual([
+      {
+        '@type': 'WebPage',
+        name: 'Video Workflows',
+        url: 'https://comfy.org/workflows/tag/video/',
+      },
+    ]);
+
+    const withoutLinks = buildWorkflowGraphJsonLd(baseParams);
+    const workflowWithoutLinks = withoutLinks!['@graph'].find(
+      (n: { '@type': unknown }) =>
+        Array.isArray(n['@type']) && n['@type'].includes('SoftwareApplication')
+    );
+    expect(workflowWithoutLinks).not.toHaveProperty('isRelatedTo');
+  });
+
   it('builds a @graph with the workflow as mainEntity of the WebPage', () => {
     const result = buildWorkflowGraphJsonLd({
       ...baseParams,
@@ -215,9 +265,16 @@ describe('buildWorkflowGraphJsonLd', () => {
     expect(webpage).toMatchObject({
       '@id': `${baseParams.url}#webpage`,
       mainEntity: { '@id': `${baseParams.url}#workflow` },
-      about: [
-        { '@type': 'DefinedTerm', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
-      ],
+      about: [{ '@id': `${baseParams.url}#workflow` }, { '@id': `${baseParams.url}#e-about-0` }],
+    });
+    const aboutTerm = graph.find(
+      (n: { '@type': unknown; name?: unknown }) =>
+        n['@type'] === 'DefinedTerm' && n.name === 'Video'
+    );
+    expect(aboutTerm).toMatchObject({
+      '@id': `${baseParams.url}#e-about-0`,
+      name: 'Video',
+      sameAs: 'https://en.wikipedia.org/wiki/Video',
     });
     expect(workflow).toMatchObject({
       '@id': `${baseParams.url}#workflow`,

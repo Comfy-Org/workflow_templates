@@ -25,6 +25,7 @@ import {
 import { workflowOgUrl } from '../../lib/og-url';
 import { serializeJsonLdForScript, buildWorkflowGraphJsonLd } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
+import { categoryPath, tagPath } from '../../lib/routes';
 
 import { localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
@@ -135,6 +136,19 @@ const ogImage = workflowOgUrl(
   data.username || undefined
 );
 
+// Category/tag listing pages this workflow belongs to, folded into the
+// workflow node's `isRelatedTo` below.
+const relatedLinks = [
+  {
+    name: `${t(`category.${data.mediaType}`, locale)} Workflows`,
+    url: absoluteUrl(localizeUrl(categoryPath(data.mediaType), locale)),
+  },
+  ...data.tags.map((tag) => ({
+    name: `${tag} Workflows`,
+    url: absoluteUrl(tagPath(tag, locale)),
+  })),
+];
+
 // Unified graph replacing the page's old per-type TechArticle/FAQPage/
 // SoftwareApplication/BreadcrumbList scripts outright: WebSite → Organization →
 // SoftwareApplication (ComfyUI) → WebPage → workflow, folding breadcrumb and FAQ
@@ -160,6 +174,7 @@ const entityGraphStructuredData = buildWorkflowGraphJsonLd({
   ],
   entities: data.entities || {},
   faqItems: data.faqItems,
+  relatedLinks,
 });
 
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);

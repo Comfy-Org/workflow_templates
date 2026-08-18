@@ -230,19 +230,25 @@ export function buildWorkflowGraphJsonLd(params: {
   breadcrumbItems: BreadcrumbItem[];
   entities?: WorkflowEntities;
   faqItems?: FaqItem[];
+  /** Category/tag listing pages this workflow belongs to, folded into the workflow node's `isRelatedTo`. */
+  relatedLinks?: { name: string; url: string }[];
 }) {
   const { about, categories } = params.entities || {};
+
+  const organizationId = `${SITE_ORIGIN}/#organization`;
 
   const website = {
     '@type': 'WebSite',
     '@id': `${SITE_ORIGIN}/#website`,
     name: 'Comfy',
     url: `${SITE_ORIGIN}/`,
+    publisher: { '@id': organizationId },
+    hasPart: [{ '@type': 'Blog', name: 'Comfy Blog', url: 'https://blog.comfy.org' }],
   };
 
   const organization = {
     '@type': 'Organization',
-    '@id': `${SITE_ORIGIN}/#organization`,
+    '@id': organizationId,
     name: 'Comfy Org',
     url: `${SITE_ORIGIN}/`,
     sameAs: [
@@ -252,6 +258,15 @@ export function buildWorkflowGraphJsonLd(params: {
       'https://www.linkedin.com/company/comfyui',
       'https://www.instagram.com/comfyui',
     ],
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: 'hello@comfy.org',
+        url: 'https://support.comfy.org/',
+      },
+      { '@type': 'ContactPoint', contactType: 'press', email: 'press@comfy.org' },
+    ],
   };
 
   const softwareApp = {
@@ -260,6 +275,12 @@ export function buildWorkflowGraphJsonLd(params: {
     name: 'ComfyUI',
     applicationCategory: 'MultimediaApplication',
     operatingSystem: 'Windows, macOS, Linux',
+    sameAs: [
+      'https://en.wikipedia.org/wiki/ComfyUI',
+      'https://github.com/Comfy-Org/ComfyUI',
+      `${SITE_ORIGIN}/`,
+    ],
+    softwareHelp: { '@type': 'CreativeWork', name: 'ComfyUI Docs', url: 'https://docs.comfy.org' },
   };
 
   const breadcrumbId = `${params.url}#breadcrumb`;
@@ -292,6 +313,19 @@ export function buildWorkflowGraphJsonLd(params: {
     };
   });
 
+  // `about` terms get their own `@id`s (unlike category terms, which are only
+  // ever referenced through their DefinedTermSet) so the WebPage's `about` can
+  // point at them alongside the workflow itself and each category set.
+  const aboutTerms = (about || []).map((term, i) => ({
+    id: `${params.url}#e-about-${i}`,
+    node: {
+      '@type': 'DefinedTerm',
+      '@id': `${params.url}#e-about-${i}`,
+      name: term.name,
+      ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+    },
+  }));
+
   const faqId = `${params.url}#faq`;
 
   const webpage = {
@@ -305,13 +339,13 @@ export function buildWorkflowGraphJsonLd(params: {
     ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
     breadcrumb: { '@id': breadcrumbId },
     mainEntity: { '@id': workflowId },
-    ...(about?.length
+    ...(aboutTerms.length || termSets.length
       ? {
-          about: about.map((term) => ({
-            '@type': 'DefinedTerm',
-            name: term.name,
-            ...(term.sameAs ? { sameAs: term.sameAs } : {}),
-          })),
+          about: [
+            { '@id': workflowId },
+            ...aboutTerms.map((t) => ({ '@id': t.id })),
+            ...termSets.map((set) => ({ '@id': set.id })),
+          ],
         }
       : {}),
     ...(termSets.length
@@ -334,6 +368,15 @@ export function buildWorkflowGraphJsonLd(params: {
     ...(params.keywords ? { keywords: params.keywords } : {}),
     creator: { '@id': `${SITE_ORIGIN}/#organization` },
     runtimePlatform: { '@id': `${SITE_ORIGIN}/#comfyui` },
+    ...(params.relatedLinks?.length
+      ? {
+          isRelatedTo: params.relatedLinks.map((link) => ({
+            '@type': 'WebPage',
+            name: link.name,
+            url: link.url,
+          })),
+        }
+      : {}),
   };
 
   const faqPage = params.faqItems?.length
@@ -358,6 +401,7 @@ export function buildWorkflowGraphJsonLd(params: {
       webpage,
       workflow,
       breadcrumbList,
+      ...aboutTerms.map((t) => t.node),
       ...termSets.flatMap((set) => [set.node, ...set.terms.map((t) => t.node)]),
       ...(faqPage ? [faqPage] : []),
     ],
