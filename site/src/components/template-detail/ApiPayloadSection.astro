@@ -1,43 +1,43 @@
 ---
 // The workflow's JSON graph, surfaced on the page (fal-style API tab): the
-// exact payload behind the Download button, fetched lazily from the existing
-// download endpoint so page weight stays flat.
+// exact payload behind the hero's Download JSON button, fetched lazily from
+// the existing download endpoint so page weight stays flat. Copy is the only
+// action here on purpose — download and Run on Cloud already live in the hero.
 import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { buttonVariants } from '../ui/button';
 import { cn } from '../../lib/utils';
 import { eyebrow } from '../workflow-pages/landing-styles';
+import { buildSdkSnippet, extractSnippetNodes } from '../../lib/sdk-snippet';
+import { loadWorkflowGraph } from '../../lib/workflow-graph';
 
 interface Props {
   locale: Locale;
   templateName: string;
+  templateTitle: string;
   downloadUrl: string;
   canonicalJsonUrl: string;
-  cloudUrl?: string;
 }
 
-const { locale, templateName, downloadUrl, canonicalJsonUrl, cloudUrl } = Astro.props;
+const { locale, templateName, templateTitle, downloadUrl, canonicalJsonUrl } = Astro.props;
 
-// Real, documented SDK quickstart (https://docs.comfy.org/development/api-development/sdks).
-// The SDKs take a workflow in API format — File → Export Workflow (API) in ComfyUI.
-const sdkSnippet = `# Install (beta)
-pip install comfy-sdk        # Python
-npm i @comfyorg/sdk          # TypeScript
-
-# Run this workflow (Python)
-from comfy_sdk import Comfy
-
-client = Comfy(api_key="comfyui-...")
-wf = client.workflows.from_file("workflow_api.json")
-job = client.run(wf)
-for output in job.get_outputs("<output-node-id>"):
-    output.to_file(output.name)`;
+// Documented SDK quickstart (https://docs.comfy.org/development/api-development/sdks),
+// personalized at build time with this workflow's real node IDs and example
+// prompt from its shipped graph JSON. API-format exports keep the same IDs.
+const graph = loadWorkflowGraph(templateName);
+const snippetNodes = graph ? extractSnippetNodes(graph) : {};
+const sdkSnippet = buildSdkSnippet({ title: templateTitle, templateName, nodes: snippetNodes });
+// Hub-sourced workflows ship no graph in this repo, so their snippet is the
+// generic one until the client fills it in from the fetched payload.
+const personalized = Boolean(snippetNodes.outputNode);
 ---
 
 <section
   id="api"
   class="api-payload-section min-w-0 scroll-mt-8"
   data-download-url={downloadUrl}
+  data-template-title={templateTitle}
+  data-personalized={personalized ? '1' : '0'}
 >
   <p class={eyebrow}>{t('template.api.eyebrow', locale)}</p>
   <h2 class="mt-3 font-display text-xl font-normal tracking-tight text-content sm:text-2xl">
@@ -58,35 +58,9 @@ for output in job.get_outputs("<output-node-id>"):
     >
       <span
         class="ppformula-text-center-sm api-copy-label"
-        data-copied-text={t('template.api.copied', locale)}>{t('template.api.copy', locale)}</span>
+        data-copied-text={t('template.api.copied', locale)}>{t('template.api.copy', locale)}</span
+      >
     </button>
-    <a
-      href={downloadUrl}
-      download
-      class={cn(
-        buttonVariants({ variant: 'brand-outline', size: 'nav' }),
-        'api-download-btn uppercase transition-colors'
-      )}
-      data-template={templateName}
-    >
-      <span class="ppformula-text-center-sm">{t('cta.downloadJson', locale)}</span>
-    </a>
-    {
-      cloudUrl && (
-        <a
-          href={cloudUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          class={cn(
-            buttonVariants({ variant: 'brand-solid', size: 'nav' }),
-            'api-run-cloud-btn uppercase transition-opacity'
-          )}
-          data-template={templateName}
-        >
-          <span class="ppformula-text-center-sm font-bold">{t('template.api.runCloud', locale)}</span>
-        </a>
-      )
-    }
   </div>
 
   <div class="mt-4 overflow-hidden rounded-2xl border border-white/15">
@@ -101,7 +75,8 @@ for output in job.get_outputs("<output-node-id>"):
 
   <p class="mt-6 max-w-2xl text-sm text-hub-muted">{t('template.api.sdkIntro', locale)}</p>
   <div class="mt-3 overflow-hidden rounded-2xl border border-white/15">
-    <pre class="overflow-auto p-4 text-xs leading-relaxed text-hub-muted">{sdkSnippet}</pre>
+    <pre
+      class="api-sdk-pre overflow-auto p-4 text-xs leading-relaxed text-hub-muted">{sdkSnippet}</pre>
   </div>
   <p class="mt-3 max-w-2xl text-xs text-hub-muted">
     {t('template.api.sdkNote', locale)}
@@ -110,18 +85,22 @@ for output in job.get_outputs("<output-node-id>"):
       target="_blank"
       rel="noopener noreferrer"
       class="text-content underline underline-offset-2 hover:no-underline"
-    >{t('template.api.sdkDocs', locale)}</a>
-     ·
+      >{t('template.api.sdkDocs', locale)}</a
+    >
+    ·
     <a
       href="https://docs.comfy.org/development/api-development/getting-an-api-key"
       target="_blank"
       rel="noopener noreferrer"
       class="text-content underline underline-offset-2 hover:no-underline"
-    >{t('template.api.sdkKey', locale)}</a>
+      >{t('template.api.sdkKey', locale)}</a
+    >
   </p>
 </section>
 
 <script>
+  import { buildSdkSnippet, extractSnippetNodes } from '../../lib/sdk-snippet';
+
   function initApiPayload() {
     const section = document.querySelector<HTMLElement>('.api-payload-section');
     if (!section || section.dataset.bound === '1') return;
@@ -132,6 +111,29 @@ for output in job.get_outputs("<output-node-id>"):
     const copyLabel = section.querySelector<HTMLElement>('.api-copy-label');
     const url = section.dataset.downloadUrl;
     if (!pre || !url) return;
+
+    // Hub-sourced workflows have no graph at build time, so their SDK snippet
+    // renders generic; personalize it from the payload once it lands.
+    function personalizeSnippet(text: string) {
+      if (!section || section.dataset.personalized !== '0') return;
+      const sdkPre = section.querySelector<HTMLPreElement>('.api-sdk-pre');
+      const templateName = copyBtn?.dataset.template;
+      if (!sdkPre || !templateName) return;
+      try {
+        const graph: unknown = JSON.parse(text);
+        if (!graph || typeof graph !== 'object' || !('nodes' in graph)) return;
+        const nodes = extractSnippetNodes(graph as Parameters<typeof extractSnippetNodes>[0]);
+        if (!nodes.outputNode) return;
+        sdkPre.textContent = buildSdkSnippet({
+          title: section.dataset.templateTitle || templateName,
+          templateName,
+          nodes,
+        });
+        section.dataset.personalized = '1';
+      } catch {
+        /* leave the documented generic snippet in place */
+      }
+    }
 
     let payload: string | null = null;
     let loading: Promise<string | null> | null = null;
@@ -147,6 +149,7 @@ for output in job.get_outputs("<output-node-id>"):
             pre.textContent = text;
             pre.dataset.state = 'loaded';
           }
+          personalizeSnippet(text);
           return text;
         })
         .catch(() => {
