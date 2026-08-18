@@ -207,6 +207,63 @@
     position: relative;
     top: 0.12em;
   }
+
+  /* Author attribution links (workflow cards, carousel, detail sidebar,
+     creator index). Hovering or keyboard-focusing one lifts a pill highlight
+     behind it, underlines the name and rings the avatar, so it reads as a
+     clickable person rather than a caption. Padding is cancelled by an equal
+     negative margin, so the highlight never shifts surrounding layout. */
+  .author-link {
+    --author-link-highlight: var(--color-transparency-white-t8);
+    --author-link-ring: currentColor;
+    padding: 0.125rem 0.375rem;
+    margin: -0.125rem -0.375rem;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition:
+      background-color 150ms ease,
+      color 150ms ease;
+  }
+
+  .author-link:hover,
+  .author-link:focus-visible {
+    background-color: var(--author-link-highlight);
+  }
+
+  .author-link:focus-visible {
+    outline: 2px solid var(--author-link-ring);
+    outline-offset: 2px;
+  }
+
+  .author-link-name {
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+    transition: text-decoration-color 150ms ease;
+  }
+
+  .author-link:hover .author-link-name,
+  .author-link:focus-visible .author-link-name {
+    text-decoration-color: currentColor;
+  }
+
+  .author-link-avatar {
+    transition: box-shadow 150ms ease;
+  }
+
+  .author-link:hover .author-link-avatar,
+  .author-link:focus-visible .author-link-avatar {
+    box-shadow: 0 0 0 2px var(--author-link-ring);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .author-link,
+    .author-link-name,
+    .author-link-avatar {
+      transition: none;
+    }
+  }
 }
 @property --border-angle {
   syntax: '<angle>';
