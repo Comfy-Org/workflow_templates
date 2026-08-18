@@ -527,7 +527,7 @@ function toWorkflowEntities(entities: HubWorkflowMetadata['entities']): Workflow
     about: entities?.about?.map((term) => ({ name: term.name, sameAs: term.same_as })),
     categories: entities?.categories?.map((category) => ({
       name: category.name,
-      terms: category.terms.map((term) => ({ name: term.name, sameAs: term.same_as })),
+      terms: (category.terms || []).map((term) => ({ name: term.name, sameAs: term.same_as })),
     })),
   };
 }

@@ -211,12 +211,12 @@ export interface WorkflowEntities {
  * (`SoftwareApplication` + `TechArticle`), plus `DefinedTerm`/`DefinedTermSet` nodes
  * for `entities.categories` and a `BreadcrumbList`/`FAQPage` when supplied.
  *
- * Mirrors the use-case page graph in `buildCollectionPageJsonLd`'s sibling — same
- * `WebSite`/`Organization`/`SoftwareApplication` root nodes — but with a `WebPage`
- * whose `mainEntity` is the workflow rather than a `CollectionPage` `ItemList`.
- * Always builds the graph, replacing the page's old per-type scripts outright —
- * `entities` is optional structured-data enrichment layered into the same graph
- * once the backend supplies it, not a gate on whether the graph itself renders.
+ * Unlike `buildCollectionPageJsonLd` (a bare `CollectionPage`, no root nodes of its
+ * own), this builds the full `WebSite`/`Organization`/`SoftwareApplication` root
+ * chain itself, with a `WebPage` whose `mainEntity` is the workflow. Always builds
+ * the graph, replacing the page's old per-type scripts outright — `entities` is
+ * optional structured-data enrichment layered into the same graph once the backend
+ * supplies it, not a gate on whether the graph itself renders.
  */
 export function buildWorkflowGraphJsonLd(params: {
   name: string;
@@ -292,6 +292,8 @@ export function buildWorkflowGraphJsonLd(params: {
     };
   });
 
+  const faqId = `${params.url}#faq`;
+
   const webpage = {
     '@type': 'WebPage',
     '@id': `${params.url}#webpage`,
@@ -315,6 +317,7 @@ export function buildWorkflowGraphJsonLd(params: {
     ...(termSets.length
       ? { mentions: termSets.flatMap((set) => set.terms.map((t) => ({ '@id': t.id }))) }
       : {}),
+    ...(params.faqItems?.length ? { hasPart: { '@id': faqId } } : {}),
   };
 
   const workflow = {
@@ -336,7 +339,8 @@ export function buildWorkflowGraphJsonLd(params: {
   const faqPage = params.faqItems?.length
     ? {
         '@type': 'FAQPage',
-        '@id': `${params.url}#faq`,
+        '@id': faqId,
+        isPartOf: { '@id': `${params.url}#webpage` },
         mainEntity: params.faqItems.map((item) => ({
           '@type': 'Question',
           name: item.question,

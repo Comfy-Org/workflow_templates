@@ -193,6 +193,9 @@ describe('buildWorkflowGraphJsonLd', () => {
         )
       ).toBe(true);
       expect(graph.some((n: { '@type': unknown }) => n['@type'] === 'DefinedTerm')).toBe(false);
+      const breadcrumb = graph.find((n: { '@type': unknown }) => n['@type'] === 'BreadcrumbList');
+      expect(breadcrumb).toMatchObject({ '@id': `${baseParams.url}#breadcrumb` });
+      expect(breadcrumb).not.toHaveProperty('@context');
     }
   });
 
@@ -234,15 +237,17 @@ describe('buildWorkflowGraphJsonLd', () => {
       },
     });
     const graph = result!['@graph'];
-    const termSets = graph.filter((n: { '@type': string }) => n['@type'] === 'DefinedTermSet');
-    const terms = graph.filter((n: { '@type': string }) => n['@type'] === 'DefinedTerm');
+    const termSets = graph.filter((n: { '@type': unknown }) => n['@type'] === 'DefinedTermSet');
+    const terms = graph.filter((n: { '@type': unknown }) => n['@type'] === 'DefinedTerm');
     expect(termSets).toHaveLength(2);
     expect(terms).toHaveLength(3);
-    const webpage = graph.find((n: { '@type': string }) => n['@type'] === 'WebPage');
-    expect(webpage.mentions).toHaveLength(3);
+    const webpage = graph.find((n: { '@type': unknown }) => n['@type'] === 'WebPage') as
+      | { mentions: Array<{ '@id': string }> }
+      | undefined;
+    expect(webpage?.mentions).toHaveLength(3);
     // Every mentioned @id must resolve to a DefinedTerm actually present in the graph.
     const termIds = new Set(terms.map((t: { '@id': string }) => t['@id']));
-    for (const mention of webpage.mentions) {
+    for (const mention of webpage!.mentions) {
       expect(termIds.has(mention['@id'])).toBe(true);
     }
   });
