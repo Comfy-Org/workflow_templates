@@ -1,0 +1,176 @@
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { refreshSignoffRecords } from '../../scripts/i18n/refresh-signoff';
+import { __resetResolverCache, hashResolvedArtifact, resolveLocalizedWorkflow } from '../../src/lib/i18n/resolver';
+import type { Locale } from '../../src/lib/i18n/schema';
+
+const A = 'aaaaaaaaaaaa';
+const B = 'bbbbbbbbbbbb';
+const TODAY = '2026-08-19';
+
+let root: string;
+
+function write(rel: string, value: unknown) {
+  const file = path.join(root, rel);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(value));
+}
+
+function readReviews() {
+  return JSON.parse(fs.readFileSync(path.join(root, 'reviews', 'zh.json'), 'utf-8'));
+}
+
+/**
+ * Only title and description are non-empty in English, so those two are the
+ * required set for these fixtures and the other required fields drop out
+ * (English has nothing to translate for them).
+ */
+const english = {
+  title: 'Wan Inpainting',
+  description: 'English description',
+  metaDescription: '',
+  extendedDescription: '',
+  howToUse: [],
+  suggestedUseCases: [],
+  faqItems: [],
+};
+
+/** A record whose seal matches the CURRENT resolved state of `sid`. */
+function currentRecord(sid: string, contentHash: string) {
+  __resetResolverCache();
+  const probe = resolveLocalizedWorkflow(sid, 'zh' as Locale, {
+    contentRoot: root,
+    indexableLocales: ['zh' as Locale],
+  });
+  return {
+    reviewer: 'zhixiong-lin',
+    reviewedAt: '2026-08-14',
+    reviewedContentHash: contentHash,
+    reviewedArtifactChecksum: hashResolvedArtifact(probe.data),
+  };
+}
+
+const staleRecord = {
+  reviewer: 'zhixiong-lin',
+  reviewedAt: '2026-08-14',
+  reviewedContentHash: 'oldhash',
+  reviewedArtifactChecksum: 'oldchecksum',
+};
+
+function run() {
+  __resetResolverCache();
+  return refreshSignoffRecords('zh' as Locale, root, TODAY);
+}
+
+beforeEach(() => {
+  root = fs.mkdtempSync(path.join(os.tmpdir(), 'signoff-'));
+  write('content/en.json', { [A]: english });
+  write('content/zh.json', { [A]: { title: '标题', description: '描述' } });
+  write('manifest.json', { [A]: { content: 'h-current' } });
+  write('review/zh.json', { promptVersion: 1, entries: {} });
+});
+
+afterEach(() => {
+  fs.rmSync(root, { recursive: true, force: true });
+  __resetResolverCache();
+});
+
+describe('refreshSignoffRecords', () => {
+  it('never bootstraps a locale that has no sign-off wave', () => {
+    write('reviews/zh.json', {});
+    expect(run()).toBeNull();
+    // and an absent file is the same case, not a crash
+    fs.rmSync(path.join(root, 'reviews', 'zh.json'));
+    expect(run()).toBeNull();
+  });
+
+  it('leaves a record alone while its seal still matches', () => {
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current') });
+    const summary = run()!;
+    expect(summary.upToDate).toBe(1);
+    expect(summary.refreshed).toEqual([]);
+    expect(readReviews()[A].reviewedAt).toBe('2026-08-14');
+  });
+
+  it('re-stamps a broken seal when the page meets the launch bar', () => {
+    write('reviews/zh.json', { [A]: staleRecord });
+    const summary = run()!;
+    expect(summary.refreshed).toEqual([A]);
+    const record = readReviews()[A];
+    expect(record.reviewedContentHash).toBe('h-current');
+    expect(record.reviewedAt).toBe(TODAY);
+    expect(record.reviewer).toBe('zhixiong-lin');
+    expect(record.approvedScope).toContain('auto-refresh');
+    // the refreshed seal must actually match, or the page still cannot index
+    __resetResolverCache();
+    const probe = resolveLocalizedWorkflow(A, 'zh' as Locale, {
+      contentRoot: root,
+      indexableLocales: ['zh' as Locale],
+    });
+    expect(record.reviewedArtifactChecksum).toBe(hashResolvedArtifact(probe.data));
+  });
+
+  it('refuses a page with a required field still in English', () => {
+    write('content/zh.json', { [A]: { title: '标题' } }); // description missing
+    write('reviews/zh.json', { [A]: staleRecord });
+    const summary = run()!;
+    expect(summary.refusedUntranslated).toEqual([A]);
+    expect(readReviews()[A]).toEqual(staleRecord);
+  });
+
+  it('refuses a page with an unresolved serious finding on served machine text', () => {
+    write('reviews/zh.json', { [A]: staleRecord });
+    write('review/zh.json', {
+      promptVersion: 1,
+      entries: { [A]: { findings: [{ field: 'description', severity: 'major' }] } },
+    });
+    const summary = run()!;
+    expect(summary.refusedFindings).toEqual([A]);
+    expect(readReviews()[A]).toEqual(staleRecord);
+  });
+
+  it('treats a serious finding as moot when an override supersedes the flagged text', () => {
+    write('reviews/zh.json', { [A]: staleRecord });
+    write('overrides/zh.json', { [A]: { description: '人工修订的描述' } });
+    write('review/zh.json', {
+      promptVersion: 1,
+      entries: { [A]: { findings: [{ field: 'description', severity: 'major' }] } },
+    });
+    const summary = run()!;
+    // flagged bytes are machine text; served bytes are the override
+    expect(summary.refreshed).toEqual([A]);
+  });
+
+  it('does not let a minor finding block a refresh', () => {
+    write('reviews/zh.json', { [A]: staleRecord });
+    write('review/zh.json', {
+      promptVersion: 1,
+      entries: { [A]: { findings: [{ field: 'description', severity: 'minor' }] } },
+    });
+    expect(run()!.refreshed).toEqual([A]);
+  });
+
+  it('seals a workflow published after the wave, under the wave reviewer', () => {
+    write('content/en.json', { [A]: english, [B]: english });
+    write('content/zh.json', {
+      [A]: { title: '标题', description: '描述' },
+      [B]: { title: '新标题', description: '新描述' },
+    });
+    write('manifest.json', { [A]: { content: 'h-current' }, [B]: { content: 'h-new' } });
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current') });
+    const summary = run()!;
+    expect(summary.sealedNew).toEqual([B]);
+    const record = readReviews()[B];
+    expect(record.reviewer).toBe('zhixiong-lin');
+    expect(record.approvedScope).toContain('auto-sealed');
+  });
+
+  it('drops the record of a workflow that left the catalog', () => {
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current'), [B]: staleRecord });
+    const summary = run()!;
+    expect(summary.droppedGone).toEqual([B]);
+    expect(readReviews()[B]).toBeUndefined();
+  });
+});
