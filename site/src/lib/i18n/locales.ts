@@ -46,7 +46,7 @@ export const SUPPORTED_HUB_LOCALES: readonly Locale[] = LOCALES;
  * its native-review wave, at which point it is added here in a one-line PR.
  * Per-page freshness/completeness/review gating applies on top (see predicate).
  */
-export const INDEXABLE_LOCALES: readonly Locale[] = [];
+export const INDEXABLE_LOCALES: readonly Locale[] = ['zh'];
 
 /**
  * Fail-closed guard for a flipped locale, asserted once per build after the
