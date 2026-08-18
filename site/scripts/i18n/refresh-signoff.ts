@@ -33,6 +33,7 @@ import {
   __resetResolverCache,
 } from '../../src/lib/i18n/resolver';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
+import { PRUNING_SEVERITIES, type FindingSeverity } from './review-translations';
 import {
   REQUIRED_FOR_INDEX,
   TRANSLATABLE_FIELDS,
@@ -170,12 +171,14 @@ export function refreshSignoffRecords(
     // served text is the machine translation. Enforce prunes such fields in the
     // same run, which the check above then catches as untranslated; this is the
     // backstop for any path where a flagged machine field is still being served.
-    const blocking = (verdicts[sid]?.findings ?? []).some(
-      (f) =>
-        (f.severity === 'critical' || f.severity === 'major') &&
-        TRANSLATABLE_FIELDS.includes(f.field as (typeof TRANSLATABLE_FIELDS)[number]) &&
-        resolved.provenance[f.field as (typeof TRANSLATABLE_FIELDS)[number]] === 'machine'
-    );
+    const blocking = (verdicts[sid]?.findings ?? []).some((f) => {
+      if (!PRUNING_SEVERITIES.has(f.severity as FindingSeverity)) return false;
+      const field = f.field as (typeof TRANSLATABLE_FIELDS)[number] | undefined;
+      // A serious finding that names no field cannot be checked against
+      // provenance, so it blocks: unattributable problems fail closed.
+      if (!field || !TRANSLATABLE_FIELDS.includes(field)) return true;
+      return resolved.provenance[field] === 'machine';
+    });
     if (blocking) {
       summary.refusedFindings.push(sid);
       continue;
@@ -187,6 +190,7 @@ export function refreshSignoffRecords(
         reviewedAt: today,
         reviewedContentHash: currentContentHash,
         reviewedArtifactChecksum: currentChecksum,
+        automated: true,
         approvedScope: withWaveScope(
           `auto-refresh ${today}: content changed after sign-off, current text is AI-review clean`,
           baseScope(existing.approvedScope) || waveScope
@@ -199,6 +203,7 @@ export function refreshSignoffRecords(
         reviewedAt: today,
         reviewedContentHash: currentContentHash,
         reviewedArtifactChecksum: currentChecksum,
+        automated: true,
         approvedScope: withWaveScope(
           `auto-sealed ${today}: published after the last wave, AI-review clean`
         ),

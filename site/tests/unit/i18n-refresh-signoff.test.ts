@@ -227,6 +227,31 @@ describe('refreshSignoffRecords', () => {
     expect(scope2.split('auto-').length - 1).toBe(1);
   });
 
+  it('blocks on a serious finding that names no field (fails closed)', () => {
+    write('reviews/zh.json', { [A]: staleRecord });
+    write('review/zh.json', {
+      promptVersion: 1,
+      entries: { [A]: { findings: [{ severity: 'major' }] } },
+    });
+    const summary = run()!;
+    expect(summary.refusedFindings).toEqual([A]);
+    expect(readReviews()[A]).toEqual(staleRecord);
+  });
+
+  it('marks every record it writes as automated, and touches no human record', () => {
+    write('content/en.json', { [A]: english, [B]: english });
+    write('content/zh.json', {
+      [A]: { title: '标题', description: '描述' },
+      [B]: { title: '新标题', description: '新描述' },
+    });
+    write('manifest.json', { [A]: { content: 'h-current' }, [B]: { content: 'h-new' } });
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current') });
+    run();
+    const reviews = readReviews();
+    expect(reviews[A].automated).toBeUndefined(); // human record, untouched
+    expect(reviews[B].automated).toBe(true); // machine-written, says so
+  });
+
   it('drops the record of a workflow that left the catalog', () => {
     write('reviews/zh.json', { [A]: currentRecord(A, 'h-current'), [B]: staleRecord });
     const summary = run()!;
