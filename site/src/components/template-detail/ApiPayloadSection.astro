@@ -17,6 +17,21 @@ interface Props {
 }
 
 const { locale, templateName, downloadUrl, canonicalJsonUrl, cloudUrl } = Astro.props;
+
+// Real, documented SDK quickstart (https://docs.comfy.org/development/api-development/sdks).
+// The SDKs take a workflow in API format — File → Export Workflow (API) in ComfyUI.
+const sdkSnippet = `# Install (beta)
+pip install comfy-sdk        # Python
+npm i @comfyorg/sdk          # TypeScript
+
+# Run this workflow (Python)
+from comfy_sdk import Comfy
+
+client = Comfy(api_key="comfyui-...")
+wf = client.workflows.from_file("workflow_api.json")
+job = client.run(wf)
+for output in job.get_outputs("<output-node-id>"):
+    output.to_file(output.name)`;
 ---
 
 <section
@@ -83,6 +98,27 @@ const { locale, templateName, downloadUrl, canonicalJsonUrl, cloudUrl } = Astro.
       data-state="idle"
       data-error-text={t('template.api.error', locale)}>{t('template.api.loading', locale)}</pre>
   </div>
+
+  <p class="mt-6 max-w-2xl text-sm text-hub-muted">{t('template.api.sdkIntro', locale)}</p>
+  <div class="mt-3 overflow-hidden rounded-2xl border border-white/15">
+    <pre class="overflow-auto p-4 text-xs leading-relaxed text-hub-muted">{sdkSnippet}</pre>
+  </div>
+  <p class="mt-3 max-w-2xl text-xs text-hub-muted">
+    {t('template.api.sdkNote', locale)}
+    <a
+      href="https://docs.comfy.org/development/api-development/sdks"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-content underline underline-offset-2 hover:no-underline"
+    >{t('template.api.sdkDocs', locale)}</a>
+     ·
+    <a
+      href="https://docs.comfy.org/development/api-development/getting-an-api-key"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-content underline underline-offset-2 hover:no-underline"
+    >{t('template.api.sdkKey', locale)}</a>
+  </p>
 </section>
 
 <script>
