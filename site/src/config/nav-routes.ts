@@ -24,6 +24,9 @@ export const navRoutes = {
   mcp: `${ORIGIN}/mcp`,
   launches: `${ORIGIN}/launches`,
   models: `${ORIGIN}/p/supported-models`,
+  fdct: `${ORIGIN}/forward-deployed-creatives`,
+  events: `${ORIGIN}/events`,
+  ltx: `${ORIGIN}/ltx-2.5`,
 } as const;
 
 export const navExternalLinks = {
@@ -44,8 +47,8 @@ const MEDIA = 'https://media.comfy.org/website/nav';
 /** Featured-card image + CTA target for each dropdown section. */
 export const navFeatured = {
   products: {
-    image: `${MEDIA}/mcp-card.webp`,
-    cta: `${ORIGIN}/mcp`,
+    image: `${MEDIA}/ltx-card.webp`,
+    cta: navRoutes.ltx,
   },
   community: {
     image: `${MEDIA}/featured-demo-card.jpg`,
