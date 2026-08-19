@@ -142,7 +142,7 @@ const SEVERITIES: readonly FindingSeverity[] = ['critical', 'major', 'minor'];
 
 /** Severities that cost a field its translation. `minor` is recorded for the report
  *  but never prunes — pruning a whole field over a comma would be worse than the nit. */
-const PRUNING_SEVERITIES: ReadonlySet<FindingSeverity> = new Set<FindingSeverity>([
+export const PRUNING_SEVERITIES: ReadonlySet<FindingSeverity> = new Set<FindingSeverity>([
   'critical',
   'major',
 ]);
