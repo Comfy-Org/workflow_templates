@@ -224,7 +224,8 @@ describe('refreshSignoffRecords', () => {
     write('content/zh.json', { [A]: { title: '又改了', description: '描述' } });
     run();
     const scope2 = readReviews()[A].approvedScope as string;
-    expect(scope2.split('auto-').length - 1).toBe(1);
+    expect(scope2.split('auto-refresh').length - 1).toBe(1);
+    expect(scope2).not.toContain('auto-sealed');
   });
 
   it('blocks on a serious finding that names no field (fails closed)', () => {
