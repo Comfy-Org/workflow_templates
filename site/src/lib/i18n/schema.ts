@@ -88,6 +88,11 @@ export interface ReviewRecord {
   reviewedContentHash: string;
   reviewedArtifactChecksum: string;
   approvedScope?: string;
+  /** True when the record was written by the pipeline's sign-off refresh rather
+   *  than by a person reading this exact text. The predicate never reads this;
+   *  it exists so the record is honest at a glance and auditable without
+   *  string-parsing the scope note. */
+  automated?: boolean;
 }
 
 /** shareId -> review record for one locale. */
