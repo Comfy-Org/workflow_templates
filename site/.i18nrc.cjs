@@ -103,6 +103,17 @@ module.exports = defineConfig({
   // Serial: paced for the org's OpenAI tier (30k TPM). Raise once the tier is bumped.
   concurrency: 1,
   saveImmediately: true,
+  // Force OpenAI's JSON mode (response_format: json_object) on every translation
+  // call. gpt-5.2 in plain-text mode appends a stray closing brace after otherwise
+  // complete, correct JSON (likely miscounting the {{PTnn}} placeholder braces in
+  // the content), lobe's JSON.parse AND its dirty-json fallback both reject that
+  // one byte, and the CLI then discards the whole chunk — which froze every
+  // locale's translation run from 2026-08-14 on. JSON mode makes the API itself
+  // guarantee syntactically valid output, so the failure is impossible at the
+  // protocol level rather than merely unlikely. lobe only sends the flag when
+  // this experimental option is set. If a future model id rejects json_object,
+  // the call fails loudly with a 400, not silently.
+  experimental: { jsonMode: true },
   // content/ holds ONLY locale files, so it is a clean lobe entry/output dir.
   entry: 'src/i18n/content/en.json',
   entryLocale: 'en',
