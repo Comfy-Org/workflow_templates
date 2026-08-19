@@ -11,6 +11,8 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import {
   readCliContextWindows,
+  readCliJsonModeSupport,
+  cliSourceSupportsJsonMode,
   effectiveSplitToken,
 } from '../../scripts/i18n/cli-context-windows';
 
@@ -18,7 +20,11 @@ const require = createRequire(import.meta.url);
 const CONFIG_PATH = path.join(process.cwd(), '.i18nrc.cjs');
 
 /** The committed config, read with any local env override removed. */
-function committedConfig(): { modelName: string; splitToken: number } {
+function committedConfig(): {
+  modelName: string;
+  splitToken: number;
+  experimental?: { jsonMode?: boolean };
+} {
   const previous = process.env.HUB_I18N_MODEL;
   delete process.env.HUB_I18N_MODEL;
   try {
@@ -64,5 +70,35 @@ describe('translator model', () => {
     const limit = effectiveSplitToken(undefined, 8000, 6000);
     expect(Number.isNaN(limit)).toBe(true);
     expect(100 <= limit).toBe(false);
+  });
+});
+
+describe('JSON mode wiring', () => {
+  it('is set in the committed config', () => {
+    // Without response_format json_object, gpt-5.2 appends a stray closing
+    // brace that lobe rejects, which froze every locale from 2026-08-14 on.
+    expect(committedConfig().experimental?.jsonMode).toBe(true);
+  });
+
+  it('is still honoured by the installed CLI', () => {
+    expect(
+      readCliJsonModeSupport(),
+      'The installed @lobehub/i18n-cli no longer reads experimental.jsonMode or sends ' +
+        'json_object. Translation would silently run in plain-text mode, where gpt-5.2 ' +
+        'output is unparseable. Pin back or re-wire JSON mode before translating.'
+    ).toBe(true);
+  });
+
+  it('detects a bundle that dropped the option', () => {
+    // The silent-regression shape the assertion exists for: a CLI that neither
+    // reads the flag nor sends the response format must fail the check.
+    expect(cliSourceSupportsJsonMode('const t = await client.chat.completions.create({messages, model})')).toBe(false);
+    // Reading the flag without forwarding it is equally broken.
+    expect(cliSourceSupportsJsonMode('this.x=!!this.config?.experimental?.jsonMode')).toBe(false);
+    expect(
+      cliSourceSupportsJsonMode(
+        'this.x=!!this.config?.experimental?.jsonMode;...this.x&&{response_format:{type:"json_object"}}'
+      )
+    ).toBe(true);
   });
 });

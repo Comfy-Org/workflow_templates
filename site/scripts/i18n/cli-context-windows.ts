@@ -25,14 +25,36 @@ const require = createRequire(import.meta.url);
  * `null` means the bundle's shape changed, not that the model is bad, so callers
  * should say so rather than treat it as a failed lookup.
  */
-export function readCliContextWindows(): Record<string, number> | null {
-  let source: string;
+function readCliSource(): string | null {
   try {
     const entry = require.resolve('@lobehub/i18n-cli');
-    source = fs.readFileSync(path.join(path.dirname(entry), 'cli.js'), 'utf-8');
+    return fs.readFileSync(path.join(path.dirname(entry), 'cli.js'), 'utf-8');
   } catch {
     return null;
   }
+}
+
+/**
+ * Whether a CLI bundle both reads the `experimental.jsonMode` config option and
+ * forwards OpenAI's `json_object` response format. Both markers are property
+ * names / wire literals, which minification leaves intact. A version that
+ * renames or drops the option would silently fall back to plain-text mode,
+ * where gpt-5.2's stray-brace output froze every locale from 2026-08-14 — an
+ * ignored config key gives no signal, unlike a rejected response_format.
+ */
+export function cliSourceSupportsJsonMode(source: string): boolean {
+  return source.includes('jsonMode') && source.includes('json_object');
+}
+
+/** jsonMode support of the installed CLI, or `null` when the bundle is unreadable. */
+export function readCliJsonModeSupport(): boolean | null {
+  const source = readCliSource();
+  return source === null ? null : cliSourceSupportsJsonMode(source);
+}
+
+export function readCliContextWindows(): Record<string, number> | null {
+  const source = readCliSource();
+  if (source === null) return null;
 
   // The bundle is minified, so anchor on a stable key rather than a variable
   // name. The table holds only numbers, so the first brace after it closes it.

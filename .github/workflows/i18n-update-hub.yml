@@ -330,7 +330,9 @@ jobs:
           # A FULLY misaligned content file (model-mangled keys, none in the
           # English source) fails validation and enforce cannot prune it, so
           # banking it would carry the mangled keys forward. Partially stale
-          # files still bank, matching the validator's tolerance.
+          # files still bank, matching the validator's tolerance. MUST run
+          # after the parse pass above: it reads en.json from the worktree,
+          # which that pass has already restored to a good version if truncated.
           while IFS= read -r f; do
             case "$f" in
               site/src/i18n/content/en.json) ;;
