@@ -204,6 +204,19 @@ jobs:
         working-directory: site
         run: pnpm i18n:validate
 
+      # Re-stamp sign-off records whose seal broke for a good reason: a held
+      # page's missing translation arrived, the English source moved and was
+      # retranslated clean, or a pruned field came back clean. Same bar as the
+      # launch itself: AI-review-clean text is sealed, flagged text stays held
+      # for a human. Runs after review/enforce/validate so it judges tonight's
+      # final state, and its output rides this run's PR like every other
+      # generated file, so a person still approves the records before main.
+      # Locales without an existing human sign-off wave are never touched.
+      - name: Refresh sign-off records
+        if: always()
+        working-directory: site
+        run: pnpm i18n:signoff-refresh
+
       # Format only the generated files; whole-tree prettier hits pre-existing
       # .astro errors. success() so we only format output we intend to publish.
       - name: Format
