@@ -165,6 +165,13 @@ const urlSlug = data.shareId ? `${data.name}-${data.shareId}` : data.name;
 const canonicalUrl = isIndexable
   ? absoluteUrl(`/${locale}/workflows/${urlSlug}/`)
   : absoluteUrl(`/workflows/${urlSlug}/`);
+// The JSON-LD graph's `@id`s must stay unique per rendered document, even while
+// gated: `canonicalUrl` points at the English URL until the flip, so every
+// non-indexable locale would otherwise derive the exact same `#webpage`/`#workflow`/
+// entity fragment ids as the English page (and as each other). Always anchor the
+// graph on this page's own locale URL; `canonicalUrl` still drives the actual
+// `<link rel="canonical">` above.
+const graphBaseUrl = absoluteUrl(`/${locale}/workflows/${urlSlug}/`);
 
 // One predicate drives four surfaces: canonical (above), robots noindex, the
 // hreflang cluster, and sitemap membership. Emit noindex until this page is
@@ -196,7 +203,7 @@ const entityGraphStructuredData = buildWorkflowGraphJsonLd(
   buildWorkflowGraphParams({
     data,
     locale,
-    canonicalUrl,
+    canonicalUrl: graphBaseUrl,
     pageTitle: title,
     image: primaryThumbnail || undefined,
   })
