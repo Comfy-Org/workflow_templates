@@ -1,0 +1,76 @@
+---
+// The workflow's JSON graph, surfaced on the page (fal-style API tab): the
+// exact payload behind the hero's Download JSON button, fetched lazily by the
+// panel island so page weight stays flat. Copy is the only action here on
+// purpose — download and Run on Cloud already live in the hero.
+import type { Locale } from '../../i18n/config';
+import { t } from '../../i18n/ui';
+import { eyebrow } from '../workflow-pages/landing-styles';
+import { buildSdkSnippet, extractSnippetNodes } from '../../lib/sdk-snippet';
+import { loadWorkflowGraph } from '../../lib/workflow-graph';
+import ApiPayloadPanel from './ApiPayloadPanel.vue';
+
+interface Props {
+  locale: Locale;
+  templateName: string;
+  templateTitle: string;
+  downloadUrl: string;
+  canonicalJsonUrl: string;
+}
+
+const { locale, templateName, templateTitle, downloadUrl, canonicalJsonUrl } = Astro.props;
+
+// Documented SDK quickstart (https://docs.comfy.org/development/api-development/sdks),
+// personalized at build time with this workflow's real node IDs and example
+// prompt from its shipped graph JSON. API-format exports keep the same IDs.
+const graph = loadWorkflowGraph(templateName);
+const snippetNodes = graph ? extractSnippetNodes(graph) : {};
+const sdkSnippet = buildSdkSnippet({ title: templateTitle, templateName, nodes: snippetNodes });
+// Hub-sourced workflows ship no graph in this repo, so their snippet is the
+// generic one until the panel fills it in from the fetched payload.
+const personalized = Boolean(snippetNodes.outputNode);
+---
+
+<section id="api" class="api-payload-section min-w-0 scroll-mt-8">
+  <p class={eyebrow}>{t('template.api.eyebrow', locale)}</p>
+  <h2 class="mt-3 font-display text-xl font-normal tracking-tight text-content sm:text-2xl">
+    {t('template.api.heading', locale)}
+  </h2>
+  <p class="mt-3 max-w-2xl text-sm text-hub-muted">
+    {t('template.api.body', locale)}
+  </p>
+
+  <ApiPayloadPanel
+    client:visible={{ rootMargin: '400px' }}
+    downloadUrl={downloadUrl}
+    canonicalJsonUrl={canonicalJsonUrl}
+    templateName={templateName}
+    templateTitle={templateTitle}
+    initialSnippet={sdkSnippet}
+    personalized={personalized}
+    sdkIntro={t('template.api.sdkIntro', locale)}
+    copyLabel={t('template.api.copy', locale)}
+    copiedLabel={t('template.api.copied', locale)}
+    loadingLabel={t('template.api.loading', locale)}
+    errorLabel={t('template.api.error', locale)}
+  />
+
+  <p class="mt-3 max-w-2xl text-xs text-hub-muted">
+    {t('template.api.sdkNote', locale)}
+    <a
+      href="https://docs.comfy.org/development/api-development/sdks"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-content underline underline-offset-2 hover:no-underline"
+      >{t('template.api.sdkDocs', locale)}</a
+    >
+    ·
+    <a
+      href="https://docs.comfy.org/development/api-development/getting-an-api-key"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="text-content underline underline-offset-2 hover:no-underline"
+      >{t('template.api.sdkKey', locale)}</a
+    >
+  </p>
+</section>
