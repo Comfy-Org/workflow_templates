@@ -58,11 +58,15 @@ export interface HubWorkflowSummary {
 export interface HubWorkflowMetadataEntityTerm {
   name: string;
   same_as?: string;
+  /** Overrides the auto-slugified `name` for this term's JSON-LD `@id` fragment. */
+  slug?: string;
 }
 
 export interface HubWorkflowMetadataEntityCategory {
   name: string;
   terms: HubWorkflowMetadataEntityTerm[];
+  /** Overrides the auto-slugified `name` for this category's `DefinedTermSet` `@id` fragment. */
+  slug?: string;
 }
 
 export interface HubWorkflowMetadata {
@@ -528,12 +532,25 @@ function toWorkflowEntities(
 ): WorkflowEntities | undefined {
   if (!entities) return undefined;
   return {
-    about: entities.about?.map((term) => ({ name: term.name, sameAs: term.same_as })),
+    about: entities.about?.map((term) => ({
+      name: term.name,
+      sameAs: term.same_as,
+      slug: term.slug,
+    })),
     categories: entities.categories?.map((category) => ({
       name: category.name,
-      terms: (category.terms || []).map((term) => ({ name: term.name, sameAs: term.same_as })),
+      slug: category.slug,
+      terms: (category.terms || []).map((term) => ({
+        name: term.name,
+        sameAs: term.same_as,
+        slug: term.slug,
+      })),
     })),
-    mentions: entities.mentions?.map((term) => ({ name: term.name, sameAs: term.same_as })),
+    mentions: entities.mentions?.map((term) => ({
+      name: term.name,
+      sameAs: term.same_as,
+      slug: term.slug,
+    })),
   };
 }
 

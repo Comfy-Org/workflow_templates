@@ -284,13 +284,13 @@ describe('buildWorkflowGraphJsonLd', () => {
     expect(webpage).toMatchObject({
       '@id': `${baseParams.url}#webpage`,
       mainEntity: { '@id': `${baseParams.url}#workflow` },
-      about: [{ '@id': `${baseParams.url}#workflow` }, { '@id': `${baseParams.url}#e-about-0` }],
+      about: [{ '@id': `${baseParams.url}#workflow` }, { '@id': `${baseParams.url}#e-video` }],
     });
     const aboutTerm = filterByType<{ name?: unknown }>(graph, 'DefinedTerm').find(
       (n) => n.name === 'Video'
     );
     expect(aboutTerm).toMatchObject({
-      '@id': `${baseParams.url}#e-about-0`,
+      '@id': `${baseParams.url}#e-video`,
       name: 'Video',
       sameAs: 'https://en.wikipedia.org/wiki/Video',
     });
@@ -364,6 +364,44 @@ describe('buildWorkflowGraphJsonLd', () => {
     // Both the standalone mention term and the category term are cross-referenced.
     expect(webpage.mentions.map((m) => m['@id'])).toContain(mentionTerm['@id']);
     expect(webpage.mentions).toHaveLength(2);
+  });
+
+  it('derives @id fragments from a slugified name, honoring an explicit slug override', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        about: [{ name: 'Graphics Processing Unit', slug: 'gpu' }],
+        categories: [
+          {
+            name: 'Computer Vision & Rendering',
+            slug: 'computervision',
+            terms: [{ name: 'Display Resolution', slug: 'display-res' }],
+          },
+        ],
+      },
+    });
+    const graph = result!['@graph'];
+    expect(
+      filterByType<{ '@id': string; name?: unknown }>(graph, 'DefinedTerm').map((n) => n['@id'])
+    ).toEqual(
+      expect.arrayContaining([`${baseParams.url}#e-gpu`, `${baseParams.url}#e-display-res`])
+    );
+    expect(findByType(graph, 'DefinedTermSet')).toMatchObject({
+      '@id': `${baseParams.url}#cat-computervision`,
+    });
+  });
+
+  it('dedupes @id fragments when two terms slugify to the same name', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        mentions: [{ name: 'Sound' }, { name: 'Sound' }],
+      },
+    });
+    const graph = result!['@graph'];
+    const ids = filterByType<{ '@id': string }>(graph, 'DefinedTerm').map((n) => n['@id']);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids).toEqual([`${baseParams.url}#e-sound`, `${baseParams.url}#e-sound-2`]);
   });
 
   it('includes a FAQPage node only when faqItems are non-empty', () => {

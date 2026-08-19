@@ -190,12 +190,47 @@ export function buildSoftwareApplicationJsonLd(params: {
 export interface EntityTerm {
   name: string;
   sameAs?: string;
+  /** Overrides the auto-slugified `name` for this term's `@id` fragment (e.g. "gpu" for "Graphics Processing Unit"). */
+  slug?: string;
 }
 
 /** A named group of related `EntityTerm`s (e.g. "Technology", "Audio & Video"). */
 export interface EntityCategory {
   name: string;
   terms: EntityTerm[];
+  /** Overrides the auto-slugified `name` for this category's `DefinedTermSet` `@id` fragment. */
+  slug?: string;
+}
+
+/** Lowercase, hyphenated `@id`-fragment form of a name: strips parentheticals, collapses non-alphanumerics to `-`. */
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/\([^)]*\)/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/**
+ * A unique `@id` fragment for an entity node: an explicit `slug` wins, then a
+ * slugified `name`, then a positional `fallback` — deduped against `used` (shared
+ * across one page's whole graph) so two same-named terms don't collide.
+ */
+function entityFragment(
+  prefix: 'e' | 'cat',
+  term: { name?: string; slug?: string },
+  fallback: string,
+  used: Set<string>
+): string {
+  const slugPart = term.slug || (term.name ? slugify(term.name) : '');
+  const base = slugPart ? `${prefix}-${slugPart}` : fallback;
+  let candidate = base;
+  let n = 2;
+  while (used.has(candidate)) {
+    candidate = `${base}-${n++}`;
+  }
+  used.add(candidate);
+  return candidate;
 }
 
 /** Entity coverage for a single workflow page: broad "about" concepts plus categorized mentions. */
@@ -302,18 +337,25 @@ export function buildWorkflowGraphJsonLd(params: {
 
   const workflowId = `${params.url}#workflow`;
 
+  // Shared across every entity/category node on this page so same-named terms
+  // (or a name that collides with another's slug) still get distinct `@id`s.
+  const usedFragments = new Set<string>();
+
   const termSets = (categories || []).map((category, ci) => {
-    const setId = `${params.url}#cat-${ci}`;
-    const terms = category.terms.map((term, ti) => ({
-      id: `${params.url}#e-${ci}-${ti}`,
-      node: {
-        '@type': 'DefinedTerm',
-        '@id': `${params.url}#e-${ci}-${ti}`,
-        name: term.name,
-        ...(term.sameAs ? { sameAs: term.sameAs } : {}),
-        inDefinedTermSet: { '@id': setId },
-      },
-    }));
+    const setId = `${params.url}#${entityFragment('cat', category, `cat-${ci}`, usedFragments)}`;
+    const terms = category.terms.map((term, ti) => {
+      const id = `${params.url}#${entityFragment('e', term, `e-${ci}-${ti}`, usedFragments)}`;
+      return {
+        id,
+        node: {
+          '@type': 'DefinedTerm',
+          '@id': id,
+          name: term.name,
+          ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+          inDefinedTermSet: { '@id': setId },
+        },
+      };
+    });
     return {
       id: setId,
       node: {
@@ -329,27 +371,33 @@ export function buildWorkflowGraphJsonLd(params: {
   // `about` terms get their own `@id`s (unlike category terms, which are only
   // ever referenced through their DefinedTermSet) so the WebPage's `about` can
   // point at them alongside the workflow itself and each category set.
-  const aboutTerms = (about || []).map((term, i) => ({
-    id: `${params.url}#e-about-${i}`,
-    node: {
-      '@type': 'DefinedTerm',
-      '@id': `${params.url}#e-about-${i}`,
-      name: term.name,
-      ...(term.sameAs ? { sameAs: term.sameAs } : {}),
-    },
-  }));
+  const aboutTerms = (about || []).map((term, i) => {
+    const id = `${params.url}#${entityFragment('e', term, `e-about-${i}`, usedFragments)}`;
+    return {
+      id,
+      node: {
+        '@type': 'DefinedTerm',
+        '@id': id,
+        name: term.name,
+        ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+      },
+    };
+  });
 
   // Unlike `aboutTerms` and category terms, `mentionTerms` carry no `inDefinedTermSet` —
   // they're standalone entities cross-referenced only through the WebPage's `mentions`.
-  const mentionTerms = (mentions || []).map((term, i) => ({
-    id: `${params.url}#e-mention-${i}`,
-    node: {
-      '@type': 'DefinedTerm',
-      '@id': `${params.url}#e-mention-${i}`,
-      name: term.name,
-      ...(term.sameAs ? { sameAs: term.sameAs } : {}),
-    },
-  }));
+  const mentionTerms = (mentions || []).map((term, i) => {
+    const id = `${params.url}#${entityFragment('e', term, `e-mention-${i}`, usedFragments)}`;
+    return {
+      id,
+      node: {
+        '@type': 'DefinedTerm',
+        '@id': id,
+        name: term.name,
+        ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+      },
+    };
+  });
 
   const faqId = `${params.url}#faq`;
 
