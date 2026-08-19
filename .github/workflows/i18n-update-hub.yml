@@ -310,6 +310,20 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add site/src/i18n
+          # Excluding a file must not UNDO banked progress: a plain staged
+          # restore resets the path to main's version, so a previously saved
+          # translation regenerated as bad would silently drop off the stable
+          # branch at commit time. Take the last good version from the branch
+          # when it has one, else main's, else drop the new file entirely.
+          exclude_from_save() {
+            if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:$1" 2>/dev/null; then
+              git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- "$1"
+            elif git cat-file -e "HEAD:$1" 2>/dev/null; then
+              git restore --source=HEAD --staged --worktree -- "$1"
+            else
+              git rm -qf --ignore-unmatch -- "$1"
+            fi
+          }
           # A truncated write (the process can die mid-file on this path) must
           # not poison the branch the next run restores from: drop any staged
           # .json the next run could not parse. Deletions are skipped (nothing
@@ -319,19 +333,31 @@ jobs:
               *.json)
                 if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f" 2>/dev/null; then
                   echo "::warning::Excluding unparseable $f from the partial save"
-                  # Excluding must not UNDO banked progress: a plain staged
-                  # restore resets the path to main's version, so a previously
-                  # saved translation regenerated as malformed would silently
-                  # drop off the stable branch at commit time. Take the last
-                  # good version from the branch when it has one, else main's,
-                  # else drop the new file entirely.
-                  if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:$f" 2>/dev/null; then
-                    git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- "$f"
-                  elif git cat-file -e "HEAD:$f" 2>/dev/null; then
-                    git restore --source=HEAD --staged --worktree -- "$f"
-                  else
-                    git rm -qf --ignore-unmatch -- "$f"
-                  fi
+                  exclude_from_save "$f"
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --name-only --diff-filter=d)
+          # A FULLY misaligned content file (every entry keyed to nothing in
+          # the regenerated English source, i.e. model-mangled keys) fails
+          # validation as a whole and cannot be repaired by enforce's pruning,
+          # which leaves unmatched entries alone by design. Banking it would
+          # carry the mangled keys forward as permanent cruft, so exclude it.
+          # A PARTIALLY stale file still banks: the validator tolerates it and
+          # its valid entries are real progress.
+          while IFS= read -r f; do
+            case "$f" in
+              site/src/i18n/content/en.json) ;;
+              site/src/i18n/content/*.json)
+                if ! node -e '
+                  const fs = require("fs");
+                  const en = JSON.parse(fs.readFileSync("site/src/i18n/content/en.json", "utf8"));
+                  const loc = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+                  const keys = Object.keys(loc);
+                  process.exit(keys.length > 0 && keys.every((k) => !(k in en)) ? 1 : 0);
+                ' "$f" 2>/dev/null; then
+                  echo "::warning::Excluding fully misaligned $f from the partial save"
+                  exclude_from_save "$f"
                 fi
                 ;;
             esac
