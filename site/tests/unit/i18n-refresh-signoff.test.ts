@@ -250,6 +250,51 @@ describe('refreshSignoffRecords', () => {
     const reviews = readReviews();
     expect(reviews[A].automated).toBeUndefined(); // human record, untouched
     expect(reviews[B].automated).toBe(true); // machine-written, says so
+    // and the refresh branch marks automated too, preserving the human identity
+    write('reviews/zh.json', { [A]: staleRecord });
+    const s2 = run()!;
+    expect(s2.refreshed).toEqual([A]);
+    const r2 = readReviews()[A];
+    expect(r2.automated).toBe(true);
+    expect(r2.reviewer).toBe('zhixiong-lin');
+  });
+
+  it('aborts without touching records when the English catalog is unreadable', () => {
+    // A transient read failure must never read as "every workflow left the
+    // catalog" — that would wipe the locale's entire sign-off state.
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current') });
+    fs.writeFileSync(path.join(root, 'content', 'en.json'), '{ not json');
+    expect(run()).toBeNull();
+    expect(readReviews()[A].reviewedContentHash).toBe('h-current');
+  });
+
+  it('refuses to seal a workflow whose manifest hash is missing', () => {
+    // No manifest hash means no meaningful seal: an empty reviewedContentHash
+    // would compare equal to the predicate's own empty fallback and pass.
+    write('content/en.json', { [A]: english, [B]: english });
+    write('content/zh.json', {
+      [A]: { title: '标题', description: '描述' },
+      [B]: { title: '新标题', description: '新描述' },
+    });
+    write('manifest.json', { [A]: { content: 'h-current' } }); // B absent
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current') });
+    const summary = run()!;
+    expect(summary.refusedNoHash).toEqual([B]);
+    expect(readReviews()[B]).toBeUndefined();
+  });
+
+  it('revokes a matching seal when a new blocking finding arrives on unchanged text', () => {
+    // Content identical, seal intact — but the reviewer now reports a serious
+    // field-less problem. Keeping the seal would keep the page indexed despite
+    // an unresolved blocker, so the record is removed until a human looks.
+    write('reviews/zh.json', { [A]: currentRecord(A, 'h-current') });
+    write('review/zh.json', {
+      promptVersion: 1,
+      entries: { [A]: { findings: [{ severity: 'critical' }] } },
+    });
+    const summary = run()!;
+    expect(summary.revokedFindings).toEqual([A]);
+    expect(readReviews()[A]).toBeUndefined();
   });
 
   it('drops the record of a workflow that left the catalog', () => {

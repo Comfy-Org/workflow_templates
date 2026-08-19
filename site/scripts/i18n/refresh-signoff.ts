@@ -55,6 +55,8 @@ export interface RefreshSummary {
   sealedNew: string[];
   refusedUntranslated: string[];
   refusedFindings: string[];
+  refusedNoHash: string[];
+  revokedFindings: string[];
   droppedGone: string[];
 }
 
@@ -87,9 +89,22 @@ export function refreshSignoffRecords(
   // the first sign-off is the native reviewer's act, not the pipeline's.
   if (!reviews || Object.keys(reviews).length === 0) return null;
 
-  const english =
-    readJson<Record<string, WorkflowContent>>(path.join(contentRoot, 'content', 'en.json')) ?? {};
-  const manifest = readJson<TranslationManifest>(path.join(contentRoot, 'manifest.json')) ?? {};
+  // Fail closed on unreadable inputs. A read/parse failure must never look like
+  // an empty catalog: that would make the cleanup below "drop" every record and
+  // wipe the locale's sign-off state over a transient error. Same for the
+  // manifest: without it every content hash is '', and an empty hash written
+  // into a record would compare equal to the predicate's own empty fallback.
+  const english = readJson<Record<string, WorkflowContent>>(
+    path.join(contentRoot, 'content', 'en.json')
+  );
+  const manifest = readJson<TranslationManifest>(path.join(contentRoot, 'manifest.json'));
+  if (!english || Object.keys(english).length === 0 || !manifest) {
+    console.error(
+      `[i18n] signoff-refresh: [${locale}] en.json or manifest.json is missing or ` +
+        `unreadable; refusing to touch any record.`
+    );
+    return null;
+  }
   const verdicts =
     readJson<Verdicts>(path.join(contentRoot, 'review', `${locale}.json`))?.entries ?? {};
 
@@ -100,6 +115,8 @@ export function refreshSignoffRecords(
     sealedNew: [],
     refusedUntranslated: [],
     refusedFindings: [],
+    refusedNoHash: [],
+    revokedFindings: [],
     droppedGone: [],
   };
 
@@ -146,11 +163,40 @@ export function refreshSignoffRecords(
     const currentChecksum = hashResolvedArtifact(resolved.data);
     const existing: ReviewRecord | undefined = reviews[sid];
 
-    if (
-      existing &&
+    // No manifest hash means no meaningful seal to write.
+    if (currentContentHash === '') {
+      summary.refusedNoHash.push(sid);
+      continue;
+    }
+
+    const sealMatches =
+      existing != null &&
       existing.reviewedContentHash === currentContentHash &&
-      existing.reviewedArtifactChecksum === currentChecksum
-    ) {
+      existing.reviewedArtifactChecksum === currentChecksum;
+
+    // Blocking findings are checked BEFORE the seal fast path: a new serious
+    // finding on unchanged text would otherwise ride an intact seal forever.
+    const blocking = (verdicts[sid]?.findings ?? []).some((f) => {
+      if (!PRUNING_SEVERITIES.has(f.severity as FindingSeverity)) return false;
+      const field = f.field as (typeof TRANSLATABLE_FIELDS)[number] | undefined;
+      // A serious finding that names no field cannot be checked against
+      // provenance, so it blocks: unattributable problems fail closed.
+      if (!field || !TRANSLATABLE_FIELDS.includes(field)) return true;
+      return resolved.provenance[field] === 'machine';
+    });
+    if (blocking) {
+      if (sealMatches) {
+        // The seal would keep the page indexed despite an unresolved blocker.
+        // Remove it: the page de-indexes until a human resolves the finding.
+        delete reviews[sid];
+        summary.revokedFindings.push(sid);
+      } else {
+        summary.refusedFindings.push(sid);
+      }
+      continue;
+    }
+
+    if (sealMatches) {
       summary.upToDate++;
       continue;
     }
@@ -164,23 +210,6 @@ export function refreshSignoffRecords(
     );
     if (untranslated.length > 0) {
       summary.refusedUntranslated.push(sid);
-      continue;
-    }
-
-    // Launch bar, part 2: no unresolved critical/major finding on a field whose
-    // served text is the machine translation. Enforce prunes such fields in the
-    // same run, which the check above then catches as untranslated; this is the
-    // backstop for any path where a flagged machine field is still being served.
-    const blocking = (verdicts[sid]?.findings ?? []).some((f) => {
-      if (!PRUNING_SEVERITIES.has(f.severity as FindingSeverity)) return false;
-      const field = f.field as (typeof TRANSLATABLE_FIELDS)[number] | undefined;
-      // A serious finding that names no field cannot be checked against
-      // provenance, so it blocks: unattributable problems fail closed.
-      if (!field || !TRANSLATABLE_FIELDS.includes(field)) return true;
-      return resolved.provenance[field] === 'machine';
-    });
-    if (blocking) {
-      summary.refusedFindings.push(sid);
       continue;
     }
 
@@ -233,11 +262,14 @@ function main(): void {
       `[i18n] signoff-refresh: [${s.locale}] ${s.upToDate} current, ` +
         `${s.refreshed.length} refreshed, ${s.sealedNew.length} newly sealed, ` +
         `${s.refusedUntranslated.length} held untranslated, ` +
-        `${s.refusedFindings.length} held on findings, ${s.droppedGone.length} dropped`
+        `${s.refusedFindings.length} held on findings, ` +
+        `${s.revokedFindings.length} revoked on new findings, ` +
+        `${s.refusedNoHash.length} refused without manifest hash, ${s.droppedGone.length} dropped`
     );
     if (s.refreshed.length > 0) console.log(`  refreshed: ${list(s.refreshed)}`);
     if (s.sealedNew.length > 0) console.log(`  newly sealed: ${list(s.sealedNew)}`);
     if (s.refusedFindings.length > 0) console.log(`  held on findings: ${list(s.refusedFindings)}`);
+    if (s.revokedFindings.length > 0) console.log(`  revoked on new findings: ${list(s.revokedFindings)}`);
   }
   if (touched === 0) console.log('[i18n] signoff-refresh: no locale has a sign-off wave yet.');
 }
