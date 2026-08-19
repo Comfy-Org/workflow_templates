@@ -50,7 +50,10 @@ function highlighter(): Promise<HighlighterCore> {
  * the code is too large or highlighting fails, leaving callers on raw text.
  */
 export async function highlightInline(code: string, lang: CodeLang): Promise<string | null> {
-  if (code.length > MAX_HIGHLIGHT_BYTES) return null;
+  // Measured in UTF-8 bytes, not UTF-16 units: a CJK payload (the zh detail
+  // pages share this component) is ~3 bytes per .length unit, so a length
+  // check would let ~3x the intended DOM cost through.
+  if (new TextEncoder().encode(code).length > MAX_HIGHLIGHT_BYTES) return null;
   try {
     const hl = await highlighter();
     if (!hl.getLoadedLanguages().includes(lang)) {

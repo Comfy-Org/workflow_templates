@@ -36,4 +36,14 @@ describe('highlightInline', () => {
 
     await expect(highlightInline(oversized, 'json')).resolves.toBeNull();
   });
+
+  it('measures the cap in bytes, so a multibyte payload cannot slip under it', async () => {
+    // CJK is 3 UTF-8 bytes per character but 1 UTF-16 unit: this payload is
+    // one third of the cap by .length and ~3x over it by bytes. A length-based
+    // guard would highlight it.
+    const multibyte = `{"a": "${'语'.repeat(Math.ceil(MAX_HIGHLIGHT_BYTES / 3))}"}`;
+    expect(multibyte.length).toBeLessThan(MAX_HIGHLIGHT_BYTES);
+
+    await expect(highlightInline(multibyte, 'json')).resolves.toBeNull();
+  });
 });
