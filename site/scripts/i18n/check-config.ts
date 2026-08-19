@@ -7,14 +7,19 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { assertLocaleSets } from '../../src/lib/i18n/locales';
-import { readCliContextWindows, effectiveSplitToken } from './cli-context-windows';
+import {
+  readCliContextWindows,
+  readCliJsonModeSupport,
+  effectiveSplitToken,
+} from './cli-context-windows';
 
 const require = createRequire(import.meta.url);
 
-/** Only the two fields this check reads; `.i18nrc.cjs` carries many more. */
+/** Only the fields this check reads; `.i18nrc.cjs` carries many more. */
 interface I18nConfig {
   modelName: string;
   splitToken: number;
+  experimental?: { jsonMode?: boolean };
 }
 
 /**
@@ -87,8 +92,39 @@ if (!contextWindows) {
   }
 }
 
+// 4. JSON mode must stay wired end to end. Without response_format json_object,
+// gpt-5.2 appends a stray closing brace that lobe rejects, which froze every
+// locale's translation run from 2026-08-14 on. The option is experimental in
+// lobe, so an upgrade that renames or drops it degrades SILENTLY back to that
+// path (an ignored config key does not 400 the way a rejected response_format
+// would) — so both halves are asserted here, before any spend.
+const { experimental } = require(path.join(process.cwd(), '.i18nrc.cjs')) as I18nConfig;
+if (experimental?.jsonMode !== true) {
+  errors.push(
+    '.i18nrc.cjs no longer sets experimental.jsonMode — without OpenAI JSON mode the ' +
+      'translator returns unparseable chunks (the stray-brace freeze). Restore the option.'
+  );
+}
+const cliJsonMode = readCliJsonModeSupport();
+if (cliJsonMode === null) {
+  // Same stance as the context-window table: an unreadable bundle says nothing
+  // about the option, so be loud without blocking.
+  console.warn(
+    '[i18n] config check: could not read the @lobehub/i18n-cli bundle to verify jsonMode ' +
+      'support. Re-verify the option is still honoured before trusting a dependency bump.'
+  );
+} else if (!cliJsonMode) {
+  errors.push(
+    'the installed @lobehub/i18n-cli no longer honours experimental.jsonMode / json_object. ' +
+      'Translation would silently run in plain-text mode, where gpt-5.2 output is unparseable. ' +
+      'Pin back to a version that supports it, or re-wire JSON mode before translating.'
+  );
+}
+
 if (errors.length > 0) {
   for (const e of errors) console.error(`[i18n] config check: ${e}`);
   process.exit(1);
 }
-console.log('[i18n] config check: entry present, locale sets valid, translator model sizable.');
+console.log(
+  '[i18n] config check: entry present, locale sets valid, translator model sizable, JSON mode wired.'
+);
