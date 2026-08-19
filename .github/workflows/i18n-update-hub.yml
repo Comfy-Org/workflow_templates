@@ -336,6 +336,18 @@ jobs:
                 ;;
             esac
           done < <(git diff --cached --name-only --diff-filter=d)
+          # Never bank UI chrome (locales/) from a failed run. Content is safe
+          # to bank because enforce has already pruned every validator-failing
+          # field to disk (it reuses collectViolations and re-prunes restored
+          # content each night), but nothing prunes locales/ and locale:ui only
+          # fills MISSING keys, so a parseable-but-invalid UI string banked here
+          # would be restored and fail validate forever. UI strings are cheap to
+          # regenerate; keep the branch's (or main's) last good version instead.
+          if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:site/src/i18n/locales" 2>/dev/null; then
+            git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- site/src/i18n/locales
+          else
+            git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
+          fi
           if git diff --cached --quiet; then
             echo "Run failed before producing any translation changes; nothing to save."
             exit 0
