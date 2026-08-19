@@ -404,6 +404,23 @@ describe('buildWorkflowGraphJsonLd', () => {
     expect(ids).toEqual([`${baseParams.url}#e-sound`, `${baseParams.url}#e-sound-2`]);
   });
 
+  it('strips parentheticals and falls back positionally for an empty slug', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        about: [{ name: 'Video (codec)' }],
+        mentions: [{ name: '工作流' }],
+      },
+    });
+    const ids = filterByType<{ '@id': string }>(result!['@graph'], 'DefinedTerm').map(
+      (n) => n['@id']
+    );
+    // "Video (codec)" -> "video", not "video-" or "video-codec".
+    expect(ids).toContain(`${baseParams.url}#e-video`);
+    // Non-ASCII-only name slugifies to '' -> falls back to the positional fragment.
+    expect(ids).toContain(`${baseParams.url}#e-mention-0`);
+  });
+
   it('includes a FAQPage node only when faqItems are non-empty', () => {
     const withFaq = buildWorkflowGraphJsonLd({
       ...baseParams,
