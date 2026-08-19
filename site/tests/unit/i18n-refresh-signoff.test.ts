@@ -298,6 +298,31 @@ describe('refreshSignoffRecords', () => {
     expect(readReviews()[A]).toBeUndefined();
   });
 
+  it('aborts when the verdict file is unreadable, instead of treating it as no findings', () => {
+    // "Could not read the findings" must never become "there are no findings":
+    // the blocking check would pass vacuously and records would be written
+    // without any review data behind them.
+    write('reviews/zh.json', { [A]: staleRecord });
+    fs.writeFileSync(path.join(root, 'review', 'zh.json'), '{ not json');
+    expect(run()).toBeNull();
+    expect(readReviews()[A]).toEqual(staleRecord);
+    // and a waved locale with NO verdict file at all is the same failure
+    fs.rmSync(path.join(root, 'review', 'zh.json'));
+    expect(run()).toBeNull();
+    expect(readReviews()[A]).toEqual(staleRecord);
+  });
+
+  it('aborts when an overrides file exists but cannot be read', () => {
+    // The resolver would silently fall back past the unreadable override layer
+    // and this refresh would re-seal pages over machine text the reviewer had
+    // corrected. Absent file is fine; present-but-unreadable is not.
+    write('reviews/zh.json', { [A]: staleRecord });
+    fs.mkdirSync(path.join(root, 'overrides'), { recursive: true });
+    fs.writeFileSync(path.join(root, 'overrides', 'zh.json'), '{ not json');
+    expect(run()).toBeNull();
+    expect(readReviews()[A]).toEqual(staleRecord);
+  });
+
   it('drops the record of a workflow that left the catalog', () => {
     write('reviews/zh.json', { [A]: currentRecord(A, 'h-current'), [B]: staleRecord });
     const summary = run()!;

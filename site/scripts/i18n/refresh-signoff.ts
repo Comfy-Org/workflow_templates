@@ -105,8 +105,32 @@ export function refreshSignoffRecords(
     );
     return null;
   }
-  const verdicts =
-    readJson<Verdicts>(path.join(contentRoot, 'review', `${locale}.json`))?.entries ?? {};
+  // The verdicts and the reviewer-correction layers get the same fail-closed
+  // treatment as the catalog: an unreadable file must abort, because reading it
+  // as empty turns "could not check" into "checked and clean". A waved locale
+  // always has committed verdicts (they land with the wave), so for this file
+  // even absence aborts. An absent overrides/human file IS legitimate;
+  // present-but-unreadable is not.
+  const verdictsPath = path.join(contentRoot, 'review', `${locale}.json`);
+  const verdictsRaw = readJson<Verdicts>(verdictsPath);
+  if (!verdictsRaw || typeof verdictsRaw.entries !== 'object' || verdictsRaw.entries === null) {
+    console.error(
+      `[i18n] signoff-refresh: [${locale}] review/${locale}.json is unreadable or malformed; ` +
+        `refusing to touch any record.`
+    );
+    return null;
+  }
+  const verdicts = verdictsRaw.entries;
+  for (const layer of ['overrides', 'human'] as const) {
+    const layerPath = path.join(contentRoot, layer, `${locale}.json`);
+    if (fs.existsSync(layerPath) && readJson<Record<string, unknown>>(layerPath) === null) {
+      console.error(
+        `[i18n] signoff-refresh: [${locale}] ${layer}/${locale}.json exists but cannot be ` +
+          `read; the resolver would silently skip that layer, so refusing to touch any record.`
+      );
+      return null;
+    }
+  }
 
   const summary: RefreshSummary = {
     locale,
