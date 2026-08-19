@@ -10,8 +10,11 @@
  *    (translated + current + reviewed + locale flipped); otherwise it canonicals
  *    to the English URL, so humans see the translation while Google keeps
  *    indexing English. This is the "safety by canonical" the whole design rests on.
- *  - for a locale in INDEXABLE_LOCALES, a non-indexable page fails the build
- *    (fail-closed) rather than shipping a half-English indexable URL.
+ *  - in a flipped locale, a page the predicate rejects is held rather than
+ *    shipped: same English canonical, no sitemap entry, no hreflang. The
+ *    fail-closed assert is per LOCALE (zero indexable pages = broken artifacts),
+ *    not per page, because holds are normal — workflows are published to the hub
+ *    between translation runs.
  *
  * With INDEXABLE_LOCALES empty, every page is non-indexable, so canonicals all
  * point at English and the Google-facing output is unchanged.
@@ -41,7 +44,11 @@ import { localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveLocalizedWorkflow, indexableAlternateLocales } from '../../../lib/i18n/resolver';
 import { localizeCards } from '../../../lib/i18n/localize-cards';
-import { SUPPORTED_HUB_LOCALES, INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
+import {
+  SUPPORTED_HUB_LOCALES,
+  INDEXABLE_LOCALES,
+  assertFlippedLocalesIndexable,
+} from '../../../lib/i18n/locales';
 
 export async function getStaticPaths() {
   // Every supported hub locale except English (English has its own route). Each
@@ -60,6 +67,10 @@ export async function getStaticPaths() {
   }
 
   const paths = [];
+  // Per flipped locale: how many pages the predicate accepted, and how many it
+  // held. The counts drive the build-time summary and the zero-indexable assert.
+  const indexableCounts = new Map<string, number>();
+  const heldCounts = new Map<string, number>();
   for (const locale of locales) {
     for (const entry of entries) {
       const shareId = entry.shareId || '';
@@ -68,13 +79,9 @@ export async function getStaticPaths() {
 
       if (shareId) {
         const resolved = resolveLocalizedWorkflow(shareId, locale);
-        // Fail-closed: a flipped (indexable) locale must never ship a page that
-        // the predicate rejects (missing/stale/unreviewed translation).
-        if (INDEXABLE_LOCALES.includes(locale) && !resolved.indexable) {
-          throw new Error(
-            `[i18n] indexable locale "${locale}" page ${name}-${shareId} is not ` +
-              `translation-complete and cannot be prerendered: ${resolved.reason}`
-          );
+        if (INDEXABLE_LOCALES.includes(locale)) {
+          const counts = resolved.indexable ? indexableCounts : heldCounts;
+          counts.set(locale, (counts.get(locale) ?? 0) + 1);
         }
         paths.push({
           params: { locale, slug: `${name}-${shareId}` },
@@ -91,6 +98,18 @@ export async function getStaticPaths() {
         });
       }
     }
+  }
+
+  // Fail-closed on the failure the per-page abort was reaching for: a flipped
+  // locale that resolved nothing indexable has broken artifacts, not a backlog.
+  assertFlippedLocalesIndexable(indexableCounts);
+  // Say the split out loud, so whoever flips a locale sees what shipped and what
+  // is waiting on translation instead of inferring it from the sitemap.
+  for (const locale of INDEXABLE_LOCALES) {
+    console.info(
+      `[i18n] ${locale}: ${indexableCounts.get(locale) ?? 0} pages indexable, ` +
+        `${heldCounts.get(locale) ?? 0} held for translation`
+    );
   }
 
   return paths;
