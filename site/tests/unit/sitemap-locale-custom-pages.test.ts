@@ -1,74 +1,139 @@
 /**
- * The sitemap's localized URLs must agree with what those pages say about
+ * The sitemap's hand-listed URLs must agree with what those pages say about
  * themselves.
  *
- * Localized directory routes are on-demand rendered, so the sitemap integration
- * never discovers them: it collects the pages the build emits as files. They are
- * listed by hand in astro.config.mjs, and that hand-written list drifted from the
- * gate the routes use, in both directions at once:
+ * Localized directory routes and the English model route are on-demand rendered,
+ * so `@astrojs/sitemap` never discovers them: it collects the pages the build
+ * emits as files. They are supplied through `customPages`, and that hand-written
+ * list had drifted from the gate the routes use, in both directions at once:
  *
  *   - every locale's listing root was advertised, including the nine that render
  *     `noindex` and canonical to English (sitemap said index, page said do not);
  *   - no launched locale's category/tag/model pages were advertised, though they
- *     self-canonical and invite indexing (page said index, sitemap never mentioned
- *     them).
+ *     self-canonical and invite indexing (page said index, sitemap never
+ *     mentioned them).
  *
  * `listing-indexing.ts` exists to keep canonical, robots, hreflang and the
- * sitemap saying one thing. This asserts the fourth surface reads the same flag,
- * by checking the construction rule rather than a built sitemap, so it runs
- * without a full build and fails on the edit that would reintroduce the drift.
+ * sitemap saying one thing; these lock the fourth surface to the same flag.
  */
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
+import { buildCustomPages, loadHubTagSlugs } from '../../src/lib/sitemap-custom-pages';
 
-const CONFIG = fs.readFileSync(path.join(process.cwd(), 'astro.config.mjs'), 'utf-8');
+const base = {
+  siteOrigin: 'https://comfy.org',
+  creatorUsernames: ['comfyui'],
+  indexableLocales: ['zh'],
+  indexableModelSlugs: ['wan', 'flux'],
+  tagSlugs: ['character', 'video'],
+};
 
-describe('localized sitemap URLs', () => {
-  it('builds the locale list from INDEXABLE_LOCALES, never from the full locale set', () => {
-    const assignment = CONFIG.match(/const localeCustomPages = ([\s\S]*?);\n\nconst customPages/);
-    expect(assignment, 'localeCustomPages assignment not found').not.toBeNull();
-    const body = assignment![1];
+describe('buildCustomPages', () => {
+  it('advertises a locale only once it is flipped indexable', () => {
+    const pages = buildCustomPages(base);
 
-    // The gate: a locale earns sitemap entries only once it is flipped indexable.
-    expect(body).toContain('indexableLocales');
-    // The regression: mapping every supported locale is what advertised the nine
-    // gated roots that render noindex.
-    expect(body).not.toContain('nonDefaultLocales');
-    expect(body).not.toMatch(/\blocales\b\s*\./);
+    expect(pages).toContain('https://comfy.org/zh/workflows/');
+    // The regression: mapping every supported locale is what advertised the
+    // gated roots that render noindex and canonical to English.
+    expect(pages.some((url) => url.includes('/ja/'))).toBe(false);
+    expect(pages.some((url) => url.includes('/es/'))).toBe(false);
   });
 
   it('advertises every localized directory page type, not just the listing root', () => {
-    const assignment = CONFIG.match(/const localeCustomPages = ([\s\S]*?);\n\nconst customPages/);
-    const body = assignment![1];
+    const pages = buildCustomPages(base);
 
-    for (const segment of ['/category/', '/tag/', '/model/']) {
-      expect(body, `localized ${segment} pages missing from the sitemap`).toContain(segment);
+    expect(pages).toContain('https://comfy.org/zh/workflows/category/video/');
+    expect(pages).toContain('https://comfy.org/zh/workflows/tag/character/');
+    expect(pages).toContain('https://comfy.org/zh/workflows/model/wan/');
+  });
+
+  it('lists all four category types', () => {
+    const pages = buildCustomPages(base);
+
+    for (const type of ['image', 'video', 'audio', '3d']) {
+      expect(pages).toContain(`https://comfy.org/zh/workflows/category/${type}/`);
     }
   });
 
-  it('gates localized model pages on the same content check English uses', () => {
-    const assignment = CONFIG.match(/const localeCustomPages = ([\s\S]*?);\n\nconst customPages/);
-    const body = assignment![1];
-
-    // Model pages carry a second gate beyond the locale one: a family with no
-    // passing landing content renders noindex in English too, so a locale must
-    // not advertise what English withholds.
-    expect(body).toContain('indexableModelSlugs');
-  });
-
-  it('lists English model pages by hand, because that route no longer prerenders', () => {
+  it('lists English model pages, because that route no longer prerenders', () => {
     // The model route is on-demand rendered so it can 301 variant slugs. The
     // sitemap integration only discovers built files, so the moment that route
-    // stopped prerendering its URLs left the sitemap silently. They have to be
-    // supplied as custom pages or the 11 indexable model URLs vanish.
-    expect(CONFIG).toMatch(/const modelPages = [\s\S]*?indexableModelSlugs/);
-    expect(CONFIG).toMatch(/const customPages = \[[^\]]*modelPages/);
+    // stopped prerendering its URLs left the sitemap silently.
+    const pages = buildCustomPages(base);
+
+    expect(pages).toContain('https://comfy.org/workflows/model/wan/');
+    expect(pages).toContain('https://comfy.org/workflows/model/flux/');
+  });
+
+  it('never lets a locale advertise a model page English withholds', () => {
+    // Model pages carry a second gate beyond the locale one: a family with no
+    // passing landing content renders noindex in English too.
+    const pages = buildCustomPages({ ...base, indexableModelSlugs: ['wan'] });
+
+    expect(pages).toContain('https://comfy.org/zh/workflows/model/wan/');
+    expect(pages.some((url) => url.endsWith('/workflows/model/flux/'))).toBe(false);
   });
 
   it('leaves the default locale out, since English lives at the root', () => {
-    const assignment = CONFIG.match(/const localeCustomPages = ([\s\S]*?);\n\nconst customPages/);
-    const body = assignment![1];
-    expect(body).toMatch(/!==\s*'en'/);
+    const pages = buildCustomPages({ ...base, indexableLocales: ['en', 'zh'] });
+
+    expect(pages.some((url) => url.includes('/en/workflows'))).toBe(false);
+  });
+
+  it('emits no tag URLs at all when the hub manifest is missing', () => {
+    // Guessing from the synced templates is what this replaced: those files are
+    // the repo's own catalog, and four of their tag slugs match no hub workflow,
+    // which the locale route answers with a 404. A sitemap that says nothing is
+    // recoverable; one that advertises a 404 is the contradiction being fixed.
+    const pages = buildCustomPages({ ...base, tagSlugs: [] });
+
+    expect(pages.some((url) => url.includes('/workflows/tag/'))).toBe(false);
+    expect(pages).toContain('https://comfy.org/zh/workflows/');
+  });
+
+  it('keeps creator pages and normalizes a trailing slash on the origin', () => {
+    const pages = buildCustomPages({ ...base, siteOrigin: 'https://comfy.org/' });
+
+    expect(pages).toContain('https://comfy.org/workflows/comfyui/');
+    expect(pages.some((url) => url.includes('//workflows'))).toBe(false);
+  });
+
+  it('ends every URL in a trailing slash', () => {
+    // The platform canonicalises requests to the slashed form, so a slashless
+    // entry would advertise a URL that only ever answers with a redirect.
+    for (const url of buildCustomPages(base)) {
+      expect(url.endsWith('/'), `${url} has no trailing slash`).toBe(true);
+    }
+  });
+});
+
+describe('loadHubTagSlugs', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-tags-'));
+
+  it('returns nothing when prebuild has not written the manifest', () => {
+    expect(loadHubTagSlugs(path.join(tmp, 'absent.json'))).toEqual([]);
+  });
+
+  it('reads the slug list a build wrote', () => {
+    const file = path.join(tmp, 'slugs.json');
+    fs.writeFileSync(file, JSON.stringify(['character', 'video']));
+
+    expect(loadHubTagSlugs(file)).toEqual(['character', 'video']);
+  });
+
+  it('degrades to nothing rather than throwing on a corrupt manifest', () => {
+    const file = path.join(tmp, 'corrupt.json');
+    fs.writeFileSync(file, '{not json');
+
+    expect(loadHubTagSlugs(file)).toEqual([]);
+  });
+
+  it('drops non-string and empty entries', () => {
+    const file = path.join(tmp, 'mixed.json');
+    fs.writeFileSync(file, JSON.stringify(['character', '', 7, null, 'video']));
+
+    expect(loadHubTagSlugs(file)).toEqual(['character', 'video']);
   });
 });

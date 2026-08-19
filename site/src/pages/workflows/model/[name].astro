@@ -54,21 +54,38 @@ import {
  */
 export const prerender = false;
 
-const buildGroups = async () =>
-  deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
+/**
+ * Memoized per process, not per request. These pages used to be built once and
+ * served as files; on demand, re-serializing the whole hub catalog and rebuilding
+ * the fallback pool on every hit would put that work in the response path. The
+ * underlying hub fetch is already cached in `hub-api`, so what these save is the
+ * repeated derivation over ~600 entries. The locale route caches its groups the
+ * same way.
+ */
+const buildCatalog = async () => loadSerializedTemplates(() => getCollection('templates'));
+let catalogCache: ReturnType<typeof buildCatalog> | null = null;
+const loadCatalog = () => (catalogCache ??= buildCatalog());
+
+const buildGroups = async () => deriveModelGroups(await loadCatalog());
 let groupsCache: ReturnType<typeof buildGroups> | null = null;
 const loadModelGroups = () => (groupsCache ??= buildGroups());
 
+const buildPool = async () => buildFallbackPool(await loadCatalog());
+let poolCache: ReturnType<typeof buildPool> | null = null;
+const loadFallbackPool = () => (poolCache ??= buildPool());
+
 const { name } = Astro.params;
 
-if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+// `name` always binds on this route, but its type is optional; treating a missing
+// one as a miss keeps the lookup below free of a non-null assertion.
+if (!name || Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
 const groups = await loadModelGroups();
 const group =
   groups.find((candidate) => candidate.slug === name) ??
-  groups.find((candidate) => candidate.redirectFrom.includes(name!));
+  groups.find((candidate) => candidate.redirectFrom.includes(name));
 
 if (!group) {
   return new Response(null, { status: 404, statusText: 'Not Found' });
@@ -79,9 +96,8 @@ if (group.slug !== name) {
   return Astro.redirect(modelPath(group.slug), 301);
 }
 
-const catalog = await loadSerializedTemplates(() => getCollection('templates'));
-const relatedUseCaseDefs = useCasesFeaturingModel(group.slug, catalog);
-const fallbackPool = buildFallbackPool(catalog);
+const relatedUseCaseDefs = useCasesFeaturingModel(group.slug, await loadCatalog());
+const fallbackPool = await loadFallbackPool();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
 const { label, templates, keywords } = group;

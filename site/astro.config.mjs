@@ -9,10 +9,13 @@ import os from 'node:os';
 
 import vue from '@astrojs/vue';
 import { INDEXABLE_LOCALES } from './src/lib/i18n/locales.ts';
-import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
+import {
+  deriveModelGroups,
+  assertUniqueModelSlugs,
+} from './src/lib/workflow-pages/model-groups.ts';
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
 import { useCasePageHasGrid } from './src/lib/workflow-pages/use-case-resolver.ts';
-import { tagSlug } from './src/lib/tag-aliases.ts';
+import { buildCustomPages, loadHubTagSlugs } from './src/lib/sitemap-custom-pages.ts';
 import {
   modelContentPasses,
   useCaseContentPasses,
@@ -72,8 +75,10 @@ const canonicalModelSlugs = new Set(modelGroups.map((group) => group.slug));
  */
 if (modelGroups.length > 0) {
   assertNoOrphanedContent('model', canonicalModelSlugs);
+  // Canonical AND variant slugs: both are route identifiers now that the routes
+  // resolve variants themselves, so both have to be unambiguous.
+  assertUniqueModelSlugs(modelGroups);
 
-  const claimedModelSlugs = new Set();
   for (const group of modelGroups) {
     // Fail the build if a qualifying (indexable) model page carries a denied term.
     if (group.qualifies) {
@@ -84,10 +89,6 @@ if (modelGroups.length > 0) {
         secondaryKeywords: group.keywords.secondary,
       });
     }
-    if (claimedModelSlugs.has(group.slug)) {
-      throw new Error(`Duplicate model slug "${group.slug}" across families; slugs must be unique.`);
-    }
-    claimedModelSlugs.add(group.slug);
   }
 }
 
@@ -133,65 +134,19 @@ const indexableLocales = new Set(INDEXABLE_LOCALES);
 
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
 
-const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
-
-/**
- * English model pages, listed by hand for the same reason the localized ones are:
- * that route is on-demand rendered (it has to issue a real 301 for variant slugs),
- * so the sitemap integration never sees it among the built pages. Without this the
- * 11 indexable model URLs would silently disappear from the sitemap the moment the
- * route stopped prerendering.
- */
-const modelPages = [...indexableModelSlugs].map(
-  (slug) => `${siteOrigin}/workflows/model/${slug}/`
-);
-
-/**
- * Localized directory pages, gated on the same flag the routes use.
- *
- * These routes are on-demand rendered, so the sitemap integration never sees
- * them: it only collects pages the build emits as files. They therefore have to
- * be listed by hand, and until now only the listing root was, for every locale
- * regardless of whether it had launched.
- *
- * That was wrong in both directions at once. A gated locale's root was
- * advertised while the page itself renders `noindex` and canonicals to English,
- * and a launched locale's category/tag/model pages were absent while those pages
- * self-canonical and invite indexing. `listing-indexing.ts` exists to keep
- * canonical, robots, hreflang and the sitemap saying one thing; this is the
- * fourth surface finally reading the same flag as the other three.
- *
- * Mirrors the English set exactly, because the localized routes render the same
- * catalog through `localizeCards`, which maps entries and never drops them.
- */
-const categoryTypes = ['image', 'video', 'audio', '3d'];
-
-const tagSlugs = [
-  ...new Set(
-    contentTemplates.flatMap((tmpl) =>
-      (tmpl.tags || [])
-        .filter((tag) => typeof tag === 'string' && tag.trim())
-        .map((tag) => tagSlug(tag))
-        .filter(Boolean)
-    )
-  ),
-];
-
-const localeCustomPages = [...indexableLocales]
-  .filter((locale) => locale !== 'en')
-  .flatMap((locale) => {
-    const base = `${siteOrigin}/${locale}/workflows`;
-    return [
-      `${base}/`,
-      ...categoryTypes.map((type) => `${base}/category/${type}/`),
-      ...tagSlugs.map((slug) => `${base}/tag/${slug}/`),
-      // Model pages carry a second gate (content quality), already resolved into
-      // `indexableModelSlugs`; a locale must not advertise what English withholds.
-      ...[...indexableModelSlugs].map((slug) => `${base}/model/${slug}/`),
-    ];
-  });
-
-const customPages = [...creatorPages, ...modelPages, ...localeCustomPages];
+// Creator pages, English model pages and every localized directory page: all
+// on-demand rendered, so `@astrojs/sitemap` cannot discover them among the built
+// files. The rule lives in src/lib/sitemap-custom-pages.ts so it can be unit
+// tested against real inputs; the tag slugs come from the hub index via a
+// prebuild-generated manifest, because the tag routes list the hub's catalog and
+// not the repo's synced one.
+const customPages = buildCustomPages({
+  siteOrigin,
+  creatorUsernames,
+  indexableLocales,
+  indexableModelSlugs,
+  tagSlugs: loadHubTagSlugs(),
+});
 
 // https://astro.build/config
 export default defineConfig({

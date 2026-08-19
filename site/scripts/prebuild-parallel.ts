@@ -72,6 +72,9 @@ async function main(): Promise<void> {
   const phase2Tasks = [
     // Search index always runs — it only reads synced data, no AI needed
     runTask('build-search-index', 'pnpm', ['run', 'build:search-index']),
+    // Tag manifest always runs too: the sitemap's localized tag URLs come from
+    // the hub index, and astro.config.mjs must not fetch it itself.
+    runTask('build-tag-manifest', 'pnpm', ['run', 'build:tag-manifest']),
     ...(skipAI
       ? []
       : [
