@@ -10,7 +10,6 @@ import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
-import { absoluteUrl } from '../../config/site';
 import { slugify } from '../../lib/slugify';
 import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
@@ -71,9 +70,6 @@ const cloudTemplateId = data.shareId || data.name;
 const downloadUrl = data.shareId
   ? getWorkflowDownloadUrl(data.shareId, data.name)
   : `/workflows/${data.name}.json`;
-// Canonical form of the same URL, shown in the API section so the payload is
-// fetchable from outside the page.
-const canonicalJsonUrl = absoluteUrl(downloadUrl.split('?')[0]);
 
 const mediaTypeLabels: Record<string, string> = {
   image: t('category.image', locale),
@@ -301,7 +297,6 @@ function formatRelativeDate(dateStr: string): string {
           templateName={data.name}
           templateTitle={data.title || data.name}
           downloadUrl={downloadUrl}
-          canonicalJsonUrl={canonicalJsonUrl}
         />
       </div>
     </div>
