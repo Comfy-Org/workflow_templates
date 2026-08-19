@@ -339,5 +339,16 @@ jobs:
           fi
           git checkout -B "$STABLE_BRANCH"
           git commit -m "chore(i18n): save partial translation progress (run failed, do not merge)"
-          git push --force-with-lease origin "$STABLE_BRANCH"
-          echo "Partial progress saved to $STABLE_BRANCH; the next run resumes from it."
+          # Retry transient push failures: the very first live run of this step
+          # lost its save to a GitHub-side HTTP 500, and on this unattended
+          # nightly path a dropped push is a night's progress gone.
+          for attempt in 1 2 3; do
+            if git push --force-with-lease origin "$STABLE_BRANCH"; then
+              echo "Partial progress saved to $STABLE_BRANCH; the next run resumes from it."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying in $((attempt * 20))s."
+            sleep $((attempt * 20))
+          done
+          echo "::error::Could not push partial progress after 3 attempts."
+          exit 1
