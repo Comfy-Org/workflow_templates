@@ -169,3 +169,54 @@ describe('loadWorkflowGraph', () => {
     expect(loadWorkflowGraph('listy', [dir])?.nodes).toHaveLength(1);
   });
 });
+
+describe('buildSdkSnippet — TypeScript', () => {
+  const nodes = {
+    outputNode: { id: '344', type: 'SaveVideo' },
+    imageNode: { id: '356' },
+    promptNode: { id: '6', text: 'a cat' },
+  };
+
+  it('emits the documented TypeScript client, awaiting only what the docs await', () => {
+    const out = buildSdkSnippet({ title: 'T', templateName: 'wf', nodes, lang: 'typescript' });
+
+    expect(out).toContain('import { Comfy } from "@comfyorg/sdk";');
+    expect(out).toContain('const client = new Comfy({ apiKey: "comfyui-..." });');
+    expect(out).toContain('const wf = await client.workflows.fromFile("wf_api.json");');
+    expect(out).toContain('const asset = client.assets.fromFile("input.png");');
+    expect(out).toContain('const job = await client.run(wf);');
+    expect(out).toContain('await job.getOutputs("344")[0].toFile("output.png");');
+  });
+
+  it('ships only the npm install line, never pip', () => {
+    const out = buildSdkSnippet({ title: 'T', templateName: 'wf', nodes, lang: 'typescript' });
+
+    expect(out).toContain('npm i @comfyorg/sdk');
+    expect(out).not.toContain('pip install');
+  });
+
+  it('keeps the Python tab free of npm, so each tab stands alone', () => {
+    const out = buildSdkSnippet({ title: 'T', templateName: 'wf', nodes, lang: 'python' });
+
+    expect(out).toContain('pip install comfy-sdk');
+    expect(out).not.toContain('npm i');
+  });
+
+  it('addresses the same node ids in both languages', () => {
+    const args = { title: 'T', templateName: 'wf', nodes };
+    const ts = buildSdkSnippet({ ...args, lang: 'typescript' });
+    const py = buildSdkSnippet({ ...args, lang: 'python' });
+
+    for (const id of ['"344"', '"356"', '"6"']) {
+      expect(ts).toContain(id);
+      expect(py).toContain(id);
+    }
+  });
+
+  it('falls back to the generic TypeScript snippet with no output node', () => {
+    const out = buildSdkSnippet({ title: 'T', templateName: 'wf', nodes: {}, lang: 'typescript' });
+
+    expect(out).toContain('<output-node-id>');
+    expect(out).toContain('@comfyorg/sdk');
+  });
+});
