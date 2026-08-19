@@ -55,6 +55,10 @@ export interface SeoPageDef {
   pins?: SeoPagePin[];
   /** Share ids dropped from the grid: filter matches that don't serve the page. */
   excludeShareIds?: string[];
+  /** Other use-case page slugs to prioritize in this page's "Keep exploring" rail,
+   *  in order. Remaining slots (if any) fill automatically as before. Omit to keep
+   *  the fully automatic behavior every other page already has. */
+  relatedSlugs?: string[];
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -520,6 +524,47 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Maanil's thumbnail-less test workflow, kept out of the grid (also excluded
     // on ai-anime-generator via its Anime tag).
     excludeShareIds: ['2030b1e2fb72'],
+  },
+  {
+    slug: 'sprite-sheet-generator',
+    title: 'AI Sprite Sheet Generator | Comfy Workflows',
+    h1: 'AI Sprite Sheet Generator Workflows',
+    // Primary carries the "ai " prefix, matching the other pages and the SEO
+    // review's framing. It is not only metadata: the body heading is built from
+    // it as "What is the {keyword}?", and the bare term renders as "What is the
+    // Sprite Sheet Generator?", which is the exact title of the workflow pinned
+    // first on this page. The bare term stays targeted from `secondary`, the
+    // meta description and the h1.
+    keywords: {
+      primary: 'ai sprite sheet generator',
+      secondary: [
+        'sprite sheet generator',
+        'sprite sheet maker',
+        'animated sprite sheet generator',
+        'character sprite generator',
+        'game sprite generator',
+        '2d game asset generator',
+      ],
+    },
+    // `Sprite Sheet` and `Game` are the catalog vocabulary for this cluster;
+    // OR semantics keep the grid self-maintaining as new game-art workflows land.
+    filters: { tags: ['Sprite Sheet', 'Game'] },
+    // Game Asset Style Transfer app, App Mode verified in cloud. It reaches the
+    // grid via its Game tag, so no pin is needed.
+    appShareId: '0b8d28f4cfa3',
+    pins: [
+      // The keyword's namesake workflow leads and carries the hero: tagged only
+      // `Video` on the hub, so the filters cannot reach it. Its thumbnail is a
+      // poster-less video, but a light one, and the on-topic stills in this
+      // cluster are compare-slider input photos that misrepresent the page.
+      { shareId: 'fe5600667e2c' }, // Sprite Sheet Generator
+      { shareId: '5cef286d4c51' }, // Single Image to Animated Sprite Sheet
+    ],
+    // Skybox generator matches `Game` but makes HDR environments, not sprites.
+    excludeShareIds: ['f5199b5121f3'],
+    // SEO review: anchor this page to the other two gaming-adjacent pages instead
+    // of whatever the automatic file-order fill would otherwise surface.
+    relatedSlugs: ['ai-anime-generator', 'image-to-3d'],
   },
 ];
 
