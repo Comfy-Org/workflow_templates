@@ -395,18 +395,29 @@ function handleCardClick() {
           <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
         </div>
 
-        <ButtonPill
-          v-if="templateUrl"
-          as="a"
-          :href="templateUrl"
-          variant="solid"
-          mode="reveal"
-          class="shrink-0"
-          :aria-label="title"
-          @click.stop
-        >
-          Try now
-        </ButtonPill>
+        <div class="flex shrink-0 items-center gap-3">
+          <a
+            v-if="templateUrl"
+            :href="`${templateUrl}#api`"
+            class="text-sm font-bold uppercase tracking-wider text-content-secondary hover:text-content"
+            :aria-label="`Run ${title} from the API`"
+            data-testid="workflow-card-api-link"
+            @click.stop
+          >
+            API
+          </a>
+          <ButtonPill
+            v-if="templateUrl"
+            as="a"
+            :href="templateUrl"
+            variant="solid"
+            mode="reveal"
+            :aria-label="title"
+            @click.stop
+          >
+            Try now
+          </ButtonPill>
+        </div>
       </div>
 
       <TagRow :tags="tags" :locale="locale" :fallback-label="tagFallbackLabel" />
