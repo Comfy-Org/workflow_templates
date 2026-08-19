@@ -34,9 +34,9 @@ const MAX_EXAMPLE_PROMPT_LENGTH = 100;
 
 // Workflow metadata reaches this module from shipped graphs and, on hub-sourced
 // pages, from a fetched payload — so titles, names, node ids and node types are
-// data, never code. JSON string syntax is a valid subset of Python's, which
-// makes quotes, backslashes and newlines safe inside a generated literal.
-function pyString(value: string): string {
+// data, never code. JSON string syntax is a valid subset of both Python's and
+// TypeScript's, so quotes, backslashes and newlines are safe in either literal.
+function quoted(value: string): string {
   return JSON.stringify(value);
 }
 
@@ -87,20 +87,27 @@ export function extractSnippetNodes(graph: WorkflowGraph): SnippetNodes {
   return result;
 }
 
-const INSTALL_LINES = `# Install (beta)
-pip install comfy-sdk        # Python
-npm i @comfyorg/sdk          # TypeScript`;
+export type SnippetLang = 'python' | 'typescript';
+
+// One install line per tab: showing pip under the TypeScript snippet (or npm
+// under Python) would be wrong the moment the reader copies it.
+const INSTALL: Record<SnippetLang, string> = {
+  python: '# Install (beta)\npip install comfy-sdk',
+  typescript: '// Install (beta)\nnpm i @comfyorg/sdk',
+};
 
 export function buildSdkSnippet(opts: {
   title: string;
   templateName: string;
   nodes: SnippetNodes;
+  lang?: SnippetLang;
 }): string {
-  const { title, templateName, nodes } = opts;
-  if (!nodes.outputNode) return buildGenericSdkSnippet();
+  const { title, templateName, nodes, lang = 'python' } = opts;
+  if (!nodes.outputNode) return buildGenericSdkSnippet(lang);
+  if (lang === 'typescript') return buildTypeScriptSnippet({ title, templateName, nodes });
 
   const lines = [
-    INSTALL_LINES,
+    INSTALL.python,
     '',
     `# Run "${commentSafe(title)}" (Python)`,
     'from comfy_sdk import Comfy',
@@ -108,35 +115,93 @@ export function buildSdkSnippet(opts: {
     'client = Comfy(api_key="comfyui-...")',
     '',
     '# This workflow, exported in API format (see note below)',
-    `wf = client.workflows.from_file(${pyString(`${templateName}_api.json`)})`,
+    `wf = client.workflows.from_file(${quoted(`${templateName}_api.json`)})`,
   ];
 
   if (nodes.imageNode) {
     lines.push(
       '',
       'asset = client.assets.from_file("input.png")',
-      `wf.set_input(${pyString(nodes.imageNode.id)}, "image", asset)  # LoadImage`
+      `wf.set_input(${quoted(nodes.imageNode.id)}, "image", asset)  # LoadImage`
     );
   }
   if (nodes.promptNode) {
-    const prompt = pyString(nodes.promptNode.text ?? 'your prompt here');
+    const prompt = quoted(nodes.promptNode.text ?? 'your prompt here');
     lines.push(
       '',
-      `wf.set_input(${pyString(nodes.promptNode.id)}, "text", ${prompt})  # CLIPTextEncode`
+      `wf.set_input(${quoted(nodes.promptNode.id)}, "text", ${prompt})  # CLIPTextEncode`
     );
   }
 
   lines.push(
     '',
     'job = client.run(wf)',
-    `for output in job.get_outputs(${pyString(nodes.outputNode.id)}):  # ${commentSafe(nodes.outputNode.type)}`,
+    `for output in job.get_outputs(${quoted(nodes.outputNode.id)}):  # ${commentSafe(nodes.outputNode.type)}`,
     '    output.to_file(output.name)'
   );
   return lines.join('\n');
 }
 
-export function buildGenericSdkSnippet(): string {
-  return `${INSTALL_LINES}
+// Mirrors the documented TypeScript quickstart: `workflows.fromFile` and `run`
+// are awaited, `assets.fromFile` is not, and outputs are indexed rather than
+// iterated (https://docs.comfy.org/development/api-development/sdks).
+function buildTypeScriptSnippet(opts: {
+  title: string;
+  templateName: string;
+  nodes: SnippetNodes;
+}): string {
+  const { title, templateName, nodes } = opts;
+  if (!nodes.outputNode) return buildGenericSdkSnippet('typescript');
+
+  const lines = [
+    INSTALL.typescript,
+    '',
+    `// Run "${commentSafe(title)}" (TypeScript)`,
+    `import { Comfy } from "@comfyorg/sdk";`,
+    '',
+    `const client = new Comfy({ apiKey: "comfyui-..." });`,
+    '',
+    '// This workflow, exported in API format (see note below)',
+    `const wf = await client.workflows.fromFile(${quoted(`${templateName}_api.json`)});`,
+  ];
+
+  if (nodes.imageNode) {
+    lines.push(
+      '',
+      `const asset = client.assets.fromFile("input.png");`,
+      `wf.setInput(${quoted(nodes.imageNode.id)}, "image", asset);  // LoadImage`
+    );
+  }
+  if (nodes.promptNode) {
+    const prompt = quoted(nodes.promptNode.text ?? 'your prompt here');
+    lines.push(
+      '',
+      `wf.setInput(${quoted(nodes.promptNode.id)}, "text", ${prompt});  // CLIPTextEncode`
+    );
+  }
+
+  lines.push(
+    '',
+    'const job = await client.run(wf);',
+    `await job.getOutputs(${quoted(nodes.outputNode.id)})[0].toFile("output.png");  // ${commentSafe(nodes.outputNode.type)}`
+  );
+  return lines.join('\n');
+}
+
+export function buildGenericSdkSnippet(lang: SnippetLang = 'python'): string {
+  if (lang === 'typescript') {
+    return `${INSTALL.typescript}
+
+// Run this workflow (TypeScript)
+import { Comfy } from "@comfyorg/sdk";
+
+const client = new Comfy({ apiKey: "comfyui-..." });
+const wf = await client.workflows.fromFile("workflow_api.json");
+const job = await client.run(wf);
+await job.getOutputs("<output-node-id>")[0].toFile("output.png");`;
+  }
+
+  return `${INSTALL.python}
 
 # Run this workflow (Python)
 from comfy_sdk import Comfy
