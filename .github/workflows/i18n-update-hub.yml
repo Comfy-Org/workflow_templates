@@ -84,15 +84,18 @@ jobs:
           # have a real base. Absent branch (first run) -> fetch fails, start fresh.
           if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
             git checkout "origin/$STABLE_BRANCH" -- site/src/i18n || true
-            # The restore above shadows every file under site/src/i18n, including
-            # the human-authored ones this pipeline does not write, so a key added
-            # to the English UI source since the branch last updated comes back
-            # deleted (it took the navbar keys on 2026-08-12). Take those paths
-            # back from the checkout; restore rather than checkout so a file
-            # deleted on main cannot be resurrected from the branch, and unguarded
-            # so this can never silently no-op.
+            # The restore above shadows every file under site/src/i18n with the
+            # branch's older copy, so an edit landed on main since the branch was
+            # last updated comes back as a deletion (it took the navbar keys on
+            # 2026-08-12). Take the layers a person edits back from the checkout:
+            # the UI source nothing regenerates, the override layer nothing here
+            # writes, and the sign-off records, whose missing entries this pipeline
+            # would otherwise re-stamp as machine-authored. restore, not checkout,
+            # so a file deleted on main cannot be resurrected from the branch.
             git restore --source=HEAD --staged --worktree -- \
               site/src/i18n/locales/en.json \
+              site/src/i18n/overrides \
+              site/src/i18n/reviews \
               site/src/i18n/human
             echo "Restored partial translations from $STABLE_BRANCH (human-authored sources kept from the checkout)."
           else
