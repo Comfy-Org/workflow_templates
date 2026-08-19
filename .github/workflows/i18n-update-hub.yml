@@ -319,7 +319,19 @@ jobs:
               *.json)
                 if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f" 2>/dev/null; then
                   echo "::warning::Excluding unparseable $f from the partial save"
-                  git restore --staged -- "$f"
+                  # Excluding must not UNDO banked progress: a plain staged
+                  # restore resets the path to main's version, so a previously
+                  # saved translation regenerated as malformed would silently
+                  # drop off the stable branch at commit time. Take the last
+                  # good version from the branch when it has one, else main's,
+                  # else drop the new file entirely.
+                  if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:$f" 2>/dev/null; then
+                    git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- "$f"
+                  elif git cat-file -e "HEAD:$f" 2>/dev/null; then
+                    git restore --source=HEAD --staged --worktree -- "$f"
+                  else
+                    git rm -qf --ignore-unmatch -- "$f"
+                  fi
                 fi
                 ;;
             esac
@@ -330,9 +342,11 @@ jobs:
           fi
           # Same no-op guard as the publish step: an identical rerun (e.g. a
           # night that failed before translating) must not force-push a new head
-          # and rerun the automation PR's CI for zero progress.
+          # and rerun the automation PR's CI for zero progress. --cached, because
+          # the commit below is built from the index and an excluded malformed
+          # file may legitimately leave the worktree differing from the branch.
           if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
-            if git diff --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+            if git diff --cached --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
               echo "No change vs the saved partial progress; leaving the branch untouched."
               exit 0
             fi
