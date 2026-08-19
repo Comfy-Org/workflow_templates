@@ -287,3 +287,57 @@ jobs:
               --title "chore(i18n): update hub workflow translations" \
               --body "Automated hub translation refresh. English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
           fi
+
+      # A failed night must still save its translation progress. Without this, a
+      # from-scratch backfill (the ru/ar retranslation) can never converge: the
+      # run rate-limits partway, enforce/validate correctly refuse the partial
+      # result, the success()-gated publish above skips, and the night's OpenAI
+      # spend is discarded — so the next night restarts from the same point
+      # forever. This step commits the partial output to the same stable branch
+      # the "Restore partial progress" step reads, so consecutive nights
+      # accumulate until a run finally completes and publishes normally.
+      #
+      # Merging stays gated exactly as before: this step never creates a PR, and
+      # if the automation PR is already open its own Validate Translations check
+      # goes red on the partial head, so nobody can merge a state main's
+      # validators reject. Only what gets REMEMBERED changes, not what gets
+      # published.
+      - name: Save partial progress on failure
+        if: failure()
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add site/src/i18n
+          # A truncated write (the process can die mid-file on this path) must
+          # not poison the branch the next run restores from: drop any staged
+          # .json the next run could not parse. Deletions are skipped (nothing
+          # to parse) and stay staged.
+          while IFS= read -r f; do
+            case "$f" in
+              *.json)
+                if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f" 2>/dev/null; then
+                  echo "::warning::Excluding unparseable $f from the partial save"
+                  git restore --staged -- "$f"
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --name-only --diff-filter=d)
+          if git diff --cached --quiet; then
+            echo "Run failed before producing any translation changes; nothing to save."
+            exit 0
+          fi
+          # Same no-op guard as the publish step: an identical rerun (e.g. a
+          # night that failed before translating) must not force-push a new head
+          # and rerun the automation PR's CI for zero progress.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
+            if git diff --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+              echo "No change vs the saved partial progress; leaving the branch untouched."
+              exit 0
+            fi
+          fi
+          git checkout -B "$STABLE_BRANCH"
+          git commit -m "chore(i18n): save partial translation progress (run failed, do not merge)"
+          git push --force-with-lease origin "$STABLE_BRANCH"
+          echo "Partial progress saved to $STABLE_BRANCH; the next run resumes from it."
