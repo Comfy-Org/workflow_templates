@@ -84,7 +84,19 @@ jobs:
           # have a real base. Absent branch (first run) -> fetch fails, start fresh.
           if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
             git checkout "origin/$STABLE_BRANCH" -- site/src/i18n || true
-            echo "Restored partial translations from $STABLE_BRANCH."
+            # The restore shadows EVERY file under site/src/i18n, including the
+            # ones this pipeline does not author. Any key a person adds to the
+            # English UI source (or to the human translation layer) on main after
+            # the automation branch was last updated would otherwise come back
+            # deleted in the next automation PR: that is how the navbar keys were
+            # lost on 2026-08-12, and the API-section strings were about to go the
+            # same way. Take those back from main; the machine layers this
+            # pipeline owns (other locales, verdicts, sign-off records) still
+            # accumulate across runs.
+            git checkout HEAD -- \
+              site/src/i18n/locales/en.json \
+              site/src/i18n/human 2>/dev/null || true
+            echo "Restored partial translations from $STABLE_BRANCH (human-authored sources kept from main)."
           else
             echo "No automation branch yet; starting fresh from main."
           fi
