@@ -351,7 +351,10 @@ export function serializeIndexEntry(
     shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
-    mediaType: entry.mediaType || 'image',
+    // Infer rather than default: the index omits mediaType on 174 of 616 live
+    // entries, and defaulting them to 'image' emptied the video and 3d category
+    // pages outright. A declared value always wins.
+    mediaType: entry.mediaType || mediaTypeFromTagNames(entry.tags || []),
     tags: entry.tags || [],
     models: entry.models || [],
     logos: (entry.logos || []) as { provider: string | string[] }[],
@@ -498,12 +501,26 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function inferMediaType(workflow: HubWorkflowSummary): MediaType {
-  const tags = (workflow.tags || []).map((t) => t.name.toLowerCase());
-  if (tags.includes('video') || tags.includes('animation')) return 'video';
-  if (tags.includes('audio')) return 'audio';
-  if (tags.includes('3d')) return '3d';
+/**
+ * Media type from tag names. One definition, shared by the index and detail paths.
+ *
+ * Substring rather than equality: the hub's vocabulary is phrase-shaped ("Image
+ * to Video", "Video Edit", "Audio to Video"), so an equality check matches only
+ * the bare "Video" tag and files the rest as images.
+ *
+ * Order encodes the OUTPUT medium, which is what a category page groups by, so
+ * "Audio to Video" has to land on video and not audio.
+ */
+export function mediaTypeFromTagNames(names: readonly string[]): MediaType {
+  const tags = names.map((name) => name.toLowerCase());
+  if (tags.some((tag) => tag.includes('video') || tag.includes('animation'))) return 'video';
+  if (tags.some((tag) => tag.includes('audio'))) return 'audio';
+  if (tags.some((tag) => tag.includes('3d'))) return '3d';
   return 'image';
+}
+
+function inferMediaType(workflow: HubWorkflowSummary): MediaType {
+  return mediaTypeFromTagNames((workflow.tags || []).map((t) => t.name));
 }
 
 function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
