@@ -120,7 +120,10 @@ describe('badgesAvailableIn', () => {
   });
 
   it('keeps a badge of an unknown type rather than silently dropping it', () => {
-    const kept = badgesAvailableIn([{ type: 'mode', value: 'app' }], templatesInTab(catalog(), 'all'));
+    const kept = badgesAvailableIn(
+      [{ type: 'mode', value: 'app' }],
+      templatesInTab(catalog(), 'all')
+    );
     expect(kept).toEqual([{ type: 'mode', value: 'app' }]);
   });
 

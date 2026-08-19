@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  heroTemplateFor,
-  isAudioFile,
-  isMediaFile,
-  isVideoFile,
-} from '../../src/lib/media-utils';
+import { heroTemplateFor, isAudioFile, isMediaFile, isVideoFile } from '../../src/lib/media-utils';
 
 describe('isVideoFile', () => {
   it.for([

@@ -7,9 +7,7 @@ import {
 
 describe('assertNoOrphanedContent', () => {
   it('passes when every authored landing slug has a matching page', () => {
-    expect(() =>
-      assertNoOrphanedContent('model', new Set(listModelContentSlugs()))
-    ).not.toThrow();
+    expect(() => assertNoOrphanedContent('model', new Set(listModelContentSlugs()))).not.toThrow();
     expect(() =>
       assertNoOrphanedContent('use-case', new Set(listUseCaseContentSlugs()))
     ).not.toThrow();

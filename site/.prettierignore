@@ -4,3 +4,13 @@ node_modules/
 package-lock.json
 pnpm-lock.yaml
 docs/
+
+# prettier-plugin-astro 0.14.1's embed() step mis-parses these: a <script>
+# (self-closing with set:html=, or followed by another <script>) sitting
+# inside a conditional/ternary JSX block confuses its script extraction,
+# spilling markup from one branch into the "JS" handed to Babel. Reproduced
+# on a clean checkout of main, unrelated to any feature change — tracked as
+# a parser bug, not excluded to hide real formatting issues in these files.
+src/components/workflow-pages/ClosingCta.astro
+src/layouts/BaseLayout.astro
+src/pages/workflows/\[username\].astro
