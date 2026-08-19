@@ -25,14 +25,51 @@ const require = createRequire(import.meta.url);
  * `null` means the bundle's shape changed, not that the model is bad, so callers
  * should say so rather than treat it as a failed lookup.
  */
-export function readCliContextWindows(): Record<string, number> | null {
-  let source: string;
+function readCliSource(): string | null {
   try {
     const entry = require.resolve('@lobehub/i18n-cli');
-    source = fs.readFileSync(path.join(path.dirname(entry), 'cli.js'), 'utf-8');
+    return fs.readFileSync(path.join(path.dirname(entry), 'cli.js'), 'utf-8');
   } catch {
     return null;
   }
+}
+
+/**
+ * Whether a CLI bundle both reads the `experimental.jsonMode` config option and
+ * forwards OpenAI's `json_object` response format from a completions call. A
+ * version that renames or drops the option would silently fall back to
+ * plain-text mode, where gpt-5.2's stray-brace output froze every locale from
+ * 2026-08-14 — an ignored config key gives no signal, unlike a rejected
+ * response_format.
+ *
+ * Checked as the wiring expressions (property access + wire literal near a
+ * `chat.completions.create` call), not bare literals anywhere in the bundle,
+ * so unrelated occurrences cannot satisfy the check. Property names and wire
+ * literals survive minification. A true behavioural assertion is not on the
+ * table: the package's lib entry exports only `defineConfig`; the translation
+ * class lives solely in the CLI bundle, whose import has side effects.
+ */
+export function cliSourceSupportsJsonMode(source: string): boolean {
+  if (!/\.experimental\??\.\s*jsonMode/.test(source)) return false;
+  for (const m of source.matchAll(/response_format\s*:\s*\{\s*type\s*:\s*"json_object"\s*\}/g)) {
+    // The flag must sit inside a completions call's argument span; the bundle
+    // builds the request object inline, so the call name appears just before.
+    if (source.slice(Math.max(0, m.index - 2000), m.index).includes('chat.completions.create')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** jsonMode support of the installed CLI, or `null` when the bundle is unreadable. */
+export function readCliJsonModeSupport(): boolean | null {
+  const source = readCliSource();
+  return source === null ? null : cliSourceSupportsJsonMode(source);
+}
+
+export function readCliContextWindows(): Record<string, number> | null {
+  const source = readCliSource();
+  if (source === null) return null;
 
   // The bundle is minified, so anchor on a stable key rather than a variable
   // name. The table holds only numbers, so the first brace after it closes it.
