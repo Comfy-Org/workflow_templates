@@ -288,20 +288,12 @@ jobs:
               --body "Automated hub translation refresh. English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
           fi
 
-      # A failed night must still save its translation progress. Without this, a
-      # from-scratch backfill (the ru/ar retranslation) can never converge: the
-      # run rate-limits partway, enforce/validate correctly refuse the partial
-      # result, the success()-gated publish above skips, and the night's OpenAI
-      # spend is discarded — so the next night restarts from the same point
-      # forever. This step commits the partial output to the same stable branch
-      # the "Restore partial progress" step reads, so consecutive nights
-      # accumulate until a run finally completes and publishes normally.
-      #
-      # Merging stays gated exactly as before: this step never creates a PR, and
-      # if the automation PR is already open its own Validate Translations check
-      # goes red on the partial head, so nobody can merge a state main's
-      # validators reject. Only what gets REMEMBERED changes, not what gets
-      # published.
+      # A failed night still saves its translation progress: without this, a
+      # from-scratch backfill can never converge — a rate-limited run fails
+      # enforce/validate, the success()-gated publish skips, and the spend is
+      # discarded. Saves to the same branch the restore step reads, so nights
+      # accumulate. Merging stays gated: never creates a PR, and the automation
+      # PR's own Validate Translations check is red on a partial head.
       - name: Save partial progress on failure
         if: failure()
         run: |
@@ -310,11 +302,10 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add site/src/i18n
-          # Excluding a file must not UNDO banked progress: a plain staged
-          # restore resets the path to main's version, so a previously saved
-          # translation regenerated as bad would silently drop off the stable
-          # branch at commit time. Take the last good version from the branch
-          # when it has one, else main's, else drop the new file entirely.
+          # Excluding must not UNDO banked progress (a plain staged restore
+          # resets to main's version and the commit drops the file from the
+          # branch): take the branch's last good version, else main's, else
+          # drop the new file.
           exclude_from_save() {
             if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:$1" 2>/dev/null; then
               git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- "$1"
@@ -324,10 +315,8 @@ jobs:
               git rm -qf --ignore-unmatch -- "$1"
             fi
           }
-          # A truncated write (the process can die mid-file on this path) must
-          # not poison the branch the next run restores from: drop any staged
-          # .json the next run could not parse. Deletions are skipped (nothing
-          # to parse) and stay staged.
+          # A truncated mid-file write must not poison the branch the next run
+          # restores from. Deletions stay staged (nothing to parse).
           while IFS= read -r f; do
             case "$f" in
               *.json)
@@ -338,13 +327,10 @@ jobs:
                 ;;
             esac
           done < <(git diff --cached --name-only --diff-filter=d)
-          # A FULLY misaligned content file (every entry keyed to nothing in
-          # the regenerated English source, i.e. model-mangled keys) fails
-          # validation as a whole and cannot be repaired by enforce's pruning,
-          # which leaves unmatched entries alone by design. Banking it would
-          # carry the mangled keys forward as permanent cruft, so exclude it.
-          # A PARTIALLY stale file still banks: the validator tolerates it and
-          # its valid entries are real progress.
+          # A FULLY misaligned content file (model-mangled keys, none in the
+          # English source) fails validation and enforce cannot prune it, so
+          # banking it would carry the mangled keys forward. Partially stale
+          # files still bank, matching the validator's tolerance.
           while IFS= read -r f; do
             case "$f" in
               site/src/i18n/content/en.json) ;;
@@ -362,13 +348,10 @@ jobs:
                 ;;
             esac
           done < <(git diff --cached --name-only --diff-filter=d)
-          # Never bank UI chrome (locales/) from a failed run. Content is safe
-          # to bank because enforce has already pruned every validator-failing
-          # field to disk (it reuses collectViolations and re-prunes restored
-          # content each night), but nothing prunes locales/ and locale:ui only
-          # fills MISSING keys, so a parseable-but-invalid UI string banked here
-          # would be restored and fail validate forever. UI strings are cheap to
-          # regenerate; keep the branch's (or main's) last good version instead.
+          # Never bank UI chrome from a failed run: nothing prunes locales/ and
+          # locale:ui fills only MISSING keys, so an invalid UI string banked
+          # here would restore and fail validate forever. (Content is safe:
+          # enforce prunes it to disk and re-prunes restored content nightly.)
           if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:site/src/i18n/locales" 2>/dev/null; then
             git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- site/src/i18n/locales
           else
@@ -378,11 +361,9 @@ jobs:
             echo "Run failed before producing any translation changes; nothing to save."
             exit 0
           fi
-          # Same no-op guard as the publish step: an identical rerun (e.g. a
-          # night that failed before translating) must not force-push a new head
-          # and rerun the automation PR's CI for zero progress. --cached, because
-          # the commit below is built from the index and an excluded malformed
-          # file may legitimately leave the worktree differing from the branch.
+          # Same no-op guard as the publish step; --cached because the commit
+          # is built from the index and an excluded file may leave the worktree
+          # differing from the branch.
           if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
             if git diff --cached --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
               echo "No change vs the saved partial progress; leaving the branch untouched."
@@ -391,9 +372,8 @@ jobs:
           fi
           git checkout -B "$STABLE_BRANCH"
           git commit -m "chore(i18n): save partial translation progress (run failed, do not merge)"
-          # Retry transient push failures: the very first live run of this step
-          # lost its save to a GitHub-side HTTP 500, and on this unattended
-          # nightly path a dropped push is a night's progress gone.
+          # Retry transient push failures (a GitHub-side 500 here costs a full
+          # night's progress).
           for attempt in 1 2 3; do
             if git push --force-with-lease origin "$STABLE_BRANCH"; then
               echo "Partial progress saved to $STABLE_BRANCH; the next run resumes from it."
