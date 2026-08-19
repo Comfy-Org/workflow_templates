@@ -7,13 +7,15 @@ import { join } from 'node:path';
 
 import type { WorkflowGraph } from './sdk-snippet';
 
-// Graphs are read from the repo's own templates/ directory (the source of
-// truth, present in a fresh checkout) and fall back to the copy sync-templates
-// writes into public/workflows/. Both run with the site package as cwd.
-const GRAPH_DIRS = [
-  join(process.cwd(), '..', 'templates'),
-  join(process.cwd(), 'public', 'workflows'),
-];
+// Graphs come from the repo's own templates/ directory: the version-controlled
+// source of truth, present in a fresh checkout, and — the reason it is the only
+// candidate — outside the site package. The Vercel adapter traces this read and
+// cannot tell that it happens at build time, so pointing it at the synced copy
+// in public/workflows/ makes it ship every graph inside the render function
+// (76MB → 631MB locally, past the 250MB function limit in CI). Reads run with
+// the site package as cwd, and every detail page is prerendered, so nothing
+// here is needed at runtime.
+const GRAPH_DIRS = [join(process.cwd(), '..', 'templates')];
 
 export function loadWorkflowGraph(
   templateName: string,
