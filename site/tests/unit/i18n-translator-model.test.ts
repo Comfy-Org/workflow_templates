@@ -95,9 +95,27 @@ describe('JSON mode wiring', () => {
     expect(cliSourceSupportsJsonMode('const t = await client.chat.completions.create({messages, model})')).toBe(false);
     // Reading the flag without forwarding it is equally broken.
     expect(cliSourceSupportsJsonMode('this.x=!!this.config?.experimental?.jsonMode')).toBe(false);
+  });
+
+  it('is not satisfied by unwired occurrences of the two markers', () => {
+    // Both strings present but on separate code paths: the flag is read, and
+    // json_object appears somewhere unrelated, with no completions call
+    // forwarding it. Bare-literal matching would wave this through.
     expect(
       cliSourceSupportsJsonMode(
-        'this.x=!!this.config?.experimental?.jsonMode;...this.x&&{response_format:{type:"json_object"}}'
+        'this.x=!!this.config?.experimental?.jsonMode;' +
+          'const docs="response_format : { type : \\"json_object\\" } is unsupported";' +
+          'x'.repeat(3000) +
+          'await client.chat.completions.create({messages, model})'
+      )
+    ).toBe(false);
+  });
+
+  it('accepts the real wiring shape', () => {
+    expect(
+      cliSourceSupportsJsonMode(
+        'this.x=!!this.config?.experimental?.jsonMode;' +
+          'await this.client.chat.completions.create({messages:o,model:m,...this.x&&{response_format:{type:"json_object"}}})'
       )
     ).toBe(true);
   });
