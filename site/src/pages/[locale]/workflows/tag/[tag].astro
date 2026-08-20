@@ -68,7 +68,10 @@ const basePath = `/workflows/tag/${tag}/`;
 const indexing = listingIndexing(basePath, typedLocale);
 const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 
-const title = `${tagName} ${SITE_NAME} - ${t('nav.templates', typedLocale)}`;
+const title = t('tag.metaTitle', typedLocale)
+  .replace('{tag}', tagName)
+  .replace('{site}', SITE_NAME)
+  .replace('{workflows}', t('nav.templates', typedLocale));
 // Localized (falls back to English until the CI locale step translates the new
 // key). These tag pages are already self-canonical, so this is a quick CTR win.
 const description = t('tag.metaDescription', typedLocale)

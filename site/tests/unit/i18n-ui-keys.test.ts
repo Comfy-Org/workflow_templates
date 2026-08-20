@@ -49,3 +49,43 @@ describe('UI string keys', () => {
     expect(missing).toEqual([]);
   });
 });
+
+/**
+ * The localized routes build their <title> from a template key now. English is
+ * ranking on those exact strings today, so the English rendering has to come out
+ * byte-identical to the concatenation it replaced.
+ */
+describe('meta title templates', () => {
+  const strings = en as Record<string, string>;
+
+  it('renders the English detail title exactly as before', () => {
+    expect(strings['template.metaTitle'].replace('{title}', 'Text to Image (New)')).toBe(
+      'Text to Image (New) - ComfyUI Workflow'
+    );
+  });
+
+  it('renders the English category title exactly as before', () => {
+    expect(
+      strings['category.metaTitle']
+        .replace('{category}', 'Image Generation')
+        .replace('{site}', strings['meta.title'])
+    ).toBe('Image Generation Workflows - Comfy Workflows');
+  });
+
+  it('renders the English tag title exactly as before', () => {
+    expect(
+      strings['tag.metaTitle']
+        .replace('{tag}', 'Character')
+        .replace('{site}', 'Comfy Workflows')
+        .replace('{workflows}', strings['nav.templates'])
+    ).toBe('Character Comfy Workflows - Workflows');
+  });
+
+  it('keeps every placeholder the routes substitute', () => {
+    // A translation that drops a placeholder would render a literal {title}.
+    expect(strings['template.metaTitle']).toContain('{title}');
+    expect(strings['category.metaTitle']).toContain('{category}');
+    expect(strings['category.metaTitle']).toContain('{site}');
+    expect(strings['tag.metaTitle']).toContain('{tag}');
+  });
+});
