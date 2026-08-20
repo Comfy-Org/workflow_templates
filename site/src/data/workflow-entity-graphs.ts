@@ -561,6 +561,144 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       },
     ],
   },
+
+  // Wan Animate 2: Motion Transfer
+  video_wan_animate2: {
+    keywords:
+      'Image Generation, Motion Control, Video, Motion Transfer, Wan Animate 2, ComfyUI Workflow',
+    isRelatedTo: [
+      { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
+      { name: 'Motion Control Workflows', url: 'https://comfy.org/workflows/tag/motion-control/' },
+      { name: 'Video Workflows', url: 'https://comfy.org/workflows/tag/video/' },
+    ],
+    coreTopics: [
+      { id: 'e-motion', name: 'Motion', sameAs: 'https://en.wikipedia.org/wiki/Motion_(physics)' },
+    ],
+    categories: [
+      { id: 'cat-computervision', name: 'Computer Vision & Rendering' },
+      { id: 'cat-business', name: 'Production & Business' },
+      { id: 'cat-audiovideo', name: 'Audio & Video' },
+    ],
+    entities: [
+      // Standalone mentions (no DefinedTermSet)
+      {
+        id: 'e-character',
+        name: 'Character',
+        sameAs: 'https://en.wikipedia.org/wiki/Character_(arts)',
+      },
+      { id: 'e-camera', name: 'Camera', sameAs: 'https://en.wikipedia.org/wiki/Camera' },
+      {
+        id: 'e-extraction',
+        name: 'Pose Extraction',
+        sameAs: 'https://en.wikipedia.org/wiki/Pose_estimation',
+      },
+      { id: 'e-frames', name: 'Video Frames', sameAs: 'https://en.wikipedia.org/wiki/Film_frame' },
+      {
+        id: 'e-skeleton',
+        name: 'Skeletal Preprocessing',
+        sameAs: 'https://en.wikipedia.org/wiki/Skeletal_animation',
+      },
+      { id: 'e-reference', name: 'Reference', sameAs: 'https://en.wikipedia.org/wiki/Citation' },
+      {
+        id: 'e-identity',
+        name: 'Identity',
+        sameAs: 'https://en.wikipedia.org/wiki/Identity_(social_science)',
+      },
+      // Computer Vision & Rendering
+      {
+        id: 'e-computer-vision',
+        name: 'Computer Vision',
+        sameAs: 'https://en.wikipedia.org/wiki/Computer_vision',
+        categoryId: 'cat-computervision',
+      },
+      {
+        id: 'e-rendering',
+        name: 'Rendering (Computer Graphics)',
+        sameAs: 'https://en.wikipedia.org/wiki/Rendering_(computer_graphics)',
+        categoryId: 'cat-computervision',
+      },
+      {
+        id: 'e-gpu',
+        name: 'Graphics Processing Unit',
+        sameAs: 'https://en.wikipedia.org/wiki/Graphics_processing_unit',
+        categoryId: 'cat-computervision',
+      },
+      {
+        id: 'e-image-stabilization',
+        name: 'Image Stabilization',
+        sameAs: 'https://en.wikipedia.org/wiki/Image_stabilization',
+        categoryId: 'cat-computervision',
+      },
+      {
+        id: 'e-display-res',
+        name: 'Display Resolution',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_resolution',
+        categoryId: 'cat-computervision',
+      },
+      // Production & Business
+      {
+        id: 'e-workflow',
+        name: 'Workflow',
+        sameAs: 'https://en.wikipedia.org/wiki/Workflow',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-footage',
+        name: 'Footage',
+        sameAs: 'https://en.wikipedia.org/wiki/Footage',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-quality',
+        name: 'Quality (Business)',
+        sameAs: 'https://en.wikipedia.org/wiki/Quality_(business)',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-communication',
+        name: 'Communication',
+        sameAs: 'https://en.wikipedia.org/wiki/Communication',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-control',
+        name: 'Control (Management)',
+        sameAs: 'https://en.wikipedia.org/wiki/Control_(management)',
+        categoryId: 'cat-business',
+      },
+      // Audio & Video
+      {
+        id: 'e-sound',
+        name: 'Sound',
+        sameAs: 'https://en.wikipedia.org/wiki/Sound',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-surround-sound',
+        name: 'Surround Sound',
+        sameAs: 'https://en.wikipedia.org/wiki/Surround_sound',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-high-fidelity',
+        name: 'High Fidelity',
+        sameAs: 'https://en.wikipedia.org/wiki/High_fidelity',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-video-editing',
+        name: 'Video Editing',
+        sameAs: 'https://en.wikipedia.org/wiki/Video_editing',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-frame-rate',
+        name: 'Frame Rate',
+        sameAs: 'https://en.wikipedia.org/wiki/Frame_rate',
+        categoryId: 'cat-audiovideo',
+      },
+    ],
+  },
 };
 
 export function getWorkflowEntityGraph(templateName: string): WorkflowEntityGraph | undefined {
