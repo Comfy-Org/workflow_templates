@@ -17,6 +17,29 @@ describe('getVideoFrameUrl', () => {
     );
   });
 
+  it('extracts a frame for the production hub asset host', () => {
+    // The bug this fixes: the live hub serves its uploads from
+    // comfy-hub-assets.comfy.org, which was not on the allowlist, so every
+    // poster resolved to null and the carousel rendered bare <video> elements.
+    const url =
+      'https://comfy-hub-assets.comfy.org/uploads/306cccad-6557-40d5-9bea-db46db4ab789.mp4';
+    expect(getVideoFrameUrl(url)).toBe(
+      'https://comfy-hub-assets.comfy.org/cdn-cgi/media/mode=frame,time=1s/uploads/306cccad-6557-40d5-9bea-db46db4ab789.mp4'
+    );
+  });
+
+  it('returns null for media.comfy.org, which answers frame URLs with 404', () => {
+    // Same apex domain, different service: a blanket comfy.org rule would put a
+    // broken poster on every marketing video.
+    expect(getVideoFrameUrl('https://media.comfy.org/website/clip.mp4')).toBeNull();
+  });
+
+  it('matches hosts by suffix, not substring', () => {
+    // `includes('engcomfy.com')` also accepted a lookalike domain.
+    expect(getVideoFrameUrl('https://engcomfy.com.example.net/uploads/v.mp4')).toBeNull();
+    expect(getVideoFrameUrl('https://notcomfy-hub-assets.comfy.org.evil.net/v.mp4')).toBeNull();
+  });
+
   it('returns null for relative paths', () => {
     expect(getVideoFrameUrl('template-name-1.mp4')).toBeNull();
     expect(getVideoFrameUrl('/workflows/thumbnails/video.mp4')).toBeNull();
