@@ -9,7 +9,8 @@ import { t } from '../i18n/ui';
 import type { Locale } from '../i18n/config';
 import { localizeUrl } from '../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../config/site';
-import { detectEntities } from './entity-dictionary';
+import { WEBSITE_ID, ORGANIZATION_ID, COMFYUI_ID, buildSiteEntityNodes } from './site-entities';
+import type { WorkflowEntityGraph } from '../data/workflow-entity-graphs';
 
 export interface FaqItem {
   question: string;
@@ -187,35 +188,146 @@ export function buildSoftwareApplicationJsonLd(params: {
 }
 
 /**
- * schema.org `WebPage` `about`/`mentions` entity coverage — `DefinedTerm` nodes
- * (with `sameAs` Wikipedia links) detected in the page's own copy, grouped into
- * `DefinedTermSet` buckets. Returns `null` when nothing in `text` matches the
- * dictionary (see entity-dictionary.ts), so the caller can skip emitting an empty
- * graph, matching `buildFaqJsonLd`'s convention.
+ * The full client-provided `@graph` for a workflow detail page: WebSite →
+ * Organization → ComfyUI SoftwareApplication (sitewide, constant) plus a
+ * per-page WebPage, workflow `[SoftwareApplication,TechArticle]`, DefinedTerm /
+ * DefinedTermSet entity nodes, BreadcrumbList, and FAQPage — replacing the
+ * separate TechArticle/FAQPage/SoftwareApplication/BreadcrumbList scripts with
+ * one linked graph. Entity names/sameAs/category assignments come verbatim from
+ * `entityGraph` (see workflow-entity-graphs.ts) — nothing here is inferred.
  */
-export function buildEntityMentionsJsonLd(params: { url: string; text: (string | undefined)[] }) {
-  const combined = params.text.filter(Boolean).join('\n');
-  const matches = detectEntities(combined);
-  if (!matches.length) return null;
+export function buildWorkflowGraphJsonLd(params: {
+  canonicalUrl: string;
+  title: string;
+  description: string;
+  image?: string;
+  datePublished?: string;
+  inLanguage: string;
+  breadcrumbItems: BreadcrumbItem[];
+  faqItems?: FaqItem[];
+  entityGraph: WorkflowEntityGraph;
+}) {
+  const {
+    canonicalUrl,
+    title,
+    description,
+    image,
+    datePublished,
+    inLanguage,
+    breadcrumbItems,
+    faqItems,
+    entityGraph,
+  } = params;
 
-  const about = matches
-    .filter((m) => m.category === 'Core')
-    .map((m) => ({ '@type': 'DefinedTerm', name: m.name, sameAs: m.sameAs }));
-  const mentions = matches
-    .filter((m) => m.category !== 'Core')
-    .map((m) => ({
+  const localId = (fragment: string) => `${canonicalUrl}#${fragment}`;
+  const webpageId = localId('webpage');
+  const workflowId = localId('workflow');
+  const breadcrumbId = localId('breadcrumb');
+  const faqId = localId('faq');
+
+  const graph: Record<string, unknown>[] = [...buildSiteEntityNodes()];
+
+  const aboutRefs: { '@id': string }[] = [{ '@id': workflowId }];
+  for (const topic of entityGraph.coreTopics) {
+    graph.push({
       '@type': 'DefinedTerm',
-      name: m.name,
-      sameAs: m.sameAs,
-      inDefinedTermSet: { '@type': 'DefinedTermSet', name: m.category },
-    }));
+      '@id': localId(topic.id),
+      name: topic.name,
+      sameAs: topic.sameAs,
+    });
+    aboutRefs.push({ '@id': localId(topic.id) });
+  }
+  for (const category of entityGraph.categories) {
+    aboutRefs.push({ '@id': localId(category.id) });
+  }
 
-  if (!about.length && !mentions.length) return null;
-  return {
-    '@context': 'https://schema.org',
+  const mentionRefs: { '@id': string }[] = [];
+  for (const entity of entityGraph.entities) {
+    graph.push({
+      '@type': 'DefinedTerm',
+      '@id': localId(entity.id),
+      name: entity.name,
+      sameAs: entity.sameAs,
+      ...(entity.categoryId ? { inDefinedTermSet: { '@id': localId(entity.categoryId) } } : {}),
+    });
+    mentionRefs.push({ '@id': localId(entity.id) });
+  }
+
+  for (const category of entityGraph.categories) {
+    graph.push({
+      '@type': 'DefinedTermSet',
+      '@id': localId(category.id),
+      name: category.name,
+      hasDefinedTerm: entityGraph.entities
+        .filter((e) => e.categoryId === category.id)
+        .map((e) => ({ '@id': localId(e.id) })),
+    });
+  }
+
+  graph.push({
+    '@type': ['SoftwareApplication', 'TechArticle'],
+    '@id': workflowId,
+    name: title,
+    headline: title,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    ...(entityGraph.identifier ? { identifier: entityGraph.identifier } : {}),
+    ...(datePublished ? { datePublished } : {}),
+    ...(image ? { image } : {}),
+    description,
+    ...(entityGraph.keywords ? { keywords: entityGraph.keywords } : {}),
+    creator: { '@id': ORGANIZATION_ID },
+    runtimePlatform: { '@id': COMFYUI_ID },
+    ...(entityGraph.isRelatedTo?.length
+      ? {
+          isRelatedTo: entityGraph.isRelatedTo.map((r) => ({
+            '@type': 'WebPage',
+            name: r.name,
+            url: r.url,
+          })),
+        }
+      : {}),
+  });
+
+  graph.push({
+    '@type': 'BreadcrumbList',
+    '@id': breadcrumbId,
+    itemListElement: breadcrumbItems.map(({ name, item }, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name,
+      ...(item ? { item } : {}),
+    })),
+  });
+
+  const hasFaq = Boolean(faqItems?.length);
+  if (hasFaq) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': faqId,
+      mainEntity: faqItems!.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    });
+  }
+
+  graph.push({
     '@type': 'WebPage',
-    url: params.url,
-    ...(about.length ? { about } : {}),
-    ...(mentions.length ? { mentions } : {}),
-  };
+    '@id': webpageId,
+    url: canonicalUrl,
+    headline: title,
+    isPartOf: { '@id': WEBSITE_ID },
+    publisher: { '@id': ORGANIZATION_ID },
+    ...(datePublished ? { datePublished } : {}),
+    inLanguage,
+    breadcrumb: { '@id': breadcrumbId },
+    mainEntity: { '@id': workflowId },
+    ...(hasFaq ? { hasPart: [{ '@id': faqId }] } : {}),
+    about: aboutRefs,
+    ...(mentionRefs.length ? { mentions: mentionRefs } : {}),
+  });
+
+  return { '@context': 'https://schema.org', '@graph': graph };
 }

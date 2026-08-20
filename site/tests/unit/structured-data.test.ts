@@ -3,9 +3,10 @@ import {
   buildHowToJsonLd,
   buildSoftwareApplicationJsonLd,
   buildCollectionPageJsonLd,
-  buildEntityMentionsJsonLd,
+  buildWorkflowGraphJsonLd,
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
+import type { WorkflowEntityGraph } from '../../src/data/workflow-entity-graphs';
 
 describe('buildHowToJsonLd', () => {
   it('returns null when there are no steps', () => {
@@ -168,81 +169,165 @@ describe('buildCollectionPageJsonLd', () => {
   });
 });
 
-describe('buildEntityMentionsJsonLd', () => {
-  it('returns null when nothing in the text matches the dictionary', () => {
-    expect(
-      buildEntityMentionsJsonLd({
-        url: 'https://comfy.org/workflows/x/',
-        text: ['A workflow that does a thing.'],
-      })
-    ).toBeNull();
-  });
+describe('buildWorkflowGraphJsonLd', () => {
+  const sampleEntityGraph: WorkflowEntityGraph = {
+    identifier: 'uuid-123',
+    keywords: 'Image Generation, Test Workflow',
+    isRelatedTo: [
+      { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
+    ],
+    coreTopics: [{ id: 'e-video', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' }],
+    categories: [{ id: 'cat-technology', name: 'Technology' }],
+    entities: [
+      {
+        id: 'e-api',
+        name: 'API',
+        sameAs: 'https://en.wikipedia.org/wiki/API',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-standalone',
+        name: 'Standalone Term',
+        sameAs: 'https://en.wikipedia.org/wiki/Standalone',
+      },
+    ],
+  };
 
-  it('emits only about for a Core-only match', () => {
-    const result = buildEntityMentionsJsonLd({
-      url: 'https://comfy.org/workflows/x/',
-      text: ['Generate a video from an image.'],
-    });
-    expect(result).toMatchObject({
-      '@context': 'https://schema.org',
-      '@type': 'WebPage',
-      url: 'https://comfy.org/workflows/x/',
-    });
-    expect(result?.about).toEqual(
+  const baseParams = {
+    canonicalUrl: 'https://comfy.org/workflows/test-abc123/',
+    title: 'Test Workflow',
+    description: 'A test workflow description.',
+    image: 'https://cdn/test.mp4',
+    datePublished: '2026-08-12',
+    inLanguage: 'en',
+    breadcrumbItems: [
+      { name: 'Home', item: 'https://comfy.org' },
+      { name: 'Workflows', item: 'https://comfy.org/workflows/' },
+      { name: 'Test Workflow', item: 'https://comfy.org/workflows/test-abc123/' },
+    ],
+    entityGraph: sampleEntityGraph,
+  };
+
+  it('emits one @context/@graph object containing the sitewide + page-specific nodes', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    expect(result['@context']).toBe('https://schema.org');
+    expect(Array.isArray(result['@graph'])).toBe(true);
+    const types = result['@graph'].map((n: Record<string, unknown>) => n['@type']);
+    expect(types).toEqual(
       expect.arrayContaining([
-        { '@type': 'DefinedTerm', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
-        { '@type': 'DefinedTerm', name: 'Image', sameAs: 'https://en.wikipedia.org/wiki/Image' },
+        'WebSite',
+        'Organization',
+        'SoftwareApplication', // ComfyUI
+        'DefinedTerm',
+        'DefinedTermSet',
+        expect.arrayContaining(['SoftwareApplication', 'TechArticle']),
+        'BreadcrumbList',
+        'WebPage',
       ])
     );
-    expect(result).not.toHaveProperty('mentions');
   });
 
-  it('groups non-Core matches under mentions with inDefinedTermSet', () => {
-    const result = buildEntityMentionsJsonLd({
-      url: 'https://comfy.org/workflows/x/',
-      text: ['Uses HDR, with full API access and MPEG-4 output.'],
+  it('derives page-specific @ids from canonicalUrl', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const webpage = result['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    )!;
+    const workflow = result['@graph'].find(
+      (n: Record<string, unknown>) =>
+        Array.isArray(n['@type']) && (n['@type'] as string[]).includes('TechArticle')
+    )!;
+    expect(webpage['@id']).toBe('https://comfy.org/workflows/test-abc123/#webpage');
+    expect(workflow['@id']).toBe('https://comfy.org/workflows/test-abc123/#workflow');
+    expect(webpage.mainEntity).toEqual({
+      '@id': 'https://comfy.org/workflows/test-abc123/#workflow',
     });
-    expect(result?.mentions).toEqual(
-      expect.arrayContaining([
-        {
-          '@type': 'DefinedTerm',
-          name: 'High Dynamic Range',
-          sameAs: 'https://en.wikipedia.org/wiki/High_dynamic_range',
-          inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'Technology' },
-        },
-        {
-          '@type': 'DefinedTerm',
-          name: 'API',
-          sameAs: 'https://en.wikipedia.org/wiki/API',
-          inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'Technology' },
-        },
-        {
-          '@type': 'DefinedTerm',
-          name: 'MPEG-4',
-          sameAs: 'https://en.wikipedia.org/wiki/MPEG-4',
-          inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'Audio & Video' },
-        },
-      ])
+  });
+
+  it('about includes the workflow, core topics, and category refs; mentions includes every entity', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const webpage = result['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    )!;
+    expect(webpage.about).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#workflow' },
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-video' },
+      { '@id': 'https://comfy.org/workflows/test-abc123/#cat-technology' },
+    ]);
+    expect(webpage.mentions).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-api' },
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-standalone' },
+    ]);
+  });
+
+  it('only categorized entities appear in their DefinedTermSet.hasDefinedTerm, standalone entities get no inDefinedTermSet', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const category = result['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'DefinedTermSet'
+    )!;
+    expect(category.hasDefinedTerm).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-api' },
+    ]);
+
+    const apiTerm = result['@graph'].find((n: Record<string, unknown>) => n.name === 'API')!;
+    expect(apiTerm.inDefinedTermSet).toEqual({
+      '@id': 'https://comfy.org/workflows/test-abc123/#cat-technology',
+    });
+
+    const standaloneTerm = result['@graph'].find(
+      (n: Record<string, unknown>) => n.name === 'Standalone Term'
     );
-    expect(result).not.toHaveProperty('about');
+    expect(standaloneTerm).not.toHaveProperty('inDefinedTermSet');
   });
 
-  it('does not duplicate an entity matched by multiple phrases or repeated text', () => {
-    const result = buildEntityMentionsJsonLd({
-      url: 'https://comfy.org/workflows/x/',
-      text: ['4K output. 4K preview. 4K everywhere.'],
+  it('includes an FAQPage node and WebPage.hasPart only when faqItems are given', () => {
+    const withFaq = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      faqItems: [{ question: 'Q1?', answer: 'A1.' }],
     });
-    const fourK = result?.mentions?.filter((m: { name: string }) => m.name === '4K Resolution');
-    expect(fourK).toHaveLength(1);
+    const faqNode = withFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'FAQPage'
+    )!;
+    expect(faqNode).toBeTruthy();
+    expect(faqNode.mainEntity).toEqual([
+      { '@type': 'Question', name: 'Q1?', acceptedAnswer: { '@type': 'Answer', text: 'A1.' } },
+    ]);
+    const webpageWithFaq = withFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    )!;
+    expect(webpageWithFaq.hasPart).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#faq' },
+    ]);
+
+    const withoutFaq = buildWorkflowGraphJsonLd(baseParams);
+    expect(
+      withoutFaq['@graph'].find((n: Record<string, unknown>) => n['@type'] === 'FAQPage')
+    ).toBeUndefined();
+    const webpageNoFaq = withoutFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    );
+    expect(webpageNoFaq).not.toHaveProperty('hasPart');
   });
 
-  it('ignores empty/undefined text entries', () => {
-    expect(
-      buildEntityMentionsJsonLd({
-        url: 'https://comfy.org/workflows/x/',
-        text: [undefined, '', '   '],
-      })
-    ).toBeNull();
+  it('every @id in the graph is unique', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      faqItems: [{ question: 'Q1?', answer: 'A1.' }],
+    });
+    const ids = result['@graph'].map((n: Record<string, unknown>) => n['@id']).filter(Boolean);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('produces valid JSON through serializeJsonLdForScript', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const json = serializeJsonLdForScript(result);
+    expect(() =>
+      JSON.parse(
+        json
+          .replace(/\\u003c/g, '<')
+          .replace(/\\u003e/g, '>')
+          .replace(/\\u0026/g, '&')
+      )
+    ).not.toThrow();
   });
 });
 

@@ -1,0 +1,407 @@
+/**
+ * Curated `DefinedTerm`/`DefinedTermSet` entity data for `buildWorkflowGraphJsonLd`
+ * (see ../lib/structured-data.ts), keyed by the template's `name` field in
+ * templates/index.json. Transcribed verbatim from the client-provided schema
+ * recommendation — do not add entries by automatic detection or extrapolation.
+ * `id` values are local `@graph` fragment identifiers, resolved against the
+ * page's own canonical URL at build time (e.g. `{canonicalUrl}#e-api`).
+ */
+
+export interface WorkflowEntityCoreTopic {
+  id: string;
+  name: string;
+  sameAs: string;
+}
+
+export interface WorkflowEntityTerm {
+  id: string;
+  name: string;
+  sameAs: string;
+  /** Id of the DefinedTermSet this term belongs to, or omitted for a standalone mention. */
+  categoryId?: string;
+}
+
+export interface WorkflowEntityCategory {
+  id: string;
+  name: string;
+}
+
+export interface WorkflowEntityGraph {
+  /** Node/model identifier surfaced as the workflow node's `identifier`, if given. */
+  identifier?: string;
+  keywords?: string;
+  isRelatedTo?: { name: string; url: string }[];
+  /** Topic-level DefinedTerms referenced directly under `about` (not in a DefinedTermSet). */
+  coreTopics: WorkflowEntityCoreTopic[];
+  categories: WorkflowEntityCategory[];
+  /** All DefinedTerms referenced under `mentions` (both categorized and standalone). */
+  entities: WorkflowEntityTerm[];
+}
+
+export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
+  // LTX-2.5: Image to Video
+  video_ltx2_5_i2v: {
+    identifier: '6e397a2b-68f7-48f6-8930-f3a5491a163c',
+    keywords: 'Image Generation, Image to Video, LTX-2.5, ComfyUI Workflow',
+    isRelatedTo: [
+      { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
+      { name: 'Image to Video Workflows', url: 'https://comfy.org/workflows/tag/image-to-video/' },
+    ],
+    coreTopics: [
+      { id: 'e-video', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
+      { id: 'e-image', name: 'Image', sameAs: 'https://en.wikipedia.org/wiki/Image' },
+    ],
+    categories: [
+      { id: 'cat-technology', name: 'Technology' },
+      { id: 'cat-business', name: 'Business & Production' },
+      { id: 'cat-software', name: 'Software & Development' },
+      { id: 'cat-audiovideo', name: 'Audio & Video' },
+    ],
+    entities: [
+      {
+        id: 'e-api',
+        name: 'API',
+        sameAs: 'https://en.wikipedia.org/wiki/API',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-open-source',
+        name: 'Open-source software',
+        sameAs: 'https://en.wikipedia.org/wiki/Open-source_software',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-codec',
+        name: 'Codec',
+        sameAs: 'https://en.wikipedia.org/wiki/Codec',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-data',
+        name: 'Data',
+        sameAs: 'https://en.wikipedia.org/wiki/Data',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-accessibility',
+        name: 'Accessibility',
+        sameAs: 'https://en.wikipedia.org/wiki/Accessibility',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-hdr',
+        name: 'High Dynamic Range',
+        sameAs: 'https://en.wikipedia.org/wiki/High_dynamic_range',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-motion-interp',
+        name: 'Motion Interpolation',
+        sameAs: 'https://en.wikipedia.org/wiki/Motion_interpolation',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-image-format',
+        name: 'Image File Format',
+        sameAs: 'https://en.wikipedia.org/wiki/Image_file_format',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-footage',
+        name: 'Footage',
+        sameAs: 'https://en.wikipedia.org/wiki/Footage',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-camera',
+        name: 'Camera',
+        sameAs: 'https://en.wikipedia.org/wiki/Camera',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-rendering',
+        name: 'Rendering (Computer Graphics)',
+        sameAs: 'https://en.wikipedia.org/wiki/Rendering_(computer_graphics)',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-quality',
+        name: 'Quality (Business)',
+        sameAs: 'https://en.wikipedia.org/wiki/Quality_(business)',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-manufacturing',
+        name: 'Manufacturing',
+        sameAs: 'https://en.wikipedia.org/wiki/Manufacturing',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-prompt-eng',
+        name: 'Prompt Engineering',
+        sameAs: 'https://en.wikipedia.org/wiki/Prompt_engineering',
+        categoryId: 'cat-software',
+      },
+      {
+        id: 'e-library',
+        name: 'Library (Computing)',
+        sameAs: 'https://en.wikipedia.org/wiki/Library_(computing)',
+        categoryId: 'cat-software',
+      },
+      {
+        id: 'e-hardware',
+        name: 'Computer Hardware',
+        sameAs: 'https://en.wikipedia.org/wiki/Computer_hardware',
+        categoryId: 'cat-software',
+      },
+      {
+        id: 'e-gpu',
+        name: 'Graphics Processing Unit',
+        sameAs: 'https://en.wikipedia.org/wiki/Graphics_processing_unit',
+        categoryId: 'cat-software',
+      },
+      {
+        id: 'e-load',
+        name: 'Load (Computing)',
+        sameAs: 'https://en.wikipedia.org/wiki/Load_(computing)',
+        categoryId: 'cat-software',
+      },
+      {
+        id: 'e-display-res',
+        name: 'Display Resolution',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_resolution',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-pixel',
+        name: 'Pixel',
+        sameAs: 'https://en.wikipedia.org/wiki/Pixel',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-frame-rate',
+        name: 'Frame Rate',
+        sameAs: 'https://en.wikipedia.org/wiki/Frame_rate',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-aspect-ratio',
+        name: 'Display Aspect Ratio',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_aspect_ratio',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-subtitles',
+        name: 'Subtitles',
+        sameAs: 'https://en.wikipedia.org/wiki/Subtitles',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-sound',
+        name: 'Sound',
+        sameAs: 'https://en.wikipedia.org/wiki/Sound',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-1080p',
+        name: '1080p',
+        sameAs: 'https://en.wikipedia.org/wiki/1080p',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-motion-blur',
+        name: 'Motion Blur',
+        sameAs: 'https://en.wikipedia.org/wiki/Motion_blur',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-mpeg4',
+        name: 'MPEG-4',
+        sameAs: 'https://en.wikipedia.org/wiki/MPEG-4',
+        categoryId: 'cat-audiovideo',
+      },
+    ],
+  },
+
+  // Seedance 2.5: Reference to Video
+  api_seedance2_5_r2v: {
+    keywords:
+      'Image Generation, Partner Nodes, Video, Reference to Video, Seedance 2.5, ComfyUI Workflow',
+    isRelatedTo: [
+      { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
+      { name: 'Partner Node Workflows', url: 'https://comfy.org/workflows/tag/partner-nodes/' },
+      { name: 'Video Workflows', url: 'https://comfy.org/workflows/tag/video/' },
+      { name: 'Image to Video Workflows', url: 'https://comfy.org/workflows/tag/image-to-video/' },
+    ],
+    coreTopics: [
+      { id: 'e-reference', name: 'Reference', sameAs: 'https://en.wikipedia.org/wiki/Citation' },
+      { id: 'e-video', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
+    ],
+    categories: [
+      { id: 'cat-audiovideo', name: 'Audio & Video' },
+      { id: 'cat-business', name: 'Business & Production' },
+      { id: 'cat-technology', name: 'Technology' },
+      { id: 'cat-marketing', name: 'Marketing & Commerce' },
+    ],
+    entities: [
+      // Standalone mentions (no DefinedTermSet)
+      { id: 'e-audio', name: 'Audio', sameAs: 'https://en.wikipedia.org/wiki/Sound' },
+      { id: 'e-motion', name: 'Motion', sameAs: 'https://en.wikipedia.org/wiki/Motion_(physics)' },
+      {
+        id: 'e-style',
+        name: 'Visual Style',
+        sameAs: 'https://en.wikipedia.org/wiki/Style_(visual_arts)',
+      },
+      { id: 'e-rhythm', name: 'Rhythm', sameAs: 'https://en.wikipedia.org/wiki/Rhythm' },
+      { id: 'e-ecommerce', name: 'E-commerce', sameAs: 'https://en.wikipedia.org/wiki/E-commerce' },
+      {
+        id: 'e-product',
+        name: 'Product',
+        sameAs: 'https://en.wikipedia.org/wiki/Product_(business)',
+      },
+      {
+        id: 'e-advertising',
+        name: 'Brand Advertising',
+        sameAs: 'https://en.wikipedia.org/wiki/Advertising',
+      },
+      // Audio & Video
+      {
+        id: 'e-video-editing',
+        name: 'Video Editing',
+        sameAs: 'https://en.wikipedia.org/wiki/Video_editing',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-sound-effect',
+        name: 'Sound Effect',
+        sameAs: 'https://en.wikipedia.org/wiki/Sound_effect',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-cinematic',
+        name: 'Cinematic Techniques',
+        sameAs: 'https://en.wikipedia.org/wiki/Cinematic_techniques',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-1080p',
+        name: '1080p',
+        sameAs: 'https://en.wikipedia.org/wiki/1080p',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-motion-blur',
+        name: 'Motion Blur',
+        sameAs: 'https://en.wikipedia.org/wiki/Motion_blur',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-microphone',
+        name: 'Microphone',
+        sameAs: 'https://en.wikipedia.org/wiki/Microphone',
+        categoryId: 'cat-audiovideo',
+      },
+      // Business & Production
+      {
+        id: 'e-camera',
+        name: 'Camera',
+        sameAs: 'https://en.wikipedia.org/wiki/Camera',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-footage',
+        name: 'Footage',
+        sameAs: 'https://en.wikipedia.org/wiki/Footage',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-quality',
+        name: 'Quality (Business)',
+        sameAs: 'https://en.wikipedia.org/wiki/Quality_(business)',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-business-process',
+        name: 'Business Process',
+        sameAs: 'https://en.wikipedia.org/wiki/Business_process',
+        categoryId: 'cat-business',
+      },
+      // Technology
+      {
+        id: 'e-display-res',
+        name: 'Display Resolution',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_resolution',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-aspect-ratio',
+        name: 'Display Aspect Ratio',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_aspect_ratio',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-image-stabilization',
+        name: 'Image Stabilization',
+        sameAs: 'https://en.wikipedia.org/wiki/Image_stabilization',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-frame-rate',
+        name: 'Frame Rate',
+        sameAs: 'https://en.wikipedia.org/wiki/Frame_rate',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-4k',
+        name: '4K Resolution',
+        sameAs: 'https://en.wikipedia.org/wiki/4K_resolution',
+        categoryId: 'cat-technology',
+      },
+      // Marketing & Commerce
+      {
+        id: 'e-branding',
+        name: 'Branding',
+        sameAs: 'https://en.wikipedia.org/wiki/Brand',
+        categoryId: 'cat-marketing',
+      },
+      {
+        id: 'e-personalization',
+        name: 'Personalization',
+        sameAs: 'https://en.wikipedia.org/wiki/Personalization',
+        categoryId: 'cat-marketing',
+      },
+      {
+        id: 'e-product-demo',
+        name: 'Product Demonstration',
+        sameAs: 'https://en.wikipedia.org/wiki/Product_demonstration',
+        categoryId: 'cat-marketing',
+      },
+      {
+        id: 'e-digital-marketing',
+        name: 'Digital Marketing',
+        sameAs: 'https://en.wikipedia.org/wiki/Digital_marketing',
+        categoryId: 'cat-marketing',
+      },
+      {
+        id: 'e-target-market',
+        name: 'Target Market',
+        sameAs: 'https://en.wikipedia.org/wiki/Target_market',
+        categoryId: 'cat-marketing',
+      },
+      {
+        id: 'e-distribution',
+        name: 'Distribution',
+        sameAs: 'https://en.wikipedia.org/wiki/Distribution_(marketing)',
+        categoryId: 'cat-marketing',
+      },
+    ],
+  },
+
+  // MiniMax H3: Image to Video — pending complete client data (paste was
+  // truncated mid-graph); falls back to the pre-existing per-page scripts
+  // until the full block is available.
+};
+
+export function getWorkflowEntityGraph(templateName: string): WorkflowEntityGraph | undefined {
+  return WORKFLOW_ENTITY_GRAPHS[templateName];
+}
