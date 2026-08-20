@@ -62,3 +62,43 @@ describe('task-type acronyms', () => {
     expect(PRESERVE_TERMS).toContain('T2I');
   });
 });
+
+/**
+ * The assertions above read configuration. These run the validator, so they fail
+ * if enforcement ever stops consuming the lists, which is the failure that would
+ * silently undo this whole PR.
+ */
+describe('the reviewer\'s corrections at the validator boundary', () => {
+  const term = (english: string, rejected: string, accepted: string) => ({
+    english,
+    rejected,
+    accepted,
+  });
+  const cases = [
+    term('Queue Prompt to run it', 'Çalıştırmak için Sıraya Ekle', 'Çalıştırmak için İstemi Kuyruğa Al'),
+    term('Contact Sheet of every frame', 'Her karenin İletişim Tablosu', 'Her karenin Kontak Baskı sayfası'),
+    term('Video to Lineart / Canny', 'Videodan Çizgi Filme / Canny', 'Videodan Çizgi Sanatına / Canny'),
+  ];
+
+  it.each(cases)('holds the line on "$english"', ({ english, rejected, accepted }) => {
+    const source = { title: english } as unknown as WorkflowContent;
+
+    expect(
+      collectViolations('sid', 'tr', source, { title: rejected }, [], trOverrides).map((v) => v.kind)
+    ).toContain('glossary');
+    expect(collectViolations('sid', 'tr', source, { title: accepted }, [], trOverrides)).toEqual([]);
+  });
+
+  it.each(['t2i', 'i2v', 't2v', 'v2v', 'flf2v'])('shields %s from being dissolved', (acronym) => {
+    const source = { title: `${acronym} pipeline` } as unknown as WorkflowContent;
+
+    expect(
+      collectViolations('sid', 'tr', source, { title: 'm2g hattı' }, PRESERVE_TERMS, {}).map(
+        (v) => v.detail
+      )
+    ).toContain(`preserve-term "${acronym}" translated away`);
+    expect(
+      collectViolations('sid', 'tr', source, { title: `${acronym} hattı` }, PRESERVE_TERMS, {})
+    ).toEqual([]);
+  });
+});
