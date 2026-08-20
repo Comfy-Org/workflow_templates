@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { refreshSignoffRecords } from '../../scripts/i18n/refresh-signoff';
+import { bootstrapLocales, refreshSignoffRecords } from '../../scripts/i18n/refresh-signoff';
 import { __resetResolverCache, hashResolvedArtifact, resolveLocalizedWorkflow } from '../../src/lib/i18n/resolver';
 import type { Locale } from '../../src/lib/i18n/schema';
 
@@ -84,6 +84,43 @@ describe('refreshSignoffRecords', () => {
     // and an absent file is the same case, not a crash
     fs.rmSync(path.join(root, 'reviews', 'zh.json'));
     expect(run()).toBeNull();
+  });
+
+  it('grants a first wave only when the locale is listed in the policy', () => {
+    // The decoupling switch: a locale opted in gets its first sign-off from the
+    // pipeline, so indexing no longer waits on a native reviewer. Everything
+    // else about the bar is unchanged, and the default is still to refuse.
+    write('reviews/zh.json', {});
+    expect(refreshSignoffRecords('zh' as Locale, root, TODAY, false)).toBeNull();
+
+    __resetResolverCache();
+    const summary = refreshSignoffRecords('zh' as Locale, root, TODAY, true)!;
+    expect(summary.sealedNew).toEqual([A]);
+    const record = readReviews()[A];
+    // Honest attribution: no human read this, and the record says so rather
+    // than inheriting a reviewer name or reading as 'unknown'.
+    expect(record.reviewer).toBe('ai-review');
+    expect(record.automated).toBe(true);
+    expect(record.approvedScope).toContain('first wave granted by policy');
+    expect(record.approvedScope).toContain('no human pass');
+  });
+
+  it('still refuses untranslated pages when bootstrapping', () => {
+    // The other half of the gate is untouched: policy decides who may seal
+    // AI-clean text, never whether English fallback counts as translated.
+    write('content/zh.json', { [A]: { title: '标题' } }); // description missing
+    write('reviews/zh.json', {});
+
+    const summary = refreshSignoffRecords('zh' as Locale, root, TODAY, true)!;
+
+    expect(summary.sealedNew).toEqual([]);
+    expect(summary.refusedUntranslated).toEqual([A]);
+  });
+
+  it('reads the opted-in locales from the environment', () => {
+    expect([...bootstrapLocales('tr, fr')]).toEqual(['tr', 'fr']);
+    expect([...bootstrapLocales('')]).toEqual([]);
+    expect([...bootstrapLocales(undefined)]).toEqual([]);
   });
 
   it('leaves a record alone while its seal still matches', () => {
