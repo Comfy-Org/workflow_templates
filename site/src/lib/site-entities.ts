@@ -25,6 +25,7 @@ export function buildSiteEntityNodes(): Record<string, unknown>[] {
       '@id': ORGANIZATION_ID,
       name: 'Comfy Org',
       url: SITE_ORIGIN,
+      logo: `${SITE_ORIGIN}/favicon-96x96.png`,
       sameAs: [
         'https://github.com/Comfy-Org',
         'https://discord.gg/comfyorg',

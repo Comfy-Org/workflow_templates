@@ -279,6 +279,33 @@ describe('buildWorkflowGraphJsonLd', () => {
     expect(standaloneTerm).not.toHaveProperty('inDefinedTermSet');
   });
 
+  it('omits inDefinedTermSet when categoryId names a category not declared on the graph', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entityGraph: {
+        ...sampleEntityGraph,
+        entities: [
+          {
+            id: 'e-orphan',
+            name: 'Orphan Term',
+            sameAs: 'https://en.wikipedia.org/wiki/Orphan',
+            categoryId: 'cat-undeclared',
+          },
+        ],
+      },
+    });
+    const orphanTerm = result['@graph'].find(
+      (n: Record<string, unknown>) => n.name === 'Orphan Term'
+    )!;
+    expect(orphanTerm).not.toHaveProperty('inDefinedTermSet');
+    // No DefinedTermSet node for the undeclared category, either.
+    expect(
+      result['@graph'].find((n: Record<string, unknown>) =>
+        n['@id']?.toString().endsWith('#cat-undeclared')
+      )
+    ).toBeUndefined();
+  });
+
   it('includes an FAQPage node and WebPage.hasPart only when faqItems are given', () => {
     const withFaq = buildWorkflowGraphJsonLd({
       ...baseParams,
@@ -306,14 +333,24 @@ describe('buildWorkflowGraphJsonLd', () => {
       (n: Record<string, unknown>) => n['@type'] === 'WebPage'
     );
     expect(webpageNoFaq).not.toHaveProperty('hasPart');
+
+    const withEmptyFaq = buildWorkflowGraphJsonLd({ ...baseParams, faqItems: [] });
+    expect(
+      withEmptyFaq['@graph'].find((n: Record<string, unknown>) => n['@type'] === 'FAQPage')
+    ).toBeUndefined();
+    const webpageEmptyFaq = withEmptyFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    );
+    expect(webpageEmptyFaq).not.toHaveProperty('hasPart');
   });
 
-  it('every @id in the graph is unique', () => {
+  it('every node in the graph has an @id, and every @id is unique', () => {
     const result = buildWorkflowGraphJsonLd({
       ...baseParams,
       faqItems: [{ question: 'Q1?', answer: 'A1.' }],
     });
-    const ids = result['@graph'].map((n: Record<string, unknown>) => n['@id']).filter(Boolean);
+    const ids = result['@graph'].map((n: Record<string, unknown>) => n['@id']);
+    expect(ids.filter(Boolean)).toHaveLength(result['@graph'].length);
     expect(new Set(ids).size).toBe(ids.length);
   });
 

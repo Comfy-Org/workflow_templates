@@ -212,7 +212,15 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
 // Organization, ComfyUI, WebPage, workflow, DefinedTerm/DefinedTermSet, FAQ,
 // and breadcrumb — in place of the four separate scripts above. Every other
 // template (no curated data yet) keeps the scripts above unchanged.
-const entityGraph = getWorkflowEntityGraph(data.name);
+//
+// Gated on isIndexable: when not indexable, canonicalUrl points at the
+// English URL while this page's title/description/FAQ/inLanguage are still
+// localized (or held English-fallback) content. Building the graph in that
+// case would stamp @ids derived from the English URL with non-English values
+// — the same @ids the English route itself emits with English values,
+// producing two conflicting JSON-LD entities for one canonical URL. Held
+// pages keep the legacy per-field scripts (which don't share @ids) instead.
+const entityGraph = isIndexable ? getWorkflowEntityGraph(data.name) : undefined;
 const workflowGraphStructuredData = entityGraph
   ? buildWorkflowGraphJsonLd({
       canonicalUrl,

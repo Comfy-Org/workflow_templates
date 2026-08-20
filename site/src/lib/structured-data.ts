@@ -23,17 +23,22 @@ export interface BreadcrumbItem {
   item?: string;
 }
 
+/** Maps an ordered list of crumbs to schema.org `ListItem` entries. */
+function mapBreadcrumbItems(items: BreadcrumbItem[]) {
+  return items.map(({ name, item }, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name,
+    ...(item ? { item } : {}),
+  }));
+}
+
 /** schema.org `BreadcrumbList` JSON-LD from an ordered list of crumbs. */
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map(({ name, item }, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name,
-      ...(item ? { item } : {}),
-    })),
+    itemListElement: mapBreadcrumbItems(items),
   };
 }
 
@@ -241,14 +246,20 @@ export function buildWorkflowGraphJsonLd(params: {
     aboutRefs.push({ '@id': localId(category.id) });
   }
 
+  const categoryIds = new Set(entityGraph.categories.map((c) => c.id));
+
   const mentionRefs: { '@id': string }[] = [];
   for (const entity of entityGraph.entities) {
+    // Only emit inDefinedTermSet when categoryId names a category actually
+    // declared on this graph — otherwise the reference would dangle (no
+    // DefinedTermSet node behind it).
+    const hasDeclaredCategory = Boolean(entity.categoryId && categoryIds.has(entity.categoryId));
     graph.push({
       '@type': 'DefinedTerm',
       '@id': localId(entity.id),
       name: entity.name,
       sameAs: entity.sameAs,
-      ...(entity.categoryId ? { inDefinedTermSet: { '@id': localId(entity.categoryId) } } : {}),
+      ...(hasDeclaredCategory ? { inDefinedTermSet: { '@id': localId(entity.categoryId!) } } : {}),
     });
     mentionRefs.push({ '@id': localId(entity.id) });
   }
@@ -292,12 +303,7 @@ export function buildWorkflowGraphJsonLd(params: {
   graph.push({
     '@type': 'BreadcrumbList',
     '@id': breadcrumbId,
-    itemListElement: breadcrumbItems.map(({ name, item }, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name,
-      ...(item ? { item } : {}),
-    })),
+    itemListElement: mapBreadcrumbItems(breadcrumbItems),
   });
 
   const hasFaq = Boolean(faqItems?.length);
