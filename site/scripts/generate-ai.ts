@@ -17,7 +17,6 @@ interface TemplateInfo {
   requiresCustomNodes?: string[];
   usage?: number;
   size?: number;
-  vram?: number;
 }
 
 type ContentTemplate = 'tutorial' | 'showcase' | 'comparison' | 'breakthrough';

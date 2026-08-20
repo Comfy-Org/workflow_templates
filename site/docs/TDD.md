@@ -35,7 +35,6 @@ interface TemplateInfo {
   // Stats
   usage?: number; // Cloud usage count (for top 50 filtering)
   size?: number; // Total model size (bytes)
-  vram?: number; // VRAM requirement (bytes)
 }
 ```
 
