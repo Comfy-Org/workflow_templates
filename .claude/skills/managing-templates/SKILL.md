@@ -67,7 +67,7 @@ Add the object to the right category's `templates` array.
 
 **Required:** `name`, `description`, `mediaType` (`image` \| `video` \| `audio` \| `3d`), `mediaSubtype` (usually `webp`).
 
-**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `vram`, `searchRank`, `io`, `thumbnail`.
+**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `searchRank`, `io`, `thumbnail`.
 
 ```json
 {

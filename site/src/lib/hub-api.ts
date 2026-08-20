@@ -74,7 +74,6 @@ export interface HubWorkflowMetadata {
   media_subtype?: string;
   open_source?: boolean;
   size?: number;
-  vram?: number;
   // AI-generated content (written by backend task worker)
   extended_description?: string;
   meta_description?: string;
@@ -128,7 +127,6 @@ export interface HubWorkflowTemplateEntry {
   mediaType?: MediaType;
   mediaSubtype?: string;
   size?: number;
-  vram?: number;
   usage?: number;
   openSource?: boolean | null;
   username?: string;
