@@ -530,7 +530,14 @@ async function main(): Promise<void> {
     );
     if (Object.keys(localeContent).length === 0) continue;
 
-    const terminology = {
+    // The same selection the translator's prompt carries, read from the one
+    // artifact `pnpm i18n:glossary` writes. Reading the uncapped mirror here is
+    // what made the reviewer demand terms the translator was never given.
+    const effective = readJson<Record<string, string> | null>(
+      path.join(GLOSSARY_DIR, 'effective', `${locale}.json`),
+      null
+    );
+    const terminology = effective ?? {
       ...readJson<Record<string, string>>(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
       ...readJson<Record<string, string>>(
         path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
