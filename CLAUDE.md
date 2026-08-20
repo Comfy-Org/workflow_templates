@@ -179,7 +179,7 @@ Each template in `templates/index.json` has:
 - `mediaType` — "image" | "video" | "audio" | "3d"
 - `mediaSubtype` — Usually "webp"
 - `thumbnailVariant` — "compareSlider" | "hoverDissolve" | "hoverZoom" | "zoomHover" | null
-- `tags`, `models`, `logos`, `date`, `usage`, `size`, `vram`, `searchRank`
+- `tags`, `models`, `logos`, `date`, `usage`, `size`, `searchRank`
 - `tutorialUrl`, `openSource`, `requiresCustomNodes`, `io`
 
 ### Workflow JSON Files
