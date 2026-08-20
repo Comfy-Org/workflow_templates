@@ -44,6 +44,12 @@ import {
   type WorkflowContent,
 } from '../../src/lib/i18n/schema';
 
+/**
+ * Written when a wave has no reviewer name to inherit. It is a sentinel, not a
+ * name, so it must never be treated as one when picking the wave's reviewer.
+ */
+const UNKNOWN_REVIEWER = 'unknown';
+
 interface Verdicts {
   entries?: Record<string, { findings?: { field?: string; severity?: string }[] }>;
 }
@@ -105,7 +111,19 @@ export function refreshSignoffRecords(
   mayBootstrap: boolean = bootstrapLocales().has(locale)
 ): RefreshSummary | null {
   const reviewsPath = path.join(contentRoot, 'reviews', `${locale}.json`);
-  const reviews = readJson<LocaleReviews>(reviewsPath) ?? (mayBootstrap ? {} : null);
+  const storedReviews = readJson<LocaleReviews>(reviewsPath);
+  // A missing file and an unreadable one both read as null, but they mean
+  // opposite things here. Bootstrapping may start from no file; starting from a
+  // file it could not parse would rewrite the locale from `{}` and take every
+  // persisted sign-off with it.
+  if (!storedReviews && mayBootstrap && fs.existsSync(reviewsPath)) {
+    console.error(
+      `[i18n] signoff-refresh: [${locale}] reviews/${locale}.json exists but could not be ` +
+        `read; refusing to bootstrap over it.`
+    );
+    return null;
+  }
+  const reviews = storedReviews ?? (mayBootstrap ? {} : null);
   // Nothing to maintain and no permission to start a wave. Granting the first
   // sign-off is the native reviewer's act unless the locale is listed above.
   if (!reviews || (Object.keys(reviews).length === 0 && !mayBootstrap)) return null;
@@ -184,8 +202,13 @@ export function refreshSignoffRecords(
   // A bootstrapped locale has no wave to inherit a name from, and 'unknown'
   // would read as "somebody signed this off and we lost track of who". Name the
   // pipeline instead, so the audit trail says plainly that no human read it.
+  // 'unknown' is this function's own "no name available" sentinel, so letting it
+  // win the mode would make it masquerade as an inherited reviewer and skip the
+  // fallback below — a bootstrapped record would then claim a human wave that
+  // never happened. Filtered out so it can only ever be the fallback's answer.
   const waveReviewer =
-    mode(records.map((r) => r.reviewer)) || (mayBootstrap ? 'ai-review' : 'unknown');
+    mode(records.map((r) => r.reviewer).filter((name) => name && name !== UNKNOWN_REVIEWER)) ||
+    (mayBootstrap ? 'ai-review' : UNKNOWN_REVIEWER);
   const waveScope = mode(records.map((r) => baseScope(r.approvedScope)).filter(Boolean));
   const withWaveScope = (marker: string, base: string = waveScope): string =>
     base ? `${base}; ${marker}` : marker;

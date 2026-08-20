@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -117,10 +117,54 @@ describe('refreshSignoffRecords', () => {
     expect(summary.refusedUntranslated).toEqual([A]);
   });
 
-  it('reads the opted-in locales from the environment', () => {
+  it('refuses to bootstrap over an unreadable reviews file', () => {
+    // A parse failure and a missing file both read as null. Treating the first
+    // as an empty catalog would rewrite the locale from {} and take every
+    // persisted sign-off with it.
+    write('reviews/zh.json', {}); // creates the directory
+    fs.writeFileSync(path.join(root, 'reviews', 'zh.json'), '{ this is not json');
+
+    __resetResolverCache();
+    expect(refreshSignoffRecords('zh' as Locale, root, TODAY, true)).toBeNull();
+    // Still on disk, untouched.
+    expect(fs.readFileSync(path.join(root, 'reviews', 'zh.json'), 'utf-8')).toBe(
+      '{ this is not json'
+    );
+  });
+
+  it('does not inherit the unknown sentinel as a bootstrap reviewer', () => {
+    // 'unknown' is written when no name was available. If it wins the mode it
+    // skips the fallback, and the record claims a human wave that never ran.
+    write('reviews/zh.json', {
+      other: { ...staleRecord, reviewer: 'unknown' },
+    });
+    write('content/en.json', { [A]: english, other: english });
+    write('content/zh.json', {
+      [A]: { title: '标题', description: '描述' },
+      other: { title: '标题', description: '描述' },
+    });
+    write('manifest.json', { [A]: { content: 'h-current' }, other: { content: 'h-current' } });
+
+    __resetResolverCache();
+    refreshSignoffRecords('zh' as Locale, root, TODAY, true);
+
+    expect(readReviews()[A].reviewer).toBe('ai-review');
+  });
+
+  it('parses an explicit opt-in list', () => {
     expect([...bootstrapLocales('tr, fr')]).toEqual(['tr', 'fr']);
     expect([...bootstrapLocales('')]).toEqual([]);
+  });
+
+  it('falls back to the environment when given no value', () => {
+    // Stubbed in BOTH directions rather than asserting [] on the ambient value:
+    // a developer or a CI job with I18N_BOOTSTRAP_LOCALES set would otherwise
+    // fail a test that has nothing to do with their change.
+    vi.stubEnv('I18N_BOOTSTRAP_LOCALES', 'ru');
+    expect([...bootstrapLocales(undefined)]).toEqual(['ru']);
+    vi.stubEnv('I18N_BOOTSTRAP_LOCALES', '');
     expect([...bootstrapLocales(undefined)]).toEqual([]);
+    vi.unstubAllEnvs();
   });
 
   it('leaves a record alone while its seal still matches', () => {
