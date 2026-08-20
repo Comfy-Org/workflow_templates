@@ -9,6 +9,7 @@ import { t } from '../i18n/ui';
 import type { Locale } from '../i18n/config';
 import { localizeUrl } from '../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../config/site';
+import { detectEntities } from './entity-dictionary';
 
 export interface FaqItem {
   question: string;
@@ -182,5 +183,39 @@ export function buildSoftwareApplicationJsonLd(params: {
     operatingSystem: 'Windows, macOS, Linux',
     description: params.description,
     ...(featureList?.length ? { featureList } : {}),
+  };
+}
+
+/**
+ * schema.org `WebPage` `about`/`mentions` entity coverage — `DefinedTerm` nodes
+ * (with `sameAs` Wikipedia links) detected in the page's own copy, grouped into
+ * `DefinedTermSet` buckets. Returns `null` when nothing in `text` matches the
+ * dictionary (see entity-dictionary.ts), so the caller can skip emitting an empty
+ * graph, matching `buildFaqJsonLd`'s convention.
+ */
+export function buildEntityMentionsJsonLd(params: { url: string; text: (string | undefined)[] }) {
+  const combined = params.text.filter(Boolean).join('\n');
+  const matches = detectEntities(combined);
+  if (!matches.length) return null;
+
+  const about = matches
+    .filter((m) => m.category === 'Core')
+    .map((m) => ({ '@type': 'DefinedTerm', name: m.name, sameAs: m.sameAs }));
+  const mentions = matches
+    .filter((m) => m.category !== 'Core')
+    .map((m) => ({
+      '@type': 'DefinedTerm',
+      name: m.name,
+      sameAs: m.sameAs,
+      inDefinedTermSet: { '@type': 'DefinedTermSet', name: m.category },
+    }));
+
+  if (!about.length && !mentions.length) return null;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    url: params.url,
+    ...(about.length ? { about } : {}),
+    ...(mentions.length ? { mentions } : {}),
   };
 }

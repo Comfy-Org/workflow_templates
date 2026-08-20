@@ -3,6 +3,7 @@ import {
   buildHowToJsonLd,
   buildSoftwareApplicationJsonLd,
   buildCollectionPageJsonLd,
+  buildEntityMentionsJsonLd,
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
 
@@ -164,6 +165,84 @@ describe('buildCollectionPageJsonLd', () => {
     });
     expect(result).toHaveProperty('inLanguage', 'ja');
     expect(result.mainEntity).toMatchObject({ '@type': 'ItemList', numberOfItems: 1 });
+  });
+});
+
+describe('buildEntityMentionsJsonLd', () => {
+  it('returns null when nothing in the text matches the dictionary', () => {
+    expect(
+      buildEntityMentionsJsonLd({
+        url: 'https://comfy.org/workflows/x/',
+        text: ['A workflow that does a thing.'],
+      })
+    ).toBeNull();
+  });
+
+  it('emits only about for a Core-only match', () => {
+    const result = buildEntityMentionsJsonLd({
+      url: 'https://comfy.org/workflows/x/',
+      text: ['Generate a video from an image.'],
+    });
+    expect(result).toMatchObject({
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      url: 'https://comfy.org/workflows/x/',
+    });
+    expect(result?.about).toEqual(
+      expect.arrayContaining([
+        { '@type': 'DefinedTerm', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
+        { '@type': 'DefinedTerm', name: 'Image', sameAs: 'https://en.wikipedia.org/wiki/Image' },
+      ])
+    );
+    expect(result).not.toHaveProperty('mentions');
+  });
+
+  it('groups non-Core matches under mentions with inDefinedTermSet', () => {
+    const result = buildEntityMentionsJsonLd({
+      url: 'https://comfy.org/workflows/x/',
+      text: ['Uses HDR, with full API access and MPEG-4 output.'],
+    });
+    expect(result?.mentions).toEqual(
+      expect.arrayContaining([
+        {
+          '@type': 'DefinedTerm',
+          name: 'High Dynamic Range',
+          sameAs: 'https://en.wikipedia.org/wiki/High_dynamic_range',
+          inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'Technology' },
+        },
+        {
+          '@type': 'DefinedTerm',
+          name: 'API',
+          sameAs: 'https://en.wikipedia.org/wiki/API',
+          inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'Technology' },
+        },
+        {
+          '@type': 'DefinedTerm',
+          name: 'MPEG-4',
+          sameAs: 'https://en.wikipedia.org/wiki/MPEG-4',
+          inDefinedTermSet: { '@type': 'DefinedTermSet', name: 'Audio & Video' },
+        },
+      ])
+    );
+    expect(result).not.toHaveProperty('about');
+  });
+
+  it('does not duplicate an entity matched by multiple phrases or repeated text', () => {
+    const result = buildEntityMentionsJsonLd({
+      url: 'https://comfy.org/workflows/x/',
+      text: ['4K output. 4K preview. 4K everywhere.'],
+    });
+    const fourK = result?.mentions?.filter((m: { name: string }) => m.name === '4K Resolution');
+    expect(fourK).toHaveLength(1);
+  });
+
+  it('ignores empty/undefined text entries', () => {
+    expect(
+      buildEntityMentionsJsonLd({
+        url: 'https://comfy.org/workflows/x/',
+        text: [undefined, '', '   '],
+      })
+    ).toBeNull();
   });
 });
 

@@ -28,6 +28,7 @@ import {
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
+  buildEntityMentionsJsonLd,
 } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
 
@@ -161,6 +162,17 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   description: data.metaDescription || data.description,
 });
 
+const entityStructuredData = buildEntityMentionsJsonLd({
+  url: canonicalUrl,
+  text: [
+    data.title,
+    data.description,
+    data.extendedDescription,
+    ...data.tags,
+    ...data.suggestedUseCases,
+  ],
+});
+
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
 // Embed only the top-30 by usage for instant paint; the grid lazy-loads the full
 // catalog from grid.json (see WorkflowGrid `lazyFull`) so the page HTML stays small.
@@ -224,6 +236,15 @@ const toolbarLabels = buildToolbarLabels(locale);
     type="application/ld+json"
     set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
   />
+  {
+    entityStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(entityStructuredData)}
+      />
+    )
+  }
 
   <Fragment slot="footer">
     <SiteFooter />

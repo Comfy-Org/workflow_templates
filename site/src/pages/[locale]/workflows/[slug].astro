@@ -42,6 +42,7 @@ import {
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
+  buildEntityMentionsJsonLd,
 } from '../../../lib/structured-data';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { localizeUrl } from '../../../i18n/utils';
@@ -205,6 +206,17 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   description: data.metaDescription || data.description,
 });
 
+const entityStructuredData = buildEntityMentionsJsonLd({
+  url: canonicalUrl,
+  text: [
+    data.title,
+    data.description,
+    data.extendedDescription,
+    ...data.tags,
+    ...data.suggestedUseCases,
+  ],
+});
+
 // Related workflows come from the hub index, which is English only. The page's
 // own text is already resolved above, so without this the translated detail page
 // ends on a grid of English cards linking to pages that are themselves translated.
@@ -271,6 +283,15 @@ const toolbarLabels = buildToolbarLabels(locale);
         is:inline
         type="application/ld+json"
         set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
+  {
+    entityStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(entityStructuredData)}
       />
     )
   }
