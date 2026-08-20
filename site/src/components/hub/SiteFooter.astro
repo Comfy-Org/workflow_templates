@@ -3,39 +3,22 @@
  * SiteFooter - Blue footer matching the Figma design
  * Blue background, Comfy logo, social icons, 4-column link grid
  */
-import { LANGUAGES, DEFAULT_LOCALE, type Locale } from '../../i18n/config';
-import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
-import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
+import { footerLanguageLinks } from '../../lib/i18n/footer-languages';
 
-// Language switcher. Self-derives from the current URL so no caller
-// has to thread props: the current locale is the path's locale prefix, and the
-// un-prefixed base path is what every alternate URL is rebuilt from.
-const currentLocale = getLocaleFromPath(Astro.url.pathname);
-const strippedPath =
-  currentLocale === DEFAULT_LOCALE
-    ? Astro.url.pathname
-    : Astro.url.pathname.replace(new RegExp(`^/${currentLocale}`), '') || '/';
-const basePath = strippedPath.startsWith('/') ? strippedPath : `/${strippedPath}`;
+interface Props {
+  /**
+   * Whether localized variants of this route exist, mirroring the declaration
+   * the page already makes to HreflangTags. When false the switcher is not
+   * rendered, so an English-only route cannot offer a link to a 404.
+   */
+  localized?: boolean;
+}
 
-// Predicate-gated links: only offer languages whose pages are actually live.
-// INDEXABLE_LOCALES is the language-level rollout gate and is empty until a
-// language passes native review, so today this renders nothing and the footer
-// stays byte-identical. English is always offered as the return path. Per-page
-// refinement (a workflow untranslated in an otherwise-live locale) is handled by
-// the indexability predicate.
-const offeredLocales: Locale[] = [
-  DEFAULT_LOCALE,
-  ...INDEXABLE_LOCALES.filter((l) => l !== DEFAULT_LOCALE),
-];
-const languageLinks =
-  offeredLocales.length > 1
-    ? offeredLocales.map((locale) => ({
-        locale,
-        nativeName: LANGUAGES[locale].nativeName,
-        url: localizeUrl(basePath, locale),
-        isCurrent: locale === currentLocale,
-      }))
-    : [];
+const { localized = true } = Astro.props;
+
+// The current locale and every alternate URL derive from the path, so no caller
+// has to thread them; only the existence of localized variants is a page fact.
+const languageLinks = footerLanguageLinks(Astro.url.pathname, { localized });
 ---
 
 <footer class="bg-page text-content">
