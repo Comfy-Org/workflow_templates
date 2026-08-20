@@ -151,6 +151,7 @@ class TemplateSyncer:
         
     def load_i18n(self) -> Dict[str, Any]:
         """Load i18n data from JSON file"""
+        self.i18n_legacy_vram_status_removed = False
         if not self.i18n_file.exists():
             self.logger.warning(f"i18n file not found: {self.i18n_file}")
             return {
@@ -173,7 +174,9 @@ class TemplateSyncer:
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
                     "pending_templates": {},
                 }
-            data["_status"].pop("vram_size_update_templates", None)
+            if "vram_size_update_templates" in data["_status"]:
+                data["_status"].pop("vram_size_update_templates", None)
+                self.i18n_legacy_vram_status_removed = True
             if "templates" not in data:
                 data["templates"] = {}
             if "tags" not in data:
@@ -713,6 +716,7 @@ class TemplateSyncManager:
                 else:
                     # Add new template - also apply translations from i18n
                     new_template = template.copy()
+                    new_template.pop("vram", None)
                     
                     # Apply translations from i18n for new templates
                     for field in self.syncer.language_specific_fields:
@@ -1248,7 +1252,10 @@ class TemplateSyncManager:
 
         if changes_made:
             self.syncer.save_json_file(self.syncer.master_file, master_data)
-            self.syncer.logger.info(f"  💾 Removed vram from {len(stripped_templates)} templates in master file")
+            self.syncer.logger.info(
+                f"  💾 Removed vram from {len(stripped_templates)} templates "
+                f"in master file"
+            )
             for template in stripped_templates:
                 self.syncer.logger.info(f"    - {template}")
         else:
@@ -1493,12 +1500,18 @@ class TemplateSyncManager:
                 self.syncer.logger.info(f"\n💾 Saving translation tracking data...")
                 needs_save = True
 
+            if self.syncer.i18n_legacy_vram_status_removed:
+                needs_save = True
+
             if needs_save:
                 self.syncer.save_i18n()
                 self.syncer.logger.info(f"✅ Saved to: {self.syncer.i18n_file}")
 
             # Generate translation report
             self.generate_translation_report()
+        elif self.syncer.i18n_legacy_vram_status_removed:
+            self.syncer.save_i18n()
+            self.syncer.logger.info(f"✅ Saved to: {self.syncer.i18n_file}")
         
         # Print summary
         self.syncer.logger.info(f"\n📊 Synchronization Summary:")

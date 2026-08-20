@@ -66,7 +66,7 @@ Edit `scripts/data/i18n.json`:
 
 ## Notes
 
-- Script automatically syncs technical fields (models, date, size, usage, searchRank, requiresCustomNodes, includeOnDistributions, logos, openSource, status)
+- Script automatically syncs technical fields (models, date, size, username, mediaType, mediaSubtype, tutorialUrl, thumbnailVariant, requiresCustomNodes, usage, searchRank, includeOnDistributions, logos, io, isApp)
 - Only title and description require translation
 - Tags are auto-translated from `scripts/data/i18n.json`
 
