@@ -1,0 +1,203 @@
+{
+  "id": "62a02c67-ec9f-44fb-87bf-80521a40e37b",
+  "revision": 0,
+  "last_node_id": 24,
+  "last_link_id": 30,
+  "nodes": [
+    {
+      "id": 24,
+      "type": "MarkdownNote",
+      "pos": [
+        40,
+        -520
+      ],
+      "size": [
+        560,
+        440
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "How to use this template",
+      "properties": {},
+      "widgets_values": [
+        "## WaveSpeed AI — Universal Generation node\n\nThis template uses the **WaveSpeedAI Predictor** node, a single node that can call any of the 600+ models hosted on WaveSpeed AI (image, video, audio, 3D, ...).\n\n### Setup\n1. Install the custom node: **Manager → Custom Nodes Manager → \"WaveSpeed AI - Universal Generation\"** (registry id `wavespeed-comfyui`).\n2. Get an API key at [wavespeed.ai](https://wavespeed.ai) (free tier available).\n3. In ComfyUI: **Settings → WaveSpeed → API Key**, paste the key, then reload the page.\n\n> The first load after adding a key fetches the model catalog once (5-10s). After that, model and parameter lists are instant.\n\n### Using this workflow\nPick a different model straight from the node - the parameter fields rebuild themselves for that model, so the rest of the graph keeps working.\n\n[Node repository](https://github.com/WaveSpeedAI/wavespeed-comfyui) · [Docs](https://wavespeed.ai/docs)"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 22,
+      "type": "WaveSpeedAIPredictor",
+      "pos": [
+        40.0,
+        41.41
+      ],
+      "size": [
+        800,
+        814
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "output_url",
+          "type": "*",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WaveSpeedAIPredictor",
+        "cnr_id": "wavespeed-comfyui",
+        "ver": "2.0.4"
+      },
+      "widgets_values": [
+        "",
+        "/api/v3/alibaba/wan-2.6/text-to-video",
+        "{\"prompt\":\"A cinematic cyberpunk city at night in the rain.\\nA mysterious messenger walks slowly through neon-lit streets.\\nCamera slowly pushes forward, rain falling in slow motion,\\nneon reflections on wet ground, dramatic cinematic lighting,\\nrealistic motion, movie-quality visuals\",\"negative_prompt\":\"illustration, painting style, anime, low detail\",\"audio\":\"\",\"size\":\"1280*720\",\"duration\":5,\"shot_type\":\"single\",\"enable_prompt_expansion\":false,\"seed\":0}",
+        "{\"prompt\":{\"type\":\"string\"},\"negative_prompt\":{\"type\":\"string\"},\"audio\":{\"type\":\"string\"},\"size\":{\"type\":\"string\",\"options\":[\"1280*720\",\"720*1280\",\"1920*1080\",\"1080*1920\"]},\"duration\":{\"type\":\"string\",\"options\":[5,10,15]},\"shot_type\":{\"type\":\"string\",\"options\":[\"single\",\"multi\"]},\"enable_prompt_expansion\":{\"type\":\"boolean\"},\"seed\":{\"type\":\"number\"}}",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "wavespeed": {
+        "modelId": "alibaba/wan-2.6/text-to-video",
+        "apiPath": "",
+        "category": "text-to-video",
+        "parameterValues": {
+          "prompt": "A cinematic cyberpunk city at night in the rain.\nA mysterious messenger walks slowly through neon-lit streets.\nCamera slowly pushes forward, rain falling in slow motion,\nneon reflections on wet ground, dramatic cinematic lighting,\nrealistic motion, movie-quality visuals",
+          "negative_prompt": "illustration, painting style, anime, low detail",
+          "audio": "",
+          "size": "1280*720",
+          "duration": 5,
+          "shot_type": "single",
+          "enable_prompt_expansion": false,
+          "seed": 0
+        },
+        "requestJsonValue": "{\"prompt\":\"A cinematic cyberpunk city at night in the rain.\\nA mysterious messenger walks slowly through neon-lit streets.\\nCamera slowly pushes forward, rain falling in slow motion,\\nneon reflections on wet ground, dramatic cinematic lighting,\\nrealistic motion, movie-quality visuals\",\"negative_prompt\":\"illustration, painting style, anime, low detail\",\"audio\":\"\",\"size\":\"1280*720\",\"duration\":5,\"shot_type\":\"single\",\"enable_prompt_expansion\":false,\"seed\":0}",
+        "savedInputs": [
+          {
+            "name": "prompt",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "negative_prompt",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "audio",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "size",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "duration",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "shot_type",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "enable_prompt_expansion",
+            "type": "*",
+            "link": null
+          },
+          {
+            "name": "seed",
+            "type": "*",
+            "link": null
+          }
+        ]
+      }
+    },
+    {
+      "id": 23,
+      "type": "WaveSpeedAI Preview",
+      "pos": [
+        940.18,
+        40.0
+      ],
+      "size": [
+        677.640625,
+        480.90625
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "input_url",
+          "type": "*",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "WaveSpeedAI Preview",
+        "cnr_id": "wavespeed-comfyui",
+        "ver": "2.0.4"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "wavespeed_preview": {
+        "media_data": []
+      }
+    }
+  ],
+  "links": [
+    [
+      30,
+      22,
+      0,
+      23,
+      0,
+      "*"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.55,
+      "offset": [
+        120,
+        620
+      ]
+    },
+    "frontendVersion": "1.39.19",
+    "workflowRendererVersion": "Vue"
+  },
+  "version": 0.4
+}
