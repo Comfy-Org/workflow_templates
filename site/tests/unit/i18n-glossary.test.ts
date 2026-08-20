@@ -112,4 +112,34 @@ describe('selectGlossary', () => {
 
     expect(Object.keys(selected)).toEqual(['Workflow']);
   });
+
+  it('does not let a term score inside an identifier', () => {
+    // The corpus is full of names like `wan2_2`, so a term riding inside one
+    // would out-rank a term that is genuinely used in prose.
+    const selected = selectGlossary(
+      { AI: 'ИИ', Workflow: 'Рабочий процесс' },
+      {},
+      JSON.stringify({
+        a: { title: 'AI2 and AI_model and 3AI', description: 'the workflow' },
+      }),
+      1
+    );
+
+    expect(Object.keys(selected)).toEqual(['Workflow']);
+  });
+
+  it('prefers the longer term when two are equally frequent', () => {
+    // The tie-break is the only thing choosing between them, so without this the
+    // `b.en.length` comparison can be dropped or reversed and nothing fails.
+    // Disjoint terms, so neither can score inside the other and the counts are
+    // genuinely equal at one each.
+    const selected = selectGlossary(
+      { Seed: 'Сид', Sampler: 'Сэмплер' },
+      {},
+      JSON.stringify({ a: { title: 'Seed', description: 'Sampler' } }),
+      1
+    );
+
+    expect(Object.keys(selected)).toEqual(['Sampler']);
+  });
 });

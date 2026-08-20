@@ -146,9 +146,12 @@ export function selectGlossary(
 ): Record<string, string> {
   const frequency = (term: string): number => {
     if (!term) return 0;
-    // Whole-term matches only: "AI" should not score inside "Explain".
+    // Whole-term matches only: "AI" should not score inside "Explain", nor inside
+    // "AI2" or "AI_model" — this corpus is full of identifiers like `wan2_2`, so
+    // digits and underscores have to count as term characters or a short term
+    // inflates its own frequency and displaces a genuinely common one at the cap.
     const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return (corpus.match(new RegExp(`(?<![A-Za-z])${escaped}(?![A-Za-z])`, 'gi')) ?? []).length;
+    return (corpus.match(new RegExp(`(?<!\\w)${escaped}(?!\\w)`, 'gi')) ?? []).length;
   };
 
   const ranked = Object.entries(mirror)
