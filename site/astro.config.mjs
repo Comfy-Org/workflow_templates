@@ -15,7 +15,11 @@ import {
 } from './src/lib/workflow-pages/model-groups.ts';
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
 import { useCasePageHasGrid } from './src/lib/workflow-pages/use-case-resolver.ts';
-import { buildCustomPages, loadHubTagSlugs } from './src/lib/sitemap-custom-pages.ts';
+import {
+  buildCustomPages,
+  loadHubCategories,
+  loadHubTagSlugs,
+} from './src/lib/sitemap-custom-pages.ts';
 import {
   modelContentPasses,
   useCaseContentPasses,
@@ -146,6 +150,7 @@ const customPages = buildCustomPages({
   indexableLocales,
   indexableModelSlugs,
   tagSlugs: loadHubTagSlugs(),
+  categoryTypes: loadHubCategories(),
 });
 
 // https://astro.build/config

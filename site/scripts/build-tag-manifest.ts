@@ -24,11 +24,12 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { listWorkflowIndex } from '../src/lib/hub-api';
+import { listWorkflowIndex, mediaTypeFromTagNames } from '../src/lib/hub-api';
 import { readEnv } from '../src/lib/ranking';
 import { tagSlug } from '../src/lib/tag-aliases';
 
 const manifestPath = path.join(process.cwd(), 'src/data/hub-tag-slugs.generated.json');
+const categoryPath = path.join(process.cwd(), 'src/data/hub-categories.generated.json');
 
 async function main(): Promise<void> {
   let entries;
@@ -62,9 +63,25 @@ async function main(): Promise<void> {
     ),
   ].sort();
 
+  // The categories that actually have workflows, by the same rule the routes
+  // classify with. The category route 404s an empty type exactly as the tag
+  // route 404s an empty tag, so the sitemap has to be told which ones exist
+  // rather than assuming all four always do. This is also what makes the
+  // classification source swappable: when the hub populates `mediaType` on every
+  // entry, this list keeps following it and no sitemap change is needed.
+  const categories = [
+    ...new Set(
+      entries.map((entry) => entry.mediaType || mediaTypeFromTagNames(entry.tags || []))
+    ),
+  ].sort();
+
   mkdirSync(path.dirname(manifestPath), { recursive: true });
   writeFileSync(manifestPath, `${JSON.stringify(slugs, null, 2)}\n`);
-  console.log(`Wrote ${slugs.length} tag slugs from ${entries.length} hub entries.`);
+  writeFileSync(categoryPath, `${JSON.stringify(categories, null, 2)}\n`);
+  console.log(
+    `Wrote ${slugs.length} tag slugs and ${categories.length} categories ` +
+      `(${categories.join(', ')}) from ${entries.length} hub entries.`
+  );
 }
 
 main().catch((err) => {

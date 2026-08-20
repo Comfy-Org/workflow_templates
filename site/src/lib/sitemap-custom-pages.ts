@@ -16,7 +16,12 @@ import path from 'node:path';
 import { DEFAULT_LOCALE } from '../i18n/config';
 
 /** The media types `workflows/category/[type]` serves. Mirrors `MediaType`. */
-const CATEGORY_TYPES = ['image', 'video', 'audio', '3d'] as const;
+const CATEGORY_TYPES: readonly string[] = ['image', 'video', 'audio', '3d'];
+
+const CATEGORY_MANIFEST_PATH = path.join(
+  process.cwd(),
+  'src/data/hub-categories.generated.json'
+);
 
 /**
  * Written by `pnpm build:tag-manifest` during prebuild; gitignored, like the
@@ -46,6 +51,27 @@ export function loadHubTagSlugs(manifestPath: string = TAG_MANIFEST_PATH): strin
   }
 }
 
+/**
+ * The categories the hub index actually fills, or none.
+ *
+ * Same contract as `loadHubTagSlugs`, and same reason: the category route 404s a
+ * type with no matching workflows, so advertising all four unconditionally puts a
+ * 404 in the sitemap the moment one empties. Nothing is guessed from the synced
+ * templates; an absent manifest means no localized category URLs this build.
+ */
+export function loadHubCategories(manifestPath: string = CATEGORY_MANIFEST_PATH): string[] {
+  if (!fs.existsSync(manifestPath)) return [];
+  try {
+    const parsed: unknown = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (type): type is string => typeof type === 'string' && CATEGORY_TYPES.includes(type)
+    );
+  } catch {
+    return [];
+  }
+}
+
 export interface CustomPagesInput {
   /** Absolute origin, no trailing slash (e.g. `https://comfy.org`). */
   siteOrigin: string;
@@ -57,6 +83,8 @@ export interface CustomPagesInput {
   indexableModelSlugs: Iterable<string>;
   /** Tag slugs from `loadHubTagSlugs()`. */
   tagSlugs: Iterable<string>;
+  /** Non-empty category types from `loadHubCategories()`. */
+  categoryTypes: Iterable<string>;
 }
 
 /**
@@ -81,6 +109,7 @@ export function buildCustomPages({
   indexableLocales,
   indexableModelSlugs,
   tagSlugs,
+  categoryTypes,
 }: CustomPagesInput): string[] {
   const origin = siteOrigin.replace(/\/$/, '');
   const modelSlugs = [...indexableModelSlugs];
@@ -99,7 +128,7 @@ export function buildCustomPages({
       const base = `${origin}/${locale}/workflows`;
       return [
         `${base}/`,
-        ...CATEGORY_TYPES.map((type) => `${base}/category/${type}/`),
+        ...[...categoryTypes].map((type) => `${base}/category/${type}/`),
         ...[...tagSlugs].map((slug) => `${base}/tag/${slug}/`),
         // Model pages carry a second gate (content quality), already resolved
         // into `indexableModelSlugs`; a locale must not advertise what English

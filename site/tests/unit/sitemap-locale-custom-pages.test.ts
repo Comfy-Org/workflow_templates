@@ -20,7 +20,11 @@ import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { buildCustomPages, loadHubTagSlugs } from '../../src/lib/sitemap-custom-pages';
+import {
+  buildCustomPages,
+  loadHubCategories,
+  loadHubTagSlugs,
+} from '../../src/lib/sitemap-custom-pages';
 
 const base = {
   siteOrigin: 'https://comfy.org',
@@ -28,6 +32,7 @@ const base = {
   indexableLocales: ['zh'],
   indexableModelSlugs: ['wan', 'flux'],
   tagSlugs: ['character', 'video'],
+  categoryTypes: ['image', 'video', 'audio', '3d'],
 };
 
 describe('buildCustomPages', () => {
@@ -106,6 +111,56 @@ describe('buildCustomPages', () => {
     for (const url of buildCustomPages(base)) {
       expect(url.endsWith('/'), `${url} has no trailing slash`).toBe(true);
     }
+  });
+});
+
+describe('category gating', () => {
+  it('advertises only the categories the hub index fills', () => {
+    // The category route 404s a type with no matching workflows, exactly as the
+    // tag route does, so an empty type must not reach the sitemap.
+    const pages = buildCustomPages({ ...base, categoryTypes: ['image', 'audio'] });
+
+    expect(pages).toContain('https://comfy.org/zh/workflows/category/image/');
+    expect(pages).toContain('https://comfy.org/zh/workflows/category/audio/');
+    expect(pages).not.toContain('https://comfy.org/zh/workflows/category/video/');
+    expect(pages).not.toContain('https://comfy.org/zh/workflows/category/3d/');
+  });
+
+  it('advertises no category when the manifest is missing', () => {
+    const pages = buildCustomPages({ ...base, categoryTypes: [] });
+
+    expect(pages.some((url) => url.includes('/workflows/category/'))).toBe(false);
+    expect(pages).toContain('https://comfy.org/zh/workflows/');
+  });
+});
+
+describe('loadHubCategories', () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-cats-'));
+
+  it('returns nothing when prebuild has not written the manifest', () => {
+    expect(loadHubCategories(path.join(tmp, 'absent.json'))).toEqual([]);
+  });
+
+  it('reads the category list a build wrote', () => {
+    const file = path.join(tmp, 'cats.json');
+    fs.writeFileSync(file, JSON.stringify(['3d', 'image', 'video']));
+
+    expect(loadHubCategories(file)).toEqual(['3d', 'image', 'video']);
+  });
+
+  it('drops anything that is not a category the route serves', () => {
+    // A type with no route would be a sitemap entry pointing at a 404.
+    const file = path.join(tmp, 'unknown.json');
+    fs.writeFileSync(file, JSON.stringify(['image', 'text', 7, null, 'video']));
+
+    expect(loadHubCategories(file)).toEqual(['image', 'video']);
+  });
+
+  it('degrades to nothing rather than throwing on a corrupt manifest', () => {
+    const file = path.join(tmp, 'corrupt.json');
+    fs.writeFileSync(file, '{not json');
+
+    expect(loadHubCategories(file)).toEqual([]);
   });
 });
 
