@@ -397,9 +397,170 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
     ],
   },
 
-  // MiniMax H3: Image to Video — pending complete client data (paste was
-  // truncated mid-graph); falls back to the pre-existing per-page scripts
-  // until the full block is available.
+  // MiniMax H3: Image to Video
+  video_minimax_h3_i2v: {
+    keywords: 'Image Generation, Video, Image to Video, MiniMax H3, ComfyUI Workflow',
+    isRelatedTo: [
+      { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
+      { name: 'Video Workflows', url: 'https://comfy.org/workflows/tag/video/' },
+      { name: 'Image to Video Workflows', url: 'https://comfy.org/workflows/tag/image-to-video/' },
+    ],
+    coreTopics: [
+      { id: 'e-workflow', name: 'Workflow', sameAs: 'https://en.wikipedia.org/wiki/Workflow' },
+      { id: 'e-video', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
+      { id: 'e-image', name: 'Image', sameAs: 'https://en.wikipedia.org/wiki/Image' },
+    ],
+    categories: [
+      { id: 'cat-audiovideo', name: 'Audio & Video' },
+      { id: 'cat-technology', name: 'Technology' },
+      { id: 'cat-business', name: 'Business' },
+      { id: 'cat-files', name: 'Files & Storage' },
+    ],
+    entities: [
+      // Standalone mentions (no DefinedTermSet)
+      { id: 'e-audio', name: 'Audio', sameAs: 'https://en.wikipedia.org/wiki/Sound' },
+      {
+        id: 'e-resolution',
+        name: 'Resolution',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_resolution',
+      },
+      { id: 'e-mp4', name: 'MP4', sameAs: 'https://en.wikipedia.org/wiki/MPEG-4' },
+      { id: 'e-clip', name: 'Clip', sameAs: 'https://en.wikipedia.org/wiki/Video_clip' },
+      { id: 'e-model', name: 'Model', sameAs: 'https://en.wikipedia.org/wiki/Model' },
+      { id: 'e-input', name: 'Input', sameAs: 'https://en.wikipedia.org/wiki/Information' },
+      { id: 'e-reference', name: 'Reference', sameAs: 'https://en.wikipedia.org/wiki/Citation' },
+      // Audio & Video
+      {
+        id: 'e-video-editing',
+        name: 'Video Editing',
+        sameAs: 'https://en.wikipedia.org/wiki/Video_editing',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-1080p',
+        name: '1080p',
+        sameAs: 'https://en.wikipedia.org/wiki/1080p',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-motion-graphics',
+        name: 'Motion Graphics',
+        sameAs: 'https://en.wikipedia.org/wiki/Motion_graphics',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-digital-audio',
+        name: 'Digital Audio',
+        sameAs: 'https://en.wikipedia.org/wiki/Digital_audio',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-stereo-sound',
+        name: 'Stereophonic Sound',
+        sameAs: 'https://en.wikipedia.org/wiki/Stereophonic_sound',
+        categoryId: 'cat-audiovideo',
+      },
+      {
+        id: 'e-aspect-ratio',
+        name: 'Display Aspect Ratio',
+        sameAs: 'https://en.wikipedia.org/wiki/Display_aspect_ratio',
+        categoryId: 'cat-audiovideo',
+      },
+      // Technology
+      {
+        id: 'e-api',
+        name: 'API',
+        sameAs: 'https://en.wikipedia.org/wiki/API',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-point-click',
+        name: 'Point and Click',
+        sameAs: 'https://en.wikipedia.org/wiki/Point_and_click',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-data',
+        name: 'Data',
+        sameAs: 'https://en.wikipedia.org/wiki/Data',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-infosec',
+        name: 'Information Security',
+        sameAs: 'https://en.wikipedia.org/wiki/Information_security',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-pixel',
+        name: 'Pixel',
+        sameAs: 'https://en.wikipedia.org/wiki/Pixel',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-frame-rate',
+        name: 'Frame Rate',
+        sameAs: 'https://en.wikipedia.org/wiki/Frame_rate',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-4k',
+        name: '4K Resolution',
+        sameAs: 'https://en.wikipedia.org/wiki/4K_resolution',
+        categoryId: 'cat-technology',
+      },
+      // Business
+      {
+        id: 'e-webcam',
+        name: 'Webcam',
+        sameAs: 'https://en.wikipedia.org/wiki/Webcam',
+        categoryId: 'cat-business',
+      },
+      {
+        id: 'e-website',
+        name: 'Website',
+        sameAs: 'https://en.wikipedia.org/wiki/Website',
+        categoryId: 'cat-business',
+      },
+      // Files & Storage
+      {
+        id: 'e-jpeg',
+        name: 'JPEG',
+        sameAs: 'https://en.wikipedia.org/wiki/JPEG',
+        categoryId: 'cat-files',
+      },
+      {
+        id: 'e-png',
+        name: 'PNG',
+        sameAs: 'https://en.wikipedia.org/wiki/PNG',
+        categoryId: 'cat-files',
+      },
+      {
+        id: 'e-download',
+        name: 'Download',
+        sameAs: 'https://en.wikipedia.org/wiki/Download',
+        categoryId: 'cat-files',
+      },
+      {
+        id: 'e-url',
+        name: 'URL',
+        sameAs: 'https://en.wikipedia.org/wiki/URL',
+        categoryId: 'cat-files',
+      },
+      {
+        id: 'e-data-center',
+        name: 'Data Center',
+        sameAs: 'https://en.wikipedia.org/wiki/Data_center',
+        categoryId: 'cat-files',
+      },
+      {
+        id: 'e-file-system',
+        name: 'File System',
+        sameAs: 'https://en.wikipedia.org/wiki/File_system',
+        categoryId: 'cat-files',
+      },
+    ],
+  },
 };
 
 export function getWorkflowEntityGraph(templateName: string): WorkflowEntityGraph | undefined {
