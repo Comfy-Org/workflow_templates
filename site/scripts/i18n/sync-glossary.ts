@@ -55,7 +55,16 @@ export const PRESERVE_TERMS: string[] = [
   'AnimateDiff',
   'RealESRGAN',
   'T5',
+  // Task-type acronyms as they appear in workflow names. Case matters: matching
+  // is case-sensitive, so 'T2I' alone left the lowercase 't2i' that the titles
+  // actually use unshielded, and a Turkish reviewer found it rendered as 'm2g'.
+  // The sibling acronyms were never listed in any casing.
   'T2I',
+  't2i',
+  'i2v',
+  't2v',
+  'v2v',
+  'flf2v',
   'safetensors',
   'GGUF',
   // Model families (mirror of FAMILY_RULES labels)
