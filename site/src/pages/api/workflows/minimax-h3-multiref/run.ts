@@ -109,7 +109,7 @@ export const POST: APIRoute = async ({ request }) => {
           contentType: field.type || 'image/png',
         });
       } else {
-        const fallback = path.join(EXAMPLE_DIR, `kf_${slot.index}.png`);
+        const fallback = path.join(EXAMPLE_DIR, `kf_${slot.index}.webp`);
         if (!existsSync(fallback)) {
           return jsonResponse(
             { error: `Reference ${slot.index} was not supplied and no bundled example exists.` },
