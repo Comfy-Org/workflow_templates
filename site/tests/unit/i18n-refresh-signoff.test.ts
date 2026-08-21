@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { refreshSignoffRecords } from '../../scripts/i18n/refresh-signoff';
+import { bootstrapLocales, refreshSignoffRecords } from '../../scripts/i18n/refresh-signoff';
 import { __resetResolverCache, hashResolvedArtifact, resolveLocalizedWorkflow } from '../../src/lib/i18n/resolver';
 import type { Locale } from '../../src/lib/i18n/schema';
 
@@ -84,6 +84,87 @@ describe('refreshSignoffRecords', () => {
     // and an absent file is the same case, not a crash
     fs.rmSync(path.join(root, 'reviews', 'zh.json'));
     expect(run()).toBeNull();
+  });
+
+  it('grants a first wave only when the locale is listed in the policy', () => {
+    // The decoupling switch: a locale opted in gets its first sign-off from the
+    // pipeline, so indexing no longer waits on a native reviewer. Everything
+    // else about the bar is unchanged, and the default is still to refuse.
+    write('reviews/zh.json', {});
+    expect(refreshSignoffRecords('zh' as Locale, root, TODAY, false)).toBeNull();
+
+    __resetResolverCache();
+    const summary = refreshSignoffRecords('zh' as Locale, root, TODAY, true)!;
+    expect(summary.sealedNew).toEqual([A]);
+    const record = readReviews()[A];
+    // Honest attribution: no human read this, and the record says so rather
+    // than inheriting a reviewer name or reading as 'unknown'.
+    expect(record.reviewer).toBe('ai-review');
+    expect(record.automated).toBe(true);
+    expect(record.approvedScope).toContain('first wave granted by policy');
+    expect(record.approvedScope).toContain('no human pass');
+  });
+
+  it('still refuses untranslated pages when bootstrapping', () => {
+    // The other half of the gate is untouched: policy decides who may seal
+    // AI-clean text, never whether English fallback counts as translated.
+    write('content/zh.json', { [A]: { title: '标题' } }); // description missing
+    write('reviews/zh.json', {});
+
+    const summary = refreshSignoffRecords('zh' as Locale, root, TODAY, true)!;
+
+    expect(summary.sealedNew).toEqual([]);
+    expect(summary.refusedUntranslated).toEqual([A]);
+  });
+
+  it('refuses to bootstrap over an unreadable reviews file', () => {
+    // A parse failure and a missing file both read as null. Treating the first
+    // as an empty catalog would rewrite the locale from {} and take every
+    // persisted sign-off with it.
+    write('reviews/zh.json', {}); // creates the directory
+    fs.writeFileSync(path.join(root, 'reviews', 'zh.json'), '{ this is not json');
+
+    __resetResolverCache();
+    expect(refreshSignoffRecords('zh' as Locale, root, TODAY, true)).toBeNull();
+    // Still on disk, untouched.
+    expect(fs.readFileSync(path.join(root, 'reviews', 'zh.json'), 'utf-8')).toBe(
+      '{ this is not json'
+    );
+  });
+
+  it('does not inherit the unknown sentinel as a bootstrap reviewer', () => {
+    // 'unknown' is written when no name was available. If it wins the mode it
+    // skips the fallback, and the record claims a human wave that never ran.
+    write('reviews/zh.json', {
+      other: { ...staleRecord, reviewer: 'unknown' },
+    });
+    write('content/en.json', { [A]: english, other: english });
+    write('content/zh.json', {
+      [A]: { title: '标题', description: '描述' },
+      other: { title: '标题', description: '描述' },
+    });
+    write('manifest.json', { [A]: { content: 'h-current' }, other: { content: 'h-current' } });
+
+    __resetResolverCache();
+    refreshSignoffRecords('zh' as Locale, root, TODAY, true);
+
+    expect(readReviews()[A].reviewer).toBe('ai-review');
+  });
+
+  it('parses an explicit opt-in list', () => {
+    expect([...bootstrapLocales('tr, fr')]).toEqual(['tr', 'fr']);
+    expect([...bootstrapLocales('')]).toEqual([]);
+  });
+
+  it('falls back to the environment when given no value', () => {
+    // Stubbed in BOTH directions rather than asserting [] on the ambient value:
+    // a developer or a CI job with I18N_BOOTSTRAP_LOCALES set would otherwise
+    // fail a test that has nothing to do with their change.
+    vi.stubEnv('I18N_BOOTSTRAP_LOCALES', 'ru');
+    expect([...bootstrapLocales(undefined)]).toEqual(['ru']);
+    vi.stubEnv('I18N_BOOTSTRAP_LOCALES', '');
+    expect([...bootstrapLocales(undefined)]).toEqual([]);
+    vi.unstubAllEnvs();
   });
 
   it('leaves a record alone while its seal still matches', () => {
