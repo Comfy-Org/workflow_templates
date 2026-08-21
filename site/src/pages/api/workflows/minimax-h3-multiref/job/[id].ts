@@ -2,8 +2,8 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { ComfyLow } from '@comfyorg/sdk/low';
-import type { JobOutput } from '@/lib/demos/mmh3/config';
-import { comfyBaseUrl, comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
+import { DEPLOYMENT_URL, type JobOutput } from '@/lib/demos/mmh3/config';
+import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
 
 export const GET: APIRoute = async ({ params }) => {
   const id = params.id;
@@ -31,7 +31,7 @@ export const GET: APIRoute = async ({ params }) => {
     let queuePosition: number | null = null;
     let progress: { value: number; message?: string | null } | null = null;
     try {
-      const raw = await new ComfyLow(comfyBaseUrl()).getJob(id);
+      const raw = await new ComfyLow(DEPLOYMENT_URL).getJob(id);
       queuePosition = raw.queue_position;
       progress = raw.progress
         ? { value: raw.progress.value, message: raw.progress.message ?? null }

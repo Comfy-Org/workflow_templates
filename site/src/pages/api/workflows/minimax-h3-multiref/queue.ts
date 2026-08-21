@@ -1,7 +1,7 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import type { QueueState } from '@/lib/demos/mmh3/config';
+import { DEPLOYMENT_URL, type QueueState } from '@/lib/demos/mmh3/config';
 import { describeError, jsonResponse } from '@/lib/demos/mmh3/server';
 
 /** Serverless deployments are addressed as `dep-<uuid>.run.comfy.app`. */
@@ -16,7 +16,6 @@ function deploymentIdFromBaseUrl(baseUrl: string): string | null {
 }
 
 export const GET: APIRoute = async () => {
-  const baseUrl = import.meta.env.COMFY_BASE_URL ?? process.env.COMFY_BASE_URL ?? '';
   // Only the deploy control plane may need a credential; the deployment itself
   // is whitelisted. Omitted when unset, rather than sent empty.
   const apiKey = import.meta.env.COMFY_DEPLOY_API_KEY ?? process.env.COMFY_DEPLOY_API_KEY ?? '';
@@ -33,7 +32,7 @@ export const GET: APIRoute = async () => {
 
   if (!deployApi) return unavailable('COMFY_DEPLOY_API_URL is not set');
 
-  const id = import.meta.env.COMFY_DEPLOYMENT_ID ?? deploymentIdFromBaseUrl(baseUrl);
+  const id = deploymentIdFromBaseUrl(DEPLOYMENT_URL);
   if (!id) return unavailable('Could not derive a deployment id');
 
   try {

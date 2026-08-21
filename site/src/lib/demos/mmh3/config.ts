@@ -7,6 +7,14 @@
  * (mmh3_motion_context_3_keyframes_i2v v0.2): one clip, three references.
  */
 
+/**
+ * The deployment this page runs against. Hard-coded rather than configured:
+ * it is pinned to this page's workflow (the graph below only makes sense on a
+ * deployment that has the H3 nodes and models), and it is whitelisted, so no
+ * credential travels with a submission.
+ */
+export const DEPLOYMENT_URL = 'https://dep-f74ca441-9963-4fb8-a112-b8d78674d88b.run.comfy.app';
+
 /** Frames per second the workflow renders at. */
 export const FPS = 24;
 

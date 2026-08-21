@@ -1,22 +1,18 @@
 /** Server-only helpers for the MiniMax-H3 demo. Never import from a component. */
 import { Comfy } from '@comfyorg/sdk';
+import { DEPLOYMENT_URL } from './config';
 
 /**
- * The SDK reads its target from `process.env.COMFY_BASE_URL` at construction,
- * while Astro surfaces `.env` through `import.meta.env` — bridge the two so a
- * plain `.env` file works in `astro dev` without exporting shell variables.
+ * A client pointed at this page's deployment.
  *
- * No API key is passed: the deployment this page targets is whitelisted, and
- * the SDK sends no credentials at all when `apiKey` is omitted.
+ * The SDK resolves its target from `process.env.COMFY_BASE_URL` at
+ * construction and takes no base-URL argument, so the constant is assigned
+ * there immediately beforehand. No API key is passed: the deployment is
+ * whitelisted, and the SDK sends no credentials at all when `apiKey` is
+ * omitted.
  */
-export function comfyBaseUrl(): string {
-  const baseUrl = import.meta.env.COMFY_BASE_URL ?? process.env.COMFY_BASE_URL;
-  if (!baseUrl) throw new Error('COMFY_BASE_URL is not set (see site/.env.example)');
-  return baseUrl;
-}
-
 export function comfyClient(): Comfy {
-  process.env.COMFY_BASE_URL = comfyBaseUrl();
+  process.env.COMFY_BASE_URL = DEPLOYMENT_URL;
   return new Comfy({ clientInfo: 'templates-site-demo' });
 }
 
