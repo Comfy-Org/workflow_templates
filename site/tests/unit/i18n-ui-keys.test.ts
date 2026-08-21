@@ -22,15 +22,21 @@ function sourceFiles(dir: string): string[] {
   });
 }
 
-/** `t('a.b', locale)` and the `tt('a.b')` shorthand components bind locally. */
-const KEY_CALL = /\btt?\(\s*'([a-z][A-Za-z0-9.]*\.[A-Za-z0-9.]+)'/g;
+/**
+ * `t('a.b', locale)` and the `tt('a.b')` shorthand components bind locally.
+ *
+ * Both quote styles, and keys with no dot: the point is to catch a key the
+ * components ask for and en.json does not have, and a single-segment key or a
+ * double-quoted one fails exactly the same way.
+ */
+const KEY_CALL = /\btt?\(\s*(['"])([A-Za-z][A-Za-z0-9.]*)\1/g;
 
 describe('UI string keys', () => {
   const referenced = new Map<string, string[]>();
   for (const file of sourceFiles(COMPONENT_DIR)) {
     const source = fs.readFileSync(file, 'utf-8');
     for (const match of source.matchAll(KEY_CALL)) {
-      const key = match[1];
+      const key = match[2];
       referenced.set(key, [...(referenced.get(key) ?? []), path.relative(COMPONENT_DIR, file)]);
     }
   }
@@ -87,5 +93,7 @@ describe('meta title templates', () => {
     expect(strings['category.metaTitle']).toContain('{category}');
     expect(strings['category.metaTitle']).toContain('{site}');
     expect(strings['tag.metaTitle']).toContain('{tag}');
+    expect(strings['tag.metaTitle']).toContain('{site}');
+    expect(strings['tag.metaTitle']).toContain('{workflows}');
   });
 });
