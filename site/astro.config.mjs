@@ -81,6 +81,45 @@ const modelSlugRedirects = Object.fromEntries(
   )
 );
 
+// Manual variant → canonical 301s for slugs no template currently tags (so
+// deriveModelGroups has nothing to cluster them from), but that get real
+// search/backlink traffic and 404 today. Cross-checked each candidate slug
+// from the 404 report against the actual synced template data (slugify()
+// normalizes casing/punctuation, e.g. "Wan2.1" -> "wan2-1"): the vast
+// majority already have a real template tag and so already get a correct
+// redirect from modelSlugRedirects above — adding them here would only be
+// dead, shadowed weight. These four are the only slugs with no matching
+// template tag today. Same shadow guard as above: skip a variant that is
+// itself a canonical slug, and let modelSlugRedirects win on overlap once
+// content catches up.
+/**
+ * @param {string} variant
+ * @param {string | null} target
+ * @returns {[string, string | null]}
+ */
+const pair = (variant, target) => [variant, target];
+
+/** @type {[string, string | null][]} */
+const manualModelSlugTargets = [
+  pair('kling-1-6', 'kling'),
+  pair('kling-2-0', 'kling'),
+  // Hunyuan3D has no dedicated page yet; land on the model index rather than
+  // a dead end. "none" is explicitly excluded from grouping (NON_MODELS in
+  // model-groups.ts), so it can never be auto-derived even once tagged.
+  pair('hunyuan-3d', null),
+  pair('none', null),
+];
+
+const manualModelSlugRedirects = Object.fromEntries(
+  manualModelSlugTargets
+    .filter(([variant]) => !canonicalModelSlugs.has(variant))
+    .map(([variant, target]) => {
+      /** @type {string} */
+      const destination = target ? `/workflows/model/${target}/` : '/workflows/model/';
+      return [`/workflows/model/${variant}`, destination];
+    })
+);
+
 // lastmod fallback for pages without a specific date.
 const buildDate = new Date().toISOString();
 
@@ -117,7 +156,7 @@ export default defineConfig({
       prefixDefaultLocale: false, // English at root, others prefixed (/zh/, /ja/, etc.)
     },
   },
-  redirects: modelSlugRedirects,
+  redirects: { ...manualModelSlugRedirects, ...modelSlugRedirects },
   integrations: [
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
