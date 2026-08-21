@@ -99,6 +99,36 @@ export const ASPECT_RATIOS = [
   '21:9 (Cinemascope)',
 ] as const;
 
+/** The `multiple` widget on the resolution node: both sides snap to this. */
+export const RESOLUTION_MULTIPLE = 8;
+
+/** What the resolution control offers, and the megapixels each one sends. */
+export const RESOLUTION_PRESETS = [
+  { label: 'Draft', megapixels: 0.2 },
+  { label: 'Standard', megapixels: 0.4 },
+  { label: 'High', megapixels: 0.8 },
+  { label: 'Very high', megapixels: 1.2 },
+] as const;
+
+/**
+ * Frame size for an aspect ratio at a megapixel budget: spread the pixels
+ * across the ratio, then snap each side to {@link RESOLUTION_MULTIPLE}.
+ *
+ * This mirrors the resolution node so the UI can show what a preset means. The
+ * node is the authority — treat these as approximate, and expect a few pixels
+ * of difference if its rounding differs.
+ */
+export function frameSizeFor(
+  aspectRatio: string,
+  megapixels: number
+): { width: number; height: number } {
+  const [w, h] = aspectRatio.split(' ')[0].split(':').map(Number);
+  const scale = Math.sqrt((megapixels * 1_000_000) / (w * h));
+  const snap = (value: number) =>
+    Math.max(RESOLUTION_MULTIPLE, Math.round(value / RESOLUTION_MULTIPLE) * RESOLUTION_MULTIPLE);
+  return { width: snap(w * scale), height: snap(h * scale) };
+}
+
 export const SAMPLERS = ['res_multistep', 'euler', 'dpmpp_2m', 'ddim', 'uni_pc'] as const;
 export const SCHEDULERS = ['simple', 'normal', 'karras', 'beta', 'sgm_uniform'] as const;
 export const CROP_MODES = ['center', 'disabled'] as const;

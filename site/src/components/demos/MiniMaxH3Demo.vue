@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { Check, Copy } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
 import {
   ASPECT_RATIOS,
   CROP_MODES,
+  RESOLUTION_PRESETS,
   DEFAULTS,
   FPS,
   KEYFRAMES,
@@ -10,6 +12,7 @@ import {
   SAMPLERS,
   SCHEDULERS,
   clipLengthFrames,
+  frameSizeFor,
   maxFrameFor,
   validateSeconds,
   type DemoSettings,
@@ -21,6 +24,8 @@ const props = defineProps<{
   defaultPrompt: string;
   exampleKeyframes: string[];
   exampleVideo: string | null;
+  /** System prompt for writing shot descriptions with an agent, if bundled. */
+  agentPromptUrl: string | null;
 }>();
 
 type RunState = 'idle' | 'submitting' | 'queued' | 'running' | 'succeeded' | 'failed';
@@ -47,6 +52,9 @@ const queuedFor = ref(0);
 const queuePosition = ref<number | null>(null);
 const progressValue = ref<number | null>(null);
 const showAdvanced = ref(false);
+const promptCopied = ref(false);
+const promptCopyFailed = ref(false);
+let copyResetTimer: number | undefined;
 const dragSlot = ref<number | null>(null);
 
 const queue = ref<QueueState>({ available: false });
@@ -58,6 +66,20 @@ let queueTimer: ReturnType<typeof setInterval> | null = null;
 const objectUrls: string[] = [];
 
 const frames = computed(() => clipLengthFrames(settings.seconds));
+
+/** Preset labels carry the megapixel budget and the frame size it works out to. */
+const resolutionOptions = computed(() =>
+  RESOLUTION_PRESETS.map((preset) => {
+    const { width, height } = frameSizeFor(settings.aspectRatio, preset.megapixels);
+    return {
+      ...preset,
+      detail: `${preset.megapixels} MP · ${width}×${height}`,
+    };
+  })
+);
+const selectedResolution = computed(() =>
+  resolutionOptions.value.find((o) => o.megapixels === settings.megapixels)
+);
 const enabledIndexes = computed(() => slots.filter((s) => s.enabled).map((s) => s.index));
 const usingExampleFrames = computed(() => slots.every((s) => s.isExample));
 const secondsError = computed(() =>
@@ -129,6 +151,30 @@ async function refreshQueue() {
     queueAgeMs.value = body.sampledAt ? Date.now() - new Date(body.sampledAt).getTime() : 0;
   } catch {
     queue.value = { available: false };
+  }
+}
+
+/**
+ * Hands the agent instructions to the clipboard. The text is fetched here
+ * rather than inlined in the page so its weight is only paid on click; the
+ * icon and reset behaviour mirror the site's own CodeCopyButton.
+ */
+async function copyAgentPrompt() {
+  if (!props.agentPromptUrl) return;
+  promptCopyFailed.value = false;
+  try {
+    const res = await fetch(props.agentPromptUrl);
+    if (!res.ok) throw new Error(String(res.status));
+    await navigator.clipboard.writeText(await res.text());
+    promptCopied.value = true;
+    window.clearTimeout(copyResetTimer);
+    copyResetTimer = window.setTimeout(() => {
+      promptCopied.value = false;
+    }, 1600);
+  } catch {
+    // Clipboard blocked (insecure context, permissions) or the fetch failed —
+    // point at the file so the text is still reachable.
+    promptCopyFailed.value = true;
   }
 }
 
@@ -289,6 +335,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  window.clearTimeout(copyResetTimer);
   if (queueTimer) clearInterval(queueTimer);
   stopTimers();
   objectUrls.forEach((u) => URL.revokeObjectURL(u));
@@ -448,6 +495,27 @@ onBeforeUnmount(() => {
             it sounds like — all in one block of prose. The references anchor the visuals; this sets
             everything between them.
           </p>
+          <div v-if="agentPromptUrl" class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-medium text-content-secondary transition hover:border-white/30 hover:text-content"
+              @click="copyAgentPrompt"
+            >
+              <Check v-if="promptCopied" class="size-3" />
+              <Copy v-else class="size-3" />
+              {{ promptCopied ? 'Copied' : 'Copy prompt guide for agents' }}
+            </button>
+            <span class="text-[10px] text-content-muted">
+              Paste it into an assistant, describe your shot, and it writes the prompt below.
+            </span>
+          </div>
+          <p v-if="promptCopyFailed" class="text-[10px] text-amber-200">
+            Could not copy —
+            <a :href="agentPromptUrl ?? '#'" target="_blank" class="underline underline-offset-2">
+              open the guide </a
+            >and copy it manually.
+          </p>
+
           <div class="flex items-baseline justify-between gap-3">
             <label class="text-xs font-medium text-content" for="mmh3-prompt"
               >Shot description</label
@@ -518,11 +586,19 @@ onBeforeUnmount(() => {
                 v-model.number="settings.megapixels"
                 class="mt-1.5 w-full rounded-lg border border-white/15 bg-black/30 px-2 py-2 text-xs text-content focus:border-white/30 focus:outline-none"
               >
-                <option :value="0.2">Draft</option>
-                <option :value="0.4">Standard</option>
-                <option :value="0.8">High</option>
-                <option :value="1.2">Very high</option>
+                <option
+                  v-for="option in resolutionOptions"
+                  :key="option.label"
+                  :value="option.megapixels"
+                >
+                  {{ option.label }} — {{ option.detail }}
+                </option>
               </select>
+              <p class="mt-1 text-[10px] text-content-muted">
+                <template v-if="selectedResolution">
+                  {{ selectedResolution.detail }} at this aspect ratio. Higher costs more time.
+                </template>
+              </p>
             </div>
 
             <div class="sm:col-span-2">
