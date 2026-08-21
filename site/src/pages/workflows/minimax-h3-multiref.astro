@@ -1,0 +1,84 @@
+---
+export const prerender = false;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HubNavbar from '@/components/hub/HubNavbar.astro';
+import SiteFooter from '@/components/hub/SiteFooter.astro';
+import Breadcrumbs from '@/components/template-detail/Breadcrumbs.astro';
+import MiniMaxH3Demo from '@/components/demos/MiniMaxH3Demo.vue';
+import graph from '@/lib/demos/mmh3/workflow-api.json';
+import { KEYFRAMES, INPUT_NODES } from '@/lib/demos/mmh3/config';
+import { DEFAULT_LOCALE } from '@/i18n/config';
+import fs from 'node:fs';
+import path from 'node:path';
+
+type ApiNode = { class_type: string; inputs: Record<string, unknown> };
+const nodes = graph as unknown as Record<string, ApiNode>;
+const locale = DEFAULT_LOCALE;
+
+/** Seed the prompt editor with the text the workflow ships with. */
+const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ?? '');
+
+const EXAMPLE_ROOT = 'demos/mmh3/example';
+const publicDir = path.join(process.cwd(), 'public', EXAMPLE_ROOT);
+
+const exampleKeyframes = KEYFRAMES.map((slot) => {
+  const file = `kf_${slot.index}.png`;
+  return fs.existsSync(path.join(publicDir, 'keyframes', file))
+    ? `/${EXAMPLE_ROOT}/keyframes/${file}`
+    : '';
+});
+
+/**
+ * The example result is optional: drop `example.mp4` into
+ * `public/demos/mmh3/example/` and it plays before the first run.
+ */
+const exampleVideo = fs.existsSync(path.join(publicDir, 'example.mp4'))
+  ? `/${EXAMPLE_ROOT}/example.mp4`
+  : null;
+
+const pageTitle = 'MiniMax-H3 Multi-Reference';
+const description =
+  'Guide one continuous shot with three reference images pinned to exact moments, and get video with matching audio.';
+---
+
+<BaseLayout
+  title={`${pageTitle} — run the workflow`}
+  {description}
+  theme="dark"
+  noindex={true}
+  hideDefaultFooter
+>
+  <HubNavbar />
+
+  <article class="template-detail-page bg-page min-h-screen text-content scroll-smooth">
+    <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)] pt-4 lg:pt-8 pb-32">
+      <Breadcrumbs locale={locale} title={pageTitle} class="mb-6 lg:mb-8" />
+
+      <header class="mb-8 flex flex-col gap-3">
+        <h1 class="text-base font-semibold text-content">{pageTitle}</h1>
+        <p class="max-w-2xl text-xs leading-relaxed text-content-secondary">{description}</p>
+        <div class="flex flex-wrap gap-1.5">
+          {
+            ['Video', 'Audio', 'Image to video', '3 references'].map((tag) => (
+              <span class="rounded-full border border-white/15 px-2.5 py-0.5 text-[11px] text-content-secondary">
+                {tag}
+              </span>
+            ))
+          }
+        </div>
+      </header>
+
+      <MiniMaxH3Demo
+        client:load
+        defaultPrompt={defaultPrompt}
+        exampleKeyframes={exampleKeyframes}
+        exampleVideo={exampleVideo}
+      />
+    </div>
+  </article>
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

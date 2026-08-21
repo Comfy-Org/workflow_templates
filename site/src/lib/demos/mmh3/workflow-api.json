@@ -1,0 +1,324 @@
+{
+  "1": {
+    "inputs": {
+      "unet_name": "minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "2": {
+    "inputs": {
+      "lora_name": "light2v-minimax_h3_fl2v_turbo_8step_v1.0_comfyui_bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "lightx2v 8-step turbo"
+    }
+  },
+  "3": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "4": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Video VAE"
+    }
+  },
+  "5": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Audio VAE"
+    }
+  },
+  "10": {
+    "inputs": {
+      "noise_seed": 424242
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "11": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "12": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 8,
+      "denoise": 1,
+      "model": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "13": {
+    "inputs": {
+      "model": [
+        "2",
+        0
+      ],
+      "conditioning": [
+        "21",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider"
+    }
+  },
+  "14": {
+    "inputs": {
+      "noise": [
+        "10",
+        0
+      ],
+      "guider": [
+        "13",
+        0
+      ],
+      "sampler": [
+        "11",
+        0
+      ],
+      "sigmas": [
+        "12",
+        0
+      ],
+      "latent_image": [
+        "20",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "20": {
+    "inputs": {
+      "prompt": "integrated_multimodal_description:\nA single continuous cinematic shot with no cuts, rendered as a 2.5D painterly illustration: flat painted layers sliding in parallax at different rates, visible brushstrokes and ink grain that subtly boil as if each frame were repainted, dry-brush edges that smear in the direction of motion, and a palette locked to black ink, crimson red, and pale parchment. Depth reads as stacked painted planes, not photographic space. The painting never freezes: every held composition keeps living intrinsic motion \u2014 wind, flame, water, breath, falling debris \u2014 even while the camera lingers.\n\nAt the beginning, a warrior in a torn-crested helmet stands in the right foreground before a burning gate in a great city wall, red light pooling on his cheek guards. He has time to live in this moment: he plants his spear into the churned earth, rolls his shoulders, and turns his head slowly to survey the fire, his crest and cloak whipping in the hot wind while the wreck behind him spits slow arcs of sparks and the smoke column leans and rolls up the left third of frame. Ash drifts between the painted planes at different speeds.\n\nAs the shot progresses toward the five-second mark, the camera begins a long unhurried crane upward along the smoke column; the warrior lowers out of the bottom edge to join a line of black helmeted silhouettes, and the smoke thins and parts to reveal what it was hiding: the colossal dark wooden horse towering between two ruined towers.\n\nThe horse holds the frame and works: it rocks forward in slow heavy heaves as unseen ropes haul it toward the gate, timbers groaning and flexing, wheels grinding over rubble, black banners snapping below, rows of spear tips swaying in loose rhythm, ember flecks orbiting it on separate parallax planes. Give this labor room to breathe \u2014 two full heaves of the great body before the shot moves on.\n\nApproaching the ten-second mark, the camera pushes into the pitch darkness between the horse's plank-built legs; the black plane floods the frame like spilled ink, thin red brushstrokes bloom downward through it, and firelight flickers on to reveal that the vertical timbers have become vertical folds of marble: a cracked goddess statue seen from below against the darkness, red stains running and lengthening down her robes, small flames climbing her raised hand and staff.\n\nIn the final five seconds the statue's destruction plays out completely: a jagged fracture line spreads across her neck with trickling dust, chips of marble drop away and tumble toward the camera, the crack widens with each pulse of firelight \u2014 and her carved head breaks free, tips forward, and falls, tumbling slowly end over end past the camera and out of the bottom of frame, trailing dust, while the headless figure stands burning against the black. Hold on the decapitated silhouette, flames climbing higher, as the shot ends.\n\nCamera:\nOne continuous evolving move with long dwells: a slow near-static drift on the warrior, a patient crane up the smoke column to the horse, a hold on the horse's labor, a push into the darkness beneath it, and a slow upward drift on the statue through the fall of the head. Every move is smooth and painterly, with foreground, midground, and background planes sliding at visibly different parallax rates.\n\nContinuity:\nNo cuts, no teleportation, no sudden subject replacement, and no extra characters unless explicitly requested. Each transition is carried by an anchor: the smoke column concealing then revealing the horse, the horse's darkness revealing the statue. The progression should read clearly as:\n[WARRIOR BEFORE THE BURNING GATE] -> [THE GREAT WOODEN HORSE HAULED FORWARD] -> [THE GODDESS STATUE, HEAD BREAKING FREE AND FALLING].\n\noverall_soundscape:\nCrackling fire, hot wind, and the crunch of the spear planting; swelling war drums and groaning timber as the crane rises; the horse's slow rhythmic heaves \u2014 rope strain, wheel grind, banner snap; the drums cut to near-silence in the darkness beneath it; then licking flame, the sharp spreading crack of stone, dust hissing down the marble, and the heavy tumbling rush of the falling head ending in silence and fire.\n\nnon_diegetic_music:\nN/A\n",
+      "width": [
+        "54",
+        0
+      ],
+      "height": [
+        "54",
+        1
+      ],
+      "length": [
+        "55",
+        1
+      ],
+      "clip": [
+        "3",
+        0
+      ],
+      "vae": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ImageToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Image to Video"
+    }
+  },
+  "21": {
+    "inputs": {
+      "keyframe_state": "{\"count\":3,\"positions\":[1,121,241]}",
+      "indexing": "1-based",
+      "crop": "center",
+      "+ Add keyframe": null,
+      "- Remove keyframe": null,
+      "conditioning": [
+        "20",
+        0
+      ],
+      "vae": [
+        "4",
+        0
+      ],
+      "latent": [
+        "20",
+        1
+      ],
+      "keyframe_image_1": [
+        "31",
+        0
+      ],
+      "keyframe_image_2": [
+        "32",
+        0
+      ],
+      "keyframe_image_3": [
+        "33",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3CustomKeyframes",
+    "_meta": {
+      "title": "H3 Custom Keyframes"
+    }
+  },
+  "31": {
+    "inputs": {
+      "image": "gstrlism_3000_00352.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "keyframe 1 @ 1"
+    }
+  },
+  "32": {
+    "inputs": {
+      "image": "gstrlism_3000_00418.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "keyframe 2 @ 121"
+    }
+  },
+  "33": {
+    "inputs": {
+      "image": "gstrlism_3000_00375.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "keyframe 3 @ 241"
+    }
+  },
+  "50": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "51": {
+    "inputs": {
+      "samples": [
+        "14",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "52": {
+    "inputs": {
+      "fps": 24,
+      "bit_depth": 8,
+      "images": [
+        "50",
+        0
+      ],
+      "audio": [
+        "51",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "53": {
+    "inputs": {
+      "filename_prefix": "video/h3_single_15s",
+      "format": "mp4",
+      "codec": "h264",
+      "codec.encoding": "auto",
+      "video": [
+        "52",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "54": {
+    "inputs": {
+      "aspect_ratio": "16:9 (Widescreen)",
+      "megapixels": 0.4,
+      "multiple": 8
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "55": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "56",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "H3 VALID FRAME LENGTH (17k+5)"
+    }
+  },
+  "56": {
+    "inputs": {
+      "value": 15
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "GLOBAL CLIP DURATION \u2014 seconds"
+    }
+  }
+}
