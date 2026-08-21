@@ -18,14 +18,11 @@ import { absoluteUrl } from '../../../config/site';
 import { modelPath, modelsIndexPath, useCasePath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
-import { loadSerializedTemplates, type MatcherTemplate } from '../../../lib/hub-api';
-import { deriveModelGroups, type ModelGroup } from '../../../lib/workflow-pages/model-groups';
+import { loadSerializedTemplates } from '../../../lib/hub-api';
+import { deriveModelGroups } from '../../../lib/workflow-pages/model-groups';
 import { loadModelContent } from '../../../lib/workflow-pages/content-loaders';
 import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-resolver';
-import { type SeoPageDef } from '../../../lib/workflow-pages/use-cases';
-import { assertBrandSafe } from '../../../lib/workflow-pages/governance';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../lib/workflow-pages/seo-page';
-import { assertNoOrphanedContent } from '../../../lib/workflow-pages/landing-content';
 import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
 import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/item-list';
 import { resolveRailImages } from '../../../lib/workflow-pages/card-images';
@@ -38,53 +35,69 @@ import {
   serializeJsonLdForScript,
 } from '../../../lib/structured-data';
 
-export async function getStaticPaths() {
-  const catalog = await loadSerializedTemplates(() => getCollection('templates'));
-  const groups = deriveModelGroups(catalog);
-  assertNoOrphanedContent('model', new Set(groups.map((group) => group.slug)));
-  const fallbackPool = buildFallbackPool(catalog);
-  const paths: {
-    params: { name: string };
-    props: {
-      group: ModelGroup;
-      relatedUseCases: SeoPageDef[];
-      fallbackPool: MatcherTemplate[];
-    };
-  }[] = [];
+/**
+ * On-demand rendered so a variant slug can 301 to its family page.
+ *
+ * This used to prerender canonical slugs only and leave variants to the
+ * `redirects` map in astro.config.mjs. That map cannot work: the Vercel adapter
+ * builds each rule's `source` from parsed route segments, and a trailing slash
+ * is not a segment, so both `/workflows/model/wan2-5` and `.../wan2-5/` collapse
+ * to one slashless rule — while the platform canonicalises every incoming
+ * request to the slashed form first. The rule never matched a real request and
+ * every variant 404'd (wan2-5, wan2-2, flux-2), which the locale route did not,
+ * because it resolves variants in code. This is that same mechanism, the only
+ * one proven to work in production.
+ *
+ * The build-time guards that lived in `getStaticPaths` (brand safety, orphaned
+ * content, duplicate slugs) moved to astro.config.mjs, which derives the same
+ * groups and still fails the build.
+ */
+export const prerender = false;
 
-  // Canonical slugs only; variants 301 via the platform redirects (astro.config.mjs).
-  const claimed = new Set<string>();
-  for (const group of groups) {
-    // Fail the build if a qualifying (indexable) model page carries a denied term.
-    if (group.qualifies) {
-      assertBrandSafe({
-        slug: group.slug,
-        primaryKeyword: group.keywords.primary,
-        title: group.label,
-        secondaryKeywords: group.keywords.secondary,
-      });
-    }
-    if (claimed.has(group.slug)) {
-      throw new Error(
-        `Duplicate model slug "${group.slug}" across families; slugs must be unique.`
-      );
-    }
-    claimed.add(group.slug);
-    const relatedUseCases = useCasesFeaturingModel(group.slug, catalog);
-    paths.push({ params: { name: group.slug }, props: { group, relatedUseCases, fallbackPool } });
-  }
-  return paths;
+/**
+ * Memoized per process, not per request. These pages used to be built once and
+ * served as files; on demand, re-serializing the whole hub catalog and rebuilding
+ * the fallback pool on every hit would put that work in the response path. The
+ * underlying hub fetch is already cached in `hub-api`, so what these save is the
+ * repeated derivation over ~600 entries. The locale route caches its groups the
+ * same way.
+ */
+const buildCatalog = async () => loadSerializedTemplates(() => getCollection('templates'));
+let catalogCache: ReturnType<typeof buildCatalog> | null = null;
+const loadCatalog = () => (catalogCache ??= buildCatalog());
+
+const buildGroups = async () => deriveModelGroups(await loadCatalog());
+let groupsCache: ReturnType<typeof buildGroups> | null = null;
+const loadModelGroups = () => (groupsCache ??= buildGroups());
+
+const buildPool = async () => buildFallbackPool(await loadCatalog());
+let poolCache: ReturnType<typeof buildPool> | null = null;
+const loadFallbackPool = () => (poolCache ??= buildPool());
+
+const { name } = Astro.params;
+
+// `name` always binds on this route, but its type is optional; treating a missing
+// one as a miss keeps the lookup below free of a non-null assertion.
+if (!name || Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
-const {
-  group,
-  relatedUseCases: relatedUseCaseDefs,
-  fallbackPool,
-} = Astro.props as {
-  group: ModelGroup;
-  relatedUseCases: SeoPageDef[];
-  fallbackPool: MatcherTemplate[];
-};
+const groups = await loadModelGroups();
+const group =
+  groups.find((candidate) => candidate.slug === name) ??
+  groups.find((candidate) => candidate.redirectFrom.includes(name));
+
+if (!group) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// A variant slug 301s to its family's canonical URL, matching the locale route.
+if (group.slug !== name) {
+  return Astro.redirect(modelPath(group.slug), 301);
+}
+
+const relatedUseCaseDefs = useCasesFeaturingModel(group.slug, await loadCatalog());
+const fallbackPool = await loadFallbackPool();
 const locale = getLocaleFromPath(Astro.url.pathname);
 
 const { label, templates, keywords } = group;

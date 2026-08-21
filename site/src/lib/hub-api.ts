@@ -349,6 +349,10 @@ export function serializeIndexEntry(
     shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
+    // Whatever the index declares, with the pre-existing 'image' default when it
+    // declares nothing. That default is itself a frontend-owned guess and is on
+    // the list for the backend contract fix; it is left as-is here so this PR
+    // changes no classification behaviour.
     mediaType: entry.mediaType || 'image',
     tags: entry.tags || [],
     models: entry.models || [],
@@ -496,12 +500,26 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function inferMediaType(workflow: HubWorkflowSummary): MediaType {
-  const tags = (workflow.tags || []).map((t) => t.name.toLowerCase());
-  if (tags.includes('video') || tags.includes('animation')) return 'video';
-  if (tags.includes('audio')) return 'audio';
-  if (tags.includes('3d')) return '3d';
+/**
+ * Media type from tag names. One definition, shared by the index and detail paths.
+ *
+ * Substring rather than equality: the hub's vocabulary is phrase-shaped ("Image
+ * to Video", "Video Edit", "Audio to Video"), so an equality check matches only
+ * the bare "Video" tag and files the rest as images.
+ *
+ * Order encodes the OUTPUT medium, which is what a category page groups by, so
+ * "Audio to Video" has to land on video and not audio.
+ */
+function mediaTypeFromTagNames(names: readonly string[]): MediaType {
+  const tags = names.map((name) => name.toLowerCase());
+  if (tags.some((tag) => tag.includes('video') || tag.includes('animation'))) return 'video';
+  if (tags.some((tag) => tag.includes('audio'))) return 'audio';
+  if (tags.some((tag) => tag.includes('3d'))) return '3d';
   return 'image';
+}
+
+function inferMediaType(workflow: HubWorkflowSummary): MediaType {
+  return mediaTypeFromTagNames((workflow.tags || []).map((t) => t.name));
 }
 
 function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
