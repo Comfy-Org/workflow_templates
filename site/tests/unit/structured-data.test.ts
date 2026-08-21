@@ -3,8 +3,32 @@ import {
   buildHowToJsonLd,
   buildSoftwareApplicationJsonLd,
   buildCollectionPageJsonLd,
+  buildWorkflowGraphJsonLd,
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
+import { SITE_ORIGIN } from '../../src/config/site';
+
+// `buildWorkflowGraphJsonLd`'s `@graph` is a union of differently-shaped nodes —
+// some carry `@type: string` (most nodes), some `@type: string[]` (the workflow
+// node, tagged both `SoftwareApplication` and `TechArticle`). These helpers match
+// either shape so tests don't re-declare the same narrow `(n: { '@type': ... })`
+// annotation (and don't accidentally narrow it to `string`, which doesn't type-check
+// against the `string[]` members).
+function hasType(node: { '@type': unknown }, type: string): boolean {
+  const nodeType = node['@type'];
+  return Array.isArray(nodeType) ? nodeType.includes(type) : nodeType === type;
+}
+
+function findByType<T = { '@type': unknown }>(
+  graph: { '@type': unknown }[],
+  type: string
+): T | undefined {
+  return graph.find((n) => hasType(n, type)) as T | undefined;
+}
+
+function filterByType<T = { '@type': unknown }>(graph: { '@type': unknown }[], type: string): T[] {
+  return graph.filter((n) => hasType(n, type)) as T[];
+}
 
 describe('buildHowToJsonLd', () => {
   it('returns null when there are no steps', () => {
@@ -164,6 +188,197 @@ describe('buildCollectionPageJsonLd', () => {
     });
     expect(result).toHaveProperty('inLanguage', 'ja');
     expect(result.mainEntity).toMatchObject({ '@type': 'ItemList', numberOfItems: 1 });
+  });
+});
+
+describe('buildWorkflowGraphJsonLd', () => {
+  const baseParams = {
+    name: 'LTX-2.5: Image to Video',
+    description: 'Generate video from a single image using LTX-2.5.',
+    url: 'https://comfy.org/workflows/ltx-2-5-i2v-abc123/',
+    breadcrumbItems: [
+      { name: 'Home', item: 'https://comfy.org' },
+      { name: 'Workflows', item: 'https://comfy.org/workflows/' },
+      { name: 'LTX-2.5: Image to Video' },
+    ],
+  };
+
+  it('always builds the graph, even with no entity data', () => {
+    for (const entities of [undefined, {}, { about: [], categories: [] }]) {
+      const result = buildWorkflowGraphJsonLd({ ...baseParams, entities });
+      expect(result).not.toBeNull();
+      const graph = result!['@graph'];
+      expect(graph.some((n) => hasType(n, 'WebPage'))).toBe(true);
+      // 'TechArticle', not 'SoftwareApplication' — the latter also matches the
+      // always-present ComfyUI node, so it wouldn't prove the workflow node itself
+      // (tagged `['SoftwareApplication', 'TechArticle']`) is in the graph.
+      expect(graph.some((n) => hasType(n, 'TechArticle'))).toBe(true);
+      expect(graph.some((n) => hasType(n, 'DefinedTerm'))).toBe(false);
+      const breadcrumb = findByType(graph, 'BreadcrumbList');
+      expect(breadcrumb).toMatchObject({ '@id': `${baseParams.url}#breadcrumb` });
+      expect(breadcrumb).not.toHaveProperty('@context');
+      // The workflow self-reference in WebPage.about must survive even with no
+      // entity data — it's the anchor `about` is built around, not conditional on it.
+      const webpage = findByType<{ about?: Array<{ '@id': string }> }>(graph, 'WebPage');
+      expect(webpage?.about).toContainEqual({ '@id': `${baseParams.url}#workflow` });
+    }
+  });
+
+  it('always includes the static org/site/app enrichment fields', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const graph = result!['@graph'];
+    const website = findByType(graph, 'WebSite');
+    const organization = findByType(graph, 'Organization');
+    const softwareApp = findByType(graph, 'SoftwareApplication');
+    expect(website).toMatchObject({
+      publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+      hasPart: [{ '@type': 'Blog', name: 'Comfy Blog', url: 'https://blog.comfy.org' }],
+    });
+    expect(organization).toMatchObject({
+      sameAs: expect.arrayContaining(['https://www.youtube.com/@comfyorg']),
+      contactPoint: [
+        { '@type': 'ContactPoint', contactType: 'customer support' },
+        { '@type': 'ContactPoint', contactType: 'press' },
+      ],
+    });
+    expect(softwareApp).toMatchObject({
+      sameAs: expect.arrayContaining(['https://en.wikipedia.org/wiki/ComfyUI']),
+      softwareHelp: { '@type': 'CreativeWork', url: 'https://docs.comfy.org' },
+    });
+  });
+
+  it('includes isRelatedTo on the workflow node only when relatedLinks are passed', () => {
+    const withLinks = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      relatedLinks: [{ name: 'Video Workflows', url: 'https://comfy.org/workflows/tag/video/' }],
+    });
+    // 'TechArticle' uniquely picks the workflow node — 'SoftwareApplication' alone
+    // would also match the always-present ComfyUI node.
+    const workflowWithLinks = findByType<{ isRelatedTo?: unknown }>(
+      withLinks!['@graph'],
+      'TechArticle'
+    )!;
+    expect(workflowWithLinks.isRelatedTo).toEqual([
+      {
+        '@type': 'WebPage',
+        name: 'Video Workflows',
+        url: 'https://comfy.org/workflows/tag/video/',
+      },
+    ]);
+
+    const withoutLinks = buildWorkflowGraphJsonLd(baseParams);
+    const workflowWithoutLinks = findByType(withoutLinks!['@graph'], 'TechArticle');
+    expect(workflowWithoutLinks).not.toHaveProperty('isRelatedTo');
+  });
+
+  it('builds a @graph with the workflow as mainEntity of the WebPage', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: { about: [{ name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' }] },
+    });
+    expect(result).not.toBeNull();
+    expect(result?.['@context']).toBe('https://schema.org');
+    const graph = result!['@graph'];
+    const webpage = findByType(graph, 'WebPage');
+    const workflow = findByType(graph, 'TechArticle');
+    expect(webpage).toMatchObject({
+      '@id': `${baseParams.url}#webpage`,
+      mainEntity: { '@id': `${baseParams.url}#workflow` },
+      about: [{ '@id': `${baseParams.url}#workflow` }, { '@id': `${baseParams.url}#e-about-0` }],
+    });
+    const aboutTerm = filterByType<{ name?: unknown }>(graph, 'DefinedTerm').find(
+      (n) => n.name === 'Video'
+    );
+    expect(aboutTerm).toMatchObject({
+      '@id': `${baseParams.url}#e-about-0`,
+      name: 'Video',
+      sameAs: 'https://en.wikipedia.org/wiki/Video',
+    });
+    expect(workflow).toMatchObject({
+      '@id': `${baseParams.url}#workflow`,
+      name: baseParams.name,
+      description: baseParams.description,
+    });
+  });
+
+  it('emits a DefinedTermSet per category with terms cross-referenced via mentions', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        categories: [
+          { name: 'Technology', terms: [{ name: 'API' }, { name: 'Codec' }] },
+          { name: 'Audio & Video', terms: [{ name: 'Frame Rate' }] },
+        ],
+      },
+    });
+    const graph = result!['@graph'];
+    const termSets = filterByType(graph, 'DefinedTermSet');
+    const terms = filterByType<{ '@id': string }>(graph, 'DefinedTerm');
+    expect(termSets).toHaveLength(2);
+    expect(terms).toHaveLength(3);
+    const webpage = findByType<{ mentions: Array<{ '@id': string }> }>(graph, 'WebPage');
+    expect(webpage?.mentions).toHaveLength(3);
+    // Every mentioned @id must resolve to a DefinedTerm actually present in the graph.
+    const termIds = new Set(terms.map((t) => t['@id']));
+    for (const mention of webpage!.mentions) {
+      expect(termIds.has(mention['@id'])).toBe(true);
+    }
+  });
+
+  it('defaults WebPage headline to name, but uses an explicit headline when provided', () => {
+    const withoutHeadline = buildWorkflowGraphJsonLd(baseParams);
+    const webpageDefault = findByType<{ headline: string }>(withoutHeadline!['@graph'], 'WebPage')!;
+    expect(webpageDefault.headline).toBe(baseParams.name);
+
+    const withHeadline = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      headline: `${baseParams.name} - ComfyUI Workflow`,
+    });
+    const webpageCustom = findByType<{ headline: string }>(withHeadline!['@graph'], 'WebPage')!;
+    const workflowCustom = findByType<{ headline: string }>(
+      withHeadline!['@graph'],
+      'TechArticle'
+    )!;
+    expect(webpageCustom.headline).toBe(`${baseParams.name} - ComfyUI Workflow`);
+    // The workflow node's own headline is unaffected by the WebPage override.
+    expect(workflowCustom.headline).toBe(baseParams.name);
+  });
+
+  it('includes standalone entities.mentions terms in mentions with no DefinedTermSet', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: {
+        mentions: [{ name: 'Audio', sameAs: 'https://en.wikipedia.org/wiki/Sound' }],
+        categories: [{ name: 'Technology', terms: [{ name: 'API' }] }],
+      },
+    });
+    const graph = result!['@graph'];
+    const mentionTerm = filterByType<{ inDefinedTermSet?: unknown; '@id': string; name?: unknown }>(
+      graph,
+      'DefinedTerm'
+    ).find((n) => n.name === 'Audio')!;
+    expect(mentionTerm).toBeDefined();
+    expect(mentionTerm).not.toHaveProperty('inDefinedTermSet');
+
+    const webpage = findByType<{ mentions: Array<{ '@id': string }> }>(graph, 'WebPage')!;
+    // Both the standalone mention term and the category term are cross-referenced.
+    expect(webpage.mentions.map((m) => m['@id'])).toContain(mentionTerm['@id']);
+    expect(webpage.mentions).toHaveLength(2);
+  });
+
+  it('includes a FAQPage node only when faqItems are non-empty', () => {
+    const withFaq = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: { about: [{ name: 'Video' }] },
+      faqItems: [{ question: 'Q?', answer: 'A.' }],
+    });
+    expect(withFaq!['@graph'].some((n) => hasType(n, 'FAQPage'))).toBe(true);
+
+    const withoutFaq = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entities: { about: [{ name: 'Video' }] },
+    });
+    expect(withoutFaq!['@graph'].some((n) => hasType(n, 'FAQPage'))).toBe(false);
   });
 });
 
