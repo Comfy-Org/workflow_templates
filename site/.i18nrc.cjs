@@ -37,22 +37,21 @@ const ALL_LOCALES = ['zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'p
 const singleLocale = process.env.HUB_I18N_LOCALE || null;
 const outputLocales = singleLocale ? [singleLocale] : ALL_LOCALES;
 
-// Cap the bulk-harvested mirror so the prompt stays bounded; curated overrides
-// are always kept in full and win over the mirror. Longest English terms first —
-// they are the most specific and least likely to misfire as substrings.
-const MAX_MIRROR_PAIRS = 200;
-
+// The glossary is selected once by `pnpm i18n:glossary` and written to
+// effective/<locale>.json, which the AI reviewer reads too. Selecting it here as
+// well is what broke the Russian run: this side capped the mirror and the
+// reviewer did not, so the reviewer enforced terms the translator never saw.
+// Falls back to the raw mirror for a local run that has not synced the glossary.
 function terminologyBlock(locale) {
-  const mirror = readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {});
-  const overrides = readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {});
+  const effective = readJson(path.join(GLOSSARY_DIR, 'effective', `${locale}.json`), null);
   const merged = new Map(
-    Object.entries(mirror)
-      .sort((a, b) => b[0].length - a[0].length)
-      .slice(0, MAX_MIRROR_PAIRS)
+    Object.entries(
+      effective ?? {
+        ...readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
+        ...readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {}),
+      }
+    )
   );
-  for (const [en, loc] of Object.entries(overrides)) {
-    if (typeof loc === 'string' && loc.trim()) merged.set(en, loc);
-  }
   if (merged.size === 0) return '';
   const lines = [...merged.entries()].map(([en, loc]) => `- ${en} → ${loc}`).join('\n');
   return `\n\nProduct-UI terminology for this locale — when the English text contains one of these terms, translate it to exactly the paired term so hub content matches the ComfyUI app UI:\n${lines}`;

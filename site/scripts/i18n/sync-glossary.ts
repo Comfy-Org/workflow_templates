@@ -119,6 +119,55 @@ export function buildMirror(
   return mirror;
 }
 
+/**
+ * How many harvested pairs reach the translator's prompt. The prompt has to stay
+ * bounded, so the mirror is trimmed; which pairs survive is the important part.
+ */
+export const MAX_MIRROR_PAIRS = 200;
+
+/**
+ * The glossary both sides actually use, chosen by how often a term appears in
+ * the English corpus rather than by how long it is.
+ *
+ * Length-first ranking is what broke the Russian run: it drops the SHORTEST
+ * terms first, and "Workflow" is the most frequent term in the product, so the
+ * translator was never shown it while the reviewer went on enforcing it. Every
+ * field mentioning a workflow was then flagged, 27% of the locale, and the
+ * systemic-prune guard failed the run.
+ *
+ * Curated overrides are always kept, on top of the cap, because someone chose
+ * them deliberately.
+ */
+export function selectGlossary(
+  mirror: Record<string, string>,
+  overrides: Record<string, string>,
+  corpus: string,
+  limit: number = MAX_MIRROR_PAIRS
+): Record<string, string> {
+  const frequency = (term: string): number => {
+    if (!term) return 0;
+    // Whole-term matches only: "AI" should not score inside "Explain", nor inside
+    // "AI2" or "AI_model" — this corpus is full of identifiers like `wan2_2`, so
+    // digits and underscores have to count as term characters or a short term
+    // inflates its own frequency and displaces a genuinely common one at the cap.
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return (corpus.match(new RegExp(`(?<!\\w)${escaped}(?!\\w)`, 'gi')) ?? []).length;
+  };
+
+  const ranked = Object.entries(mirror)
+    .map(([en, localized]) => ({ en, localized, count: frequency(en) }))
+    // Frequency first; longer term wins a tie, since it is the more specific one.
+    .sort((a, b) => b.count - a.count || b.en.length - a.en.length)
+    .slice(0, limit);
+
+  const selected: Record<string, string> = {};
+  for (const { en, localized } of ranked) selected[en] = localized;
+  for (const [en, localized] of Object.entries(overrides)) {
+    if (typeof localized === 'string' && localized.trim()) selected[en] = localized;
+  }
+  return selected;
+}
+
 /** Flatten a nested JSON dictionary to flat "a.b.c" → string entries. */
 export function flattenStrings(obj: unknown, prefix = ''): Record<string, string> {
   const out: Record<string, string> = {};
@@ -168,6 +217,28 @@ function loadAppStrings(localesDir: string, locale: string): Record<string, stri
   return merged;
 }
 
+function readJson<T>(file: string, fallback: T): T {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf-8')) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * The English content the translator will see, as one string for term counting.
+ * Absent before the first build-source run, in which case ranking falls back to
+ * term length via the zero-count tie-break.
+ */
+function readEnglishCorpus(): string {
+  const file = path.join(process.cwd(), 'src', 'i18n', 'content', 'en.json');
+  try {
+    return fs.readFileSync(file, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 function writeJson(file: string, value: unknown): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n');
@@ -186,19 +257,30 @@ function main(): void {
   }
 
   const enStrings = loadAppStrings(localesDir, 'en');
+  // Rank against the text being translated, so the terms that survive the cap
+  // are the ones the corpus actually uses.
+  const corpus = readEnglishCorpus();
   let mirrorTotal = 0;
+  let effectiveTotal = 0;
   for (const locale of SUPPORTED_HUB_LOCALES) {
     if (locale === 'en') continue;
     const mirror = buildMirror(enStrings, loadAppStrings(localesDir, locale));
     writeJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), mirror);
     const overridePath = path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`);
     if (!fs.existsSync(overridePath)) writeJson(overridePath, {});
+    const overrides = readJson<Record<string, string>>(overridePath, {});
+    // ONE artifact, read verbatim by the translator config and the reviewer, so
+    // neither can enforce a term the other was never shown.
+    const effective = selectGlossary(mirror, overrides, corpus);
+    writeJson(path.join(GLOSSARY_DIR, 'effective', `${locale}.json`), effective);
     mirrorTotal += Object.keys(mirror).length;
+    effectiveTotal += Object.keys(effective).length;
   }
 
   console.log(
     `[i18n] glossary: ${PRESERVE_TERMS.length} preserve terms, ` +
-      `${mirrorTotal} mirror pairs across ${SUPPORTED_HUB_LOCALES.length - 1} locales ` +
+      `${mirrorTotal} mirror pairs (${effectiveTotal} effective) across ` +
+      `${SUPPORTED_HUB_LOCALES.length - 1} locales ` +
       `(from ${localesDir}).`
   );
 }
