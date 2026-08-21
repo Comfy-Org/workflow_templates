@@ -184,3 +184,226 @@ export function buildSoftwareApplicationJsonLd(params: {
     ...(featureList?.length ? { featureList } : {}),
   };
 }
+
+/** A named concept a workflow page covers, optionally linked to its Wikipedia article. */
+export interface EntityTerm {
+  name: string;
+  sameAs?: string;
+}
+
+/** A named group of related `EntityTerm`s (e.g. "Technology", "Audio & Video"). */
+export interface EntityCategory {
+  name: string;
+  terms: EntityTerm[];
+}
+
+/** Entity coverage for a single workflow page: broad "about" concepts plus categorized mentions. */
+export interface WorkflowEntities {
+  /** Broad concepts the page is directly about (e.g. Video, Image). */
+  about?: EntityTerm[];
+  /** Narrower entities the page touches on, grouped into `DefinedTermSet`s. */
+  categories?: EntityCategory[];
+}
+
+/**
+ * Unified nested `@graph` JSON-LD for a single workflow detail page: `WebSite` →
+ * `Organization` → `SoftwareApplication` (ComfyUI) → `WebPage` → the workflow itself
+ * (`SoftwareApplication` + `TechArticle`), plus `DefinedTerm`/`DefinedTermSet` nodes
+ * for `entities.categories` and a `BreadcrumbList`/`FAQPage` when supplied.
+ *
+ * Unlike `buildCollectionPageJsonLd` (a bare `CollectionPage`, no root nodes of its
+ * own), this builds the full `WebSite`/`Organization`/`SoftwareApplication` root
+ * chain itself, with a `WebPage` whose `mainEntity` is the workflow. Always builds
+ * the graph, replacing the page's old per-type scripts outright — `entities` is
+ * optional structured-data enrichment layered into the same graph once the backend
+ * supplies it, not a gate on whether the graph itself renders.
+ */
+export function buildWorkflowGraphJsonLd(params: {
+  name: string;
+  description: string;
+  url: string;
+  image?: string;
+  identifier?: string;
+  datePublished?: string;
+  inLanguage?: string;
+  keywords?: string;
+  breadcrumbItems: BreadcrumbItem[];
+  entities?: WorkflowEntities;
+  faqItems?: FaqItem[];
+  /** Category/tag listing pages this workflow belongs to, folded into the workflow node's `isRelatedTo`. */
+  relatedLinks?: { name: string; url: string }[];
+}) {
+  const { about, categories } = params.entities || {};
+
+  const organizationId = `${SITE_ORIGIN}/#organization`;
+
+  const website = {
+    '@type': 'WebSite',
+    '@id': `${SITE_ORIGIN}/#website`,
+    name: 'Comfy',
+    url: `${SITE_ORIGIN}/`,
+    publisher: { '@id': organizationId },
+    hasPart: [{ '@type': 'Blog', name: 'Comfy Blog', url: 'https://blog.comfy.org' }],
+  };
+
+  const organization = {
+    '@type': 'Organization',
+    '@id': organizationId,
+    name: 'Comfy Org',
+    url: `${SITE_ORIGIN}/`,
+    sameAs: [
+      'https://github.com/Comfy-Org',
+      'https://discord.gg/comfyorg',
+      'https://x.com/ComfyUI',
+      'https://www.linkedin.com/company/comfyui',
+      'https://www.instagram.com/comfyui',
+    ],
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: 'hello@comfy.org',
+        url: 'https://support.comfy.org/',
+      },
+      { '@type': 'ContactPoint', contactType: 'press', email: 'press@comfy.org' },
+    ],
+  };
+
+  const softwareApp = {
+    '@type': 'SoftwareApplication',
+    '@id': `${SITE_ORIGIN}/#comfyui`,
+    name: 'ComfyUI',
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    sameAs: [
+      'https://en.wikipedia.org/wiki/ComfyUI',
+      'https://github.com/Comfy-Org/ComfyUI',
+      `${SITE_ORIGIN}/`,
+    ],
+    softwareHelp: { '@type': 'CreativeWork', name: 'ComfyUI Docs', url: 'https://docs.comfy.org' },
+  };
+
+  const breadcrumbId = `${params.url}#breadcrumb`;
+  const { '@context': _ctx, ...breadcrumb } = buildBreadcrumbJsonLd(params.breadcrumbItems);
+  const breadcrumbList = { ...breadcrumb, '@id': breadcrumbId };
+
+  const workflowId = `${params.url}#workflow`;
+
+  const termSets = (categories || []).map((category, ci) => {
+    const setId = `${params.url}#cat-${ci}`;
+    const terms = category.terms.map((term, ti) => ({
+      id: `${params.url}#e-${ci}-${ti}`,
+      node: {
+        '@type': 'DefinedTerm',
+        '@id': `${params.url}#e-${ci}-${ti}`,
+        name: term.name,
+        ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+        inDefinedTermSet: { '@id': setId },
+      },
+    }));
+    return {
+      id: setId,
+      node: {
+        '@type': 'DefinedTermSet',
+        '@id': setId,
+        name: category.name,
+        hasDefinedTerm: terms.map((t) => ({ '@id': t.id })),
+      },
+      terms,
+    };
+  });
+
+  // `about` terms get their own `@id`s (unlike category terms, which are only
+  // ever referenced through their DefinedTermSet) so the WebPage's `about` can
+  // point at them alongside the workflow itself and each category set.
+  const aboutTerms = (about || []).map((term, i) => ({
+    id: `${params.url}#e-about-${i}`,
+    node: {
+      '@type': 'DefinedTerm',
+      '@id': `${params.url}#e-about-${i}`,
+      name: term.name,
+      ...(term.sameAs ? { sameAs: term.sameAs } : {}),
+    },
+  }));
+
+  const faqId = `${params.url}#faq`;
+
+  const webpage = {
+    '@type': 'WebPage',
+    '@id': `${params.url}#webpage`,
+    url: params.url,
+    headline: params.name,
+    isPartOf: { '@id': `${SITE_ORIGIN}/#website` },
+    publisher: { '@id': `${SITE_ORIGIN}/#organization` },
+    ...(params.datePublished ? { datePublished: params.datePublished } : {}),
+    ...(params.inLanguage ? { inLanguage: params.inLanguage } : {}),
+    breadcrumb: { '@id': breadcrumbId },
+    mainEntity: { '@id': workflowId },
+    ...(aboutTerms.length || termSets.length
+      ? {
+          about: [
+            { '@id': workflowId },
+            ...aboutTerms.map((t) => ({ '@id': t.id })),
+            ...termSets.map((set) => ({ '@id': set.id })),
+          ],
+        }
+      : {}),
+    ...(termSets.length
+      ? { mentions: termSets.flatMap((set) => set.terms.map((t) => ({ '@id': t.id }))) }
+      : {}),
+    ...(params.faqItems?.length ? { hasPart: { '@id': faqId } } : {}),
+  };
+
+  const workflow = {
+    '@type': ['SoftwareApplication', 'TechArticle'],
+    '@id': workflowId,
+    name: params.name,
+    headline: params.name,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    ...(params.identifier ? { identifier: params.identifier } : {}),
+    ...(params.datePublished ? { datePublished: params.datePublished } : {}),
+    ...(params.image ? { image: params.image } : {}),
+    description: params.description,
+    ...(params.keywords ? { keywords: params.keywords } : {}),
+    creator: { '@id': `${SITE_ORIGIN}/#organization` },
+    runtimePlatform: { '@id': `${SITE_ORIGIN}/#comfyui` },
+    ...(params.relatedLinks?.length
+      ? {
+          isRelatedTo: params.relatedLinks.map((link) => ({
+            '@type': 'WebPage',
+            name: link.name,
+            url: link.url,
+          })),
+        }
+      : {}),
+  };
+
+  const faqPage = params.faqItems?.length
+    ? {
+        '@type': 'FAQPage',
+        '@id': faqId,
+        isPartOf: { '@id': `${params.url}#webpage` },
+        mainEntity: params.faqItems.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      }
+    : null;
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      website,
+      organization,
+      softwareApp,
+      webpage,
+      workflow,
+      breadcrumbList,
+      ...aboutTerms.map((t) => t.node),
+      ...termSets.flatMap((set) => [set.node, ...set.terms.map((t) => t.node)]),
+      ...(faqPage ? [faqPage] : []),
+    ],
+  };
+}
