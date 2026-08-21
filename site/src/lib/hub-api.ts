@@ -351,10 +351,11 @@ export function serializeIndexEntry(
     shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
-    // Infer rather than default: the index omits mediaType on 174 of 616 live
-    // entries, and defaulting them to 'image' emptied the video and 3d category
-    // pages outright. A declared value always wins.
-    mediaType: entry.mediaType || mediaTypeFromTagNames(entry.tags || []),
+    // Whatever the index declares, with the pre-existing 'image' default when it
+    // declares nothing. That default is itself a frontend-owned guess and is on
+    // the list for the backend contract fix; it is left as-is here so this PR
+    // changes no classification behaviour.
+    mediaType: entry.mediaType || 'image',
     tags: entry.tags || [],
     models: entry.models || [],
     logos: (entry.logos || []) as { provider: string | string[] }[],
@@ -511,7 +512,7 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
  * Order encodes the OUTPUT medium, which is what a category page groups by, so
  * "Audio to Video" has to land on video and not audio.
  */
-export function mediaTypeFromTagNames(names: readonly string[]): MediaType {
+function mediaTypeFromTagNames(names: readonly string[]): MediaType {
   const tags = names.map((name) => name.toLowerCase());
   if (tags.some((tag) => tag.includes('video') || tag.includes('animation'))) return 'video';
   if (tags.some((tag) => tag.includes('audio'))) return 'audio';

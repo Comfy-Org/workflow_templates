@@ -24,7 +24,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { listWorkflowIndex, mediaTypeFromTagNames } from '../src/lib/hub-api';
+import { listWorkflowIndex } from '../src/lib/hub-api';
 import { readEnv } from '../src/lib/ranking';
 import { tagSlug } from '../src/lib/tag-aliases';
 
@@ -70,9 +70,7 @@ async function main(): Promise<void> {
   // classification source swappable: when the hub populates `mediaType` on every
   // entry, this list keeps following it and no sitemap change is needed.
   const categories = [
-    ...new Set(
-      entries.map((entry) => entry.mediaType || mediaTypeFromTagNames(entry.tags || []))
-    ),
+    ...new Set(entries.map((entry) => entry.mediaType).filter(Boolean)),
   ].sort();
 
   mkdirSync(path.dirname(manifestPath), { recursive: true });
