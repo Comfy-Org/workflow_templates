@@ -8,10 +8,14 @@
  */
 
 import { applyRanking, fetchRankingMap, readEnv, type RankingMap } from './ranking';
+import type { WorkflowEntities } from './structured-data';
 
 // readEnv, not import.meta.env directly: `scripts/` runs this module under plain
 // Node, where import.meta.env is undefined and a direct read throws.
-const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(/\/$/, '');
+const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(
+  /\/$/,
+  ''
+);
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
@@ -51,6 +55,20 @@ export interface HubWorkflowSummary {
   profile: HubProfile;
 }
 
+export interface HubWorkflowMetadataEntityTerm {
+  name: string;
+  same_as?: string;
+  /** Overrides the auto-slugified `name` for this term's JSON-LD `@id` fragment. */
+  slug?: string;
+}
+
+export interface HubWorkflowMetadataEntityCategory {
+  name: string;
+  terms: HubWorkflowMetadataEntityTerm[];
+  /** Overrides the auto-slugified `name` for this category's `DefinedTermSet` `@id` fragment. */
+  slug?: string;
+}
+
 export interface HubWorkflowMetadata {
   media_type?: MediaType;
   media_subtype?: string;
@@ -63,6 +81,13 @@ export interface HubWorkflowMetadata {
   suggested_use_cases?: string[];
   faq_items?: Array<{ question: string; answer: string }>;
   content_template?: string;
+  // SEO entity coverage for the JSON-LD `about`/`mentions` graph — optional,
+  // absent for workflows the backend hasn't been enriched with entities yet.
+  entities?: {
+    about?: HubWorkflowMetadataEntityTerm[];
+    categories?: HubWorkflowMetadataEntityCategory[];
+    mentions?: HubWorkflowMetadataEntityTerm[];
+  };
 }
 
 export interface HubWorkflowDetail extends HubWorkflowSummary {
@@ -127,6 +152,9 @@ export interface HubWorkflowTemplateEntry {
   suggestedUseCases?: string[];
   faqItems?: Array<{ question: string; answer: string }>;
   contentTemplate?: string;
+  // SEO entity coverage for the JSON-LD `about`/`mentions` graph — optional,
+  // absent for workflows the backend hasn't been enriched with entities yet.
+  entities?: WorkflowEntities;
 }
 
 // ---------------------------------------------------------------------------
@@ -493,6 +521,34 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
     faqItems: meta.faq_items || [],
     contentTemplate: meta.content_template || undefined,
     tutorialUrl: workflow.tutorial_url,
+    entities: toWorkflowEntities(meta.entities),
+  };
+}
+
+function toWorkflowEntities(
+  entities: HubWorkflowMetadata['entities']
+): WorkflowEntities | undefined {
+  if (!entities) return undefined;
+  return {
+    about: entities.about?.map((term) => ({
+      name: term.name,
+      sameAs: term.same_as,
+      slug: term.slug,
+    })),
+    categories: entities.categories?.map((category) => ({
+      name: category.name,
+      slug: category.slug,
+      terms: (category.terms || []).map((term) => ({
+        name: term.name,
+        sameAs: term.same_as,
+        slug: term.slug,
+      })),
+    })),
+    mentions: entities.mentions?.map((term) => ({
+      name: term.name,
+      sameAs: term.same_as,
+      slug: term.slug,
+    })),
   };
 }
 

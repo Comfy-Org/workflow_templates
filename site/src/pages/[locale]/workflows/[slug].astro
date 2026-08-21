@@ -38,10 +38,9 @@ import {
 } from '../../../lib/hub-api';
 import { workflowOgUrl } from '../../../lib/og-url';
 import {
-  buildFaqJsonLd,
   serializeJsonLdForScript,
-  buildWorkflowBreadcrumb,
-  buildSoftwareApplicationJsonLd,
+  buildWorkflowGraphJsonLd,
+  buildWorkflowGraphParams,
 } from '../../../lib/structured-data';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { localizeUrl } from '../../../i18n/utils';
@@ -153,6 +152,7 @@ const data = {
   suggestedUseCases: loc?.suggestedUseCases ?? entry.suggestedUseCases ?? [],
   faqItems: loc?.faqItems ?? entry.faqItems ?? [],
   contentTemplate: entry.contentTemplate,
+  entities: entry.entities,
 };
 
 const isIndexable = resolved?.indexable ?? false;
@@ -165,6 +165,13 @@ const urlSlug = data.shareId ? `${data.name}-${data.shareId}` : data.name;
 const canonicalUrl = isIndexable
   ? absoluteUrl(`/${locale}/workflows/${urlSlug}/`)
   : absoluteUrl(`/workflows/${urlSlug}/`);
+// The JSON-LD graph's `@id`s must stay unique per rendered document, even while
+// gated: `canonicalUrl` points at the English URL until the flip, so every
+// non-indexable locale would otherwise derive the exact same `#webpage`/`#workflow`/
+// entity fragment ids as the English page (and as each other). Always anchor the
+// graph on this page's own locale URL; `canonicalUrl` still drives the actual
+// `<link rel="canonical">` above.
+const graphBaseUrl = absoluteUrl(`/${locale}/workflows/${urlSlug}/`);
 
 // One predicate drives four surfaces: canonical (above), robots noindex, the
 // hreflang cluster, and sitemap membership. Emit noindex until this page is
@@ -183,27 +190,24 @@ const ogImage = workflowOgUrl(
   data.username || undefined
 );
 
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'TechArticle',
-  headline: data.title,
-  description: data.description,
-  image: primaryThumbnail || undefined,
-  datePublished: data.date,
-  inLanguage: locale,
-};
-
-const faqStructuredData = buildFaqJsonLd(data.faqItems);
-
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
-  name: data.title,
-  item: canonicalUrl,
-});
-
-const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
-  name: data.title,
-  description: data.metaDescription || data.description,
-});
+// Unified graph replacing the page's old per-type TechArticle/FAQPage/
+// SoftwareApplication/BreadcrumbList scripts outright: WebSite → Organization →
+// SoftwareApplication (ComfyUI) → WebPage → workflow, folding breadcrumb and FAQ
+// into the same set of cross-referenced `@id`s. Entities are structural (English
+// only, like the rest of the non-translatable fields above) and layer DefinedTerm
+// coverage into the same graph once the backend supplies it — they don't gate
+// whether the graph itself renders; `inLanguage` still reflects the locale.
+// `buildWorkflowGraphParams` computes `relatedLinks`/`keywords`/`breadcrumbItems`
+// the same way the default-locale route does, so the two routes can't drift apart.
+const entityGraphStructuredData = buildWorkflowGraphJsonLd(
+  buildWorkflowGraphParams({
+    data,
+    locale,
+    canonicalUrl: graphBaseUrl,
+    pageTitle: title,
+    image: primaryThumbnail || undefined,
+  })
+);
 
 // Related workflows come from the hub index, which is English only. The page's
 // own text is already resolved above, so without this the translated detail page
@@ -223,7 +227,6 @@ const toolbarLabels = buildToolbarLabels(locale);
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
   ogType="article"
-  structuredData={structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
   noindex={!isIndexable}
@@ -258,22 +261,8 @@ const toolbarLabels = buildToolbarLabels(locale);
   <script
     is:inline
     type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+    set:html={serializeJsonLdForScript(entityGraphStructuredData)}
   />
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-  />
-  {
-    faqStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(faqStructuredData)}
-      />
-    )
-  }
   <Fragment slot="footer">
     <SiteFooter />
   </Fragment>

@@ -24,10 +24,9 @@ import {
 } from '../../lib/hub-api';
 import { workflowOgUrl } from '../../lib/og-url';
 import {
-  buildFaqJsonLd,
   serializeJsonLdForScript,
-  buildWorkflowBreadcrumb,
-  buildSoftwareApplicationJsonLd,
+  buildWorkflowGraphJsonLd,
+  buildWorkflowGraphParams,
 } from '../../lib/structured-data';
 import { buildToolbarLabels } from '../../lib/toolbar';
 
@@ -118,6 +117,7 @@ const data = {
   suggestedUseCases: entry.suggestedUseCases || [],
   faqItems: entry.faqItems || [],
   contentTemplate: entry.contentTemplate,
+  entities: entry.entities,
 };
 
 const title = `${data.title} - ComfyUI Workflow`;
@@ -139,27 +139,23 @@ const ogImage = workflowOgUrl(
   data.username || undefined
 );
 
-const structuredData = {
-  '@context': 'https://schema.org',
-  '@type': 'TechArticle',
-  headline: data.title,
-  description: data.description,
-  image: primaryThumbnail || undefined,
-  datePublished: data.date,
-  inLanguage: 'en',
-};
-
-const faqStructuredData = buildFaqJsonLd(data.faqItems);
-
-const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
-  name: data.title,
-  item: canonicalUrl,
-});
-
-const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
-  name: data.title,
-  description: data.metaDescription || data.description,
-});
+// Unified graph replacing the page's old per-type TechArticle/FAQPage/
+// SoftwareApplication/BreadcrumbList scripts outright: WebSite → Organization →
+// SoftwareApplication (ComfyUI) → WebPage → workflow, folding breadcrumb and FAQ
+// into the same set of cross-referenced `@id`s. `entities` layers DefinedTerm
+// coverage into the same graph once the backend supplies it — it does not gate
+// whether the graph itself renders. `buildWorkflowGraphParams` computes
+// `relatedLinks`/`keywords`/`breadcrumbItems` the same way the localized route
+// does, so the two routes can't drift apart.
+const entityGraphStructuredData = buildWorkflowGraphJsonLd(
+  buildWorkflowGraphParams({
+    data,
+    locale,
+    canonicalUrl,
+    pageTitle: title,
+    image: primaryThumbnail || undefined,
+  })
+);
 
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
 // Embed only the top-30 by usage for instant paint; the grid lazy-loads the full
@@ -174,7 +170,6 @@ const toolbarLabels = buildToolbarLabels(locale);
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
   ogType="article"
-  structuredData={structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
   theme="dark"
@@ -205,24 +200,10 @@ const toolbarLabels = buildToolbarLabels(locale);
     }
   </TemplateDetailPage>
 
-  {
-    faqStructuredData && (
-      <script
-        is:inline
-        type="application/ld+json"
-        set:html={serializeJsonLdForScript(faqStructuredData)}
-      />
-    )
-  }
   <script
     is:inline
     type="application/ld+json"
-    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-  />
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+    set:html={serializeJsonLdForScript(entityGraphStructuredData)}
   />
 
   <Fragment slot="footer">
