@@ -23,6 +23,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Mark preview comment as rebuilding
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vercel-preview
+          message: |
+            ⏳ **Preview rebuilding** for `${{ github.event.pull_request.head.sha }}` — [watch the run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}). The link will appear here when the deploy finishes.
+
       - name: Setup
         uses: ./.github/actions/site-setup
 
@@ -81,6 +89,7 @@ jobs:
             fi
 
             echo "preview-url=$preview_url" >> "$GITHUB_OUTPUT"
+            echo "deployed-at=$(date -u '+%Y-%m-%d %H:%M UTC')" >> "$GITHUB_OUTPUT"
           else
             cat "$stderr_file" >&2
             cat "$stdout_file"
@@ -94,3 +103,13 @@ jobs:
           header: vercel-preview
           message: |
             🚀 **Preview deployed:** ${{ steps.deploy.outputs.preview-url }}
+
+            Built from `${{ github.event.pull_request.head.sha }}` at ${{ steps.deploy.outputs.deployed-at }} ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})).
+
+      - name: Comment build failure
+        if: failure() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: vercel-preview
+          message: |
+            ❌ **Preview build failed** for `${{ github.event.pull_request.head.sha }}` — [see the run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}). Any earlier preview link is outdated.
