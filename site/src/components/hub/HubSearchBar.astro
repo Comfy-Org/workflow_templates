@@ -2,6 +2,8 @@
 /** Inline search: sits among the filters, then docks flush below the sticky navbar
  *  (top-hub-nav) once scrolled past. SearchPopover keeps its own pill shape. */
 import SearchPopover from './SearchPopover.vue';
+import { t } from '../../i18n/ui';
+import type { Locale } from '../../i18n/config';
 import { getProfileCache, getCreatorsList, type SerializedTemplate } from '../../lib/hub-api';
 import { buildDiscoveryData } from '../../lib/search-discovery';
 
@@ -12,6 +14,11 @@ interface Props {
 
 const { templates, locale } = Astro.props;
 const creators = getCreatorsList(await getProfileCache());
+const searchLabels = {
+  placeholder: t('search.placeholder', locale as Locale),
+  placeholderShort: t('search.placeholderShort', locale as Locale),
+  ariaLabel: t('search.ariaLabel', locale as Locale),
+};
 // Precompute the small discovery slices server-side; the island lazy-loads the
 // full catalog from grid.json only when a filter badge is applied.
 const discovery = buildDiscoveryData(templates, creators);
@@ -25,5 +32,6 @@ const discovery = buildDiscoveryData(templates, creators);
     facets={discovery.facets}
     totalCount={discovery.totalCount}
     locale={locale}
+    labels={searchLabels}
   />
 </div>

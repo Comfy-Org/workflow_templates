@@ -1,5 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
+import { t } from '../../i18n/ui';
+import type { Locale } from '../../i18n/config';
 import { getLocaleFromPath } from '../../i18n/utils';
 import HeaderMain from './nav/HeaderMain.vue';
 import SearchPopover from './SearchPopover.vue';
@@ -32,6 +34,11 @@ if (showSearch) {
   ]);
   discovery = buildDiscoveryData(searchTemplates, getCreatorsList(profiles));
 }
+const searchLabels = {
+  placeholder: t('search.placeholder', locale as Locale),
+  placeholderShort: t('search.placeholderShort', locale as Locale),
+  ariaLabel: t('search.ariaLabel', locale as Locale),
+};
 ---
 
 <header class:list={['w-full bg-page', sticky && 'sticky top-0 z-50']}>
@@ -50,6 +57,7 @@ if (showSearch) {
             facets={discovery.facets}
             totalCount={discovery.totalCount}
             locale={locale}
+            labels={searchLabels}
           />
         </div>
       )

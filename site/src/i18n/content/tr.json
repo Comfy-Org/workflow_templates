@@ -2468,14 +2468,6 @@
         "question": "Hangi video formatları destekleniyor?"
       }
     ],
-    "howToUse": [
-      "İş akışı JSON'unu ComfyUI'de yükleyin. VideoHelperSuite eklentisinin kurulu olduğundan ve VHS_LoadVideo ile VHS_VideoCombine'ın mevcut olduğundan emin olun.",
-      "VHS_LoadVideo'yu açın ve giriş videonuzu seçin. İsteğe bağlı olarak kırpma aralığı belirleyin, hedef çözünürlüğe yeniden boyutlandırın ve gerekirse kare hızını normalleştirin.",
-      "IC-LoRA düzenleme düğümünü (UUID 2e37ecc9-770a-4ac2-972c-e953901f49d3) bulun. Net bir düzenleme istemi girin (örn. “sol kaldırımda küçük kahverengi bir köpek ekle” veya “sulu boya tarzına dönüştür”). Varsa, değişmesini istemediğiniz öğeleri korumak için negatif istemi ayarlayın (örn. “arka planı koru, fazladan insan olmasın”).",
-      "Düzenleme yoğunluğu ve tutarlılık kontrollerini düzenleme düğümünde ayarlayın (örn. güç/denoise ve rehberlik). Hafif yeniden biçimlendirmeler için düşük güç kullanın; nesne ekleme veya kaldırma için gücü artırın. Varyasyonları karşılaştırırken tohumları sabit tutun.",
-      "VHS_VideoCombine'da çıktı FPS, format/kodek (örn. MP4/H.264), kalite ve çıktı yolunu ayarlayın. Daha hızlı önizleme için FPS veya çözünürlüğü düşürün.",
-      "Queue Prompt'a tıklayın. Çıktı videoyu inceleyin ve yineleyin: istemi iyileştirin, güç/rehberlik ayarlarını değiştirin veya zamansal stabiliteyi artırmak için klibi kısaltın."
-    ],
     "metaDescription": "ComfyUI'de metin istemleriyle video içeriğini düzenleyin. Deneysel bir IC LoRA ile VHS_LoadVideo ve VHS_VideoCombine kullanarak nesne ekleyin, kaldırın veya yeniden biçimlendirin.",
     "suggestedUseCases": [
       "Sosyal içerikler için küçük nesne/hayvan ekleme veya kaldırma; elle maskeleme olmadan.",
@@ -2863,32 +2855,6 @@
   "2652985596d8": {
     "description": "Wan VACE kullanarak giriş videolarını ve referans görsellerini kontrol ederek videolar oluşturun.",
     "extendedDescription": "Wan2.1 VACE Control Video, bir kaynak videonun hareketini ve zamanlamasını korurken, metin istemi ve referans görsel ile yeniden stilize eden veya karakterize eden yönlendirmeli bir video-to-video iş akışıdır. Wan2.1 VACE kontrol noktalarını (1.3B veya 14B) UNETLoader ve VAELoader ile yükler, metninizi CLIPTextEncode ile kodlar ve üretimi basit görsel ön işleme (varsayılan olarak Canny) ile elde edilen kontrol sinyalleriyle koşullandırır. GetVideoComponents, giriş klibinden kareleri ve FPS'yi okur; TrimVideoLatent ise seçilen kare aralığı ve çözünürlükle latent dizisini hizalar.\n\nArka planda, ModelSamplingSD3 Wan2.1 VACE için beklenen örnekleyici zamanlamasını ayarlar ve KSampler, kontrol videosu, istem ve referans görselinizle oluşturulan video latent dizisinde gürültü azaltma yapar. VAEDecode, son latentleri tekrar karelere dönüştürür, CreateVideo bunları istenen FPS'de birleştirir ve MP4 (SaveVideo) veya animasyonlu WebP (SaveAnimatedWEBP) olarak dışa aktarabilirsiniz. İsteğe bağlı CausVid LoRA (LoraLoader), çok düşük adımlarda hareketi hızlandırabilir veya sabitleyebilir; ancak gücünü ayarlamanız gerekebilir. 14B model daha yüksek doğruluk (ve 720p desteği) sunar ancak daha yavaş çalışır ve daha fazla VRAM kullanır; 1.3B varyantı daha hızlıdır ve 480p çıktılar için uygundur.",
-    "faqItems": [
-      {
-        "answer": "Daha hızlı denemeler ve 480p çıktılar için 1.3B kullanın. Daha yüksek kalite veya 720p gerekiyorsa 14B seçin. 14B model daha yavaş çalışır ve daha fazla VRAM ister, ancak genellikle daha temiz detay ve zamansal stabilite sağlar.",
-        "question": "1.3B mi yoksa 14B Wan2.1 VACE modelini mi seçmeliyim?"
-      },
-      {
-        "answer": "LoRA gücünü 0.3–0.5 civarına düşürün, adım sayısını biraz artırın (ör. 2'den 3–4'e) ve LoRA ön ayarı için CFG'yi 1.0 civarında tutun. Sorun devam ederse, LoRA'i tamamen atlayın veya Canny eşiklerini gevşetin ki kenarlar daha az kısıtlayıcı olsun.",
-        "question": "CausVid LoRA kullanırken videom titrek veya bulanık görünüyor. Nasıl düzeltebilirim?"
-      },
-      {
-        "answer": "TrimVideoLatent ile kare aralığını sınırlayabilir veya hizalayabilirsiniz. GetVideoComponents FPS'i kaynaktan okur; CreateVideo sırasında bunu koruyabilir veya üzerine yazabilirsiniz. Daha kısa klipler ve makul FPS, VRAM kullanımını azaltır ve örneklemeyi hızlandırır.",
-        "question": "Süreyi veya FPS'i nasıl değiştiririm?"
-      },
-      {
-        "answer": "Evet. Canny düğümünü başka bir comfyui_controlnet_aux ön işleyiciyle (ör. Lineart veya Depth) değiştirin ve çıktısını WanVaceToVideo'nun kullandığı aynı kontrol girişine yönlendirin. Farklı ön işleyiciler, yapının ne kadar sıkı korunduğunu değiştirir.",
-        "question": "Canny yerine farklı bir ön işleyici kullanabilir miyim?"
-      }
-    ],
-    "howToUse": [
-      "İş akışını ComfyUI'de yükleyin ve UNETLoader, VAELoader ve CLIPLoader düğümlerini kullanmak istediğiniz Wan2.1 VACE modeline yönlendirin (hız için 1.3B/480p, kalite için 14B/720p). Ön işleyiciyi değiştirecekseniz comfyui_controlnet_aux kurun.",
-      "Kontrol video grubunda, LoadVideo ile kaynak klibinizi bağlayın. GetVideoComponents kareleri, FPS'yi ve boyutları çıkarır. Gerekirse TrimVideoLatent ile kare aralığını kırpın ve hedef çözünürlüğün seçilen modelin kapasitesine uygun olduğundan emin olun.",
-      "Referans görsel grubunda, LoadImage ile stil/kimlik görselinizi ekleyin. Görsel ön işleme kısmında, Canny düğümü kenar rehberliği üretir (Lineart veya Depth gibi başka bir ön işleyiciyle değiştirebilirsiniz). Kenarların ne kadar sıkı takip edileceğini Canny eşiklerini ayarlayarak kontrol edin.",
-      "Prompt grubunu açın ve ana isteminizi (ve şablonda varsa negatif istemi) girin. Sampling & Decoding'de örnekleme parametrelerini ayarlayın: varsayılan üretim için steps=20 ve cfg=6.0; CausVid LoRA kullanıyorsanız steps=2–4 ve cfg≈1.0 ile başlayın. LoRA'i LoraLoader'da yükleyin ve gücünü 0.3 ile 0.7 arasında ayarlayın veya devre dışı bırakmak için atlayın.",
-      "Grafiği çalıştırın. WanVaceToVideo koşullandırmayı birleştirir, KSampler ModelSamplingSD3 ile gürültü azaltma yapar ve VAEDecode latentleri karelere çevirir. Kareleri kontrol etmek için PreviewImage kullanın, ardından CreateVideo ile tespit edilen veya seçilen FPS'de birleştirin.",
-      "Sonucunuzu Save Video(Mp4) ile SaveVideo düğümünden veya Save Video(WebP) ile SaveAnimatedWEBP'den dışa aktarın. Sallanma veya bulanıklık görürseniz, LoRA gücünü düşürün, adım sayısını biraz artırın, CFG'yi 5–6'ya düşürün veya Canny eşiklerini gevşetin."
-    ],
     "metaDescription": "Bir kaynak videoyu Wan2.1 VACE ile stilize bir klibe dönüştürün. Metin ve referans görsel ile yönlendirin, kenarları Canny ile kontrol edin, ComfyUI'de MP4/WebP olarak dışa aktarın.",
     "suggestedUseCases": [
       "Karakter yeniden stilizasyonu: Bir kaynak klipten hareketi koruyup, referans görselle tanımlanan yeni bir karakter görünümüyle değiştirin.",
@@ -8099,14 +8065,6 @@
         "question": "Bu iş akışında yükseltme (upscaling) var mı?"
       }
     ],
-    "howToUse": [
-      "Restore Old Photos iş akışını ComfyUI'de açın. 4c000cf8-4ec4-49a6-853c-e78dd316edc6 için eksik düğüm uyarısı görürseniz, ilgili özel düğüm/uzantıyı yükleyin ve ComfyUI'yi yeniden başlatın.",
-      "LoadImage'ı seçin ve eski veya hasarlı fotoğrafınızı seçin. Görsel hem onarım hem de orijinal (temel) dala beslenir.",
-      "Özel onarım düğümünü (ID 4c000cf8-4ec4-49a6-853c-e78dd316edc6) açın ve mevcut kontrollerini ayarlayın (ör. genel onarım/geliştirme gücü, varsa renk/kontrast seçenekleri). Queue Prompt'a tıklayarak işleyin.",
-      "ComfySwitchNode ile Orijinal ve Onarılmış çıktılar arasında geçiş yapın. Hızlı kontroller için PreviewAny'de güncellemeleri izleyin.",
-      "ImageCompare'u açarak orijinal ve onarılmış görselleri yan yana görüntüleyin. Yüzleri, kenarları ve dokuları incelemek için yakınlaştırın. Onarım düğümü ayarlarını değiştirin ve memnun kalana kadar tekrar sıraya alın.",
-      "Dışa aktarmadan önce, ComfySwitchNode'un tercih ettiğiniz onarılmış dala yönlendirildiğinden emin olun. Ardından SaveImage ile son görseli diske yazın (dosya adınızı/ön ekinizi ve çıktı klasörünü ayarlayın)."
-    ],
     "metaDescription": "ComfyUI iş akışı: özel onarım düğümü, A/B karşılaştırma ve kolay dışa aktarma ile eski fotoğrafları LoadImage, ImageCompare ve SaveImage kullanarak onarın.",
     "suggestedUseCases": [
       "Aile fotoğraf albümlerini minimum manuel rötuşla dijitalleştirip yenileme.",
@@ -10133,14 +10091,6 @@
         "answer": "Evet. Herhangi bir Moodboard grubunu (PrimitiveNodes → Krea2ImageNode → SaveImage) çoğaltın, MarkdownNote etiketini güncelleyin ve yeni PrimitiveNode'ları yeni moodboard_id ve isteminize yönlendirin.",
         "question": "Altıdan fazla moodboard ekleyebilir miyim?"
       }
-    ],
-    "howToUse": [
-      "Krea 2 Moodboard'ları iş akışını ComfyUI'de yükleyin ve Krea2ImageNode özel düğümünün kurulu olduğundan emin olun. Krea API anahtarınızı düğüm ayarlarında veya dokümantasyona göre ortamınıza ekleyin.",
-      "Önce hangi bölümleri test etmek istediğinize karar verin ve diğerlerini atlayın. MarkdownNote etiketlerini kullanarak her grubu (01–06) bulun.",
-      "Her etkin grup için PrimitiveNode değerlerini ayarlayın: bir moodboard_id yapıştırın (Yazar Notları'ndaki örnek UUID'leri veya kendi ID'nizi kullanabilirsiniz), bir istem yazın ve bir moodboard_strength seçin. Krea2ImageNode sürümünüzde açıksa isteğe bağlı olarak tohum ve boyut da ayarlayabilirsiniz.",
-      "Her etkin gruptaki SaveImage düğümünü açın ve net bir filename_prefix belirleyin (ör. mb01_ethereal_) böylece farklı stillerden gelen çıktılar birbirinin üzerine yazılmaz.",
-      "Queue Prompt'a tıklayın. Krea2ImageNode, her etkin dal için Krea 2 API'sini çağıracak ve SaveImage sonuçları çıktı klasörünüze yazacaktır.",
-      "Yineleyin: moodboard_strength'ı ayarlayarak stil ve istem dengesini kurun, istemleri geliştirin, moodboard ID'lerini değiştirin veya daha fazla stil varyantı eklemek için bir grubu çoğaltın."
     ],
     "metaDescription": "ComfyUI'de Krea 2 moodboard stillerini test edin ve karşılaştırın. Altı paralel dalda bölüm başına istem, moodboard ID ve temiz SaveImage çıktıları.",
     "suggestedUseCases": [
@@ -12427,14 +12377,6 @@
         "question": "Hangi donanıma ihtiyacım var?"
       }
     ],
-    "howToUse": [
-      "İş akışı JSON'unu ComfyUI'de yükleyin, ardından Prompt girişi, Stable Audio 3 düğümü ve SaveAudioMP3 çıktısını görüntüleyin.",
-      "Stable Audio 3 modelini Hugging Face'dan (Comfy-Org/stable-audio-3) indirin ve depo talimatlarına göre dosyaları yerleştirin. qwen3.5_2b_bf16.safetensors dosyasını indirip ComfyUI/models/text_encoders klasörüne koyun. ComfyUI'yi yeniden başlatın.",
-      "Prompt alanına kısa bir fikir girin (2–10 kelime en iyi sonucu verir). İsteğe bağlı olarak Stable Audio 3 düğümünde Süre (saniye) ve Seed ayarlayın. İlk deneme için diğer ayarları varsayılanda bırakın.",
-      "Queue Prompt/Run'a tıklayın. Alt Grafik, prompt'unuzu Qwen ile genişletir ve Stable Audio 3 üretim düğümüne iletir. Sesin oluşturulmasını bekleyin.",
-      "SaveAudioMP3 düğümünde çıktı yolunu (ve varsa bitrate'i) ayarlayın, ardından kaydetmek için çalıştırın veya tekrar çalıştırın. Kaydedilen dosyanın konumunu konsolda veya düğüm önizlemesinde kontrol edin.",
-      "Yineleyin: varyasyonlar için seed'i değiştirin, kullanımınıza göre süreyi ayarlayın veya sonuçlar çok karmaşıksa prompt'u sadeleştirin (Qwen genişletmesi kısa girdileri yine de zenginleştirir)."
-    ],
     "metaDescription": "ComfyUI iş akışı: Kısa prompt'ları Qwen ile genişletin ve Stable Audio 3 ile stereo ses üretin. Hızlı müzik, SFX ve ses taslağı için MP3 dışa aktarımı içerir.",
     "suggestedUseCases": [
       "Tür, atmosfer ve enstrümantasyon keşfi için hızlı müzik taslakları.",
@@ -14103,14 +14045,6 @@
         "question": "Kling 3.0 çağrıları başarısız oluyor veya zaman aşımına uğruyor—ne yapmalıyım?"
       }
     ],
-    "howToUse": [
-      "“Adım 3: İletişim Tablosu İş Akışı” JSON'unu ComfyUI'de yükleyin ve tüm düğümlerin yeşil olduğunu doğrulayın (LoadImage, BatchImagesNode, PrimitiveNode, SaveVideo, Kling 3.0 ve yardımcı düğümler).",
-      "8 görseli tam hikaye sırasına göre içe aktarın. BatchImagesNode ile çoklu dosya yükleyin (dosya adlarının doğru sıralandığından emin olun) veya tek tek LoadImage düğümlerini güncelleyin. Tüm görselleri 16:9 oranına yakın tutun, aksi halde 1080p'de kırpma olabilir.",
-      "PrimitiveNode parametrelerini açın ve 1920×1080 çözünürlük (yazar notu: 1080p), FPS ve çekim başına süreyi ayarlayın. Bunlar hem önizleme temposunu hem de Kling 3.0 istek zamanlamasını kontrol eder.",
-      "İsteğe bağlı olarak, anahtar kare çiftleri arasında kısa otomatik açıklamalar istiyorsanız Gemini-3.1-flsih-lite düğümünü etkinleştirin. Bu notlar, Kling 3.0 istemlerine hafif rehberlik olarak aktarılabilir.",
-      "SaveVideo ile 1080p iletişim tablosu önizlemesini üretmek için grafiği kuyruğa alın. Çıktıyı gözden geçirerek kare sırasını, en-boy oranını ve temposunu doğrulayın.",
-      "Kling 3.0 FFLF düğümlerini çalıştırarak 7 video oluşturun (çiftler: 1–2, 2–3, …, 7–8). Çıktı/video klasöründe kaydedilen klipleri kontrol edin. Bir şey yanlış görünüyorsa, PrimitiveNode'da sıralama/süreyi ayarlayın ve tekrar kuyruğa alın."
-    ],
     "suggestedUseCases": [
       "Storyboard'dan harekete: Görsel bir anlatıyı doğrulayın, ardından her geçişi rehberli bir klibe dönüştürün.",
       "Ürün özelliklerini ortaya çıkarma: Özellik çekimleri arasında sorunsuz, kontrollü geçişler oluşturun.",
@@ -15664,32 +15598,6 @@
   "c1959fdc5642": {
     "description": "Bu uygulama, görselinizi en iyi açık kaynak büyütme modeli SeedVR2 ile büyütür.",
     "extendedDescription": "Bu ComfyUI iş akışı, açık kaynak SeedVR2 büyütme modeliyle yüksek kaliteli tek görsel süper çözünürlük sağlar. Minimal ve üretime uygun bir boru hattıdır: LoadImage ile kaynak görselinizi yüklersiniz, SeedVR2 Upscale düğümü (c35dd4ba-0fe3-47d6-afce-1c56d9fe5beb) çözünürlüğü artırırken ince detayları yeniden oluşturur ve SaveImage sonucu diske yazar. Grafik yalnızca büyütmeye odaklandığı için istem, örnekleyici veya difüzyon adımı yoktur—bu da işlemi hızlı, tekrarlanabilir ve kolay ayarlanabilir kılar.\n\nArka planda SeedVR2, yüksek çözünürlükte yüksek frekanslı detayları tahmin eden öğrenilmiş bir eşleme uygular; orijinal kompozisyon ve renkleri korurken keskinlik ve dokuyu iyileştirir. Pratikte, görselinizi yüklersiniz, SeedVR2 düğümünde sunulan ölçek faktörünü seçersiniz (genellikle 2x veya 4x, düğümün yapılandırmasına bağlı olarak), işi kuyruğa alırsınız ve çıktıyı alırsınız. Bu iş akışı, baskı için varlık hazırlama, render büyütme veya yapay zekâ ile üretilmiş görselleri içeriklerini değiştirmeden parlatmak için idealdir.",
-    "faqItems": [
-      {
-        "answer": "Hayır. Öğrenilmiş bir büyütücü (SeedVR2) kullanır ve istem veya difüzyon adımı olmadan daha yüksek çözünürlükte detayları yeniden oluşturur. Kompozisyon ve renkler korunur; hafif keskinleştirme ve doku iyileştirmesi olabilir.",
-        "question": "Bu iş akışı görselimin içeriğini değiştirir mi?"
-      },
-      {
-        "answer": "Mevcut ölçek faktörleri, bu iş akışındaki SeedVR2 Upscale düğümünün yapılandırmasına bağlıdır (genellikle 2x veya 4x). Seçenekleri görmek için düğümü açın. Çok büyük çıktılar için iki kez 2x çalıştırmayı düşünebilirsiniz.",
-        "question": "Hangi ölçek faktörleri destekleniyor?"
-      },
-      {
-        "answer": "SaveImage, dosyaları ComfyUI/output dizinine, düğümde belirlediğiniz dosya adı ön ekiyle kaydeder. Queue Prompt'a tıkladıktan sonra bu klasörü kontrol edin.",
-        "question": "Sonuçlarım nereye kaydediliyor?"
-      },
-      {
-        "answer": "Daha düşük bir ölçek faktörü deneyin, diğer GPU yoğun uygulamaları kapatın veya iki aşamada büyütün (ör. önce 2x, sonra tekrar 2x). GPU önerilir; CPU ile çalıştırmak mümkündür ancak çok daha yavaştır.",
-        "question": "Bellek (VRAM) hatası alırsam ne yapmalıyım?"
-      }
-    ],
-    "howToUse": [
-      "ComfyUI'yi açın ve Görsel Büyütme iş akışı JSON'unu yükleyin. Üç düğüm görmelisiniz: LoadImage → SeedVR2 Upscale (c35dd4ba-0fe3-47d6-afce-1c56d9fe5beb) → SaveImage.",
-      "LoadImage'da kaynak görselinizi seçin. En iyi sonuç için mümkün olan en yüksek kaliteli orijinali kullanın.",
-      "SeedVR2 Upscale düğümünü açın ve mevcut ölçek faktörünü ayarlayın (ör. 2x veya 4x, düğüm seçeneklerine bağlı olarak). Bellek sınırına takılırsanız daha düşük bir ölçek deneyin veya iki kez 2x uygulayın.",
-      "SaveImage'da çıktıları düzenli tutmak için net bir dosya adı ön eki belirleyin.",
-      "Grafiği çalıştırmak için Queue Prompt'a tıklayın. Önizleme/çıktıdan keskinliği ve artefakt seviyesini kontrol edin.",
-      "Büyütülmüş görseli, seçtiğiniz dosya adı ön ekiyle ComfyUI/output klasörünüzde bulabilirsiniz."
-    ],
     "metaDescription": "SeedVR2 modeliyle görselleri büyütmek için basit bir ComfyUI iş akışı. Görsel yükle, büyüt ve net, yüksek çözünürlüklü sonuçları kaydet.",
     "suggestedUseCases": [
       "Baskı ve yüksek DPI ekranlar için ürün fotoğraflarını veya arayüz varlıklarını büyütmek",
@@ -18112,8 +18020,7 @@
       "Sosyal medya ve kampanya planlama: sunumlar, storyboard'lar veya Instagram/TikTok hikaye önizlemeleri için dikey 9:16 4K kontakt sayfası üretin.",
       "Pazar yeri listeleme standardizasyonu: SKU'lar arasında tekrarlanabilir açı setiyle görsel tutarlılığı artırın.",
       "Müşteri inceleme turları: sekiz açının tek bir sayfada paylaşılmasıyla daha hızlı onay alın."
-    ],
-    "title": "Adım 2: Kontakt Sayfası İş Akışı"
+    ]
   },
   "dc62b97bc1fc": {
     "faqItems": [
@@ -19656,14 +19563,6 @@
   "ed1c4eade3a3": {
     "description": "Seedance 2.0 ile viral bir sinemagraf kare efekti üretmek için tek tıkla çalışan bir iş akışı. Karakterinizin görselini yükleyin, isteğe bağlı olarak sahnedeki hareketi tanımlayın ve oluşturmak için tıklayın. Bu iş akışı, gerçekçi insan girişi yasağını/sınırlamasını atlar. Sinemagraf, durağan bir fotoğraf ile videonun birleşimidir; statik bir görselde ince, tekrarlayan ve kusursuz bir hareket bulunur.",
     "extendedDescription": "Seedance 2.0 - Viral Sinemagraf Efekti, tek bir karakter görselini ince hareketli, kısa ve döngüsel bir sinemagrafa dönüştürür. İş akışı, LoadImage (veya birden fazla için BatchImagesNode) ile durağan görselinizi yükleyerek başlar; ardından hareket açıklamanızı model dostu kısa hareket ipuçlarına dönüştüren hafif bir metin hattı (PrimitiveStringMultiline → RegexReplace → GeminiNode/GeminiNanoBanana2) kullanır. Maske tabanlı bir geçiş, hareketin nerede olacağını belirler: MaskPreview ile bölgeyi görselleştirir, MaskToImage ise maskeyi aşağı akışta kullanılmak üzere dönüştürür; böylece sadece seçili alan hareket eder, çerçevenin geri kalanı tamamen sabit kalır.\n\nTemelde, ByteDance2ReferenceNode, Seedance 2.0’ın referans tabanlı görselden videoya hareketini yalnızca maskelenmiş bölgede uygular; kaynak fotoğraftaki kimlik ve kompozisyonu korur. Kareler GetVideoComponents ve CreateVideo ile birleştirilir; PreviewAny ile sonuçları inceleyebilir, SaveVideo (ve anahtar kare/maske anlık görüntüleri için SaveImage) ile dışa aktarabilirsiniz. Grafik içinde iki özel yardımcı düğüm (f4cfd806-6db2-425e-9f50-3eb8fe546a77 ve e42b05e2-13fc-4ad5-822d-b89a8a297d35) önceden bağlıdır ve tek tıkla çalıştırma için manuel değişiklik gerektirmez. Sonuç; sosyal medya, başlıklar ve karakter tanıtımları için ideal, temiz ve kusursuz bir döngüdür—tüm sahneyi yeniden inşa etmeden hassas, kontrollü hareket.",
-    "howToUse": [
-      "İş akışını ComfyUI'de yükleyin ve kaynak görselinizi LoadImage düğümüne bırakın (birden fazla için BatchImagesNode kullanın).",
-      "PrimitiveStringMultiline düğümüne istediğiniz hareketi tanımlayın (ör. \"saç hafifçe sallanıyor ve gözler kırpıyor\"). RegexReplace ve GeminiNode/GeminiNanoBanana2 bunu otomatik olarak kısa hareket ipuçlarına dönüştürür.",
-      "Hareketli bölgeyi tanımlayın: MaskPreview ile animasyon yapılacak bölgeyi kontrol edin ve gerekirse ayarlayın; ardından MaskToImage ile hareket geçişi için dönüştürün, böylece arka plan sabit kalır.",
-      "ByteDance2ReferenceNode’u açarak hareket yoğunluğu ve döngü uzunluğu gibi ana kontrolleri gözden geçirin (sürümünüzde varsa). Platformunuza uygun fps/süreyi GetVideoComponents/CreateVideo’da ayarlayın.",
-      "Kuyruğa Al/Üret’e tıklayın. Ara kareleri PreviewAny ile izleyin; kenar artefaktları veya titreme görürseniz maske yumuşaklığını veya hareket yoğunluğunu ayarlayın.",
-      "Sonucunuzu SaveVideo (MP4) ile dışa aktarın; yineleme için maske veya ana kareleri kaydetmek isterseniz SaveImage kullanın."
-    ],
     "metaDescription": "Seedance 2.0 ile tek görselden kusursuz bir sinemagraf oluşturun. Hareket alanını maskeleyin, hareketi tanımlayın ve tek tıkla döngüsel video olarak dışa aktarın.",
     "suggestedUseCases": [
       "Sosyal medya gönderileri ve profil başlıkları için karakter portrelerinde ince nefes alma, göz kırpma veya saç hareketi.",

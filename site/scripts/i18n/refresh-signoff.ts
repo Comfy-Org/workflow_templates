@@ -44,6 +44,12 @@ import {
   type WorkflowContent,
 } from '../../src/lib/i18n/schema';
 
+/**
+ * Written when a wave has no reviewer name to inherit. It is a sentinel, not a
+ * name, so it must never be treated as one when picking the wave's reviewer.
+ */
+const UNKNOWN_REVIEWER = 'unknown';
+
 interface Verdicts {
   entries?: Record<string, { findings?: { field?: string; severity?: string }[] }>;
 }
@@ -78,16 +84,49 @@ function isNonEmpty(value: unknown): boolean {
  * Refresh one locale's records in place. Pure apart from reading and writing
  * under `contentRoot`, so tests run it against a fixture tree.
  */
+/**
+ * Locales the pipeline may grant a FIRST sign-off to, rather than only
+ * maintaining an existing human wave.
+ *
+ * Empty by default, so a locale still waits for its native reviewer exactly as
+ * before. Listing a locale here says the team has decided that AI-review-clean
+ * text is enough to index it, and that corrections will land afterwards as
+ * overrides instead of gating the ranking. It does NOT weaken the other half of
+ * the gate: a page whose required fields are not genuinely translated stays
+ * non-indexable either way, because the predicate checks that separately.
+ */
+export function bootstrapLocales(raw: string | undefined = process.env.I18N_BOOTSTRAP_LOCALES): Set<string> {
+  return new Set(
+    (raw ?? '')
+      .split(/[,\s]+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+  );
+}
+
 export function refreshSignoffRecords(
   locale: Locale,
   contentRoot: string,
-  today: string = new Date().toISOString().slice(0, 10)
+  today: string = new Date().toISOString().slice(0, 10),
+  mayBootstrap: boolean = bootstrapLocales().has(locale)
 ): RefreshSummary | null {
   const reviewsPath = path.join(contentRoot, 'reviews', `${locale}.json`);
-  const reviews = readJson<LocaleReviews>(reviewsPath);
-  // No first wave, nothing to maintain. Never bootstrap a locale here: granting
-  // the first sign-off is the native reviewer's act, not the pipeline's.
-  if (!reviews || Object.keys(reviews).length === 0) return null;
+  const storedReviews = readJson<LocaleReviews>(reviewsPath);
+  // A missing file and an unreadable one both read as null, but they mean
+  // opposite things here. Bootstrapping may start from no file; starting from a
+  // file it could not parse would rewrite the locale from `{}` and take every
+  // persisted sign-off with it.
+  if (!storedReviews && mayBootstrap && fs.existsSync(reviewsPath)) {
+    console.error(
+      `[i18n] signoff-refresh: [${locale}] reviews/${locale}.json exists but could not be ` +
+        `read; refusing to bootstrap over it.`
+    );
+    return null;
+  }
+  const reviews = storedReviews ?? (mayBootstrap ? {} : null);
+  // Nothing to maintain and no permission to start a wave. Granting the first
+  // sign-off is the native reviewer's act unless the locale is listed above.
+  if (!reviews || (Object.keys(reviews).length === 0 && !mayBootstrap)) return null;
 
   // Fail closed on unreadable inputs. A read/parse failure must never look like
   // an empty catalog: that would make the cleanup below "drop" every record and
@@ -160,7 +199,16 @@ export function refreshSignoffRecords(
   const baseScope = (scope: string | undefined): string =>
     (scope ?? '').split(/(?:^|;\s*)auto-(?:refresh|sealed)\b/)[0].trim();
   const records = Object.values(reviews);
-  const waveReviewer = mode(records.map((r) => r.reviewer)) || 'unknown';
+  // A bootstrapped locale has no wave to inherit a name from, and 'unknown'
+  // would read as "somebody signed this off and we lost track of who". Name the
+  // pipeline instead, so the audit trail says plainly that no human read it.
+  // 'unknown' is this function's own "no name available" sentinel, so letting it
+  // win the mode would make it masquerade as an inherited reviewer and skip the
+  // fallback below — a bootstrapped record would then claim a human wave that
+  // never happened. Filtered out so it can only ever be the fallback's answer.
+  const waveReviewer =
+    mode(records.map((r) => r.reviewer).filter((name) => name && name !== UNKNOWN_REVIEWER)) ||
+    (mayBootstrap ? 'ai-review' : UNKNOWN_REVIEWER);
   const waveScope = mode(records.map((r) => baseScope(r.approvedScope)).filter(Boolean));
   const withWaveScope = (marker: string, base: string = waveScope): string =>
     base ? `${base}; ${marker}` : marker;
@@ -258,7 +306,9 @@ export function refreshSignoffRecords(
         reviewedArtifactChecksum: currentChecksum,
         automated: true,
         approvedScope: withWaveScope(
-          `auto-sealed ${today}: published after the last wave, AI-review clean`
+          records.length === 0
+            ? `auto-sealed ${today}: first wave granted by policy, AI-review clean, no human pass`
+            : `auto-sealed ${today}: published after the last wave, AI-review clean`
         ),
       };
       summary.sealedNew.push(sid);
