@@ -40,6 +40,11 @@ const slots = reactive(
     preview: props.exampleKeyframes[i] ?? '',
     isExample: true,
     enabled: true,
+    /** True while the browser is re-encoding a freshly dropped image. */
+    preparing: false,
+    /** Size of what the user picked, and of what will actually be uploaded. */
+    originalBytes: 0,
+    uploadBytes: 0,
   }))
 );
 
@@ -82,6 +87,18 @@ const selectedResolution = computed(() =>
 );
 const enabledIndexes = computed(() => slots.filter((s) => s.enabled).map((s) => s.index));
 const usingExampleFrames = computed(() => slots.every((s) => s.isExample));
+const preparingCount = computed(() => slots.filter((s) => s.preparing).length);
+
+/** Only reports on images the browser actually shrank. */
+const compression = computed(() => {
+  const shrunk = slots.filter((s) => s.enabled && s.uploadBytes && s.uploadBytes < s.originalBytes);
+  if (!shrunk.length) return null;
+  return {
+    count: shrunk.length,
+    before: shrunk.reduce((sum, s) => sum + s.originalBytes, 0),
+    after: shrunk.reduce((sum, s) => sum + s.uploadBytes, 0),
+  };
+});
 const secondsError = computed(() =>
   validateSeconds(settings.seconds, maxFrameFor(enabledIndexes.value))
 );
@@ -180,21 +197,23 @@ async function copyAgentPrompt() {
 
 /**
  * Longest edge kept for an uploaded reference. The workflow renders at most
- * ~1464px wide (Very high, 21:9), and the node crops/resizes every reference to
- * the frame anyway, so anything beyond this is detail the model never sees.
+ * ~1464px wide, and the keyframes node crops and resizes every reference to
+ * the frame, so anything beyond this is detail the model never sees.
  */
 const MAX_REFERENCE_EDGE = 1536;
+/** Skip work on images that are already small enough to not matter. */
+const COMPRESS_THRESHOLD_BYTES = 600_000;
 /** Vercel rejects function requests over 4.5 MB; stay clear of the edge. */
 const MAX_UPLOAD_BYTES = 3.5 * 1024 * 1024;
 
 /**
- * Re-encode an oversized image to WebP so three references fit in one request.
- * Returns the original file when it is already small enough, and falls back to
- * it if the browser cannot decode or encode (old Safari, exotic formats) —
- * better to try the upload than to refuse the file outright.
+ * Re-encode an oversized image to WebP so a full set of references fits in one
+ * request. Never upscales, and returns the original file when it is already
+ * small or when the browser cannot decode/encode it — better to attempt the
+ * upload than to refuse the file outright.
  */
 async function prepareImage(file: File): Promise<File> {
-  if (file.size <= 600_000) return file;
+  if (file.size <= COMPRESS_THRESHOLD_BYTES) return file;
   try {
     const bitmap = await createImageBitmap(file);
     const scale = Math.min(1, MAX_REFERENCE_EDGE / Math.max(bitmap.width, bitmap.height));
@@ -214,38 +233,14 @@ async function prepareImage(file: File): Promise<File> {
     );
     if (!blob || blob.size >= file.size) return file;
 
-    const name = file.name.replace(/\.[^.]+$/, '') + '.webp';
-    return new File([blob], name, { type: 'image/webp' });
+    return new File([blob], file.name.replace(/\.[^.]+$/, '') + '.webp', { type: 'image/webp' });
   } catch {
     return file;
   }
 }
 
-/**
- * Read a response that is *usually* JSON.
- *
- * Our routes always answer with JSON, but the platform in front of them does
- * not: an oversized upload is rejected by Vercel itself with an HTML error
- * page, and a cold start or gateway fault can do the same. Parsing those
- * blindly surfaced the parser's complaint ("Unexpected token 'R'...") instead
- * of the actual failure, so fall back to a message built from the status.
- */
-async function readResponse(res: Response): Promise<{ error?: string; [key: string]: unknown }> {
-  const text = await res.text();
-  try {
-    return text ? JSON.parse(text) : {};
-  } catch {
-    return { error: httpErrorMessage(res.status, text) };
-  }
-}
-
-function httpErrorMessage(status: number, body: string): string {
-  if (status === 413) {
-    return 'Those reference images are too large to upload in one request. Try smaller images, or remove a reference.';
-  }
-  if (status === 504) return 'The request timed out before the server answered. Try again.';
-  const detail = body.trim().split('\n')[0].slice(0, 120);
-  return detail ? `Request failed (${status}): ${detail}` : `Request failed (${status}).`;
+function formatMb(bytes: number): string {
+  return `${(bytes / 1024 / 1024).toFixed(bytes < 1024 * 1024 ? 2 : 1)} MB`;
 }
 
 function timecode(frame: number): string {
@@ -266,14 +261,21 @@ function randomizeSeed() {
 async function attachFile(index: number, file: File | null) {
   if (!file || !file.type.startsWith('image/')) return;
   const slot = slots[index];
-  // Shrink before storing, so what we preview is exactly what we upload.
-  const prepared = await prepareImage(file);
-  const url = URL.createObjectURL(prepared);
-  objectUrls.push(url);
-  slot.file = prepared;
-  slot.preview = url;
-  slot.isExample = false;
-  slot.enabled = true;
+  slot.preparing = true;
+  try {
+    // Shrink before storing, so what is previewed is exactly what is uploaded.
+    const prepared = await prepareImage(file);
+    const url = URL.createObjectURL(prepared);
+    objectUrls.push(url);
+    slot.file = prepared;
+    slot.preview = url;
+    slot.isExample = false;
+    slot.enabled = true;
+    slot.originalBytes = file.size;
+    slot.uploadBytes = prepared.size;
+  } finally {
+    slot.preparing = false;
+  }
 }
 
 function onPick(index: number, event: Event) {
@@ -289,6 +291,8 @@ function onDrop(index: number, event: DragEvent) {
 
 function resetSlot(index: number) {
   const slot = slots[index];
+  slot.originalBytes = 0;
+  slot.uploadBytes = 0;
   slot.file = null;
   slot.preview = props.exampleKeyframes[index] ?? '';
   slot.isExample = true;
@@ -386,7 +390,7 @@ async function run() {
   // an oversized set is reported here instead of as an opaque 413.
   if (uploadBytes > MAX_UPLOAD_BYTES) {
     state.value = 'failed';
-    errorMessage.value = `Those images add up to ${(uploadBytes / 1024 / 1024).toFixed(1)} MB, over the ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(1)} MB this page can send at once. Use smaller images, or remove a reference.`;
+    errorMessage.value = `Those images add up to ${formatMb(uploadBytes)}, over the ${formatMb(MAX_UPLOAD_BYTES)} this page can send at once. Use smaller images, or remove a reference.`;
     return;
   }
 
@@ -452,7 +456,28 @@ onBeforeUnmount(() => {
           <p class="text-[11px] leading-relaxed text-content-secondary">
             Three images pinned to moments in the clip — start, middle and end. The model paints its
             way from one to the next, so the order tells the story. Drop in your own to replace one,
-            or remove it to let the model invent that stretch freely.
+            or remove it to let the model invent that stretch freely. Large images are resized and
+            re-encoded in your browser before upload — the model renders well below their full
+            resolution either way.
+          </p>
+
+          <p
+            v-if="preparingCount"
+            class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 text-[11px] text-content-secondary"
+          >
+            <span
+              class="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/25 border-t-white/80"
+              aria-hidden="true"
+            ></span>
+            Resizing {{ preparingCount }} image{{ preparingCount === 1 ? '' : 's' }} for upload…
+          </p>
+          <p
+            v-else-if="compression"
+            class="rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] p-2 text-[11px] text-emerald-200/90"
+          >
+            {{ compression.count }} image{{ compression.count === 1 ? '' : 's' }} resized for upload
+            — {{ formatMb(compression.before) }} → {{ formatMb(compression.after) }}. The originals
+            on your machine are untouched.
           </p>
 
           <div class="flex flex-wrap gap-3">
@@ -508,9 +533,24 @@ onBeforeUnmount(() => {
                     {{ slot.index }}
                   </span>
                   <span
-                    v-if="!slot.isExample && slot.enabled"
+                    v-if="!slot.isExample && slot.enabled && !slot.preparing"
                     class="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-emerald-400"
+                    :title="
+                      slot.uploadBytes && slot.uploadBytes < slot.originalBytes
+                        ? `Compressed for upload: ${formatMb(slot.originalBytes)} → ${formatMb(slot.uploadBytes)}`
+                        : 'Your image'
+                    "
                   ></span>
+                  <div
+                    v-if="slot.preparing"
+                    class="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/70 text-[9px] text-white"
+                  >
+                    <span
+                      class="inline-block h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white"
+                      aria-hidden="true"
+                    ></span>
+                    resizing
+                  </div>
                 </div>
                 <input
                   type="file"
