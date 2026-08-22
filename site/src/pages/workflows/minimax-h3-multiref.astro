@@ -9,8 +9,6 @@ import MiniMaxH3Demo from '@/components/demos/MiniMaxH3Demo.vue';
 import graph from '@/lib/demos/mmh3/workflow-api.json';
 import { KEYFRAMES, INPUT_NODES } from '@/lib/demos/mmh3/config';
 import { DEFAULT_LOCALE } from '@/i18n/config';
-import fs from 'node:fs';
-import path from 'node:path';
 
 type ApiNode = { class_type: string; inputs: Record<string, unknown> };
 const nodes = graph as unknown as Record<string, ApiNode>;
@@ -19,32 +17,25 @@ const locale = DEFAULT_LOCALE;
 /** Seed the prompt editor with the text the workflow ships with. */
 const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ?? '');
 
+// These assets are committed (public/demos/mmh3/example/.gitignore whitelists
+// them), so the URLs are referenced directly. This page renders on demand, and
+// on Vercel `public/` is served from the CDN without existing on the
+// function's filesystem — an fs check here would wrongly report every asset
+// missing and hide the prompt-guide button and example media.
 const EXAMPLE_ROOT = 'demos/mmh3/example';
-const publicDir = path.join(process.cwd(), 'public', EXAMPLE_ROOT);
 
-const exampleKeyframes = KEYFRAMES.map((slot) => {
-  const file = `kf_${slot.index}.webp`;
-  return fs.existsSync(path.join(publicDir, 'keyframes', file))
-    ? `/${EXAMPLE_ROOT}/keyframes/${file}`
-    : '';
-});
+const exampleKeyframes = KEYFRAMES.map(
+  (slot) => `/${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`
+);
 
-/**
- * The example result is optional: drop `example.mp4` into
- * `public/demos/mmh3/example/` and it plays before the first run.
- */
-const exampleVideo = fs.existsSync(path.join(publicDir, 'example.mp4'))
-  ? `/${EXAMPLE_ROOT}/example.mp4`
-  : null;
+/** The example result, played before the first run. */
+const exampleVideo = `/${EXAMPLE_ROOT}/example.mp4`;
 
 /**
  * A system prompt for writing this workflow's prompts with an agent. Fetched
  * on click rather than inlined, so its ~22 KB stays out of the page payload.
  */
-const AGENT_PROMPT_PATH = 'demos/mmh3/agent-prompt.txt';
-const agentPromptUrl = fs.existsSync(path.join(process.cwd(), 'public', AGENT_PROMPT_PATH))
-  ? `/${AGENT_PROMPT_PATH}`
-  : null;
+const agentPromptUrl = '/demos/mmh3/agent-prompt.txt';
 
 const pageTitle = 'MiniMax-H3 Multi-Reference';
 const description =
