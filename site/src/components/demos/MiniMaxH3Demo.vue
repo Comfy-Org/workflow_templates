@@ -109,12 +109,18 @@ const emptyError = computed(() =>
 const blockingError = computed(() => secondsError.value ?? emptyError.value);
 const isBusy = computed(() => ['submitting', 'queued', 'running'].includes(state.value));
 
-/** The generated video once there is one, otherwise the bundled example. */
+/**
+ * The generated video once there is one, otherwise the bundled example.
+ *
+ * A failed run shows nothing: leaving the example on screen next to an error
+ * reads as though it were the result of that run.
+ */
 const video = computed(() => {
   if (outputs.value.length) {
     const out = outputs.value[0];
     return { url: out.url, name: out.name, sizeBytes: out.sizeBytes, isExample: false };
   }
+  if (state.value === 'failed') return null;
   return props.exampleVideo
     ? { url: props.exampleVideo, name: 'Example result', sizeBytes: 0, isExample: true }
     : null;
@@ -159,6 +165,33 @@ const queueLabel = computed(() => {
   return queueStale.value ? `${jobs} queued (last known)` : `${jobs} queued`;
 });
 const busyWorkers = computed(() => queue.value.workers?.running ?? 0);
+
+/**
+ * Read a response that is *usually* JSON.
+ *
+ * Our routes always answer with JSON, but the platform in front of them does
+ * not: an oversized upload is rejected by Vercel itself with an HTML error
+ * page, and a gateway fault can do the same. Parsing those blindly surfaced
+ * the parser's complaint ("Unexpected token 'R'...") instead of the real
+ * failure, so fall back to a message built from the status.
+ */
+async function readResponse(res: Response): Promise<{ error?: string; [key: string]: unknown }> {
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return { error: httpErrorMessage(res.status, text) };
+  }
+}
+
+function httpErrorMessage(status: number, body: string): string {
+  if (status === 413) {
+    return 'Those reference images are too large to upload in one request. Try smaller images, or remove a reference.';
+  }
+  if (status === 504) return 'The request timed out before the server answered. Try again.';
+  const detail = body.trim().split('\n')[0].slice(0, 120);
+  return detail ? `Request failed (${status}): ${detail}` : `Request failed (${status}).`;
+}
 
 async function refreshQueue() {
   try {
@@ -399,7 +432,7 @@ async function run() {
       method: 'POST',
       body: form,
     });
-    const body = await res.json();
+    const body = await readResponse(res);
     if (!res.ok) throw new Error(body.error ?? `Submit failed (${res.status})`);
 
     jobId.value = body.jobId;
@@ -859,7 +892,9 @@ onBeforeUnmount(() => {
           {{
             outputs.length
               ? 'Generated from your settings.'
-              : 'An example result. Run the workflow to replace it with your own.'
+              : state === 'failed'
+                ? 'This run did not produce a video.'
+                : 'An example result. Run the workflow to replace it with your own.'
           }}
         </p>
 
@@ -876,7 +911,11 @@ onBeforeUnmount(() => {
             v-else
             class="flex aspect-video w-full items-center justify-center px-6 text-center text-[11px] text-content-muted"
           >
-            No example available yet — run the workflow to fill this in.
+            {{
+              state === 'failed'
+                ? 'Nothing was generated — see the error below.'
+                : 'No example available yet — run the workflow to fill this in.'
+            }}
           </div>
         </div>
 
