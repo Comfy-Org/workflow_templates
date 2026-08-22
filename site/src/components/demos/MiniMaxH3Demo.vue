@@ -146,7 +146,7 @@ const busyWorkers = computed(() => queue.value.workers?.running ?? 0);
 async function refreshQueue() {
   try {
     const res = await fetch('/api/workflows/minimax-h3-multiref/queue');
-    const body: QueueState = await res.json();
+    const body = (await readResponse(res)) as QueueState;
     queue.value = body;
     queueAgeMs.value = body.sampledAt ? Date.now() - new Date(body.sampledAt).getTime() : 0;
   } catch {
@@ -178,6 +178,76 @@ async function copyAgentPrompt() {
   }
 }
 
+/**
+ * Longest edge kept for an uploaded reference. The workflow renders at most
+ * ~1464px wide (Very high, 21:9), and the node crops/resizes every reference to
+ * the frame anyway, so anything beyond this is detail the model never sees.
+ */
+const MAX_REFERENCE_EDGE = 1536;
+/** Vercel rejects function requests over 4.5 MB; stay clear of the edge. */
+const MAX_UPLOAD_BYTES = 3.5 * 1024 * 1024;
+
+/**
+ * Re-encode an oversized image to WebP so three references fit in one request.
+ * Returns the original file when it is already small enough, and falls back to
+ * it if the browser cannot decode or encode (old Safari, exotic formats) —
+ * better to try the upload than to refuse the file outright.
+ */
+async function prepareImage(file: File): Promise<File> {
+  if (file.size <= 600_000) return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_REFERENCE_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/webp', 0.9)
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, '') + '.webp';
+    return new File([blob], name, { type: 'image/webp' });
+  } catch {
+    return file;
+  }
+}
+
+/**
+ * Read a response that is *usually* JSON.
+ *
+ * Our routes always answer with JSON, but the platform in front of them does
+ * not: an oversized upload is rejected by Vercel itself with an HTML error
+ * page, and a cold start or gateway fault can do the same. Parsing those
+ * blindly surfaced the parser's complaint ("Unexpected token 'R'...") instead
+ * of the actual failure, so fall back to a message built from the status.
+ */
+async function readResponse(res: Response): Promise<{ error?: string; [key: string]: unknown }> {
+  const text = await res.text();
+  try {
+    return text ? JSON.parse(text) : {};
+  } catch {
+    return { error: httpErrorMessage(res.status, text) };
+  }
+}
+
+function httpErrorMessage(status: number, body: string): string {
+  if (status === 413) {
+    return 'Those reference images are too large to upload in one request. Try smaller images, or remove a reference.';
+  }
+  if (status === 504) return 'The request timed out before the server answered. Try again.';
+  const detail = body.trim().split('\n')[0].slice(0, 120);
+  return detail ? `Request failed (${status}): ${detail}` : `Request failed (${status}).`;
+}
+
 function timecode(frame: number): string {
   const total = frame / FPS;
   const m = Math.floor(total / 60);
@@ -193,12 +263,14 @@ function randomizeSeed() {
   settings.seed = Math.floor(Math.random() * 2 ** 31);
 }
 
-function attachFile(index: number, file: File | null) {
+async function attachFile(index: number, file: File | null) {
   if (!file || !file.type.startsWith('image/')) return;
   const slot = slots[index];
-  const url = URL.createObjectURL(file);
+  // Shrink before storing, so what we preview is exactly what we upload.
+  const prepared = await prepareImage(file);
+  const url = URL.createObjectURL(prepared);
   objectUrls.push(url);
-  slot.file = file;
+  slot.file = prepared;
   slot.preview = url;
   slot.isExample = false;
   slot.enabled = true;
@@ -206,13 +278,13 @@ function attachFile(index: number, file: File | null) {
 
 function onPick(index: number, event: Event) {
   const input = event.target as HTMLInputElement;
-  attachFile(index, input.files?.[0] ?? null);
+  void attachFile(index, input.files?.[0] ?? null);
   input.value = '';
 }
 
 function onDrop(index: number, event: DragEvent) {
   dragSlot.value = null;
-  attachFile(index, event.dataTransfer?.files?.[0] ?? null);
+  void attachFile(index, event.dataTransfer?.files?.[0] ?? null);
 }
 
 function resetSlot(index: number) {
@@ -244,7 +316,7 @@ async function poll() {
   if (!jobId.value) return;
   try {
     const res = await fetch(`/api/workflows/minimax-h3-multiref/job/${jobId.value}`);
-    const body = await res.json();
+    const body = await readResponse(res);
     if (!res.ok) throw new Error(body.error ?? `Status check failed (${res.status})`);
 
     queuePosition.value = body.queuePosition ?? null;
@@ -302,8 +374,20 @@ async function run() {
 
   const form = new FormData();
   form.append('settings', JSON.stringify({ ...settings, enabledKeyframes: enabledIndexes.value }));
+  let uploadBytes = 0;
   for (const slot of slots) {
-    if (slot.file && slot.enabled) form.append(`keyframe_${slot.index}`, slot.file, slot.file.name);
+    if (slot.file && slot.enabled) {
+      uploadBytes += slot.file.size;
+      form.append(`keyframe_${slot.index}`, slot.file, slot.file.name);
+    }
+  }
+
+  // The submit route runs as a serverless function with a request-size cap, so
+  // an oversized set is reported here instead of as an opaque 413.
+  if (uploadBytes > MAX_UPLOAD_BYTES) {
+    state.value = 'failed';
+    errorMessage.value = `Those images add up to ${(uploadBytes / 1024 / 1024).toFixed(1)} MB, over the ${(MAX_UPLOAD_BYTES / 1024 / 1024).toFixed(1)} MB this page can send at once. Use smaller images, or remove a reference.`;
+    return;
   }
 
   try {
