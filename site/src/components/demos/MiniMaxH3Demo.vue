@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { Check, Copy } from 'lucide-vue-next';
+import { Check, Copy, RefreshCw } from 'lucide-vue-next';
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import ComfySelect from '@/components/shared/ComfySelect.vue';
+import VideoPlayer from '@/components/shared/VideoPlayer.vue';
 import {
   ASPECT_RATIOS,
   CROP_MODES,
@@ -61,6 +63,7 @@ const promptCopied = ref(false);
 const promptCopyFailed = ref(false);
 let copyResetTimer: number | undefined;
 const dragSlot = ref<number | null>(null);
+const dragSource = ref<number | null>(null);
 
 const queue = ref<QueueState>({ available: false });
 const queueAgeMs = ref(0);
@@ -82,6 +85,20 @@ const resolutionOptions = computed(() =>
     };
   })
 );
+
+const aspectRatioOptions = ASPECT_RATIOS.map((value) => ({ label: value, value }));
+const resolutionSelectOptions = computed(() =>
+  resolutionOptions.value.map((option) => ({
+    label: `${option.label} — ${option.detail}`,
+    value: option.megapixels,
+  }))
+);
+const cropOptions = [
+  { label: 'Crop to fill the frame', value: CROP_MODES[0] },
+  { label: 'Use images as they are', value: CROP_MODES[1] },
+];
+const samplerOptions = SAMPLERS.map((value) => ({ label: value, value }));
+const schedulerOptions = SCHEDULERS.map((value) => ({ label: value, value }));
 const selectedResolution = computed(() =>
   resolutionOptions.value.find((o) => o.megapixels === settings.megapixels)
 );
@@ -102,9 +119,8 @@ const compression = computed(() => {
 const secondsError = computed(() =>
   validateSeconds(settings.seconds, maxFrameFor(enabledIndexes.value))
 );
-/** The node needs at least one image to anchor, so the last one can't go. */
 const emptyError = computed(() =>
-  enabledIndexes.value.length ? null : 'Keep at least one reference image.'
+  enabledIndexes.value.length ? null : 'Add at least one reference image to run the workflow.'
 );
 const blockingError = computed(() => secondsError.value ?? emptyError.value);
 const isBusy = computed(() => ['submitting', 'queued', 'running'].includes(state.value));
@@ -319,7 +335,40 @@ function onPick(index: number, event: Event) {
 
 function onDrop(index: number, event: DragEvent) {
   dragSlot.value = null;
+  if (dragSource.value !== null) {
+    swapSlotContent(dragSource.value, index);
+    dragSource.value = null;
+    return;
+  }
   void attachFile(index, event.dataTransfer?.files?.[0] ?? null);
+}
+
+function onDragStart(index: number, event: DragEvent) {
+  dragSource.value = index;
+  if (!event.dataTransfer) return;
+  event.dataTransfer.effectAllowed = 'move';
+  event.dataTransfer.setData('text/plain', String(index));
+}
+
+function swapSlotContent(sourceIndex: number, targetIndex: number) {
+  if (sourceIndex === targetIndex) return;
+  const source = slots[sourceIndex];
+  const target = slots[targetIndex];
+  const sourceContent = {
+    file: source.file,
+    preview: source.preview,
+    isExample: source.isExample,
+    enabled: source.enabled,
+  };
+
+  source.file = target.file;
+  source.preview = target.preview;
+  source.isExample = target.isExample;
+  source.enabled = target.enabled;
+  target.file = sourceContent.file;
+  target.preview = sourceContent.preview;
+  target.isExample = sourceContent.isExample;
+  target.enabled = sourceContent.enabled;
 }
 
 function resetSlot(index: number) {
@@ -331,15 +380,9 @@ function resetSlot(index: number) {
   slot.isExample = true;
 }
 
-/** Remove a reference from the run (or put it back). */
 function toggleSlot(index: number) {
   const slot = slots[index];
-  if (slot.enabled && enabledIndexes.value.length === 1) return;
   slot.enabled = !slot.enabled;
-}
-
-function isLastEnabled(index: number): boolean {
-  return slots[index].enabled && enabledIndexes.value.length === 1;
 }
 
 function stopTimers() {
@@ -464,39 +507,38 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(360px,26rem)] lg:items-start lg:gap-8">
+  <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(380px,30rem)] lg:items-start">
     <!-- Controls -->
-    <div class="flex min-w-0 flex-col gap-6">
+    <div class="flex min-w-0 flex-col gap-5">
       <!-- References -->
-      <section class="flex flex-col gap-4">
-        <div class="flex flex-wrap items-center justify-between gap-2 px-2">
-          <span class="text-xs font-semibold uppercase tracking-wider text-content-secondary">
+      <section class="flex flex-col gap-5 rounded-4xl bg-hub-surface p-5 sm:p-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <span
+            class="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-content"
+          >
+            <span class="grid size-7 place-items-center rounded-full bg-brand text-xs text-page"
+              >1</span
+            >
             Reference images
           </span>
           <span
-            class="rounded-full border px-2.5 py-0.5 text-[11px]"
+            class="rounded-full px-3 py-1.5 text-xs"
             :class="
-              usingExampleFrames
-                ? 'border-white/15 text-content-secondary'
-                : 'border-emerald-400/30 text-emerald-300'
+              usingExampleFrames ? 'bg-white/4 text-content-secondary' : 'bg-brand/10 text-brand'
             "
           >
             {{ enabledIndexes.length }}/{{ slots.length }} in use
           </span>
         </div>
 
-        <div class="flex flex-col gap-4 rounded-2xl border border-white/15 px-4 py-4">
-          <p class="text-[11px] leading-relaxed text-content-secondary">
-            Three images pinned to moments in the clip — start, middle and end. The model paints its
-            way from one to the next, so the order tells the story. Drop in your own to replace one,
-            or remove it to let the model invent that stretch freely. Large images are resized and
-            re-encoded in your browser before upload — the model renders well below their full
-            resolution either way.
+        <div class="flex flex-col gap-5">
+          <p class="max-w-3xl text-sm leading-relaxed text-content-secondary">
+            Three fixed moments in the clip — start, middle and end.
           </p>
 
           <p
             v-if="preparingCount"
-            class="flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] p-2 text-[11px] text-content-secondary"
+            class="flex items-center gap-2 rounded-2xl border border-divider-subtle bg-white/4 p-3 text-xs text-content-secondary"
           >
             <span
               class="inline-block h-3 w-3 shrink-0 animate-spin rounded-full border-2 border-white/25 border-t-white/80"
@@ -506,20 +548,21 @@ onBeforeUnmount(() => {
           </p>
           <p
             v-else-if="compression"
-            class="rounded-lg border border-emerald-400/20 bg-emerald-400/[0.06] p-2 text-[11px] text-emerald-200/90"
+            class="rounded-2xl border border-brand/20 bg-brand/6 p-3 text-xs text-content-secondary"
           >
             {{ compression.count }} image{{ compression.count === 1 ? '' : 's' }} resized for upload
             — {{ formatMb(compression.before) }} → {{ formatMb(compression.after) }}. The originals
             on your machine are untouched.
           </p>
 
-          <div class="flex flex-wrap gap-3">
+          <div class="grid grid-cols-3 gap-3 sm:gap-4">
             <div
               v-for="slot in slots"
               :key="slot.index"
-              class="group relative w-[84px]"
+              class="group relative min-w-0"
               @dragover.prevent="dragSlot = slot.index"
               @dragleave="dragSlot = null"
+              @dragend="dragSource = null"
               @drop.prevent="
                 onDrop(
                   slots.findIndex((s) => s.index === slot.index),
@@ -528,10 +571,12 @@ onBeforeUnmount(() => {
               "
             >
               <label
-                class="block cursor-pointer overflow-hidden rounded-lg border transition"
+                :draggable="slot.enabled"
+                class="block overflow-hidden rounded-2xl border transition"
                 :class="[
+                  slot.enabled ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
                   dragSlot === slot.index
-                    ? 'border-emerald-400/60 ring-2 ring-emerald-400/30'
+                    ? 'border-brand/60 ring-2 ring-brand/30'
                     : slot.enabled
                       ? 'border-white/15 hover:border-white/30'
                       : 'border-dashed border-white/15 hover:border-white/30',
@@ -541,9 +586,15 @@ onBeforeUnmount(() => {
                     ? `Reference ${slot.index} — ${timecode(slot.frame)} into the clip`
                     : `Reference ${slot.index} removed — click + to put it back`
                 "
+                @dragstart="
+                  onDragStart(
+                    slots.findIndex((s) => s.index === slot.index),
+                    $event
+                  )
+                "
               >
                 <div
-                  class="relative aspect-[3/4]"
+                  class="relative aspect-[4/3] sm:aspect-[3/2]"
                   :class="slot.enabled ? 'bg-black/40' : 'bg-white/[0.02]'"
                 >
                   <img
@@ -551,23 +602,24 @@ onBeforeUnmount(() => {
                     :src="slot.preview"
                     :alt="`Reference ${slot.index}`"
                     class="h-full w-full object-cover"
+                    draggable="false"
                     loading="lazy"
                   />
                   <div
                     v-else-if="slot.enabled"
-                    class="flex h-full w-full items-center justify-center text-[9px] text-content-muted"
+                    class="flex h-full w-full items-center justify-center text-xs text-content-muted"
                   >
                     drop
                   </div>
                   <span
-                    class="absolute left-1 top-1 rounded px-1 text-[9px] font-semibold"
+                    class="absolute left-2 top-2 grid size-6 place-items-center rounded-full text-xs font-semibold"
                     :class="slot.enabled ? 'bg-black/75 text-white' : 'text-content-muted/60'"
                   >
                     {{ slot.index }}
                   </span>
                   <span
                     v-if="!slot.isExample && slot.enabled && !slot.preparing"
-                    class="absolute right-1 top-1 h-1.5 w-1.5 rounded-full bg-emerald-400"
+                    class="absolute right-2 top-2 size-2 rounded-full bg-brand"
                     :title="
                       slot.uploadBytes && slot.uploadBytes < slot.originalBytes
                         ? `Compressed for upload: ${formatMb(slot.originalBytes)} → ${formatMb(slot.uploadBytes)}`
@@ -598,56 +650,69 @@ onBeforeUnmount(() => {
                 />
               </label>
               <div
-                class="mt-1 text-center font-mono text-[9px] leading-tight"
+                class="mt-2 text-center font-mono text-xs leading-tight"
                 :class="slot.enabled ? 'text-content-muted' : 'text-content-muted/40'"
               >
                 {{ timecode(slot.frame) }}
               </div>
 
-              <div class="absolute -top-1.5 right-0 hidden gap-1 group-hover:flex">
+              <div
+                class="absolute right-2 top-2 flex gap-2 transition-opacity"
+                :class="
+                  slot.enabled
+                    ? 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'
+                    : 'opacity-100'
+                "
+              >
                 <button
                   v-if="!slot.isExample && slot.enabled"
                   type="button"
-                  class="h-4 w-4 rounded-full bg-white/90 text-[9px] font-bold leading-none text-black hover:bg-white"
+                  class="grid size-12 place-items-center rounded-2xl bg-brand text-page transition-opacity hover:opacity-90"
+                  aria-label="Revert to the example image"
                   title="Revert to the example image"
                   @click.prevent="resetSlot(slots.findIndex((s) => s.index === slot.index))"
                 >
-                  ↺
+                  <RefreshCw class="size-5" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
-                  :disabled="isLastEnabled(slots.findIndex((s) => s.index === slot.index))"
-                  class="h-4 w-4 rounded-full text-[10px] font-bold leading-none disabled:cursor-not-allowed disabled:opacity-40"
-                  :class="
-                    slot.enabled
-                      ? 'bg-red-400/90 text-black hover:bg-red-400'
-                      : 'bg-emerald-400/90 text-black hover:bg-emerald-400'
-                  "
-                  :title="
-                    isLastEnabled(slots.findIndex((s) => s.index === slot.index))
-                      ? 'Keep at least one reference'
-                      : slot.enabled
-                        ? 'Remove this reference'
-                        : 'Put this reference back'
-                  "
+                  class="grid place-items-center bg-brand text-page transition-opacity hover:opacity-90"
+                  :class="slot.enabled ? 'size-8 rounded-xl' : 'size-12 rounded-2xl'"
+                  :aria-label="slot.enabled ? 'Remove this reference' : 'Put this reference back'"
+                  :title="slot.enabled ? 'Remove this reference' : 'Put this reference back'"
                   @click.prevent="toggleSlot(slots.findIndex((s) => s.index === slot.index))"
                 >
-                  {{ slot.enabled ? '×' : '+' }}
+                  <span
+                    class="bg-page [mask-image:url('/icons/plus.svg')] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+                    :class="slot.enabled ? 'size-4 rotate-45' : 'size-6'"
+                    aria-hidden="true"
+                  ></span>
                 </button>
               </div>
             </div>
           </div>
+
+          <p class="text-xs leading-relaxed text-content-muted">
+            Click a slot to upload a replacement, drag a file from your computer onto it, or drag
+            one reference onto another to swap them. Remove any slot you do not want to use; at
+            least one is required to run.
+          </p>
         </div>
       </section>
 
       <!-- Prompt -->
-      <section class="flex flex-col gap-4">
-        <span class="px-2 text-xs font-semibold uppercase tracking-wider text-content-secondary">
-          Prompt
+      <section class="flex flex-col gap-5 rounded-4xl bg-hub-surface p-5 sm:p-6">
+        <span
+          class="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-content"
+        >
+          <span class="grid size-7 place-items-center rounded-full bg-brand text-xs text-page"
+            >2</span
+          >
+          Shot description
         </span>
 
-        <div class="flex flex-col gap-3 rounded-2xl border border-white/15 px-4 py-4">
-          <p class="text-[11px] leading-relaxed text-content-secondary">
+        <div class="flex flex-col gap-4">
+          <p class="text-sm leading-relaxed text-content-secondary">
             Describe what happens, how the camera moves, what carries over between scenes, and what
             it sounds like — all in one block of prose. The references anchor the visuals; this sets
             everything between them.
@@ -655,14 +720,14 @@ onBeforeUnmount(() => {
           <div v-if="agentPromptUrl" class="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-3 py-1.5 text-[11px] font-medium text-content-secondary transition hover:border-white/30 hover:text-content"
+              class="inline-flex min-h-8 items-center gap-2 rounded-full border border-divider-subtle px-3 py-2 text-xs font-semibold text-content-secondary transition-colors hover:border-divider hover:bg-hub-surface-hover hover:text-content"
               @click="copyAgentPrompt"
             >
               <Check v-if="promptCopied" class="size-3" />
               <Copy v-else class="size-3" />
               {{ promptCopied ? 'Copied' : 'Copy prompt guide for agents' }}
             </button>
-            <span class="text-[10px] text-content-muted">
+            <span class="text-xs text-content-muted">
               Paste it into an assistant, describe your shot, and it writes the prompt below.
             </span>
           </div>
@@ -674,31 +739,34 @@ onBeforeUnmount(() => {
           </p>
 
           <div class="flex items-baseline justify-between gap-3">
-            <label class="text-xs font-medium text-content" for="mmh3-prompt"
-              >Shot description</label
-            >
-            <span class="font-mono text-[10px] text-content-muted">
+            <label class="text-xs font-semibold text-content" for="mmh3-prompt">Your prompt</label>
+            <span class="font-mono text-xs text-content-muted">
               {{ settings.prompt.length.toLocaleString() }}
             </span>
           </div>
           <textarea
             id="mmh3-prompt"
             v-model="settings.prompt"
-            rows="10"
-            class="w-full resize-y rounded-xl border border-white/15 bg-black/30 p-3 font-mono text-[12px] leading-relaxed text-content placeholder:text-content-muted focus:border-white/30 focus:outline-none"
+            rows="7"
+            class="w-full resize-y rounded-2xl border border-divider-subtle bg-hub-surface p-4 font-mono text-xs leading-relaxed text-content outline-none placeholder:text-content-muted focus:border-divider"
             placeholder="Describe the shot…"
           ></textarea>
         </div>
       </section>
 
       <!-- Format -->
-      <section class="flex flex-col gap-4">
-        <span class="px-2 text-xs font-semibold uppercase tracking-wider text-content-secondary">
-          Format
+      <section class="flex flex-col gap-5 rounded-4xl bg-hub-surface p-5 sm:p-6">
+        <span
+          class="flex items-center gap-3 text-sm font-semibold uppercase tracking-wider text-content"
+        >
+          <span class="grid size-7 place-items-center rounded-full bg-brand text-xs text-page"
+            >3</span
+          >
+          Output format
         </span>
 
-        <div class="flex flex-col gap-4 rounded-2xl border border-white/15 px-4 py-4">
-          <p class="text-[11px] leading-relaxed text-content-secondary">
+        <div class="flex flex-col gap-5">
+          <p class="text-sm leading-relaxed text-content-secondary">
             How long the finished video runs and what shape it comes out. Longer clips give the
             references more room to breathe between beats.
           </p>
@@ -706,10 +774,8 @@ onBeforeUnmount(() => {
           <div class="grid gap-4 sm:grid-cols-2">
             <div class="sm:col-span-2">
               <div class="flex items-baseline justify-between">
-                <label class="text-xs font-medium text-content">Clip length</label>
-                <span class="font-mono text-[11px] text-content-muted"
-                  >{{ settings.seconds }}s</span
-                >
+                <label class="text-xs font-semibold text-content">Clip length</label>
+                <span class="font-mono text-xs text-content-muted">{{ settings.seconds }}s</span>
               </div>
               <input
                 v-model.number="settings.seconds"
@@ -717,7 +783,7 @@ onBeforeUnmount(() => {
                 min="2"
                 max="30"
                 step="0.5"
-                class="mt-2 h-1 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-white"
+                class="mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-divider accent-brand"
               />
               <p
                 v-if="blockingError"
@@ -728,30 +794,24 @@ onBeforeUnmount(() => {
             </div>
 
             <div>
-              <label class="text-xs font-medium text-content">Aspect ratio</label>
-              <select
+              <label class="text-xs font-semibold text-content">Aspect ratio</label>
+              <ComfySelect
                 v-model="settings.aspectRatio"
-                class="mt-1.5 w-full rounded-lg border border-white/15 bg-black/30 px-2 py-2 text-xs text-content focus:border-white/30 focus:outline-none"
-              >
-                <option v-for="r in ASPECT_RATIOS" :key="r" :value="r">{{ r }}</option>
-              </select>
+                class="mt-2"
+                aria-label="Aspect ratio"
+                :options="aspectRatioOptions"
+              />
             </div>
 
             <div>
-              <label class="text-xs font-medium text-content">Resolution</label>
-              <select
+              <label class="text-xs font-semibold text-content">Resolution</label>
+              <ComfySelect
                 v-model.number="settings.megapixels"
-                class="mt-1.5 w-full rounded-lg border border-white/15 bg-black/30 px-2 py-2 text-xs text-content focus:border-white/30 focus:outline-none"
-              >
-                <option
-                  v-for="option in resolutionOptions"
-                  :key="option.label"
-                  :value="option.megapixels"
-                >
-                  {{ option.label }} — {{ option.detail }}
-                </option>
-              </select>
-              <p class="mt-1 text-[10px] text-content-muted">
+                class="mt-2"
+                aria-label="Resolution"
+                :options="resolutionSelectOptions"
+              />
+              <p class="mt-2 text-xs text-content-muted">
                 <template v-if="selectedResolution">
                   {{ selectedResolution.detail }} at this aspect ratio. Higher costs more time.
                 </template>
@@ -759,15 +819,14 @@ onBeforeUnmount(() => {
             </div>
 
             <div class="sm:col-span-2">
-              <label class="text-xs font-medium text-content">Fitting references</label>
-              <select
+              <label class="text-xs font-semibold text-content">Fitting references</label>
+              <ComfySelect
                 v-model="settings.crop"
-                class="mt-1.5 w-full rounded-lg border border-white/15 bg-black/30 px-2 py-2 text-xs text-content focus:border-white/30 focus:outline-none"
-              >
-                <option value="center">Crop to fill the frame</option>
-                <option value="disabled">Use images as they are</option>
-              </select>
-              <p class="mt-1 text-[10px] text-content-muted">
+                class="mt-2"
+                aria-label="Fitting references"
+                :options="cropOptions"
+              />
+              <p class="mt-2 text-xs text-content-muted">
                 How images that do not match the aspect ratio are handled.
               </p>
             </div>
@@ -776,23 +835,35 @@ onBeforeUnmount(() => {
       </section>
 
       <!-- Advanced -->
-      <section class="flex flex-col gap-4">
+      <section class="flex flex-col border-y border-divider">
         <button
           type="button"
-          class="flex items-center gap-2 px-2 text-xs font-semibold uppercase tracking-wider text-content-secondary hover:text-content"
+          class="group flex min-h-16 w-full items-center justify-between gap-4 py-5 text-left text-sm font-semibold uppercase tracking-wider text-content transition-colors hover:text-brand"
+          :aria-expanded="showAdvanced"
           @click="showAdvanced = !showAdvanced"
         >
           Advanced
-          <span class="text-[10px] font-normal normal-case tracking-normal text-content-muted">
-            {{ showAdvanced ? 'hide' : 'show' }}
-          </span>
+          <svg
+            :class="showAdvanced ? 'text-brand' : 'text-content-secondary'"
+            class="size-5 shrink-0 transition-colors duration-200 group-hover:text-brand"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path
+              :class="{ 'rotate-90 opacity-0': showAdvanced }"
+              class="origin-center transition-all duration-200"
+              d="M12 5v14"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+          </svg>
         </button>
 
-        <div
-          v-if="showAdvanced"
-          class="flex flex-col gap-4 rounded-2xl border border-white/15 px-4 py-4"
-        >
-          <p class="text-[11px] leading-relaxed text-content-secondary">
+        <div v-if="showAdvanced" class="flex flex-col gap-6 border-t border-divider py-6">
+          <p class="text-sm leading-relaxed text-content-secondary">
             Sampling controls. The defaults are tuned for this model — change them when you want
             more detail, a different feel, or a repeatable result.
           </p>
@@ -800,8 +871,8 @@ onBeforeUnmount(() => {
           <div class="grid gap-4 sm:grid-cols-2">
             <div>
               <div class="flex items-baseline justify-between">
-                <label class="text-xs font-medium text-content">Quality steps</label>
-                <span class="font-mono text-[11px] text-content-muted">{{ settings.steps }}</span>
+                <label class="text-xs font-semibold text-content">Quality steps</label>
+                <span class="font-mono text-xs text-content-muted">{{ settings.steps }}</span>
               </div>
               <input
                 v-model.number="settings.steps"
@@ -809,17 +880,17 @@ onBeforeUnmount(() => {
                 min="4"
                 max="30"
                 step="1"
-                class="mt-2 h-1 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-white"
+                class="mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-divider accent-brand"
               />
-              <p class="mt-1 text-[10px] text-content-muted">
+              <p class="mt-2 text-xs leading-relaxed text-content-muted">
                 More steps take longer; this model is tuned for 8.
               </p>
             </div>
 
             <div>
               <div class="flex items-baseline justify-between">
-                <label class="text-xs font-medium text-content">Speed-up strength</label>
-                <span class="font-mono text-[11px] text-content-muted">
+                <label class="text-xs font-semibold text-content">Speed-up strength</label>
+                <span class="font-mono text-xs text-content-muted">
                   {{ settings.loraStrength }}
                 </span>
               </div>
@@ -829,50 +900,53 @@ onBeforeUnmount(() => {
                 min="0"
                 max="1.5"
                 step="0.05"
-                class="mt-2 h-1 w-full cursor-pointer appearance-none rounded-full bg-white/15 accent-white"
+                class="mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-divider accent-brand"
               />
-              <p class="mt-1 text-[10px] text-content-muted">Lower trades speed for fidelity.</p>
+              <p class="mt-2 text-xs leading-relaxed text-content-muted">
+                Lower trades speed for fidelity.
+              </p>
             </div>
 
             <div class="sm:col-span-2">
-              <label class="text-xs font-medium text-content">Seed</label>
-              <div class="mt-1.5 flex gap-2">
+              <label class="text-xs font-semibold text-content">Seed</label>
+              <div class="mt-2 flex gap-2">
                 <input
                   v-model.number="settings.seed"
                   type="number"
-                  class="min-w-0 flex-1 rounded-lg border border-white/15 bg-black/30 px-2 py-2 font-mono text-[11px] text-content focus:border-white/30 focus:outline-none"
+                  class="h-12 min-w-0 flex-1 rounded-2xl border border-divider-subtle bg-hub-surface p-4 font-mono text-xs font-semibold text-content transition-colors outline-none focus:border-divider"
                 />
                 <button
                   type="button"
-                  class="rounded-lg border border-white/15 px-2.5 text-xs text-content-secondary hover:border-white/30 hover:text-content"
-                  title="Randomize"
+                  class="grid size-12 shrink-0 place-items-center rounded-2xl border border-divider-subtle bg-hub-surface text-content-secondary transition-colors hover:border-divider hover:text-brand focus-visible:border-divider focus-visible:outline-none"
+                  aria-label="Randomize seed"
+                  title="Randomize seed"
                   @click="randomizeSeed"
                 >
-                  ⟳
+                  <RefreshCw class="size-4" aria-hidden="true" />
                 </button>
               </div>
-              <p class="mt-1 text-[10px] text-content-muted">
+              <p class="mt-2 text-xs leading-relaxed text-content-muted">
                 Same seed and settings give the same video back.
               </p>
             </div>
 
             <div>
-              <label class="text-xs font-medium text-content">Sampler</label>
-              <select
+              <label class="text-xs font-semibold text-content">Sampler</label>
+              <ComfySelect
                 v-model="settings.sampler"
-                class="mt-1.5 w-full rounded-lg border border-white/15 bg-black/30 px-2 py-2 text-xs text-content focus:border-white/30 focus:outline-none"
-              >
-                <option v-for="s in SAMPLERS" :key="s" :value="s">{{ s }}</option>
-              </select>
+                class="mt-2"
+                aria-label="Sampler"
+                :options="samplerOptions"
+              />
             </div>
             <div>
-              <label class="text-xs font-medium text-content">Scheduler</label>
-              <select
+              <label class="text-xs font-semibold text-content">Scheduler</label>
+              <ComfySelect
                 v-model="settings.scheduler"
-                class="mt-1.5 w-full rounded-lg border border-white/15 bg-black/30 px-2 py-2 text-xs text-content focus:border-white/30 focus:outline-none"
-              >
-                <option v-for="s in SCHEDULERS" :key="s" :value="s">{{ s }}</option>
-              </select>
+                class="mt-2"
+                aria-label="Scheduler"
+                :options="schedulerOptions"
+              />
             </div>
           </div>
         </div>
@@ -881,35 +955,16 @@ onBeforeUnmount(() => {
 
     <!-- Result — sticky so it stays in view while the controls scroll -->
     <aside
-      class="flex flex-col gap-4 lg:sticky lg:top-48 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:pr-1"
+      class="flex flex-col lg:sticky lg:top-48 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:pr-1"
     >
-      <span class="px-2 text-xs font-semibold uppercase tracking-wider text-content-secondary">
-        Result
-      </span>
+      <div class="flex flex-col gap-4 rounded-4xl bg-hub-surface p-5 sm:p-6">
+        <span class="text-sm font-semibold uppercase tracking-wider text-brand">Result</span>
 
-      <div class="flex flex-col gap-3 rounded-2xl border border-white/15 px-4 py-4">
-        <p class="text-[11px] leading-relaxed text-content-secondary">
-          {{
-            outputs.length
-              ? 'Generated from your settings.'
-              : state === 'failed'
-                ? 'This run did not produce a video.'
-                : 'An example result. Run the workflow to replace it with your own.'
-          }}
-        </p>
-
-        <div class="media-frame overflow-hidden rounded-lg border border-white/10 bg-black">
-          <video
-            v-if="video"
-            :key="video.url"
-            :src="video.url"
-            controls
-            playsinline
-            class="aspect-video w-full bg-black"
-          ></video>
+        <div class="media-frame">
+          <VideoPlayer v-if="video" :key="video.url" :src="video.url" :aria-label="video.name" />
           <div
             v-else
-            class="flex aspect-video w-full items-center justify-center px-6 text-center text-[11px] text-content-muted"
+            class="flex aspect-video w-full items-center justify-center px-6 text-center text-sm text-content-muted"
           >
             {{
               state === 'failed'
@@ -921,40 +976,48 @@ onBeforeUnmount(() => {
 
         <div
           v-if="video"
-          class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-content-muted"
+          class="flex flex-wrap items-center justify-between gap-2 text-xs text-content-muted"
         >
-          <span class="truncate">{{ video.name }}</span>
-          <span class="flex shrink-0 items-center gap-3">
-            <span v-if="video.sizeBytes">{{ formatSize(video.sizeBytes) }}</span>
-            <a
-              :href="video.url"
-              download
-              class="text-content-secondary underline underline-offset-4 hover:text-content"
-              >Download</a
-            >
+          <span class="min-w-0">
+            {{
+              outputs.length
+                ? video.name
+                : 'An example result. Run the workflow to replace it with your own.'
+            }}
           </span>
+          <span v-if="video.sizeBytes" class="shrink-0">{{ formatSize(video.sizeBytes) }}</span>
         </div>
 
-        <button
-          type="button"
-          :disabled="isBusy || !!blockingError"
-          class="mt-1 w-full rounded-full bg-white px-4 py-3 text-xs font-semibold text-black transition hover:bg-white/90 disabled:cursor-not-allowed disabled:bg-white/30 disabled:text-black/50"
-          @click="run"
-        >
-          <span class="flex items-center justify-center gap-2">
-            <span
-              v-if="isBusy"
-              class="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-black/25 border-t-black/80"
-              :class="
-                state === 'queued'
-                  ? 'animate-[mmh3-pulse_1.4s_ease-in-out_infinite]'
-                  : 'animate-spin'
-              "
-              aria-hidden="true"
-            ></span>
-            {{ runLabel }}
-          </span>
-        </button>
+        <div class="mt-1 flex flex-col gap-3">
+          <button
+            type="button"
+            :disabled="isBusy || !!blockingError"
+            class="min-h-12 w-full rounded-2xl bg-brand px-6 py-3 text-sm font-semibold uppercase tracking-wider text-page transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-white/20 disabled:text-content-muted"
+            @click="run"
+          >
+            <span class="flex items-center justify-center gap-2">
+              <span
+                v-if="isBusy"
+                class="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-black/25 border-t-black/80"
+                :class="
+                  state === 'queued'
+                    ? 'animate-[mmh3-pulse_1.4s_ease-in-out_infinite]'
+                    : 'animate-spin'
+                "
+                aria-hidden="true"
+              ></span>
+              {{ runLabel }}
+            </span>
+          </button>
+          <a
+            v-if="video"
+            :href="video.url"
+            download
+            class="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-brand px-6 py-3 text-sm font-semibold uppercase tracking-wider text-brand transition-colors hover:bg-brand hover:text-page"
+          >
+            Download video
+          </a>
+        </div>
 
         <!-- Queued shows a pulsing track (nothing is happening yet); running
              shows real progress when the deployment reports it, and a moving
@@ -980,11 +1043,11 @@ onBeforeUnmount(() => {
           ></div>
         </div>
 
-        <p v-if="runCaption" class="text-[11px] leading-relaxed text-content-muted">
+        <p v-if="runCaption" class="text-xs leading-relaxed text-content-muted">
           {{ runCaption }}
         </p>
 
-        <div class="flex flex-col gap-1 text-[11px] text-content-muted">
+        <div class="flex flex-col gap-2 border-t border-white/10 pt-4 text-xs text-content-muted">
           <div v-if="queueLabel" class="flex items-center justify-between">
             <span class="flex items-center gap-1.5">
               <span
