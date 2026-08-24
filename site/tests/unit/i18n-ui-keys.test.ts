@@ -58,9 +58,11 @@ describe('UI string keys', () => {
 
 /**
  * The localized routes build their <title> from a template key. These pins make
- * every English title change a deliberate, reviewed edit — the strings below
- * were last changed Aug 2026 (GSC: hub at 2.0% CTR on 517k impressions; titles
- * lacked the exact "ComfyUI workflows" head term).
+ * every English title change a deliberate, reviewed edit. Last changed Aug 2026
+ * (GSC: hub at 2.0% CTR on 517k impressions). "Comfy Workflows" is the branded
+ * site name and must stay; "ComfyUI" belongs in the surrounding descriptor.
+ * "Free" is deliberate: the workflow file is free to download, even where
+ * running it on Cloud costs credits.
  */
 describe('meta title templates', () => {
   const strings = en as Record<string, string>;
@@ -76,16 +78,16 @@ describe('meta title templates', () => {
       strings['category.metaTitle']
         .replace('{category}', 'Image Generation')
         .replace('{site}', strings['meta.title'])
-    ).toBe('Image Generation Workflows - ComfyUI Workflows');
+    ).toBe('Image Generation Workflows - Comfy Workflows');
   });
 
   it('renders the English tag title from the template key', () => {
     expect(
       strings['tag.metaTitle']
         .replace('{tag}', 'Character')
-        .replace('{site}', 'ComfyUI Workflows')
+        .replace('{site}', 'Comfy Workflows')
         .replace('{workflows}', strings['nav.templates'])
-    ).toBe('Character ComfyUI Workflows - Workflows');
+    ).toBe('Character Comfy Workflows - Workflows');
   });
 
   it('keeps every placeholder the routes substitute', () => {
