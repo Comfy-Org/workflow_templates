@@ -13,7 +13,7 @@
  * deployment that has the H3 nodes and models), and it is whitelisted, so no
  * credential travels with a submission.
  */
-export const DEPLOYMENT_URL = 'https://dep-f74ca441-9963-4fb8-a112-b8d78674d88b.run.comfy.app';
+export const DEPLOYMENT_URL = 'https://dep-5b1d092b-e1c5-437e-b3dc-67870425da2d.run.comfy.app';
 
 /** Frames per second the workflow renders at. */
 export const FPS = 24;
