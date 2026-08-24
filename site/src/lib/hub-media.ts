@@ -15,6 +15,7 @@
  * pick those up.
  */
 import generatedAssets from '@/data/hub-media-assets.json';
+import generatedImages from '@/data/hub-media-images.json';
 
 const MEDIA_BASE = 'https://media.comfy.org/hub-media';
 
@@ -33,6 +34,22 @@ export interface HubMedia {
   poster: string;
   /** Re-encoded video at the source's own resolution. */
   video: string;
+}
+
+/**
+ * Extension of our copy, keyed by asset id. Stills become `jpg`; animated WebP
+ * stays `webp` so the loop keeps looping. Assets that gained nothing from
+ * re-encoding, or that carry real transparency, are absent and keep their
+ * original URL.
+ */
+const generatedImageExt = generatedImages as Record<string, string>;
+
+/** Our re-encoded still or animation for a card image, when one exists. */
+export function hubImageFor(sourceUrl: string): string | null {
+  const id = assetId(sourceUrl);
+  if (!id) return null;
+  const ext = generatedImageExt[id];
+  return ext ? `${MEDIA_BASE}/images/${id}.${ext}` : null;
 }
 
 export function hubMediaFor(sourceUrl: string): HubMedia | null {

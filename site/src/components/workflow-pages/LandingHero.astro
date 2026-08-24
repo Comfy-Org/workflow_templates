@@ -7,6 +7,7 @@ import {
   isVideoFile,
 } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
+import { hubImageFor, hubMediaFor } from '../../lib/hub-media';
 import { externalLinkAttrs } from '../../lib/urls';
 import type { SerializedTemplate } from '../../lib/hub-api';
 import { resolveTemplateLogos } from '../../lib/model-logos';
@@ -64,9 +65,17 @@ const heroVideoThumb =
   heroTemplate && !hasStillThumbnail(heroTemplate.thumbnails)
     ? heroTemplate.thumbnails?.find((thumb) => isVideoFile(thumb))
     : undefined;
-const heroVideoSrc = heroVideoThumb ? thumbnailPath(heroVideoThumb) : null;
+// The hero is this page's LCP element, so it is the one image most worth
+// serving from our re-encoded copy. Falls back to the original when the asset
+// predates the last generation run.
+const heroVideoOriginal = heroVideoThumb ? thumbnailPath(heroVideoThumb) : null;
+const heroVideoSrc = heroVideoOriginal
+  ? (hubMediaFor(heroVideoOriginal)?.video ?? heroVideoOriginal)
+  : null;
+const heroVideoPoster = heroVideoOriginal ? hubMediaFor(heroVideoOriginal)?.poster : undefined;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
-const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
+const heroOriginal = heroImage ? thumbnailPath(heroImage) : null;
+const heroSrc = heroOriginal ? (hubImageFor(heroOriginal) ?? heroOriginal) : null;
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
 // The hero visual links to the override (page CTA) or the hero template's detail page.
 const heroHref =
@@ -134,6 +143,7 @@ const heroVisualProps = heroHref
             {heroVideoSrc ? (
               <video
                 src={heroVideoSrc}
+                poster={heroVideoPoster}
                 class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
                 autoplay
                 muted

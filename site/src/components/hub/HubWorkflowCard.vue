@@ -11,7 +11,7 @@ import TagRow from '@/components/hub/TagRow.vue';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
-import { hubMediaFor } from '@/lib/hub-media';
+import { hubImageFor, hubMediaFor } from '@/lib/hub-media';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
@@ -133,7 +133,11 @@ useIntersectionObserver(videoEl, ([entry]) => {
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
   if (!f || isMediaFile(f)) return null;
-  return thumbnailPath(f);
+  const url = thumbnailPath(f);
+  // Prefer our re-encoded copy. Card images are the largest remaining cost on
+  // the page: 283 of them ship as raw PNG, averaging ~2 MB, into a box roughly
+  // 400 px wide. Dimensions are unchanged; only the encoding is.
+  return hubImageFor(url) ?? url;
 });
 
 const hasSecondImage = computed(() => {
@@ -147,7 +151,8 @@ const hasSecondImage = computed(() => {
 
 const secondaryUrl = computed(() => {
   if (!hasSecondImage.value || !secondaryFile.value) return null;
-  return thumbnailPath(secondaryFile.value);
+  const url = thumbnailPath(secondaryFile.value);
+  return hubImageFor(url) ?? url;
 });
 
 const showCompare = computed(

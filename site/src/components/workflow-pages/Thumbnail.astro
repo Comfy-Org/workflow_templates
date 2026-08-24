@@ -11,6 +11,7 @@
  */
 import { COMFY_GLYPH } from './comfy-glyph';
 import { isVideoFile } from '../../lib/media-utils';
+import { hubImageFor, hubMediaFor } from '../../lib/hub-media';
 
 interface Props {
   src?: string | null;
@@ -20,13 +21,22 @@ interface Props {
 
 const { src, alt, class: imgClass } = Astro.props;
 const isVideo = Boolean(src && isVideoFile(src));
+
+// Prefer our re-encoded copy of the asset. Shared by every landing-page card,
+// so this one line covers all of them; anything without a generated copy keeps
+// its original URL untouched.
+const resolvedSrc = src
+  ? (isVideo ? hubMediaFor(src)?.video : hubImageFor(src)) ?? src
+  : src;
+const posterSrc = src && isVideo ? hubMediaFor(src)?.poster : undefined;
 ---
 
 {
   src &&
     (isVideo ? (
       <video
-        src={src}
+        src={resolvedSrc}
+        poster={posterSrc}
         class={imgClass}
         autoplay
         muted
@@ -37,7 +47,7 @@ const isVideo = Boolean(src && isVideoFile(src));
       />
     ) : (
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         class={imgClass}
         loading="lazy"
