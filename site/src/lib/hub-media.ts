@@ -79,3 +79,24 @@ export function landingHeroImage(thumbnails: string[] | undefined): string | nul
   const url = thumbnailPath(still);
   return hubImageFor(url) ?? url;
 }
+
+/**
+ * The URL a card or hero should actually render for an asset: our re-encoded
+ * video or image where one exists, otherwise the original untouched.
+ *
+ * Shared so a page emitting `<link rel="preload">` and the component rendering
+ * the element resolve identically. A preload that differs from the element's
+ * `src` fetches the file twice, which is worse than not preloading at all.
+ */
+export function hubAssetUrl(url: string): string {
+  if (!url) return url;
+  return hubMediaFor(url)?.video ?? hubImageFor(url) ?? url;
+}
+
+/** The still worth preloading for a detail hero, or null when there is none. */
+export function detailHeroPreload(thumbnail: string | null | undefined): string | null {
+  if (!thumbnail) return null;
+  const url = thumbnailPath(thumbnail);
+  // A video hero paints its poster first, so that is the image to fetch early.
+  return hubMediaFor(url)?.poster ?? hubImageFor(url);
+}

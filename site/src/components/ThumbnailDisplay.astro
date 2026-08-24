@@ -12,6 +12,7 @@
 
 import type { ThumbnailVariant } from '../lib/hub-api';
 import { getVideoFrameUrl } from '../lib/video-thumbnail';
+import { hubAssetUrl, hubMediaFor } from '../lib/hub-media';
 import { isVideoFile, isAudioFile } from '../lib/media-utils';
 
 interface Props {
@@ -49,15 +50,26 @@ const imgClass = mediaClass;
 
 const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
-const primarySrc = primaryThumb ? thumbUrl(primaryThumb) : '';
-const secondarySrc = secondaryThumb ? thumbUrl(secondaryThumb) : '';
+// This is the hero of every workflow detail page, the worst-LCP page type in
+// the baseline at 15.9 s. Resolve to our re-encoded copy where one exists;
+// anything newer than the last generation run keeps its original URL.
+const primaryOriginal = primaryThumb ? thumbUrl(primaryThumb) : '';
+const secondaryOriginal = secondaryThumb ? thumbUrl(secondaryThumb) : '';
+const primarySrc = hubAssetUrl(primaryOriginal);
+const secondarySrc = hubAssetUrl(secondaryOriginal);
 const isAnimated = mediaSubtype === 'webp';
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb ? isAudioFile(primaryThumb) : false;
 const isVideo = primaryThumb ? isVideoFile(primaryThumb) : false;
 const isSecondaryVideo = secondaryThumb ? isVideoFile(secondaryThumb) : false;
-const videoPosterUrl = isVideo ? getVideoFrameUrl(primarySrc) : null;
-const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc) : null;
+// Posters resolve from the ORIGINAL url: our manifest is keyed by the upstream
+// asset id, and primarySrc may already point at our bucket.
+const videoPosterUrl = isVideo
+  ? (hubMediaFor(primaryOriginal)?.poster ?? getVideoFrameUrl(primaryOriginal))
+  : null;
+const secondaryVideoPosterUrl = isSecondaryVideo
+  ? (hubMediaFor(secondaryOriginal)?.poster ?? getVideoFrameUrl(secondaryOriginal))
+  : null;
 ---
 
 {
