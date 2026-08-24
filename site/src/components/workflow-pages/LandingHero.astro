@@ -1,13 +1,12 @@
 ---
 import type { Locale } from '../../i18n/config';
 import {
-  firstStillThumbnail,
   hasStillThumbnail,
   heroTemplateFor,
   isVideoFile,
 } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
-import { hubImageFor, hubMediaFor } from '../../lib/hub-media';
+import { hubMediaFor, landingHeroImage } from '../../lib/hub-media';
 import { externalLinkAttrs } from '../../lib/urls';
 import type { SerializedTemplate } from '../../lib/hub-api';
 import { resolveTemplateLogos } from '../../lib/model-logos';
@@ -73,9 +72,9 @@ const heroVideoSrc = heroVideoOriginal
   ? (hubMediaFor(heroVideoOriginal)?.video ?? heroVideoOriginal)
   : null;
 const heroVideoPoster = heroVideoOriginal ? hubMediaFor(heroVideoOriginal)?.poster : undefined;
-const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
-const heroOriginal = heroImage ? thumbnailPath(heroImage) : null;
-const heroSrc = heroOriginal ? (hubImageFor(heroOriginal) ?? heroOriginal) : null;
+// Shared with the page's <link rel="preload"> so the two cannot resolve to
+// different URLs, which would fetch the hero twice.
+const heroSrc = landingHeroImage(heroTemplate?.thumbnails);
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
 // The hero visual links to the override (page CTA) or the hero template's detail page.
 const heroHref =

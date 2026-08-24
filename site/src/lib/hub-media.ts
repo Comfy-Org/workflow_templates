@@ -16,6 +16,8 @@
  */
 import generatedAssets from '@/data/hub-media-assets.json';
 import generatedImages from '@/data/hub-media-images.json';
+import { firstStillThumbnail } from '@/lib/media-utils';
+import { thumbnailPath } from '@/lib/routes';
 
 const MEDIA_BASE = 'https://media.comfy.org/hub-media';
 
@@ -59,4 +61,21 @@ export function hubMediaFor(sourceUrl: string): HubMedia | null {
     poster: `${MEDIA_BASE}/posters/${id}.jpg`,
     video: `${MEDIA_BASE}/video/${id}.mp4`,
   };
+}
+
+/**
+ * The still image a landing hero will render, resolved to our copy.
+ *
+ * Exported so the page can emit a matching `<link rel="preload">` without
+ * recomputing the URL. A preload whose href differs from the element's `src`
+ * by even a query string downloads the file twice, which is worse than not
+ * preloading at all, so both sides read from here.
+ *
+ * Returns null when the hero is a video, which carries its own poster instead.
+ */
+export function landingHeroImage(thumbnails: string[] | undefined): string | null {
+  const still = firstStillThumbnail(thumbnails);
+  if (!still) return null;
+  const url = thumbnailPath(still);
+  return hubImageFor(url) ?? url;
 }
