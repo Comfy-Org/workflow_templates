@@ -150,7 +150,6 @@ function toggleFullscreen() {
       :aria-label="ariaLabel"
       class="size-full object-cover"
       preload="metadata"
-      crossorigin="anonymous"
       playsinline
       @click="playing = !playing"
     ></video>

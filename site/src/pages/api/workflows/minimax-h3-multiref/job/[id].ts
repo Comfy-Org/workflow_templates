@@ -5,6 +5,19 @@ import { ComfyLow } from '@comfyorg/sdk/low';
 import { DEPLOYMENT_URL, type JobOutput } from '@/lib/demos/mmh3/config';
 import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
 
+export const DELETE: APIRoute = async ({ params }) => {
+  const id = params.id;
+  if (!id) return jsonResponse({ error: 'Missing job id' }, 400);
+
+  try {
+    const job = await comfyClient().jobs.get(id);
+    await job.cancel();
+    return jsonResponse({ jobId: job.id, status: job.status });
+  } catch (err) {
+    return jsonResponse({ error: describeError(err) }, 502);
+  }
+};
+
 export const GET: APIRoute = async ({ params }) => {
   const id = params.id;
   if (!id) return jsonResponse({ error: 'Missing job id' }, 400);

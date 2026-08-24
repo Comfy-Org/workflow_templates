@@ -9,9 +9,6 @@ import {
   INPUT_NODES,
   KEYFRAMES,
   KEYFRAMES_NODE,
-  buildKeyframeState,
-  maxFrameFor,
-  validateSeconds,
   type DemoSettings,
 } from '@/lib/demos/mmh3/config';
 import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
@@ -34,7 +31,6 @@ function coerceSettings(raw: unknown): DemoSettings {
     megapixels: num(input.megapixels, DEFAULTS.megapixels),
     sampler: str(input.sampler, DEFAULTS.sampler),
     scheduler: str(input.scheduler, DEFAULTS.scheduler),
-    loraStrength: num(input.loraStrength, DEFAULTS.loraStrength),
     crop: str(input.crop, DEFAULTS.crop),
     enabledKeyframes: Array.isArray(input.enabledKeyframes)
       ? input.enabledKeyframes.filter((i) => KEYFRAMES.some((k) => k.index === i))
@@ -58,14 +54,20 @@ export const POST: APIRoute = async ({ request }) => {
   }
   const enabled = settings.enabledKeyframes;
 
-  if (!enabled.length) {
-    return jsonResponse({ error: 'Keep at least one reference image.' }, 400);
+  if (KEYFRAMES.some((slot) => !enabled.includes(slot.index))) {
+    return jsonResponse(
+      { error: 'Add all three reference images before running the workflow.' },
+      400
+    );
   }
 
-  // References are pinned to absolute frames; a clip shorter than the last one
-  // fails deep inside the node, so refuse it here where we can explain why.
-  const secondsError = validateSeconds(settings.seconds, maxFrameFor(enabled));
-  if (secondsError) return jsonResponse({ error: secondsError }, 400);
+  if (!Number.isInteger(settings.seconds) || settings.seconds < 5 || settings.seconds > 15) {
+    return jsonResponse({ error: 'Clip length must be a whole number from 5 to 15 seconds.' }, 400);
+  }
+
+  if (!Number.isInteger(settings.steps) || settings.steps < 4 || settings.steps > 12) {
+    return jsonResponse({ error: 'Quality steps must be a whole number from 4 to 12.' }, 400);
+  }
 
   let client;
   try {
@@ -85,19 +87,7 @@ export const POST: APIRoute = async ({ request }) => {
 
   const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   try {
-    const node = (wf.json[KEYFRAMES_NODE] ?? {}) as { inputs?: Record<string, unknown> };
-    const inputs = node.inputs ?? {};
-
-    // Removing a reference renumbers the rest: the node pairs `positions[i]`
-    // with `keyframe_image_{i+1}`, so stale image inputs have to go first.
-    for (const key of Object.keys(inputs)) {
-      if (key.startsWith('keyframe_image_')) delete inputs[key];
-    }
-
-    const kept = KEYFRAMES.filter((k) => enabled.includes(k.index));
-    wf.setInput(KEYFRAMES_NODE, 'keyframe_state', buildKeyframeState(kept.map((k) => k.frame)));
-
-    for (const [i, slot] of kept.entries()) {
+    for (const [i, slot] of KEYFRAMES.entries()) {
       const field = form.get(`keyframe_${slot.index}`);
       let asset;
 
@@ -124,13 +114,6 @@ export const POST: APIRoute = async ({ request }) => {
       // that node's IMAGE output (slot 0), which is what it expects.
       wf.setInput(slot.nodeId, 'image', asset.filePath);
       wf.setInput(KEYFRAMES_NODE, `keyframe_image_${i + 1}`, [slot.nodeId, 0]);
-    }
-
-    // Drop the loaders for removed references. They are unused, but the server
-    // validates every LoadImage in the graph, so leaving one behind fails with
-    // "does not match any uploaded asset" for its original filename.
-    for (const slot of KEYFRAMES) {
-      if (!enabled.includes(slot.index)) delete wf.json[slot.nodeId];
     }
 
     const job = await client.submit(wf);

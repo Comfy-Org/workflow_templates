@@ -32,49 +32,21 @@ export interface KeyframeSlot {
   nodeId: string;
   /** 1-based position in the UI. */
   index: number;
-  /** Frame this reference is anchored to. */
-  frame: number;
 }
 
 /** The three references, in the order they occur in the clip. */
 export const KEYFRAMES: KeyframeSlot[] = [
-  { nodeId: '31', index: 1, frame: 1 },
-  { nodeId: '32', index: 2, frame: 121 },
-  { nodeId: '33', index: 3, frame: 241 },
+  { nodeId: '31', index: 1 },
+  { nodeId: '32', index: 2 },
+  { nodeId: '33', index: 3 },
 ];
 
 /** The MiniMaxH3CustomKeyframes node the references feed. */
 export const KEYFRAMES_NODE = '21';
 
-/** Highest frame any reference is pinned to — the clip cannot be shorter. */
-export const MAX_KEYFRAME_FRAME = Math.max(...KEYFRAMES.map((k) => k.frame));
-
-/**
- * The `keyframe_state` widget the node reads: how many references it should
- * expect, and where each lands. Rebuilt whenever one is removed, since the node
- * pairs positions with `keyframe_image_1..count` in order.
- */
-export function buildKeyframeState(positions: number[]): string {
-  return JSON.stringify({ count: positions.length, positions });
-}
-
-/** Highest frame still in play once removed references are excluded. */
-export function maxFrameFor(enabled: number[]): number {
-  const frames = KEYFRAMES.filter((k) => enabled.includes(k.index)).map((k) => k.frame);
-  return frames.length ? Math.max(...frames) : 0;
-}
-
-/**
- * References are pinned to absolute frames; nothing rescales them when the clip
- * length changes, so a clip that ends before the last one fails inside the node.
- */
-export function validateSeconds(seconds: number, maxFrame = MAX_KEYFRAME_FRAME): string | null {
-  const length = clipLengthFrames(seconds);
-  if (maxFrame && length < maxFrame) {
-    const needed = (maxFrame / FPS).toFixed(1);
-    return `The last reference image sits at ${needed}s, past the end of a ${seconds}s clip. Make the clip at least ${needed}s, or remove the references that fall past the end.`;
-  }
-  return null;
+/** Place the references at the start, one-third, and two-thirds of the clip. */
+export function keyframePositions(seconds: number): number[] {
+  return [1, Math.round((seconds * FPS) / 3) + 1, Math.round((seconds * FPS * 2) / 3) + 1];
 }
 
 /** Where each scalar control writes in the graph. */
@@ -87,7 +59,6 @@ export const INPUT_NODES = {
   megapixels: { nodeId: '54', field: 'megapixels' },
   sampler: { nodeId: '11', field: 'sampler_name' },
   scheduler: { nodeId: '12', field: 'scheduler' },
-  loraStrength: { nodeId: '2', field: 'strength_model' },
   crop: { nodeId: KEYFRAMES_NODE, field: 'crop' },
 } as const;
 
@@ -106,8 +77,7 @@ export const RESOLUTION_MULTIPLE = 8;
 export const RESOLUTION_PRESETS = [
   { label: 'Draft', megapixels: 0.2 },
   { label: 'Standard', megapixels: 0.4 },
-  { label: 'High', megapixels: 0.8 },
-  { label: 'Very high', megapixels: 1.2 },
+  { label: 'High', megapixels: 1 },
 ] as const;
 
 /**
@@ -143,22 +113,20 @@ export interface DemoSettings {
   megapixels: number;
   sampler: string;
   scheduler: string;
-  loraStrength: number;
   crop: string;
-  /** Reference slot indices (1-3) still in the run; omitted ones are removed. */
+  /** Reference slot indices (1-3) present in the run. */
   enabledKeyframes: number[];
 }
 
 export const DEFAULTS: DemoSettings = {
   prompt: '',
-  seconds: 15,
+  seconds: 10,
   steps: 8,
   seed: 424242,
   aspectRatio: '16:9 (Widescreen)',
   megapixels: 0.4,
   sampler: 'res_multistep',
   scheduler: 'simple',
-  loraStrength: 1,
   crop: 'center',
   enabledKeyframes: KEYFRAMES.map((k) => k.index),
 };

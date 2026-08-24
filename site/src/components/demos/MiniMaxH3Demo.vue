@@ -15,8 +15,7 @@ import {
   SCHEDULERS,
   clipLengthFrames,
   frameSizeFor,
-  maxFrameFor,
-  validateSeconds,
+  keyframePositions,
   type DemoSettings,
   type JobOutput,
   type QueueState,
@@ -30,7 +29,7 @@ const props = defineProps<{
   agentPromptUrl: string | null;
 }>();
 
-type RunState = 'idle' | 'submitting' | 'queued' | 'running' | 'succeeded' | 'failed';
+type RunState = 'idle' | 'submitting' | 'queued' | 'running' | 'canceling' | 'succeeded' | 'failed';
 
 const settings = reactive<DemoSettings>({ ...DEFAULTS, prompt: props.defaultPrompt });
 
@@ -53,6 +52,7 @@ const slots = reactive(
 const state = ref<RunState>('idle');
 const jobId = ref<string | null>(null);
 const errorMessage = ref<string | null>(null);
+const statusMessage = ref<string | null>(null);
 const outputs = ref<JobOutput[]>([]);
 const elapsed = ref(0);
 const queuedFor = ref(0);
@@ -74,6 +74,7 @@ let queueTimer: ReturnType<typeof setInterval> | null = null;
 const objectUrls: string[] = [];
 
 const frames = computed(() => clipLengthFrames(settings.seconds));
+const keyframeFrames = computed(() => keyframePositions(settings.seconds));
 
 /** Preset labels carry the megapixel budget and the frame size it works out to. */
 const resolutionOptions = computed(() =>
@@ -116,14 +117,18 @@ const compression = computed(() => {
     after: shrunk.reduce((sum, s) => sum + s.uploadBytes, 0),
   };
 });
-const secondsError = computed(() =>
-  validateSeconds(settings.seconds, maxFrameFor(enabledIndexes.value))
+const hasAllReferences = computed(() =>
+  slots.every((slot) => slot.enabled && Boolean(slot.preview) && !slot.preparing)
 );
-const emptyError = computed(() =>
-  enabledIndexes.value.length ? null : 'Add at least one reference image to run the workflow.'
+const blockingError = computed(() =>
+  hasAllReferences.value ? null : 'Add all three reference images before running the workflow.'
 );
-const blockingError = computed(() => secondsError.value ?? emptyError.value);
-const isBusy = computed(() => ['submitting', 'queued', 'running'].includes(state.value));
+const isBusy = computed(() =>
+  ['submitting', 'queued', 'running', 'canceling'].includes(state.value)
+);
+const canCancel = computed(
+  () => Boolean(jobId.value) && (state.value === 'queued' || state.value === 'running')
+);
 
 /**
  * The generated video once there is one, otherwise the bundled example.
@@ -133,7 +138,8 @@ const isBusy = computed(() => ['submitting', 'queued', 'running'].includes(state
  */
 const video = computed(() => {
   if (outputs.value.length) {
-    const out = outputs.value[0];
+    const out =
+      outputs.value.find((output) => output.contentType.startsWith('video/')) ?? outputs.value[0];
     return { url: out.url, name: out.name, sizeBytes: out.sizeBytes, isExample: false };
   }
   if (state.value === 'failed') return null;
@@ -167,6 +173,8 @@ const runCaption = computed(() => {
         : 'Waiting for a free worker.';
     case 'running':
       return 'A worker is rendering your clip. This usually takes a few minutes.';
+    case 'canceling':
+      return 'Stopping this job…';
     default:
       return null;
   }
@@ -392,6 +400,14 @@ function stopTimers() {
   clockTimer = null;
 }
 
+function startJobTimers(pollDelay = 2000) {
+  clockTimer = setInterval(() => {
+    elapsed.value += 1;
+    if (state.value === 'queued') queuedFor.value += 1;
+  }, 1000);
+  pollTimer = setTimeout(poll, pollDelay);
+}
+
 async function poll() {
   if (!jobId.value) return;
   try {
@@ -424,7 +440,17 @@ async function poll() {
       return;
     }
 
-    if (body.status === 'failed' || body.status === 'canceled' || body.status === 'cancelled') {
+    if (body.status === 'canceled' || body.status === 'cancelled') {
+      state.value = 'idle';
+      statusMessage.value = 'Generation canceled.';
+      jobId.value = null;
+      queuePosition.value = null;
+      progressValue.value = null;
+      stopTimers();
+      return;
+    }
+
+    if (body.status === 'failed') {
       state.value = 'failed';
       errorMessage.value = body.error ?? `Job ${body.status}`;
       stopTimers();
@@ -439,12 +465,49 @@ async function poll() {
   }
 }
 
+async function cancelJob() {
+  const id = jobId.value;
+  if (!id || !canCancel.value) return;
+
+  const previousState = state.value;
+  stopTimers();
+  state.value = 'canceling';
+  errorMessage.value = null;
+  statusMessage.value = null;
+
+  try {
+    const res = await fetch(`/api/workflows/minimax-h3-multiref/job/${id}`, {
+      method: 'DELETE',
+    });
+    const body = await readResponse(res);
+    if (!res.ok) throw new Error(body.error ?? `Cancel failed (${res.status})`);
+
+    if (body.status === 'canceled' || body.status === 'cancelled') {
+      state.value = 'idle';
+      jobId.value = null;
+      queuePosition.value = null;
+      progressValue.value = null;
+      statusMessage.value = 'Generation canceled.';
+      return;
+    }
+
+    state.value = previousState;
+    statusMessage.value = `The job is already ${body.status}.`;
+    startJobTimers(0);
+  } catch (err) {
+    state.value = previousState;
+    errorMessage.value = err instanceof Error ? err.message : String(err);
+    startJobTimers(3000);
+  }
+}
+
 async function run() {
   if (isBusy.value || blockingError.value) return;
 
   stopTimers();
   state.value = 'submitting';
   errorMessage.value = null;
+  statusMessage.value = null;
   outputs.value = [];
   jobId.value = null;
   elapsed.value = 0;
@@ -480,11 +543,7 @@ async function run() {
 
     jobId.value = body.jobId;
     state.value = body.status === 'queued' ? 'queued' : 'running';
-    clockTimer = setInterval(() => {
-      elapsed.value += 1;
-      if (state.value === 'queued') queuedFor.value += 1;
-    }, 1000);
-    pollTimer = setTimeout(poll, 2000);
+    startJobTimers();
   } catch (err) {
     state.value = 'failed';
     errorMessage.value = err instanceof Error ? err.message : String(err);
@@ -583,7 +642,7 @@ onBeforeUnmount(() => {
                 ]"
                 :title="
                   slot.enabled
-                    ? `Reference ${slot.index} — ${timecode(slot.frame)} into the clip`
+                    ? `Reference ${slot.index} — ${timecode(keyframeFrames[slot.index - 1])} into the clip`
                     : `Reference ${slot.index} removed — click + to put it back`
                 "
                 @dragstart="
@@ -653,7 +712,7 @@ onBeforeUnmount(() => {
                 class="mt-2 text-center font-mono text-xs leading-tight"
                 :class="slot.enabled ? 'text-content-muted' : 'text-content-muted/40'"
               >
-                {{ timecode(slot.frame) }}
+                {{ timecode(keyframeFrames[slot.index - 1]) }}
               </div>
 
               <div
@@ -676,15 +735,14 @@ onBeforeUnmount(() => {
                 </button>
                 <button
                   type="button"
-                  class="grid place-items-center bg-brand text-page transition-opacity hover:opacity-90"
-                  :class="slot.enabled ? 'size-8 rounded-xl' : 'size-12 rounded-2xl'"
+                  class="grid size-8 place-items-center rounded-xl bg-brand text-page transition-opacity hover:opacity-90"
                   :aria-label="slot.enabled ? 'Remove this reference' : 'Put this reference back'"
                   :title="slot.enabled ? 'Remove this reference' : 'Put this reference back'"
                   @click.prevent="toggleSlot(slots.findIndex((s) => s.index === slot.index))"
                 >
                   <span
-                    class="bg-page [mask-image:url('/icons/plus.svg')] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
-                    :class="slot.enabled ? 'size-4 rotate-45' : 'size-6'"
+                    class="size-4 bg-page [mask-image:url('/icons/plus.svg')] [mask-position:center] [mask-repeat:no-repeat] [mask-size:contain]"
+                    :class="slot.enabled && 'rotate-45'"
                     aria-hidden="true"
                   ></span>
                 </button>
@@ -694,8 +752,7 @@ onBeforeUnmount(() => {
 
           <p class="text-xs leading-relaxed text-content-muted">
             Click a slot to upload a replacement, drag a file from your computer onto it, or drag
-            one reference onto another to swap them. Remove any slot you do not want to use; at
-            least one is required to run.
+            one reference onto another to swap them. All three slots are required to run.
           </p>
         </div>
       </section>
@@ -728,7 +785,8 @@ onBeforeUnmount(() => {
               {{ promptCopied ? 'Copied' : 'Copy prompt guide for agents' }}
             </button>
             <span class="text-xs text-content-muted">
-              Paste it into an assistant, describe your shot, and it writes the prompt below.
+              Paste it into an assistant, describe your shot, upload your images, and it writes the
+              prompt below.
             </span>
           </div>
           <p v-if="promptCopyFailed" class="text-[10px] text-amber-200">
@@ -780,17 +838,11 @@ onBeforeUnmount(() => {
               <input
                 v-model.number="settings.seconds"
                 type="range"
-                min="2"
-                max="30"
-                step="0.5"
+                min="5"
+                max="15"
+                step="1"
                 class="mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-divider accent-brand"
               />
-              <p
-                v-if="blockingError"
-                class="mt-2 rounded-lg border border-amber-400/30 bg-amber-400/10 p-2 text-[11px] leading-relaxed text-amber-200"
-              >
-                {{ blockingError }}
-              </p>
             </div>
 
             <div>
@@ -828,6 +880,29 @@ onBeforeUnmount(() => {
               />
               <p class="mt-2 text-xs text-content-muted">
                 How images that do not match the aspect ratio are handled.
+              </p>
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="text-xs font-semibold text-content">Seed</label>
+              <div class="mt-2 flex gap-2">
+                <input
+                  v-model.number="settings.seed"
+                  type="number"
+                  class="h-12 min-w-0 flex-1 rounded-2xl border border-divider-subtle bg-hub-surface p-4 font-mono text-xs font-semibold text-content transition-colors outline-none focus:border-divider"
+                />
+                <button
+                  type="button"
+                  class="grid size-12 shrink-0 place-items-center rounded-2xl border border-divider-subtle bg-hub-surface text-content-secondary transition-colors hover:border-divider hover:text-brand focus-visible:border-divider focus-visible:outline-none"
+                  aria-label="Randomize seed"
+                  title="Randomize seed"
+                  @click="randomizeSeed"
+                >
+                  <RefreshCw class="size-4" aria-hidden="true" />
+                </button>
+              </div>
+              <p class="mt-2 text-xs leading-relaxed text-content-muted">
+                Same seed and settings give the same video back.
               </p>
             </div>
           </div>
@@ -869,7 +944,7 @@ onBeforeUnmount(() => {
           </p>
 
           <div class="grid gap-4 sm:grid-cols-2">
-            <div>
+            <div class="sm:col-span-2">
               <div class="flex items-baseline justify-between">
                 <label class="text-xs font-semibold text-content">Quality steps</label>
                 <span class="font-mono text-xs text-content-muted">{{ settings.steps }}</span>
@@ -878,55 +953,12 @@ onBeforeUnmount(() => {
                 v-model.number="settings.steps"
                 type="range"
                 min="4"
-                max="30"
+                max="12"
                 step="1"
                 class="mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-divider accent-brand"
               />
               <p class="mt-2 text-xs leading-relaxed text-content-muted">
                 More steps take longer; this model is tuned for 8.
-              </p>
-            </div>
-
-            <div>
-              <div class="flex items-baseline justify-between">
-                <label class="text-xs font-semibold text-content">Speed-up strength</label>
-                <span class="font-mono text-xs text-content-muted">
-                  {{ settings.loraStrength }}
-                </span>
-              </div>
-              <input
-                v-model.number="settings.loraStrength"
-                type="range"
-                min="0"
-                max="1.5"
-                step="0.05"
-                class="mt-3 h-1 w-full cursor-pointer appearance-none rounded-full bg-divider accent-brand"
-              />
-              <p class="mt-2 text-xs leading-relaxed text-content-muted">
-                Lower trades speed for fidelity.
-              </p>
-            </div>
-
-            <div class="sm:col-span-2">
-              <label class="text-xs font-semibold text-content">Seed</label>
-              <div class="mt-2 flex gap-2">
-                <input
-                  v-model.number="settings.seed"
-                  type="number"
-                  class="h-12 min-w-0 flex-1 rounded-2xl border border-divider-subtle bg-hub-surface p-4 font-mono text-xs font-semibold text-content transition-colors outline-none focus:border-divider"
-                />
-                <button
-                  type="button"
-                  class="grid size-12 shrink-0 place-items-center rounded-2xl border border-divider-subtle bg-hub-surface text-content-secondary transition-colors hover:border-divider hover:text-brand focus-visible:border-divider focus-visible:outline-none"
-                  aria-label="Randomize seed"
-                  title="Randomize seed"
-                  @click="randomizeSeed"
-                >
-                  <RefreshCw class="size-4" aria-hidden="true" />
-                </button>
-              </div>
-              <p class="mt-2 text-xs leading-relaxed text-content-muted">
-                Same seed and settings give the same video back.
               </p>
             </div>
 
@@ -997,7 +1029,7 @@ onBeforeUnmount(() => {
           >
             <span class="flex items-center justify-center gap-2">
               <span
-                v-if="isBusy"
+                v-if="isBusy && state !== 'canceling'"
                 class="inline-block h-3 w-3 shrink-0 rounded-full border-2 border-black/25 border-t-black/80"
                 :class="
                   state === 'queued'
@@ -1008,6 +1040,18 @@ onBeforeUnmount(() => {
               ></span>
               {{ runLabel }}
             </span>
+          </button>
+          <p v-if="blockingError" class="text-xs leading-relaxed text-content-muted">
+            {{ blockingError }}
+          </p>
+          <button
+            v-if="canCancel || state === 'canceling'"
+            type="button"
+            :disabled="state === 'canceling'"
+            class="min-h-12 w-full rounded-2xl border border-divider px-6 py-3 text-sm font-semibold uppercase tracking-wider text-content transition-colors hover:border-brand hover:text-brand disabled:cursor-wait disabled:text-content-muted"
+            @click="cancelJob"
+          >
+            {{ state === 'canceling' ? 'Canceling…' : 'Cancel job' }}
           </button>
           <a
             v-if="video"
@@ -1081,6 +1125,12 @@ onBeforeUnmount(() => {
           class="max-h-40 overflow-auto rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-[11px] leading-relaxed text-red-200"
         >
           {{ errorMessage }}
+        </p>
+        <p
+          v-else-if="statusMessage"
+          class="rounded-lg border border-divider-subtle bg-white/4 p-3 text-[11px] text-content-secondary"
+        >
+          {{ statusMessage }}
         </p>
         <p
           v-else-if="state === 'succeeded'"
