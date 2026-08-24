@@ -42,14 +42,31 @@ const outputLocales = singleLocale ? [singleLocale] : ALL_LOCALES;
 // well is what broke the Russian run: this side capped the mirror and the
 // reviewer did not, so the reviewer enforced terms the translator never saw.
 // Falls back to the raw mirror for a local run that has not synced the glossary.
+// Mirror of `applyOverrides` in scripts/i18n/sync-glossary.ts, duplicated because
+// this file is CommonJS and cannot import the TypeScript module. A `null` in the
+// overrides file RETRACTS the harvested pair; spreading the override object over
+// the mirror instead would keep the key with a null value and emit `- Video → null`.
+function withOverrides(base, overrides) {
+  const result = { ...base };
+  for (const [en, localized] of Object.entries(overrides)) {
+    if (localized === null) {
+      delete result[en];
+      continue;
+    }
+    if (typeof localized === 'string' && localized.trim()) result[en] = localized;
+  }
+  return result;
+}
+
 function terminologyBlock(locale) {
   const effective = readJson(path.join(GLOSSARY_DIR, 'effective', `${locale}.json`), null);
   const merged = new Map(
     Object.entries(
-      effective ?? {
-        ...readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
-        ...readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {}),
-      }
+      effective ??
+        withOverrides(
+          readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
+          readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
+        )
     )
   );
   if (merged.size === 0) return '';

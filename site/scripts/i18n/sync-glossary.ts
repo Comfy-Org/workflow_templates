@@ -16,6 +16,9 @@
  *                          the product UI already uses (workflow, node, queue…).
  *   overrides/{locale}.json — hand-curated fixes that win over the mirror
  *                          (created empty here; reviewers/CODEOWNERS extend them).
+ *                          A `null` value RETRACTS a harvested pair instead of
+ *                          replacing it, for the cases where the app's own UI
+ *                          contradicts itself. See `GlossaryOverrides`.
  *
  * The pure functions are exported and unit-tested; `main()` only does IO.
  */
@@ -135,6 +138,64 @@ export function buildMirror(
 export const MAX_MIRROR_PAIRS = 200;
 
 /**
+ * The on-disk shape of `overrides/{locale}.json`.
+ *
+ * A string is the curated translation a term MUST use. `null` is a RETRACTION:
+ * it says the harvested mirror pair for that term is wrong and must not be
+ * enforced by anyone. Retraction is the only way to drop a bad harvested pair,
+ * because the mirror is regenerated from the app's locale files on every run and
+ * hand-edits to it would not survive.
+ *
+ * Needed because the harvest cannot see when the app's own UI contradicts
+ * itself. `buildMirror` skips identity pairs, so where the Spanish UI leaves a
+ * term untranslated the pair is dropped as uninformative and only a divergent
+ * outlier survives: es harvested `Video -> Vídeo` from one standalone label
+ * while `Descargar video`, `Subir un video` and ten other phrases in the same
+ * file leave it unaccented. The reviewer then flagged 401 fields for using the
+ * spelling the app itself uses everywhere else, and `enforce` pruned them to
+ * English, 19.2% of the locale, over the 15% systemic threshold.
+ */
+export type GlossaryOverrides = Record<string, string | null>;
+
+/**
+ * Lay the curated override layer over a set of harvested pairs: a string wins
+ * over the harvested value, a `null` retracts the harvested pair entirely.
+ *
+ * ONE implementation on purpose. Retraction has to mean "delete" in the capped
+ * selection AND in the raw-mirror fallback both consumers use when
+ * `effective/` has not been built. Merging the override object over the mirror
+ * instead (`{...mirror, ...overrides}`) silently gets that wrong: the retracted
+ * key survives as an explicit `null`, and the prompt renders `- Video → null`.
+ */
+export function applyOverrides(
+  base: Record<string, string>,
+  overrides: GlossaryOverrides
+): Record<string, string> {
+  const result = { ...base };
+  for (const [en, localized] of Object.entries(overrides)) {
+    if (localized === null) {
+      delete result[en];
+      continue;
+    }
+    if (typeof localized === 'string' && localized.trim()) result[en] = localized;
+  }
+  return result;
+}
+
+/**
+ * The subset of an overrides file that may be ENFORCED: curated translations,
+ * with retractions dropped.
+ *
+ * Every consumer that checks content against the override layer must read it
+ * through here. `collectViolations` treats an override as a hard requirement
+ * ("term X must be rendered as Y") with no model in the loop, so a raw `null`
+ * reaching it would demand that fields render as the literal `null`.
+ */
+export function enforceableOverrides(overrides: GlossaryOverrides): Record<string, string> {
+  return applyOverrides({}, overrides);
+}
+
+/**
  * The glossary both sides actually use, chosen by how often a term appears in
  * the English corpus rather than by how long it is.
  *
@@ -149,7 +210,7 @@ export const MAX_MIRROR_PAIRS = 200;
  */
 export function selectGlossary(
   mirror: Record<string, string>,
-  overrides: Record<string, string>,
+  overrides: GlossaryOverrides,
   corpus: string,
   limit: number = MAX_MIRROR_PAIRS
 ): Record<string, string> {
@@ -171,10 +232,15 @@ export function selectGlossary(
 
   const selected: Record<string, string> = {};
   for (const { en, localized } of ranked) selected[en] = localized;
-  for (const [en, localized] of Object.entries(overrides)) {
-    if (typeof localized === 'string' && localized.trim()) selected[en] = localized;
-  }
-  return selected;
+  // Overrides are laid on AFTER the cap, retractions included. A retraction must
+  // never filter the mirror before ranking: dropping a term earlier promotes
+  // whatever sits at rank 200 into the glossary, so retracting one bad pair would
+  // silently start enforcing a term nobody vetted. Measured on es, retracting
+  // Video/VIDEO before the cap would have promoted `Top -> Arriba` and
+  // `Number of Frames -> Número de fotogramas`, and `Top` is an ordinary word in
+  // this corpus. After the cap it is purely subtractive: 200 -> 198, nothing else
+  // moves.
+  return applyOverrides(selected, overrides);
 }
 
 /** Flatten a nested JSON dictionary to flat "a.b.c" → string entries. */
@@ -277,7 +343,7 @@ function main(): void {
     writeJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), mirror);
     const overridePath = path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`);
     if (!fs.existsSync(overridePath)) writeJson(overridePath, {});
-    const overrides = readJson<Record<string, string>>(overridePath, {});
+    const overrides = readJson<GlossaryOverrides>(overridePath, {});
     // ONE artifact, read verbatim by the translator config and the reviewer, so
     // neither can enforce a term the other was never shown.
     const effective = selectGlossary(mirror, overrides, corpus);
