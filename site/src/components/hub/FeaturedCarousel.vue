@@ -4,16 +4,17 @@
  * Auto-rotates the most-used templates, pauses on hover, loops, and is fully
  * click-through to each template's workflow page. Renders one hero card per view.
  */
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
-import { usePreferredReducedMotion } from '@vueuse/core';
+import { usePreferredReducedMotion, useTemplateRefsList } from '@vueuse/core';
 import type { IslandTemplate } from '@/lib/hub-api';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { hubMediaFor } from '@/lib/hub-media';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 
@@ -90,8 +91,9 @@ const slides = computed<FeaturedSlide[]>(() =>
       providerName: badge?.name ?? null,
       logoPath: badge?.src ?? null,
       imageUrl: isVideo ? null : mediaUrl,
-      videoUrl: isVideo ? mediaUrl : null,
-      posterUrl: isVideo && mediaUrl ? getVideoFrameUrl(mediaUrl) : null,
+      videoUrl: isVideo && mediaUrl ? (hubMediaFor(mediaUrl)?.video ?? mediaUrl) : null,
+      posterUrl:
+        isVideo && mediaUrl ? (hubMediaFor(mediaUrl)?.poster ?? getVideoFrameUrl(mediaUrl)) : null,
       creatorName: t.creatorDisplayName || 'ComfyUI',
       creatorAvatarUrl: t.creatorAvatarUrl,
       creatorUrl: t.username ? creatorPath(t.username, props.locale) : null,
@@ -108,6 +110,28 @@ const videoFailed = ref<Record<string, boolean>>({});
 function onVideoError(key: string) {
   videoFailed.value[key] = true;
 }
+
+/**
+ * Only the slide the reader is looking at holds a playing video.
+ *
+ * Every slide carried `autoplay`, so all six hero videos downloaded on load to
+ * show one. Slide one still autoplays exactly as before; the rest load nothing
+ * until they become active, which is the first moment they are visible.
+ */
+const videoRefs = useTemplateRefsList<HTMLVideoElement>();
+
+onMounted(() => {
+  const api = emblaApi.value;
+  if (!api) return;
+  api.on('select', () => {
+    const active = api.selectedScrollSnap();
+    videoRefs.value.forEach((video, index) => {
+      if (!video) return;
+      if (index === active && autoplayEnabled) video.play().catch(() => {});
+      else video.pause();
+    });
+  });
+});
 
 onUnmounted(() => {
   emblaApi.value?.destroy();
@@ -134,8 +158,9 @@ onUnmounted(() => {
             :src="slide.videoUrl"
             :poster="slide.posterUrl || undefined"
             class="h-full w-full object-cover"
-            :preload="index === 0 ? 'auto' : 'metadata'"
-            :autoplay="autoplayEnabled"
+            :ref="videoRefs.set"
+            :preload="index === 0 ? 'auto' : 'none'"
+            :autoplay="autoplayEnabled && index === 0"
             muted
             loop
             playsinline
