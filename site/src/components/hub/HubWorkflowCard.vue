@@ -5,11 +5,13 @@
  * Visual structure: landscape thumbnail with the title and provider logo overlaid
  * on it; creator line + CTA and tag pills beneath.
  */
-import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted, nextTick, useTemplateRef } from 'vue';
+import { useIntersectionObserver, usePreferredReducedMotion } from '@vueuse/core';
 import TagRow from '@/components/hub/TagRow.vue';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { hubMediaFor } from '@/lib/hub-media';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
@@ -84,9 +86,15 @@ const videoUrl = computed(() => {
   return thumbnailPath(primaryFile.value!);
 });
 
+/** Our re-encoded copy of this asset, when one has been generated. */
+const hubMedia = computed(() => (videoUrl.value ? hubMediaFor(videoUrl.value) : null));
+
+/** Prefer our copy; an asset uploaded since the last run falls back upstream. */
+const playbackUrl = computed(() => hubMedia.value?.video ?? videoUrl.value);
+
 const posterUrl = computed(() => {
   if (!videoUrl.value) return null;
-  return getVideoFrameUrl(videoUrl.value);
+  return hubMedia.value?.poster ?? getVideoFrameUrl(videoUrl.value);
 });
 
 const videoFailed = ref(false);
@@ -94,6 +102,33 @@ const videoFailed = ref(false);
 function onVideoError() {
   videoFailed.value = true;
 }
+
+/**
+ * Play only what the reader can see.
+ *
+ * Every card carried `autoplay`, which silently overrides `preload="metadata"`,
+ * so all 28 videos on the listing downloaded in full to show the two actually on
+ * screen. Playback is gated on visibility instead: a card the reader can see
+ * behaves exactly as it did before, and one they cannot see costs them nothing.
+ *
+ * The element is deliberately never unobserved, so a card scrolled past and
+ * returned to plays again, and a long scroll does not accumulate videos left
+ * decoding off screen.
+ */
+const videoEl = useTemplateRef<HTMLVideoElement>('videoEl');
+const reducedMotion = usePreferredReducedMotion();
+
+useIntersectionObserver(videoEl, ([entry]) => {
+  const el = videoEl.value;
+  if (!el) return;
+  if (entry?.isIntersecting && reducedMotion.value !== 'reduce') {
+    // Rejects when the browser declines playback. The poster stays visible,
+    // which is the same thing the reader sees before a video has started.
+    el.play().catch(() => {});
+  } else {
+    el.pause();
+  }
+});
 
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
@@ -275,11 +310,11 @@ function handleCardClick() {
 
       <video
         v-else-if="isVideoPrimary && videoUrl"
-        :src="videoUrl"
+        ref="videoEl"
+        :src="playbackUrl || undefined"
         :poster="posterUrl || undefined"
         class="w-full h-full object-cover"
-        preload="metadata"
-        autoplay
+        preload="none"
         muted
         loop
         playsinline
