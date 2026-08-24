@@ -70,15 +70,39 @@ const indexableUseCaseSlugs = new Set(
 // the canonicalized `/workflows/model/<variant>/` fall through to a 404. The
 // locale route redirects variants in code regardless of trailing slash, so both
 // forms here restore parity.
+// Variant model URLs Search Console and crawlers already hold (emitted by
+// builds where detail chips linked `slugify(model)` directly). Today's catalog
+// still derives all of these, so the pins are belt-and-braces: they keep the
+// 301s alive even if the variant model name later drops out of the local
+// content templates. Every target is a PRIORITY_MODELS family, so its page
+// always exists.
+const legacyModelSlugRedirects = {
+  'wan2-2': 'wan',
+  'wan2-1': 'wan',
+  'ltx-2': 'ltx',
+  'ltx-2-3': 'ltx',
+  'flux-1': 'flux',
+  'z-image-turbo': 'z-image',
+  'gemini3-pro-image-preview': 'nano-banana',
+};
+
 const modelSlugRedirects = Object.fromEntries(
-  modelGroups.flatMap((group) =>
-    group.redirectFrom
-      .filter((variant) => !canonicalModelSlugs.has(variant))
-      .flatMap((variant) => [
-        [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`],
-        [`/workflows/model/${variant}/`, `/workflows/model/${group.slug}/`],
-      ])
-  )
+  Object.entries(legacyModelSlugRedirects)
+    .filter(([variant]) => !canonicalModelSlugs.has(variant))
+    .flatMap(([variant, target]) => [
+      [`/workflows/model/${variant}`, `/workflows/model/${target}/`],
+      [`/workflows/model/${variant}/`, `/workflows/model/${target}/`],
+    ])
+    .concat(
+      modelGroups.flatMap((group) =>
+        group.redirectFrom
+          .filter((variant) => !canonicalModelSlugs.has(variant))
+          .flatMap((variant) => [
+            [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`],
+            [`/workflows/model/${variant}/`, `/workflows/model/${group.slug}/`],
+          ])
+      )
+    )
 );
 
 // lastmod fallback for pages without a specific date.
@@ -103,6 +127,45 @@ const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/$
 const localeCustomPages = nonDefaultLocales.map((locale) => `${siteOrigin}/${locale}/workflows/`);
 const customPages = [...creatorPages, ...localeCustomPages];
 
+// The Vercel adapter collapses `/x` and `/x/` redirect keys into one `^/x$`
+// route (emitted twice), so the trailing-slash form of a variant model URL —
+// the exact form crawlers hold, since canonical model URLs carry a trailing
+// slash — fell through to a 404. Patch the emitted routes to accept both
+// forms, and drop the duplicate rows while we're in there.
+const slashTolerantModelRedirects = () => ({
+  name: 'slash-tolerant-model-redirects',
+  hooks: {
+    'astro:build:done': async () => {
+      const configPath = path.join(process.cwd(), '.vercel/output/config.json');
+      if (!fs.existsSync(configPath)) return;
+      const output = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+      const seen = new Set();
+      let patched = 0;
+      /** @param {{src?: unknown, status?: unknown, headers?: Record<string, string>}} route */
+      const patchRoute = (route) => {
+        const src = typeof route.src === 'string' ? route.src : '';
+        const isModelRedirect =
+          src.startsWith('^/workflows/model/') && route.status === 301 && route.headers?.Location;
+        if (!isModelRedirect) return true;
+        if (seen.has(src)) return false;
+        seen.add(src);
+        route.src = src.replace(/\$$/, '/?$');
+        patched += 1;
+        return true;
+      };
+      output.routes = (output.routes || []).filter(patchRoute);
+      if (patched === 0) {
+        console.warn(
+          '[slash-tolerant-model-redirects] no model redirect routes found in ' +
+            configPath +
+            ' — the adapter output shape may have changed and variant model URLs will 404 again.'
+        );
+      }
+      fs.writeFileSync(configPath, JSON.stringify(output));
+    },
+  },
+});
+
 // https://astro.build/config
 export default defineConfig({
   site: (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, ''),
@@ -119,6 +182,7 @@ export default defineConfig({
   },
   redirects: modelSlugRedirects,
   integrations: [
+    slashTolerantModelRedirects(),
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
       filenameBase: 'sitemap-workflows',

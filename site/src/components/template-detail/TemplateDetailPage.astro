@@ -10,9 +10,9 @@ import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
-import { slugify } from '../../lib/slugify';
-import { creatorPath } from '../../lib/routes';
+import { creatorPath, modelPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
+import { modelPageSlug } from '../../lib/workflow-pages/model-groups';
 import { isBillableWorkflow } from '../../lib/partner-nodes';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
 import { isVideoFile } from '../../lib/media-utils';
@@ -198,10 +198,14 @@ function formatRelativeDate(dateStr: string): string {
                   client:load
                   moreLabel={t('badge.more', locale)}
                   lessLabel={t('badge.less', locale)}
-                  items={data.models.map((model: string) => ({
-                    label: model,
-                    href: localizeUrl(`/workflows/model/${slugify(model)}/`, locale),
-                  }))}
+                  items={data.models.flatMap((model: string) => {
+                    // Link the family page (always exists); raw slugify(model)
+                    // produced variant URLs like /workflows/model/wan2-2/ that 404.
+                    const slug = modelPageSlug(model);
+                    return slug
+                      ? [{ label: model, href: localizeUrl(modelPath(slug), locale) }]
+                      : [];
+                  })}
                 />
               </SidebarSection>
             )

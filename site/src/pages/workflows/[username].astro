@@ -25,6 +25,7 @@ import { fetchRankingMap } from '../../lib/ranking';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../lib/structured-data';
 import { getSocialDisplay } from '../../lib/social-links';
+import { t } from '../../i18n/ui';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -145,7 +146,9 @@ const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
 // Detail page variables (only used when isDetailPage is true)
-const detailTitle = detailData ? `${detailData.title || detailData.name} - ComfyUI Workflow` : '';
+const detailTitle = detailData
+  ? t('template.metaTitle', 'en').replace('{title}', detailData.title || detailData.name)
+  : '';
 const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slugParam}/`) : '';
 const detailThumbnails = detailData?.thumbnails || [];
 const detailPrimaryThumbnail = detailThumbnails[0] || null;
@@ -236,7 +239,7 @@ const detailBreadcrumb = detailData
               </div>
               <!-- Name & Handle -->
               <div class="flex flex-col">
-                <p class="text-content text-base font-bold">{displayName}</p>
+                <h1 class="text-content text-base font-bold">{displayName}</h1>
                 <p class="text-hub-muted text-sm">@{slugParam}</p>
               </div>
             </div>
