@@ -33,6 +33,11 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
+// ISR: cache for 60s, serve stale for up to 10 min while revalidating.
+// Set after the redirect above so only a rendered page carries it; a returned
+// Response replaces Astro.response and would drop it anyway.
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
 // Cards come from the hub index, which is English only. Resolve the same text
 // the detail page will show, so a localized listing is not a translated page
 // sitting above a grid of English cards.
