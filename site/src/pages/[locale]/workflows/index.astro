@@ -47,6 +47,13 @@ const serialized = localizeCards(
 );
 
 const featured = getFeatured(serialized);
+// `description` is ~96 KB of the island props and nothing in the island reads
+// it: no card renders it, and SearchPopover indexes grid.json, which already
+// strips it. Server-side uses above are unaffected, they just don't ship.
+const forIsland = serialized.map(({ description: _description, ...rest }) => rest);
+// The hero island does not read `description` either; only the server-side
+// `featured` above needs the full record, for the LCP preload.
+const featuredForIsland = featured.map(({ description: _description, ...rest }) => rest);
 const featuredLcpImage = featuredPreloadImage(featured);
 
 // Gated until this locale completes native review: canonical to the English hub,
@@ -103,7 +110,7 @@ const facetsConfig = buildFacetsConfig(typedLocale);
     <!-- Featured hero carousel (Vue island) -->
     <FeaturedCarousel
       client:load
-      templates={featured}
+      templates={featuredForIsland}
       locale={typedLocale}
       isRtl={isRTL(typedLocale)}
       featuredLabel={t('hub.featured.label', typedLocale)}
@@ -114,12 +121,12 @@ const facetsConfig = buildFacetsConfig(typedLocale);
     <HubHero count={serialized.length} />
 
     <!-- Inline search — shows among the filters, docks flush below the navbar once scrolled past. -->
-    <HubSearchBar templates={serialized} locale={typedLocale} />
+    <HubSearchBar templates={forIsland} locale={typedLocale} />
 
     <!-- Interactive browse (Vue island) -->
     <HubBrowse
       client:load
-      templates={serialized}
+      templates={forIsland}
       locale={typedLocale}
       mediaTypes={mediaTypes}
       facetsConfig={facetsConfig}

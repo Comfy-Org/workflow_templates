@@ -16,7 +16,9 @@ import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 export interface SerializedTemplate {
   name: string;
   title: string;
-  description: string;
+  /** Optional, and deliberately not embedded: see the island props note in
+   *  `pages/workflows/index.astro`. Nothing here reads it. */
+  description?: string;
   mediaType: MediaType;
   tags: string[];
   models: string[];

@@ -8,7 +8,7 @@ import { computed, onUnmounted, ref } from 'vue';
 import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
 import { usePreferredReducedMotion } from '@vueuse/core';
-import type { SerializedTemplate } from '@/lib/hub-api';
+import type { IslandTemplate } from '@/lib/hub-api';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { tagDisplayName } from '@/lib/tag-aliases';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 
 interface Props {
-  templates: SerializedTemplate[];
+  templates: IslandTemplate[];
   locale: string;
   isRtl: boolean;
   featuredLabel: string;
