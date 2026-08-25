@@ -228,6 +228,13 @@ jobs:
       - name: Refresh sign-off records
         if: always()
         working-directory: site
+        # Every hub locale may be granted its first wave by policy: the native
+        # review gate was dropped deliberately (nav, 2026-08-24) so indexation is
+        # not held behind reviewer capacity. The other half of the predicate is
+        # untouched, so a page whose fields are not genuinely translated, or that
+        # carries an unresolved critical/major finding, is still held back.
+        env:
+          I18N_BOOTSTRAP_LOCALES: zh,zh-TW,ja,ko,es,fr,ru,tr,ar,pt-BR
         run: pnpm i18n:signoff-refresh
 
       # Format only the generated files; whole-tree prettier hits pre-existing
