@@ -107,27 +107,22 @@ Generated output goes to `scripts/.output/` (gitignored) or repo root (`model_an
 
 ## Duplicate thumbnail check
 
-Install the single image dependency, then audit every effective image thumbnail:
+Install Pillow, then audit every effective image thumbnail:
 
 ```bash
 python -m pip install Pillow
 python scripts/validate/check_duplicate_thumbnails.py --audit
 ```
 
-The checker includes both image paths declared by `thumbnail` in `templates/index.json` and
-implicit `{template}-N.webp` assets. It reports byte-identical files and strict perceptual matches
-that remain visually equivalent after resizing or re-encoding. Multiple assets owned by the same
-template are never treated as cross-template duplicates.
-
-The repository contains legacy duplicate groups, so audit mode reports without failing. Before
-committing a thumbnail change, use the same changed-files gate as CI:
+The checker covers explicit image paths in `templates/index.json` and implicit
+`{template}-N.webp` assets, while ignoring multiple images owned by one template. Audit mode
+reports legacy duplicates without failing. Before committing a thumbnail change, run the CI gate:
 
 ```bash
 python scripts/validate/check_duplicate_thumbnails.py --base-ref origin/main
 ```
 
-That mode fails only when a duplicate group contains a changed image asset, a new template, or a
-changed explicit image-thumbnail mapping. Unrelated legacy groups are summarized and ignored.
+It fails only for duplicate pairs involving a changed asset or image-thumbnail mapping.
 
 ## ComfyUI node compatibility check
 

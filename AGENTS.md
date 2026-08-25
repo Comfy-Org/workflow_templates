@@ -15,7 +15,7 @@
 - `python scripts/sync/sync_is_app.py` — Write `isApp` into `index.json` from each workflow's `extra.linearMode` (`--dry-run` to report, `--check` for the CI gate)
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
 - `python scripts/validate/check_duplicate_thumbnails.py --audit` — Report all byte-identical and visually equivalent cross-template thumbnails (requires Pillow)
-- `python scripts/validate/check_duplicate_thumbnails.py --base-ref origin/main` — Fail only for duplicate groups involving thumbnail changes since the branch base
+- `python scripts/validate/check_duplicate_thumbnails.py --base-ref origin/main` — Fail only for duplicate pairs involving thumbnail changes since the branch base
 - `python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail` — CI-style static compat scan
 - `python scripts/sync/sync_frozen_inventory.py` — Regenerate frozen bundle template inventory from `bundles.json`
 - `python scripts/ci/check_frozen_policy.py --base-ref origin/main` — Dry-run frozen-bundle PR reminder locally
