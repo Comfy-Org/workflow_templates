@@ -51,11 +51,16 @@ Validates model specifications in workflow templates.
 
 Validates template JSON structure, thumbnails, and checks for third-party nodes.
 
-### 4. Publish (`publish.yml`)
+### 4. Duplicate Thumbnails (`check-duplicate-thumbnails.yml`)
+
+Checks image thumbnails changed by a pull request for byte-identical or visually equivalent images
+owned by another template. Existing legacy duplicate groups do not fail unrelated pull requests.
+
+### 5. Publish (`publish.yml`)
 
 Publishes approved templates to the registry.
 
-### 5. ComfyUI Node Compatibility Report (`report-comfyui-node-compat.yml`)
+### 6. ComfyUI Node Compatibility Report (`report-comfyui-node-compat.yml`)
 
 Informational check — **never blocks PR merges**. Compares changed `templates/*.json` against ComfyUI `master` via static source scan (no torch, no running server).
 

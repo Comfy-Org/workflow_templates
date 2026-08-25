@@ -1,0 +1,55 @@
+name: Check Duplicate Thumbnails
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'templates/index.json'
+      - 'templates/*.webp'
+      - 'templates/**/*.webp'
+      - 'templates/*.png'
+      - 'templates/**/*.png'
+      - 'templates/*.jpg'
+      - 'templates/**/*.jpg'
+      - 'templates/*.jpeg'
+      - 'templates/**/*.jpeg'
+      - 'templates/*.avif'
+      - 'templates/**/*.avif'
+      - 'scripts/validate/check_duplicate_thumbnails.py'
+      - 'packages/core/tests/test_duplicate_thumbnails.py'
+      - '.github/workflows/check-duplicate-thumbnails.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  duplicate-thumbnails:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          # PR checkouts are merge commits. Depth 2 includes the base parent,
+          # avoiding a costly full-history fetch in this media-heavy repository.
+          fetch-depth: 2
+          sparse-checkout: |
+            templates/
+            scripts/lib/paths.py
+            scripts/validate/check_duplicate_thumbnails.py
+            packages/core/tests/test_duplicate_thumbnails.py
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install lightweight image-check dependencies
+        run: python -m pip install Pillow pytest
+
+      - name: Test duplicate thumbnail checker
+        run: python -m pytest -q packages/core/tests/test_duplicate_thumbnails.py
+
+      - name: Reject changed cross-template duplicates
+        run: python scripts/validate/check_duplicate_thumbnails.py --base-ref HEAD^1

@@ -14,6 +14,8 @@
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
 - `python scripts/sync/sync_is_app.py` — Write `isApp` into `index.json` from each workflow's `extra.linearMode` (`--dry-run` to report, `--check` for the CI gate)
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
+- `python scripts/validate/check_duplicate_thumbnails.py --audit` — Report all byte-identical and visually equivalent cross-template thumbnails (requires Pillow)
+- `python scripts/validate/check_duplicate_thumbnails.py --base-ref origin/main` — Fail only for duplicate groups involving thumbnail changes since the branch base
 - `python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail` — CI-style static compat scan
 - `python scripts/sync/sync_frozen_inventory.py` — Regenerate frozen bundle template inventory from `bundles.json`
 - `python scripts/ci/check_frozen_policy.py --base-ref origin/main` — Dry-run frozen-bundle PR reminder locally
@@ -128,6 +130,7 @@ For full site-specific instructions, see `site/AGENTS.md`.
 ## Code Style
 - **Python**: Ruff linter, line-length 100, target py312. Select rules: E, F
 - **Templates**: JSON workflow files with embedded model metadata. Thumbnails named `{template}-1.webp`
+- **Thumbnail changes**: Whenever adding or changing an implicit `{template}-N.webp` thumbnail or an image path in `templates/index.json`'s `thumbnail` field, run `python scripts/validate/check_duplicate_thumbnails.py --base-ref origin/main`. Install Pillow first if needed (`python -m pip install Pillow`). Use `--audit` to inspect all legacy duplicates.
 - **Naming**: snake_case for Python/templates
 - Bump root `pyproject.toml` version only when intentionally releasing to PyPI (`release` label). Template-only / archive PRs usually leave the root version unchanged.
 
