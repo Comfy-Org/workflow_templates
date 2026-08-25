@@ -5811,11 +5811,45 @@
   "46a303cbccf9": {
     "title": "MiniMax H3: Reference to Video",
     "description": "Generate a new video by feeding MiniMax H3 a reference image, up to nine images, three videos, and three audio clips alongside a text prompt, letting the model match character identity, motion, camera, voice, or style from those sources while producing native stereo audio in a single pass. Output is a single MP4 video at up to 2K resolution and 24fps for roughly 15 seconds. Ideal for character-consistent animation, style-transfer video generation, and audio-synced content creation.",
-    "metaDescription": "",
-    "extendedDescription": "",
-    "howToUse": [],
-    "suggestedUseCases": [],
-    "faqItems": []
+    "metaDescription": "ComfyUI tutorial: Generate a 15s MP4 with stereo audio from MiniMax H3 using prompt + image/video/audio references at up to 2K and 24fps.",
+    "extendedDescription": "This workflow demonstrates MiniMax H3’s reference-to-video generation in ComfyUI: you provide a text prompt plus up to nine reference images, three short reference videos, and three audio clips, and the model produces a single MP4 with native stereo audio in one pass. The MiniMaxH3ReferenceToVideo node is the core, fusing multi-modal context (identity, motion, camera, style, and voice) with your prompt to synthesize a ~15s clip at up to 2K resolution and 24fps.\n\nUnder the hood, the Switch Model and Settings group loads the MiniMax H3 model stack via UNETLoader and CLIPLoader, while KSamplerSelect, BasicScheduler, SamplerCustomAdvanced, and BasicGuider manage sampling behavior (seeded by RandomNoise for reproducibility). ResolutionSelector sets a 16:9 size aligned to multiples of 32, and ComfyMathExpression with PrimitiveFloat handles derived values like frame count from duration and fps. After generation, VAELoader provides both video and audio VAEs; VAEDecode reconstructs frames from video latents and VAEDecodeAudio reconstructs stereo waveforms. CreateVideo multiplexes frames and audio, and SaveVideo writes the final MP4. This makes the workflow practical for character-consistent animation, style-guided motion, and audio-synced content without separate TTS or sound design steps.",
+    "howToUse": [
+      "Load the workflow in ComfyUI. Install the MiniMax H3 weights from Comfy-Org/MiniMax-H3 and place the VAEs (minimax_h3_video_vae_fp16.safetensors, minimax_h3_audio_vae_fp32.safetensors) into your models/vae folder. Ensure the UNet/CLIP weights are in the appropriate models directories, then restart ComfyUI.",
+      "Open the User Inputs group: enter your text prompt in the PrimitiveStringMultiline node. Add reference media: use the MiniMaxH3ReferenceToVideo node’s inputs to attach up to nine images, three short videos, and three audio clips (voice, music, or SFX). If the workflow exposes LoadImage nodes, use them for image references; supply video/audio via the MiniMax node’s file inputs.",
+      "Pick your resolution with ResolutionSelector. For 16:9, choose a target megapixel level that maps to multiples of 32 (e.g., 0.7 MP → 1152x640, 0.9 MP → 1280x736). Keep within 2K for best VRAM stability. Set fps to 24 and duration near 15s unless you know your hardware headroom.",
+      "In the Sampling group, choose your sampler and scheduler via KSamplerSelect and BasicScheduler. Set guidance scale in BasicGuider (a moderate value like 4–7 often balances prompt adherence with reference fidelity). Set a seed in RandomNoise for repeatability, or -1 for fresh variations.",
+      "Review any switches in the Switch Model and Settings group (e.g., toggling audio on/off via a ComfySwitchNode, or selecting model variants if provided). Confirm the VAELoader is set to minimax_h3_video_vae_fp16 for video and minimax_h3_audio_vae_fp32 for audio.",
+      "Run the graph. After sampling completes, VAEDecode and VAEDecodeAudio reconstruct video and stereo audio. CreateVideo muxes frames with the decoded audio, and SaveVideo outputs a single MP4 file."
+    ],
+    "suggestedUseCases": [
+      "Character-consistent animation: feed a face or full-body photo and guide motion/camera with a short reference video.",
+      "Style-transfer video: provide style frames (illustrations, film stills) to steer look and grading while following your prompt.",
+      "Voice- or music-synced content: condition with a voice clip or beat and let H3 co-generate visuals and stereo audio.",
+      "Product teasers: combine product photos with a motion reference for smooth hero shots and matching sound design.",
+      "Social clips and memes: rapidly iterate prompt+reference combos for 10–15s edits with coherent audio."
+    ],
+    "faqItems": [
+      {
+        "question": "What models and files do I need, and where do they go?",
+        "answer": "Download MiniMax H3 from Comfy-Org/MiniMax-H3. Place minimax_h3_video_vae_fp16.safetensors and minimax_h3_audio_vae_fp32.safetensors in models/vae. Ensure the H3 UNet and CLIP/text encoder weights are in the correct ComfyUI model folders (e.g., models/unet, models/clip). Restart ComfyUI so UNETLoader, CLIPLoader, and VAELoader can find them."
+      },
+      {
+        "question": "How long and how big can the output be?",
+        "answer": "This workflow targets about 15 seconds at up to 24fps and up to 2K resolution. Use ResolutionSelector’s 16:9 presets (multiples of 32) like 1152x640 or 1280x736. Higher resolutions, frame rates, or longer durations increase VRAM and time costs and may be unstable."
+      },
+      {
+        "question": "How do I improve identity/style matching from references?",
+        "answer": "Use a small set of high-quality references (start with 1–3). Make your primary identity image the first input. Keep reference videos short and representative of the motion/camera you want. Tight, explicit prompts plus moderate guidance (CFG ~4–7) often preserve references better."
+      },
+      {
+        "question": "Can I disable or replace audio?",
+        "answer": "Yes. If the workflow exposes a ComfySwitchNode on the audio path, set it to bypass VAEDecodeAudio. Alternatively, leave the audio inputs empty to generate minimal audio, then replace or mute in the CreateVideo stage or in post."
+      },
+      {
+        "question": "Is the result deterministic?",
+        "answer": "Set a fixed seed in RandomNoise to reproduce the same sampling trajectory with the same inputs and settings. Changing seed, references, resolution, or sampler parameters will change the output."
+      }
+    ]
   },
   "46a80518c9c6": {
     "title": "NetaYume Lumina Text to Image",
@@ -5968,6 +6002,45 @@
       {
         "question": "How can I ensure the best quality output?",
         "answer": "Ensure your input images are high-resolution and well-lit. Adjust the camera settings in the QwenMultiangleCameraNode carefully to match your desired output."
+      }
+    ]
+  },
+  "473606b441c6": {
+    "title": "Wan3.0: Image to Video",
+    "description": "Create up to 30 seconds of high-fidelity video from a single image using Wan 3.0, which supports text, image, audio, and document inputs for versatile scene generation. Produces authentic, realistic footage with unique facial details and believable motion in one pass. Ideal for cinematic storytelling, product visualization, and documentary-style scene recreation.\n",
+    "metaDescription": "ComfyUI image-to-video tutorial: animate a single image into up to 30s of video with Wan 3.0 using LoadImage → Wan3ImageToVideoApi → SaveVideo.",
+    "extendedDescription": "This ComfyUI tutorial shows how to turn a single still image into a high‑fidelity video clip (up to ~30 seconds) using Wan 3.0. The workflow is compact and predictable: LoadImage reads your source frame, Wan3ImageToVideoApi sends it to the Wan 3.0 image‑to‑video endpoint for temporal generation, and SaveVideo writes the returned clip to disk. A MarkdownNote in the graph provides quick tips and points to a ready‑to‑use example input.\n\nTechnically, Wan3ImageToVideoApi conditions the model with your image and passes generation parameters such as duration and resolution to the API. The node then waits for the job to complete and returns the video for saving. This template focuses on the image input path (text/audio/document modalities supported by Wan 3.0 are not wired here), making it a straightforward way to animate concept art, product shots, or documentary stills while preserving subject identity and adding believable motion.\n\nFor best results, start with a clean, high‑resolution image that roughly matches your target aspect ratio. Keep the main subject well framed, avoid heavy compression artifacts, and choose a sensible duration—shorter clips render faster and typically produce more stable motion.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and update to the latest version (and required custom nodes) as recommended in the MarkdownNote.",
+      "Place the provided sample image at input/beetle_rider.png, or edit the LoadImage node to point to your own source image.",
+      "Open Wan3ImageToVideoApi and set key options such as duration (up to ~30 seconds) and output resolution. Ensure your Wan 3.0 API credentials are configured so the node can reach the service.",
+      "Optionally add guidance (if your node build exposes a prompt or related fields) and align resolution/aspect ratio to your source image for more stable motion.",
+      "Click Queue Prompt to run. The API node will submit the job and wait for completion; you can monitor progress in the ComfyUI console/log.",
+      "When finished, SaveVideo will write the result to the path shown in its node. Play the exported file to review motion quality and iterate on settings as needed."
+    ],
+    "suggestedUseCases": [
+      "Cinematic storytelling: animate keyframes or concept art into moving establishing shots.",
+      "Product visualization: turn a hero still into a short motion clip for web or ads.",
+      "Documentary-style scenes: add subtle motion to archival photos for edits and transitions.",
+      "Character and creature studies: bring a single character portrait to life with gentle camera or subject motion.",
+      "Social media teasers: create quick, eye-catching motion from a static post or thumbnail."
+    ],
+    "faqItems": [
+      {
+        "question": "How long can the generated video be?",
+        "answer": "The template is designed for clips up to about 30 seconds. Longer durations increase processing time and may be limited by your account or the API service."
+      },
+      {
+        "question": "Do I need an internet connection or API key?",
+        "answer": "Yes. Wan3ImageToVideoApi calls a remote Wan 3.0 service, so network access and valid API credentials are required. If authentication is missing, the node will fail with an API error."
+      },
+      {
+        "question": "What kind of input images work best?",
+        "answer": "High-resolution, clean images with the main subject centered or clearly framed produce the most stable motion. Try to match output aspect ratio to the source to reduce warping or jitter."
+      },
+      {
+        "question": "Can I add text guidance or change FPS/aspect ratio?",
+        "answer": "This template wires image-to-video only. If your Wan3ImageToVideoApi build exposes fields for prompts, FPS, or aspect ratio, you can adjust them there. Otherwise, keep your source image close to the target aspect ratio for consistent results."
       }
     ]
   },
@@ -7593,6 +7666,45 @@
       {
         "question": "Is there a tutorial available for using the Animate Path node?",
         "answer": "Yes, you can watch a detailed tutorial on using the Animate Path node [here](https://www.youtube.com/watch?v=AI9-1G7niXY&t=498s)."
+      }
+    ]
+  },
+  "58a3f7167dba": {
+    "title": "Minimax H3 Video Restyling",
+    "description": "Using the open-weights version of Minimax H3, restyle a video's background and lighting using a guided key art image. You can also do a full character swap and voice/language replacement as well. A super powerful workflow for your VFX toolbox!",
+    "metaDescription": "Restyle video with MiniMax H3 using key art or character swap. Control lighting, palette, and identity; prompt via LLM; preserve or replace audio.",
+    "extendedDescription": "This workflow restyles an existing video using the open-weights MiniMax H3 model, guided by a reference “key art” image or a character image. In key art mode, it transfers background, palette, and lighting while preserving the performance; in character swap mode, it targets the subject’s appearance for a full identity change. The core is the MiniMaxH3ReferenceToVideo node, driven by UNETLoader (MiniMax H3), CLIPLoader (text conditioning), RandomNoise, and a sampler chain built from KSamplerSelect, BasicScheduler, SamplerCustomAdvanced, and BasicGuider. VAELoader and VAEDecode convert generated latents back to frames, and ImageFromBatch lets you QC results mid-run.\n\nResolutionSelector and VHS_VideoInfo handle the practicalities—frame size, fps, and clip duration (the clip length parameter expects whole seconds). SetNode/GetNode are used as convenient toggles and parameter routers, including the mode switch between key art swap and character swap. LoadImage supplies your guiding key art or character reference, while OpenRouterLLMNode (in the GENERATE PROMPT group) can help draft a shot-specific prompt that CLIPLoader uses for text conditioning. A VOICE OPTIONS branch can keep your original audio or pass it to a voice-replacement path; VAEDecodeAudio decodes the final audio stream for muxing with the new visuals.\n\nThe result is a VFX-friendly process for look development and restyling: keep the motion and timing of your source while re-lighting the scene, shifting color mood, replacing backgrounds, or swapping a character—useful for previz, mood boards, and quick creative iterations.",
+    "howToUse": [
+      "Load the workflow and open the SETUP groups. Point the source video input to your clip, then use VHS_VideoInfo to verify fps and duration. Set the clip length parameter in whole seconds and pick your output resolution with ResolutionSelector.",
+      "In MODELS, load the open-weights MiniMax H3 in UNETLoader, the matching text encoder in CLIPLoader, and the appropriate VAE in VAELoader. Confirm your sampler path: choose a method in KSamplerSelect, with BasicScheduler, SamplerCustomAdvanced, and BasicGuider connected to MiniMaxH3ReferenceToVideo.",
+      "Import your guide with LoadImage. Use the SetNode/GetNode toggle to choose between key art swap (scene/background + lighting restyle) and character swap (subject identity). Ensure the selected image is well-framed and high quality.",
+      "Write a concise shot-aware prompt (camera, lighting, environment, style cues) in the GENERATE PROMPT group. Optionally, use OpenRouterLLMNode to expand your brief into a detailed prompt, then feed it into CLIPLoader. Add a negative prompt if needed (e.g., artifacts to avoid).",
+      "Tune strength and consistency via the MODIFY group parameters (PrimitiveFloat and ComfyMathExpression feed key weights such as style/denoise strength, reference influence, and temporal coherence into MiniMaxH3ReferenceToVideo and the sampler). Lower strength preserves more of the original look; higher strength pushes the restyle further.",
+      "Run a short preview range first. Inspect frames with ImageFromBatch to confirm identity, lighting, and texture stability. When satisfied, render the full clip. In VOICE OPTIONS, choose to keep original audio or route to voice/language replacement (VAEDecodeAudio handles final audio decoding)."
+    ],
+    "suggestedUseCases": [
+      "Look development: quickly test different lighting palettes and art directions on existing footage using a single key art image.",
+      "Background and environment restyling for previz or social content while preserving the original performance and timing.",
+      "Character swap for concept tests and pitch frames without reshooting, using a clean character reference image.",
+      "Localized content: swap style and language/voice for regional variants while keeping the same edit.",
+      "Mood boards and dailies: generate consistent restyled passes to align teams on visual targets."
+    ],
+    "faqItems": [
+      {
+        "question": "What’s the difference between key art swap and character swap modes?",
+        "answer": "Key art swap emphasizes scene-level changes (background, lighting, color palette) using your key art as guidance while preserving the subject. Character swap targets the subject’s identity and attire to match a character reference. The mode toggle is handled via SetNode/GetNode, which routes the reference conditioning into MiniMaxH3ReferenceToVideo differently."
+      },
+      {
+        "question": "How do I get stable results across frames?",
+        "answer": "Keep your source clip well-lit and steady, use a high-quality guide image, and tune the MODIFY parameters. Lowering denoise/style strength preserves more original structure; increasing temporal/consistency weights (fed by PrimitiveFloat/ComfyMathExpression into MiniMaxH3ReferenceToVideo and the sampler) reduces flicker. Preview a short segment and adjust before rendering the full clip."
+      },
+      {
+        "question": "Which models do I need to load?",
+        "answer": "Load the open-weights MiniMax H3 in UNETLoader, a compatible text encoder in CLIPLoader, and a matching VAE in VAELoader. The sampler path uses KSamplerSelect, BasicScheduler, SamplerCustomAdvanced, and BasicGuider to drive diffusion steps for MiniMaxH3ReferenceToVideo."
+      },
+      {
+        "question": "Do I have to replace the audio?",
+        "answer": "No. In VOICE OPTIONS you can keep the original audio or use the replacement path if configured. VAEDecodeAudio handles the final audio decoding. If you choose replacement, set the language/voice options provided in that group; otherwise, pass through the source audio."
       }
     ]
   },
@@ -11212,6 +11324,45 @@
       }
     ]
   },
+  "834ab8919949": {
+    "title": "Seedance2.5 1080P: Image to Video",
+    "description": "Generate cinematic 1080P video clips from a single image using Seedance 2.5, animating the still into a moving scene with synchronized sound, music, and dialogue for clips up to 30 seconds across any aspect ratio. Ideal for breathing life into product shots, extending concept art into motion, and creating engaging social media content from photographs.\n\n",
+    "metaDescription": "Animate a single image into 1080p video in ComfyUI with Seedance 2.5. Configure motion, duration, and aspect ratio, then export clips up to 30 seconds.",
+    "extendedDescription": "This ComfyUI workflow turns a single still image into a polished 1080p video clip using Seedance 2.5 via the ByteDance2ReferenceNodeV2. The graph is intentionally simple and reliable: LoadImage brings your source frame into the pipeline, ByteDance2ReferenceNodeV2 synthesizes motion-conditioned frames from that reference, and SaveVideo encodes the output sequence to a playable MP4 at your chosen frame rate and aspect ratio. You control duration (up to ~30 seconds), FPS, motion strength, and seeding for reproducible results.\n\nTechnically, the ByteDance2ReferenceNodeV2 uses the input image as a visual prior, generating a temporally coherent frame sequence that preserves identity and structure while introducing camera-like moves (e.g., gentle pans, zooms, and parallax) and scene dynamics. Because resolution and aspect ratio are configurable, you can produce 1920x1080 landscape, 1080x1920 vertical, or square clips while maintaining 1080 on the long edge. SaveVideo then assembles frames at the specified FPS. Note: this minimal graph outputs video only; to add music, dialogue, or foley, mux audio afterward or extend the workflow with audio nodes/external tools.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and verify required nodes are available: LoadImage, ByteDance2ReferenceNodeV2 (Seedance 2.5), and SaveVideo.",
+      "Load your source still via LoadImage. For best results, pre-crop it to your target aspect ratio (e.g., 16:9, 9:16, or 1:1) to avoid unintended cropping or stretching.",
+      "In ByteDance2ReferenceNodeV2, set key parameters: duration (seconds, up to ~30), FPS (e.g., 16–24 for efficiency, 30 for smoother motion), motion strength (lower = subtle parallax, higher = bolder movement), and a fixed seed for reproducibility.",
+      "Choose your 1080p target size. For landscape, use 1920x1080; for vertical, 1080x1920; for square, 1080x1080. Ensure these dimensions are reflected both in the generation node (if width/height are exposed) and in SaveVideo.",
+      "Execute the graph. Inspect the preview frames for artifacts or identity drift; if needed, reduce motion strength or the clip length and re-run with the same seed.",
+      "Export with SaveVideo at your chosen FPS. If you need audio (music, VO, or dialogue), add it in a video editor or extend the workflow to mux an external audio track."
+    ],
+    "suggestedUseCases": [
+      "Breathing life into product shots with subtle camera moves and parallax for ecommerce or ads.",
+      "Extending concept art or keyframes into motion to pitch scenes or mood pieces.",
+      "Turning portraits or lifestyle photos into eye-catching vertical clips for social media.",
+      "Animating architectural renders to demonstrate space and depth with gentle camera motion.",
+      "Creating loopable background visuals from static graphics for events or stream overlays."
+    ],
+    "faqItems": [
+      {
+        "question": "Does this workflow generate audio (music or dialogue) along with the video?",
+        "answer": "No. This graph outputs video only via SaveVideo. To add music, VO, or dialogue, mux an audio file afterward in your editor or extend the workflow with audio/muxing nodes."
+      },
+      {
+        "question": "What resolution and aspect ratios are supported?",
+        "answer": "Any common aspect ratio works. For 1080p deliverables, use 1920x1080 (landscape), 1080x1920 (vertical), or 1080x1080 (square). Keep the long edge at 1080 and match your source image’s aspect ratio to minimize cropping."
+      },
+      {
+        "question": "How long can the clip be, and what are performance considerations?",
+        "answer": "Up to ~30 seconds is practical. Longer clips and higher FPS increase VRAM and render time. For mid-range GPUs, start with 16–24 FPS and moderate motion strength; if VRAM is limited, consider shorter durations or 720p tests first."
+      },
+      {
+        "question": "Can I automate this via the ComfyUI API?",
+        "answer": "Yes. Serialize the workflow JSON and POST it to ComfyUI’s /prompt endpoint. Provide your image as a file path (server-side) or base64. Set duration, FPS, resolution, and seed in the ByteDance2ReferenceNodeV2 before triggering the run."
+      }
+    ]
+  },
   "8357db8ead93": {
     "title": "3.1 Advanced:  Multi-Shot Video",
     "description": "Learn how to create a UGC video with your character and product in app mode.",
@@ -11812,6 +11963,45 @@
       {
         "question": "What should I do if the output image doesn't meet my expectations?",
         "answer": "Try adjusting the feature toggles and denoise settings, or refine your input prompt to better match your desired outcome."
+      }
+    ]
+  },
+  "8bd8b493eb7a": {
+    "title": "Wan3.0: Text to Video",
+    "description": "Generate videos up to 30 seconds directly from text prompts using Wan3.0-Video, producing a single video output with lifelike visuals and synchronized sound. This workflow transforms written descriptions into immersive, production-ready footage with strong character consistency and cinematic quality. Ideal for cinematic storytelling, character-driven animations, and quick multimedia content creation.\n\n",
+    "metaDescription": "Text-to-video in ComfyUI with Wan3.0-Video: generate up to 30s cinematic clips from prompts, optional references, and save with SaveVideo.",
+    "extendedDescription": "This ComfyUI tutorial walks you through a compact text-to-video pipeline powered by the Wan3.0-Video model. The core of the workflow is the Wan3ReferenceToVideoApi node, which sends your prompt (and optional reference images) to the Wan3.0-Video service, then returns a single rendered clip. The SaveVideo node writes that clip to disk. You’ll control duration (up to 30 seconds), resolution/aspect, frame rate, seed, and other generation settings directly on the API node, making it easy to iterate from a single graph.\n\nTechnically, Wan3ReferenceToVideoApi handles the remote job lifecycle: it packages your text prompt and any reference inputs, submits the request, polls until completion, and outputs a finished video. The “Reference” capability helps maintain strong character or style consistency when you supply a face or character image. If your API plan/model supports it, the node can also return synchronized sound; otherwise you’ll receive a silent video you can score later. SaveVideo finalizes the output with your chosen filename pattern and fps, giving you a simple, reliable path from text to production-ready footage.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and locate the Wan3ReferenceToVideoApi and SaveVideo nodes. In Wan3ReferenceToVideoApi, set your API credentials/endpoint and choose the Wan3.0-Video model.",
+      "Enter a clear text prompt describing subject, setting, mood, and camera language (e.g., \"golden hour, dolly-in on a hero, dramatic backlight\"). Optionally add a negative prompt to avoid unwanted artifacts.",
+      "If you want character or style consistency, connect a reference image to the node’s reference input(s) and adjust the reference strength/weight so the model follows the look while allowing the motion you want.",
+      "Configure generation settings: duration (max ~30s), resolution/aspect ratio (e.g., 16:9, 9:16), fps, and seed (fixed for repeatability or random for variety). If available in your plan, enable audio so the clip returns with synchronized sound.",
+      "Queue/execute the graph. The API node will submit and track the job; when complete, preview the output. If needed, refine by adjusting the prompt (camera moves, pacing verbs), seed, or reference weight, then re-run.",
+      "In SaveVideo, set the output path/filename pattern and fps to match your project. Execute to write the final video file to disk."
+    ],
+    "suggestedUseCases": [
+      "Cinematic story beats and teasers for pitch decks or previsualization",
+      "Character-driven shorts where a reference image ensures consistent identity",
+      "Quick social media promos and vertical Reels/TikToks with strong art direction",
+      "Explainer cutaways or B-roll generated from descriptive prompts",
+      "Animatics to explore camera moves and mood before full production"
+    ],
+    "faqItems": [
+      {
+        "question": "How long can the generated video be?",
+        "answer": "This workflow targets clips up to about 30 seconds. Longer runs may be limited by the API plan or timeout settings; keep to 30s or less for reliable results."
+      },
+      {
+        "question": "Does it generate audio?",
+        "answer": "If your Wan3.0-Video endpoint/plan supports audio, the API node can return synchronized sound. If not, you’ll receive a silent video—add music/FX in post."
+      },
+      {
+        "question": "How do I keep a character’s look consistent?",
+        "answer": "Provide a clear reference image via Wan3ReferenceToVideoApi’s reference input and keep your prompt consistent across iterations. Reusing the same seed also helps stabilize identity."
+      },
+      {
+        "question": "Can I batch multiple prompts in one run?",
+        "answer": "This graph is set up to produce a single video per execution. To batch, duplicate the API/SaveVideo branch for each prompt or iterate with a batching/loop mechanism."
       }
     ]
   },
@@ -14139,6 +14329,43 @@
       }
     ]
   },
+  "9fbb34bb59b3": {
+    "title": "QR Code Image Generator",
+    "description": "Turn an ordinary QR code into artwork. Instead of a plain black-and-white square, this blends your code directly into an image — the pattern becomes part of the composition, hidden in the textures, shadows, and shapes of the scene rather than stamped on top of it. The result still scans reliably with any phone camera, but it looks like something you'd actually want to put on a poster, album cover, business card, or product label.\n\nJust supply your link and a prompt or reference image describing the look you want, and you'll get back a piece that works as both a picture and a working code.",
+    "metaDescription": "ComfyUI workflow to blend a QR code into artwork using a prompt or reference image, balancing style and scan reliability for print and digital uses.",
+    "extendedDescription": "This workflow turns a plain QR code into a stylized image where the code pattern is blended into textures, shadows, and shapes rather than overlaid on top. You provide a link (or any QR payload) and either a text prompt or a reference image to describe the look you want. The system produces an artwork that still scans reliably with a phone camera while looking polished enough for posters, album covers, business cards, or product labels.\n\nTechnically, the heavy lifting happens in a single custom node (UUID: 323b0c6a-e2f0-42c3-93b4-36b7878136fd). This node encodes your URL into a QR matrix, then synthesizes or stylizes an image so local contrast and edges align with the QR modules, preserving a readable pattern inside the composition. You can balance aesthetics and readability by adjusting style strength and QR visibility. The final image is written to disk by the SaveImage node as a PNG in ComfyUI's output folder.",
+    "howToUse": [
+      "Load the workflow JSON in ComfyUI and locate the custom QR node (UUID: 323b0c6a-e2f0-42c3-93b4-36b7878136fd) and the SaveImage node.",
+      "In the QR node, paste your URL or text payload. Add either a text prompt to describe the style or provide a reference image for guidance.",
+      "Set image size (a square frame is recommended) and adjust controls for style strength and QR visibility to balance aesthetics and readability. Optionally fix a seed for reproducible results.",
+      "Run the workflow. Preview the generated image and confirm that the QR code area remains unclipped with a clear margin around the edges.",
+      "Test with your phone’s camera. If it doesn’t scan easily, re-run with higher QR visibility, slightly lower style strength, simpler textures near the code, or increased overall contrast. The SaveImage node will write each result to the ComfyUI/output folder."
+    ],
+    "suggestedUseCases": [
+      "Event posters and flyers where the QR code should be scannable but visually integrated into the design.",
+      "Album or podcast artwork that includes a QR linking to streaming or social profiles without a visible black-and-white block.",
+      "Business cards and product labels that keep brand aesthetics intact while embedding a working QR code.",
+      "Social posts or landing page hero images that double as scannable calls-to-action."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I improve scan reliability if the result looks good but won’t scan?",
+        "answer": "Increase the QR visibility setting, reduce the overall style strength near the code, keep a clear quiet zone (blank margin) around the QR area, and avoid extreme blur or heavy texture over modules. Also test under normal indoor lighting and ensure the final crop doesn’t cut into the code edges."
+      },
+      {
+        "question": "Can I guide the look with a reference image instead of a text prompt?",
+        "answer": "Yes. Provide a reference image to the custom QR node. The node will align textures and edges to the QR matrix while borrowing colors and structure from your reference. If the code becomes hard to scan, reduce style strength or simplify the reference."
+      },
+      {
+        "question": "What image size works best?",
+        "answer": "Start with a square canvas to keep the QR proportions consistent. Higher resolution improves detail, but ensure the QR modules remain crisp with good contrast. For print, generate at the final print size or plan to upscale with care and re-test scanning afterward."
+      },
+      {
+        "question": "Where do the images save?",
+        "answer": "The SaveImage node writes the outputs as PNG files in your ComfyUI/output folder. Each run will create a new file; use the seed or naming options to keep versions organized."
+      }
+    ]
+  },
   "9ff401a65647": {
     "title": "Qwen-Image-Layered Decomposition",
     "description": "Decompose an image into editable RGBA layers for high-fidelity recolor, replace, resize, and reposition workflows using Qwen-Image-Layered.",
@@ -15391,6 +15618,45 @@
     "suggestedUseCases": [],
     "faqItems": []
   },
+  "abafa1d4f1f1": {
+    "title": "Wan3.0: Reference to Video",
+    "description": "Generate a video from two reference images using Wan3.0's reference-to-video capability, which produces up to 30 seconds of footage with character consistency and lifelike visuals. Ideal for creating consistent character animations, scene replication from visual references, and producing audiovisual content from static imagery.\n\n",
+    "metaDescription": "Turn two reference images into a consistent, lifelike video with Wan3.0 in ComfyUI. Load images, call the API, and save up to 30s MP4 results.",
+    "extendedDescription": "This ComfyUI tutorial workflow demonstrates Wan3.0’s reference-to-video generation: starting from two images, it produces a lifelike, up-to-30-second video that preserves character identity and visual style. Two LoadImage nodes bring in your references (for example, a clean subject image and a context/pose or style image). These feed directly into the Wan3ReferenceToVideoApi node, which sends the request to the Wan3.0 service and returns a ready-to-save video. A SaveVideo node then writes the final clip to disk as an MP4.\n\nTechnically, the pipeline is lean and reliable: the heavy lifting happens remotely via the Wan3ReferenceToVideoApi node, so your local GPU is not a bottleneck. The MarkdownNote node in the graph includes inline tips and reminders about inputs and expected outputs. Because the generator is reference-driven, the quality and composition of your two images strongly influence identity lock, motion coherence, and background fidelity. Use this when you want consistent character animation from stills, quick scene mocks from storyboards, or product visuals derived from brand imagery.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and review the MarkdownNote for on-canvas instructions.",
+      "In the two LoadImage nodes, set your reference files (the template includes input/vortex_shoe.png; replace it and the second reference with your own if desired). Use clear, well-lit images that match your target aspect ratio.",
+      "Open the Wan3ReferenceToVideoApi node and add your API credentials or key as required. Configure core settings such as duration (up to 30 seconds) and any available text prompt or style fields the node exposes.",
+      "Optionally adjust SaveVideo: set output filename, location, and fps to match your creative intent (e.g., 24 or 30 fps).",
+      "Click Queue Prompt (or Render). The API node will submit the job and return the generated clip when ready.",
+      "Review the saved MP4. Iterate by refining your references (cleaner subject, better framing), adjusting duration/fps, or tweaking prompt/style settings for improved motion and consistency."
+    ],
+    "suggestedUseCases": [
+      "Character animation from a subject portrait plus a style/pose reference for shorts, intros, or story beats.",
+      "Product visuals (e.g., a shoe or gadget) animated using a clean product shot and a brand mood or environment image.",
+      "Scene replication from storyboard frames to quickly preview motion and continuity.",
+      "Social media loops and ads where identity consistency and quick iteration are key.",
+      "Concept-to-motion tests for pitching ideas to clients or teammates."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need two different images, or can I use just one?",
+        "answer": "The workflow is designed for two references to guide identity and style/motion. If you only have a single image, you can feed the same image into both LoadImage nodes, but using two complementary references typically yields better motion and scene coherence."
+      },
+      {
+        "question": "How long can the generated video be?",
+        "answer": "Up to 30 seconds, as supported by the Wan3.0 reference-to-video capability. If you need shorter clips, reduce the duration or fps to match your target runtime."
+      },
+      {
+        "question": "What image prep leads to the best character consistency?",
+        "answer": "Use a high-quality, well-lit subject image with minimal background clutter. Keep the subject large in frame, avoid motion blur, and try to match the output aspect ratio. For the second reference, choose an image that clearly conveys the desired style, pose, or environment."
+      },
+      {
+        "question": "Why did my job fail or return an error?",
+        "answer": "Most failures stem from API issues: missing/invalid credentials, quota limits, or network timeouts. Double-check the Wan3ReferenceToVideoApi node’s key/headers, ensure you have internet access, and review the ComfyUI console/logs for the specific error message. Try shorter durations or smaller resolutions if the service imposes limits."
+      }
+    ]
+  },
   "ac37ba4d362c": {
     "title": "Flux.2 [Klein] 4B Distilled: Image Edit",
     "description": "The fastest variant in the Klein family. Built for interactive applications, real-time previews, and latency-critical production use cases.",
@@ -15659,6 +15925,45 @@
       {
         "question": "Is it possible to generate more than 9 icons at once?",
         "answer": "The current workflow is optimized for a 3x3 grid. For more icons, you can run the workflow multiple times with different parameters."
+      }
+    ]
+  },
+  "afa2656c1d4e": {
+    "title": "Seedance2.5 1080P: Text to Video",
+    "description": "Generate cinematic 1080P video clips from text descriptions using Seedance 2.5, supporting clips up to 30 seconds with synchronized sound, music, and dialogue across any aspect ratio. Ideal for short comedy scenes, product showcases, and creative storytelling.\n\n",
+    "metaDescription": "ComfyUI tutorial: Generate 1080p text-to-video with audio using Seedance 2.5 via ByteDance2TextToVideoNode and SaveVideo. Up to 30s, any aspect ratio.",
+    "extendedDescription": "This workflow turns plain text descriptions into cinematic 1080p video clips with optional synchronized sound using Seedance 2.5. At its core is the ByteDance2TextToVideoNode, which sends your prompt and generation settings (duration, resolution, aspect ratio, FPS, seed) to the Seedance 2.5 backend and returns a finished video stream that can include music, ambience, and simple dialogue aligned to the scene. The SaveVideo node then writes the result to disk as an MP4, preserving the audio track when present.\n\nTechnically, you control the visual output by setting width/height (1920x1080 by default) or any custom aspect ratio the model supports, plus a duration cap of up to 30 seconds. The node also exposes a seed so you can iterate with reproducible variations. Because generation is API-based, you get consistent performance without local GPU setup. The simple two-node graph keeps things lean: ByteDance2TextToVideoNode handles synthesis; SaveVideo handles encoding and file naming—ideal for quick iterations, social-ready formats (landscape, square, vertical), and prompt-driven story beats.",
+    "howToUse": [
+      "Load the workflow JSON in ComfyUI, then open the ByteDance2TextToVideoNode and SaveVideo nodes.",
+      "Add your API credentials to ByteDance2TextToVideoNode (if required by your setup) so it can reach the Seedance 2.5 service.",
+      "Write a clear prompt that includes visual direction and optional audio cues (e.g., tone of music, ambience, or simple dialogue). Set Duration (≤ 30s), Resolution (e.g., 1920x1080), Aspect Ratio (if not 16:9), FPS, and Seed.",
+      "If you want sound, ensure audio generation is enabled in ByteDance2TextToVideoNode and keep audio cues concise (e.g., “soft piano music,” “crowd chatter,” “character says: ‘Let’s go!’”).",
+      "In SaveVideo, set your filename and confirm the output directory. Queue the graph and wait for the ByteDance2TextToVideoNode to finish; SaveVideo will write the MP4.",
+      "Review the result, then iterate: tweak the prompt wording, adjust duration/FPS/aspect ratio, or change the seed for variations."
+    ],
+    "suggestedUseCases": [
+      "Short comedy skits with simple dialogue and matching background music",
+      "Product teasers highlighting features with on-brand soundtrack",
+      "Storyboarding and previsualization for film or animation",
+      "Social media shorts in vertical or square formats",
+      "Scene mood tests (lighting, motion, soundtrack) for creative direction"
+    ],
+    "faqItems": [
+      {
+        "question": "How do I get synchronized audio (music or dialogue) in the video?",
+        "answer": "Include audio cues directly in your prompt (e.g., “uplifting synth music,” “footsteps echo,” or “character whispers: ‘Hello’”) and ensure audio is enabled in ByteDance2TextToVideoNode. Keep cues short and specific so Seedance 2.5 can align them plausibly to the scene."
+      },
+      {
+        "question": "What are the limits for clip length and resolution?",
+        "answer": "This workflow is designed for clips up to 30 seconds. 1080p (1920x1080) is the default, but you can set other aspect ratios by adjusting width/height (e.g., 1080x1920 for vertical or 1080x1080 for square). Higher resolutions or longer durations may increase generation time and are not guaranteed beyond the stated limits."
+      },
+      {
+        "question": "Can I reproduce a result exactly using the same seed?",
+        "answer": "Using the same prompt, settings, and seed often yields similar results, but exact reproducibility is not guaranteed across API versions or model updates. For stable iterations, keep all parameters identical and only change one variable at a time."
+      },
+      {
+        "question": "Where is the video saved and what format is used?",
+        "answer": "SaveVideo writes an MP4 file to your configured output directory (commonly ComfyUI/output). If the ByteDance2TextToVideoNode returns an audio track, it is preserved in the saved MP4."
       }
     ]
   },
@@ -21040,38 +21345,39 @@
   "e8099b642c9f": {
     "title": "MiniMax H3: Text to Video",
     "description": "Generate video with native stereo audio directly from a text prompt using MiniMax H3, an omni-modal model that synthesizes voice, sound effects, and music in a single pass. Output is up to 2K resolution, 24fps, and roughly 15 seconds long, with no file inputs required — just a prompt to one video output. Ideal for rapid concept visualization, social media content creation, and audio-synced storytelling.",
-    "metaDescription": "Generate a 15s, 24fps video with native stereo audio from a text prompt in ComfyUI using MiniMax H3. One pass, up to 2K, no inputs—just prompt to video.",
-    "extendedDescription": "This ComfyUI workflow turns a single text prompt into a complete short video with native stereo audio using MiniMax H3, an omni‑modal generative model. The core generation is handled by the H3 node (4c314f31-ecda-4b08-ae98-faaba1bf613f), which jointly synthesizes visuals, voice, sound effects, and music in one forward pass. ResolutionSelector chooses a valid width/height pair (multiples of 32) for stable decoding, while SaveVideo writes the final container with embedded audio. A MarkdownNote on the canvas provides quick tips and model links. Typical outputs are ~15 seconds at 24 fps and can reach up to 2K resolution—ideal for rapid concept visualization and audio‑synced storytelling without any file inputs.\n\nUnder the hood, the workflow uses MiniMax’s paired VAEs to decode both modalities: a video VAE (minimax_h3_video_vae_fp16.safetensors) for frames and an audio VAE (minimax_h3_audio_vae_fp32.safetensors) for stereo sound. By routing the H3 node’s unified output directly to SaveVideo, you get a single MP4 (or chosen container) that’s already synchronized, with no manual audio mixing required. Because the model generates image and audio together, prompt wording guides both: you can describe scenes, pacing, and audio cues (e.g., “soft piano music,” “crackling fireplace,” or “narrator: …”) to shape timing and tone in one pass.",
+    "metaDescription": "Prompt-only MiniMax H3 ComfyUI: generate ~15s, 24fps video with native stereo audio up to 2K. Uses ResolutionSelector and SaveVideo for a one-pass result.",
+    "extendedDescription": "This ComfyUI tutorial workflow turns a single text prompt into a finished video with native stereo audio using MiniMax H3, an omni‑modal model that synthesizes visuals, voice, sound effects, and music in one pass. There are no file inputs to manage—just describe what you want, and the graph returns a roughly 15‑second clip at 24 fps, up to 2K resolution, with stereo sound baked in.\n\nUnder the hood, a MiniMax H3 subgraph (node 79dd8a95-ce9d-4c14-b264-2162e8bec5ce) handles generation and decoding. It uses the MiniMax H3 video and audio VAEs (minimax_h3_video_vae_fp16.safetensors and minimax_h3_audio_vae_fp32.safetensors) to reconstruct frames and stereo audio from the model’s latents. ResolutionSelector maps convenient presets to valid dimensions in multiples of 32 (e.g., 960×544, 1152×640, 1216×672), and SaveVideo multiplexes the frames and stereo audio stream into a single MP4. A MarkdownNote in the canvas provides quick tips and prompt examples. The result is a compact, prompt‑only pipeline ideal for rapid concept visualization, social posts, and audio‑synced storytelling.",
     "howToUse": [
-      "Load the MiniMax H3: Text to Video workflow in ComfyUI and confirm all nodes are green. If prompted, download the VAEs from the links in the canvas note and place them in ComfyUI/models/vae.",
-      "Open ResolutionSelector and choose an aspect ratio and megapixel target. It outputs a width/height pair snapped to multiples of 32 for stable decoding.",
-      "Open the H3 generator node (4c314f31-ecda-4b08-ae98-faaba1bf613f) and enter your prompt. Include both visuals and audio cues, e.g., “A sweeping drone shot over misty mountains at sunrise; soft piano and distant birds; narrator: ‘A new day begins.’”",
-      "Optionally adjust any exposed settings (e.g., duration if available, or seed for repeatability). Keep 24 fps for most cases to match the model’s native timing.",
-      "Connect the H3 node’s output to SaveVideo (already wired in the template) and click Queue/Execute. Generation time scales with resolution; start lower for quick previews.",
-      "Find the rendered file in ComfyUI/output (or your custom save path). The result is a single video with embedded stereo audio, ready for review or sharing."
+      "Load the MiniMax H3: Text to Video workflow in ComfyUI. Open the MarkdownNote for a quick overview. If prompted for missing models, download minimax_h3_video_vae_fp16.safetensors and minimax_h3_audio_vae_fp32.safetensors from the provided links and place them with your VAEs.",
+      "Open the MiniMax H3 subgraph node (79dd8a95-ce9d-4c14-b264-2162e8bec5ce) and enter your prompt. Describe both visuals and audio cues (e.g., camera motion, pacing, voice style, sound effects, and music mood).",
+      "Choose an output size with ResolutionSelector. Start with a mid‑range 16:9 preset (e.g., 960×544 or 1152×640) for fast iteration; increase toward the 2K limit once you like the result. All presets are multiples of 32 for model compatibility.",
+      "Leave timing at the defaults (the model is tuned for ~15 seconds at 24 fps) unless the subgraph exposes controls you wish to adjust. Then queue the workflow.",
+      "Monitor progress. The subgraph runs generation and the VAEs reconstruct video frames and stereo audio. When complete, the SaveVideo node writes a single MP4 containing both streams.",
+      "Review the output video. Iterate by refining visual details and audio direction in your prompt (e.g., \"warm narrators voice, gentle ocean ambience, light acoustic music\") and re‑run."
     ],
     "suggestedUseCases": [
-      "Rapid concept reels for pitches or previsualization, with music and SFX aligned to the scene.",
-      "Social media clips and teasers where voiceover and visuals must land on beat without manual editing.",
-      "Product explainer snippets that combine on‑screen action with synthesized narration and UI sound cues.",
-      "Storybeat drafts for short films, guiding pacing with ambient audio and transitional effects."
+      "Rapid concept visualization with sound: storyboard beats, tone, and motion plus temp voice/music in one render.",
+      "Social media shorts: prompt concise scenes with built‑in soundtrack and effects for quick posting.",
+      "Product teasers and motion logos: short branded clips with synchronized whooshes, risers, and VO cues.",
+      "Education and explainers: simple narrated visuals with ambient beds or light music for intros/outros.",
+      "Atmospheric loops: mood pieces (e.g., \"rainy neon alley with distant traffic and soft synth pads\") for backgrounds."
     ],
     "faqItems": [
       {
-        "question": "How do I control the audio (voice, music, SFX) from a text prompt?",
-        "answer": "Describe the sound explicitly in your prompt. Use cues like “narrator: …” for voiceover, name instruments or genres for music (e.g., “gentle piano arpeggios”), and specify ambience or effects (“city street ambience,” “whoosh transition”). Because MiniMax H3 generates audio and visuals together, these cues help timing and emphasis stay synchronized."
+        "question": "How do I steer the audio (voice, SFX, music) in the result?",
+        "answer": "Include explicit audio guidance in your prompt. Specify narration style (voice gender/tone/accent), music genre and mood (e.g., \"lo‑fi, soft piano, no drums\"), and key sound effects (\"gentle wind, distant traffic, minimal footsteps\"). Placing audio cues near the relevant visual beats often improves alignment."
       },
       {
-        "question": "Which resolution should I pick in ResolutionSelector?",
-        "answer": "Choose an aspect that matches your target platform (e.g., 16:9 for landscape) and a megapixel level that balances quality and speed. ResolutionSelector outputs dimensions snapped to multiples of 32, which the model and VAEs expect. For drafts, try ~0.7–0.9 MP; for higher quality, move toward 1.5–2.0 MP. Higher resolutions take longer to render."
+        "question": "What resolutions, frame rate, and duration does this workflow support?",
+        "answer": "The graph targets ~15 seconds at 24 fps and supports up to ~2K resolution. Use ResolutionSelector to choose valid 16:9 sizes in multiples of 32 (e.g., 608×352, 736×416, 864×480, 960×544, 1056×608, 1152×640, 1216×672, 1280×736). Larger sizes increase generation and decode time."
       },
       {
-        "question": "Can I go beyond ~15 seconds or change the frame rate?",
-        "answer": "The base graph targets roughly 15 seconds at 24 fps, which aligns with the model’s typical settings. If the H3 node exposes duration or fps, you can adjust them—but longer clips or non‑native frame rates may increase generation time and can reduce temporal consistency. For longer stories, generate multiple clips and edit them together downstream."
+        "question": "Can I use my own audio or voiceover instead of the generated audio?",
+        "answer": "This tutorial workflow is prompt‑only and outputs the model’s native stereo audio. To replace audio with your own track, extend the graph: disable or ignore the generated audio stream and mux your external WAV/MP3 before SaveVideo (or post‑replace audio in your NLE)."
       },
       {
-        "question": "Do I need to install anything besides the workflow?",
-        "answer": "Ensure the MiniMax H3 VAEs are available: minimax_h3_video_vae_fp16.safetensors and minimax_h3_audio_vae_fp32.safetensors (see links in the canvas note). Place them in ComfyUI/models/vae if the workflow doesn’t auto‑fetch. A modern GPU is recommended for reasonable render times; CPU rendering is possible but significantly slower."
+        "question": "Do I need to install additional models or files?",
+        "answer": "Yes, the subgraph expects the MiniMax H3 VAEs: minimax_h3_video_vae_fp16.safetensors and minimax_h3_audio_vae_fp32.safetensors. If ComfyUI reports missing files on first run, download them from the provided links and place them in your models directory so the node can decode video and stereo audio correctly."
       }
     ]
   },
@@ -22002,6 +22308,45 @@
       {
         "question": "Can I get separate audio stems for dialogue, SFX, and music?",
         "answer": "Not with this workflow. HappyHorseTextToVideoApi returns a single video with audio baked in, and SaveVideo writes that to disk. If you need stems, you’ll need an alternative API mode or a different workflow that supports multi-track output."
+      }
+    ]
+  },
+  "f3096e2ffb64": {
+    "title": "Seedance 2.5: Video Extend",
+    "description": "Extend an existing video forward or backward by generating new segments that seamlessly preserve the original characters, scenes, and aspect ratio. The source video must be 1.9–30 seconds long, and you specify the duration of the new clip (4–30 seconds, default 5), with output delivered as MP4 or MOV. Ideal for continuing unfinished footage, creating extended narrative sequences, and building longer edit chains.\n\n",
+    "metaDescription": "Extend a video forward or backward 4–30s with Seedance 2.5 in ComfyUI. Preserves characters, scene, and aspect ratio. Outputs MP4 or MOV.",
+    "extendedDescription": "Seedance 2.5: Video Extend is a ComfyUI workflow for continuing an existing video either forward (adding new moments after the last frame) or backward (adding pre-roll before the first frame). It is designed to preserve the original characters, setting, and aspect ratio while generating a new segment 4–30 seconds long (default 5). The pipeline loads your source clip with LoadVideo, extracts a short context range with Video Slice, conditions a reference-aware model via ByteDance2ReferenceNodeV2, and synthesizes the new frames using the workflow’s Seedance 2.5 generation node (d9aa59a4-3784-4796-9f1b-5b467fb41fa1). The final sequence is encoded with SaveVideo as MP4 or MOV.\n\nTechnically, the Video Slice node selects the most informative frames at the head or tail of your source (depending on whether you extend backward or forward). Those frames feed ByteDance2ReferenceNodeV2, which anchors appearance, layout, and motion cues so the generator can extrapolate in-time while maintaining character identity and scene consistency. The generation node (d9aa59a4-3784-4796-9f1b-5b467fb41fa1) then produces the new segment at the original aspect ratio, and SaveVideo assembles the output clip. A MarkdownNote inside the graph documents limits and defaults: the input video must be 1.9–30 seconds; the requested extension can be 4–30 seconds (default 5).",
+    "howToUse": [
+      "Load the workflow in ComfyUI and open the MarkdownNote to review the input and duration limits (source: 1.9–30s, extension: 4–30s, default 5s).",
+      "In LoadVideo, select your source clip (e.g., sloth_bullfight.mp4). Confirm the clip plays end-to-end without corruption and note its aspect ratio.",
+      "In Video Slice, choose the direction and context: for forward extension, slice the last portion of the clip; for backward extension, slice the first portion. Keep enough context (e.g., 1–2 seconds) for stable appearance and motion cues.",
+      "Open ByteDance2ReferenceNodeV2 and verify it is wired to the sliced frames. If available, adjust reference strength to balance strict appearance matching versus freer motion extrapolation.",
+      "In the Seedance 2.5 generation node (d9aa59a4-3784-4796-9f1b-5b467fb41fa1), set the target extension duration (4–30s). Keep the aspect ratio consistent with the source.",
+      "In SaveVideo, pick the output container (MP4 or MOV) and frame rate settings if exposed. Run the graph, preview the result, and iterate by tweaking slice range or reference strength if you see identity drift or composition shifts."
+    ],
+    "suggestedUseCases": [
+      "Continue an unfinished shot by adding a natural outro after the final frame.",
+      "Create lead-in pre-roll to establish scene context before the original first frame.",
+      "Bridge two clips by generating a short connective sequence that preserves character and layout.",
+      "Extend a hero moment in a trailer while maintaining subject identity and camera feel.",
+      "Lengthen B-roll segments to fit a target edit timeline without jarring cuts."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I extend the video backward instead of forward?",
+        "answer": "Use Video Slice to select context from the start of the source clip (first 1–2 seconds) and route that to ByteDance2ReferenceNodeV2. The generation node will then synthesize new frames that precede your original first frame."
+      },
+      {
+        "question": "What clip lengths are supported?",
+        "answer": "The input video must be between 1.9 and 30 seconds. You can request an extension between 4 and 30 seconds (default is 5 seconds). Staying near 4–8 seconds often yields the most consistent identity and motion."
+      },
+      {
+        "question": "How can I reduce identity drift or scene changes?",
+        "answer": "Provide a clean, stable context in Video Slice (faces unobstructed, consistent lighting), and keep enough context duration. If exposed, increase reference strength in ByteDance2ReferenceNodeV2. Avoid abrupt camera cuts right at the slice point."
+      },
+      {
+        "question": "Does the workflow change the aspect ratio or add audio?",
+        "answer": "No. It preserves the source aspect ratio. The SaveVideo node outputs a silent MP4 or MOV unless you later merge audio in your editor."
       }
     ]
   },
