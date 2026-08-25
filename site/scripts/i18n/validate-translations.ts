@@ -20,7 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
-import { enforceableOverrides, type GlossaryOverrides } from './sync-glossary';
+import { enforceableOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 import {
   TRANSLATABLE_FIELDS,
   type FaqItem,

@@ -32,12 +32,12 @@
 import { describe, expect, it } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
+import { selectGlossary } from '../../scripts/i18n/sync-glossary';
 import {
   applyOverrides,
   enforceableOverrides,
-  selectGlossary,
   type GlossaryOverrides,
-} from '../../scripts/i18n/sync-glossary';
+} from '../../scripts/i18n/glossary-overrides.cjs';
 import { collectViolations } from '../../scripts/i18n/validate-translations';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
 

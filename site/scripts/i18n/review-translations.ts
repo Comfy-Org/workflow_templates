@@ -30,7 +30,7 @@ import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import { TRANSLATABLE_FIELDS } from '../../src/lib/i18n/schema';
 import type { Locale, TranslatableField, WorkflowContent } from '../../src/lib/i18n/schema';
 import type { Violation } from './validate-translations';
-import { applyOverrides, type GlossaryOverrides } from './sync-glossary';
+import { applyOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');

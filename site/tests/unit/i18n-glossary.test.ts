@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyOverrides,
   buildMirror,
-  enforceableOverrides,
   flattenStrings,
   PRESERVE_TERMS,
   selectGlossary,
 } from '../../scripts/i18n/sync-glossary';
+import { applyOverrides, enforceableOverrides } from '../../scripts/i18n/glossary-overrides.cjs';
 
 describe('flattenStrings', () => {
   it('flattens nested dictionaries to dot paths, keeping only strings', () => {

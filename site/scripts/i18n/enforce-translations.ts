@@ -26,7 +26,7 @@ import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import type { Locale, WorkflowContent } from '../../src/lib/i18n/schema';
 import { collectViolations, type Violation } from './validate-translations';
 import { loadReviewState, reviewViolations } from './review-translations';
-import { enforceableOverrides, type GlossaryOverrides } from './sync-glossary';
+import { enforceableOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');

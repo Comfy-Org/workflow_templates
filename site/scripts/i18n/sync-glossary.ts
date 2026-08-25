@@ -18,7 +18,8 @@
  *                          (created empty here; reviewers/CODEOWNERS extend them).
  *                          A `null` value RETRACTS a harvested pair instead of
  *                          replacing it, for the cases where the app's own UI
- *                          contradicts itself. See `GlossaryOverrides`.
+ *                          contradicts itself. The override layer itself lives
+ *                          in glossary-overrides.cjs, shared with .i18nrc.cjs.
  *
  * The pure functions are exported and unit-tested; `main()` only does IO.
  */
@@ -26,6 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
+import { applyOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
 
@@ -136,64 +138,6 @@ export function buildMirror(
  * bounded, so the mirror is trimmed; which pairs survive is the important part.
  */
 export const MAX_MIRROR_PAIRS = 200;
-
-/**
- * The on-disk shape of `overrides/{locale}.json`.
- *
- * A string is the curated translation a term MUST use. `null` is a RETRACTION:
- * it says the harvested mirror pair for that term is wrong and must not be
- * enforced by anyone. Retraction is the only way to drop a bad harvested pair,
- * because the mirror is regenerated from the app's locale files on every run and
- * hand-edits to it would not survive.
- *
- * Needed because the harvest cannot see when the app's own UI contradicts
- * itself. `buildMirror` skips identity pairs, so where the Spanish UI leaves a
- * term untranslated the pair is dropped as uninformative and only a divergent
- * outlier survives: es harvested `Video -> Vídeo` from one standalone label
- * while `Descargar video`, `Subir un video` and ten other phrases in the same
- * file leave it unaccented. The reviewer then flagged 401 fields for using the
- * spelling the app itself uses everywhere else, and `enforce` pruned them to
- * English, 19.2% of the locale, over the 15% systemic threshold.
- */
-export type GlossaryOverrides = Record<string, string | null>;
-
-/**
- * Lay the curated override layer over a set of harvested pairs: a string wins
- * over the harvested value, a `null` retracts the harvested pair entirely.
- *
- * ONE implementation on purpose. Retraction has to mean "delete" in the capped
- * selection AND in the raw-mirror fallback both consumers use when
- * `effective/` has not been built. Merging the override object over the mirror
- * instead (`{...mirror, ...overrides}`) silently gets that wrong: the retracted
- * key survives as an explicit `null`, and the prompt renders `- Video → null`.
- */
-export function applyOverrides(
-  base: Record<string, string>,
-  overrides: GlossaryOverrides
-): Record<string, string> {
-  const result = { ...base };
-  for (const [en, localized] of Object.entries(overrides)) {
-    if (localized === null) {
-      delete result[en];
-      continue;
-    }
-    if (typeof localized === 'string' && localized.trim()) result[en] = localized;
-  }
-  return result;
-}
-
-/**
- * The subset of an overrides file that may be ENFORCED: curated translations,
- * with retractions dropped.
- *
- * Every consumer that checks content against the override layer must read it
- * through here. `collectViolations` treats an override as a hard requirement
- * ("term X must be rendered as Y") with no model in the loop, so a raw `null`
- * reaching it would demand that fields render as the literal `null`.
- */
-export function enforceableOverrides(overrides: GlossaryOverrides): Record<string, string> {
-  return applyOverrides({}, overrides);
-}
 
 /**
  * The glossary both sides actually use, chosen by how often a term appears in
