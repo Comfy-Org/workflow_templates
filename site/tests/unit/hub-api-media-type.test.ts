@@ -13,7 +13,11 @@
  * backend populates the field and makes it required.
  */
 import { describe, expect, it } from 'vitest';
-import { serializeIndexEntry, type HubWorkflowTemplateEntry } from '../../src/lib/hub-api';
+import {
+  serializeIndexEntry,
+  toTemplateData,
+  type HubWorkflowTemplateEntry,
+} from '../../src/lib/hub-api';
 
 const entry = (tags: string[], mediaType?: string): HubWorkflowTemplateEntry =>
   ({
@@ -59,5 +63,46 @@ describe('serializeIndexEntry media type', () => {
 
   it('falls back to image when the index declares nothing', () => {
     expect(typeOf([])).toBe('image');
+  });
+});
+
+/**
+ * The detail path classifies separately from the index, via `inferMediaType`,
+ * and its breadcrumb links straight to `/workflows/category/{mediaType}/`.
+ *
+ * That is the half that regressed: widening the tag match to substrings sent a
+ * workflow tagged "Image to Video" to the video category, which holds no entries
+ * now that classification comes from the index, so the link 404s in every locale
+ * and renders empty in English. Exact match is what main shipped.
+ */
+describe('toTemplateData media type (the detail-page breadcrumb)', () => {
+  const detail = (tagNames: string[], mediaType?: string) =>
+    toTemplateData({
+      share_id: 's',
+      name: 'n',
+      title: 't',
+      tags: tagNames.map((name) => ({ name })),
+      profile: { username: 'u' },
+      metadata: mediaType ? { media_type: mediaType } : {},
+    } as unknown as Parameters<typeof toTemplateData>[0]).mediaType;
+
+  it('uses the declared media type when the detail payload carries one', () => {
+    expect(detail(['Image to Video'], 'audio')).toBe('audio');
+  });
+
+  it('matches a whole tag, not a phrase containing one', () => {
+    // Each of these reads as video to a human and must NOT resolve to video:
+    // the breadcrumb would point at a category with nothing in it.
+    expect(detail(['Image to Video'])).toBe('image');
+    expect(detail(['Video Edit'])).toBe('image');
+    expect(detail(['Audio to Video'])).toBe('image');
+    expect(detail(['Image to 3D'])).toBe('image');
+  });
+
+  it('still resolves an exact medium tag, which is main behaviour', () => {
+    expect(detail(['Video'])).toBe('video');
+    expect(detail(['Animation'])).toBe('video');
+    expect(detail(['Audio'])).toBe('audio');
+    expect(detail(['3D'])).toBe('3d');
   });
 });

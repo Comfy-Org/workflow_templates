@@ -18,10 +18,7 @@ import { DEFAULT_LOCALE } from '../i18n/config';
 /** The media types `workflows/category/[type]` serves. Mirrors `MediaType`. */
 const CATEGORY_TYPES: readonly string[] = ['image', 'video', 'audio', '3d'];
 
-const CATEGORY_MANIFEST_PATH = path.join(
-  process.cwd(),
-  'src/data/hub-categories.generated.json'
-);
+const CATEGORY_MANIFEST_PATH = path.join(process.cwd(), 'src/data/hub-categories.generated.json');
 
 /**
  * Written by `pnpm build:tag-manifest` during prebuild; gitignored, like the

@@ -69,9 +69,7 @@ async function main(): Promise<void> {
   // rather than assuming all four always do. This is also what makes the
   // classification source swappable: when the hub populates `mediaType` on every
   // entry, this list keeps following it and no sitemap change is needed.
-  const categories = [
-    ...new Set(entries.map((entry) => entry.mediaType).filter(Boolean)),
-  ].sort();
+  const categories = [...new Set(entries.map((entry) => entry.mediaType).filter(Boolean))].sort();
 
   mkdirSync(path.dirname(manifestPath), { recursive: true });
   writeFileSync(manifestPath, `${JSON.stringify(slugs, null, 2)}\n`);

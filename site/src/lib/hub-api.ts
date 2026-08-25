@@ -11,7 +11,10 @@ import { applyRanking, fetchRankingMap, readEnv, type RankingMap } from './ranki
 
 // readEnv, not import.meta.env directly: `scripts/` runs this module under plain
 // Node, where import.meta.env is undefined and a direct read throws.
-const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(/\/$/, '');
+const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(
+  /\/$/,
+  ''
+);
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
@@ -512,11 +515,21 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
  * Order encodes the OUTPUT medium, which is what a category page groups by, so
  * "Audio to Video" has to land on video and not audio.
  */
+/**
+ * Media type from tag names, by EXACT tag match.
+ *
+ * Deliberately not substring: widening it to phrase-shaped tags ("Image to
+ * Video") changes which category a workflow claims on the detail page, and the
+ * breadcrumb there links straight to that category. With classification now
+ * coming from the index, video and 3d hold no entries, so a widened match sends
+ * the reader to a category page that is empty in English and 404s in every
+ * locale. Same rule as before this PR; one definition instead of two.
+ */
 function mediaTypeFromTagNames(names: readonly string[]): MediaType {
   const tags = names.map((name) => name.toLowerCase());
-  if (tags.some((tag) => tag.includes('video') || tag.includes('animation'))) return 'video';
-  if (tags.some((tag) => tag.includes('audio'))) return 'audio';
-  if (tags.some((tag) => tag.includes('3d'))) return '3d';
+  if (tags.includes('video') || tags.includes('animation')) return 'video';
+  if (tags.includes('audio')) return 'audio';
+  if (tags.includes('3d')) return '3d';
   return 'image';
 }
 
