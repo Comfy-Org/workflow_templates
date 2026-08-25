@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 import re
-from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -110,10 +109,7 @@ def _extract_combo_options(fragment: str, dict_keys: dict[str, list[str]]) -> li
     return None
 
 
-def _extract_dynamic_combo_options(
-    fragment: str,
-    dict_keys: dict[str, list[str]],
-) -> list[str] | None:
+def _extract_dynamic_combo_options(fragment: str, dict_keys: dict[str, list[str]]) -> list[str] | None:
     match = DYNAMIC_COMBO_MODEL_RE.search(fragment)
     if match:
         var_name = match.group(1)
@@ -230,25 +226,6 @@ def scan_api_node_ids(api_nodes_dir: Path) -> list[str]:
     return sorted(ids)
 
 
-def _iter_graph_nodes(graph: Any) -> Iterator[dict[str, Any]]:
-    """Yield nodes from a workflow graph and any nested subgraph definitions."""
-    if not isinstance(graph, dict):
-        return
-
-    nodes = graph.get("nodes")
-    if isinstance(nodes, list):
-        yield from (node for node in nodes if isinstance(node, dict))
-
-    definitions = graph.get("definitions")
-    if not isinstance(definitions, dict):
-        return
-    subgraphs = definitions.get("subgraphs")
-    if not isinstance(subgraphs, list):
-        return
-    for subgraph in subgraphs:
-        yield from _iter_graph_nodes(subgraph)
-
-
 def model_options_for_workflow(
     workflow_path: Path,
     node_index: dict[str, dict[str, Any]],
@@ -262,7 +239,7 @@ def model_options_for_workflow(
         return {}
 
     result: dict[str, list[str]] = {}
-    for node in _iter_graph_nodes(wf):
+    for node in wf.get("nodes") or []:
         node_type = node.get("type", "")
         if node_type not in node_index:
             continue
