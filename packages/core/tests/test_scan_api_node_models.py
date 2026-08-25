@@ -81,3 +81,26 @@ def test_recurses_into_nested_subgraph_definitions(tmp_path):
     assert scan_api_node_models.model_options_for_workflow(path, NODE_INDEX) == {
         "ApiNode": ["Full model", "Lite model"]
     }
+
+
+def test_reports_each_distinct_api_model_node_across_graph_boundaries(tmp_path):
+    node_index = {
+        **NODE_INDEX,
+        "OtherApiNode": {"model_options": ["Other model"]},
+    }
+    path = _write_workflow(
+        tmp_path,
+        {
+            "nodes": [{"id": 1, "type": "OtherApiNode"}],
+            "definitions": {
+                "subgraphs": [
+                    {"nodes": [{"id": 2, "type": "ApiNode"}]}
+                ]
+            },
+        },
+    )
+
+    assert scan_api_node_models.model_options_for_workflow(path, node_index) == {
+        "OtherApiNode": ["Other model"],
+        "ApiNode": ["Full model", "Lite model"],
+    }
