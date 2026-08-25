@@ -12,7 +12,8 @@ import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
 import { creatorPath, modelPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
-import { modelPageSlug } from '../../lib/workflow-pages/model-groups';
+import { modelPageHrefSlug } from '../../lib/workflow-pages/model-groups';
+import { loadModelPageSlugs } from '../../lib/workflow-pages/model-page-availability';
 import { isBillableWorkflow } from '../../lib/partner-nodes';
 import { getProfileCache, type MediaType, type ThumbnailVariant } from '../../lib/hub-api';
 import { isVideoFile } from '../../lib/media-utils';
@@ -46,6 +47,8 @@ interface Props {
 }
 
 const { template, locale } = Astro.props;
+
+const modelPageSlugs = await loadModelPageSlugs();
 const { data } = template;
 
 const profiles = await getProfileCache();
@@ -199,9 +202,11 @@ function formatRelativeDate(dateStr: string): string {
                   moreLabel={t('badge.more', locale)}
                   lessLabel={t('badge.less', locale)}
                   items={data.models.flatMap((model: string) => {
-                    // Link the family page (always exists); raw slugify(model)
-                    // produced variant URLs like /workflows/model/wan2-2/ that 404.
-                    const slug = modelPageSlug(model);
+                    // Link only families the model routes emit a page for; raw
+                    // slugify(model) produced variant URLs like
+                    // /workflows/model/wan2-2/ that 404, and a hub-only family
+                    // can miss a page entirely — those render unlinked.
+                    const slug = modelPageHrefSlug(model, modelPageSlugs);
                     return slug
                       ? [{ label: model, href: localizeUrl(modelPath(slug), locale) }]
                       : [];

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { modelPageSlug, deriveModelGroups } from '../../src/lib/workflow-pages/model-groups';
+import {
+  modelPageSlug,
+  modelPageHrefSlug,
+  deriveModelGroups,
+} from '../../src/lib/workflow-pages/model-groups';
 
 /**
  * Detail-page model chips link `modelPageSlug(model)`. Every family label the
@@ -40,5 +44,23 @@ describe('modelPageSlug', () => {
       expect(slug, model).not.toBeNull();
       expect(pageSlugs.has(slug as string), `${model} -> ${slug}`).toBe(true);
     }
+  });
+});
+
+describe('modelPageHrefSlug', () => {
+  const available = new Set(['wan', 'flux']);
+
+  it('returns the family slug only when a page exists for it', () => {
+    expect(modelPageHrefSlug('Wan2.2', available)).toBe('wan');
+    expect(modelPageHrefSlug('Flux.1 Dev', available)).toBe('flux');
+  });
+
+  it('returns null for a family with no emitted page, so the badge renders unlinked', () => {
+    expect(modelPageHrefSlug('Chatterbox TTS', available)).toBeNull();
+    expect(modelPageHrefSlug('LTX-2.3', available)).toBeNull();
+  });
+
+  it('keeps placeholder handling', () => {
+    expect(modelPageHrefSlug('None', available)).toBeNull();
   });
 });

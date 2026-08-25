@@ -111,6 +111,19 @@ export function modelPageSlug(modelName: string): string | null {
   return slug || null;
 }
 
+/**
+ * Chip link slug for a model name, or null when no model page exists — a
+ * hub-only family absent from the build catalog must render an unlinked badge
+ * rather than a dead link.
+ */
+export function modelPageHrefSlug(
+  modelName: string,
+  availableSlugs: Set<string>
+): string | null {
+  const slug = modelPageSlug(modelName);
+  return slug && availableSlugs.has(slug) ? slug : null;
+}
+
 export interface ModelGroup<T extends CatalogTemplate = SerializedTemplate> {
   slug: string;
   label: string;
