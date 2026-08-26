@@ -1,6 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { describe, expect, it } from 'vitest';
 import SEOHead from '../../src/components/SEOHead.astro';
+import { LANGUAGES } from '../../src/i18n/config';
 
 async function render(pathname: string, props: Record<string, unknown> = {}) {
   const container = await AstroContainer.create();
@@ -20,7 +21,9 @@ describe('SEOHead rendered output', () => {
       (m) => m[1]
     );
     expect(alternates).not.toContain('ko_KR');
-    expect(alternates).toHaveLength(10);
+    // Derived, not a literal: registering a locale should change this number,
+    // and a hard-coded one silently rots the moment it does.
+    expect(alternates).toHaveLength(Object.keys(LANGUAGES).length - 1);
   });
 
   it('emits no alternates for an English-only page', async () => {
