@@ -506,16 +506,6 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
 }
 
 /**
- * Media type from tag names. One definition, shared by the index and detail paths.
- *
- * Substring rather than equality: the hub's vocabulary is phrase-shaped ("Image
- * to Video", "Video Edit", "Audio to Video"), so an equality check matches only
- * the bare "Video" tag and files the rest as images.
- *
- * Order encodes the OUTPUT medium, which is what a category page groups by, so
- * "Audio to Video" has to land on video and not audio.
- */
-/**
  * Media type from tag names, by EXACT tag match.
  *
  * Deliberately not substring: widening it to phrase-shaped tags ("Image to

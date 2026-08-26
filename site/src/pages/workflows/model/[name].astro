@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
@@ -18,12 +17,14 @@ import { absoluteUrl } from '../../../config/site';
 import { modelPath, modelsIndexPath, useCasePath } from '../../../lib/routes';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
-import { loadSerializedTemplates } from '../../../lib/hub-api';
-import { deriveModelGroups } from '../../../lib/workflow-pages/model-groups';
 import { loadModelContent } from '../../../lib/workflow-pages/content-loaders';
 import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-resolver';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../lib/workflow-pages/seo-page';
-import { buildFallbackPool } from '../../../lib/workflow-pages/fallback-pool';
+import {
+  loadCatalog,
+  loadFallbackPool,
+  loadModelGroups,
+} from '../../../lib/workflow-pages/model-route-cache';
 import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/item-list';
 import { resolveRailImages } from '../../../lib/workflow-pages/card-images';
 import {
@@ -53,26 +54,6 @@ import {
  * groups and still fails the build.
  */
 export const prerender = false;
-
-/**
- * Memoized per process, not per request. These pages used to be built once and
- * served as files; on demand, re-serializing the whole hub catalog and rebuilding
- * the fallback pool on every hit would put that work in the response path. The
- * underlying hub fetch is already cached in `hub-api`, so what these save is the
- * repeated derivation over ~600 entries. The locale route caches its groups the
- * same way.
- */
-const buildCatalog = async () => loadSerializedTemplates(() => getCollection('templates'));
-let catalogCache: ReturnType<typeof buildCatalog> | null = null;
-const loadCatalog = () => (catalogCache ??= buildCatalog());
-
-const buildGroups = async () => deriveModelGroups(await loadCatalog());
-let groupsCache: ReturnType<typeof buildGroups> | null = null;
-const loadModelGroups = () => (groupsCache ??= buildGroups());
-
-const buildPool = async () => buildFallbackPool(await loadCatalog());
-let poolCache: ReturnType<typeof buildPool> | null = null;
-const loadFallbackPool = () => (poolCache ??= buildPool());
 
 const { name } = Astro.params;
 
