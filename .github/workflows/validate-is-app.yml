@@ -1,0 +1,54 @@
+name: Validate isApp
+
+# `isApp` in templates/index.json is derived from each workflow's own
+# extra.linearMode. Nothing recomputes it at read time, so a PR that adds or
+# flips an App Mode workflow without running the sync ships an index that
+# disagrees with the workflows beside it.
+#
+# A gate rather than an auto-commit: this writes to templates/index.json, which
+# sync-custom-nodes.yml and sync-template-index.yml also write, and those jobs
+# pushing to the same file on the same PR race each other. Failing with the
+# command to run keeps one writer.
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize]
+    branches: [ main ]
+    paths:
+      - 'templates/**.json'
+      - 'scripts/sync/sync_is_app.py'
+      - 'scripts/lib/index_format.py'
+      - '.github/workflows/validate-is-app.yml'
+
+jobs:
+  validate-is-app:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          templates/*.json
+          scripts/sync/sync_is_app.py
+          scripts/lib/index_format.py
+          scripts/lib/paths.py
+        sparse-checkout-cone-mode: false
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Check isApp is in sync with extra.linearMode
+      run: |
+        if ! python scripts/sync/sync_is_app.py --templates-dir ./templates --check; then
+          echo ""
+          echo "::error::templates/index.json disagrees with the workflows' extra.linearMode."
+          echo "Run: python scripts/sync/sync_is_app.py"
+          echo "Then commit the updated templates/index.json."
+          exit 1
+        fi
+        echo "✅ isApp is in sync"

@@ -27,6 +27,7 @@ import {
   type SerializedTemplate,
 } from '../../../lib/hub-api';
 import { fetchRankingMap } from '../../../lib/ranking';
+import { localizeCards } from '../../../lib/i18n/localize-cards';
 import { creatorOgUrl } from '../../../lib/og-url';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { getSocialDisplay } from '../../../lib/social-links';
@@ -134,7 +135,13 @@ let indexFetchFailed = false;
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slug);
-  serialized = filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap));
+  // Index entries are English only. Resolve the same text the detail page will
+  // show, so a creator's localized profile is not a translated page sitting
+  // above a grid of English cards.
+  serialized = localizeCards(
+    filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap)),
+    typedLocale
+  );
 } catch (err) {
   indexFetchFailed = true;
   console.error('Hub API failed for creator grid:', err);

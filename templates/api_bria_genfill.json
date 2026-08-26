@@ -1,0 +1,311 @@
+{
+  "id": "fb5b92b3-fd02-4753-8d96-4f8848898ee8",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 24,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "BriaGenFill",
+      "pos": [
+        -2060,
+        4860
+      ],
+      "size": [
+        400,
+        297.890625
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BriaGenFill"
+      },
+      "widgets_values": [
+        "The girl is holding a cup of beverage, which is a glass of lime juice.",
+        "",
+        true,
+        1745816485,
+        "randomize",
+        "false"
+      ],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -2900,
+        4860
+      ],
+      "size": [
+        360,
+        470
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            5,
+            23,
+            24
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage",
+        "image": "clipspace-painted-masked-1787233871783.png [input]"
+      },
+      "widgets_values": [
+        "retro_girl_cinnamon_bun.png",
+        "image"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "Painter",
+      "pos": [
+        -2500,
+        4860
+      ],
+      "size": [
+        400,
+        750
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": []
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Painter",
+        "painterTool": "brush",
+        "painterBrushSize": 110,
+        "painterBrushColor": "#000000",
+        "painterBrushOpacity": 1,
+        "painterBrushHardness": 1
+      },
+      "widgets_values": [
+        "painter-3-1787234799226.png [input]",
+        1024,
+        1024,
+        "#000000"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        -1610,
+        4860
+      ],
+      "size": [
+        550,
+        145.90625
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "Bria_GenFill",
+        "png",
+        "8-bit",
+        "sRGB"
+      ]
+    },
+    {
+      "id": 5,
+      "type": "ImageCompare",
+      "pos": [
+        -1020,
+        4860
+      ],
+      "size": [
+        400,
+        350
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": []
+    },
+    {
+      "id": 13,
+      "type": "MarkdownNote",
+      "pos": [
+        -3380,
+        4860
+      ],
+      "size": [
+        440,
+        690
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Bria GenFill",
+      "properties": {},
+      "widgets_values": [
+        "# Bria GenFill Template\n\nUse this template to **regenerate a specific region of an image** with Bria's Generative Fill API. The masked area is fully regenerated from your prompt; everything outside the mask stays pixel-perfect unchanged.\n\n## Input Assets\n\n- [retro_girl_cinnamon_bun.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/retro_girl_cinnamon_bun.png)\n\n## How to use\n\n1. **Load an image**: Upload your image in `LoadImage`. The Painter canvas and compare view auto-update.\n2. **Paint a mask**: Use the `Painter` node to brush over the region you want to regenerate. Blob-shaped, brush-drawn masks work best. Tip: paint slightly beyond the object's edge (hair, glass, fabric, contact points) so the model has room to blend.\n3. **Write the prompt**: In `BriaGenFill`, describe what should be generated *inside the masked area*, as if art-directing a cropped micro-scene: name the object, its material and size, how it interacts with the surface, and ask for a contact shadow. Around 90-110 words works best. Keep `refine_prompt` enabled.\n4. **Optional**: `negative_prompt` to avoid unwanted details. Use a fixed `seed` to iterate on the mask or wording, then randomize once the result looks right.\n5. **Compare and save**: `ImageCompare` shows before/after, `SaveImageAdvanced` exports the result.\n\n## Notes\n\n- Masks trigger **generative replacement**, not pixel retouching: the masked area is \"regenerate this region\", not \"touch up this region\".\n- The `Painter` node is only available under **Nodes 2.0**. The canvas auto-updates when you upload a new image. If you only see \"Painter: Node 2.0 only\": enable Nodes 2.0 via **Menu -> Nodes2.0**, or remove the Painter node and use the [Mask Editor](https://docs.comfy.org/interface/maskeditor) to create the mask."
+      ],
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      4,
+      1,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      2,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      6,
+      4,
+      0,
+      5,
+      1,
+      "IMAGE"
+    ],
+    [
+      21,
+      3,
+      1,
+      1,
+      1,
+      "MASK"
+    ],
+    [
+      23,
+      2,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      24,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.42470937079664656,
+      "offset": [
+        4070.628281640673,
+        -4352.9194436876605
+      ]
+    },
+    "frontendVersion": "1.48.7",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

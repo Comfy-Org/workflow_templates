@@ -1,12 +1,12 @@
 name: Sync Template Index
 
 # When index files change in a PR:
-#   1. Fetch per-template run_clicks from Algolia (templates_index)
-#   2. Fold usage into templates/index.json via sync_data.py --index-only
-#   3. Propagate technical fields to every locale index
+#   Propagate technical fields from templates/index.json to every locale index
+#   via sync_data.py --index-only.
 #
-# Optimized for speed: sparse checkout (index files only), no workflow JSON scan,
-# no i18n bookkeeping. Requires repo secret ALGOLIA_API_KEY.
+# usage is hand-maintained in index.json (Datadog sync) and is never rewritten.
+# Optimized for speed: sparse checkout (index files only), no workflow JSON
+# scan, no i18n bookkeeping.
 
 on:
   pull_request:
@@ -27,7 +27,6 @@ on:
       - 'scripts/sync/sync_data.py'
       - 'scripts/lib/locale_index_files.py'
       - 'scripts/data/i18n.json'
-      - 'scripts/sync/fetch_algolia_usage.py'
       - '.github/workflows/sync-template-index.yml'
 
 # contents: write is required to commit and push synced index files back to the PR branch.
@@ -37,9 +36,6 @@ permissions:
 jobs:
   sync-index:
     runs-on: ubuntu-latest
-    env:
-      ALGOLIA_APP_ID: 4E0RO38HS8
-      ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
     # Only run on same-repo PRs (fork PRs cannot receive auto-commits).
     if: github.event.pull_request.head.repo.full_name == github.repository
     concurrency:
@@ -66,10 +62,8 @@ jobs:
             templates/index.fa.json
             templates/index.pt-BR.json
             scripts/sync/sync_data.py
-            scripts/sync/fetch_algolia_usage.py
             scripts/lib/locale_index_files.py
             scripts/lib/paths.py
-            scripts/lib/run_click_coverage.py
             scripts/data/i18n.json
           sparse-checkout-cone-mode: false
 
@@ -78,10 +72,8 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Fetch usage from Algolia and sync index to all locales
+      - name: Sync index to all locales
         run: |
-          echo "=== Fetching run_clicks from Algolia ==="
-          python scripts/sync/fetch_algolia_usage.py --templates-dir ./templates
           echo "=== Syncing templates/index.json to all locale index files ==="
           python scripts/sync/sync_data.py --templates-dir ./templates --index-only
           echo "✅ Template index sync complete"

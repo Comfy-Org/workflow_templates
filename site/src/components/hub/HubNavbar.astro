@@ -1,6 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
-import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
+import type { Locale } from '../../i18n/config';
+import { getLocaleFromPath } from '../../i18n/utils';
 import HeaderMain from './nav/HeaderMain.vue';
 import SearchPopover from './SearchPopover.vue';
 import { getProfileCache, getCreatorsList, loadSerializedTemplates } from '../../lib/hub-api';
@@ -19,32 +21,30 @@ const { showSearch = true, sticky = showSearch } = Astro.props;
 const rawStars = await fetchGitHubStars('Comfy-Org', 'ComfyUI');
 const githubStars = rawStars ? formatStarCount(rawStars) : '';
 
-const profiles = await getProfileCache();
 const locale = getLocaleFromPath(Astro.url.pathname);
-
-// Top creators for the mobile menu (locale-aware profile links).
-const creatorLinks = Array.from(profiles.entries())
-  .slice(0, 5)
-  .map(([username, profile]) => ({
-    username,
-    displayName: profile.display_name || username,
-    href: localizeUrl(`/workflows/creators/${username}/`, locale),
-  }));
 
 // Precompute the small discovery slices (popular, creators, facets) only when
 // the header renders the search bar. The full catalog stays server-side and is
 // lazy-loaded by the island from grid.json when a filter is applied.
 let discovery: DiscoveryData | null = null;
 if (showSearch) {
-  const searchTemplates = await loadSerializedTemplates(() => getCollection('templates'));
+  const [searchTemplates, profiles] = await Promise.all([
+    loadSerializedTemplates(() => getCollection('templates')),
+    getProfileCache(),
+  ]);
   discovery = buildDiscoveryData(searchTemplates, getCreatorsList(profiles));
 }
+const searchLabels = {
+  placeholder: t('search.placeholder', locale as Locale),
+  placeholderShort: t('search.placeholderShort', locale as Locale),
+  ariaLabel: t('search.ariaLabel', locale as Locale),
+};
 ---
 
 <header class:list={['w-full bg-page', sticky && 'sticky top-0 z-50']}>
   <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)]">
     <div class="pt-4 lg:pt-8 pb-6 lg:pb-8">
-      <HeaderMain client:load locale={locale} creators={creatorLinks} githubStars={githubStars} />
+      <HeaderMain client:load locale={locale} githubStars={githubStars} />
     </div>
 
     {
@@ -57,6 +57,7 @@ if (showSearch) {
             facets={discovery.facets}
             totalCount={discovery.totalCount}
             locale={locale}
+            labels={searchLabels}
           />
         </div>
       )

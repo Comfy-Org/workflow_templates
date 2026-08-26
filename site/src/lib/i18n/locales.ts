@@ -46,7 +46,47 @@ export const SUPPORTED_HUB_LOCALES: readonly Locale[] = LOCALES;
  * its native-review wave, at which point it is added here in a one-line PR.
  * Per-page freshness/completeness/review gating applies on top (see predicate).
  */
-export const INDEXABLE_LOCALES: readonly Locale[] = [];
+export const INDEXABLE_LOCALES: readonly Locale[] = [
+  'zh',
+  'zh-TW',
+  'ja',
+  'ko',
+  'es',
+  'fr',
+  'ru',
+  'tr',
+  'ar',
+  'pt-BR',
+];
+
+/**
+ * Fail-closed guard for a flipped locale, asserted once per build after the
+ * locale routes have resolved every page.
+ *
+ * An individual page the predicate rejects is NOT a build failure: it is held
+ * back (rendered in-locale for humans, canonical to English, absent from the
+ * sitemap and from every hreflang cluster), which is the graceful degradation
+ * the design specifies. Holds are the steady state, not an anomaly — workflows
+ * are published to the hub between translation runs, so a flipped locale always
+ * trails the catalog by however many entries landed since its last run.
+ *
+ * A flipped locale with ZERO indexable pages is a different animal: its
+ * translation artifacts are missing or unreadable, and the language would
+ * silently serve English under its own URLs. That fails the build.
+ */
+export function assertFlippedLocalesIndexable(
+  indexablePageCounts: ReadonlyMap<string, number>,
+  flipped: readonly Locale[] = INDEXABLE_LOCALES
+): void {
+  const empty = flipped.filter((locale) => (indexablePageCounts.get(locale) ?? 0) === 0);
+  if (empty.length > 0) {
+    throw new Error(
+      `[i18n] flipped locale(s) ${empty.join(', ')} resolved zero indexable pages. ` +
+        `Their translation artifacts are missing or unreadable — fix those, or drop ` +
+        `the locale from INDEXABLE_LOCALES rather than serving English under its URLs.`
+    );
+  }
+}
 
 /**
  * Assert SUPPORTED ⊆ AVAILABLE (and INDEXABLE ⊆ SUPPORTED). Called from CI; throws

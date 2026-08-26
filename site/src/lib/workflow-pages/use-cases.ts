@@ -28,6 +28,12 @@ export interface SeoPagePin {
   /** Files the pin under the "Comfy Apps" tab when the catalog hasn't flagged
    *  it. Set only after verifying App Mode in cloud.comfy.org. */
   isApp?: boolean;
+  /** Brand-safety gate carried over from the keyword sheet. A pin that declares
+   *  one never reaches the grid: `assertBrandSafe` only inspects the slug,
+   *  keywords and title, so without this a pin is the one way gated material
+   *  could reach a page. Recorded here rather than deleted so the intended
+   *  placement survives; delete the field once the gate's conditions ship. */
+  gate?: 'GATED' | 'GATED-LITE';
 }
 
 export interface SeoPageDef {
@@ -49,6 +55,10 @@ export interface SeoPageDef {
   pins?: SeoPagePin[];
   /** Share ids dropped from the grid: filter matches that don't serve the page. */
   excludeShareIds?: string[];
+  /** Other use-case page slugs to prioritize in this page's "Keep exploring" rail,
+   *  in order. Remaining slots (if any) fill automatically as before. Omit to keep
+   *  the fully automatic behavior every other page already has. */
+  relatedSlugs?: string[];
 }
 
 export const SEO_PAGES: SeoPageDef[] = [
@@ -346,6 +356,13 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Backed by the Wan 2.2 Animate cluster (character replacement / full-scene animate).
     // No single clean tag covers them, so filter by the model.
     filters: { models: ['wan2.2 Animate'] },
+    // Held pending the consent flow, celebrity-preset block, filters and C2PA.
+    // The keywords above must never gain face-swap terms: the governance denylist
+    // fails the build on them.
+    pins: [
+      { shareId: 'bed989744195', gate: 'GATED' }, // Video Face Swap
+      { shareId: 'c2aae816fe63', gate: 'GATED' }, // Face Swap (image)
+    ],
     // Model matches that aren't character replacement: a comedy inflation
     // effect and a pose-control tutorial.
     excludeShareIds: ['06caca08d30b', '86efedaffa3e'],
@@ -432,6 +449,30 @@ export const SEO_PAGES: SeoPageDef[] = [
     ],
   },
   {
+    slug: 'ai-image-extender',
+    title: 'AI Image Extender | Comfy Workflows',
+    h1: 'AI Image Extender Workflows',
+    // "image extender" is the searched term; outpainting is what practitioners
+    // call it, so both vocabularies ride the same page.
+    keywords: {
+      primary: 'ai image extender',
+      secondary: [
+        'image extender',
+        'ai outpainting',
+        'extend image background',
+        'expand image ai',
+        'change image aspect ratio',
+        'uncrop photo',
+      ],
+    },
+    // The Outpainting tag is on-topic end to end. Video outpainting rides along
+    // for the same reason ai-image-upscaler carries Video Upscale: same
+    // capability, and searchers land on the image term for both.
+    filters: { tags: ['Outpainting'] },
+    appShareId: 'f8cf4feac2e9',
+    pins: [{ shareId: 'f8cf4feac2e9' }], // Expand Image (the App the CTA opens)
+  },
+  {
     slug: 'ai-hairstyle-changer',
     title: 'AI Hairstyle Changer | Comfy Workflows',
     h1: 'AI Hairstyle Changer Workflows',
@@ -450,7 +491,11 @@ export const SEO_PAGES: SeoPageDef[] = [
     // Fully curated: no hairstyle tag exists in the catalog, so the page is the
     // dedicated workflow alone until siblings are published.
     filters: {},
-    pins: [{ shareId: 'fffa07892f17' }], // Hairstyle Changer
+    pins: [
+      { shareId: 'fffa07892f17' }, // Hairstyle Changer
+      // Held: the sheet allows it under outfit/try-on framing only.
+      { shareId: '8ce4aa90e8af', gate: 'GATED-LITE' }, // Clothes Changer (virtual try-on)
+    ],
   },
   {
     slug: 'image-to-3d',
@@ -480,4 +525,85 @@ export const SEO_PAGES: SeoPageDef[] = [
     // on ai-anime-generator via its Anime tag).
     excludeShareIds: ['2030b1e2fb72'],
   },
+  {
+    slug: 'sprite-sheet-generator',
+    title: 'AI Sprite Sheet Generator | Comfy Workflows',
+    h1: 'AI Sprite Sheet Generator Workflows',
+    // Primary carries the "ai " prefix, matching the other pages and the SEO
+    // review's framing. It is not only metadata: the body heading is built from
+    // it as "What is the {keyword}?", and the bare term renders as "What is the
+    // Sprite Sheet Generator?", which is the exact title of the workflow pinned
+    // first on this page. The bare term stays targeted from `secondary`, the
+    // meta description and the h1.
+    keywords: {
+      primary: 'ai sprite sheet generator',
+      secondary: [
+        'sprite sheet generator',
+        'sprite sheet maker',
+        'animated sprite sheet generator',
+        'character sprite generator',
+        'game sprite generator',
+        '2d game asset generator',
+      ],
+    },
+    // `Sprite Sheet` and `Game` are the catalog vocabulary for this cluster;
+    // OR semantics keep the grid self-maintaining as new game-art workflows land.
+    filters: { tags: ['Sprite Sheet', 'Game'] },
+    // Game Asset Style Transfer app, App Mode verified in cloud. It reaches the
+    // grid via its Game tag, so no pin is needed.
+    appShareId: '0b8d28f4cfa3',
+    pins: [
+      // The keyword's namesake workflow leads and carries the hero: tagged only
+      // `Video` on the hub, so the filters cannot reach it. Its thumbnail is a
+      // poster-less video, but a light one, and the on-topic stills in this
+      // cluster are compare-slider input photos that misrepresent the page.
+      { shareId: 'fe5600667e2c' }, // Sprite Sheet Generator
+      { shareId: '5cef286d4c51' }, // Single Image to Animated Sprite Sheet
+    ],
+    // Skybox generator matches `Game` but makes HDR environments, not sprites.
+    excludeShareIds: ['f5199b5121f3'],
+    // SEO review: anchor this page to the other two gaming-adjacent pages instead
+    // of whatever the automatic file-order fill would otherwise surface.
+    relatedSlugs: ['ai-anime-generator', 'image-to-3d'],
+  },
 ];
+
+/**
+ * Every share id withheld for brand safety, catalog-wide.
+ *
+ * Declared here rather than derived from the pins that happen to carry a `gate`.
+ * Those are two different statements: a pin's `gate` says "do not render on this
+ * page", and this set says "withhold everywhere". Deriving one from the other
+ * meant a workflow was only withheld if some page happened to pin it, so one
+ * nobody pinned stayed in the whole-catalog fallback pool and could still surface
+ * as a capability card with a live CTA. It also meant removing a pin as editorial
+ * cleanup silently republished the workflow.
+ *
+ * `assertGatedPinsAreWithheld` keeps the two in step: every gated pin must appear
+ * here. Removing an id is a deliberate publish, reviewed on its own.
+ */
+export const GATED_SHARE_IDS: ReadonlySet<string> = new Set([
+  '8ce4aa90e8af', // Clothes Changer (virtual try-on): outfit/try-on framing only
+  'bed989744195', // Video Face Swap: pending consent flow, celebrity block, C2PA
+  'c2aae816fe63', // Face Swap (image): same hold as the video variant
+]);
+
+/**
+ * Every gated pin must also be withheld catalog-wide.
+ *
+ * Guards the one direction that can go wrong silently: gating a pin on a page
+ * while leaving the workflow in the fallback pool, which puts it back on the site
+ * through a different surface. Exported so a test can assert it rather than
+ * running at import time.
+ */
+export function gatedPinsMissingFromWithheldSet(): string[] {
+  return [
+    ...new Set(
+      SEO_PAGES.flatMap((def) =>
+        (def.pins ?? [])
+          .filter((pin) => pin.gate && !GATED_SHARE_IDS.has(pin.shareId))
+          .map((pin) => pin.shareId)
+      )
+    ),
+  ];
+}

@@ -27,8 +27,12 @@ install_paths()
 
 from comfyui_paths import resolve_comfy_api_nodes_dir  # noqa: E402
 from json_format import dumps_compact_arrays  # noqa: E402
-from paths import API_NODE_OPTIONS_FILE, TEMPLATES_DIR  # noqa: E402
-from scan_api_node_models import model_options_for_workflow, scan_api_nodes_dir  # noqa: E402
+from paths import API_NODE_IDS_FILE, API_NODE_OPTIONS_FILE, TEMPLATES_DIR  # noqa: E402
+from scan_api_node_models import (  # noqa: E402
+    model_options_for_workflow,
+    scan_api_node_ids,
+    scan_api_nodes_dir,
+)
 
 OUTPUT_FILE = API_NODE_OPTIONS_FILE
 
@@ -67,6 +71,14 @@ def main() -> int:
             print(f"    ... and {with_model - 8} more")
         return 0
 
+    node_ids = scan_api_node_ids(api_nodes_dir)
+    # A wrong or partial COMFYUI_REPO_PATH scans clean and yields nothing, which
+    # would replace both committed files with empty ones. Nothing downstream can
+    # tell that apart from "no API nodes exist", so refuse before writing.
+    if not node_ids:
+        print(f"Refusing to write: no API nodes found in {api_nodes_dir}", file=sys.stderr)
+        return 1
+
     payload = {
         "source": str(api_nodes_dir),
         "node_count": len(index),
@@ -74,6 +86,15 @@ def main() -> int:
     }
     OUTPUT_FILE.write_text(dumps_compact_arrays(payload), encoding="utf-8")
     print(f"Written: {OUTPUT_FILE}")
+
+    ids_payload = {
+        # The directory, not the absolute path: where it sits is per machine.
+        "source": api_nodes_dir.name,
+        "node_count": len(node_ids),
+        "node_ids": node_ids,
+    }
+    API_NODE_IDS_FILE.write_text(dumps_compact_arrays(ids_payload), encoding="utf-8")
+    print(f"Written: {API_NODE_IDS_FILE} ({len(node_ids)} API node ids)")
     return 0
 
 

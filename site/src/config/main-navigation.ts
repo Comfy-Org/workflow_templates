@@ -39,7 +39,7 @@ export function getMainNavigation(locale: Locale): NavItem[] {
         imageAlt: t('nav.featuredProductsAlt', locale),
         title: t('nav.featuredProductsTitle', locale),
         cta: {
-          label: t('cta.getStarted', locale),
+          label: t('nav.featuredProductsCta', locale),
           ariaLabel: t('nav.featuredProductsCtaAria', locale),
           href: navFeatured.products.cta,
         },
@@ -84,7 +84,9 @@ export function getMainNavigation(locale: Locale): NavItem[] {
           header: t('nav.colPrograms', locale),
           items: [
             { label: t('nav.comfyHub', locale), href: navExternalLinks.workflows },
+            { label: t('nav.fdct', locale), href: navRoutes.fdct, badge: 'new' },
             { label: t('nav.gallery', locale), href: navRoutes.gallery },
+            { label: t('nav.events', locale), href: navRoutes.events, badge: 'new' },
             { label: t('nav.affiliates', locale), href: navRoutes.affiliates, badge: 'new' },
             { label: t('nav.learning', locale), href: navRoutes.learning, badge: 'new' },
           ],

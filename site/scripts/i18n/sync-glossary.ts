@@ -16,6 +16,10 @@
  *                          the product UI already uses (workflow, node, queue…).
  *   overrides/{locale}.json — hand-curated fixes that win over the mirror
  *                          (created empty here; reviewers/CODEOWNERS extend them).
+ *                          A `null` value RETRACTS a harvested pair instead of
+ *                          replacing it, for the cases where the app's own UI
+ *                          contradicts itself. The override layer itself lives
+ *                          in glossary-overrides.cjs, shared with .i18nrc.cjs.
  *
  * The pure functions are exported and unit-tested; `main()` only does IO.
  */
@@ -23,6 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
+import { applyOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
 
@@ -55,7 +60,16 @@ export const PRESERVE_TERMS: string[] = [
   'AnimateDiff',
   'RealESRGAN',
   'T5',
+  // Task-type acronyms as they appear in workflow names. Case matters: matching
+  // is case-sensitive, so 'T2I' alone left the lowercase 't2i' that the titles
+  // actually use unshielded, and a Turkish reviewer found it rendered as 'm2g'.
+  // The sibling acronyms were never listed in any casing.
   'T2I',
+  't2i',
+  'i2v',
+  't2v',
+  'v2v',
+  'flf2v',
   'safetensors',
   'GGUF',
   // Model families (mirror of FAMILY_RULES labels)
@@ -75,6 +89,22 @@ export const PRESERVE_TERMS: string[] = [
   'Nano Banana Pro',
   'Nano Banana',
   'Hunyuan3D',
+  'ACE-Step',
+  'Dall-E',
+  // Variant names whose parent family is already listed above. Listing only the
+  // family leaves the rest of the name exposed: "Wan" was protected inside
+  // "Wan 2.2 5B Fun Inpaint" while "Fun" was not, and zh rendered it 趣味
+  // ("playful"), turning a product name into an adjective. Likewise
+  // "Qwen-Image" protected the head of "Qwen-Image-Layered" and left "Layered"
+  // to be translated.
+  //
+  // "Fun" is deliberately listed bare rather than as each variant
+  // (Fun Inpaint / Fun Inp / Fun Control / Fun Camera Control / Fun Union):
+  // every one of its 38 occurrences in the English content is a model name and
+  // none is the ordinary adjective, and matching is case-sensitive, so lowercase
+  // "fun" in prose is untouched.
+  'Fun',
+  'Qwen-Image-Layered',
 ];
 
 /** Longest glossary term to harvest from UI strings (skip full sentences). */
@@ -101,6 +131,60 @@ export function buildMirror(
     if (!(enTrim in mirror)) mirror[enTrim] = locTrim;
   }
   return mirror;
+}
+
+/**
+ * How many harvested pairs reach the translator's prompt. The prompt has to stay
+ * bounded, so the mirror is trimmed; which pairs survive is the important part.
+ */
+export const MAX_MIRROR_PAIRS = 200;
+
+/**
+ * The glossary both sides actually use, chosen by how often a term appears in
+ * the English corpus rather than by how long it is.
+ *
+ * Length-first ranking is what broke the Russian run: it drops the SHORTEST
+ * terms first, and "Workflow" is the most frequent term in the product, so the
+ * translator was never shown it while the reviewer went on enforcing it. Every
+ * field mentioning a workflow was then flagged, 27% of the locale, and the
+ * systemic-prune guard failed the run.
+ *
+ * Curated overrides are always kept, on top of the cap, because someone chose
+ * them deliberately.
+ */
+export function selectGlossary(
+  mirror: Record<string, string>,
+  overrides: GlossaryOverrides,
+  corpus: string,
+  limit: number = MAX_MIRROR_PAIRS
+): Record<string, string> {
+  const frequency = (term: string): number => {
+    if (!term) return 0;
+    // Whole-term matches only: "AI" should not score inside "Explain", nor inside
+    // "AI2" or "AI_model" — this corpus is full of identifiers like `wan2_2`, so
+    // digits and underscores have to count as term characters or a short term
+    // inflates its own frequency and displaces a genuinely common one at the cap.
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return (corpus.match(new RegExp(`(?<!\\w)${escaped}(?!\\w)`, 'gi')) ?? []).length;
+  };
+
+  const ranked = Object.entries(mirror)
+    .map(([en, localized]) => ({ en, localized, count: frequency(en) }))
+    // Frequency first; longer term wins a tie, since it is the more specific one.
+    .sort((a, b) => b.count - a.count || b.en.length - a.en.length)
+    .slice(0, limit);
+
+  const selected: Record<string, string> = {};
+  for (const { en, localized } of ranked) selected[en] = localized;
+  // Overrides are laid on AFTER the cap, retractions included. A retraction must
+  // never filter the mirror before ranking: dropping a term earlier promotes
+  // whatever sits at rank 200 into the glossary, so retracting one bad pair would
+  // silently start enforcing a term nobody vetted. Measured on es, retracting
+  // Video/VIDEO before the cap would have promoted `Top -> Arriba` and
+  // `Number of Frames -> Número de fotogramas`, and `Top` is an ordinary word in
+  // this corpus. After the cap it is purely subtractive: 200 -> 198, nothing else
+  // moves.
+  return applyOverrides(selected, overrides);
 }
 
 /** Flatten a nested JSON dictionary to flat "a.b.c" → string entries. */
@@ -152,6 +236,28 @@ function loadAppStrings(localesDir: string, locale: string): Record<string, stri
   return merged;
 }
 
+function readJson<T>(file: string, fallback: T): T {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf-8')) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+/**
+ * The English content the translator will see, as one string for term counting.
+ * Absent before the first build-source run, in which case ranking falls back to
+ * term length via the zero-count tie-break.
+ */
+function readEnglishCorpus(): string {
+  const file = path.join(process.cwd(), 'src', 'i18n', 'content', 'en.json');
+  try {
+    return fs.readFileSync(file, 'utf-8');
+  } catch {
+    return '';
+  }
+}
+
 function writeJson(file: string, value: unknown): void {
   fs.mkdirSync(path.dirname(file), { recursive: true });
   fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n');
@@ -170,19 +276,30 @@ function main(): void {
   }
 
   const enStrings = loadAppStrings(localesDir, 'en');
+  // Rank against the text being translated, so the terms that survive the cap
+  // are the ones the corpus actually uses.
+  const corpus = readEnglishCorpus();
   let mirrorTotal = 0;
+  let effectiveTotal = 0;
   for (const locale of SUPPORTED_HUB_LOCALES) {
     if (locale === 'en') continue;
     const mirror = buildMirror(enStrings, loadAppStrings(localesDir, locale));
     writeJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), mirror);
     const overridePath = path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`);
     if (!fs.existsSync(overridePath)) writeJson(overridePath, {});
+    const overrides = readJson<GlossaryOverrides>(overridePath, {});
+    // ONE artifact, read verbatim by the translator config and the reviewer, so
+    // neither can enforce a term the other was never shown.
+    const effective = selectGlossary(mirror, overrides, corpus);
+    writeJson(path.join(GLOSSARY_DIR, 'effective', `${locale}.json`), effective);
     mirrorTotal += Object.keys(mirror).length;
+    effectiveTotal += Object.keys(effective).length;
   }
 
   console.log(
     `[i18n] glossary: ${PRESERVE_TERMS.length} preserve terms, ` +
-      `${mirrorTotal} mirror pairs across ${SUPPORTED_HUB_LOCALES.length - 1} locales ` +
+      `${mirrorTotal} mirror pairs (${effectiveTotal} effective) across ` +
+      `${SUPPORTED_HUB_LOCALES.length - 1} locales ` +
       `(from ${localesDir}).`
   );
 }

@@ -363,6 +363,114 @@
         "capabilities": {
           "workflow": ["api", "text-to-video"]
         }
+      },
+      {
+        "name": "api_reve_image_create",
+        "title": "Reve: Text to Image",
+        "task": "Text to Image",
+        "model": "Reve",
+        "freshness": "current",
+        "usage": 15,
+        "recommend": "not_recommended",
+        "description": "This workflow creates high-quality images from text prompts using Reve’s image generation model, which delivers detailed aesthetics and accurate text rendering. It takes a text description as input and outputs a generated image. Execution uses a third-party API, so response time depends on server-side processing.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired image"],
+          "outputs": ["image: Generated image"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
+        "name": "api_reve_image_edit",
+        "title": "Reve: Image Edit",
+        "task": "Image Edit",
+        "model": "Reve",
+        "freshness": "current",
+        "usage": 15,
+        "recommend": "not_recommended",
+        "description": "Upload an image with text instructions to edit it using Reve's editing model. It supports object removal, restoration, and recomposition with optional upscaling. This workflow calls a third-party API, so execution time depends on server-side response.",
+        "io": {
+          "inputs": ["image: Input image to be edited", "text: Text instructions describing the desired edits"],
+          "outputs": ["image: Edited output image"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-edit"]
+        }
+      },
+      {
+        "name": "api_reve_image_remix",
+        "title": "Reve: Image Remix And Edit",
+        "task": "Image Edit",
+        "model": "Reve",
+        "freshness": "current",
+        "usage": 10,
+        "recommend": "not_recommended",
+        "description": "Remix and edit images by combining up to three reference images into a single output using the Reve model. This workflow calls a third-party API, so execution time depends on server‑side response. Input: three reference images. Output: one blended, remixed image.",
+        "io": {
+          "inputs": ["image×3: Reference images to combine and remix into a single output"],
+          "outputs": ["image: Remixed image combining elements from all inputs"]
+        },
+        "capabilities": {
+          "workflow": ["image-edit", "api"]
+        }
+      },
+      {
+        "name": "api_ltxv_image_to_video",
+        "title": "LTX-2: Image to Video",
+        "task": "Image to Video",
+        "model": "LTX-2",
+        "freshness": "established",
+        "usage": 184,
+        "recommend": "low",
+        "description": "Transform a static image into a dynamic cinematic video using the LTX‑2 model (Pro or Fast variant). The workflow accepts a reference image and generates a video with natural motion and optional synchronized audio. This workflow calls a third‑party API, so execution time depends on server‑side response.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a cinematic video sequence"],
+          "outputs": ["video: Generated cinematic video with natural motion and optional audio"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "LtxvApiImageToVideo": ["LTX-2 (Pro)", "LTX-2 (Fast)"]
+          }
+        }
+      },
+      {
+        "name": "api_ltxv_text_to_video",
+        "title": "LTX-2: Text to Video",
+        "task": "Text to Video",
+        "model": "LTX-2",
+        "freshness": "established",
+        "usage": 28,
+        "recommend": "not_recommended",
+        "description": "Use Lightricks LTX-2, an affordable medium-quality model that natively generates audio with video. This workflow accepts a text prompt and returns a generated video, with Fast and Pro mode options. It calls a third-party API, so execution time depends on server response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video content"],
+          "outputs": ["video: Generated high-quality video from the text prompt with LTX-2"]
+        },
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "LtxvApiTextToVideo": ["LTX-2 (Pro)", "LTX-2 (Fast)"]
+          }
+        }
+      },
+      {
+        "name": "api_kling_avatar2",
+        "title": "Kling: Avatar 2.0",
+        "task": "Lip Sync",
+        "model": "Kling",
+        "freshness": "current",
+        "usage": 17,
+        "recommend": "not_recommended",
+        "description": "This workflow uses the Kling Avatar 2.0 API to generate a talking avatar video from a portrait image and audio file. It produces synchronized lip movements and natural facial expressions by leveraging Kling's top-tier video generation capabilities. Execution goes through a third-party API, so response time depends on server-side processing.",
+        "io": {
+          "inputs": ["image: Portrait image of the avatar", "audio: Audio file for the avatar to lip-sync to"],
+          "outputs": ["video: Talking avatar video with synchronized lips"]
+        },
+        "capabilities": {
+          "workflow": ["lip-sync", "api"]
+        }
       }
     ]
   }

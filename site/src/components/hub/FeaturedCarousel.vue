@@ -203,17 +203,19 @@ onUnmounted(() => {
               <a
                 v-if="slide.creatorUrl"
                 :href="slide.creatorUrl"
-                class="pointer-events-auto relative z-20 flex min-w-0 items-center gap-2 text-white/95 transition-colors hover:text-white"
+                class="author-link pointer-events-auto relative z-20 flex min-w-0 items-center gap-2 text-white/95 hover:text-white focus-visible:text-white"
+                style="--author-link-highlight: rgb(255 255 255 / 0.18)"
                 @click.stop
               >
                 <Avatar
                   :src="slide.creatorAvatarUrl"
                   :name="slide.creatorName"
-                  class="size-5 sm:size-6"
+                  class="author-link-avatar size-5 sm:size-6"
                 />
-                <span class="ppformula-text-center-sm truncate text-sm sm:text-base">{{
-                  slide.creatorName
-                }}</span>
+                <span
+                  class="author-link-name ppformula-text-center-sm truncate text-sm sm:text-base"
+                  >{{ slide.creatorName }}</span
+                >
               </a>
               <div v-else class="flex min-w-0 items-center gap-2 text-white/95">
                 <Avatar
