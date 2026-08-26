@@ -11,6 +11,7 @@ export const LANGUAGES = {
   tr: { code: 'tr', name: 'Turkish', nativeName: 'Türkçe', dir: 'ltr' },
   ar: { code: 'ar', name: 'Arabic', nativeName: 'العربية', dir: 'rtl' },
   'pt-BR': { code: 'pt-BR', name: 'Portuguese (Brazil)', nativeName: 'Português', dir: 'ltr' },
+  it: { code: 'it', name: 'Italian', nativeName: 'Italiano', dir: 'ltr' },
 } as const;
 
 export const DEFAULT_LOCALE = 'en';
@@ -29,6 +30,7 @@ export const LOCALE_INDEX_FILES: Record<string, string> = {
   tr: 'index.tr.json',
   ar: 'index.ar.json',
   'pt-BR': 'index.pt-BR.json',
+  it: 'index.it.json',
 };
 
 export type Locale = keyof typeof LANGUAGES;
