@@ -73,6 +73,18 @@ describe('pathForHref', () => {
     expect(pathForHref(`${ORIGIN}/workflows/?a=1#b`, ORIGIN)).toBe('/workflows/');
   });
 
+  it('accepts an equivalent origin written differently', () => {
+    // Same origin once parsed: the explicit default port and the uppercased host
+    // both normalise away, and rejecting them would fail CI on a correct build.
+    expect(pathForHref('https://comfy.org:443/ko/workflows/', ORIGIN)).toBe('/ko/workflows/');
+    expect(pathForHref('https://COMFY.ORG/ko/workflows/', ORIGIN)).toBe('/ko/workflows/');
+  });
+
+  it('rejects an href that is not absolute', () => {
+    expect(pathForHref('/ko/workflows/', ORIGIN)).toBeNull();
+    expect(pathForHref('not a url', ORIGIN)).toBeNull();
+  });
+
   it('rejects another origin rather than treating it as a path', () => {
     expect(pathForHref('https://staging.comfy.org/ko/workflows/', ORIGIN)).toBeNull();
     // A prefix match alone must not pass: this host merely starts with the origin.

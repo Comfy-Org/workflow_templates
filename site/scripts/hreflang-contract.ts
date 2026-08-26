@@ -66,10 +66,20 @@ export function normalizePath(pathname: string): string {
   return rooted.endsWith('/') ? rooted : `${rooted}/`;
 }
 
-/** Site-relative path for an absolute href, or null when it is not on `origin`. */
+/**
+ * Site-relative path for an absolute href, or null when it is not on `origin`.
+ * Compares parsed origins rather than raw strings, so an explicit default port or
+ * an uppercased host is still recognised as the same site, and a host that merely
+ * begins with the origin is still not.
+ */
 export function pathForHref(href: string, origin: string): string | null {
-  if (href !== origin && !href.startsWith(`${origin}/`)) return null;
-  return normalizePath(href.slice(origin.length).split(/[?#]/)[0]);
+  let url: URL;
+  try {
+    url = new URL(href);
+  } catch {
+    return null;
+  }
+  return url.origin === origin ? normalizePath(url.pathname) : null;
 }
 
 export function originOf(url: string): string | null {
@@ -80,9 +90,25 @@ export function originOf(url: string): string | null {
   }
 }
 
+interface ResolvedAlternate extends Alternate {
+  /** Site-relative target, or null when the href is not on `origin`. */
+  path: string | null;
+}
+
 export function checkHreflangContract(pages: readonly RenderedPage[], origin: string): string[] {
   const problems: string[] = [];
   const byPath = new Map(pages.map((page) => [page.path, page]));
+  // Resolved once per href: the reciprocity check reads every alternate of every
+  // target, so parsing on demand would re-parse each href once per cluster member.
+  const resolvedByPath = new Map<string, ResolvedAlternate[]>(
+    pages.map((page) => [
+      page.path,
+      page.alternates.map((alternate) => ({
+        ...alternate,
+        path: pathForHref(alternate.href, origin),
+      })),
+    ])
+  );
 
   for (const page of pages) {
     if (page.canonical) {
@@ -99,14 +125,14 @@ export function checkHreflangContract(pages: readonly RenderedPage[], origin: st
     if (page.noindex) continue;
 
     const seen = new Set<string>();
-    for (const alternate of page.alternates) {
+    for (const alternate of resolvedByPath.get(page.path) ?? []) {
       // A repeated hreflang value is ambiguous, so Google drops the whole cluster.
       if (seen.has(alternate.hreflang)) {
         problems.push(`${page.path}: duplicate hreflang "${alternate.hreflang}"`);
       }
       seen.add(alternate.hreflang);
 
-      const target = pathForHref(alternate.href, origin);
+      const target = alternate.path;
       if (target === null) {
         problems.push(
           `${page.path}: hreflang "${alternate.hreflang}" is off-origin: ${alternate.href}`
@@ -131,8 +157,8 @@ export function checkHreflangContract(pages: readonly RenderedPage[], origin: st
 
       // x-default declares a fallback, not a language pairing, so it does not
       // satisfy the return leg of a cluster.
-      const linksBack = targetPage.alternates.some(
-        (back) => back.hreflang !== 'x-default' && pathForHref(back.href, origin) === page.path
+      const linksBack = (resolvedByPath.get(target) ?? []).some(
+        (back) => back.hreflang !== 'x-default' && back.path === page.path
       );
       if (!linksBack) {
         problems.push(
@@ -143,11 +169,10 @@ export function checkHreflangContract(pages: readonly RenderedPage[], origin: st
 
     // Google requires a cluster member to name itself; without it the page is not
     // considered part of the set it is advertising.
-    const languageAlternates = page.alternates.filter((a) => a.hreflang !== 'x-default');
-    if (
-      languageAlternates.length > 0 &&
-      !languageAlternates.some((a) => pathForHref(a.href, origin) === page.path)
-    ) {
+    const languageAlternates = (resolvedByPath.get(page.path) ?? []).filter(
+      (a) => a.hreflang !== 'x-default'
+    );
+    if (languageAlternates.length > 0 && !languageAlternates.some((a) => a.path === page.path)) {
       problems.push(`${page.path}: emits alternates but none point back at itself`);
     }
   }
