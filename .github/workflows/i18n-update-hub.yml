@@ -58,14 +58,23 @@ jobs:
           INPUT_LOCALE: ${{ github.event.inputs.locale }}
         run: |
           set -euo pipefail
-          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR"
+          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR it"
           if [ -n "${INPUT_LOCALE:-}" ]; then
-            # Match the input exactly against the allowlist (literal case patterns,
-            # so a value like "*" cannot glob-match its way in).
-            case "$INPUT_LOCALE" in
-              zh|zh-TW|ja|ko|es|fr|ru|tr|ar|pt-BR) TARGET="$INPUT_LOCALE" ;;
-              *) echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"; exit 1 ;;
-            esac
+            # ONE list. There used to be a second copy in a case pattern here, and
+            # adding a locale to only one of them either lets a dispatch through
+            # that the nightly never translates, or the reverse.
+            #
+            # Compared with = rather than a case pattern, so the input is never in
+            # pattern position: a value like "*" is matched literally and cannot
+            # glob its way in.
+            TARGET=""
+            for locale in $SUPPORTED; do
+              if [ "$locale" = "$INPUT_LOCALE" ]; then TARGET="$INPUT_LOCALE"; fi
+            done
+            if [ -z "$TARGET" ]; then
+              echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"
+              exit 1
+            fi
           else
             TARGET="$SUPPORTED"
           fi

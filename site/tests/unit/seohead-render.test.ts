@@ -1,0 +1,41 @@
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
+import { describe, expect, it } from 'vitest';
+import SEOHead from '../../src/components/SEOHead.astro';
+
+async function render(pathname: string, props: Record<string, unknown> = {}) {
+  const container = await AstroContainer.create();
+  return container.renderToString(SEOHead, {
+    props: { title: 'T', description: 'D', ...props },
+    request: new Request(`https://comfy.org${pathname}`),
+  });
+}
+
+describe('SEOHead rendered output', () => {
+  it('declares the page language and the other locales', async () => {
+    const html = await render('/ko/workflows/');
+    expect(html).toContain('<meta property="og:locale" content="ko_KR">');
+    expect(html).toContain('<meta property="og:locale:alternate" content="en_US">');
+    expect(html).not.toContain('content="ko_KR"></meta>');
+    const alternates = [...html.matchAll(/og:locale:alternate" content="([^"]+)"/g)].map(
+      (m) => m[1]
+    );
+    expect(alternates).not.toContain('ko_KR');
+    expect(alternates).toHaveLength(10);
+  });
+
+  it('emits no alternates for an English-only page', async () => {
+    const html = await render('/workflows/use-cases/x/', { hreflangLocalized: false });
+    expect(html).toContain('<meta property="og:locale" content="en_US">');
+    expect(html).not.toContain('og:locale:alternate');
+  });
+
+  it('matches the hreflang cluster exactly', async () => {
+    const html = await render('/ja/workflows/x/', { hreflangLocales: ['en', 'ja'] });
+    const hreflangs = [...html.matchAll(/hreflang="([^"]+)"/g)].map((m) => m[1]);
+    const ogLocales = [...html.matchAll(/og:locale(?::alternate)?" content="([^"]+)"/g)].map(
+      (m) => m[1]
+    );
+    expect(hreflangs.sort()).toEqual(['en', 'ja', 'x-default']);
+    expect(ogLocales.sort()).toEqual(['en_US', 'ja_JP']);
+  });
+});
