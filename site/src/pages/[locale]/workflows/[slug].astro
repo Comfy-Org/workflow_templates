@@ -42,7 +42,9 @@ import {
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
+  buildWorkflowGraphJsonLd,
 } from '../../../lib/structured-data';
+import { getWorkflowEntityGraph } from '../../../data/workflow-entity-graphs';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
@@ -205,6 +207,37 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   description: data.metaDescription || data.description,
 });
 
+// Client-approved schema replacement: templates with a curated entity graph
+// (see workflow-entity-graphs.ts) get a single linked @graph — WebSite,
+// Organization, ComfyUI, WebPage, workflow, DefinedTerm/DefinedTermSet, FAQ,
+// and breadcrumb — in place of the four separate scripts above. Every other
+// template (no curated data yet) keeps the scripts above unchanged.
+//
+// Gated on isIndexable: when not indexable, canonicalUrl points at the
+// English URL while this page's title/description/FAQ/inLanguage are still
+// localized (or held English-fallback) content. Building the graph in that
+// case would stamp @ids derived from the English URL with non-English values
+// — the same @ids the English route itself emits with English values,
+// producing two conflicting JSON-LD entities for one canonical URL. Held
+// pages keep the legacy per-field scripts (which don't share @ids) instead.
+const entityGraph = isIndexable ? getWorkflowEntityGraph(data.name) : undefined;
+const workflowGraphStructuredData = entityGraph
+  ? buildWorkflowGraphJsonLd({
+      canonicalUrl,
+      title: data.title,
+      description: data.description,
+      image: primaryThumbnail || undefined,
+      datePublished: data.date,
+      inLanguage: locale,
+      breadcrumbItems: breadcrumbStructuredData.itemListElement.map(({ name, item }) => ({
+        name,
+        item,
+      })),
+      faqItems: data.faqItems,
+      entityGraph,
+    })
+  : null;
+
 // Related workflows come from the hub index, which is English only. The page's
 // own text is already resolved above, so without this the translated detail page
 // ends on a grid of English cards linking to pages that are themselves translated.
@@ -223,7 +256,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
   ogType="article"
-  structuredData={structuredData}
+  structuredData={workflowGraphStructuredData ?? structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
   noindex={!isIndexable}
@@ -255,18 +288,26 @@ const toolbarLabels = buildToolbarLabels(locale);
       )
     }
   </TemplateDetailPage>
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-  />
   {
-    faqStructuredData && (
+    !entityGraph && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+      />
+    )
+  }
+  {
+    !entityGraph && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
+      />
+    )
+  }
+  {
+    !entityGraph && faqStructuredData && (
       <script
         is:inline
         type="application/ld+json"
