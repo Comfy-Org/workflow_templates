@@ -209,8 +209,12 @@ onUnmounted(() => {
                 name-class="ppformula-text-center-sm text-sm sm:text-base"
                 :class="
                   cn(
-                    'pointer-events-auto relative z-20 min-w-0 text-white/95',
-                    slide.creatorUrl && 'hover:text-white focus-visible:text-white'
+                    'relative z-20 min-w-0 text-white/95',
+                    // Only the real link opts back into pointer events: without a creator
+                    // URL the wrapper must stay transparent (inheriting the overlay's
+                    // pointer-events-none) so clicks fall through to the whole-card link.
+                    slide.creatorUrl &&
+                      'pointer-events-auto hover:text-white focus-visible:text-white'
                   )
                 "
                 @click="(event: MouseEvent) => slide.creatorUrl && event.stopPropagation()"
