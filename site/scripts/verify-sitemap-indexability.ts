@@ -139,8 +139,14 @@ function main(): void {
     problems.push('No canonical URL found in any rendered page; cannot verify hreflang.');
   } else {
     const clustered = pages.filter((p) => p.alternates.length > 0).length;
+    const result = checkHreflangContract(pages, origin);
     console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
-    problems.push(...checkHreflangContract(pages, origin));
+    if (result.unverifiable) {
+      console.log(
+        `  hreflang: ${result.unverifiable} alternates target server-rendered routes, not checkable here`
+      );
+    }
+    problems.push(...result.problems);
   }
 
   if (problems.length) {

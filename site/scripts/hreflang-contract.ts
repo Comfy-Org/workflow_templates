@@ -95,8 +95,24 @@ interface ResolvedAlternate extends Alternate {
   path: string | null;
 }
 
-export function checkHreflangContract(pages: readonly RenderedPage[], origin: string): string[] {
+export interface ContractResult {
+  problems: string[];
+  /**
+   * Alternates whose target is not in the build. Every localized route is
+   * `prerender = false`, so its URL is served on demand and never becomes a file
+   * here: absence proves nothing, and treating it as a broken link reported 920
+   * false failures. Counted and printed rather than dropped, so the limit of what
+   * this check can prove stays visible.
+   */
+  unverifiable: number;
+}
+
+export function checkHreflangContract(
+  pages: readonly RenderedPage[],
+  origin: string
+): ContractResult {
   const problems: string[] = [];
+  let unverifiable = 0;
   const byPath = new Map(pages.map((page) => [page.path, page]));
   // Resolved once per href: the reciprocity check reads every alternate of every
   // target, so parsing on demand would re-parse each href once per cluster member.
@@ -142,7 +158,9 @@ export function checkHreflangContract(pages: readonly RenderedPage[], origin: st
 
       const targetPage = byPath.get(target);
       if (!targetPage) {
-        problems.push(`${page.path}: hreflang "${alternate.hreflang}" points at unbuilt ${target}`);
+        // Server-rendered, so existence, indexability and the return link are all
+        // unknowable from the build output.
+        unverifiable += 1;
         continue;
       }
       if (targetPage.noindex) {
@@ -177,5 +195,5 @@ export function checkHreflangContract(pages: readonly RenderedPage[], origin: st
     }
   }
 
-  return problems.sort();
+  return { problems: problems.sort(), unverifiable };
 }

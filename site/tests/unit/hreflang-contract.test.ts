@@ -92,14 +92,18 @@ describe('pathForHref', () => {
   });
 });
 
+function problems(pages: RenderedPage[], origin = ORIGIN): string[] {
+  return checkHreflangContract(pages, origin).problems;
+}
+
 describe('checkHreflangContract', () => {
   it('accepts a reciprocal cluster', () => {
-    expect(checkHreflangContract(reciprocalPair(), ORIGIN)).toEqual([]);
+    expect(problems(reciprocalPair())).toEqual([]);
   });
 
   it('accepts an English-only page that emits x-default alone', () => {
     const pages = [page('/use-cases/upscaling/', [alt('x-default', '/use-cases/upscaling/')])];
-    expect(checkHreflangContract(pages, ORIGIN)).toEqual([]);
+    expect(problems(pages)).toEqual([]);
   });
 
   it('catches a one-way declaration', () => {
@@ -108,8 +112,9 @@ describe('checkHreflangContract', () => {
       alt('ko', '/ko/workflows/'),
       alt('x-default', '/workflows/'),
     ]);
-    const problems = checkHreflangContract([en, ko], ORIGIN);
-    expect(problems).toEqual(['/workflows/: hreflang "ko" (/ko/workflows/) does not link back']);
+    expect(problems([en, ko])).toEqual([
+      '/workflows/: hreflang "ko" (/ko/workflows/) does not link back',
+    ]);
   });
 
   it('does not accept x-default as the return leg', () => {
@@ -119,23 +124,38 @@ describe('checkHreflangContract', () => {
       alt('ko', '/ko/workflows/'),
       alt('x-default', '/workflows/'),
     ]);
-    expect(checkHreflangContract([en, ko], ORIGIN)).toContain(
+    expect(problems([en, ko])).toContain(
       '/workflows/: hreflang "ko" (/ko/workflows/) does not link back'
     );
   });
 
-  it('catches an alternate pointing at a page that was never built', () => {
+  it('does not fail on an alternate whose target is server-rendered', () => {
+    // Every localized route is prerender = false, so its URL is never a file in
+    // the build. Absence proves nothing, and asserting on it reported 920 false
+    // failures against a correct site.
     const pages = reciprocalPair();
     pages[0].alternates.push(alt('ja', '/ja/workflows/'));
-    expect(checkHreflangContract(pages, ORIGIN)).toEqual([
-      '/workflows/: hreflang "ja" points at unbuilt /ja/workflows/',
+    const result = checkHreflangContract(pages, ORIGIN);
+    expect(result.problems).toEqual([]);
+    expect(result.unverifiable).toBe(1);
+  });
+
+  it('counts every unverifiable target rather than dropping them silently', () => {
+    const en = page('/workflows/', [
+      alt('en', '/workflows/'),
+      alt('ja', '/ja/workflows/'),
+      alt('ko', '/ko/workflows/'),
+      alt('x-default', '/workflows/'),
     ]);
+    const result = checkHreflangContract([en], ORIGIN);
+    expect(result.problems).toEqual([]);
+    expect(result.unverifiable).toBe(2);
   });
 
   it('catches an alternate pointing at a noindexed page', () => {
     const [en, ko] = reciprocalPair();
     ko.noindex = true;
-    expect(checkHreflangContract([en, ko], ORIGIN)).toEqual([
+    expect(problems([en, ko])).toEqual([
       '/workflows/: hreflang "ko" points at noindexed /ko/workflows/',
     ]);
   });
@@ -143,9 +163,7 @@ describe('checkHreflangContract', () => {
   it('catches a repeated hreflang value', () => {
     const [en, ko] = reciprocalPair();
     en.alternates.push(alt('ko', '/ko/workflows/'));
-    expect(checkHreflangContract([en, ko], ORIGIN)).toEqual([
-      '/workflows/: duplicate hreflang "ko"',
-    ]);
+    expect(problems([en, ko])).toEqual(['/workflows/: duplicate hreflang "ko"']);
   });
 
   it('catches an alternate on the wrong origin', () => {
@@ -155,7 +173,7 @@ describe('checkHreflangContract', () => {
         { hreflang: 'ko', href: 'https://staging.comfy.org/ko/workflows/' },
       ]),
     ];
-    expect(checkHreflangContract(pages, ORIGIN)).toEqual([
+    expect(problems(pages)).toEqual([
       '/workflows/: hreflang "ko" is off-origin: https://staging.comfy.org/ko/workflows/',
     ]);
   });
@@ -163,7 +181,7 @@ describe('checkHreflangContract', () => {
   it('catches a page that advertises a cluster it is not a member of', () => {
     const en = page('/workflows/', [alt('en', '/workflows/'), alt('ko', '/ko/workflows/')]);
     const ko = page('/ko/workflows/', [alt('en', '/workflows/')]);
-    expect(checkHreflangContract([en, ko], ORIGIN)).toEqual([
+    expect(problems([en, ko])).toEqual([
       '/ko/workflows/: emits alternates but none point back at itself',
     ]);
   });
@@ -171,7 +189,7 @@ describe('checkHreflangContract', () => {
   it('catches a canonical left pointing at a preview origin', () => {
     const pages = reciprocalPair();
     pages[1].canonical = 'https://comfy-preview.vercel.app/ko/workflows/';
-    expect(checkHreflangContract(pages, ORIGIN)).toEqual([
+    expect(problems(pages)).toEqual([
       '/ko/workflows/: canonical is not on https://comfy.org: https://comfy-preview.vercel.app/ko/workflows/',
     ]);
   });
@@ -190,13 +208,13 @@ describe('checkHreflangContract', () => {
       [alt('en', '/workflows/x/'), alt('ja', '/ja/workflows/x/')],
       { noindex: true, canonical: `${ORIGIN}/workflows/x/` }
     );
-    expect(checkHreflangContract([en, ja, ru], ORIGIN)).toEqual([]);
+    expect(problems([en, ja, ru])).toEqual([]);
   });
 
   it('still reports an indexable page that advertises a gated one', () => {
     const en = page('/workflows/x/', [alt('en', '/workflows/x/'), alt('ru', '/ru/workflows/x/')]);
     const ru = page('/ru/workflows/x/', [alt('en', '/workflows/x/')], { noindex: true });
-    expect(checkHreflangContract([en, ru], ORIGIN)).toEqual([
+    expect(problems([en, ru])).toEqual([
       '/workflows/x/: hreflang "ru" points at noindexed /ru/workflows/x/',
     ]);
   });
@@ -208,6 +226,6 @@ describe('checkHreflangContract', () => {
     const pages = locales.map((locale) =>
       page(pathFor(locale), [...cluster, alt('x-default', '/workflows/')])
     );
-    expect(checkHreflangContract(pages, ORIGIN)).toEqual([]);
+    expect(problems(pages)).toEqual([]);
   });
 });
