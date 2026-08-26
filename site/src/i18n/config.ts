@@ -53,4 +53,5 @@ export const OG_LOCALES: Record<Locale, string> = {
   tr: 'tr_TR',
   ar: 'ar_AR',
   'pt-BR': 'pt_BR',
+  it: 'it_IT',
 };
