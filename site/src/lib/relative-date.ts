@@ -29,15 +29,20 @@ export function formatRelativeDate(
   // previous implementation rendered "NaN years ago" instead; show nothing.
   if (Number.isNaN(diffMs)) return '';
 
-  const diffDays = Math.floor(diffMs / MS_PER_DAY);
-  if (diffDays === 0) return t('date.today', locale);
+  // Round the distance, not the signed difference, so the same gap reads the same
+  // in both directions. Flooring while signed rounded future dates away from now:
+  // 29 days and 23 hours ahead landed in the month lane as "in 1 month" while the
+  // same gap in the past stayed "29 days ago", and a timestamp a few hours ahead
+  // became "in 1 day" rather than today. Clock skew against the hub API is the
+  // realistic way a reader ever sees a future date at all.
+  const distanceDays = Math.floor(Math.abs(diffMs) / MS_PER_DAY);
+  if (distanceDays === 0) return t('date.today', locale);
 
   const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
-  // Pick the unit from the distance and apply the direction separately. Testing
-  // the signed value put every future date in the day lane, so a template dated a
-  // year ahead read "in 400 days" instead of "in 1 year".
-  const direction = diffDays < 0 ? 1 : -1;
-  const distanceDays = Math.abs(diffDays);
+  // The unit comes from the distance; only the sign of the formatted value says
+  // which side of now it falls on. Choosing the lane from the signed value put
+  // every future date in the day lane, so a year ahead read "in 400 days".
+  const direction = diffMs < 0 ? 1 : -1;
   if (distanceDays < 30) return relative.format(direction * distanceDays, 'day');
 
   const distanceMonths = Math.floor(distanceDays / 30);

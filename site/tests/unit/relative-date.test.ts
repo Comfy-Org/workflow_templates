@@ -99,6 +99,24 @@ describe('edge cases', () => {
     expect(ahead(1080)).toBe('in 3 years');
   });
 
+  it('reads the same distance the same way in both directions', () => {
+    // Flooring the signed difference rounded future dates away from now, so this
+    // gap landed in the month lane going forward and the day lane going back.
+    const gap = (29 + 23 / 24) * MS_PER_DAY;
+    const ahead = new Date(NOW.getTime() + gap).toISOString();
+    const behind = new Date(NOW.getTime() - gap).toISOString();
+    expect(formatRelativeDate(ahead, 'en', NOW)).toBe('in 29 days');
+    expect(formatRelativeDate(behind, 'en', NOW)).toBe('29 days ago');
+  });
+
+  it('treats a timestamp a few hours ahead as today', () => {
+    // Clock skew between the hub API and the render clock is the realistic way a
+    // reader sees a future date. This used to render "in 1 day".
+    const skewed = new Date(NOW.getTime() + 4 * 60 * 60 * 1000).toISOString();
+    expect(formatRelativeDate(skewed, 'en', NOW)).toBe('Today');
+    expect(formatRelativeDate(skewed, 'ja', NOW)).toBe('今日');
+  });
+
   it('localizes future dates too', () => {
     const ahead = new Date(NOW.getTime() + 400 * MS_PER_DAY).toISOString();
     expect(formatRelativeDate(ahead, 'ja', NOW)).toBe('1 年後');
