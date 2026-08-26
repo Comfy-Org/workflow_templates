@@ -89,6 +89,22 @@ describe('edge cases', () => {
     expect(formatRelativeDate(tomorrow, 'en', NOW)).toBe('in 2 days');
   });
 
+  it('picks the unit by distance, so a future date leaves the day lane', () => {
+    // Testing the signed difference sent every future date down the day lane,
+    // which reported a year ahead as "in 400 days".
+    const ahead = (days: number) =>
+      formatRelativeDate(new Date(NOW.getTime() + days * MS_PER_DAY).toISOString(), 'en', NOW);
+    expect(ahead(45)).toBe('in 1 month');
+    expect(ahead(400)).toBe('in 1 year');
+    expect(ahead(1080)).toBe('in 3 years');
+  });
+
+  it('localizes future dates too', () => {
+    const ahead = new Date(NOW.getTime() + 400 * MS_PER_DAY).toISOString();
+    expect(formatRelativeDate(ahead, 'ja', NOW)).toBe('1 年後');
+    expect(formatRelativeDate(ahead, 'ru', NOW)).toBe('через 1 год');
+  });
+
   it('uses the same-day string for a date earlier today', () => {
     const earlierToday = new Date(NOW.getTime() - 3 * 60 * 60 * 1000).toISOString();
     expect(formatRelativeDate(earlierToday, 'ko', NOW)).toBe('오늘');

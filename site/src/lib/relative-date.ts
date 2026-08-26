@@ -33,10 +33,15 @@ export function formatRelativeDate(
   if (diffDays === 0) return t('date.today', locale);
 
   const relative = new Intl.RelativeTimeFormat(locale, { numeric: 'always' });
-  if (diffDays < 30) return relative.format(-diffDays, 'day');
+  // Pick the unit from the distance and apply the direction separately. Testing
+  // the signed value put every future date in the day lane, so a template dated a
+  // year ahead read "in 400 days" instead of "in 1 year".
+  const direction = diffDays < 0 ? 1 : -1;
+  const distanceDays = Math.abs(diffDays);
+  if (distanceDays < 30) return relative.format(direction * distanceDays, 'day');
 
-  const diffMonths = Math.floor(diffDays / 30);
-  if (diffMonths < 12) return relative.format(-diffMonths, 'month');
+  const distanceMonths = Math.floor(distanceDays / 30);
+  if (distanceMonths < 12) return relative.format(direction * distanceMonths, 'month');
 
-  return relative.format(-Math.floor(diffMonths / 12), 'year');
+  return relative.format(direction * Math.floor(distanceMonths / 12), 'year');
 }
