@@ -27,6 +27,17 @@ const HREFLANG_ATTR = /\bhreflang="([^"]*)"/i;
 const HREF_ATTR = /\bhref="([^"]*)"/i;
 const NOINDEX_META = /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i;
 
+/**
+ * V8 returns a regex capture as a slice that keeps its entire source string
+ * alive. Hub detail pages are ~1.6 MB of HTML each, so keeping a few hrefs from
+ * every page retains the whole build: measured at 2.1 GB of heap for 1,400 pages,
+ * which is what took CI past its 4 GB limit. Copying through a Buffer yields a
+ * standalone string and lets the page be collected.
+ */
+function detached(value: string): string {
+  return Buffer.from(value, 'utf8').toString('utf8');
+}
+
 export function parseAlternates(html: string): Alternate[] {
   const alternates: Alternate[] = [];
   for (const tag of html.match(ALTERNATE_TAG) ?? []) {
@@ -34,13 +45,16 @@ export function parseAlternates(html: string): Alternate[] {
     const href = tag.match(HREF_ATTR)?.[1];
     // rel="alternate" also carries RSS and media links; only the tags that
     // declare an hreflang belong to the language cluster.
-    if (hreflang && href) alternates.push({ hreflang: hreflang.toLowerCase(), href });
+    if (hreflang && href) {
+      alternates.push({ hreflang: detached(hreflang.toLowerCase()), href: detached(href) });
+    }
   }
   return alternates;
 }
 
 export function parseCanonical(html: string): string | null {
-  return html.match(CANONICAL_TAG)?.[0].match(HREF_ATTR)?.[1] ?? null;
+  const href = html.match(CANONICAL_TAG)?.[0].match(HREF_ATTR)?.[1];
+  return href === undefined ? null : detached(href);
 }
 
 export function parseNoindex(html: string): boolean {
