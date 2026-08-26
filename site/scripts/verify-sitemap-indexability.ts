@@ -2,10 +2,22 @@
  * Sitemap membership and each route's noindex decision come from different datasets
  * (on-disk JSON vs live hub index) and can drift; verify the built artifacts agree.
  * Static-only, so it also catches the empty-set case where prebuild didn't run.
+ *
+ * The same pass also enforces the hreflang contract across every rendered page:
+ * a broken language cluster is invisible in the build and in Search Console, and
+ * only shows up weeks later as lost rankings in that language.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  checkHreflangContract,
+  originOf,
+  parseAlternates,
+  parseCanonical,
+  parseNoindex,
+  type RenderedPage,
+} from './hreflang-contract';
 
 const SITE_DIR = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const STATIC_DIR =
@@ -15,6 +27,9 @@ const STATIC_DIR =
 
 const SECTIONS = ['model', 'use-cases'] as const;
 type Section = (typeof SECTIONS)[number];
+
+/** Cap on printed problems; a broken cluster repeats across thousands of pages. */
+const MAX_REPORTED = 25;
 
 function sitemapSlugs(section: Section): Set<string> {
   const slugs = new Set<string>();
@@ -46,6 +61,51 @@ function diff(a: Set<string>, b: Set<string>): string[] {
   return [...a].filter((x) => !b.has(x)).sort();
 }
 
+/** Every rendered index.html, keyed by the URL path it will be served from. */
+function collectRenderedPages(): RenderedPage[] {
+  const pages: RenderedPage[] = [];
+  const walk = (dir: string, urlPath: string): void => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full, `${urlPath}${entry.name}/`);
+        continue;
+      }
+      if (entry.name !== 'index.html') continue;
+      const html = fs.readFileSync(full, 'utf-8');
+      pages.push({
+        path: urlPath,
+        alternates: parseAlternates(html),
+        canonical: parseCanonical(html),
+        noindex: parseNoindex(html),
+      });
+    }
+  };
+  walk(STATIC_DIR, '/');
+  return pages;
+}
+
+/**
+ * Taken from the build's own canonical tags rather than config, so the check
+ * cannot pass by measuring the site against a wrong origin it also emitted.
+ */
+function buildOrigin(pages: readonly RenderedPage[]): string | null {
+  const counts = new Map<string, number>();
+  for (const page of pages) {
+    const origin = page.canonical && originOf(page.canonical);
+    if (origin) counts.set(origin, (counts.get(origin) ?? 0) + 1);
+  }
+  let winner: string | null = null;
+  let best = 0;
+  for (const [origin, count] of counts) {
+    if (count > best) {
+      winner = origin;
+      best = count;
+    }
+  }
+  return winner;
+}
+
 function main(): void {
   if (!fs.existsSync(STATIC_DIR)) {
     console.error(`Error: build output not found at ${STATIC_DIR}. Run \`pnpm build\` first.`);
@@ -73,13 +133,26 @@ function main(): void {
     console.log(`  ${section}: ${inSitemap.size} in sitemap, ${indexable.size} indexable`);
   }
 
+  const pages = collectRenderedPages();
+  const origin = buildOrigin(pages);
+  if (!origin) {
+    problems.push('No canonical URL found in any rendered page; cannot verify hreflang.');
+  } else {
+    const clustered = pages.filter((p) => p.alternates.length > 0).length;
+    console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
+    problems.push(...checkHreflangContract(pages, origin));
+  }
+
   if (problems.length) {
-    console.error('\nSitemap ↔ indexable contract violated:');
-    for (const p of problems) console.error(`  ✗ ${p}`);
+    console.error('\nBuilt-site contract violated:');
+    for (const p of problems.slice(0, MAX_REPORTED)) console.error(`  ✗ ${p}`);
+    if (problems.length > MAX_REPORTED) {
+      console.error(`  ... and ${problems.length - MAX_REPORTED} more`);
+    }
     process.exit(1);
   }
 
-  console.log('\nSitemap membership matches the rendered-indexable set.');
+  console.log('\nSitemap membership and the hreflang contract both hold.');
 }
 
 main();
