@@ -10,6 +10,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { LOCALES } from '../src/i18n/config';
 import {
   checkHreflangContract,
   parseAlternates,
@@ -115,7 +116,7 @@ function main(): void {
   const pages = collectRenderedPages();
   const origin = resolveSiteOrigin(process.env.PUBLIC_SITE_ORIGIN);
   const clustered = pages.filter((p) => p.alternates.length > 0).length;
-  const result = checkHreflangContract(pages, origin);
+  const result = checkHreflangContract(pages, origin, LOCALES);
   console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
   if (result.unverifiable) {
     console.log(

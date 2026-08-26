@@ -102,6 +102,16 @@ export function resolveSiteOrigin(raw?: string): string {
   }
 }
 
+/**
+ * The locale a built path belongs to, by its prefix, or null when the first
+ * segment is not a locale (which is the English tree).
+ */
+export function localeOfPath(path: string, locales: readonly string[]): string | null {
+  const first = path.split('/').filter(Boolean)[0];
+  if (!first) return null;
+  return locales.find((locale) => locale.toLowerCase() === first.toLowerCase()) ?? null;
+}
+
 export function originOf(url: string): string | null {
   try {
     return new URL(url).origin;
@@ -129,7 +139,13 @@ export interface ContractResult {
 
 export function checkHreflangContract(
   pages: readonly RenderedPage[],
-  origin: string
+  origin: string,
+  /**
+   * Every locale the site routes, so a label can be checked against the path it
+   * points at. Injected rather than imported so the rules stay free of site
+   * config and can be tested against a fixed set.
+   */
+  locales: readonly string[]
 ): ContractResult {
   const problems: string[] = [];
   let unverifiable = 0;
@@ -187,6 +203,23 @@ export function checkHreflangContract(
         problems.push(
           `${page.path}: hreflang "${alternate.hreflang}" points at noindexed ${target}`
         );
+      }
+
+      // x-default names a fallback, not a language, so it is the one alternate
+      // whose label is not expected to describe its target.
+      if (alternate.hreflang !== 'x-default') {
+        // Reciprocity and self-reference both pass a cluster whose labels are
+        // swapped: every link resolves, every page lists the others, and every
+        // page is a member, while Google is told each page is the wrong language.
+        // The URL scheme is deterministic, so the path settles what the label
+        // should say.
+        const targetLocale = localeOfPath(target, locales);
+        const expected = (targetLocale ?? 'en').toLowerCase();
+        if (alternate.hreflang !== expected) {
+          problems.push(
+            `${page.path}: hreflang "${alternate.hreflang}" points at ${target}, which is "${expected}"`
+          );
+        }
       }
 
       // x-default is a one-way fallback declaration, not a cluster member, and a

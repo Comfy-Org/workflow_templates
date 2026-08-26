@@ -93,8 +93,11 @@ describe('pathForHref', () => {
   });
 });
 
+/** The locales the hub routes, so a label can be checked against its target path. */
+const LOCALES = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
+
 function problems(pages: RenderedPage[], origin = ORIGIN): string[] {
-  return checkHreflangContract(pages, origin).problems;
+  return checkHreflangContract(pages, origin, LOCALES).problems;
 }
 
 describe('resolveSiteOrigin', () => {
@@ -156,7 +159,7 @@ describe('checkHreflangContract', () => {
     // failures against a correct site.
     const pages = reciprocalPair();
     pages[0].alternates.push(alt('ja', '/ja/workflows/'));
-    const result = checkHreflangContract(pages, ORIGIN);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
     expect(result.problems).toEqual([]);
     expect(result.unverifiable).toBe(1);
   });
@@ -168,7 +171,7 @@ describe('checkHreflangContract', () => {
       alt('ko', '/ko/workflows/'),
       alt('x-default', '/workflows/'),
     ]);
-    const result = checkHreflangContract([en], ORIGIN);
+    const result = checkHreflangContract([en], ORIGIN, LOCALES);
     expect(result.problems).toEqual([]);
     expect(result.unverifiable).toBe(2);
   });
@@ -264,7 +267,7 @@ describe('checkHreflangContract', () => {
         noindex: false,
       },
     ];
-    const result = checkHreflangContract(pages, ORIGIN);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
     expect(result.problems).toContain(
       `/workflows/: canonical is not on ${ORIGIN}: ${preview}/workflows/`
     );
@@ -272,6 +275,54 @@ describe('checkHreflangContract', () => {
       `/ja/workflows/: canonical is not on ${ORIGIN}: ${preview}/ja/workflows/`
     );
     expect(result.problems.some((p) => p.includes('is off-origin'))).toBe(true);
+  });
+
+  it('catches a cluster whose labels are swapped', () => {
+    // Reciprocity and self-reference both pass this: every link resolves, every
+    // page lists the others, and every page is a member of the set. Only the
+    // label is wrong, and it is the one thing Google reads as the language.
+    const cluster = [
+      alt('en', '/workflows/'),
+      alt('ja', '/ko/workflows/'),
+      alt('ko', '/ja/workflows/'),
+    ];
+    const pages = ['/workflows/', '/ko/workflows/', '/ja/workflows/'].map((path) =>
+      page(path, cluster)
+    );
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    expect(result.problems).toContain(
+      '/workflows/: hreflang "ja" points at /ko/workflows/, which is "ko"'
+    );
+    expect(result.problems).toContain(
+      '/workflows/: hreflang "ko" points at /ja/workflows/, which is "ja"'
+    );
+  });
+
+  it('reads an unprefixed path as English', () => {
+    const pages = [page('/workflows/', [alt('ko', '/workflows/'), alt('en', '/workflows/')])];
+    expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toContain(
+      '/workflows/: hreflang "ko" points at /workflows/, which is "en"'
+    );
+  });
+
+  it('matches a mixed-case locale prefix against its lowercase label', () => {
+    // The hub emits hreflang="zh-tw" for /zh-TW/, and "pt-br" for /pt-BR/.
+    const cluster = [
+      alt('en', '/workflows/'),
+      alt('zh-tw', '/zh-TW/workflows/'),
+      alt('pt-br', '/pt-BR/workflows/'),
+    ];
+    const pages = ['/workflows/', '/zh-TW/workflows/', '/pt-BR/workflows/'].map((path) =>
+      page(path, cluster)
+    );
+    expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toEqual([]);
+  });
+
+  it('leaves x-default alone, since it names a fallback and not a language', () => {
+    const pages = [
+      page('/workflows/', [alt('en', '/workflows/'), alt('x-default', '/workflows/')]),
+    ];
+    expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toEqual([]);
   });
 
   it('holds for the full eleven-locale cluster the hub ships', () => {
