@@ -154,6 +154,8 @@ Order matters: edit `i18n.json` first, then sync. Re-run sync after any later tr
 
 See [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
 
+Full release knowledge (label flow, publish pipeline, quota gates, force publish): use `/managing-releases`.
+
 ---
 
 ## Renaming a Template

@@ -38,6 +38,9 @@ const props = defineProps<{
   facets: { tags: DiscoveryFacet[]; models: DiscoveryFacet[] };
   totalCount: number;
   locale: string;
+  /** Translated chrome, resolved server-side: importing the locale JSONs here
+   *  would ship all eleven of them to every visitor. */
+  labels: { placeholder: string; placeholderShort: string; ariaLabel: string };
 }>();
 
 const store = useHubStore();
@@ -643,8 +646,8 @@ onUnmounted(() => {
           ref="inputRef"
           v-model="searchQuery"
           type="search"
-          aria-label="Search workflows, models, and creators"
-          :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
+          :aria-label="labels.ariaLabel"
+          :placeholder="hasBadges ? labels.placeholderShort : labels.placeholder"
           class="flex-1 min-w-0 h-full bg-transparent text-content text-sm font-normal leading-none placeholder:text-hub-muted outline-none relative top-[0.09em] [&::-webkit-search-cancel-button]:hidden"
           @focus="handleFocus"
           @keydown="handleKeydown"
