@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkHreflangContract,
+  resolveSiteOrigin,
   parseAlternates,
   parseCanonical,
   parseNoindex,
@@ -95,6 +96,26 @@ describe('pathForHref', () => {
 function problems(pages: RenderedPage[], origin = ORIGIN): string[] {
   return checkHreflangContract(pages, origin).problems;
 }
+
+describe('resolveSiteOrigin', () => {
+  it('defaults to the production origin when nothing is configured', () => {
+    expect(resolveSiteOrigin(undefined)).toBe(ORIGIN);
+    expect(resolveSiteOrigin('')).toBe(ORIGIN);
+    expect(resolveSiteOrigin('   ')).toBe(ORIGIN);
+  });
+
+  it('takes the configured origin, normalised the way the site normalises it', () => {
+    expect(resolveSiteOrigin('https://preview.example.com')).toBe('https://preview.example.com');
+    expect(resolveSiteOrigin('https://preview.example.com/some/path')).toBe(
+      'https://preview.example.com'
+    );
+    expect(resolveSiteOrigin(' https://comfy.org/ ')).toBe(ORIGIN);
+  });
+
+  it('falls back rather than trusting an unparseable value', () => {
+    expect(resolveSiteOrigin('not a url')).toBe(ORIGIN);
+  });
+});
 
 describe('checkHreflangContract', () => {
   it('accepts a reciprocal cluster', () => {
@@ -217,6 +238,40 @@ describe('checkHreflangContract', () => {
     expect(problems([en, ru])).toEqual([
       '/workflows/x/: hreflang "ru" points at noindexed /ru/workflows/x/',
     ]);
+  });
+
+  it('catches a whole build emitted on a preview origin', () => {
+    // The case an origin inferred from the build itself cannot see: every page
+    // agrees with every other, so a self-consistent build passes while shipping
+    // canonicals and alternates that hand the entire site to another host.
+    const preview = 'https://workflow-templates-abc123.vercel.app';
+    const previewAlt = (hreflang: string, pathname: string) => ({
+      hreflang,
+      href: `${preview}${pathname}`,
+    });
+    const cluster = [previewAlt('en', '/workflows/'), previewAlt('ja', '/ja/workflows/')];
+    const pages: RenderedPage[] = [
+      {
+        path: '/workflows/',
+        alternates: cluster,
+        canonical: `${preview}/workflows/`,
+        noindex: false,
+      },
+      {
+        path: '/ja/workflows/',
+        alternates: cluster,
+        canonical: `${preview}/ja/workflows/`,
+        noindex: false,
+      },
+    ];
+    const result = checkHreflangContract(pages, ORIGIN);
+    expect(result.problems).toContain(
+      `/workflows/: canonical is not on ${ORIGIN}: ${preview}/workflows/`
+    );
+    expect(result.problems).toContain(
+      `/ja/workflows/: canonical is not on ${ORIGIN}: ${preview}/ja/workflows/`
+    );
+    expect(result.problems.some((p) => p.includes('is off-origin'))).toBe(true);
   });
 
   it('holds for the full eleven-locale cluster the hub ships', () => {

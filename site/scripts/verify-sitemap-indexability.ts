@@ -12,10 +12,10 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   checkHreflangContract,
-  originOf,
   parseAlternates,
   parseCanonical,
   parseNoindex,
+  resolveSiteOrigin,
   type RenderedPage,
 } from './hreflang-contract';
 
@@ -85,27 +85,6 @@ function collectRenderedPages(): RenderedPage[] {
   return pages;
 }
 
-/**
- * Taken from the build's own canonical tags rather than config, so the check
- * cannot pass by measuring the site against a wrong origin it also emitted.
- */
-function buildOrigin(pages: readonly RenderedPage[]): string | null {
-  const counts = new Map<string, number>();
-  for (const page of pages) {
-    const origin = page.canonical && originOf(page.canonical);
-    if (origin) counts.set(origin, (counts.get(origin) ?? 0) + 1);
-  }
-  let winner: string | null = null;
-  let best = 0;
-  for (const [origin, count] of counts) {
-    if (count > best) {
-      winner = origin;
-      best = count;
-    }
-  }
-  return winner;
-}
-
 function main(): void {
   if (!fs.existsSync(STATIC_DIR)) {
     console.error(`Error: build output not found at ${STATIC_DIR}. Run \`pnpm build\` first.`);
@@ -134,20 +113,16 @@ function main(): void {
   }
 
   const pages = collectRenderedPages();
-  const origin = buildOrigin(pages);
-  if (!origin) {
-    problems.push('No canonical URL found in any rendered page; cannot verify hreflang.');
-  } else {
-    const clustered = pages.filter((p) => p.alternates.length > 0).length;
-    const result = checkHreflangContract(pages, origin);
-    console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
-    if (result.unverifiable) {
-      console.log(
-        `  hreflang: ${result.unverifiable} alternates target server-rendered routes, not checkable here`
-      );
-    }
-    problems.push(...result.problems);
+  const origin = resolveSiteOrigin(process.env.PUBLIC_SITE_ORIGIN);
+  const clustered = pages.filter((p) => p.alternates.length > 0).length;
+  const result = checkHreflangContract(pages, origin);
+  console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
+  if (result.unverifiable) {
+    console.log(
+      `  hreflang: ${result.unverifiable} alternates target server-rendered routes, not checkable here`
+    );
   }
+  problems.push(...result.problems);
 
   if (problems.length) {
     console.error('\nBuilt-site contract violated:');

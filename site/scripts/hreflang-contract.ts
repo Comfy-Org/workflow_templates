@@ -82,6 +82,26 @@ export function pathForHref(href: string, origin: string): string | null {
   return url.origin === origin ? normalizePath(url.pathname) : null;
 }
 
+/** Mirrors src/config/site.ts, which is what generated the hrefs being checked. */
+const DEFAULT_SITE_ORIGIN = 'https://comfy.org';
+
+/**
+ * The origin the build was configured to emit, from the same PUBLIC_SITE_ORIGIN
+ * the site itself reads. Deliberately not inferred from the rendered canonical
+ * tags: a build that emitted a preview origin on every page would agree with
+ * itself and pass, which is precisely the failure worth catching. Takes the raw
+ * value rather than reading the environment so the rules stay pure.
+ */
+export function resolveSiteOrigin(raw?: string): string {
+  const value = raw?.trim();
+  if (!value) return DEFAULT_SITE_ORIGIN;
+  try {
+    return new URL(value).origin;
+  } catch {
+    return DEFAULT_SITE_ORIGIN;
+  }
+}
+
 export function originOf(url: string): string | null {
   try {
     return new URL(url).origin;
