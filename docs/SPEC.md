@@ -51,7 +51,6 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `models` | array of strings | ❌ | Model names used by the workflow |
 | `date` | string | ❌ | Creation/update date (YYYY-MM-DD format) |
 | `size` | number | ❌ | Size of the template in bytes |
-| `vram` | number | ❌ | VRAM requirement in bytes |
 | `openSource` | boolean | ❌ | Whether the template is open source |
 | `isApp` | `true` | ❌ | Opens in App Mode rather than as a node graph. Derived from the workflow's own `extra.linearMode`; regenerate with `python scripts/sync/sync_is_app.py`. Only ever written as `true`: omitted means false, and the schema rejects a literal `false`. Do not infer this from a `.app` filename, which is wrong in both directions |
 | `status` | string | ❌ | Lifecycle status: "active", "archived", "deprecated" |
