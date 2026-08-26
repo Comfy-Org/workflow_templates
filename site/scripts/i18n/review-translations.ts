@@ -30,6 +30,7 @@ import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import { TRANSLATABLE_FIELDS } from '../../src/lib/i18n/schema';
 import type { Locale, TranslatableField, WorkflowContent } from '../../src/lib/i18n/schema';
 import type { Violation } from './validate-translations';
+import { applyOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
@@ -568,13 +569,15 @@ async function main(): Promise<void> {
       path.join(GLOSSARY_DIR, 'effective', `${locale}.json`),
       null
     );
-    const terminology = effective ?? {
-      ...readJson<Record<string, string>>(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
-      ...readJson<Record<string, string>>(
-        path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
-        {}
-      ),
-    };
+    // `applyOverrides`, not a spread: a retraction has to DELETE the harvested
+    // pair here too, or the fallback would enforce the very pair the override
+    // file retracts (and render it as `- Video → null` in the prompt).
+    const terminology =
+      effective ??
+      applyOverrides(
+        readJson<Record<string, string>>(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
+        readJson<GlossaryOverrides>(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
+      );
 
     const priorState = loadReviewState(locale, REVIEW_DIR, glossaryFingerprint(terminology));
     const pending = selectEntriesForReview(
