@@ -2,7 +2,12 @@ export const prerender = false;
 
 import type { APIRoute } from 'astro';
 import { ComfyLow } from '@comfyorg/sdk/low';
-import { DEPLOYMENT_URL, type JobOutput } from '@/lib/demos/mmh3/config';
+import {
+  DEPLOYMENT_URL,
+  type JobActionResponse,
+  type JobOutput,
+  type JobStatusResponse,
+} from '@/lib/demos/mmh3/config';
 import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
 
 export const DELETE: APIRoute = async ({ params }) => {
@@ -12,7 +17,7 @@ export const DELETE: APIRoute = async ({ params }) => {
   try {
     const job = await comfyClient().jobs.get(id);
     await job.cancel();
-    return jsonResponse({ jobId: job.id, status: job.status });
+    return jsonResponse({ jobId: job.id, status: job.status } satisfies JobActionResponse);
   } catch (err) {
     return jsonResponse({ error: describeError(err) }, 502);
   }
@@ -66,7 +71,7 @@ export const GET: APIRoute = async ({ params }) => {
       error,
       queuePosition,
       progress,
-    });
+    } satisfies JobStatusResponse);
   } catch (err) {
     return jsonResponse({ error: describeError(err) }, 502);
   }

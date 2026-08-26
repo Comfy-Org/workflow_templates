@@ -85,14 +85,26 @@ const facetsConfig = buildFacetsConfig(locale);
       <div
         class="media-frame relative aspect-video min-h-56 overflow-hidden rounded-4xl bg-black lg:aspect-auto lg:min-h-80"
       >
+        <!-- metadata-only preload + a poster keep the clip's megabytes off the
+             page's critical path; the frame paints before any video bytes. -->
         <video
+          id="mmh3-promo-video"
           src="/demos/mmh3/example/example.mp4"
+          poster="/demos/mmh3/example/keyframes/kf_1.webp"
           autoplay
           muted
           loop
           playsinline
-          preload="auto"
+          preload="metadata"
           class="h-full w-full object-cover"></video>
+        <script>
+          // Autoplay is a flourish — hold the poster for reduced-motion users.
+          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            const promo = document.getElementById('mmh3-promo-video') as HTMLVideoElement | null;
+            promo?.removeAttribute('autoplay');
+            promo?.pause();
+          }
+        </script>
       </div>
       <div
         class="flex min-w-0 flex-col justify-center px-6 py-7 sm:px-8 lg:col-span-2 lg:px-10 lg:py-8"

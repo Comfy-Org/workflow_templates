@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULTS, RESOLUTION_PRESETS, keyframePositions } from '@/lib/demos/mmh3/config';
 
 describe('MiniMax H3 demo settings', () => {
-  it('places references proportionally throughout every supported clip length', () => {
-    expect(keyframePositions(5)).toEqual([1, 41, 81]);
-    expect(keyframePositions(10)).toEqual([1, 81, 161]);
-    expect(keyframePositions(15)).toEqual([1, 121, 241]);
+  it('pins references at the first, middle and final frame for every supported clip length', () => {
+    expect(keyframePositions(5)).toEqual([1, 62, 124]);
+    expect(keyframePositions(10)).toEqual([1, 122, 243]);
+    expect(keyframePositions(15)).toEqual([1, 181, 362]);
   });
 
   it('defaults to a 10-second clip', () => {

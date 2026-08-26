@@ -17,9 +17,14 @@ import {
   frameSizeFor,
   keyframePositions,
   type DemoSettings,
+  type JobActionResponse,
   type JobOutput,
+  type JobStatusResponse,
   type QueueState,
 } from '@/lib/demos/mmh3/config';
+
+/** Every route may answer `{ error }` instead of its success shape. */
+type Failable = { error?: string | null };
 
 const props = defineProps<{
   defaultPrompt: string;
@@ -199,7 +204,7 @@ const busyWorkers = computed(() => queue.value.workers?.running ?? 0);
  * the parser's complaint ("Unexpected token 'R'...") instead of the real
  * failure, so fall back to a message built from the status.
  */
-async function readResponse(res: Response): Promise<{ error?: string; [key: string]: unknown }> {
+async function readResponse<T extends object>(res: Response): Promise<Partial<T> & Failable> {
   const text = await res.text();
   try {
     return text ? JSON.parse(text) : {};
@@ -210,7 +215,7 @@ async function readResponse(res: Response): Promise<{ error?: string; [key: stri
 
 function httpErrorMessage(status: number, body: string): string {
   if (status === 413) {
-    return 'Those reference images are too large to upload in one request. Try smaller images, or remove a reference.';
+    return 'Those reference images are too large to upload in one request. Use smaller images.';
   }
   if (status === 504) return 'The request timed out before the server answered. Try again.';
   const detail = body.trim().split('\n')[0].slice(0, 120);
@@ -220,8 +225,8 @@ function httpErrorMessage(status: number, body: string): string {
 async function refreshQueue() {
   try {
     const res = await fetch('/api/workflows/minimax-h3-multiref/queue');
-    const body = (await readResponse(res)) as QueueState;
-    queue.value = body;
+    const body = await readResponse<QueueState>(res);
+    queue.value = { available: false, ...body };
     queueAgeMs.value = body.sampledAt ? Date.now() - new Date(body.sampledAt).getTime() : 0;
   } catch {
     queue.value = { available: false };
@@ -367,16 +372,22 @@ function swapSlotContent(sourceIndex: number, targetIndex: number) {
     preview: source.preview,
     isExample: source.isExample,
     enabled: source.enabled,
+    originalBytes: source.originalBytes,
+    uploadBytes: source.uploadBytes,
   };
 
   source.file = target.file;
   source.preview = target.preview;
   source.isExample = target.isExample;
   source.enabled = target.enabled;
+  source.originalBytes = target.originalBytes;
+  source.uploadBytes = target.uploadBytes;
   target.file = sourceContent.file;
   target.preview = sourceContent.preview;
   target.isExample = sourceContent.isExample;
   target.enabled = sourceContent.enabled;
+  target.originalBytes = sourceContent.originalBytes;
+  target.uploadBytes = sourceContent.uploadBytes;
 }
 
 function resetSlot(index: number) {
@@ -412,7 +423,7 @@ async function poll() {
   if (!jobId.value) return;
   try {
     const res = await fetch(`/api/workflows/minimax-h3-multiref/job/${jobId.value}`);
-    const body = await readResponse(res);
+    const body = await readResponse<JobStatusResponse>(res);
     if (!res.ok) throw new Error(body.error ?? `Status check failed (${res.status})`);
 
     queuePosition.value = body.queuePosition ?? null;
@@ -479,7 +490,7 @@ async function cancelJob() {
     const res = await fetch(`/api/workflows/minimax-h3-multiref/job/${id}`, {
       method: 'DELETE',
     });
-    const body = await readResponse(res);
+    const body = await readResponse<JobActionResponse>(res);
     if (!res.ok) throw new Error(body.error ?? `Cancel failed (${res.status})`);
 
     if (body.status === 'canceled' || body.status === 'cancelled') {
@@ -517,29 +528,33 @@ async function run() {
 
   const form = new FormData();
   form.append('settings', JSON.stringify({ ...settings, enabledKeyframes: enabledIndexes.value }));
-  let uploadBytes = 0;
-  for (const slot of slots) {
-    if (slot.file && slot.enabled) {
-      uploadBytes += slot.file.size;
-      form.append(`keyframe_${slot.index}`, slot.file, slot.file.name);
-    }
-  }
-
-  // The submit route runs as a serverless function with a request-size cap, so
-  // an oversized set is reported here instead of as an opaque 413.
-  if (uploadBytes > MAX_UPLOAD_BYTES) {
-    state.value = 'failed';
-    errorMessage.value = `Those images add up to ${formatMb(uploadBytes)}, over the ${formatMb(MAX_UPLOAD_BYTES)} this page can send at once. Use smaller images, or remove a reference.`;
-    return;
-  }
 
   try {
+    // Every enabled slot travels as real bytes: the bundled examples exist
+    // only as static URLs (the serverless route cannot read `public/`), so a
+    // slot still showing its example is fetched here and sent like an upload.
+    let uploadBytes = 0;
+    for (const slot of slots) {
+      if (!slot.enabled) continue;
+      const file = slot.file ?? (await fetchExampleFile(slot.preview, slot.index));
+      uploadBytes += file.size;
+      form.append(`keyframe_${slot.index}`, file, file.name);
+    }
+
+    // The submit route runs as a serverless function with a request-size cap,
+    // so an oversized set is reported here instead of as an opaque 413.
+    if (uploadBytes > MAX_UPLOAD_BYTES) {
+      state.value = 'failed';
+      errorMessage.value = `Those images add up to ${formatMb(uploadBytes)}, over the ${formatMb(MAX_UPLOAD_BYTES)} this page can send at once. Use smaller images.`;
+      return;
+    }
+
     const res = await fetch('/api/workflows/minimax-h3-multiref/run', {
       method: 'POST',
       body: form,
     });
-    const body = await readResponse(res);
-    if (!res.ok) throw new Error(body.error ?? `Submit failed (${res.status})`);
+    const body = await readResponse<JobActionResponse>(res);
+    if (!res.ok || !body.jobId) throw new Error(body.error ?? `Submit failed (${res.status})`);
 
     jobId.value = body.jobId;
     state.value = body.status === 'queued' ? 'queued' : 'running';
@@ -548,6 +563,16 @@ async function run() {
     state.value = 'failed';
     errorMessage.value = err instanceof Error ? err.message : String(err);
   }
+}
+
+/** Pull a bundled example reference off the CDN so it can be uploaded. */
+async function fetchExampleFile(url: string, index: number): Promise<File> {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Could not load the example image for reference ${index} (${res.status}).`);
+  }
+  const blob = await res.blob();
+  return new File([blob], `kf_${index}.webp`, { type: blob.type || 'image/webp' });
 }
 
 onMounted(() => {

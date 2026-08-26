@@ -1,8 +1,6 @@
 export const prerender = false;
 
 import type { APIRoute } from 'astro';
-import path from 'node:path';
-import { existsSync } from 'node:fs';
 import graph from '@/lib/demos/mmh3/workflow-api.json';
 import {
   DEFAULTS,
@@ -10,11 +8,9 @@ import {
   KEYFRAMES,
   KEYFRAMES_NODE,
   type DemoSettings,
+  type JobActionResponse,
 } from '@/lib/demos/mmh3/config';
 import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
-
-/** Bundled sample references, used for any slot the caller didn't upload. */
-const EXAMPLE_DIR = path.join(process.cwd(), 'public/demos/mmh3/example/keyframes');
 
 function coerceSettings(raw: unknown): DemoSettings {
   const input = (raw ?? {}) as Partial<DemoSettings>;
@@ -88,36 +84,34 @@ export const POST: APIRoute = async ({ request }) => {
   const stamp = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
   try {
     for (const [i, slot] of KEYFRAMES.entries()) {
+      // The page always sends real bytes, fetching its bundled examples for
+      // any slot the user left untouched: this function has no filesystem
+      // copy of `public/` to fall back to.
       const field = form.get(`keyframe_${slot.index}`);
-      let asset;
-
-      if (field instanceof File && field.size > 0) {
-        const bytes = new Uint8Array(await field.arrayBuffer());
-        const ext = (field.name.split('.').pop() || 'png').toLowerCase();
-        asset = client.assets.fromBytes(bytes, {
-          filename: `mmh3_${stamp}_kf${slot.index}.${ext}`,
-          contentType: field.type || 'image/png',
-        });
-      } else {
-        const fallback = path.join(EXAMPLE_DIR, `kf_${slot.index}.webp`);
-        if (!existsSync(fallback)) {
-          return jsonResponse(
-            { error: `Reference ${slot.index} was not supplied and no bundled example exists.` },
-            400
-          );
-        }
-        asset = client.assets.fromFile(fallback);
+      if (!(field instanceof File) || field.size === 0) {
+        return jsonResponse(
+          { error: `Reference ${slot.index} is missing from the upload. Reload and try again.` },
+          400
+        );
       }
 
+      const bytes = new Uint8Array(await field.arrayBuffer());
+      const ext = (field.name.split('.').pop() || 'png').toLowerCase();
+      const asset = client.assets.fromBytes(bytes, {
+        filename: `mmh3_${stamp}_kf${slot.index}.${ext}`,
+        contentType: field.type || 'image/png',
+      });
+
       await asset.commit();
-      // The LoadImage node holds the uploaded filename; the keyframes node takes
-      // that node's IMAGE output (slot 0), which is what it expects.
-      wf.setInput(slot.nodeId, 'image', asset.filePath);
+      // The asset handle (not its filename) goes into LoadImage: submit()
+      // substitutes it as a `core/ASSET` reference the server can resolve.
+      // The keyframes node takes that node's IMAGE output (slot 0).
+      wf.setInput(slot.nodeId, 'image', asset);
       wf.setInput(KEYFRAMES_NODE, `keyframe_image_${i + 1}`, [slot.nodeId, 0]);
     }
 
     const job = await client.submit(wf);
-    return jsonResponse({ jobId: job.id, status: job.status });
+    return jsonResponse({ jobId: job.id, status: job.status } satisfies JobActionResponse);
   } catch (err) {
     return jsonResponse({ error: describeError(err) }, 502);
   }

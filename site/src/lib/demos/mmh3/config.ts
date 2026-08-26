@@ -44,9 +44,14 @@ export const KEYFRAMES: KeyframeSlot[] = [
 /** The MiniMaxH3CustomKeyframes node the references feed. */
 export const KEYFRAMES_NODE = '21';
 
-/** Place the references at the start, one-third, and two-thirds of the clip. */
+/**
+ * Pin the references at the first, middle and final frame of the clip — the
+ * agent guide's default spacing, computed from the H3-valid frame count.
+ * Mirrors graph nodes 57/58 so the UI timecodes match what actually renders.
+ */
 export function keyframePositions(seconds: number): number[] {
-  return [1, Math.round((seconds * FPS) / 3) + 1, Math.round((seconds * FPS * 2) / 3) + 1];
+  const frames = clipLengthFrames(seconds);
+  return [1, Math.floor((frames + 1) / 2), frames];
 }
 
 /** Where each scalar control writes in the graph. */
@@ -137,6 +142,27 @@ export interface JobOutput {
   contentType: string;
   sizeBytes: number;
   url: string;
+}
+
+/**
+ * What the API routes answer with, shared so the island reads typed fields
+ * instead of casting. Every route may answer `{ error }` instead on failure.
+ */
+
+/** POST /run and DELETE /job/[id]: the job acted on. */
+export interface JobActionResponse {
+  jobId: string;
+  status: string;
+}
+
+/** GET /job/[id]: current job state. */
+export interface JobStatusResponse {
+  jobId: string;
+  status: string;
+  outputs?: JobOutput[];
+  error?: string | null;
+  queuePosition?: number | null;
+  progress?: { value: number; message?: string | null } | null;
 }
 
 /** Queue depth for the deployment behind this page. */

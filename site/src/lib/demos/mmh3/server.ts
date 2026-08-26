@@ -7,13 +7,20 @@ import { DEPLOYMENT_URL } from './config';
  *
  * The SDK resolves its target from `process.env.COMFY_BASE_URL` at
  * construction and takes no base-URL argument, so the constant is assigned
- * there immediately beforehand. No API key is passed: the deployment is
- * whitelisted, and the SDK sends no credentials at all when `apiKey` is
- * omitted.
+ * there for the duration of the constructor and restored afterwards — the
+ * variable is process-wide, and other SDK consumers must not inherit this
+ * page's deployment. No API key is passed: the deployment is whitelisted,
+ * and the SDK sends no credentials at all when `apiKey` is omitted.
  */
 export function comfyClient(): Comfy {
+  const previous = process.env.COMFY_BASE_URL;
   process.env.COMFY_BASE_URL = DEPLOYMENT_URL;
-  return new Comfy({ clientInfo: 'templates-site-demo' });
+  try {
+    return new Comfy({ clientInfo: 'templates-site-demo' });
+  } finally {
+    if (previous === undefined) delete process.env.COMFY_BASE_URL;
+    else process.env.COMFY_BASE_URL = previous;
+  }
 }
 
 export function jsonResponse(body: unknown, status = 200): Response {
