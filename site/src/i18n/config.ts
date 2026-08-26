@@ -34,3 +34,23 @@ export const LOCALE_INDEX_FILES: Record<string, string> = {
 };
 
 export type Locale = keyof typeof LANGUAGES;
+
+/**
+ * Open Graph wants language_TERRITORY, which is not the tag we route on: we say
+ * `ko`, OG wants `ko_KR`. Typed as a full Record so adding a locale without an
+ * entry here is a compile error rather than a page that silently claims no
+ * language.
+ */
+export const OG_LOCALES: Record<Locale, string> = {
+  en: 'en_US',
+  zh: 'zh_CN',
+  'zh-TW': 'zh_TW',
+  ja: 'ja_JP',
+  ko: 'ko_KR',
+  es: 'es_ES',
+  fr: 'fr_FR',
+  ru: 'ru_RU',
+  tr: 'tr_TR',
+  ar: 'ar_AR',
+  'pt-BR': 'pt_BR',
+};
