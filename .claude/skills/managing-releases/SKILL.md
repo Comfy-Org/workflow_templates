@@ -39,12 +39,14 @@ How this repository turns template changes into **version bumps → PyPI package
 ## How to make a PyPI release (the happy path)
 
 1. Make your template changes on a branch (follow `managing-templates`).
-2. **Bump the root version** in `pyproject.toml` (e.g. `0.11.48` → `0.11.49`). Semantic `x.y.z` only — no `v` prefix, no `1.2` shorthand.
+2. **Bump the root version** in `pyproject.toml` (e.g. `0.11.48` → `0.11.49`). Semantic `x.y.z` with optional `-prerelease` / `+build` metadata — no `v` prefix, no `1.2` shorthand. This matches the `publish.yml` validator.
 3. Open the PR. `version-check.yml` runs: syncs manifests, auto-bumps affected sub-packages, pins them exactly in root `pyproject.toml`, posts quota + distribution comments, and commits everything back to your branch.
 4. Add the **`release` label** to the PR:
+
    ```bash
    gh pr edit <PR-NUMBER> --add-label release
    ```
+
 5. Merge to `main`. `publish.yml` runs: quota gate → builds & publishes sub-packages in dependency order → verifies all meta deps are on PyPI → publishes `meta` → creates GitHub Release with notes.
 
 Result: `pip install comfyui-workflow-templates==<version>` works, and the GitHub Release notes show **Published to PyPI**.
@@ -77,7 +79,7 @@ To deliberately ship a legacy wheel (rare): manually bump `packages/media_<bundl
 
 ## PyPI quota gate
 
-- Config: `.github/pypi-packages.json` — project quota **10 GB**, per-file limit **100 MB** (warn 85 / critical 95 / fail 95 MB).
+- Config: `.github/pypi-packages.json` — project quota **10 GB** (warn 80% / critical 90% / fail 95%), per-file limit **100 MB** (warn 85 MB / critical 95 MB).
 - `check_pypi_quota.py` runs in two places:
   - **PR phase** (`version-check.yml`): posts a PR comment with quota status + delete-candidates when the root version differs from base.
   - **Publish phase** (`publish.yml`): a gate job **blocks the PyPI publish job** on critical/fail quota. GitHub Release creation is NOT blocked by quota.
@@ -93,7 +95,7 @@ On version-bump PRs, `release_distribution_report.py` posts a comment summarizin
 |---------|-------|-----|
 | GitHub Release created but **no PyPI packages** | PR merged without `release` label | Manual dispatch with Force publish |
 | Version-check says "no bump" on a template PR | Root version wasn't changed | That's expected; bump root version only if you want a release |
-| "Invalid version format" | Non-semantic version in pyproject.toml | Use `x.y.z[-prerelease]` (e.g. `0.11.49`) |
+| "Invalid version format" | Non-semantic version in pyproject.toml | Use `x.y.z[-prerelease][+build]` (e.g. `0.11.49`) |
 | Publish blocked / quota comment critical | PyPI quota ≥ 90% | Delete orphan versions (see delete-candidates in PR comment) or hold the release |
 | `media-*` package never auto-bumps | Frozen by policy | Expected; move new assets to `media-assets-01` |
 | "No associated PR found" in publish.yml | GitHub API race right after merge | Workflow retries 5×; if still missing, it creates the release without PyPI — force-publish after |
@@ -103,10 +105,15 @@ On version-bump PRs, `release_distribution_report.py` posts a comment summarizin
 ```bash
 # current version
 grep -E '^\s*version\s*=' pyproject.toml | head -1
-# sub-package versions vs PyPI
-for pkg in core media-api media-video media-image media-other; do
+# sub-package versions vs PyPI (all releaseable sub-packages)
+for pkg in core json media-api media-video media-image media-other media-assets-01 blueprints; do
   local=$(./scripts/ci/get_version.sh "packages/${pkg//-/_}/pyproject.toml")
-  pypi=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates-$pkg")
+  if [ "$pkg" = "blueprints" ]; then
+    pypi_name="comfyui-subgraph-blueprints"
+  else
+    pypi_name="comfyui-workflow-templates-$pkg"
+  fi
+  pypi=$(./scripts/ci/get_pypi_version.sh "$pypi_name")
   echo "$pkg: local=$local pypi=$pypi"
 done
 # PyPI quota status
