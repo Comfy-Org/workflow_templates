@@ -325,6 +325,55 @@ describe('checkHreflangContract', () => {
     expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toEqual([]);
   });
 
+  it('checks the label even when the target is server-rendered', () => {
+    // The label is settled by the path it names, so it holds whether or not that
+    // page is a file. Behind the target lookup this was skipped for exactly the
+    // routes nothing else can check.
+    const en = page('/workflows/', [
+      alt('en', '/workflows/'),
+      alt('ja', '/ko/workflows/'), // wrong label, and /ko/workflows/ is on demand
+    ]);
+    const result = checkHreflangContract([en], ORIGIN, LOCALES);
+    expect(result.problems).toContain(
+      '/workflows/: hreflang "ja" points at /ko/workflows/, which is "ko"'
+    );
+    expect(result.unverifiable).toBe(1);
+  });
+
+  it('fails on a detail page the build should have produced', () => {
+    // ja prerenders its detail pages, proven by the one that is here, so the
+    // missing sibling is a broken cluster member rather than an unknown.
+    const cluster = [
+      alt('en', '/workflows/a/'),
+      alt('ja', '/ja/workflows/a/'),
+      alt('ko', '/ko/workflows/a/'),
+    ];
+    const pages = [
+      page('/workflows/a/', cluster),
+      page('/ja/workflows/a/', cluster),
+      page('/ja/workflows/b/', [alt('ja', '/ja/workflows/b/')]),
+    ];
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    expect(result.problems).toContain(
+      '/workflows/a/: hreflang "ko" points at /ko/workflows/a/, which this build did not produce'
+    );
+  });
+
+  it('still treats an on-demand family as unverifiable', () => {
+    // Listing, category, tag and model are prerender = false, so absence there
+    // proves nothing no matter which locales prerender detail pages.
+    const pages = [
+      page('/workflows/category/video/', [
+        alt('en', '/workflows/category/video/'),
+        alt('ja', '/ja/workflows/category/video/'),
+      ]),
+      page('/ja/workflows/a/', [alt('ja', '/ja/workflows/a/')]),
+    ];
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    expect(result.problems).toEqual([]);
+    expect(result.unverifiable).toBe(1);
+  });
+
   it('holds for the full eleven-locale cluster the hub ships', () => {
     const locales = ['en', 'zh', 'zh-tw', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-br'];
     const pathFor = (locale: string) => (locale === 'en' ? '/workflows/' : `/${locale}/workflows/`);

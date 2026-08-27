@@ -137,6 +137,38 @@ export interface ContractResult {
   unverifiable: number;
 }
 
+/** Route segments under /<locale>/workflows/ that belong to a non-detail family. */
+const NON_DETAIL_SEGMENTS = new Set(['category', 'tag', 'model', 'creators']);
+
+/**
+ * Whether this build prerenders localized workflow detail pages.
+ *
+ * `[locale]/workflows/[slug].astro` is prerendered while every other localized
+ * route is `prerender = false`, so any built `/<locale>/workflows/<x>/` page is a
+ * detail page: the creator catch-all that shares its shape is server-rendered and
+ * never becomes a file. Once one exists, absence is provable for that whole
+ * family, and a detail page an English page advertises but the build did not
+ * produce is a broken cluster member rather than something the build cannot see.
+ *
+ * Deliberately not per locale. A locale with no detail pages at all is the case
+ * worth catching, not the case to excuse: the English page only advertises a
+ * locale it believes indexable, so zero pages for it means the build dropped them.
+ */
+export function prerendersLocalizedDetail(
+  pages: readonly RenderedPage[],
+  locales: readonly string[]
+): boolean {
+  return pages.some((page) => detailLocaleOf(page.path, locales) !== null);
+}
+
+/** The locale of `/<locale>/workflows/<slug>/`, or null when the path is not one. */
+function detailLocaleOf(path: string, locales: readonly string[]): string | null {
+  const segments = path.split('/').filter(Boolean);
+  if (segments.length !== 3 || segments[1] !== 'workflows') return null;
+  if (NON_DETAIL_SEGMENTS.has(segments[2])) return null;
+  return locales.find((locale) => locale.toLowerCase() === segments[0].toLowerCase()) ?? null;
+}
+
 export function checkHreflangContract(
   pages: readonly RenderedPage[],
   origin: string,
@@ -149,6 +181,7 @@ export function checkHreflangContract(
 ): ContractResult {
   const problems: string[] = [];
   let unverifiable = 0;
+  const detailIsPrerendered = prerendersLocalizedDetail(pages, locales);
   const byPath = new Map(pages.map((page) => [page.path, page]));
   // Resolved once per href: the reciprocity check reads every alternate of every
   // target, so parsing on demand would re-parse each href once per cluster member.
@@ -192,34 +225,42 @@ export function checkHreflangContract(
         continue;
       }
 
+      // Checked before the target is looked up: the label is settled by the path
+      // it names, so it holds whether or not that page is in the build. Behind the
+      // lookup it was skipped for exactly the server-rendered routes where nothing
+      // else can catch it, so `hreflang="ja"` on a /ko/ URL passed silently.
+      //
+      // Reciprocity and self-reference both accept a cluster whose labels are
+      // swapped: every link resolves, every page lists the others, and every page
+      // is a member, while Google is told each page is the wrong language.
+      if (alternate.hreflang !== 'x-default') {
+        const expected = (localeOfPath(target, locales) ?? 'en').toLowerCase();
+        if (alternate.hreflang !== expected) {
+          problems.push(
+            `${page.path}: hreflang "${alternate.hreflang}" points at ${target}, which is "${expected}"`
+          );
+        }
+      }
+
       const targetPage = byPath.get(target);
       if (!targetPage) {
-        // Server-rendered, so existence, indexability and the return link are all
-        // unknowable from the build output.
-        unverifiable += 1;
+        if (detailIsPrerendered && detailLocaleOf(target, locales) !== null) {
+          // This locale does prerender its detail pages, so this one should be a
+          // file and is not. That is a broken cluster member, not an unknown.
+          problems.push(
+            `${page.path}: hreflang "${alternate.hreflang}" points at ${target}, which this build did not produce`
+          );
+        } else {
+          // Served on demand, so existence, indexability and the return link are
+          // all unknowable from the build output.
+          unverifiable += 1;
+        }
         continue;
       }
       if (targetPage.noindex) {
         problems.push(
           `${page.path}: hreflang "${alternate.hreflang}" points at noindexed ${target}`
         );
-      }
-
-      // x-default names a fallback, not a language, so it is the one alternate
-      // whose label is not expected to describe its target.
-      if (alternate.hreflang !== 'x-default') {
-        // Reciprocity and self-reference both pass a cluster whose labels are
-        // swapped: every link resolves, every page lists the others, and every
-        // page is a member, while Google is told each page is the wrong language.
-        // The URL scheme is deterministic, so the path settles what the label
-        // should say.
-        const targetLocale = localeOfPath(target, locales);
-        const expected = (targetLocale ?? 'en').toLowerCase();
-        if (alternate.hreflang !== expected) {
-          problems.push(
-            `${page.path}: hreflang "${alternate.hreflang}" points at ${target}, which is "${expected}"`
-          );
-        }
       }
 
       // x-default is a one-way fallback declaration, not a cluster member, and a
