@@ -8,66 +8,10 @@
  * option instead, which is what this module builds.
  *
  * It lives outside `astro.config.mjs` so the rule can be tested against real
- * inputs. The construction is pure; the one filesystem read (the tag manifest) is
- * a separate function.
+ * inputs. The construction is pure: the hub-derived inputs are read by
+ * `hub-manifests.ts` and passed in.
  */
-import fs from 'node:fs';
-import path from 'node:path';
 import { DEFAULT_LOCALE } from '../i18n/config';
-
-/** The media types `workflows/category/[type]` serves. Mirrors `MediaType`. */
-const CATEGORY_TYPES: readonly string[] = ['image', 'video', 'audio', '3d'];
-
-const CATEGORY_MANIFEST_PATH = path.join(process.cwd(), 'src/data/hub-categories.generated.json');
-
-/**
- * Written by `pnpm build:tag-manifest` during prebuild; gitignored, like the
- * synced template catalog it sits beside.
- */
-const TAG_MANIFEST_PATH = path.join(process.cwd(), 'src/data/hub-tag-slugs.generated.json');
-
-/**
- * Tag slugs the hub index actually carries, or none.
- *
- * Deliberately no fallback to the synced templates in `src/content/templates`.
- * Those are the repo's own workflows; the tag routes list the hub's, which is a
- * larger catalog with a different tag vocabulary. Deriving the list from the files
- * omitted 25 tags the hub has and invented 4 it does not — and the localized tag
- * route 404s a tag with no matching workflows, so those 4 would have been sitemap
- * entries pointing at 404s, per locale. Advertising nothing is recoverable;
- * advertising a 404 is the exact contradiction this ticket exists to remove.
- */
-export function loadHubTagSlugs(manifestPath: string = TAG_MANIFEST_PATH): string[] {
-  if (!fs.existsSync(manifestPath)) return [];
-  try {
-    const parsed: unknown = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter((slug): slug is string => typeof slug === 'string' && slug.length > 0);
-  } catch {
-    return [];
-  }
-}
-
-/**
- * The categories the hub index actually fills, or none.
- *
- * Same contract as `loadHubTagSlugs`, and same reason: the category route 404s a
- * type with no matching workflows, so advertising all four unconditionally puts a
- * 404 in the sitemap the moment one empties. Nothing is guessed from the synced
- * templates; an absent manifest means no localized category URLs this build.
- */
-export function loadHubCategories(manifestPath: string = CATEGORY_MANIFEST_PATH): string[] {
-  if (!fs.existsSync(manifestPath)) return [];
-  try {
-    const parsed: unknown = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (type): type is string => typeof type === 'string' && CATEGORY_TYPES.includes(type)
-    );
-  } catch {
-    return [];
-  }
-}
 
 export interface CustomPagesInput {
   /** Absolute origin, no trailing slash (e.g. `https://comfy.org`). */
@@ -78,9 +22,9 @@ export interface CustomPagesInput {
   indexableLocales: Iterable<string>;
   /** Model families whose page renders indexable; both English and localized. */
   indexableModelSlugs: Iterable<string>;
-  /** Tag slugs from `loadHubTagSlugs()`. */
+  /** Tag slugs from `loadHubTagSlugs()` (hub-manifests.ts). */
   tagSlugs: Iterable<string>;
-  /** Non-empty category types from `loadHubCategories()`. */
+  /** Non-empty category types from `loadHubCategories()` (hub-manifests.ts). */
   categoryTypes: Iterable<string>;
 }
 

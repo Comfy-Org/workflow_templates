@@ -1,7 +1,6 @@
 /**
  * Sitemap membership and each route's noindex decision come from different datasets
- * (on-disk JSON vs live hub index) and can drift; verify the built artifacts agree.
- * Static-only, so it also catches the empty-set case where the catalog is missing.
+ * and can drift; verify the built artifacts agree.
  *
  * How a section's verdict is read depends on how its route renders:
  *
@@ -10,23 +9,37 @@
  * - On-demand (model): that route emits no HTML for the build to inspect, since it
  *   has to run per request to 301 a variant slug. Its verdict is recomputed here
  *   instead, by calling `isModelPageIndexable` — the same helper the route calls,
- *   over families derived the same way. That still catches the drift this check
- *   exists for, because the sitemap's own list comes from a different expression
- *   in astro.config.mjs (`qualifies && modelContentPasses`), so a change to either
- *   side breaks the tie. What it can no longer see is a render-time difference
- *   between the helper's answer and the markup, which only a request to the
- *   running route would show.
+ *   over families derived from the catalog the route derives them from: the live
+ *   hub index.
  *
- * Reads `templates/index.json` rather than the synced `src/content/templates`,
- * because this runs in a job that only downloads the build artifact and never runs
- * prebuild. That file is the committed source the sync generates from, so it is
- * the same catalog, and it is present at checkout.
+ * That dataset is the whole point. The sitemap's model list is built from a hub
+ * snapshot taken during prebuild; the route answers from the hub as it is at
+ * request time. Reading the prerendered HTML used to compare the two by accident,
+ * because `getStaticPaths` built those pages from hub data. Recomputing the
+ * verdict from `templates/index.json` — the committed catalog the sitemap's own
+ * snapshot is a sibling of — would compare the repo to itself and could no longer
+ * fail on the drift this check exists for.
+ *
+ * The hub fetch is the only network call, and it degrades rather than fails: a
+ * gate that blocks merges must not go red because the hub was down. When it
+ * degrades it says so and falls back to `templates/index.json`, the only catalog
+ * present in a job that downloads the build artifact without ever running
+ * prebuild.
+ *
+ * One coupling worth naming, because it is the obvious way to reintroduce a false
+ * verdict: `listWorkflowIndex` filters by `PUBLIC_APPROVED_ONLY` and usage is
+ * ranked through `PUBLIC_ALGOLIA_*`, so this check has to run with the same values
+ * as the build whose artifact it reads. That holds by construction today —
+ * `site-ci.yml` is the only workflow that runs this step, and neither its build
+ * job nor its audit job sets any of them — but setting one on a single job would
+ * break the check without touching a line of it.
  */
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { deriveModelGroups } from '../src/lib/workflow-pages/model-groups';
+import { listWorkflowIndex, loadSerializedTemplates } from '../src/lib/hub-api';
+import { deriveModelGroups, type CatalogTemplate } from '../src/lib/workflow-pages/model-groups';
 import { readModelContent } from '../src/lib/workflow-pages/landing-content';
 import { isModelPageIndexable } from '../src/lib/workflow-pages/seo-page';
 import { flattenTemplates, loadTemplateIndex } from './lib/index-reader';
@@ -69,67 +82,56 @@ function renderedIndexableSlugs(section: Section): Set<string> {
 }
 
 /**
- * On-demand sections: recompute the verdict with the route's own helper, over the
- * catalog the route actually serves.
- *
- * This read `templates/index.json` while sitemap membership came from
- * `src/content/templates`, which prebuild syncs from that same committed file, so
- * it compared the repo catalog to itself. The model route resolves through
- * `loadSerializedTemplates`, which fetches the hub index, and the two disagree by
- * 45 families. Prebuild writes the hub-derived list for exactly this reason; the
- * fetch cannot happen here, since this job runs against a downloaded build
- * artifact with no network.
- *
- * Falls back to the committed index when the manifest is absent, which is the
- * pre-existing behaviour and still better than skipping the check.
+ * The catalog the model routes serve, or the committed index if the hub is
+ * unreachable. Announced either way — a silent fallback would leave the check
+ * looking green while comparing the repo to itself.
  */
-function modelIndexableSlugs(): Set<string> {
-  const groups = loadHubModelGroups() ?? modelGroupsFromRepoCatalog();
+async function modelCatalog(): Promise<{ catalog: CatalogTemplate[]; degraded: boolean }> {
+  try {
+    // Ask the index first and let it be the thing that fails: without
+    // `PUBLIC_HUB_API_URL` set — which is this job — `loadSerializedTemplates`
+    // swallows a hub failure and falls back to the collection it is handed,
+    // so on its own it would return an empty catalog and read as "nothing is
+    // indexable" rather than as an outage.
+    await listWorkflowIndex();
+    return { catalog: await loadSerializedTemplates(async () => []), degraded: false };
+  } catch (err) {
+    console.log(`  hub index unreachable (${err})`);
+  }
+  const categories = loadTemplateIndex(DEFAULT_LOCALE);
+  return { catalog: categories ? flattenTemplates(categories) : [], degraded: true };
+}
+
+/** On-demand sections: recompute the verdict with the route's own helper. */
+async function modelIndexableSlugs(): Promise<Set<string>> {
+  const { catalog, degraded } = await modelCatalog();
+  if (degraded) {
+    console.log(
+      '  model: DEGRADED — hub index unavailable, families derived from templates/index.json. ' +
+        'Drift between the sitemap and the live catalog cannot be detected in this run.'
+    );
+  }
+
   return new Set(
-    groups
+    deriveModelGroups(catalog)
       .filter((group) =>
-        isModelPageIndexable(group, group.templateCount, readModelContent(group.slug))
+        isModelPageIndexable(group, group.templates.length, readModelContent(group.slug))
       )
       .map((group) => group.slug)
   );
 }
 
-interface ManifestModelGroup {
-  slug: string;
-  qualifies: boolean;
-  templateCount: number;
-}
-
-function loadHubModelGroups(): ManifestModelGroup[] | null {
-  const file = path.join(SITE_DIR, 'src/data/hub-model-groups.generated.json');
-  if (!fs.existsSync(file)) return null;
-  try {
-    const parsed = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
-function modelGroupsFromRepoCatalog(): ManifestModelGroup[] {
-  const categories = loadTemplateIndex(DEFAULT_LOCALE);
-  if (!categories) return [];
-  return deriveModelGroups(flattenTemplates(categories)).map((group) => ({
-    slug: group.slug,
-    qualifies: group.qualifies,
-    templateCount: group.templates.length,
-  }));
-}
-
-function indexableSlugs(section: Section): Set<string> {
-  return section === 'model' ? modelIndexableSlugs() : renderedIndexableSlugs(section);
+function indexableSlugs(section: Section): Promise<Set<string>> {
+  return section === 'model'
+    ? modelIndexableSlugs()
+    : Promise.resolve(renderedIndexableSlugs(section));
 }
 
 function diff(a: Set<string>, b: Set<string>): string[] {
   return [...a].filter((x) => !b.has(x)).sort();
 }
 
-function main(): void {
+async function main(): Promise<void> {
   if (!fs.existsSync(STATIC_DIR)) {
     console.error(`Error: build output not found at ${STATIC_DIR}. Run \`pnpm build\` first.`);
     process.exit(1);
@@ -139,14 +141,14 @@ function main(): void {
 
   for (const section of SECTIONS) {
     const inSitemap = sitemapSlugs(section);
-    const indexable = indexableSlugs(section);
+    const indexable = await indexableSlugs(section);
 
     if (indexable.size === 0) {
       // An empty set is never a legitimate answer here, and the two sections fail
       // it for different reasons, so name the one that applies.
       problems.push(
         section === 'model'
-          ? 'No indexable model pages — templates/index.json is missing or unreadable.'
+          ? 'No indexable model pages — the hub index and templates/index.json are both empty or unreadable.'
           : `No indexable ${section} pages rendered — prebuild sync likely did not run.`
       );
     }
@@ -171,4 +173,7 @@ function main(): void {
   console.log('\nSitemap membership matches the rendered-indexable set.');
 }
 
-main();
+main().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});

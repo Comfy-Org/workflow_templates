@@ -5,16 +5,18 @@ import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 /**
- * The degraded shape is "no localized tag or category URLs", and that has to hold
- * in a reused checkout too. An earlier successful run leaves both manifests
- * behind, and astro.config.mjs reads whatever is on disk, so a later failed
- * refresh that returned without touching them would advertise the previous
- * build's URLs as though this build had produced them.
+ * The degraded shape is "no hub-derived URLs and no model guards this build", and
+ * that has to hold in a reused checkout too. An earlier successful run leaves all
+ * three manifests behind, and astro.config.mjs reads whatever is on disk, so a
+ * later failed refresh that returned without touching them would advertise the
+ * previous build's tag and category URLs and validate the previous build's model
+ * families as though this build had produced them.
  */
 const siteDir = process.cwd();
 const manifests = [
   path.join(siteDir, 'src/data/hub-tag-slugs.generated.json'),
   path.join(siteDir, 'src/data/hub-categories.generated.json'),
+  path.join(siteDir, 'src/data/hub-model-catalog.generated.json'),
 ];
 
 const saved = new Map<string, string | null>();
@@ -38,14 +40,14 @@ afterEach(() => {
 /** Refuses immediately, so the failure is the hub being unreachable, not a timeout. */
 const UNREACHABLE_HUB = 'http://127.0.0.1:1/';
 
-describe('build-tag-manifest degradation', () => {
-  it('removes both manifests when a configured hub fails', () => {
+describe('build-hub-manifests degradation', () => {
+  it('removes every manifest when a configured hub fails', () => {
     seedStaleManifests();
     expect(manifests.every((file) => existsSync(file))).toBe(true);
 
     let failed = false;
     try {
-      execFileSync('npx', ['tsx', 'scripts/build-tag-manifest.ts'], {
+      execFileSync('npx', ['tsx', 'scripts/build-hub-manifests.ts'], {
         cwd: siteDir,
         env: { ...process.env, PUBLIC_HUB_API_URL: UNREACHABLE_HUB },
         stdio: 'pipe',

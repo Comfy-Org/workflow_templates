@@ -17,14 +17,7 @@
  * sitemap saying one thing; these lock the fourth surface to the same flag.
  */
 import { describe, expect, it } from 'vitest';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
-import {
-  buildCustomPages,
-  loadHubCategories,
-  loadHubTagSlugs,
-} from '../../src/lib/sitemap-custom-pages';
+import { buildCustomPages } from '../../src/lib/sitemap-custom-pages';
 
 const base = {
   siteOrigin: 'https://comfy.org',
@@ -131,64 +124,5 @@ describe('category gating', () => {
 
     expect(pages.some((url) => url.includes('/workflows/category/'))).toBe(false);
     expect(pages).toContain('https://comfy.org/zh/workflows/');
-  });
-});
-
-describe('loadHubCategories', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-cats-'));
-
-  it('returns nothing when prebuild has not written the manifest', () => {
-    expect(loadHubCategories(path.join(tmp, 'absent.json'))).toEqual([]);
-  });
-
-  it('reads the category list a build wrote', () => {
-    const file = path.join(tmp, 'cats.json');
-    fs.writeFileSync(file, JSON.stringify(['3d', 'image', 'video']));
-
-    expect(loadHubCategories(file)).toEqual(['3d', 'image', 'video']);
-  });
-
-  it('drops anything that is not a category the route serves', () => {
-    // A type with no route would be a sitemap entry pointing at a 404.
-    const file = path.join(tmp, 'unknown.json');
-    fs.writeFileSync(file, JSON.stringify(['image', 'text', 7, null, 'video']));
-
-    expect(loadHubCategories(file)).toEqual(['image', 'video']);
-  });
-
-  it('degrades to nothing rather than throwing on a corrupt manifest', () => {
-    const file = path.join(tmp, 'corrupt.json');
-    fs.writeFileSync(file, '{not json');
-
-    expect(loadHubCategories(file)).toEqual([]);
-  });
-});
-
-describe('loadHubTagSlugs', () => {
-  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-tags-'));
-
-  it('returns nothing when prebuild has not written the manifest', () => {
-    expect(loadHubTagSlugs(path.join(tmp, 'absent.json'))).toEqual([]);
-  });
-
-  it('reads the slug list a build wrote', () => {
-    const file = path.join(tmp, 'slugs.json');
-    fs.writeFileSync(file, JSON.stringify(['character', 'video']));
-
-    expect(loadHubTagSlugs(file)).toEqual(['character', 'video']);
-  });
-
-  it('degrades to nothing rather than throwing on a corrupt manifest', () => {
-    const file = path.join(tmp, 'corrupt.json');
-    fs.writeFileSync(file, '{not json');
-
-    expect(loadHubTagSlugs(file)).toEqual([]);
-  });
-
-  it('drops non-string and empty entries', () => {
-    const file = path.join(tmp, 'mixed.json');
-    fs.writeFileSync(file, JSON.stringify(['character', '', 7, null, 'video']));
-
-    expect(loadHubTagSlugs(file)).toEqual(['character', 'video']);
   });
 });
