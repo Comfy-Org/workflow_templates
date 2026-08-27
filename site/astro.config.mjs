@@ -56,7 +56,34 @@ if (fs.existsSync(templatesDir)) {
   }
 }
 
-const modelGroups = deriveModelGroups(contentTemplates);
+/**
+ * The model families the routes actually serve.
+ *
+ * `src/content/templates` is the repo's own catalog, synced from the committed
+ * `templates/index.json`. The model routes do not read it: they resolve through
+ * `loadSerializedTemplates`, which fetches the hub index and only falls back to
+ * those files when the hub is unconfigured. Measured against production the two
+ * disagree by 45 families, 3 the hub serves that the guards below never saw and
+ * 42 the guards validated with no route behind them, so a hub-only slug collision
+ * or denied term could pass a green build.
+ *
+ * Prebuild writes the hub-derived list next to the tag manifest, by the same
+ * fetch, so the guards and the sitemap read the route dataset. Absent on a plain
+ * config load (astro check, a fresh clone, no network), where the repo catalog is
+ * the only thing available and the guards degrade exactly as they already do.
+ */
+function loadHubModelGroups() {
+  const file = path.join(process.cwd(), 'src/data/hub-model-groups.generated.json');
+  if (!fs.existsSync(file)) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+const modelGroups = loadHubModelGroups() ?? deriveModelGroups(contentTemplates);
 const canonicalModelSlugs = new Set(modelGroups.map((group) => group.slug));
 
 /**

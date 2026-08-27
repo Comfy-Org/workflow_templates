@@ -68,19 +68,57 @@ function renderedIndexableSlugs(section: Section): Set<string> {
   return slugs;
 }
 
-/** On-demand sections: recompute the verdict with the route's own helper. */
+/**
+ * On-demand sections: recompute the verdict with the route's own helper, over the
+ * catalog the route actually serves.
+ *
+ * This read `templates/index.json` while sitemap membership came from
+ * `src/content/templates`, which prebuild syncs from that same committed file, so
+ * it compared the repo catalog to itself. The model route resolves through
+ * `loadSerializedTemplates`, which fetches the hub index, and the two disagree by
+ * 45 families. Prebuild writes the hub-derived list for exactly this reason; the
+ * fetch cannot happen here, since this job runs against a downloaded build
+ * artifact with no network.
+ *
+ * Falls back to the committed index when the manifest is absent, which is the
+ * pre-existing behaviour and still better than skipping the check.
+ */
 function modelIndexableSlugs(): Set<string> {
-  const categories = loadTemplateIndex(DEFAULT_LOCALE);
-  if (!categories) return new Set();
-
-  const groups = deriveModelGroups(flattenTemplates(categories));
+  const groups = loadHubModelGroups() ?? modelGroupsFromRepoCatalog();
   return new Set(
     groups
       .filter((group) =>
-        isModelPageIndexable(group, group.templates.length, readModelContent(group.slug))
+        isModelPageIndexable(group, group.templateCount, readModelContent(group.slug))
       )
       .map((group) => group.slug)
   );
+}
+
+interface ManifestModelGroup {
+  slug: string;
+  qualifies: boolean;
+  templateCount: number;
+}
+
+function loadHubModelGroups(): ManifestModelGroup[] | null {
+  const file = path.join(SITE_DIR, 'src/data/hub-model-groups.generated.json');
+  if (!fs.existsSync(file)) return null;
+  try {
+    const parsed = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    return Array.isArray(parsed) && parsed.length > 0 ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function modelGroupsFromRepoCatalog(): ManifestModelGroup[] {
+  const categories = loadTemplateIndex(DEFAULT_LOCALE);
+  if (!categories) return [];
+  return deriveModelGroups(flattenTemplates(categories)).map((group) => ({
+    slug: group.slug,
+    qualifies: group.qualifies,
+    templateCount: group.templates.length,
+  }));
 }
 
 function indexableSlugs(section: Section): Set<string> {
