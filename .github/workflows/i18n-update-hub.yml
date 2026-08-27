@@ -58,14 +58,23 @@ jobs:
           INPUT_LOCALE: ${{ github.event.inputs.locale }}
         run: |
           set -euo pipefail
-          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR"
+          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR it"
           if [ -n "${INPUT_LOCALE:-}" ]; then
-            # Match the input exactly against the allowlist (literal case patterns,
-            # so a value like "*" cannot glob-match its way in).
-            case "$INPUT_LOCALE" in
-              zh|zh-TW|ja|ko|es|fr|ru|tr|ar|pt-BR) TARGET="$INPUT_LOCALE" ;;
-              *) echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"; exit 1 ;;
-            esac
+            # ONE list. There used to be a second copy in a case pattern here, and
+            # adding a locale to only one of them either lets a dispatch through
+            # that the nightly never translates, or the reverse.
+            #
+            # Compared with = rather than a case pattern, so the input is never in
+            # pattern position: a value like "*" is matched literally and cannot
+            # glob its way in.
+            TARGET=""
+            for locale in $SUPPORTED; do
+              if [ "$locale" = "$INPUT_LOCALE" ]; then TARGET="$INPUT_LOCALE"; fi
+            done
+            if [ -z "$TARGET" ]; then
+              echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"
+              exit 1
+            fi
           else
             TARGET="$SUPPORTED"
           fi
@@ -84,7 +93,20 @@ jobs:
           # have a real base. Absent branch (first run) -> fetch fails, start fresh.
           if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
             git checkout "origin/$STABLE_BRANCH" -- site/src/i18n || true
-            echo "Restored partial translations from $STABLE_BRANCH."
+            # The restore above shadows every file under site/src/i18n with the
+            # branch's older copy, so an edit landed on main since the branch was
+            # last updated comes back as a deletion (it took the navbar keys on
+            # 2026-08-12). Take the layers a person edits back from the checkout:
+            # the UI source nothing regenerates, the override layer nothing here
+            # writes, and the sign-off records, whose missing entries this pipeline
+            # would otherwise re-stamp as machine-authored. restore, not checkout,
+            # so a file deleted on main cannot be resurrected from the branch.
+            git restore --source=HEAD --staged --worktree -- \
+              site/src/i18n/locales/en.json \
+              site/src/i18n/overrides \
+              site/src/i18n/reviews \
+              site/src/i18n/human
+            echo "Restored partial translations from $STABLE_BRANCH (human-authored sources kept from the checkout)."
           else
             echo "No automation branch yet; starting fresh from main."
           fi
@@ -204,6 +226,26 @@ jobs:
         working-directory: site
         run: pnpm i18n:validate
 
+      # Re-stamp sign-off records whose seal broke for a good reason: a held
+      # page's missing translation arrived, the English source moved and was
+      # retranslated clean, or a pruned field came back clean. Same bar as the
+      # launch itself: AI-review-clean text is sealed, flagged text stays held
+      # for a human. Runs after review/enforce/validate so it judges tonight's
+      # final state, and its output rides this run's PR like every other
+      # generated file, so a person still approves the records before main.
+      # Locales without an existing human sign-off wave are never touched.
+      - name: Refresh sign-off records
+        if: always()
+        working-directory: site
+        # Every hub locale may be granted its first wave by policy: the native
+        # review gate was dropped deliberately (nav, 2026-08-24) so indexation is
+        # not held behind reviewer capacity. The other half of the predicate is
+        # untouched, so a page whose fields are not genuinely translated, or that
+        # carries an unresolved critical/major finding, is still held back.
+        env:
+          I18N_BOOTSTRAP_LOCALES: zh,zh-TW,ja,ko,es,fr,ru,tr,ar,pt-BR
+        run: pnpm i18n:signoff-refresh
+
       # Format only the generated files; whole-tree prettier hits pre-existing
       # .astro errors. success() so we only format output we intend to publish.
       - name: Format
@@ -274,3 +316,102 @@ jobs:
               --title "chore(i18n): update hub workflow translations" \
               --body "Automated hub translation refresh. English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
           fi
+
+      # A failed night still saves its translation progress: without this, a
+      # from-scratch backfill can never converge — a rate-limited run fails
+      # enforce/validate, the success()-gated publish skips, and the spend is
+      # discarded. Saves to the same branch the restore step reads, so nights
+      # accumulate. Merging stays gated: never creates a PR, and the automation
+      # PR's own Validate Translations check is red on a partial head.
+      - name: Save partial progress on failure
+        if: failure()
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add site/src/i18n
+          # Excluding must not UNDO banked progress (a plain staged restore
+          # resets to main's version and the commit drops the file from the
+          # branch): take the branch's last good version, else main's, else
+          # drop the new file.
+          exclude_from_save() {
+            if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:$1" 2>/dev/null; then
+              git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- "$1"
+            elif git cat-file -e "HEAD:$1" 2>/dev/null; then
+              git restore --source=HEAD --staged --worktree -- "$1"
+            else
+              git rm -qf --ignore-unmatch -- "$1"
+            fi
+          }
+          # A truncated mid-file write must not poison the branch the next run
+          # restores from. Deletions stay staged (nothing to parse).
+          while IFS= read -r f; do
+            case "$f" in
+              *.json)
+                if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f" 2>/dev/null; then
+                  echo "::warning::Excluding unparseable $f from the partial save"
+                  exclude_from_save "$f"
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --name-only --diff-filter=d)
+          # A FULLY misaligned content file (model-mangled keys, none in the
+          # English source) fails validation and enforce cannot prune it, so
+          # banking it would carry the mangled keys forward. Partially stale
+          # files still bank, matching the validator's tolerance. MUST run
+          # after the parse pass above: it reads en.json from the worktree,
+          # which that pass has already restored to a good version if truncated.
+          while IFS= read -r f; do
+            case "$f" in
+              site/src/i18n/content/en.json) ;;
+              site/src/i18n/content/*.json)
+                if ! node -e '
+                  const fs = require("fs");
+                  const en = JSON.parse(fs.readFileSync("site/src/i18n/content/en.json", "utf8"));
+                  const loc = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+                  const keys = Object.keys(loc);
+                  process.exit(keys.length > 0 && keys.every((k) => !(k in en)) ? 1 : 0);
+                ' "$f" 2>/dev/null; then
+                  echo "::warning::Excluding fully misaligned $f from the partial save"
+                  exclude_from_save "$f"
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --name-only --diff-filter=d)
+          # Never bank UI chrome from a failed run: nothing prunes locales/ and
+          # locale:ui fills only MISSING keys, so an invalid UI string banked
+          # here would restore and fail validate forever. (Content is safe:
+          # enforce prunes it to disk and re-prunes restored content nightly.)
+          if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:site/src/i18n/locales" 2>/dev/null; then
+            git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- site/src/i18n/locales
+          else
+            git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
+          fi
+          if git diff --cached --quiet; then
+            echo "Run failed before producing any translation changes; nothing to save."
+            exit 0
+          fi
+          # Same no-op guard as the publish step; --cached because the commit
+          # is built from the index and an excluded file may leave the worktree
+          # differing from the branch.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
+            if git diff --cached --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+              echo "No change vs the saved partial progress; leaving the branch untouched."
+              exit 0
+            fi
+          fi
+          git checkout -B "$STABLE_BRANCH"
+          git commit -m "chore(i18n): save partial translation progress (run failed, do not merge)"
+          # Retry transient push failures (a GitHub-side 500 here costs a full
+          # night's progress).
+          for attempt in 1 2 3; do
+            if git push --force-with-lease origin "$STABLE_BRANCH"; then
+              echo "Partial progress saved to $STABLE_BRANCH; the next run resumes from it."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying in $((attempt * 20))s."
+            sleep $((attempt * 20))
+          done
+          echo "::error::Could not push partial progress after 3 attempts."
+          exit 1

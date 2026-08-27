@@ -6,10 +6,8 @@ import { test, expect, type Page } from '@playwright/test';
  * real creator profile route is `/workflows/<user>/` (see `creatorPath()` in
  * `src/lib/routes.ts`).
  *
- * This has to run in a real browser rather than a static HTML/dist crawl:
- * the mobile nav's "Top Creators" links live inside a Sheet (dialog) that
- * Vue only mounts into the DOM once opened client-side, so they never appear
- * in server-rendered/prerendered HTML output.
+ * This has to run in a real browser rather than a static HTML/dist crawl,
+ * since some of the checked chrome only mounts client-side.
  *
  * Scope is deliberately narrow — the nav chrome and hub index pages that are
  * reachable from every page, plus one sample creator and one sample template
@@ -50,32 +48,6 @@ async function expectAllResolve(page: Page, hrefs: string[], context: string) {
 }
 
 test.describe('Internal link integrity — nav & hub routes', () => {
-  test('mobile "Top Creators" menu links resolve to real creator profile routes', async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/', { waitUntil: 'domcontentloaded' });
-
-    await page.getByTestId('mobile-nav-toggle').click();
-
-    const creatorLinks = page.getByTestId('mobile-nav-creator-link');
-    await creatorLinks.first().waitFor({ state: 'attached' });
-    test.skip(
-      (await creatorLinks.count()) === 0,
-      'No creators returned by the Hub API for this build'
-    );
-
-    const hrefs = await collectHrefs(page, '[data-testid="mobile-nav-creator-link"]');
-
-    // The exact regression this test guards: creator profiles live at
-    // /workflows/<username>/, never /workflows/creators/<username>/.
-    for (const href of hrefs) {
-      expect(href, href).not.toMatch(/^\/workflows\/creators\//);
-    }
-
-    await expectAllResolve(page, hrefs, 'mobile nav creator links');
-  });
-
   test('header and footer chrome on home/workflows/creators link to routes that resolve', async ({
     page,
   }) => {

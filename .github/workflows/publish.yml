@@ -132,7 +132,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0  # Full history needed for tags and version comparison
+          fetch-depth: 2  # HEAD and HEAD~1 for version comparison
           sparse-checkout: |
             pyproject.toml
             packages/*/pyproject.toml
@@ -211,16 +211,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0  # Full history needed for tags
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install Node dependencies
-        run: npm ci
+          # HEAD~1 is enough for changed-file detection. Full history plus
+          # input/, output/, site/, archived/, and thumbnail/ is ~3.3GB and
+          # is not used by the PyPI build.
+          fetch-depth: 2
+          sparse-checkout: |
+            templates
+            packages
+            scripts
+          # Cone mode always keeps root files (pyproject.toml, bundles.json,
+          # README.md, LICENSE, MANIFEST.in, setup.py).
 
       - name: Set up Python
         uses: actions/setup-python@v4

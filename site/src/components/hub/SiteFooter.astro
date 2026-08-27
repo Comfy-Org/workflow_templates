@@ -3,39 +3,29 @@
  * SiteFooter - Blue footer matching the Figma design
  * Blue background, Comfy logo, social icons, 4-column link grid
  */
-import { LANGUAGES, DEFAULT_LOCALE, type Locale } from '../../i18n/config';
-import { getLocaleFromPath, localizeUrl } from '../../i18n/utils';
-import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
+import { footerLanguageLinks } from '../../lib/i18n/footer-languages';
+import { getLocaleFromPath } from '../../i18n/utils';
+import { t } from '../../i18n/ui';
 
-// Language switcher. Self-derives from the current URL so no caller
-// has to thread props: the current locale is the path's locale prefix, and the
-// un-prefixed base path is what every alternate URL is rebuilt from.
+interface Props {
+  /**
+   * Whether localized variants of this route exist, mirroring the declaration
+   * the page already makes to HreflangTags. When false the switcher is not
+   * rendered, so an English-only route cannot offer a link to a 404.
+   */
+  localized?: boolean;
+}
+
+const { localized = true } = Astro.props;
+
+// The current locale and every alternate URL derive from the path, so no caller
+// has to thread them; only the existence of localized variants is a page fact.
+const languageLinks = footerLanguageLinks(Astro.url.pathname, { localized });
+
+// Bound to this page's locale so the markup below reads as labels, not lookups.
+// Same derivation the switcher uses, from the path.
 const currentLocale = getLocaleFromPath(Astro.url.pathname);
-const strippedPath =
-  currentLocale === DEFAULT_LOCALE
-    ? Astro.url.pathname
-    : Astro.url.pathname.replace(new RegExp(`^/${currentLocale}`), '') || '/';
-const basePath = strippedPath.startsWith('/') ? strippedPath : `/${strippedPath}`;
-
-// Predicate-gated links: only offer languages whose pages are actually live.
-// INDEXABLE_LOCALES is the language-level rollout gate and is empty until a
-// language passes native review, so today this renders nothing and the footer
-// stays byte-identical. English is always offered as the return path. Per-page
-// refinement (a workflow untranslated in an otherwise-live locale) is handled by
-// the indexability predicate.
-const offeredLocales: Locale[] = [
-  DEFAULT_LOCALE,
-  ...INDEXABLE_LOCALES.filter((l) => l !== DEFAULT_LOCALE),
-];
-const languageLinks =
-  offeredLocales.length > 1
-    ? offeredLocales.map((locale) => ({
-        locale,
-        nativeName: LANGUAGES[locale].nativeName,
-        url: localizeUrl(basePath, locale),
-        isCurrent: locale === currentLocale,
-      }))
-    : [];
+const tt = (key: string) => t(key, currentLocale);
 ---
 
 <footer class="bg-page text-content">
@@ -127,7 +117,7 @@ const languageLinks =
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-8">
         <!-- Product -->
         <div>
-          <h4 class="text-brand font-semibold text-sm mb-4">Product</h4>
+          <h4 class="text-brand font-semibold text-sm mb-4">{tt('footer.product')}</h4>
           <ul class="space-y-3">
             <li>
               <a
@@ -136,7 +126,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Download
+                {tt('footer.download')}
               </a>
             </li>
             <li>
@@ -146,7 +136,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Comfy Cloud
+                {tt('nav.comfyCloud')}
               </a>
             </li>
             <li>
@@ -156,7 +146,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Enterprise
+                {tt('footer.enterprise')}
               </a>
             </li>
             <li>
@@ -166,7 +156,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Gallery
+                {tt('nav.gallery')}
               </a>
             </li>
             <li>
@@ -174,7 +164,7 @@ const languageLinks =
                 href="/workflows/"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Template
+                {tt('footer.template')}
               </a>
             </li>
             <li>
@@ -182,7 +172,7 @@ const languageLinks =
                 href="/workflows/use-cases/"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Use Cases
+                {tt('template.useCases')}
               </a>
             </li>
           </ul>
@@ -190,7 +180,7 @@ const languageLinks =
 
         <!-- Resources -->
         <div>
-          <h4 class="text-brand font-semibold text-sm mb-4">Resources</h4>
+          <h4 class="text-brand font-semibold text-sm mb-4">{tt('footer.resources')}</h4>
           <ul class="space-y-3">
             <li>
               <a
@@ -199,7 +189,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors inline-flex items-center gap-1"
               >
-                Blog
+                {tt('nav.blogs')}
                 <svg
                   class="size-3"
                   viewBox="0 0 24 24"
@@ -220,7 +210,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors inline-flex items-center gap-1"
               >
-                Discord
+                {tt('nav.discord')}
                 <svg
                   class="size-3"
                   viewBox="0 0 24 24"
@@ -241,7 +231,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors inline-flex items-center gap-1"
               >
-                Github
+                {tt('nav.github')}
                 <svg
                   class="size-3"
                   viewBox="0 0 24 24"
@@ -262,7 +252,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors inline-flex items-center gap-1"
               >
-                Docs
+                {tt('nav.docs')}
                 <svg
                   class="size-3"
                   viewBox="0 0 24 24"
@@ -283,7 +273,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors inline-flex items-center gap-1"
               >
-                YouTube
+                {tt('nav.youtube')}
                 <svg
                   class="size-3"
                   viewBox="0 0 24 24"
@@ -302,7 +292,7 @@ const languageLinks =
 
         <!-- Company -->
         <div>
-          <h4 class="text-brand font-semibold text-sm mb-4">Company</h4>
+          <h4 class="text-brand font-semibold text-sm mb-4">{tt('nav.company')}</h4>
           <ul class="space-y-3">
             <li>
               <a
@@ -311,7 +301,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                About
+                {tt('footer.about')}
               </a>
             </li>
             <li>
@@ -321,7 +311,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Careers
+                {tt('nav.careers')}
               </a>
             </li>
             <li>
@@ -331,7 +321,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Terms of Service
+                {tt('footer.termsOfService')}
               </a>
             </li>
             <li>
@@ -341,7 +331,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Privacy Policy
+                {tt('footer.privacyPolicy')}
               </a>
             </li>
           </ul>
@@ -349,7 +339,7 @@ const languageLinks =
 
         <!-- Contact -->
         <div>
-          <h4 class="text-brand font-semibold text-sm mb-4">Contact</h4>
+          <h4 class="text-brand font-semibold text-sm mb-4">{tt('nav.contact')}</h4>
           <ul class="space-y-3">
             <li>
               <a
@@ -364,7 +354,7 @@ const languageLinks =
                 href="mailto:press@comfy.org"
                 class="text-content-secondary text-sm hover:text-content transition-colors"
               >
-                Press
+                {tt('footer.press')}
               </a>
             </li>
             <li>
@@ -374,7 +364,7 @@ const languageLinks =
                 rel="noopener noreferrer"
                 class="text-content-secondary text-sm hover:text-content transition-colors inline-flex items-center gap-1"
               >
-                Support
+                {tt('footer.support')}
                 <svg
                   class="size-3"
                   viewBox="0 0 24 24"
@@ -424,7 +414,7 @@ const languageLinks =
       <div
         class="flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-content-muted"
       >
-        <span>San Francisco, USA</span>
+        <span>{tt('footer.location')}</span>
         <span>&copy; 2026 Comfy Org</span>
       </div>
     </div>

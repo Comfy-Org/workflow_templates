@@ -1,0 +1,92 @@
+---
+export const prerender = false;
+
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import HubNavbar from '@/components/hub/HubNavbar.astro';
+import SiteFooter from '@/components/hub/SiteFooter.astro';
+import Breadcrumbs from '@/components/template-detail/Breadcrumbs.astro';
+import MiniMaxH3Demo from '@/components/demos/MiniMaxH3Demo.vue';
+import graph from '@/lib/demos/mmh3/workflow-api.json';
+import { KEYFRAMES, INPUT_NODES } from '@/lib/demos/mmh3/config';
+import { DEFAULT_LOCALE } from '@/i18n/config';
+
+type ApiNode = { class_type: string; inputs: Record<string, unknown> };
+const nodes = graph as unknown as Record<string, ApiNode>;
+const locale = DEFAULT_LOCALE;
+
+/** Seed the prompt editor with the text the workflow ships with. */
+const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ?? '');
+
+// These assets are committed (public/demos/mmh3/example/.gitignore whitelists
+// them), so the URLs are referenced directly. This page renders on demand, and
+// on Vercel `public/` is served from the CDN without existing on the
+// function's filesystem — an fs check here would wrongly report every asset
+// missing and hide the prompt-guide button and example media.
+const EXAMPLE_ROOT = 'demos/mmh3/example';
+
+const exampleKeyframes = KEYFRAMES.map(
+  (slot) => `/${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`
+);
+
+/** The example result, played before the first run. */
+const exampleVideo = `/${EXAMPLE_ROOT}/example.mp4`;
+
+/**
+ * A system prompt for writing this workflow's prompts with an agent. Fetched
+ * on click rather than inlined, so its ~19 KB stays out of the page payload.
+ */
+const agentPromptUrl = '/demos/mmh3/agent-prompt.md';
+
+const pageTitle = 'MiniMax H3 - Motion Context';
+const description =
+  'Guide one continuous shot with three reference images pinned to exact moments, and get video with matching audio.';
+---
+
+<BaseLayout
+  title={`${pageTitle} — run the workflow`}
+  {description}
+  theme="dark"
+  noindex={true}
+  hideDefaultFooter
+>
+  <HubNavbar />
+
+  <article class="template-detail-page bg-page min-h-screen text-content scroll-smooth">
+    <div class="max-w-400 mx-auto px-6 lg:px-[clamp(0.25rem,4vw,5rem)] pt-4 lg:pt-8 pb-32">
+      <Breadcrumbs locale={locale} title={pageTitle} class="mb-6 lg:mb-8" />
+
+      <header class="mb-12 max-w-4xl">
+        <p class="text-sm font-semibold uppercase tracking-wider text-brand">Live workflow</p>
+        <h1
+          class="mt-4 font-display text-4xl font-light leading-none tracking-[-0.03em] text-content sm:text-5xl lg:text-6xl"
+        >
+          {pageTitle}
+        </h1>
+        <p class="mt-6 max-w-3xl text-base leading-relaxed text-content-secondary sm:text-lg">
+          {description}
+        </p>
+        <div class="mt-6 flex flex-wrap gap-2">
+          {
+            ['Video', 'Audio', 'Image to video', '3 references'].map((tag) => (
+              <span class="rounded-full bg-hub-surface px-4 py-2 text-sm text-content-secondary">
+                {tag}
+              </span>
+            ))
+          }
+        </div>
+      </header>
+
+      <MiniMaxH3Demo
+        client:load
+        defaultPrompt={defaultPrompt}
+        exampleKeyframes={exampleKeyframes}
+        exampleVideo={exampleVideo}
+        agentPromptUrl={agentPromptUrl}
+      />
+    </div>
+  </article>
+
+  <Fragment slot="footer">
+    <SiteFooter />
+  </Fragment>
+</BaseLayout>

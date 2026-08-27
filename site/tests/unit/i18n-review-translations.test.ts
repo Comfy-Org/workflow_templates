@@ -9,6 +9,7 @@ import {
   buildSystemPrompt,
   buildUserPrompt,
   entryHash,
+  glossaryFingerprint,
   parseFindings,
   pruneOrphanedVerdicts,
   reviewViolations,
@@ -538,6 +539,47 @@ describe('loadReviewState (reads a committed, therefore corruptible, file)', () 
     expect(loadReviewState('zh', dir).entries).toEqual({});
   });
 
+  it('discards everything when the glossary has changed under it', () => {
+    // entryHash covers the source and the translation, never the glossary, so a
+    // verdict reached under different required terms would otherwise be reused
+    // as though it still applied.
+    write({
+      promptVersion: PROMPT_VERSION,
+      glossary: glossaryFingerprint({ Workflow: 'Рабочий процесс' }),
+      entries: { wf1: { hash: 'h', findings: [] } },
+    });
+
+    const reloaded = loadReviewState('zh', dir, glossaryFingerprint({ Workflow: 'Поток' }));
+
+    expect(reloaded.entries).toEqual({});
+  });
+
+  it('keeps verdicts when the glossary is unchanged', () => {
+    const fingerprint = glossaryFingerprint({ Workflow: 'Рабочий процесс' });
+    write({
+      promptVersion: PROMPT_VERSION,
+      glossary: fingerprint,
+      entries: { wf1: { hash: 'h', findings: [] } },
+    });
+
+    expect(Object.keys(loadReviewState('zh', dir, fingerprint).entries)).toEqual(['wf1']);
+  });
+
+  it('discards verdicts stored before the fingerprint existed', () => {
+    write({ promptVersion: PROMPT_VERSION, entries: { wf1: { hash: 'h', findings: [] } } });
+
+    expect(loadReviewState('zh', dir, glossaryFingerprint({ Seed: 'Сид' })).entries).toEqual({});
+  });
+
+  it('does not erase a stored fingerprint when the caller declares none', () => {
+    // Otherwise a read with no glossary in hand would blank the field and make
+    // the next real run re-review the whole locale for nothing.
+    const fingerprint = glossaryFingerprint({ Seed: 'Сид' });
+    write({ promptVersion: PROMPT_VERSION, glossary: fingerprint, entries: {} });
+
+    expect(loadReviewState('zh', dir).glossary).toBe(fingerprint);
+  });
+
   it('drops malformed verdicts instead of throwing', () => {
     write({
       promptVersion: PROMPT_VERSION,
@@ -629,5 +671,26 @@ describe('resolveReviewModel (blank env is not a model choice)', () => {
     for (const raw of [undefined, '', ' ', '\t', '\n  \n']) {
       expect(resolveReviewModel(raw).length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe('glossaryFingerprint', () => {
+  it('ignores key order, so a re-serialised glossary is not a new rubric', () => {
+    expect(glossaryFingerprint({ Seed: 'Сид', Workflow: 'Поток' })).toBe(
+      glossaryFingerprint({ Workflow: 'Поток', Seed: 'Сид' })
+    );
+  });
+
+  it('changes when a required translation changes', () => {
+    // The term is the same; what the reviewer will demand for it is not.
+    expect(glossaryFingerprint({ Workflow: 'Поток' })).not.toBe(
+      glossaryFingerprint({ Workflow: 'Рабочий процесс' })
+    );
+  });
+
+  it('changes when a term is added', () => {
+    expect(glossaryFingerprint({ Workflow: 'Поток' })).not.toBe(
+      glossaryFingerprint({ Workflow: 'Поток', Seed: 'Сид' })
+    );
   });
 });

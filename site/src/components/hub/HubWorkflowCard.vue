@@ -382,11 +382,13 @@ function handleCardClick() {
         <a
           v-if="creatorUrl"
           :href="creatorUrl"
-          class="creator-link flex items-center gap-2 min-w-0 w-fit text-content-secondary hover:text-content transition-colors"
+          class="creator-link author-link flex items-center gap-2 min-w-0 w-fit text-content-secondary hover:text-content focus-visible:text-content"
           @click.stop
         >
-          <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />
-          <span class="ppformula-text-center-sm text-base truncate">{{ authorName }}</span>
+          <Avatar :src="creatorAvatarUrl" :name="authorName" class="author-link-avatar size-5" />
+          <span class="author-link-name ppformula-text-center-sm text-base truncate">{{
+            authorName
+          }}</span>
         </a>
         <div v-else class="flex items-center gap-2 min-w-0 text-content-secondary">
           <Avatar :src="creatorAvatarUrl" :name="authorName" class="size-5" />

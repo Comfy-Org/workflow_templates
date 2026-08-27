@@ -30,6 +30,7 @@ import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import { TRANSLATABLE_FIELDS } from '../../src/lib/i18n/schema';
 import type { Locale, TranslatableField, WorkflowContent } from '../../src/lib/i18n/schema';
 import type { Violation } from './validate-translations';
+import { applyOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
@@ -134,6 +135,15 @@ export interface EntryVerdict {
 
 export interface ReviewState {
   promptVersion: number;
+  /**
+   * Fingerprint of the glossary the stored verdicts were produced under.
+   *
+   * The glossary is part of the rubric but is not in `entryHash`, and it cannot
+   * be: it is identical for every entry in a locale, so it belongs here beside
+   * `promptVersion` rather than in each entry's key. Absent on state files
+   * written before this field existed, which is treated as "unknown, re-review".
+   */
+  glossary?: string;
   entries: Record<string, EntryVerdict>;
 }
 
@@ -142,7 +152,7 @@ const SEVERITIES: readonly FindingSeverity[] = ['critical', 'major', 'minor'];
 
 /** Severities that cost a field its translation. `minor` is recorded for the report
  *  but never prunes — pruning a whole field over a comma would be worse than the nit. */
-const PRUNING_SEVERITIES: ReadonlySet<FindingSeverity> = new Set<FindingSeverity>([
+export const PRUNING_SEVERITIES: ReadonlySet<FindingSeverity> = new Set<FindingSeverity>([
   'critical',
   'major',
 ]);
@@ -169,6 +179,20 @@ export function entryHash(
     .update(JSON.stringify({ english, target, promptVersion }))
     .digest('hex')
     .slice(0, 32);
+}
+
+/**
+ * Identity of the glossary a review was produced under.
+ *
+ * Sorted so key order in the file cannot change the fingerprint, and covering the
+ * translations as well as the terms: changing what `Workflow` must become is as
+ * much a rubric change as adding the term in the first place.
+ */
+export function glossaryFingerprint(terminology: Record<string, string>): string {
+  const sorted = Object.keys(terminology)
+    .sort()
+    .map((term) => [term, terminology[term]]);
+  return createHash('sha256').update(JSON.stringify(sorted)).digest('hex').slice(0, 32);
 }
 
 /**
@@ -205,7 +229,7 @@ export function pruneOrphanedVerdicts(
   for (const [shareId, verdict] of Object.entries(state.entries)) {
     if (live.has(shareId)) entries[shareId] = verdict;
   }
-  return { promptVersion: state.promptVersion, entries };
+  return { promptVersion: state.promptVersion, glossary: state.glossary, entries };
 }
 
 /** JSON schema the model's answer is constrained to. Structured output means the
@@ -406,15 +430,21 @@ export function reviewStatePath(locale: Locale, dir: string = REVIEW_DIR): strin
  * would report NaN) or a non-array `findings` reach a `for…of` (which throws and
  * takes down the run). Both are avoidable by validating once, here.
  */
-export function loadReviewState(locale: Locale, dir: string = REVIEW_DIR): ReviewState {
+export function loadReviewState(
+  locale: Locale,
+  dir: string = REVIEW_DIR,
+  glossary?: string
+): ReviewState {
   const state = readJson<ReviewState>(reviewStatePath(locale, dir), {
     promptVersion: PROMPT_VERSION,
     entries: {},
   });
   // A rubric change makes every stored verdict incomparable, so discard them all
-  // rather than mixing verdicts from two different rubrics in one report.
-  if (state?.promptVersion !== PROMPT_VERSION) {
-    return { promptVersion: PROMPT_VERSION, entries: {} };
+  // rather than mixing verdicts from two different rubrics in one report. The
+  // glossary is part of that rubric: a verdict reached under a different set of
+  // required terms says nothing about the terms in force now.
+  if (state?.promptVersion !== PROMPT_VERSION || (glossary && state.glossary !== glossary)) {
+    return { promptVersion: PROMPT_VERSION, glossary, entries: {} };
   }
   const entries: Record<string, EntryVerdict> = {};
   for (const [shareId, verdict] of Object.entries(state.entries ?? {})) {
@@ -423,7 +453,9 @@ export function loadReviewState(locale: Locale, dir: string = REVIEW_DIR): Revie
     // filter — a stored finding names a field that may legitimately be absent now.
     entries[shareId] = { hash: verdict.hash, findings: sanitizeFindings(verdict.findings) };
   }
-  return { promptVersion: PROMPT_VERSION, entries };
+  // Callers with no glossary to declare (tests, ad-hoc reads) must not erase the
+  // fingerprint the last real run recorded.
+  return { promptVersion: PROMPT_VERSION, glossary: glossary ?? state.glossary, entries };
 }
 
 /** Run `worker` over `items` with a bounded number in flight. */
@@ -530,15 +562,24 @@ async function main(): Promise<void> {
     );
     if (Object.keys(localeContent).length === 0) continue;
 
-    const terminology = {
-      ...readJson<Record<string, string>>(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
-      ...readJson<Record<string, string>>(
-        path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
-        {}
-      ),
-    };
+    // The same selection the translator's prompt carries, read from the one
+    // artifact `pnpm i18n:glossary` writes. Reading the uncapped mirror here is
+    // what made the reviewer demand terms the translator was never given.
+    const effective = readJson<Record<string, string> | null>(
+      path.join(GLOSSARY_DIR, 'effective', `${locale}.json`),
+      null
+    );
+    // `applyOverrides`, not a spread: a retraction has to DELETE the harvested
+    // pair here too, or the fallback would enforce the very pair the override
+    // file retracts (and render it as `- Video → null` in the prompt).
+    const terminology =
+      effective ??
+      applyOverrides(
+        readJson<Record<string, string>>(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
+        readJson<GlossaryOverrides>(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
+      );
 
-    const priorState = loadReviewState(locale);
+    const priorState = loadReviewState(locale, REVIEW_DIR, glossaryFingerprint(terminology));
     const pending = selectEntriesForReview(
       localeContent,
       english,

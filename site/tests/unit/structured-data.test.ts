@@ -3,8 +3,10 @@ import {
   buildHowToJsonLd,
   buildSoftwareApplicationJsonLd,
   buildCollectionPageJsonLd,
+  buildWorkflowGraphJsonLd,
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
+import type { WorkflowEntityGraph } from '../../src/data/workflow-entity-graphs';
 
 describe('buildHowToJsonLd', () => {
   it('returns null when there are no steps', () => {
@@ -164,6 +166,205 @@ describe('buildCollectionPageJsonLd', () => {
     });
     expect(result).toHaveProperty('inLanguage', 'ja');
     expect(result.mainEntity).toMatchObject({ '@type': 'ItemList', numberOfItems: 1 });
+  });
+});
+
+describe('buildWorkflowGraphJsonLd', () => {
+  const sampleEntityGraph: WorkflowEntityGraph = {
+    identifier: 'uuid-123',
+    keywords: 'Image Generation, Test Workflow',
+    isRelatedTo: [
+      { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
+    ],
+    coreTopics: [{ id: 'e-video', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' }],
+    categories: [{ id: 'cat-technology', name: 'Technology' }],
+    entities: [
+      {
+        id: 'e-api',
+        name: 'API',
+        sameAs: 'https://en.wikipedia.org/wiki/API',
+        categoryId: 'cat-technology',
+      },
+      {
+        id: 'e-standalone',
+        name: 'Standalone Term',
+        sameAs: 'https://en.wikipedia.org/wiki/Standalone',
+      },
+    ],
+  };
+
+  const baseParams = {
+    canonicalUrl: 'https://comfy.org/workflows/test-abc123/',
+    title: 'Test Workflow',
+    description: 'A test workflow description.',
+    image: 'https://cdn/test.mp4',
+    datePublished: '2026-08-12',
+    inLanguage: 'en',
+    breadcrumbItems: [
+      { name: 'Home', item: 'https://comfy.org' },
+      { name: 'Workflows', item: 'https://comfy.org/workflows/' },
+      { name: 'Test Workflow', item: 'https://comfy.org/workflows/test-abc123/' },
+    ],
+    entityGraph: sampleEntityGraph,
+  };
+
+  it('emits one @context/@graph object containing the sitewide + page-specific nodes', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    expect(result['@context']).toBe('https://schema.org');
+    expect(Array.isArray(result['@graph'])).toBe(true);
+    const types = result['@graph'].map((n: Record<string, unknown>) => n['@type']);
+    expect(types).toEqual(
+      expect.arrayContaining([
+        'WebSite',
+        'Organization',
+        'SoftwareApplication', // ComfyUI
+        'DefinedTerm',
+        'DefinedTermSet',
+        expect.arrayContaining(['SoftwareApplication', 'TechArticle']),
+        'BreadcrumbList',
+        'WebPage',
+      ])
+    );
+  });
+
+  it('derives page-specific @ids from canonicalUrl', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const webpage = result['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    )!;
+    const workflow = result['@graph'].find(
+      (n: Record<string, unknown>) =>
+        Array.isArray(n['@type']) && (n['@type'] as string[]).includes('TechArticle')
+    )!;
+    expect(webpage['@id']).toBe('https://comfy.org/workflows/test-abc123/#webpage');
+    expect(workflow['@id']).toBe('https://comfy.org/workflows/test-abc123/#workflow');
+    expect(webpage.mainEntity).toEqual({
+      '@id': 'https://comfy.org/workflows/test-abc123/#workflow',
+    });
+  });
+
+  it('about includes the workflow, core topics, and category refs; mentions includes every entity', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const webpage = result['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    )!;
+    expect(webpage.about).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#workflow' },
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-video' },
+      { '@id': 'https://comfy.org/workflows/test-abc123/#cat-technology' },
+    ]);
+    expect(webpage.mentions).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-api' },
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-standalone' },
+    ]);
+  });
+
+  it('only categorized entities appear in their DefinedTermSet.hasDefinedTerm, standalone entities get no inDefinedTermSet', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const category = result['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'DefinedTermSet'
+    )!;
+    expect(category.hasDefinedTerm).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#e-api' },
+    ]);
+
+    const apiTerm = result['@graph'].find((n: Record<string, unknown>) => n.name === 'API')!;
+    expect(apiTerm.inDefinedTermSet).toEqual({
+      '@id': 'https://comfy.org/workflows/test-abc123/#cat-technology',
+    });
+
+    const standaloneTerm = result['@graph'].find(
+      (n: Record<string, unknown>) => n.name === 'Standalone Term'
+    );
+    expect(standaloneTerm).not.toHaveProperty('inDefinedTermSet');
+  });
+
+  it('omits inDefinedTermSet when categoryId names a category not declared on the graph', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      entityGraph: {
+        ...sampleEntityGraph,
+        entities: [
+          {
+            id: 'e-orphan',
+            name: 'Orphan Term',
+            sameAs: 'https://en.wikipedia.org/wiki/Orphan',
+            categoryId: 'cat-undeclared',
+          },
+        ],
+      },
+    });
+    const orphanTerm = result['@graph'].find(
+      (n: Record<string, unknown>) => n.name === 'Orphan Term'
+    )!;
+    expect(orphanTerm).not.toHaveProperty('inDefinedTermSet');
+    // No DefinedTermSet node for the undeclared category, either.
+    expect(
+      result['@graph'].find((n: Record<string, unknown>) =>
+        n['@id']?.toString().endsWith('#cat-undeclared')
+      )
+    ).toBeUndefined();
+  });
+
+  it('includes an FAQPage node and WebPage.hasPart only when faqItems are given', () => {
+    const withFaq = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      faqItems: [{ question: 'Q1?', answer: 'A1.' }],
+    });
+    const faqNode = withFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'FAQPage'
+    )!;
+    expect(faqNode).toBeTruthy();
+    expect(faqNode.mainEntity).toEqual([
+      { '@type': 'Question', name: 'Q1?', acceptedAnswer: { '@type': 'Answer', text: 'A1.' } },
+    ]);
+    const webpageWithFaq = withFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    )!;
+    expect(webpageWithFaq.hasPart).toEqual([
+      { '@id': 'https://comfy.org/workflows/test-abc123/#faq' },
+    ]);
+
+    const withoutFaq = buildWorkflowGraphJsonLd(baseParams);
+    expect(
+      withoutFaq['@graph'].find((n: Record<string, unknown>) => n['@type'] === 'FAQPage')
+    ).toBeUndefined();
+    const webpageNoFaq = withoutFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    );
+    expect(webpageNoFaq).not.toHaveProperty('hasPart');
+
+    const withEmptyFaq = buildWorkflowGraphJsonLd({ ...baseParams, faqItems: [] });
+    expect(
+      withEmptyFaq['@graph'].find((n: Record<string, unknown>) => n['@type'] === 'FAQPage')
+    ).toBeUndefined();
+    const webpageEmptyFaq = withEmptyFaq['@graph'].find(
+      (n: Record<string, unknown>) => n['@type'] === 'WebPage'
+    );
+    expect(webpageEmptyFaq).not.toHaveProperty('hasPart');
+  });
+
+  it('every node in the graph has an @id, and every @id is unique', () => {
+    const result = buildWorkflowGraphJsonLd({
+      ...baseParams,
+      faqItems: [{ question: 'Q1?', answer: 'A1.' }],
+    });
+    const ids = result['@graph'].map((n: Record<string, unknown>) => n['@id']);
+    expect(ids.filter(Boolean)).toHaveLength(result['@graph'].length);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('produces valid JSON through serializeJsonLdForScript', () => {
+    const result = buildWorkflowGraphJsonLd(baseParams);
+    const json = serializeJsonLdForScript(result);
+    expect(() =>
+      JSON.parse(
+        json
+          .replace(/\\u003c/g, '<')
+          .replace(/\\u003e/g, '>')
+          .replace(/\\u0026/g, '&')
+      )
+    ).not.toThrow();
   });
 });
 

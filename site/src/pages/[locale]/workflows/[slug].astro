@@ -10,8 +10,11 @@
  *    (translated + current + reviewed + locale flipped); otherwise it canonicals
  *    to the English URL, so humans see the translation while Google keeps
  *    indexing English. This is the "safety by canonical" the whole design rests on.
- *  - for a locale in INDEXABLE_LOCALES, a non-indexable page fails the build
- *    (fail-closed) rather than shipping a half-English indexable URL.
+ *  - in a flipped locale, a page the predicate rejects is held rather than
+ *    shipped: same English canonical, no sitemap entry, no hreflang. The
+ *    fail-closed assert is per LOCALE (zero indexable pages = broken artifacts),
+ *    not per page, because holds are normal — workflows are published to the hub
+ *    between translation runs.
  *
  * With INDEXABLE_LOCALES empty, every page is non-indexable, so canonicals all
  * point at English and the Google-facing output is unchanged.
@@ -39,13 +42,19 @@ import {
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
+  buildWorkflowGraphJsonLd,
 } from '../../../lib/structured-data';
+import { getWorkflowEntityGraph } from '../../../data/workflow-entity-graphs';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
 import { resolveLocalizedWorkflow, indexableAlternateLocales } from '../../../lib/i18n/resolver';
 import { localizeCards } from '../../../lib/i18n/localize-cards';
-import { SUPPORTED_HUB_LOCALES, INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
+import {
+  SUPPORTED_HUB_LOCALES,
+  INDEXABLE_LOCALES,
+  assertFlippedLocalesIndexable,
+} from '../../../lib/i18n/locales';
 
 export async function getStaticPaths() {
   // Every supported hub locale except English (English has its own route). Each
@@ -64,6 +73,10 @@ export async function getStaticPaths() {
   }
 
   const paths = [];
+  // Per flipped locale: how many pages the predicate accepted, and how many it
+  // held. The counts drive the build-time summary and the zero-indexable assert.
+  const indexableCounts = new Map<string, number>();
+  const heldCounts = new Map<string, number>();
   for (const locale of locales) {
     for (const entry of entries) {
       const shareId = entry.shareId || '';
@@ -72,13 +85,9 @@ export async function getStaticPaths() {
 
       if (shareId) {
         const resolved = resolveLocalizedWorkflow(shareId, locale);
-        // Fail-closed: a flipped (indexable) locale must never ship a page that
-        // the predicate rejects (missing/stale/unreviewed translation).
-        if (INDEXABLE_LOCALES.includes(locale) && !resolved.indexable) {
-          throw new Error(
-            `[i18n] indexable locale "${locale}" page ${name}-${shareId} is not ` +
-              `translation-complete and cannot be prerendered: ${resolved.reason}`
-          );
+        if (INDEXABLE_LOCALES.includes(locale)) {
+          const counts = resolved.indexable ? indexableCounts : heldCounts;
+          counts.set(locale, (counts.get(locale) ?? 0) + 1);
         }
         paths.push({
           params: { locale, slug: `${name}-${shareId}` },
@@ -95,6 +104,18 @@ export async function getStaticPaths() {
         });
       }
     }
+  }
+
+  // Fail-closed on the failure the per-page abort was reaching for: a flipped
+  // locale that resolved nothing indexable has broken artifacts, not a backlog.
+  assertFlippedLocalesIndexable(indexableCounts);
+  // Say the split out loud, so whoever flips a locale sees what shipped and what
+  // is waiting on translation instead of inferring it from the sitemap.
+  for (const locale of INDEXABLE_LOCALES) {
+    console.info(
+      `[i18n] ${locale}: ${indexableCounts.get(locale) ?? 0} pages indexable, ` +
+        `${heldCounts.get(locale) ?? 0} held for translation`
+    );
   }
 
   return paths;
@@ -137,7 +158,7 @@ const data = {
 };
 
 const isIndexable = resolved?.indexable ?? false;
-const title = `${data.title} - ComfyUI Workflow`;
+const title = t('template.metaTitle', locale).replace('{title}', data.title);
 // Shareless workflows carry no `-shareId` suffix; guard against a dangling hyphen
 // that would canonicalize to a nonexistent /workflows/name-/ URL.
 const urlSlug = data.shareId ? `${data.name}-${data.shareId}` : data.name;
@@ -186,6 +207,37 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   description: data.metaDescription || data.description,
 });
 
+// Client-approved schema replacement: templates with a curated entity graph
+// (see workflow-entity-graphs.ts) get a single linked @graph — WebSite,
+// Organization, ComfyUI, WebPage, workflow, DefinedTerm/DefinedTermSet, FAQ,
+// and breadcrumb — in place of the four separate scripts above. Every other
+// template (no curated data yet) keeps the scripts above unchanged.
+//
+// Gated on isIndexable: when not indexable, canonicalUrl points at the
+// English URL while this page's title/description/FAQ/inLanguage are still
+// localized (or held English-fallback) content. Building the graph in that
+// case would stamp @ids derived from the English URL with non-English values
+// — the same @ids the English route itself emits with English values,
+// producing two conflicting JSON-LD entities for one canonical URL. Held
+// pages keep the legacy per-field scripts (which don't share @ids) instead.
+const entityGraph = isIndexable ? getWorkflowEntityGraph(data.name) : undefined;
+const workflowGraphStructuredData = entityGraph
+  ? buildWorkflowGraphJsonLd({
+      canonicalUrl,
+      title: data.title,
+      description: data.description,
+      image: primaryThumbnail || undefined,
+      datePublished: data.date,
+      inLanguage: locale,
+      breadcrumbItems: breadcrumbStructuredData.itemListElement.map(({ name, item }) => ({
+        name,
+        item,
+      })),
+      faqItems: data.faqItems,
+      entityGraph,
+    })
+  : null;
+
 // Related workflows come from the hub index, which is English only. The page's
 // own text is already resolved above, so without this the translated detail page
 // ends on a grid of English cards linking to pages that are themselves translated.
@@ -204,7 +256,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
   ogType="article"
-  structuredData={structuredData}
+  structuredData={workflowGraphStructuredData ?? structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
   noindex={!isIndexable}
@@ -236,18 +288,26 @@ const toolbarLabels = buildToolbarLabels(locale);
       )
     }
   </TemplateDetailPage>
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-  />
   {
-    faqStructuredData && (
+    !entityGraph && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+      />
+    )
+  }
+  {
+    !entityGraph && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
+      />
+    )
+  }
+  {
+    !entityGraph && faqStructuredData && (
       <script
         is:inline
         type="application/ld+json"
