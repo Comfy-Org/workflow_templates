@@ -96,8 +96,11 @@ describe('pathForHref', () => {
 /** The locales the hub routes, so a label can be checked against its target path. */
 const LOCALES = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
 
+/** Detail pages are a prerendered route; the policy, not an observation. */
+const DETAIL_PRERENDERED = true;
+
 function problems(pages: RenderedPage[], origin = ORIGIN): string[] {
-  return checkHreflangContract(pages, origin, LOCALES).problems;
+  return checkHreflangContract(pages, origin, LOCALES, DETAIL_PRERENDERED).problems;
 }
 
 describe('resolveSiteOrigin', () => {
@@ -159,7 +162,7 @@ describe('checkHreflangContract', () => {
     // failures against a correct site.
     const pages = reciprocalPair();
     pages[0].alternates.push(alt('ja', '/ja/workflows/'));
-    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toEqual([]);
     expect(result.unverifiable).toBe(1);
   });
@@ -171,7 +174,7 @@ describe('checkHreflangContract', () => {
       alt('ko', '/ko/workflows/'),
       alt('x-default', '/workflows/'),
     ]);
-    const result = checkHreflangContract([en], ORIGIN, LOCALES);
+    const result = checkHreflangContract([en], ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toEqual([]);
     expect(result.unverifiable).toBe(2);
   });
@@ -267,7 +270,7 @@ describe('checkHreflangContract', () => {
         noindex: false,
       },
     ];
-    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toContain(
       `/workflows/: canonical is not on ${ORIGIN}: ${preview}/workflows/`
     );
@@ -289,7 +292,7 @@ describe('checkHreflangContract', () => {
     const pages = ['/workflows/', '/ko/workflows/', '/ja/workflows/'].map((path) =>
       page(path, cluster)
     );
-    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toContain(
       '/workflows/: hreflang "ja" points at /ko/workflows/, which is "ko"'
     );
@@ -300,7 +303,7 @@ describe('checkHreflangContract', () => {
 
   it('reads an unprefixed path as English', () => {
     const pages = [page('/workflows/', [alt('ko', '/workflows/'), alt('en', '/workflows/')])];
-    expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toContain(
+    expect(checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED).problems).toContain(
       '/workflows/: hreflang "ko" points at /workflows/, which is "en"'
     );
   });
@@ -315,14 +318,14 @@ describe('checkHreflangContract', () => {
     const pages = ['/workflows/', '/zh-TW/workflows/', '/pt-BR/workflows/'].map((path) =>
       page(path, cluster)
     );
-    expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toEqual([]);
+    expect(checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED).problems).toEqual([]);
   });
 
   it('leaves x-default alone, since it names a fallback and not a language', () => {
     const pages = [
       page('/workflows/', [alt('en', '/workflows/'), alt('x-default', '/workflows/')]),
     ];
-    expect(checkHreflangContract(pages, ORIGIN, LOCALES).problems).toEqual([]);
+    expect(checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED).problems).toEqual([]);
   });
 
   it('checks the label even when the target is server-rendered', () => {
@@ -333,7 +336,7 @@ describe('checkHreflangContract', () => {
       alt('en', '/workflows/'),
       alt('ja', '/ko/workflows/'), // wrong label, and /ko/workflows/ is on demand
     ]);
-    const result = checkHreflangContract([en], ORIGIN, LOCALES);
+    const result = checkHreflangContract([en], ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toContain(
       '/workflows/: hreflang "ja" points at /ko/workflows/, which is "ko"'
     );
@@ -353,10 +356,29 @@ describe('checkHreflangContract', () => {
       page('/ja/workflows/a/', cluster),
       page('/ja/workflows/b/', [alt('ja', '/ja/workflows/b/')]),
     ];
-    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toContain(
       '/workflows/a/: hreflang "ko" points at /ko/workflows/a/, which this build did not produce'
     );
+  });
+
+  it('fails when a degraded build emitted no localized detail pages at all', () => {
+    // getStaticPaths emits none when the hub index is unavailable. Reading the
+    // policy off the emitted pages inverted here: zero pages looked like "served
+    // on demand", so every absence an English page advertised was excused.
+    const en = page('/workflows/a/', [alt('en', '/workflows/a/'), alt('ja', '/ja/workflows/a/')]);
+    const result = checkHreflangContract([en], ORIGIN, LOCALES, DETAIL_PRERENDERED);
+    expect(result.problems).toContain(
+      '/workflows/a/: hreflang "ja" points at /ja/workflows/a/, which this build did not produce'
+    );
+    expect(result.unverifiable).toBe(0);
+  });
+
+  it('excuses the same absence when the route really is on demand', () => {
+    const en = page('/workflows/a/', [alt('en', '/workflows/a/'), alt('ja', '/ja/workflows/a/')]);
+    const result = checkHreflangContract([en], ORIGIN, LOCALES, false);
+    expect(result.problems).toEqual([]);
+    expect(result.unverifiable).toBe(1);
   });
 
   it('still treats an on-demand family as unverifiable', () => {
@@ -369,7 +391,7 @@ describe('checkHreflangContract', () => {
       ]),
       page('/ja/workflows/a/', [alt('ja', '/ja/workflows/a/')]),
     ];
-    const result = checkHreflangContract(pages, ORIGIN, LOCALES);
+    const result = checkHreflangContract(pages, ORIGIN, LOCALES, DETAIL_PRERENDERED);
     expect(result.problems).toEqual([]);
     expect(result.unverifiable).toBe(1);
   });

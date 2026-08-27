@@ -141,26 +141,15 @@ export interface ContractResult {
 const NON_DETAIL_SEGMENTS = new Set(['category', 'tag', 'model', 'creators']);
 
 /**
- * Whether this build prerenders localized workflow detail pages.
+ * Whether the localized workflow detail route is prerendered.
  *
- * `[locale]/workflows/[slug].astro` is prerendered while every other localized
- * route is `prerender = false`, so any built `/<locale>/workflows/<x>/` page is a
- * detail page: the creator catch-all that shares its shape is server-rendered and
- * never becomes a file. Once one exists, absence is provable for that whole
- * family, and a detail page an English page advertises but the build did not
- * produce is a broken cluster member rather than something the build cannot see.
- *
- * Deliberately not per locale. A locale with no detail pages at all is the case
- * worth catching, not the case to excuse: the English page only advertises a
- * locale it believes indexable, so zero pages for it means the build dropped them.
+ * This is route policy, not an observation. It was read off the emitted pages,
+ * which inverts exactly when it matters: `getStaticPaths` emits no localized
+ * detail pages when the hub index is unavailable, so a degraded build produced
+ * zero of them, the signal flipped to "on demand", and every absent target an
+ * English page advertised was excused as unverifiable. The caller passes the
+ * policy so a build that dropped the whole family still fails.
  */
-export function prerendersLocalizedDetail(
-  pages: readonly RenderedPage[],
-  locales: readonly string[]
-): boolean {
-  return pages.some((page) => detailLocaleOf(page.path, locales) !== null);
-}
-
 /** The locale of `/<locale>/workflows/<slug>/`, or null when the path is not one. */
 function detailLocaleOf(path: string, locales: readonly string[]): string | null {
   const segments = path.split('/').filter(Boolean);
@@ -177,11 +166,16 @@ export function checkHreflangContract(
    * points at. Injected rather than imported so the rules stay free of site
    * config and can be tested against a fixed set.
    */
-  locales: readonly string[]
+  locales: readonly string[],
+  /**
+   * Whether `[locale]/workflows/[slug].astro` is a prerendered route. Required
+   * rather than defaulted: a default would quietly decide the one question that
+   * separates "this page is missing" from "this page is served on demand".
+   */
+  localizedDetailIsPrerendered: boolean
 ): ContractResult {
   const problems: string[] = [];
   let unverifiable = 0;
-  const detailIsPrerendered = prerendersLocalizedDetail(pages, locales);
   const byPath = new Map(pages.map((page) => [page.path, page]));
   // Resolved once per href: the reciprocity check reads every alternate of every
   // target, so parsing on demand would re-parse each href once per cluster member.
@@ -244,7 +238,7 @@ export function checkHreflangContract(
 
       const targetPage = byPath.get(target);
       if (!targetPage) {
-        if (detailIsPrerendered && detailLocaleOf(target, locales) !== null) {
+        if (localizedDetailIsPrerendered && detailLocaleOf(target, locales) !== null) {
           // This locale does prerender its detail pages, so this one should be a
           // file and is not. That is a broken cluster member, not an unknown.
           problems.push(

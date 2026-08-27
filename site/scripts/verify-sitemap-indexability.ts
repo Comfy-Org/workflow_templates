@@ -86,6 +86,20 @@ function collectRenderedPages(): RenderedPage[] {
   return pages;
 }
 
+/**
+ * Whether the localized detail route is prerendered, read from the route itself.
+ *
+ * Astro's `output: 'static'` prerenders every page that does not opt out, so the
+ * absence of `prerender = false` in the route file is the policy. Read from source
+ * rather than from the emitted pages: a build whose hub fetch failed emits none of
+ * them, and inferring from that would excuse the very absence worth reporting.
+ */
+function localizedDetailIsPrerendered(): boolean {
+  const route = path.join(SITE_DIR, 'src/pages/[locale]/workflows/[slug].astro');
+  if (!fs.existsSync(route)) return false;
+  return !/\bprerender\s*=\s*false/.test(fs.readFileSync(route, 'utf-8'));
+}
+
 function main(): void {
   if (!fs.existsSync(STATIC_DIR)) {
     console.error(`Error: build output not found at ${STATIC_DIR}. Run \`pnpm build\` first.`);
@@ -116,7 +130,7 @@ function main(): void {
   const pages = collectRenderedPages();
   const origin = resolveSiteOrigin(process.env.PUBLIC_SITE_ORIGIN);
   const clustered = pages.filter((p) => p.alternates.length > 0).length;
-  const result = checkHreflangContract(pages, origin, LOCALES);
+  const result = checkHreflangContract(pages, origin, LOCALES, localizedDetailIsPrerendered());
   console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);
   if (result.unverifiable) {
     console.log(
