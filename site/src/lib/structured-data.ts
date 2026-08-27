@@ -9,6 +9,8 @@ import { t } from '../i18n/ui';
 import type { Locale } from '../i18n/config';
 import { localizeUrl } from '../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../config/site';
+import { WEBSITE_ID, ORGANIZATION_ID, COMFYUI_ID, buildSiteEntityNodes } from './site-entities';
+import type { WorkflowEntityGraph } from '../data/workflow-entity-graphs';
 
 export interface FaqItem {
   question: string;
@@ -21,17 +23,22 @@ export interface BreadcrumbItem {
   item?: string;
 }
 
+/** Maps an ordered list of crumbs to schema.org `ListItem` entries. */
+function mapBreadcrumbItems(items: BreadcrumbItem[]) {
+  return items.map(({ name, item }, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name,
+    ...(item ? { item } : {}),
+  }));
+}
+
 /** schema.org `BreadcrumbList` JSON-LD from an ordered list of crumbs. */
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map(({ name, item }, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name,
-      ...(item ? { item } : {}),
-    })),
+    itemListElement: mapBreadcrumbItems(items),
   };
 }
 
@@ -360,4 +367,150 @@ export function buildSoftwareApplicationJsonLd(params: {
     description: params.description,
     ...(featureList?.length ? { featureList } : {}),
   };
+}
+
+/**
+ * The full client-provided `@graph` for a workflow detail page: WebSite →
+ * Organization → ComfyUI SoftwareApplication (sitewide, constant) plus a
+ * per-page WebPage, workflow `[SoftwareApplication,TechArticle]`, DefinedTerm /
+ * DefinedTermSet entity nodes, BreadcrumbList, and FAQPage — replacing the
+ * separate TechArticle/FAQPage/SoftwareApplication/BreadcrumbList scripts with
+ * one linked graph. Entity names/sameAs/category assignments come verbatim from
+ * `entityGraph` (see workflow-entity-graphs.ts) — nothing here is inferred.
+ */
+export function buildWorkflowGraphJsonLd(params: {
+  canonicalUrl: string;
+  title: string;
+  description: string;
+  image?: string;
+  datePublished?: string;
+  inLanguage: string;
+  breadcrumbItems: BreadcrumbItem[];
+  faqItems?: FaqItem[];
+  entityGraph: WorkflowEntityGraph;
+}) {
+  const {
+    canonicalUrl,
+    title,
+    description,
+    image,
+    datePublished,
+    inLanguage,
+    breadcrumbItems,
+    faqItems,
+    entityGraph,
+  } = params;
+
+  const localId = (fragment: string) => `${canonicalUrl}#${fragment}`;
+  const webpageId = localId('webpage');
+  const workflowId = localId('workflow');
+  const breadcrumbId = localId('breadcrumb');
+  const faqId = localId('faq');
+
+  const graph: Record<string, unknown>[] = [...buildSiteEntityNodes()];
+
+  const aboutRefs: { '@id': string }[] = [{ '@id': workflowId }];
+  for (const topic of entityGraph.coreTopics) {
+    graph.push({
+      '@type': 'DefinedTerm',
+      '@id': localId(topic.id),
+      name: topic.name,
+      sameAs: topic.sameAs,
+    });
+    aboutRefs.push({ '@id': localId(topic.id) });
+  }
+  for (const category of entityGraph.categories) {
+    aboutRefs.push({ '@id': localId(category.id) });
+  }
+
+  const categoryIds = new Set(entityGraph.categories.map((c) => c.id));
+
+  const mentionRefs: { '@id': string }[] = [];
+  for (const entity of entityGraph.entities) {
+    // Only emit inDefinedTermSet when categoryId names a category actually
+    // declared on this graph — otherwise the reference would dangle (no
+    // DefinedTermSet node behind it).
+    const hasDeclaredCategory = Boolean(entity.categoryId && categoryIds.has(entity.categoryId));
+    graph.push({
+      '@type': 'DefinedTerm',
+      '@id': localId(entity.id),
+      name: entity.name,
+      sameAs: entity.sameAs,
+      ...(hasDeclaredCategory ? { inDefinedTermSet: { '@id': localId(entity.categoryId!) } } : {}),
+    });
+    mentionRefs.push({ '@id': localId(entity.id) });
+  }
+
+  for (const category of entityGraph.categories) {
+    graph.push({
+      '@type': 'DefinedTermSet',
+      '@id': localId(category.id),
+      name: category.name,
+      hasDefinedTerm: entityGraph.entities
+        .filter((e) => e.categoryId === category.id)
+        .map((e) => ({ '@id': localId(e.id) })),
+    });
+  }
+
+  graph.push({
+    '@type': ['SoftwareApplication', 'TechArticle'],
+    '@id': workflowId,
+    name: title,
+    headline: title,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    ...(entityGraph.identifier ? { identifier: entityGraph.identifier } : {}),
+    ...(datePublished ? { datePublished } : {}),
+    ...(image ? { image } : {}),
+    description,
+    ...(entityGraph.keywords ? { keywords: entityGraph.keywords } : {}),
+    creator: { '@id': ORGANIZATION_ID },
+    runtimePlatform: { '@id': COMFYUI_ID },
+    ...(entityGraph.isRelatedTo?.length
+      ? {
+          isRelatedTo: entityGraph.isRelatedTo.map((r) => ({
+            '@type': 'WebPage',
+            name: r.name,
+            url: r.url,
+          })),
+        }
+      : {}),
+  });
+
+  graph.push({
+    '@type': 'BreadcrumbList',
+    '@id': breadcrumbId,
+    itemListElement: mapBreadcrumbItems(breadcrumbItems),
+  });
+
+  const hasFaq = Boolean(faqItems?.length);
+  if (hasFaq) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': faqId,
+      mainEntity: faqItems!.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    });
+  }
+
+  graph.push({
+    '@type': 'WebPage',
+    '@id': webpageId,
+    url: canonicalUrl,
+    headline: title,
+    isPartOf: { '@id': WEBSITE_ID },
+    publisher: { '@id': ORGANIZATION_ID },
+    ...(datePublished ? { datePublished } : {}),
+    inLanguage,
+    breadcrumb: { '@id': breadcrumbId },
+    mainEntity: { '@id': workflowId },
+    ...(hasFaq ? { hasPart: [{ '@id': faqId }] } : {}),
+    about: aboutRefs,
+    ...(mentionRefs.length ? { mentions: mentionRefs } : {}),
+  });
+
+  return { '@context': 'https://schema.org', '@graph': graph };
 }

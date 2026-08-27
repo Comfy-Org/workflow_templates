@@ -36,6 +36,7 @@ export const AVAILABLE_APP_LOCALES = [
   'tr',
   'ar',
   'pt-BR',
+  'it',
 ] as const satisfies readonly Locale[];
 
 /** Locales the hub deliberately builds + serves. Currently all configured ones. */
