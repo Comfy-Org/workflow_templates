@@ -396,6 +396,16 @@ describe('checkHreflangContract', () => {
     expect(result.unverifiable).toBe(1);
   });
 
+  it('reports a noindexed target once, without also asking it to link back', () => {
+    // Google drops the noindexed page and its annotations together, so its return
+    // leg is moot; two problems for one broken alternate is noise.
+    const en = page('/workflows/', [alt('en', '/workflows/'), alt('ko', '/ko/workflows/')]);
+    const ko = page('/ko/workflows/', [alt('ko', '/ko/workflows/')], { noindex: true });
+    expect(problems([en, ko])).toEqual([
+      '/workflows/: hreflang "ko" points at noindexed /ko/workflows/',
+    ]);
+  });
+
   it('holds for the full eleven-locale cluster the hub ships', () => {
     const locales = ['en', 'zh', 'zh-tw', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-br'];
     const pathFor = (locale: string) => (locale === 'en' ? '/workflows/' : `/${locale}/workflows/`);

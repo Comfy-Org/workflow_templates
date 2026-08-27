@@ -97,7 +97,10 @@ function collectRenderedPages(): RenderedPage[] {
 function localizedDetailIsPrerendered(): boolean {
   const route = path.join(SITE_DIR, 'src/pages/[locale]/workflows/[slug].astro');
   if (!fs.existsSync(route)) return false;
-  return !/\bprerender\s*=\s*false/.test(fs.readFileSync(route, 'utf-8'));
+  // Anchored on the declaration, not the bare words: this one boolean gates the
+  // whole existence rule and a match switches it off, so prose about prerendering
+  // in the route's own comments must not be able to disable it silently.
+  return !/export\s+const\s+prerender\s*=\s*false/.test(fs.readFileSync(route, 'utf-8'));
 }
 
 function main(): void {

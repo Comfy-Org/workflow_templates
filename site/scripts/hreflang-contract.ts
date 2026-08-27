@@ -128,11 +128,13 @@ interface ResolvedAlternate extends Alternate {
 export interface ContractResult {
   problems: string[];
   /**
-   * Alternates whose target is not in the build. Every localized route is
-   * `prerender = false`, so its URL is served on demand and never becomes a file
-   * here: absence proves nothing, and treating it as a broken link reported 920
-   * false failures. Counted and printed rather than dropped, so the limit of what
-   * this check can prove stays visible.
+   * Alternates whose target is not in the build and whose route is served on
+   * demand, so its URL never becomes a file here and absence proves nothing. That
+   * is the localized listing, category, tag, model and creators families, all
+   * `prerender = false`; treating them as broken links reported 920 false
+   * failures. Counted and printed rather than dropped, so the limit of what this
+   * check can prove stays visible. A localized detail page is NOT one of these:
+   * its route is prerendered, so its absence is a problem.
    */
   unverifiable: number;
 }
@@ -140,16 +142,6 @@ export interface ContractResult {
 /** Route segments under /<locale>/workflows/ that belong to a non-detail family. */
 const NON_DETAIL_SEGMENTS = new Set(['category', 'tag', 'model', 'creators']);
 
-/**
- * Whether the localized workflow detail route is prerendered.
- *
- * This is route policy, not an observation. It was read off the emitted pages,
- * which inverts exactly when it matters: `getStaticPaths` emits no localized
- * detail pages when the hub index is unavailable, so a degraded build produced
- * zero of them, the signal flipped to "on demand", and every absent target an
- * English page advertised was excused as unverifiable. The caller passes the
- * policy so a build that dropped the whole family still fails.
- */
 /** The locale of `/<locale>/workflows/<slug>/`, or null when the path is not one. */
 function detailLocaleOf(path: string, locales: readonly string[]): string | null {
   const segments = path.split('/').filter(Boolean);
@@ -255,6 +247,11 @@ export function checkHreflangContract(
         problems.push(
           `${page.path}: hreflang "${alternate.hreflang}" points at noindexed ${target}`
         );
+        // Google drops the noindexed page and its own annotations together, so
+        // whether it links back is moot. The alternate is already broken, and a
+        // second problem for the same one is noise on a cluster that repeats
+        // across thousands of pages.
+        continue;
       }
 
       // x-default is a one-way fallback declaration, not a cluster member, and a
