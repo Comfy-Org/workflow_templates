@@ -193,17 +193,26 @@ export function buildSoftwareApplicationJsonLd(params: {
 }
 
 /**
- * The full client-provided `@graph` for a workflow detail page: WebSite →
- * Organization → ComfyUI SoftwareApplication (sitewide, constant) plus a
- * per-page WebPage, workflow `[SoftwareApplication,TechArticle]`, DefinedTerm /
- * DefinedTermSet entity nodes, BreadcrumbList, and FAQPage — replacing the
- * separate TechArticle/FAQPage/SoftwareApplication/BreadcrumbList scripts with
- * one linked graph. Entity names/sameAs/category assignments come verbatim from
- * `entityGraph` (see workflow-entity-graphs.ts) — nothing here is inferred.
+ * The full client-provided `@graph` for a workflow detail page, in the exact
+ * node order of the schema recommendation: WebSite → Organization → ComfyUI
+ * SoftwareApplication (sitewide, constant) → WebPage → workflow
+ * `[SoftwareApplication,TechArticle]` → core-topic DefinedTerms → any standalone
+ * (uncategorized) DefinedTerms → each DefinedTermSet immediately followed by its
+ * member DefinedTerms → BreadcrumbList → FAQPage. Replaces the separate
+ * TechArticle/FAQPage/SoftwareApplication/
+ * BreadcrumbList scripts with one linked graph. Entity names/sameAs/category
+ * assignments and ordering come verbatim from `entityGraph` (see
+ * workflow-entity-graphs.ts) — nothing here is inferred.
  */
 export function buildWorkflowGraphJsonLd(params: {
   canonicalUrl: string;
   title: string;
+  /**
+   * The page `<title>` (with the " - ComfyUI Workflow" suffix) used for
+   * `WebPage.headline`. Falls back to `title` when omitted; the workflow node
+   * always uses the bare `title`.
+   */
+  pageHeadline?: string;
   description: string;
   image?: string;
   datePublished?: string;
@@ -215,6 +224,7 @@ export function buildWorkflowGraphJsonLd(params: {
   const {
     canonicalUrl,
     title,
+    pageHeadline,
     description,
     image,
     datePublished,
@@ -230,11 +240,19 @@ export function buildWorkflowGraphJsonLd(params: {
   const breadcrumbId = localId('breadcrumb');
   const faqId = localId('faq');
 
-  const graph: Record<string, unknown>[] = [...buildSiteEntityNodes()];
+  // A curated `datePublished` on the entity graph pins the value from the client
+  // schema; otherwise fall back to the page date (from the hub index).
+  const publishedDate = entityGraph.datePublished ?? datePublished;
+  const hasFaq = Boolean(faqItems?.length);
 
+  // --- Precompute the entity nodes and their cross-references ------------------
+  const categoryIds = new Set(entityGraph.categories.map((c) => c.id));
+
+  // about: the workflow, then each core topic, then each category set.
   const aboutRefs: { '@id': string }[] = [{ '@id': workflowId }];
+  const coreTopicNodes: Record<string, unknown>[] = [];
   for (const topic of entityGraph.coreTopics) {
-    graph.push({
+    coreTopicNodes.push({
       '@type': 'DefinedTerm',
       '@id': localId(topic.id),
       name: topic.name,
@@ -246,34 +264,64 @@ export function buildWorkflowGraphJsonLd(params: {
     aboutRefs.push({ '@id': localId(category.id) });
   }
 
-  const categoryIds = new Set(entityGraph.categories.map((c) => c.id));
-
-  const mentionRefs: { '@id': string }[] = [];
+  // One DefinedTerm node per entity, split into standalone vs. per-category
+  // buckets. Order within a bucket follows the `entities` array order, which is
+  // also the order used for each `DefinedTermSet.hasDefinedTerm`.
+  const standaloneTermNodes: Record<string, unknown>[] = [];
+  const termNodesByCategory = new Map<string, Record<string, unknown>[]>();
+  const knownEntityIds = new Set<string>();
   for (const entity of entityGraph.entities) {
+    knownEntityIds.add(entity.id);
     // Only emit inDefinedTermSet when categoryId names a category actually
     // declared on this graph — otherwise the reference would dangle (no
     // DefinedTermSet node behind it).
     const hasDeclaredCategory = Boolean(entity.categoryId && categoryIds.has(entity.categoryId));
-    graph.push({
+    const node: Record<string, unknown> = {
       '@type': 'DefinedTerm',
       '@id': localId(entity.id),
       name: entity.name,
       sameAs: entity.sameAs,
       ...(hasDeclaredCategory ? { inDefinedTermSet: { '@id': localId(entity.categoryId!) } } : {}),
-    });
-    mentionRefs.push({ '@id': localId(entity.id) });
+    };
+    if (hasDeclaredCategory) {
+      const bucket = termNodesByCategory.get(entity.categoryId!) ?? [];
+      bucket.push(node);
+      termNodesByCategory.set(entity.categoryId!, bucket);
+    } else {
+      standaloneTermNodes.push(node);
+    }
   }
 
-  for (const category of entityGraph.categories) {
-    graph.push({
-      '@type': 'DefinedTermSet',
-      '@id': localId(category.id),
-      name: category.name,
-      hasDefinedTerm: entityGraph.entities
-        .filter((e) => e.categoryId === category.id)
-        .map((e) => ({ '@id': localId(e.id) })),
-    });
-  }
+  // mentions: the explicit `mentionsOrder` when the client schema pins one (with
+  // any entity it omits appended in `entities` order), else plain `entities`
+  // order.
+  const mentionsOrder = entityGraph.mentionsOrder;
+  const orderedMentionIds = mentionsOrder?.length
+    ? [
+        ...mentionsOrder.filter((id) => knownEntityIds.has(id)),
+        ...entityGraph.entities.map((e) => e.id).filter((id) => !mentionsOrder.includes(id)),
+      ]
+    : entityGraph.entities.map((e) => e.id);
+  const mentionRefs = orderedMentionIds.map((id) => ({ '@id': localId(id) }));
+
+  // --- Assemble the graph in the client schema's node order ------------------
+  const graph: Record<string, unknown>[] = [...buildSiteEntityNodes()];
+
+  graph.push({
+    '@type': 'WebPage',
+    '@id': webpageId,
+    url: canonicalUrl,
+    headline: pageHeadline ?? title,
+    isPartOf: { '@id': WEBSITE_ID },
+    publisher: { '@id': ORGANIZATION_ID },
+    ...(publishedDate ? { datePublished: publishedDate } : {}),
+    inLanguage,
+    breadcrumb: { '@id': breadcrumbId },
+    mainEntity: { '@id': workflowId },
+    ...(hasFaq ? { hasPart: [{ '@id': faqId }] } : {}),
+    about: aboutRefs,
+    ...(mentionRefs.length ? { mentions: mentionRefs } : {}),
+  });
 
   graph.push({
     '@type': ['SoftwareApplication', 'TechArticle'],
@@ -283,7 +331,7 @@ export function buildWorkflowGraphJsonLd(params: {
     applicationCategory: 'MultimediaApplication',
     operatingSystem: 'Windows, macOS, Linux',
     ...(entityGraph.identifier ? { identifier: entityGraph.identifier } : {}),
-    ...(datePublished ? { datePublished } : {}),
+    ...(publishedDate ? { datePublished: publishedDate } : {}),
     ...(image ? { image } : {}),
     description,
     ...(entityGraph.keywords ? { keywords: entityGraph.keywords } : {}),
@@ -300,13 +348,26 @@ export function buildWorkflowGraphJsonLd(params: {
       : {}),
   });
 
+  graph.push(...coreTopicNodes);
+  graph.push(...standaloneTermNodes);
+
+  for (const category of entityGraph.categories) {
+    const memberNodes = termNodesByCategory.get(category.id) ?? [];
+    graph.push({
+      '@type': 'DefinedTermSet',
+      '@id': localId(category.id),
+      name: category.name,
+      hasDefinedTerm: memberNodes.map((n) => ({ '@id': n['@id'] as string })),
+    });
+    graph.push(...memberNodes);
+  }
+
   graph.push({
     '@type': 'BreadcrumbList',
     '@id': breadcrumbId,
     itemListElement: mapBreadcrumbItems(breadcrumbItems),
   });
 
-  const hasFaq = Boolean(faqItems?.length);
   if (hasFaq) {
     graph.push({
       '@type': 'FAQPage',
@@ -318,22 +379,6 @@ export function buildWorkflowGraphJsonLd(params: {
       })),
     });
   }
-
-  graph.push({
-    '@type': 'WebPage',
-    '@id': webpageId,
-    url: canonicalUrl,
-    headline: title,
-    isPartOf: { '@id': WEBSITE_ID },
-    publisher: { '@id': ORGANIZATION_ID },
-    ...(datePublished ? { datePublished } : {}),
-    inLanguage,
-    breadcrumb: { '@id': breadcrumbId },
-    mainEntity: { '@id': workflowId },
-    ...(hasFaq ? { hasPart: [{ '@id': faqId }] } : {}),
-    about: aboutRefs,
-    ...(mentionRefs.length ? { mentions: mentionRefs } : {}),
-  });
 
   return { '@context': 'https://schema.org', '@graph': graph };
 }

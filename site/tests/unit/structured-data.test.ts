@@ -7,6 +7,13 @@ import {
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
 import type { WorkflowEntityGraph } from '../../src/data/workflow-entity-graphs';
+import { WORKFLOW_ENTITY_GRAPHS } from '../../src/data/workflow-entity-graphs';
+import { buildSiteEntityNodes } from '../../src/lib/site-entities';
+
+// Every node id ends in a `#fragment`; collapse to that fragment for order
+// assertions (site nodes hang off the origin, page nodes off the canonical).
+const fragOf = (id: unknown) =>
+  typeof id === 'string' && id.includes('#') ? id.slice(id.indexOf('#')) : String(id);
 
 describe('buildHowToJsonLd', () => {
   it('returns null when there are no steps', () => {
@@ -377,4 +384,622 @@ describe('serializeJsonLdForScript with the new builders', () => {
     expect(json).toContain('\\u003c');
     expect(json).toContain('\\u0026');
   });
+});
+
+describe('buildWorkflowGraphJsonLd — LTX-2.5: Image to Video matches the client schema recommendation', () => {
+  const CANONICAL = 'https://comfy.org/workflows/b37902cee452-b37902cee452/';
+  const frag = (n: Record<string, unknown>) => fragOf(n['@id']);
+
+  const result = buildWorkflowGraphJsonLd({
+    canonicalUrl: CANONICAL,
+    title: 'LTX-2.5: Image to Video',
+    pageHeadline: 'LTX-2.5: Image to Video - ComfyUI Workflow',
+    description:
+      'Generate video from a single image using LTX-2.5, producing a high-fidelity clip with industry-leading pixel quality and native multishot capability that holds character, environment, and lighting across connected scenes. Ideal for cinematic production, VFX shot creation, and content pipelines requiring fast, locally deployable video generation.',
+    image: 'https://comfy-hub-assets.comfy.org/uploads/3797af8e-2d26-4c76-a61a-138647979889.mp4',
+    datePublished: '2026-08-11',
+    inLanguage: 'en',
+    breadcrumbItems: [
+      { name: 'Home', item: 'https://comfy.org' },
+      { name: 'Workflows', item: 'https://comfy.org/workflows/' },
+      { name: 'LTX-2.5: Image to Video', item: CANONICAL },
+    ],
+    faqItems: [
+      {
+        question: 'Why does the workflow use ResolutionSelector and multiples of 32?',
+        answer: 'a',
+      },
+      { question: 'How long can my clip be, and what affects render time?', answer: 'b' },
+      { question: 'How do I keep the subject stable and avoid jitter?', answer: 'c' },
+      { question: 'Does this support multishot timelines?', answer: 'd' },
+    ],
+    entityGraph: WORKFLOW_ENTITY_GRAPHS.video_ltx2_5_i2v,
+  });
+  const graph = result['@graph'] as Record<string, unknown>[];
+  const byFrag = (f: string) => graph.find((n) => frag(n) === f)!;
+
+  it('emits every node in the exact order of the recommendation', () => {
+    expect(graph.map(frag)).toEqual([
+      '#website',
+      '#organization',
+      '#comfyui',
+      '#webpage',
+      '#workflow',
+      '#e-video',
+      '#e-image',
+      '#cat-technology',
+      '#e-api',
+      '#e-open-source',
+      '#e-codec',
+      '#e-data',
+      '#e-accessibility',
+      '#e-hdr',
+      '#e-motion-interp',
+      '#e-image-format',
+      '#cat-business',
+      '#e-footage',
+      '#e-camera',
+      '#e-rendering',
+      '#e-quality',
+      '#e-manufacturing',
+      '#cat-software',
+      '#e-prompt-eng',
+      '#e-library',
+      '#e-hardware',
+      '#e-gpu',
+      '#e-load',
+      '#cat-audiovideo',
+      '#e-display-res',
+      '#e-pixel',
+      '#e-frame-rate',
+      '#e-aspect-ratio',
+      '#e-subtitles',
+      '#e-sound',
+      '#e-1080p',
+      '#e-motion-blur',
+      '#e-mpeg4',
+      '#breadcrumb',
+      '#faq',
+    ]);
+  });
+
+  it('WebPage carries the suffixed headline, pinned date, and the recommendation about/mentions order', () => {
+    const webpage = byFrag('#webpage');
+    expect(webpage['@type']).toBe('WebPage');
+    expect(webpage.headline).toBe('LTX-2.5: Image to Video - ComfyUI Workflow');
+    expect(webpage.datePublished).toBe('2026-08-12');
+    expect(webpage.inLanguage).toBe('en');
+    expect(webpage.isPartOf).toEqual({ '@id': 'https://comfy.org/#website' });
+    expect(webpage.publisher).toEqual({ '@id': 'https://comfy.org/#organization' });
+    expect(webpage.mainEntity).toEqual({ '@id': `${CANONICAL}#workflow` });
+    expect(webpage.hasPart).toEqual([{ '@id': `${CANONICAL}#faq` }]);
+    expect((webpage.about as Record<string, unknown>[]).map((r) => frag(r))).toEqual([
+      '#workflow',
+      '#e-video',
+      '#e-image',
+      '#cat-technology',
+      '#cat-business',
+      '#cat-software',
+      '#cat-audiovideo',
+    ]);
+    expect((webpage.mentions as Record<string, unknown>[]).map((r) => frag(r))).toEqual([
+      '#e-api',
+      '#e-open-source',
+      '#e-codec',
+      '#e-data',
+      '#e-accessibility',
+      '#e-hdr',
+      '#e-motion-interp',
+      '#e-hardware',
+      '#e-gpu',
+      '#e-prompt-eng',
+      '#e-library',
+      '#e-load',
+      '#e-footage',
+      '#e-camera',
+      '#e-rendering',
+      '#e-quality',
+      '#e-manufacturing',
+      '#e-image-format',
+      '#e-display-res',
+      '#e-pixel',
+      '#e-frame-rate',
+      '#e-aspect-ratio',
+      '#e-subtitles',
+      '#e-sound',
+      '#e-1080p',
+      '#e-motion-blur',
+      '#e-mpeg4',
+    ]);
+  });
+
+  it('the workflow node keeps the bare title and the pinned identifier/date/keywords', () => {
+    const workflow = byFrag('#workflow');
+    expect(workflow['@type']).toEqual(['SoftwareApplication', 'TechArticle']);
+    expect(workflow.name).toBe('LTX-2.5: Image to Video');
+    expect(workflow.headline).toBe('LTX-2.5: Image to Video');
+    expect(workflow.identifier).toBe('6e397a2b-68f7-48f6-8930-f3a5491a163c');
+    expect(workflow.datePublished).toBe('2026-08-12');
+    expect(workflow.keywords).toBe('Image Generation, Image to Video, LTX-2.5, ComfyUI Workflow');
+    expect(workflow.creator).toEqual({ '@id': 'https://comfy.org/#organization' });
+    expect(workflow.runtimePlatform).toEqual({ '@id': 'https://comfy.org/#comfyui' });
+    expect(workflow.isRelatedTo).toEqual([
+      {
+        '@type': 'WebPage',
+        name: 'Image Generation Workflows',
+        url: 'https://comfy.org/workflows/category/image/',
+      },
+      {
+        '@type': 'WebPage',
+        name: 'Image to Video Workflows',
+        url: 'https://comfy.org/workflows/tag/image-to-video/',
+      },
+    ]);
+  });
+
+  it('each DefinedTermSet lists its members in the recommendation order', () => {
+    const members = (f: string) =>
+      (byFrag(f).hasDefinedTerm as Record<string, unknown>[]).map((r) => frag(r));
+    expect(members('#cat-technology')).toEqual([
+      '#e-api',
+      '#e-open-source',
+      '#e-codec',
+      '#e-data',
+      '#e-accessibility',
+      '#e-hdr',
+      '#e-motion-interp',
+      '#e-image-format',
+    ]);
+    expect(members('#cat-business')).toEqual([
+      '#e-footage',
+      '#e-camera',
+      '#e-rendering',
+      '#e-quality',
+      '#e-manufacturing',
+    ]);
+    expect(members('#cat-software')).toEqual([
+      '#e-prompt-eng',
+      '#e-library',
+      '#e-hardware',
+      '#e-gpu',
+      '#e-load',
+    ]);
+    expect(members('#cat-audiovideo')).toEqual([
+      '#e-display-res',
+      '#e-pixel',
+      '#e-frame-rate',
+      '#e-aspect-ratio',
+      '#e-subtitles',
+      '#e-sound',
+      '#e-1080p',
+      '#e-motion-blur',
+      '#e-mpeg4',
+    ]);
+  });
+
+  it('every categorized DefinedTerm points back at its set; core topics do not', () => {
+    expect(byFrag('#e-api').inDefinedTermSet).toEqual({ '@id': `${CANONICAL}#cat-technology` });
+    expect(byFrag('#e-image-format').inDefinedTermSet).toEqual({
+      '@id': `${CANONICAL}#cat-technology`,
+    });
+    expect(byFrag('#e-load').inDefinedTermSet).toEqual({ '@id': `${CANONICAL}#cat-software` });
+    expect(byFrag('#e-video')).not.toHaveProperty('inDefinedTermSet');
+    expect(byFrag('#e-image')).not.toHaveProperty('inDefinedTermSet');
+  });
+
+  it('the Organization node keeps its logo (for the Google logo rich result)', () => {
+    expect(byFrag('#organization')).toHaveProperty('logo');
+    const org = buildSiteEntityNodes().find((n) => n['@type'] === 'Organization')!;
+    expect(org.logo).toBe('https://comfy.org/favicon-96x96.png');
+  });
+
+  it('serializes to valid JSON', () => {
+    const json = serializeJsonLdForScript(result)
+      .replace(/\\u003c/g, '<')
+      .replace(/\\u003e/g, '>')
+      .replace(/\\u0026/g, '&');
+    expect(() => JSON.parse(json)).not.toThrow();
+  });
+});
+
+// Every curated workflow @graph, transcribed from the client "Comfy Schema &
+// Content Recommendations" doc: the exact node order, the WebPage about/mentions
+// order, each DefinedTermSet's member order, the pinned datePublished, and the
+// "- ComfyUI Workflow" headline suffix.
+describe('buildWorkflowGraphJsonLd — every curated workflow matches the recommendation doc', () => {
+  const SITE = 'https://comfy.org';
+
+  interface ExpectedGraph {
+    key: string;
+    slug: string;
+    title: string;
+    datePublished: string;
+    identifier?: string;
+    nodeOrder: string[];
+    about: string[];
+    mentions: string[];
+    sets: Record<string, string[]>;
+  }
+
+  const EXPECTED: ExpectedGraph[] = [
+    {
+      key: 'api_seedance2_5_r2v',
+      slug: 'cd0c4f9f61a4-cd0c4f9f61a4',
+      title: 'Seedance 2.5: Reference to Video',
+      datePublished: '2026-08-08',
+      nodeOrder: [
+        '#website',
+        '#organization',
+        '#comfyui',
+        '#webpage',
+        '#workflow',
+        '#e-reference',
+        '#e-video',
+        '#e-audio',
+        '#e-motion',
+        '#e-style',
+        '#e-rhythm',
+        '#e-ecommerce',
+        '#e-product',
+        '#e-advertising',
+        '#cat-audiovideo',
+        '#e-video-editing',
+        '#e-sound-effect',
+        '#e-cinematic',
+        '#e-1080p',
+        '#e-motion-blur',
+        '#e-microphone',
+        '#cat-business',
+        '#e-camera',
+        '#e-footage',
+        '#e-quality',
+        '#e-business-process',
+        '#cat-technology',
+        '#e-display-res',
+        '#e-aspect-ratio',
+        '#e-image-stabilization',
+        '#e-frame-rate',
+        '#e-4k',
+        '#cat-marketing',
+        '#e-branding',
+        '#e-personalization',
+        '#e-product-demo',
+        '#e-digital-marketing',
+        '#e-target-market',
+        '#e-distribution',
+        '#breadcrumb',
+        '#faq',
+      ],
+      about: [
+        '#workflow',
+        '#e-reference',
+        '#e-video',
+        '#cat-audiovideo',
+        '#cat-business',
+        '#cat-technology',
+        '#cat-marketing',
+      ],
+      mentions: [
+        '#e-audio',
+        '#e-motion',
+        '#e-style',
+        '#e-rhythm',
+        '#e-ecommerce',
+        '#e-product',
+        '#e-advertising',
+        '#e-video-editing',
+        '#e-sound-effect',
+        '#e-cinematic',
+        '#e-1080p',
+        '#e-motion-blur',
+        '#e-microphone',
+        '#e-camera',
+        '#e-footage',
+        '#e-quality',
+        '#e-business-process',
+        '#e-display-res',
+        '#e-aspect-ratio',
+        '#e-image-stabilization',
+        '#e-frame-rate',
+        '#e-4k',
+        '#e-branding',
+        '#e-personalization',
+        '#e-product-demo',
+        '#e-digital-marketing',
+        '#e-target-market',
+        '#e-distribution',
+      ],
+      sets: {
+        '#cat-audiovideo': [
+          '#e-video-editing',
+          '#e-sound-effect',
+          '#e-cinematic',
+          '#e-1080p',
+          '#e-motion-blur',
+          '#e-microphone',
+        ],
+        '#cat-business': ['#e-camera', '#e-footage', '#e-quality', '#e-business-process'],
+        '#cat-technology': [
+          '#e-display-res',
+          '#e-aspect-ratio',
+          '#e-image-stabilization',
+          '#e-frame-rate',
+          '#e-4k',
+        ],
+        '#cat-marketing': [
+          '#e-branding',
+          '#e-personalization',
+          '#e-product-demo',
+          '#e-digital-marketing',
+          '#e-target-market',
+          '#e-distribution',
+        ],
+      },
+    },
+    {
+      key: 'video_minimax_h3_i2v',
+      slug: 'a781503cf508-a781503cf508',
+      title: 'MiniMax H3: Image to Video',
+      datePublished: '2026-08-03',
+      nodeOrder: [
+        '#website',
+        '#organization',
+        '#comfyui',
+        '#webpage',
+        '#workflow',
+        '#e-workflow',
+        '#e-video',
+        '#e-image',
+        '#e-audio',
+        '#e-resolution',
+        '#e-mp4',
+        '#e-clip',
+        '#e-model',
+        '#e-input',
+        '#e-reference',
+        '#cat-audiovideo',
+        '#e-video-editing',
+        '#e-1080p',
+        '#e-motion-graphics',
+        '#e-digital-audio',
+        '#e-stereo-sound',
+        '#e-aspect-ratio',
+        '#cat-technology',
+        '#e-api',
+        '#e-point-click',
+        '#e-data',
+        '#e-infosec',
+        '#e-pixel',
+        '#e-frame-rate',
+        '#e-4k',
+        '#cat-business',
+        '#e-webcam',
+        '#e-website',
+        '#cat-files',
+        '#e-jpeg',
+        '#e-png',
+        '#e-download',
+        '#e-url',
+        '#e-data-center',
+        '#e-file-system',
+        '#breadcrumb',
+        '#faq',
+      ],
+      about: [
+        '#workflow',
+        '#e-workflow',
+        '#e-video',
+        '#e-image',
+        '#cat-audiovideo',
+        '#cat-technology',
+        '#cat-business',
+        '#cat-files',
+      ],
+      mentions: [
+        '#e-audio',
+        '#e-resolution',
+        '#e-mp4',
+        '#e-clip',
+        '#e-model',
+        '#e-input',
+        '#e-reference',
+        '#e-video-editing',
+        '#e-1080p',
+        '#e-motion-graphics',
+        '#e-digital-audio',
+        '#e-stereo-sound',
+        '#e-aspect-ratio',
+        '#e-api',
+        '#e-point-click',
+        '#e-data',
+        '#e-infosec',
+        '#e-pixel',
+        '#e-frame-rate',
+        '#e-4k',
+        '#e-webcam',
+        '#e-website',
+        '#e-jpeg',
+        '#e-png',
+        '#e-download',
+        '#e-url',
+        '#e-data-center',
+        '#e-file-system',
+      ],
+      sets: {
+        '#cat-audiovideo': [
+          '#e-video-editing',
+          '#e-1080p',
+          '#e-motion-graphics',
+          '#e-digital-audio',
+          '#e-stereo-sound',
+          '#e-aspect-ratio',
+        ],
+        '#cat-technology': [
+          '#e-api',
+          '#e-point-click',
+          '#e-data',
+          '#e-infosec',
+          '#e-pixel',
+          '#e-frame-rate',
+          '#e-4k',
+        ],
+        '#cat-business': ['#e-webcam', '#e-website'],
+        '#cat-files': [
+          '#e-jpeg',
+          '#e-png',
+          '#e-download',
+          '#e-url',
+          '#e-data-center',
+          '#e-file-system',
+        ],
+      },
+    },
+    {
+      key: 'video_wan_animate2',
+      slug: '9394f9968da3-9394f9968da3',
+      title: 'Wan Animate 2: Motion Transfer',
+      datePublished: '2026-08-08',
+      nodeOrder: [
+        '#website',
+        '#organization',
+        '#comfyui',
+        '#webpage',
+        '#workflow',
+        '#e-motion',
+        '#e-character',
+        '#e-camera',
+        '#e-extraction',
+        '#e-frames',
+        '#e-skeleton',
+        '#e-reference',
+        '#e-identity',
+        '#cat-computervision',
+        '#e-computer-vision',
+        '#e-rendering',
+        '#e-gpu',
+        '#e-image-stabilization',
+        '#e-display-res',
+        '#cat-business',
+        '#e-workflow',
+        '#e-footage',
+        '#e-quality',
+        '#e-communication',
+        '#e-control',
+        '#cat-audiovideo',
+        '#e-sound',
+        '#e-surround-sound',
+        '#e-high-fidelity',
+        '#e-video-editing',
+        '#e-frame-rate',
+        '#breadcrumb',
+        '#faq',
+      ],
+      about: ['#workflow', '#e-motion', '#cat-computervision', '#cat-business', '#cat-audiovideo'],
+      mentions: [
+        '#e-character',
+        '#e-camera',
+        '#e-extraction',
+        '#e-frames',
+        '#e-skeleton',
+        '#e-reference',
+        '#e-identity',
+        '#e-computer-vision',
+        '#e-rendering',
+        '#e-gpu',
+        '#e-image-stabilization',
+        '#e-display-res',
+        '#e-workflow',
+        '#e-footage',
+        '#e-quality',
+        '#e-communication',
+        '#e-control',
+        '#e-sound',
+        '#e-surround-sound',
+        '#e-high-fidelity',
+        '#e-video-editing',
+        '#e-frame-rate',
+      ],
+      sets: {
+        '#cat-computervision': [
+          '#e-computer-vision',
+          '#e-rendering',
+          '#e-gpu',
+          '#e-image-stabilization',
+          '#e-display-res',
+        ],
+        '#cat-business': [
+          '#e-workflow',
+          '#e-footage',
+          '#e-quality',
+          '#e-communication',
+          '#e-control',
+        ],
+        '#cat-audiovideo': [
+          '#e-sound',
+          '#e-surround-sound',
+          '#e-high-fidelity',
+          '#e-video-editing',
+          '#e-frame-rate',
+        ],
+      },
+    },
+  ];
+
+  for (const exp of EXPECTED) {
+    describe(exp.title, () => {
+      const canonical = `${SITE}/workflows/${exp.slug}/`;
+      const g = buildWorkflowGraphJsonLd({
+        canonicalUrl: canonical,
+        title: exp.title,
+        pageHeadline: `${exp.title} - ComfyUI Workflow`,
+        description: 'desc',
+        image: 'https://cdn/x.mp4',
+        // A stale page date must lose to the pinned datePublished on the graph.
+        datePublished: '1999-01-01',
+        inLanguage: 'en',
+        breadcrumbItems: [
+          { name: 'Home', item: SITE },
+          { name: 'Workflows', item: `${SITE}/workflows/` },
+          { name: exp.title, item: canonical },
+        ],
+        faqItems: [{ question: 'Q?', answer: 'A.' }],
+        entityGraph: WORKFLOW_ENTITY_GRAPHS[exp.key],
+      });
+      const graph = g['@graph'] as Record<string, unknown>[];
+      const node = (frag: string) => graph.find((n) => fragOf(n['@id']) === frag)!;
+
+      it('emits every node in the documented order', () => {
+        expect(graph.map((n) => fragOf(n['@id']))).toEqual(exp.nodeOrder);
+      });
+
+      it('WebPage carries the suffixed headline, pinned date, and documented about/mentions order', () => {
+        const wp = node('#webpage');
+        expect(wp.headline).toBe(`${exp.title} - ComfyUI Workflow`);
+        expect(wp.datePublished).toBe(exp.datePublished);
+        expect((wp.about as Record<string, unknown>[]).map((r) => fragOf(r['@id']))).toEqual(
+          exp.about
+        );
+        expect((wp.mentions as Record<string, unknown>[]).map((r) => fragOf(r['@id']))).toEqual(
+          exp.mentions
+        );
+      });
+
+      it('the workflow node uses the bare title and the pinned date', () => {
+        const wf = node('#workflow');
+        expect(wf.name).toBe(exp.title);
+        expect(wf.headline).toBe(exp.title);
+        expect(wf.datePublished).toBe(exp.datePublished);
+        if (exp.identifier) expect(wf.identifier).toBe(exp.identifier);
+        else expect(wf).not.toHaveProperty('identifier');
+      });
+
+      it('each DefinedTermSet lists its members in the documented order', () => {
+        for (const [setFrag, members] of Object.entries(exp.sets)) {
+          expect(
+            (node(setFrag).hasDefinedTerm as Record<string, unknown>[]).map((r) => fragOf(r['@id']))
+          ).toEqual(members);
+        }
+      });
+    });
+  }
 });
