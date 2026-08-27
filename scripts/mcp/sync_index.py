@@ -674,6 +674,9 @@ def build_template_entry(
         "description": desc,
         "io": io_info,
     }
+    min_version = str(tpl.get("minComfyUIVersion") or "").strip()
+    if min_version:
+        entry["minComfyUIVersion"] = min_version
     if capabilities:
         entry["capabilities"] = capabilities
     if cached.get("io") and cache_matches_workflow(name, cached):
