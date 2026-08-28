@@ -10,6 +10,7 @@ import type { Locale } from '../../i18n/config';
 import { t } from '../../i18n/ui';
 import { localizeUrl } from '../../i18n/utils';
 import { getCloudCtaUrl, getWorkflowDownloadUrl } from '../../lib/urls';
+import { formatRelativeDate } from '../../lib/relative-date';
 import { slugify } from '../../lib/slugify';
 import { creatorPath } from '../../lib/routes';
 import { tagSlug, tagDisplayName } from '../../lib/tag-aliases';
@@ -77,23 +78,6 @@ const mediaTypeLabels: Record<string, string> = {
   audio: t('category.audio', locale),
   '3d': t('category.3d', locale),
 };
-
-function formatRelativeDate(dateStr: string): string {
-  const now = new Date();
-  const date = new Date(dateStr);
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return '1 day ago';
-  if (diffDays < 30) return `${diffDays} days ago`;
-  const diffMonths = Math.floor(diffDays / 30);
-  if (diffMonths === 1) return '1 month ago';
-  if (diffMonths < 12) return `${diffMonths} months ago`;
-  const diffYears = Math.floor(diffMonths / 12);
-  if (diffYears === 1) return '1 year ago';
-  return `${diffYears} years ago`;
-}
 ---
 
 <article
@@ -246,7 +230,7 @@ function formatRelativeDate(dateStr: string): string {
               {
                 data.date && (
                   <span class="ml-11 text-xs text-content-secondary">
-                    {formatRelativeDate(data.date)}
+                    {formatRelativeDate(data.date, locale)}
                   </span>
                 )
               }
