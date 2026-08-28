@@ -15,6 +15,10 @@
 const { defineConfig } = require('@lobehub/i18n-cli');
 const fs = require('node:fs');
 const path = require('node:path');
+// The one implementation of the override layer, shared with the TypeScript
+// scripts under scripts/i18n. It lives in CommonJS because node requires this
+// config directly and cannot load a TypeScript module.
+const { applyOverrides } = require('./scripts/i18n/glossary-overrides.cjs');
 
 const GLOSSARY_DIR = path.join(__dirname, 'i18n', 'glossary');
 
@@ -41,15 +45,18 @@ const outputLocales = singleLocale ? [singleLocale] : ALL_LOCALES;
 // effective/<locale>.json, which the AI reviewer reads too. Selecting it here as
 // well is what broke the Russian run: this side capped the mirror and the
 // reviewer did not, so the reviewer enforced terms the translator never saw.
-// Falls back to the raw mirror for a local run that has not synced the glossary.
+// Falls back to the raw mirror for a local run that has not synced the glossary,
+// merged through the shared `applyOverrides` so this side honours a retraction
+// (a `null` in the overrides file) exactly as the reviewer and the validator do.
 function terminologyBlock(locale) {
   const effective = readJson(path.join(GLOSSARY_DIR, 'effective', `${locale}.json`), null);
   const merged = new Map(
     Object.entries(
-      effective ?? {
-        ...readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
-        ...readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {}),
-      }
+      effective ??
+        applyOverrides(
+          readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
+          readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
+        )
     )
   );
   if (merged.size === 0) return '';

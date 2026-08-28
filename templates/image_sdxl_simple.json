@@ -1,0 +1,491 @@
+{
+  "id": "0fe56559-1cb1-4fe8-955a-15de80e086e9",
+  "revision": 0,
+  "last_node_id": 16,
+  "last_link_id": 41,
+  "nodes": [
+    {
+      "id": 7,
+      "type": "SaveImage",
+      "pos": [
+        1700,
+        270
+      ],
+      "size": [
+        550,
+        720
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 37
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "sdxl_simple"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "sdxl_simple"
+      }
+    },
+    {
+      "id": 10,
+      "type": "CLIPTextEncode",
+      "pos": [
+        530,
+        270
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            33
+          ]
+        }
+      ],
+      "title": "Positive Prompt",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "a giant classical marble statue standing alone in a pure white empty void, soft diffused lighting, subtle shadows, surreal, minimalist, fine art photography, quiet atmosphere, sense of scale"
+      ],
+      "widgets_values_named": {
+        "text": "a giant classical marble statue standing alone in a pure white empty void, soft diffused lighting, subtle shadows, surreal, minimalist, fine art photography, quiet atmosphere, sense of scale"
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 11,
+      "type": "CLIPTextEncode",
+      "pos": [
+        540,
+        550
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "links": [
+            34
+          ]
+        }
+      ],
+      "title": "Negative Prompt",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        "color, colored, lowres, blurry, out of focus, deformed, bad anatomy, extra limbs, mutated, watermark, text, logo, signature\n"
+      ],
+      "widgets_values_named": {
+        "text": "color, colored, lowres, blurry, out of focus, deformed, bad anatomy, extra limbs, mutated, watermark, text, logo, signature\n"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 12,
+      "type": "KSampler",
+      "pos": [
+        1030,
+        270
+      ],
+      "size": [
+        270,
+        270
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 38
+        },
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 33
+        },
+        {
+          "name": "negative",
+          "type": "CONDITIONING",
+          "link": 34
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 35
+        }
+      ],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            36
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "KSampler"
+      },
+      "widgets_values": [
+        812045847300606,
+        "randomize",
+        25,
+        7,
+        "dpmpp_2m",
+        "karras",
+        1
+      ],
+      "widgets_values_named": {
+        "seed": 812045847300606,
+        "control_after_generate": "randomize",
+        "steps": 25,
+        "cfg": 7,
+        "sampler_name": "dpmpp_2m",
+        "scheduler": "karras",
+        "denoise": 1
+      }
+    },
+    {
+      "id": 13,
+      "type": "EmptyLatentImage",
+      "pos": [
+        600,
+        890
+      ],
+      "size": [
+        270,
+        120
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            35
+          ]
+        }
+      ],
+      "title": "Empty Latent",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "EmptyLatentImage"
+      },
+      "widgets_values": [
+        1024,
+        1024,
+        1
+      ],
+      "widgets_values_named": {
+        "width": 1024,
+        "height": 1024,
+        "batch_size": 1
+      },
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 14,
+      "type": "VAEDecode",
+      "pos": [
+        1400,
+        270
+      ],
+      "size": [
+        230,
+        60
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 36
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            37
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "VAEDecode"
+      }
+    },
+    {
+      "id": 15,
+      "type": "CheckpointLoaderSimple",
+      "pos": [
+        80,
+        270
+      ],
+      "size": [
+        350,
+        110
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            38
+          ]
+        },
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            39,
+            40
+          ]
+        },
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            41
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "Node name for S&R": "CheckpointLoaderSimple",
+        "models": [
+          {
+            "name": "sd_xl_base_1.0.safetensors",
+            "url": "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors?download=true",
+            "directory": "checkpoints"
+          }
+        ]
+      },
+      "widgets_values": [
+        "sd_xl_base_1.0.safetensors"
+      ],
+      "widgets_values_named": {
+        "ckpt_name": "sd_xl_base_1.0.safetensors"
+      }
+    },
+    {
+      "id": 16,
+      "type": "MarkdownNote",
+      "pos": [
+        -440,
+        270
+      ],
+      "size": [
+        470,
+        590
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model Link",
+      "properties": {},
+      "widgets_values": [
+        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Link\n\n**checkpoints**\n\n- [sd_xl_base_1.0.safetensors](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors?download=true)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   └── 📂 checkpoints/\n│       └── sd_xl_base_1.0.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Link\n\n**checkpoints**\n\n- [sd_xl_base_1.0.safetensors](https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors?download=true)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   └── 📂 checkpoints/\n│       └── sd_xl_base_1.0.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      33,
+      10,
+      0,
+      12,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      34,
+      11,
+      0,
+      12,
+      2,
+      "CONDITIONING"
+    ],
+    [
+      35,
+      13,
+      0,
+      12,
+      3,
+      "LATENT"
+    ],
+    [
+      36,
+      12,
+      0,
+      14,
+      0,
+      "LATENT"
+    ],
+    [
+      37,
+      14,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      38,
+      15,
+      0,
+      12,
+      0,
+      "MODEL"
+    ],
+    [
+      39,
+      15,
+      1,
+      10,
+      0,
+      "CLIP"
+    ],
+    [
+      40,
+      15,
+      1,
+      11,
+      0,
+      "CLIP"
+    ],
+    [
+      41,
+      15,
+      2,
+      14,
+      1,
+      "VAE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Prompt",
+      "bounding": [
+        520,
+        200,
+        430,
+        570
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Image Size",
+      "bounding": [
+        520,
+        800,
+        420,
+        260
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.3903256921908007,
+      "offset": [
+        2466.4019207611336,
+        1069.08458841223
+      ]
+    },
+    "frontendVersion": "1.49.6",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

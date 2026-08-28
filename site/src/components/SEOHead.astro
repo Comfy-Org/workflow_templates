@@ -1,6 +1,7 @@
 ---
 import HreflangTags from './HreflangTags.astro';
-import { LANGUAGES, DEFAULT_LOCALE, type Locale } from '../i18n/config';
+import { OG_LOCALES, type Locale } from '../i18n/config';
+import { clusterLocales, getLocaleFromPath, unlocalizePath } from '../i18n/utils';
 import { absoluteUrl, SITE_NAME } from '../config/site';
 import { serializeJsonLdForScript } from '../lib/structured-data';
 
@@ -55,23 +56,16 @@ const OG_IMAGE_MIME: Record<string, string> = {
 const ogImageExt = ogImage.split('?')[0].split('.').pop()?.toLowerCase() ?? '';
 const ogImageType = OG_IMAGE_MIME[ogImageExt] ?? 'image/png';
 
-// Compute hreflang base path if not provided
-// Strip locale prefix from pathname to get the base path
-let computedHreflangBasePath = hreflangBasePath;
-if (!computedHreflangBasePath) {
-  // Check if pathname starts with a locale prefix
-  const pathSegments = pathname.split('/').filter(Boolean);
-  if (pathSegments[0] && pathSegments[0] in LANGUAGES && pathSegments[0] !== DEFAULT_LOCALE) {
-    // Remove locale prefix
-    computedHreflangBasePath = '/' + pathSegments.slice(1).join('/');
-  } else {
-    computedHreflangBasePath = pathname;
-  }
-  // Ensure trailing slash
-  if (!computedHreflangBasePath.endsWith('/')) {
-    computedHreflangBasePath += '/';
-  }
-}
+const computedHreflangBasePath = hreflangBasePath ?? unlocalizePath(pathname);
+
+// Social platforms read og:locale to decide which audience a shared link suits;
+// without it every localized page presents itself as language-neutral. Built from
+// the same cluster the hreflang tags use so the two cannot contradict each other.
+const currentLocale = getLocaleFromPath(pathname);
+const ogAlternateLocales: readonly Locale[] = clusterLocales(
+  hreflangLocalized,
+  hreflangLocales
+).filter((locale) => locale !== currentLocale);
 ---
 
 <meta charset="UTF-8" />
@@ -99,6 +93,12 @@ if (!computedHreflangBasePath) {
 <meta property="og:image:height" content="630" />
 <meta property="og:image:alt" content={title} />
 <meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:locale" content={OG_LOCALES[currentLocale]} />
+{
+  ogAlternateLocales.map((locale) => (
+    <meta property="og:locale:alternate" content={OG_LOCALES[locale]} />
+  ))
+}
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image" />

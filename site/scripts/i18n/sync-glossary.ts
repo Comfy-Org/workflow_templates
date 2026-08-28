@@ -16,6 +16,10 @@
  *                          the product UI already uses (workflow, node, queue…).
  *   overrides/{locale}.json — hand-curated fixes that win over the mirror
  *                          (created empty here; reviewers/CODEOWNERS extend them).
+ *                          A `null` value RETRACTS a harvested pair instead of
+ *                          replacing it, for the cases where the app's own UI
+ *                          contradicts itself. The override layer itself lives
+ *                          in glossary-overrides.cjs, shared with .i18nrc.cjs.
  *
  * The pure functions are exported and unit-tested; `main()` only does IO.
  */
@@ -23,6 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
+import { applyOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
 
@@ -149,7 +154,7 @@ export const MAX_MIRROR_PAIRS = 200;
  */
 export function selectGlossary(
   mirror: Record<string, string>,
-  overrides: Record<string, string>,
+  overrides: GlossaryOverrides,
   corpus: string,
   limit: number = MAX_MIRROR_PAIRS
 ): Record<string, string> {
@@ -171,10 +176,15 @@ export function selectGlossary(
 
   const selected: Record<string, string> = {};
   for (const { en, localized } of ranked) selected[en] = localized;
-  for (const [en, localized] of Object.entries(overrides)) {
-    if (typeof localized === 'string' && localized.trim()) selected[en] = localized;
-  }
-  return selected;
+  // Overrides are laid on AFTER the cap, retractions included. A retraction must
+  // never filter the mirror before ranking: dropping a term earlier promotes
+  // whatever sits at rank 200 into the glossary, so retracting one bad pair would
+  // silently start enforcing a term nobody vetted. Measured on es, retracting
+  // Video/VIDEO before the cap would have promoted `Top -> Arriba` and
+  // `Number of Frames -> Número de fotogramas`, and `Top` is an ordinary word in
+  // this corpus. After the cap it is purely subtractive: 200 -> 198, nothing else
+  // moves.
+  return applyOverrides(selected, overrides);
 }
 
 /** Flatten a nested JSON dictionary to flat "a.b.c" → string entries. */
@@ -277,7 +287,7 @@ function main(): void {
     writeJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), mirror);
     const overridePath = path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`);
     if (!fs.existsSync(overridePath)) writeJson(overridePath, {});
-    const overrides = readJson<Record<string, string>>(overridePath, {});
+    const overrides = readJson<GlossaryOverrides>(overridePath, {});
     // ONE artifact, read verbatim by the translator config and the reviewer, so
     // neither can enforce a term the other was never shown.
     const effective = selectGlossary(mirror, overrides, corpus);

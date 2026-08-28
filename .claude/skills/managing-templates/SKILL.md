@@ -67,7 +67,7 @@ Add the object to the right category's `templates` array.
 
 **Required:** `name`, `description`, `mediaType` (`image` \| `video` \| `audio` \| `3d`), `mediaSubtype` (usually `webp`).
 
-**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `searchRank`, `io`, `thumbnail`.
+**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `minComfyUIVersion`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `searchRank`, `io`, `thumbnail`.
 
 ```json
 {
@@ -153,6 +153,8 @@ Order matters: edit `i18n.json` first, then sync. Re-run sync after any later tr
 ### Step 9 — Version (release PRs only)
 
 See [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
+
+Full release knowledge (label flow, publish pipeline, quota gates, force publish): use `/managing-releases`.
 
 ---
 

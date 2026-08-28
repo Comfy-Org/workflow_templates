@@ -20,6 +20,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
+import { enforceableOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 import {
   TRANSLATABLE_FIELDS,
   type FaqItem,
@@ -333,9 +334,10 @@ function main(): void {
       );
     }
     // Curated per-locale terms that must be honored (the override layer's teeth).
-    const overrides = readJson<Record<string, string>>(
-      path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
-      {}
+    // Read through `enforceableOverrides` so a retraction (a `null`, which drops a
+    // bad harvested pair) can never become a requirement to render the literal null.
+    const overrides = enforceableOverrides(
+      readJson<GlossaryOverrides>(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
     );
     for (const [shareId, localized] of Object.entries(localeContent)) {
       const en = english[shareId];

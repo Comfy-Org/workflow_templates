@@ -5,6 +5,7 @@ import {
   PRESERVE_TERMS,
   selectGlossary,
 } from '../../scripts/i18n/sync-glossary';
+import { applyOverrides, enforceableOverrides } from '../../scripts/i18n/glossary-overrides.cjs';
 
 describe('flattenStrings', () => {
   it('flattens nested dictionaries to dot paths, keeping only strings', () => {
@@ -102,6 +103,38 @@ describe('selectGlossary', () => {
     expect(selected.Workflow).toBe('Рабочий процесс');
   });
 
+  it('lets a null override RETRACT a harvested pair', () => {
+    // The escape hatch for a pair the app's own UI contradicts. The mirror is
+    // regenerated from the app locales every run, so retraction is the only way
+    // to drop one: a hand-edit to the mirror would not survive the next sync.
+    const selected = selectGlossary(
+      { Workflow: 'Рабочий процесс', Video: 'Видео' },
+      { Video: null },
+      corpus
+    );
+
+    expect(selected).toEqual({ Workflow: 'Рабочий процесс' });
+  });
+
+  it('applies a retraction after the cap, so nothing is promoted in its place', () => {
+    // Pins the design decision. Filtering the mirror before ranking would free a
+    // slot and pull the next-ranked term into the enforced glossary, which is how
+    // retracting one bad pair could start enforcing a term nobody vetted.
+    const mirror = { Workflow: 'Рабочий процесс', video: 'Видео', Seed: 'Сид' };
+
+    const retracted = selectGlossary(mirror, { Workflow: null }, corpus, 2);
+
+    expect('Seed' in retracted).toBe(false);
+    expect(Object.keys(retracted)).toEqual(['video']);
+  });
+
+  it('still ignores a blank override rather than treating it as a retraction', () => {
+    // Blank stays an accident; only an explicit null is a deliberate retraction.
+    const selected = selectGlossary({ Workflow: 'Рабочий процесс' }, { Workflow: '  ' }, corpus);
+
+    expect(selected.Workflow).toBe('Рабочий процесс');
+  });
+
   it('counts whole terms only, so a short term cannot ride inside a longer word', () => {
     const selected = selectGlossary(
       { AI: 'ИИ', Workflow: 'Рабочий процесс' },
@@ -141,5 +174,36 @@ describe('selectGlossary', () => {
     );
 
     expect(Object.keys(selected)).toEqual(['Sampler']);
+  });
+});
+
+describe('applyOverrides', () => {
+  it('replaces on a string and deletes on a null', () => {
+    expect(applyOverrides({ a: '1', b: '2' }, { a: 'one', b: null })).toEqual({ a: 'one' });
+  });
+
+  it('ignores a retraction for a term that was never harvested', () => {
+    expect(applyOverrides({ a: '1' }, { zzz: null })).toEqual({ a: '1' });
+  });
+
+  it('does not mutate its input', () => {
+    const base = { a: '1' };
+    applyOverrides(base, { a: null });
+
+    expect(base).toEqual({ a: '1' });
+  });
+});
+
+describe('enforceableOverrides', () => {
+  it('keeps curated terms and drops retractions', () => {
+    // Everything that checks content against the override layer reads it through
+    // here. `collectViolations` treats an override as a hard requirement with no
+    // model in the loop, so a null reaching it would demand fields render as the
+    // literal null.
+    expect(enforceableOverrides({ Queue: 'Cola', Video: null })).toEqual({ Queue: 'Cola' });
+  });
+
+  it('drops a blank the same way it always did', () => {
+    expect(enforceableOverrides({ Queue: '   ' })).toEqual({});
   });
 });
