@@ -92,21 +92,38 @@ jobs:
           # a narrow refspec), so both the restore and the later force-with-lease
           # have a real base. Absent branch (first run) -> fetch fails, start fresh.
           if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
-            git checkout "origin/$STABLE_BRANCH" -- site/src/i18n || true
-            # The restore above shadows every file under site/src/i18n with the
-            # branch's older copy, so an edit landed on main since the branch was
-            # last updated comes back as a deletion (it took the navbar keys on
-            # 2026-08-12). Take the layers a person edits back from the checkout:
-            # the UI source nothing regenerates, the override layer nothing here
-            # writes, and the sign-off records, whose missing entries this pipeline
-            # would otherwise re-stamp as machine-authored. restore, not checkout,
-            # so a file deleted on main cannot be resurrected from the branch.
-            git restore --source=HEAD --staged --worktree -- \
-              site/src/i18n/locales/en.json \
-              site/src/i18n/overrides \
-              site/src/i18n/reviews \
-              site/src/i18n/human
-            echo "Restored partial translations from $STABLE_BRANCH (human-authored sources kept from the checkout)."
+            # Take back ONLY what this pipeline generates, rather than taking the
+            # whole tree and undoing the parts a person owns. An allowlist of
+            # things to protect has to be extended by hand every time someone adds
+            # a file, and three times nobody did, so the run proposed deleting
+            # their work: the navbar keys on 2026-08-12, the template.api.* strings
+            # on 2026-08-19, and clusterLocales, unlocalizePath, OG_LOCALES and
+            # Italian on 2026-08-27. An allowlist of things to copy cannot do that,
+            # because anything not named here is never touched.
+            #
+            # The failure direction inverts with it: forgetting to name a generated
+            # path costs one re-translation of that path, where forgetting to name
+            # a hand-written path deleted it, silently whenever it was data.
+            #
+            # locales/ is deliberately absent. It is not purely generated: it is
+            # lobe's entry (locales/en.json) plus its outputLocales, and `it` is in
+            # this workflow's SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales,
+            # so nothing regenerates locales/it.json at all. Resuming that layer is
+            # also worth nothing: main is ahead of the branch on every locale (206
+            # keys against 205, and Italian 1 against 0, the date.today key added by
+            # #1200), and lobe skips keys that are already translated. Copying it
+            # back could only ever discard merged strings.
+            #
+            # Per path, not one command, so a path this branch has not created yet
+            # only loses its own progress instead of discarding every path's.
+            for generated in \
+              site/src/i18n/content \
+              site/src/i18n/review \
+              site/src/i18n/manifest.json; do
+              git checkout "origin/$STABLE_BRANCH" -- "$generated" 2>/dev/null \
+                || echo "No $generated on $STABLE_BRANCH yet; it will be regenerated."
+            done
+            echo "Restored generated translation state from $STABLE_BRANCH (everything else kept from main)."
           else
             echo "No automation branch yet; starting fresh from main."
           fi
@@ -383,11 +400,14 @@ jobs:
           # locale:ui fills only MISSING keys, so an invalid UI string banked
           # here would restore and fail validate forever. (Content is safe:
           # enforce prunes it to disk and re-prunes restored content nightly.)
-          if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:site/src/i18n/locales" 2>/dev/null; then
-            git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- site/src/i18n/locales
-          else
-            git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
-          fi
+          #
+          # Always main, never the branch. The branch's copy is only ever as new
+          # as the last night that wrote it, so preferring it banks a regression
+          # the moment someone merges a UI string: right now main carries 206 keys
+          # and the branch 205, the difference being date.today from #1200. Since
+          # the restore step above no longer reads this layer from the branch,
+          # there is no banked UI progress here left to preserve.
+          git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
           if git diff --cached --quiet; then
             echo "Run failed before producing any translation changes; nothing to save."
             exit 0
