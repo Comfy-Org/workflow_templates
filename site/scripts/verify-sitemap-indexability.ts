@@ -13,6 +13,7 @@ import { fileURLToPath } from 'node:url';
 import { LOCALES } from '../src/i18n/config';
 import {
   checkHreflangContract,
+  declaresOnDemandRendering,
   parseAlternates,
   parseCanonical,
   parseNoindex,
@@ -86,21 +87,31 @@ function collectRenderedPages(): RenderedPage[] {
   return pages;
 }
 
+/** The route whose render policy decides whether a missing localized detail page is a problem. */
+const LOCALIZED_DETAIL_ROUTE = 'src/pages/[locale]/workflows/[slug].astro';
+
 /**
  * Whether the localized detail route is prerendered, read from the route itself.
  *
  * Astro's `output: 'static'` prerenders every page that does not opt out, so the
- * absence of `prerender = false` in the route file is the policy. Read from source
- * rather than from the emitted pages: a build whose hub fetch failed emits none of
- * them, and inferring from that would excuse the very absence worth reporting.
+ * absence of the opt-out in the route file is the policy. Read from source rather
+ * than from the emitted pages: a build whose hub fetch failed emits none of them,
+ * and inferring from that would excuse the very absence worth reporting.
+ *
+ * Throws when the route is gone rather than answering "not prerendered". That
+ * answer would reclassify every missing localized detail page as unverifiable and
+ * switch the existence rule off in silence, which is exactly what a moved or
+ * renamed route must not be able to do.
  */
 function localizedDetailIsPrerendered(): boolean {
-  const route = path.join(SITE_DIR, 'src/pages/[locale]/workflows/[slug].astro');
-  if (!fs.existsSync(route)) return false;
-  // Anchored on the declaration, not the bare words: this one boolean gates the
-  // whole existence rule and a match switches it off, so prose about prerendering
-  // in the route's own comments must not be able to disable it silently.
-  return !/export\s+const\s+prerender\s*=\s*false/.test(fs.readFileSync(route, 'utf-8'));
+  const route = path.join(SITE_DIR, LOCALIZED_DETAIL_ROUTE);
+  if (!fs.existsSync(route)) {
+    throw new Error(
+      `${LOCALIZED_DETAIL_ROUTE} is missing, so the localized detail render policy cannot be ` +
+        'determined. Point LOCALIZED_DETAIL_ROUTE at the route if it moved.'
+    );
+  }
+  return !declaresOnDemandRendering(fs.readFileSync(route, 'utf-8'));
 }
 
 function main(): void {
@@ -154,4 +165,11 @@ function main(): void {
   console.log('\nSitemap membership and the hreflang contract both hold.');
 }
 
-main();
+try {
+  main();
+} catch (error) {
+  // The checks themselves report through `problems`; reaching here means an input
+  // the run depends on was not there, which is a failure, not a clean pass.
+  console.error(`\nError: ${error instanceof Error ? error.message : String(error)}`);
+  process.exit(1);
+}

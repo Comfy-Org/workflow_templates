@@ -61,6 +61,58 @@ export function parseNoindex(html: string): boolean {
   return NOINDEX_META.test(html);
 }
 
+/**
+ * Source with comments and string literals removed, so text that merely looks like
+ * code cannot be read as code. Astro frontmatter is ordinary TypeScript, so those
+ * are the two comment styles and the three quote styles.
+ */
+function withoutCommentsAndStrings(source: string): string {
+  let out = '';
+  for (let i = 0; i < source.length; ) {
+    const pair = source.slice(i, i + 2);
+    if (pair === '//') {
+      const end = source.indexOf('\n', i);
+      i = end === -1 ? source.length : end;
+      continue;
+    }
+    if (pair === '/*') {
+      const end = source.indexOf('*/', i + 2);
+      i = end === -1 ? source.length : end + 2;
+      continue;
+    }
+    const quote = source[i];
+    if (quote === '"' || quote === "'" || quote === '`') {
+      i += 1;
+      while (i < source.length && source[i] !== quote) i += source[i] === '\\' ? 2 : 1;
+      i += 1;
+      continue;
+    }
+    out += source[i];
+    i += 1;
+  }
+  return out;
+}
+
+/** The declaration that opts an Astro route out of prerendering. */
+const PRERENDER_OPT_OUT = /\bexport\s+const\s+prerender\s*(?::[^=]*)?=\s*false\b/;
+
+/**
+ * Whether an Astro route is served on demand, read from its own source. Under
+ * `output: 'static'` every page prerenders unless it declares otherwise, so the
+ * declaration is the policy and its absence is the default.
+ *
+ * Matched against the source with comments and strings stripped. This one boolean
+ * gates the whole existence rule, and the route it is read from spends its header
+ * comment discussing which of its siblings are server-rendered: a mention in prose
+ * must not be able to switch the rule off. The stripper does not model regex
+ * literals, which these routes do not use; were one ever to confuse it the
+ * declaration would be missed, and a missed declaration asserts existence rather
+ * than excusing it, so that failure is a red build rather than a silent pass.
+ */
+export function declaresOnDemandRendering(source: string): boolean {
+  return PRERENDER_OPT_OUT.test(withoutCommentsAndStrings(source));
+}
+
 export function normalizePath(pathname: string): string {
   const rooted = pathname.startsWith('/') ? pathname : `/${pathname}`;
   return rooted.endsWith('/') ? rooted : `${rooted}/`;

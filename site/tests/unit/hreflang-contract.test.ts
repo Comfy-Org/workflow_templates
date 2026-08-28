@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   checkHreflangContract,
+  declaresOnDemandRendering,
   resolveSiteOrigin,
   parseAlternates,
   parseCanonical,
@@ -120,6 +121,51 @@ describe('resolveSiteOrigin', () => {
 
   it('falls back rather than trusting an unparseable value', () => {
     expect(resolveSiteOrigin('not a url')).toBe(ORIGIN);
+  });
+});
+
+describe('declaresOnDemandRendering', () => {
+  it('reads the declaration that opts a route out of prerendering', () => {
+    expect(declaresOnDemandRendering('---\nexport const prerender = false;\n---')).toBe(true);
+  });
+
+  it('reads it through a type annotation', () => {
+    expect(declaresOnDemandRendering('export const prerender: boolean = false;')).toBe(true);
+  });
+
+  it('treats a route with no declaration as prerendered', () => {
+    expect(declaresOnDemandRendering('---\nconst related = 4;\n---')).toBe(false);
+  });
+
+  it('does not take the opt-out from an assignment to true', () => {
+    expect(declaresOnDemandRendering('export const prerender = true;')).toBe(false);
+  });
+
+  it('does not take the opt-out from a line comment', () => {
+    expect(declaresOnDemandRendering('// export const prerender = false\nconst a = 1;')).toBe(
+      false
+    );
+  });
+
+  it('does not take the opt-out from a block comment', () => {
+    // The real route's header comment is this shape: prose naming the sibling
+    // route that is server-rendered, sitting above code that is not.
+    const source = [
+      '/**',
+      ' * The sibling route declares export const prerender = false; this one does not.',
+      ' */',
+      'const a = 1;',
+    ].join('\n');
+    expect(declaresOnDemandRendering(source)).toBe(false);
+  });
+
+  it('does not take the opt-out from a string', () => {
+    expect(declaresOnDemandRendering('const hint = "export const prerender = false";')).toBe(false);
+  });
+
+  it('does not read the // in a URL as the start of a comment', () => {
+    const source = "const site = 'https://comfy.org'; export const prerender = false;";
+    expect(declaresOnDemandRendering(source)).toBe(true);
   });
 });
 
