@@ -25,6 +25,7 @@ import {
 import { workflowOgUrl } from '../../lib/og-url';
 import {
   buildFaqJsonLd,
+  buildHowToJsonLd,
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
@@ -122,7 +123,8 @@ const data = {
   contentTemplate: entry.contentTemplate,
 };
 
-const title = `${data.title} - ComfyUI Workflow`;
+// Same template key as the localized route, so the pattern evolves in one place.
+const title = t('template.metaTitle', locale).replace('{title}', data.title);
 // Guard against a dangling hyphen for shareless workflows (no `-shareId` suffix).
 const urlSlug = data.shareId ? `${data.name}-${data.shareId}` : data.name;
 const canonicalUrl = absoluteUrl(`/workflows/${urlSlug}/`);
@@ -152,6 +154,14 @@ const structuredData = {
 };
 
 const faqStructuredData = buildFaqJsonLd(data.faqItems);
+
+// The pipeline already writes howToUse steps for every template; surface them
+// as HowTo JSON-LD (LLM/AEO consumption, same stance as the model pages).
+const howToStructuredData = buildHowToJsonLd({
+  name: t('template.howToName', locale).replace('{title}', data.title),
+  steps: data.howToUse,
+  description: data.metaDescription || data.description,
+});
 
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
   name: data.title,
@@ -236,6 +246,15 @@ const toolbarLabels = buildToolbarLabels(locale);
         is:inline
         type="application/ld+json"
         set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
+  {
+    howToStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(howToStructuredData)}
       />
     )
   }

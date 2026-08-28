@@ -96,6 +96,34 @@ function modelFamilyLabel(modelName: string): string {
   return rule?.label ?? modelName;
 }
 
+/**
+ * Canonical model-page slug for a model name, or null when the name is not a
+ * real model. Every family derived from the same catalog gets a page
+ * (qualifying families the rich page, the rest a bare noindex grid), so the
+ * family slug is the link that exists — unlike `slugify(modelName)`, which
+ * produced variant slugs (`wan2-2`, `ltx-2-3`, ...) with no page behind them.
+ * A hub-only family absent from the local content catalog can still miss its
+ * page; the variant slug missed for every versioned model, on every build.
+ */
+export function modelPageSlug(modelName: string): string | null {
+  if (NON_MODELS.has(modelName.trim().toLowerCase())) return null;
+  const slug = slugify(modelFamilyLabel(modelName));
+  return slug || null;
+}
+
+/**
+ * Chip link slug for a model name, or null when no model page exists — a
+ * hub-only family absent from the build catalog must render an unlinked badge
+ * rather than a dead link.
+ */
+export function modelPageHrefSlug(
+  modelName: string,
+  availableSlugs: Set<string>
+): string | null {
+  const slug = modelPageSlug(modelName);
+  return slug && availableSlugs.has(slug) ? slug : null;
+}
+
 export interface ModelGroup<T extends CatalogTemplate = SerializedTemplate> {
   slug: string;
   label: string;

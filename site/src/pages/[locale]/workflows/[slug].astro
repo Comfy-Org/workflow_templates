@@ -39,6 +39,7 @@ import {
 import { workflowOgUrl } from '../../../lib/og-url';
 import {
   buildFaqJsonLd,
+  buildHowToJsonLd,
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
@@ -197,6 +198,14 @@ const structuredData = {
 
 const faqStructuredData = buildFaqJsonLd(data.faqItems);
 
+// The pipeline already writes howToUse steps for every template; surface them
+// as HowTo JSON-LD (LLM/AEO consumption, same stance as the model pages).
+const howToStructuredData = buildHowToJsonLd({
+  name: t('template.howToName', locale).replace('{title}', data.title),
+  steps: data.howToUse,
+  description: data.metaDescription || data.description,
+});
+
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, {
   name: data.title,
   item: canonicalUrl,
@@ -312,6 +321,15 @@ const toolbarLabels = buildToolbarLabels(locale);
         is:inline
         type="application/ld+json"
         set:html={serializeJsonLdForScript(faqStructuredData)}
+      />
+    )
+  }
+  {
+    howToStructuredData && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(howToStructuredData)}
       />
     )
   }

@@ -57,20 +57,23 @@ describe('UI string keys', () => {
 });
 
 /**
- * The localized routes build their <title> from a template key now. English is
- * ranking on those exact strings today, so the English rendering has to come out
- * byte-identical to the concatenation it replaced.
+ * The localized routes build their <title> from a template key. These pins make
+ * every English title change a deliberate, reviewed edit. Last changed Aug 2026
+ * (GSC: hub at 2.0% CTR on 517k impressions). "Comfy Workflows" is the branded
+ * site name and must stay; "ComfyUI" belongs in the surrounding descriptor.
+ * "Free" is deliberate: the workflow file is free to download, even where
+ * running it on Cloud costs credits.
  */
 describe('meta title templates', () => {
   const strings = en as Record<string, string>;
 
-  it('renders the English detail title exactly as before', () => {
+  it('renders the English detail title from the template key', () => {
     expect(strings['template.metaTitle'].replace('{title}', 'Text to Image (New)')).toBe(
-      'Text to Image (New) - ComfyUI Workflow'
+      'Text to Image (New) - Free ComfyUI Workflow'
     );
   });
 
-  it('renders the English category title exactly as before', () => {
+  it('renders the English category title from the template key', () => {
     expect(
       strings['category.metaTitle']
         .replace('{category}', 'Image Generation')
@@ -78,7 +81,7 @@ describe('meta title templates', () => {
     ).toBe('Image Generation Workflows - Comfy Workflows');
   });
 
-  it('renders the English tag title exactly as before', () => {
+  it('renders the English tag title from the template key', () => {
     expect(
       strings['tag.metaTitle']
         .replace('{tag}', 'Character')
