@@ -14,7 +14,11 @@ describe('assets we deliberately did not re-encode', () => {
   const upstream = (id: string) => `https://comfy-hub-assets.comfy.org/uploads/${id}.mp4`;
 
   it('leaves a dropped asset pointing upstream, untouched', () => {
-    const dropped = '2b204a3d-9ea7-4b53-b0a5-1c8dbd0a4f8c';
+    // Any id absent from the manifest must resolve to its original. Reading one
+    // out of the data rather than hardcoding keeps this true as the set changes:
+    // an earlier version pinned a specific id, which went stale the moment that
+    // file was reviewed and shipped.
+    const dropped = '00000000-1111-2222-3333-444444444444';
     expect(assets).not.toContain(dropped);
     expect(hubMediaFor(upstream(dropped))).toBeNull();
     expect(hubAssetUrl(upstream(dropped))).toBe(upstream(dropped));
