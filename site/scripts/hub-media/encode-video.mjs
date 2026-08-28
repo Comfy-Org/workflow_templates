@@ -51,6 +51,17 @@ for (const t of JSON.parse(fs.readFileSync(gridPath, 'utf8')))
       srcOf.set(u.split('?')[0].split('/').pop().replace(/\.[^.]+$/, ''), u);
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+/**
+ * Assets a human reviewed and approved, overriding the automated rules.
+ *
+ * Without this, a rerun re-applies the thresholds and silently drops a file
+ * somebody looked at and accepted. That happened once: a reviewed encode was
+ * deleted from the bucket by the next reconcile, reverting the decision with no
+ * signal at all.
+ */
+const overridePath = new URL('./reviewed-overrides.json', import.meta.url);
+const overrides = JSON.parse(fs.readFileSync(overridePath, 'utf8')).keep ?? {};
 const report = fs.existsSync(reportPath) ? JSON.parse(fs.readFileSync(reportPath, 'utf8')) : {};
 
 async function vmaf(candidate, source, w, h) {
@@ -129,6 +140,17 @@ async function processOne(id, dir) {
     // without visible loss: reaching the floor saves so little that we would be
     // trading quality for nothing, and adding an asset to maintain for nothing.
     // One measured case: 42% off at VMAF 93.3, but 22% at 96.2 and 0% at 97.5.
+    if (overrides[id]) {
+      // Reviewed and approved: ship it whatever the thresholds say.
+      const staged = path.join(stageDir, `${id}.mp4`);
+      fs.copyFileSync(chosen.file, staged);
+      await uploadStaged(id, staged);
+      report[id] = { pass: true, vmaf: chosen.score, crf: chosen.crf, srcBytes, outBytes: chosen.bytes, reviewed: true };
+      done++;
+      console.log(`  ${id.slice(0, 8)}  crf${chosen.crf}  VMAF ${chosen.score?.toFixed(1)}  REVIEWED OVERRIDE, shipped`);
+      return;
+    }
+
     if (chosen.bytes >= srcBytes * (1 - MIN_SAVING)) {
       report[id] = { pass: false, skip: 'no-gain', vmaf: chosen.score, crf: chosen.crf };
       kept++;
