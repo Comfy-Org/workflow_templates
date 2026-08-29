@@ -12,7 +12,7 @@ const OVERRIDE_KEY = 'EXPERIMENT_MINIMAX_H3_DEMO';
 
 afterEach(() => {
   delete process.env[OVERRIDE_KEY];
-  delete process.env.VERCEL_ENV;
+  delete process.env.EXPERIMENT_OVERRIDES;
 });
 
 describe('experiment flags', () => {
@@ -52,15 +52,16 @@ describe('experiment flags', () => {
     }
   });
 
-  it('ignores the override entirely in a production build', () => {
-    // Otherwise a stray variable in Vercel project settings silently outranks
-    // the committed JSON, and CI's kill switch reports success while the next
-    // production build keeps serving the broken experiment.
-    process.env.VERCEL_ENV = 'production';
+  it('refuses overrides when the build denies them', () => {
+    // deploy-site.yml and cron-rebuild-site.yml set EXPERIMENT_OVERRIDES=deny.
+    // Without it a stray variable silently outranks the committed JSON, and CI's
+    // kill switch reports success while the next build keeps serving the broken
+    // experiment.
     process.env[OVERRIDE_KEY] = 'on';
+    process.env.EXPERIMENT_OVERRIDES = 'deny';
     expect(isExperimentEnabled('minimaxH3Demo')).toBe(experimentFlags.minimaxH3Demo.enabled);
 
-    process.env.VERCEL_ENV = 'preview';
+    delete process.env.EXPERIMENT_OVERRIDES;
     expect(isExperimentEnabled('minimaxH3Demo')).toBe(true);
   });
 
@@ -93,7 +94,9 @@ describe('experiment entry points are measurable', () => {
   it('ships no HTML comments to the browser', async () => {
     // Astro emits <!-- --> verbatim; only {/* */} is stripped. The notes in
     // this component explain internal analytics wiring and have no business
-    // being in a page anyone can view-source.
+    // being in a page anyone can view-source. Scoped to this component: the
+    // hub index still carries short pre-existing section labels, which are
+    // repo style and out of scope here.
     const container = await AstroContainer.create();
     const html = await container.renderToString(MiniMaxPromo, {
       props: { locale: 'en' },

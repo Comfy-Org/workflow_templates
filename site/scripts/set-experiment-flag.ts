@@ -11,7 +11,7 @@
  * is a typo, and silently creating a flag nothing reads would make CI look like
  * it succeeded while the site kept serving the broken surface.
  */
-import { renameSync, writeFileSync } from 'node:fs';
+import { renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import { experimentFlags, type ExperimentName } from '../src/config/experimentFlags';
@@ -58,8 +58,14 @@ const changed = existing.enabled !== enabled;
 if (changed) {
   flags[name] = { enabled, updatedAt: new Date().toISOString(), updatedBy, reason };
   const tempPath = `${flagsPath}.tmp`;
-  writeFileSync(tempPath, `${JSON.stringify(flags, null, 2)}\n`, 'utf8');
-  renameSync(tempPath, flagsPath);
+  try {
+    writeFileSync(tempPath, `${JSON.stringify(flags, null, 2)}\n`, 'utf8');
+    renameSync(tempPath, flagsPath);
+  } finally {
+    // A crash between write and rename would otherwise leave an untracked
+    // sibling of a tracked file behind in the checkout.
+    rmSync(tempPath, { force: true });
+  }
 }
 
 const summary = changed

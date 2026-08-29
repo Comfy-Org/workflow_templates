@@ -64,6 +64,14 @@ An experiment gets a **visually subordinate** entry point.
 **Check:** screenshot the page before and after. If the experiment is the first
 thing your eye lands on, it is in a primary slot.
 
+> **Known exception, to be closed.** The MiniMax H3 promo on `/workflows` still
+> breaks this rule: full-width between the hero and the search grid, with a
+> solid-brand CTA matching the tracked Cloud CTA. It is switched off, so it
+> costs nothing today, and the commit that introduced this document only
+> extracted the existing block into a component rather than redesigning it.
+> Rule 1 must be satisfied — subordinate placement and treatment — before the
+> flag goes back on. Tracked in FE-1932.
+
 ---
 
 ## Rule 2 — Don't cannibalize keywords or navigation targets

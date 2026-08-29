@@ -42,14 +42,21 @@ export const experimentFlags: Readonly<Record<ExperimentName, ExperimentFlag>> =
  * Local/preview override, so working on a disabled experiment does not require
  * dirtying a tracked file: `EXPERIMENT_MINIMAX_H3_DEMO=on pnpm dev`.
  *
- * Ignored entirely in production builds. It must never be possible for a stray
- * variable in Vercel project settings to outrank the committed JSON: CI would
- * switch a broken experiment off, commit, and announce it, while the next
- * production build kept serving the thing that is broken — a kill switch that
- * reports success and does nothing.
+ * Refused when the environment says so. It must never be possible for a stray
+ * variable to outrank the committed JSON in a production build: CI would switch
+ * a broken experiment off, commit, and announce it, while the next build kept
+ * serving the thing that is broken — a kill switch that reports success and
+ * does nothing.
+ *
+ * The signal is `EXPERIMENT_OVERRIDES=deny`, set by the two workflows that build
+ * for production (`deploy-site.yml`, `cron-rebuild-site.yml`). Deliberately not
+ * `VERCEL_ENV`: this project is deployed `--prebuilt` from a GitHub runner with
+ * Vercel's Git integration off, so that variable is never set while the site is
+ * being built, and a guard keyed on it would be dead code with a test asserting
+ * a property nothing enforces.
  */
 function envOverride(name: ExperimentName): boolean | null {
-  if (process.env.VERCEL_ENV === 'production') return null;
+  if (process.env.EXPERIMENT_OVERRIDES === 'deny') return null;
 
   const key = `EXPERIMENT_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}`;
   const raw = process.env[key] ?? import.meta.env?.[key];

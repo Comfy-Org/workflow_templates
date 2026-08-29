@@ -112,12 +112,13 @@ jobs:
           # to Slack AND committed into experiment-flags.json as the flag's
           # permanent reason, so it has to be right.
           #
-          # TypeError is matched, not just AssertionError: a down origin fails
-          # as `TypeError: fetch failed` before any assertion runs — the single
-          # most likely outage, given the backend is private beta. Matching only
-          # assertions would skip past it to a downstream guard and record
-          # "nothing to poll", which reads like a diagnosis and is not one.
-          reason=$(grep -m1 -oP '^\s*(?:AssertionError|TypeError|ReferenceError|SyntaxError|Error):.*' \
+          # Any *Error, not just AssertionError. The two most likely outages both
+          # throw before an assertion runs: a refused origin as `TypeError: fetch
+          # failed`, and a hung one as `TimeoutError` from the AbortSignal the
+          # test wraps every call in. Matching only assertions would skip past
+          # those to a downstream guard and record "nothing to poll", which reads
+          # like a diagnosis and is not one.
+          reason=$(grep -m1 -oP '^\s*(?:[A-Za-z]*Error|DOMException)(?: \[[^\]]+\])?:.*' \
             "$RUNNER_TEMP/integration.log" | tr -d '\r\n' | cut -c1-300 || true)
           [ -n "$reason" ] || reason="See the workflow run for details."
           echo "reason=$reason" >> "$GITHUB_OUTPUT"
