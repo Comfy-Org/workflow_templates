@@ -1,0 +1,198 @@
+# Health gate for the MiniMax H3 in-browser demo (FE-1932).
+#
+# Runs the end-to-end integration test against production and, when it fails,
+# switches the `minimaxH3Demo` experiment flag off and says so in Slack.
+#
+# It deliberately does NOT fail. The demo is served by the Comfy dev platform
+# (private beta) through comfy-router (pre-alpha); both are expected to have
+# downtime, and a red check on a pre-alpha dependency must never hold up an
+# unrelated template release. "Blocking the deploy" is achieved by shipping the
+# feature switched off rather than by blocking the pipeline: the next site build
+# picks up the committed flag and serves the static fallback instead of a runner
+# nobody can run.
+#
+# Recovery is deliberately NOT automatic. A green run only reports that the demo
+# could be switched back on — turning an experiment back on in front of users is
+# a judgement call about whether it is worth showing, not something a passing
+# health check should decide on its own.
+#
+# Requires, in this repo's settings:
+#   secrets.SLACK_BOT_TOKEN               — same bot used by ComfyUI_frontend
+#   vars.SLACK_HUB_ALERTS_CHANNEL_ID      — channel for these alerts
+# Both are optional at runtime: the notify step warns and skips if either is
+# unset, so the flag flip still happens.
+name: MiniMax Demo Integration
+
+on:
+  schedule:
+    # Every 6 hours. Frequent enough to catch an outage within one working
+    # session, rare enough that the demo's single deployment is not tied up.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Origin to test (defaults to https://comfy.org)'
+        type: string
+        default: 'https://comfy.org'
+  workflow_run:
+    # Verify right after the site actually ships, which is the moment a routing
+    # or config regression becomes visible to users.
+    workflows: ['Deploy Template Site', 'Cron Rebuild Site']
+    types: [completed]
+    branches: [main]
+
+# One run at a time: two concurrent runs would race on the flag file and could
+# put two GPU jobs on a single-deployment demo.
+concurrency:
+  group: minimax-demo-integration
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # Skip when the triggering deploy itself failed — the demo being unreachable
+    # is then a symptom of that failure, not a reason to switch the demo off.
+    if: >-
+      github.event_name != 'workflow_run'
+      || github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      - name: Read current flag state
+        id: flag
+        working-directory: site
+        run: |
+          enabled=$(jq -r '.minimaxH3Demo.enabled' src/data/experiment-flags.json)
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+          echo "Demo flag is currently: $enabled"
+
+      - name: Run integration test
+        id: test
+        continue-on-error: true
+        working-directory: site
+        env:
+          DEMO_BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          # Plain output so the reason can be parsed out below without ANSI codes.
+          NO_COLOR: '1'
+        run: |
+          # pipefail: without it `tee` supplies the exit status and every run
+          # would look green, which is the one bug that would make this whole
+          # workflow silently useless.
+          set -o pipefail
+          pnpm run test:integration 2>&1 | tee "$RUNNER_TEMP/integration.log"
+
+      - name: Summarize
+        id: summary
+        env:
+          OUTCOME: ${{ steps.test.outcome }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          WAS_ENABLED: ${{ steps.flag.outputs.enabled }}
+        run: |
+          {
+            echo "## MiniMax H3 demo integration"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Target** | $BASE_URL |"
+            echo "| **Result** | $([ "$OUTCOME" = success ] && echo '✅ passing' || echo '❌ failing') |"
+            echo "| **Flag before this run** | $WAS_ENABLED |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # First assertion message names the actual cause (router 404 vs CSRF
+          # 403 vs backend 502) rather than just "a test failed".
+          reason=$(grep -m1 -oP 'AssertionError: \K.*' "$RUNNER_TEMP/integration.log" | tr -d '\r\n' | cut -c1-300 || true)
+          [ -n "$reason" ] || reason="See the workflow run for details."
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+
+      - name: Switch the demo off
+        id: disable
+        # Only when the test failed AND the demo is currently on. A failing test
+        # against an already-off demo is expected while it stays off, and must
+        # not produce a commit or a duplicate alert every 6 hours.
+        if: steps.test.outcome == 'failure' && steps.flag.outputs.enabled == 'true'
+        working-directory: site
+        env:
+          # Via the environment, never string-interpolated into the command:
+          # this text embeds an origin server's response body.
+          REASON: ${{ steps.summary.outputs.reason }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+        run: |
+          pnpm run experiment-flag minimaxH3Demo off \
+            --by "ci:minimax-demo-integration" \
+            --reason "Integration test failed against ${BASE_URL}: ${REASON}"
+
+      - name: Commit the flag flip
+        id: commit
+        if: steps.disable.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          REASON: ${{ steps.summary.outputs.reason }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site/src/data/experiment-flags.json
+          printf '%s\n\n%s\n\nRun: %s\n' \
+            'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
+            "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
+          git commit --file="$RUNNER_TEMP/commit-msg.txt"
+          git push origin HEAD:main
+
+      - name: Notify Slack
+        # Announce a flip we just made, or a recovery worth acting on. Silence
+        # otherwise, so a demo left off on purpose does not alert four times a day.
+        if: >-
+          steps.disable.outputs.changed == 'true'
+          || (steps.test.outcome == 'success' && steps.flag.outputs.enabled == 'false')
+        continue-on-error: true
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_HUB_ALERTS_CHANNEL_ID }}
+          DISABLED: ${{ steps.disable.outputs.changed }}
+          COMMITTED: ${{ steps.commit.outcome }}
+          REASON: ${{ steps.summary.outputs.reason }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/deploy-site.yml
+        run: |
+          set -euo pipefail
+          if [ -z "${SLACK_BOT_TOKEN:-}" ] || [ -z "${SLACK_CHANNEL_ID:-}" ]; then
+            echo "::warning::SLACK_BOT_TOKEN or SLACK_HUB_ALERTS_CHANNEL_ID is unset — skipping Slack notification."
+            exit 0
+          fi
+
+          if [ "$DISABLED" = "true" ]; then
+            TEXT=":warning: *MiniMax H3 demo switched off automatically.* The integration test failed against ${BASE_URL}, so the \`minimaxH3Demo\` experiment flag is now off and the page will serve its static fallback."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            if [ "$COMMITTED" = "success" ]; then
+              TEXT="${TEXT}"$'\n'"The flip is committed to \`main\`. It reaches users on the next site build — <${DEPLOY_URL}|run Deploy Template Site> to apply it now."
+            else
+              TEXT="${TEXT}"$'\n'":rotating_light: The flag could not be committed to \`main\`, so *the demo is still live*. Someone needs to switch it off by hand."
+            fi
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          else
+            TEXT=":white_check_mark: *MiniMax H3 demo is healthy again.* The integration test passes against ${BASE_URL} while the \`minimaxH3Demo\` flag is off. Re-enabling is a deliberate call: set the flag back on and deploy when you want it in front of users. <${RUN_URL}|View run>"
+          fi
+
+          BODY=$(jq -n --arg ch "$SLACK_CHANNEL_ID" --arg text "$TEXT" '{channel: $ch, text: $text}')
+          # Slack answers HTTP 200 with {"ok":false,...} on auth and channel
+          # errors, so -f alone would report a silent drop as success.
+          RESPONSE=$(curl -sS -X POST \
+            --connect-timeout 10 --max-time 30 \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d "$BODY" \
+            https://slack.com/api/chat.postMessage)
+          if ! jq -e '.ok == true' <<<"$RESPONSE" >/dev/null; then
+            echo "Slack rejected the notification: $(jq -r '.error // "unparseable response"' <<<"$RESPONSE")"
+            exit 1
+          fi

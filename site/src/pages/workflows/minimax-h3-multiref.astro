@@ -1,6 +1,4 @@
 ---
-export const prerender = false;
-
 import BaseLayout from '@/layouts/BaseLayout.astro';
 import HubNavbar from '@/components/hub/HubNavbar.astro';
 import SiteFooter from '@/components/hub/SiteFooter.astro';
@@ -9,10 +7,20 @@ import MiniMaxH3Demo from '@/components/demos/MiniMaxH3Demo.vue';
 import graph from '@/lib/demos/mmh3/workflow-api.json';
 import { KEYFRAMES, INPUT_NODES } from '@/lib/demos/mmh3/config';
 import { DEFAULT_LOCALE } from '@/i18n/config';
+import { isExperimentEnabled } from '@/config/experimentFlags';
+import { getCloudLandingUrl } from '@/lib/urls';
+import { localizeUrl } from '@/i18n/utils';
 
 type ApiNode = { class_type: string; inputs: Record<string, unknown> };
 const nodes = graph as unknown as Record<string, ApiNode>;
 const locale = DEFAULT_LOCALE;
+
+/**
+ * Decided at build time so the two branches differ in the emitted HTML, not in
+ * what client JS chooses to mount. A crawler and a visitor are served byte-identical
+ * markup either way, which is the only version of this gate that is safe for SEO.
+ */
+const demoEnabled = isExperimentEnabled('minimaxH3Demo');
 
 /** Seed the prompt editor with the text the workflow ships with. */
 const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ?? '');
@@ -25,9 +33,7 @@ const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ??
 // still works cross-origin.
 const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
 
-const exampleKeyframes = KEYFRAMES.map(
-  (slot) => `${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`
-);
+const exampleKeyframes = KEYFRAMES.map((slot) => `${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`);
 
 /** The example result, played before the first run. */
 const exampleVideo = `${EXAMPLE_ROOT}/example.mp4`;
@@ -41,13 +47,24 @@ const agentPromptUrl = 'https://media.comfy.org/website/demos/mmh3/agent-prompt.
 const pageTitle = 'MiniMax H3 - Motion Context';
 const description =
   'Guide one continuous shot with three reference images pinned to exact moments, and get video with matching audio.';
+
+/**
+ * Held noindex in BOTH states, deliberately, and NOT wired to the experiment flag.
+ *
+ * The flag flips unattended when the demo's backend goes down, and indexability
+ * that flaps with backend uptime teaches crawlers this URL is unreliable —
+ * strictly worse for the ranking this page was built to capture. Ranking capture
+ * gets earned by promoting a proven page in one reviewed commit, not by an
+ * automated kill switch. See docs/shipping-experiments-policy.md.
+ */
+const noindex = true;
 ---
 
 <BaseLayout
   title={`${pageTitle} — run the workflow`}
   {description}
   theme="dark"
-  noindex={true}
+  {noindex}
   hideDefaultFooter
 >
   <HubNavbar />
@@ -77,13 +94,89 @@ const description =
         </div>
       </header>
 
-      <MiniMaxH3Demo
-        client:load
-        defaultPrompt={defaultPrompt}
-        exampleKeyframes={exampleKeyframes}
-        exampleVideo={exampleVideo}
-        agentPromptUrl={agentPromptUrl}
-      />
+      {
+        demoEnabled ? (
+          <MiniMaxH3Demo
+            client:load
+            defaultPrompt={defaultPrompt}
+            exampleKeyframes={exampleKeyframes}
+            exampleVideo={exampleVideo}
+            agentPromptUrl={agentPromptUrl}
+          />
+        ) : (
+          /*
+           * Static stand-in, shaped like a normal template detail page: preview
+           * media, what the workflow does, and a route onward. It ships zero
+           * client JS and never calls the demo API, so a down backend cannot
+           * produce an error state here.
+           *
+           * It deliberately does not say "try again later" and stop there — a
+           * page whose only outcome is a dead end is the failure mode this whole
+           * gate exists to avoid, so both CTAs go somewhere that actually works.
+           */
+          <div class="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(380px,30rem)] lg:items-start">
+            <div class="media-frame overflow-hidden rounded-4xl bg-black">
+              <video
+                src={exampleVideo}
+                poster={exampleKeyframes[0]}
+                controls
+                muted
+                loop
+                playsinline
+                preload="metadata"
+                class="h-full w-full object-cover"
+              />
+            </div>
+
+            <div class="flex min-w-0 flex-col gap-5 rounded-4xl bg-hub-surface p-6 sm:p-8">
+              <div>
+                <span class="text-xs font-semibold uppercase tracking-wider text-brand">
+                  Preview
+                </span>
+                <h2 class="mt-3 text-2xl font-normal text-content sm:text-3xl">
+                  Three references, one continuous shot
+                </h2>
+                <p class="mt-4 text-base leading-relaxed text-content-secondary">
+                  The clip above was generated by this workflow from the three reference frames
+                  below, pinned to the first, middle and final frame. The in-browser runner is
+                  turned off right now; the workflow itself runs today in Comfy Cloud.
+                </p>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                {exampleKeyframes.map((src, i) => (
+                  <img
+                    src={src}
+                    alt={`Reference ${i + 1} of 3 used to generate the preview clip`}
+                    width="96"
+                    height="96"
+                    loading="lazy"
+                    decoding="async"
+                    class="h-24 w-24 rounded-2xl object-cover"
+                  />
+                ))}
+              </div>
+
+              <div class="flex flex-col gap-3 sm:flex-row">
+                <a
+                  href={getCloudLandingUrl('minimax_h3_multiref_fallback')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="inline-flex h-10 items-center justify-center rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+                >
+                  Run it in Comfy Cloud
+                </a>
+                <a
+                  href={localizeUrl('/workflows/', locale)}
+                  class="inline-flex h-10 items-center justify-center rounded-2xl bg-white/4 px-6 text-sm font-semibold uppercase tracking-wider text-content-secondary transition-colors hover:text-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+                >
+                  Browse all workflows
+                </a>
+              </div>
+            </div>
+          </div>
+        )
+      }
     </div>
   </article>
 

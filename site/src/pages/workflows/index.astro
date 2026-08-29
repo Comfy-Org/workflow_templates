@@ -6,6 +6,7 @@ import HubHero from '../../components/hub/HubHero.astro';
 import HubSearchBar from '../../components/hub/HubSearchBar.astro';
 import HubBrowse from '../../components/hub/HubBrowse.vue';
 import FeaturedCarousel from '../../components/hub/FeaturedCarousel.vue';
+import MiniMaxPromo from '../../components/hub/MiniMaxPromo.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import { getLocaleFromPath, localizeUrl, isRTL } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
@@ -15,6 +16,7 @@ import { getFeatured, featuredPreloadImage } from '../../lib/featured';
 import { buildToolbarLabels, buildFacetsConfig } from '../../lib/toolbar';
 import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
+import { isExperimentEnabled } from '../../config/experimentFlags';
 
 // This English index is always indexable itself; it only needs to advertise
 // the locales that are actually flipped on (INDEXABLE_LOCALES), not every
@@ -24,6 +26,14 @@ import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
 const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const locale = getLocaleFromPath(Astro.url.pathname);
+
+/**
+ * Resolved at build time, so a disabled promo is absent from the HTML rather
+ * than hidden in it. This block sits between the hero and the search/browse
+ * grid — the hub's primary browse flow — so while the demo is off it must not
+ * cost a single pixel above the templates people came here for.
+ */
+const showMiniMaxPromo = isExperimentEnabled('minimaxH3Demo');
 
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
 
@@ -91,61 +101,12 @@ const facetsConfig = buildFacetsConfig(locale);
       Run-in-browser demo. Not a template in the index (it is an interactive
       runner backed by a live deployment), so it is linked explicitly here
       rather than injected into the grid data.
+
+      Gated on the `minimaxH3Demo` experiment flag: with the demo off, this
+      block is absent from the built page, so the hub's browse flow is not
+      interrupted by a promo leading to a runner nobody can run.
     -->
-    <section class="mb-12 grid overflow-hidden rounded-5xl bg-hub-surface p-2 lg:grid-cols-3">
-      <div
-        class="media-frame relative aspect-video min-h-56 overflow-hidden rounded-4xl bg-black lg:aspect-auto lg:min-h-80"
-      >
-        <!-- metadata-only preload + a poster keep the clip's megabytes off the
-             page's critical path; the frame paints before any video bytes. -->
-        <video
-          id="mmh3-promo-video"
-          src="https://media.comfy.org/website/demos/mmh3/example/example.mp4"
-          poster="https://media.comfy.org/website/demos/mmh3/example/keyframes/kf_1.webp"
-          autoplay
-          muted
-          loop
-          playsinline
-          preload="metadata"
-          class="h-full w-full object-cover"></video>
-        <script>
-          // Autoplay is a flourish — hold the poster for reduced-motion users.
-          if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            const promo = document.getElementById('mmh3-promo-video') as HTMLVideoElement | null;
-            promo?.removeAttribute('autoplay');
-            promo?.pause();
-          }
-        </script>
-      </div>
-      <div
-        class="flex min-w-0 flex-col justify-center px-6 py-7 sm:px-8 lg:col-span-2 lg:px-10 lg:py-8"
-      >
-        <span class="text-xs font-semibold uppercase tracking-wider text-brand">
-          Run in your browser
-        </span>
-        <h2 class="mt-4 text-3xl font-normal text-content sm:text-4xl">
-          MiniMax H3 - Motion Context
-        </h2>
-        <p class="mt-4 max-w-2xl text-base leading-relaxed text-content-secondary">
-          Guide one continuous shot with three reference images pinned to exact moments — no
-          install, runs on a live deployment.
-        </p>
-        <a
-          href={localizeUrl('/workflows/minimax-h3-multiref/', locale)}
-          class="mt-6 inline-flex h-10 w-fit items-center justify-center rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
-        >
-          Try MiniMax H3
-        </a>
-        <div class="mt-8 flex flex-wrap gap-2">
-          <span class="rounded-full bg-white/4 px-4 py-2 text-sm text-content-secondary">
-            Live deployment
-          </span>
-          <span class="rounded-full bg-white/4 px-4 py-2 text-sm text-content-secondary">
-            Video + audio
-          </span>
-        </div>
-      </div>
-    </section>
+    {showMiniMaxPromo && <MiniMaxPromo locale={locale} />}
 
     <!-- Inline search — shows among the filters, docks flush below the navbar once scrolled past. -->
     <HubSearchBar templates={serialized} locale={locale} />

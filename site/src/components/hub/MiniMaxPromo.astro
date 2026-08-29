@@ -1,0 +1,77 @@
+---
+/**
+ * MiniMaxPromo - Promo block for the in-browser MiniMax H3 demo, shown on the
+ * hub index between the hero and the browse grid.
+ *
+ * Extracted from `pages/workflows/index.astro` so the `minimaxH3Demo`
+ * experiment flag can gate it with a single conditional, and so the
+ * reduced-motion script stays a normal processed <script> instead of being
+ * escaped into a JSX expression.
+ *
+ * The caller owns the flag check — this component always renders.
+ */
+import { localizeUrl } from '../../i18n/utils';
+import type { Locale } from '../../i18n/config';
+
+interface Props {
+  /** Active locale, used to localize the link to the demo page. */
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
+---
+
+<section class="mb-12 grid overflow-hidden rounded-5xl bg-hub-surface p-2 lg:grid-cols-3">
+  <div
+    class="media-frame relative aspect-video min-h-56 overflow-hidden rounded-4xl bg-black lg:aspect-auto lg:min-h-80"
+  >
+    <!-- metadata-only preload + a poster keep the clip's megabytes off the
+         page's critical path; the frame paints before any video bytes. -->
+    <video
+      id="mmh3-promo-video"
+      src={`${EXAMPLE_ROOT}/example.mp4`}
+      poster={`${EXAMPLE_ROOT}/keyframes/kf_1.webp`}
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      class="h-full w-full object-cover"></video>
+    <script>
+      // Autoplay is a flourish — hold the poster for reduced-motion users.
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        const promo = document.getElementById('mmh3-promo-video') as HTMLVideoElement | null;
+        promo?.removeAttribute('autoplay');
+        promo?.pause();
+      }
+    </script>
+  </div>
+  <div
+    class="flex min-w-0 flex-col justify-center px-6 py-7 sm:px-8 lg:col-span-2 lg:px-10 lg:py-8"
+  >
+    <span class="text-xs font-semibold uppercase tracking-wider text-brand">
+      Run in your browser
+    </span>
+    <h2 class="mt-4 text-3xl font-normal text-content sm:text-4xl">MiniMax H3 - Motion Context</h2>
+    <p class="mt-4 max-w-2xl text-base leading-relaxed text-content-secondary">
+      Guide one continuous shot with three reference images pinned to exact moments — no install,
+      runs on a live deployment.
+    </p>
+    <a
+      href={localizeUrl('/workflows/minimax-h3-multiref/', locale)}
+      class="mt-6 inline-flex h-10 w-fit items-center justify-center rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+    >
+      Try MiniMax H3
+    </a>
+    <div class="mt-8 flex flex-wrap gap-2">
+      <span class="rounded-full bg-white/4 px-4 py-2 text-sm text-content-secondary">
+        Live deployment
+      </span>
+      <span class="rounded-full bg-white/4 px-4 py-2 text-sm text-content-secondary">
+        Video + audio
+      </span>
+    </div>
+  </div>
+</section>
