@@ -39,8 +39,13 @@ const SUBMIT_TIMEOUT_MS = 90_000;
 const POLL_WINDOW_MS = 45_000;
 const POLL_INTERVAL_MS = 5_000;
 
-/** Statuses the deployment may legitimately report while we watch. */
-const HEALTHY_STATUSES = ['queued', 'pending', 'running', 'completed', 'succeeded', 'success'];
+/**
+ * The subset of the SDK's `JobStatus` union that means "accepted and progressing".
+ * The full vocabulary is queued | running | succeeded | canceling | canceled |
+ * failed | expired; the four omitted here are all states this check should go
+ * red on, so listing extras would quietly accept a broken deployment.
+ */
+const HEALTHY_STATUSES = ['queued', 'running', 'succeeded'];
 
 /** A browser sends `Origin` on same-origin POSTs; the CSRF check depends on it. */
 function browserHeaders(): Record<string, string> {
@@ -50,14 +55,23 @@ function browserHeaders(): Record<string, string> {
 /**
  * Turn a status code into the actual operational cause, so a red build names
  * the thing to go fix instead of leaving the next person to rediscover it.
+ *
+ * The API and page routes fail for different reasons, so they get different
+ * explanations: only the API path is forwarded by a router rule, and only its
+ * unsafe methods pass through Astro's CSRF check.
  */
-function diagnose(status: number, path: string): string {
+function diagnose(status: number, path: string, kind: 'api' | 'page' = 'api'): string {
   const where = `${path} returned ${status}`;
+  if (status === 404) {
+    return kind === 'api'
+      ? `${where}. The request did not reach the hub app. The edge router (comfy-router) forwards /workflows/* but must also forward /api/workflows/* to the workflows origin — this is the FE-1932 failure exactly.`
+      : `${where}. The page itself is missing from the deployed site — check that it built, and that the router still forwards /workflows/* here.`;
+  }
+  if (kind === 'page') return where;
+
   switch (status) {
     case 403:
-      return `${where}. Astro's CSRF check rejected the request: its computed origin does not match the browser's "Origin: ${BASE_URL}". Behind the comfy.org router this needs security.allowedDomains in astro.config.mjs to include the proxied host.`;
-    case 404:
-      return `${where}. The request did not reach the hub app. The edge router (comfy-router) forwards /workflows/* but must also forward /api/workflows/* to the workflows origin — this is the FE-1932 failure exactly.`;
+      return `${where}. Astro's CSRF check rejected the request: its computed origin does not match the browser's "Origin: ${BASE_URL}". Behind the comfy.org router this needs security.allowedDomains in astro.config.mjs to name the proxied host (hostname only — adding a protocol makes Astro drop X-Forwarded-Proto).`;
     case 502:
       return `${where}. The hub app was reached but the Comfy deployment behind it errored or is down. Expected while the dev platform is in private beta.`;
     case 413:
@@ -105,7 +119,7 @@ afterAll(async () => {
 describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
   it('serves the demo page', async () => {
     const res = await fetch(PAGE, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-    expect(res.status, diagnose(res.status, PAGE)).toBe(200);
+    expect(res.status, diagnose(res.status, PAGE, 'page')).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/html');
   });
 
@@ -160,9 +174,13 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
 
     const json = parseJson(body, detail);
     expect(typeof json.jobId, `submit should return a jobId. ${detail}`).toBe('string');
-    expect(HEALTHY_STATUSES, `unexpected submit status. ${detail}`).toContain(json.status);
 
+    // Recorded before the status assertion, not after: an unexpected status
+    // throws, and a job id captured only on the happy path would leave a live
+    // GPU job running with nothing left to cancel it.
     jobId = json.jobId as string;
+
+    expect(HEALTHY_STATUSES, `unexpected submit status. ${detail}`).toContain(json.status);
   });
 
   it('reports status for the submitted job', async () => {
@@ -186,7 +204,7 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
       expect(json.error, `job reported an error. ${detail}`).toBeFalsy();
       seen++;
 
-      if (json.status !== 'queued' && json.status !== 'pending') break;
+      if (json.status !== 'queued') break;
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
     }
 

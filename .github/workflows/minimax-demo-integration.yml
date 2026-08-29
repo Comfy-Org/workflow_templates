@@ -115,10 +115,20 @@ jobs:
 
       - name: Switch the demo off
         id: disable
-        # Only when the test failed AND the demo is currently on. A failing test
-        # against an already-off demo is expected while it stays off, and must
-        # not produce a commit or a duplicate alert every 6 hours.
-        if: steps.test.outcome == 'failure' && steps.flag.outputs.enabled == 'true'
+        # Three conditions, all required:
+        #   - the test failed
+        #   - the demo is currently on (a failing test against an already-off
+        #     demo is expected, and must not commit or re-alert every 6 hours)
+        #   - production was what we tested. A dispatch against a preview origin
+        #     is for debugging; it must never flip the flag users are served.
+        if: >-
+          steps.test.outcome == 'failure'
+          && steps.flag.outputs.enabled == 'true'
+          && (inputs.base_url || 'https://comfy.org') == 'https://comfy.org'
+        # The kill switch must not take the job down with it: if this step
+        # fails, the steps below still run and Slack still says the demo is
+        # stuck on. Without this, the alert is silent exactly when it matters.
+        continue-on-error: true
         working-directory: site
         env:
           # Via the environment, never string-interpolated into the command:
@@ -148,16 +158,25 @@ jobs:
           git push origin HEAD:main
 
       - name: Notify Slack
-        # Announce a flip we just made, or a recovery worth acting on. Silence
-        # otherwise, so a demo left off on purpose does not alert four times a day.
+        # Three reasons to speak, and nothing else:
+        #   - we just switched the demo off
+        #   - we tried to and could not, so it is stuck on and broken
+        #   - somebody ran this by hand and is waiting for the answer
+        #
+        # Recovery is NOT announced on schedule/deploy runs. This workflow keeps
+        # no state between runs, and "healthy while switched off" is the shipped
+        # steady state — alerting on it would post the same message 4x a day
+        # forever. Scheduled recovery shows up in the step summary instead.
         if: >-
           steps.disable.outputs.changed == 'true'
-          || (steps.test.outcome == 'success' && steps.flag.outputs.enabled == 'false')
+          || steps.disable.outcome == 'failure'
+          || (github.event_name == 'workflow_dispatch' && steps.test.outcome == 'success')
         continue-on-error: true
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ vars.SLACK_HUB_ALERTS_CHANNEL_ID }}
           DISABLED: ${{ steps.disable.outputs.changed }}
+          DISABLE_OUTCOME: ${{ steps.disable.outcome }}
           COMMITTED: ${{ steps.commit.outcome }}
           REASON: ${{ steps.summary.outputs.reason }}
           BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
@@ -170,7 +189,11 @@ jobs:
             exit 0
           fi
 
-          if [ "$DISABLED" = "true" ]; then
+          if [ "$DISABLE_OUTCOME" = "failure" ]; then
+            TEXT=":rotating_light: *MiniMax H3 demo is broken and could not be switched off.* The integration test failed against ${BASE_URL} and the kill switch itself errored, so *the demo is still live*. Switch it off by hand: \`pnpm experiment-flag minimaxH3Demo off\` in \`site/\`, commit, deploy."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$DISABLED" = "true" ]; then
             TEXT=":warning: *MiniMax H3 demo switched off automatically.* The integration test failed against ${BASE_URL}, so the \`minimaxH3Demo\` experiment flag is now off and the page will serve its static fallback."
             TEXT="${TEXT}"$'\n'">${REASON}"
             if [ "$COMMITTED" = "success" ]; then
@@ -180,7 +203,7 @@ jobs:
             fi
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
           else
-            TEXT=":white_check_mark: *MiniMax H3 demo is healthy again.* The integration test passes against ${BASE_URL} while the \`minimaxH3Demo\` flag is off. Re-enabling is a deliberate call: set the flag back on and deploy when you want it in front of users. <${RUN_URL}|View run>"
+            TEXT=":white_check_mark: *MiniMax H3 demo integration passes* against ${BASE_URL} (flag is currently \`${{ steps.flag.outputs.enabled }}\`). Turning it on is a deliberate call: set the flag and deploy when you want it in front of users. <${RUN_URL}|View run>"
           fi
 
           BODY=$(jq -n --arg ch "$SLACK_CHANNEL_ID" --arg text "$TEXT" '{channel: $ch, text: $text}')

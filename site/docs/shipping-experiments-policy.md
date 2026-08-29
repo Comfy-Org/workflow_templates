@@ -145,8 +145,18 @@ default and switches itself off when it breaks.
   *can* run, not that it *should* be in front of users. That is a human call.
 - Delete the code when you turn it off — that is the point of the flag.
 
-**Check:** build with the flag off and grep the output. If the experiment's
-markup, scripts, or media URLs are still in there, the gate is in the wrong place.
+**Check:** build with the flag off and grep the emitted **HTML** for the
+experiment's markup and its links:
+
+```bash
+pnpm exec astro build
+grep -c "minimax-h3-multiref" dist/client/workflows/index.html   # expect 0
+```
+
+Grep the HTML specifically, not the whole output directory. Astro detects
+`client:*` islands at compile time, so an unreferenced component chunk can still
+be emitted under `_astro/`, and a fallback may legitimately serve the same
+`media.comfy.org` assets. Neither means the gate leaked; markup in the HTML does.
 
 ---
 

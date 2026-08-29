@@ -59,8 +59,18 @@ const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
       Guide one continuous shot with three reference images pinned to exact moments — no install,
       runs on a live deployment.
     </p>
+    <!--
+      `data-*` rather than `utm_*`: this is an internal navigation, and UTM
+      params on an internal link start a new session in most analytics tools,
+      breaking attribution for the visit it interrupts. These attributes match
+      the ones the template CTAs carry, so existing click tracking picks the
+      promo up and diversions into the demo are measurable — which they were
+      not when this shipped. See docs/shipping-experiments-policy.md, Rule 3.
+    -->
     <a
       href={localizeUrl('/workflows/minimax-h3-multiref/', locale)}
+      data-location="hub_index_promo"
+      data-experiment="minimaxH3Demo"
       class="mt-6 inline-flex h-10 w-fit items-center justify-center rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
     >
       Try MiniMax H3
