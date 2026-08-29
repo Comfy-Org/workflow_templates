@@ -193,8 +193,10 @@ jobs:
             git reset --hard origin/main
 
             # GITHUB_OUTPUT is cleared so this rerun cannot append a second
-            # `changed=` line to the step's outputs.
-            GITHUB_OUTPUT= pnpm --dir site run experiment-flag minimaxH3Demo off \
+            # `changed=` line to the step's outputs. Explicit '' rather than a
+            # bare `=` so the intent reads as a prefix assignment (ShellCheck
+            # SC1007) instead of a suspected typo.
+            GITHUB_OUTPUT='' pnpm --dir site run experiment-flag minimaxH3Demo off \
               --by "ci:minimax-demo-integration" \
               --reason "Integration test failed against ${BASE_URL}: ${REASON}"
 
