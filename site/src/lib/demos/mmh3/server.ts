@@ -26,7 +26,10 @@ export function comfyClient(): Comfy {
 export function jsonResponse(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json' },
+    // These routes live under /workflows/ so the comfy.org proxy reaches them,
+    // and that subtree is CDN-cached by vercel.json — job status and queue
+    // answers must never be served stale.
+    headers: { 'content-type': 'application/json', 'cache-control': 'no-store' },
   });
 }
 
