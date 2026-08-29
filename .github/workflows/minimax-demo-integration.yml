@@ -156,16 +156,59 @@ jobs:
         continue-on-error: true
         env:
           REASON: ${{ steps.summary.outputs.reason }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
+          set -euo pipefail
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add site/src/data/experiment-flags.json
-          printf '%s\n\n%s\n\nRun: %s\n' \
-            'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
-            "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
-          git commit --file="$RUNNER_TEMP/commit-msg.txt"
-          git push origin HEAD:main
+
+          commit_flip() {
+            git add site/src/data/experiment-flags.json
+            printf '%s\n\n%s\n\nRun: %s\n' \
+              'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
+              "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
+            git commit --file="$RUNNER_TEMP/commit-msg.txt"
+          }
+
+          commit_flip
+
+          # The integration test takes minutes, so main can move underneath this
+          # checkout and reject the push. Retrying matters: the whole point of the
+          # kill switch is that a broken demo goes off without waiting for a
+          # human, and losing this race would leave it live until someone acted
+          # on the Slack ping.
+          for attempt in 1 2 3; do
+            if git push origin HEAD:main; then
+              echo "Pushed on attempt ${attempt}."
+              exit 0
+            fi
+
+            echo "Push rejected (attempt ${attempt}); refreshing main and reapplying."
+            git fetch origin main
+            # Safe here and nowhere else: this is an ephemeral runner whose only
+            # local change is the commit we just made, which is reapplied
+            # deterministically below. It never discards anyone else's work.
+            git reset --hard origin/main
+
+            # GITHUB_OUTPUT is cleared so this rerun cannot append a second
+            # `changed=` line to the step's outputs.
+            GITHUB_OUTPUT= pnpm --dir site run experiment-flag minimaxH3Demo off \
+              --by "ci:minimax-demo-integration" \
+              --reason "Integration test failed against ${BASE_URL}: ${REASON}"
+
+            # Someone else — or an earlier attempt — may have already switched it
+            # off on the refreshed main. Nothing left to say.
+            if git diff --quiet -- site/src/data/experiment-flags.json; then
+              echo "The refreshed main already has the demo off; nothing to push."
+              exit 0
+            fi
+            commit_flip
+          done
+
+          echo "Could not push the flag flip after 3 attempts; the demo is still enabled." >&2
+          exit 1
 
       - name: Notify Slack
         # Three reasons to speak, and nothing else:
