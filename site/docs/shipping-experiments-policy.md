@@ -96,23 +96,37 @@ you are competing with yourself.
 
 An experiment nobody can measure cannot be evaluated, so it never gets removed.
 
+PostHog runs with `autocapture: false` and tracks purely by delegation on
+specific hooks in `components/PostHogAnalytics.astro`. A plain `<a>` therefore
+emits **nothing** — adding `data-*` attributes that no delegate reads does not
+change that.
+
 **Do**
 
-- Tag every outbound CTA with the shared helpers in `src/lib/urls.ts`
+- Tag every **outbound** CTA with the shared helpers in `src/lib/urls.ts`
   (`getCloudLandingUrl`, `getCloudCtaUrl`) so `utm_source` / `utm_medium` /
-  `utm_campaign` / `utm_content` match everything else in the funnel.
-- Carry the same `data-*` attributes as neighbouring CTAs, so existing click
-  tracking picks it up with no new dashboard.
+  `utm_campaign` / `utm_content` match everything else in the funnel, and give
+  it `class="run-cloud-btn"` plus `data-location` so the click is captured.
+- Tag every **internal** entry point into the experiment with
+  `data-experiment="<flagName>"` and `data-location`, which fires
+  `hub:experiment_cta_clicked`. Do not use `run-cloud-btn` here — that path
+  reports a signup CTA, which an internal navigation is not.
+- Skip `utm_*` on internal links: they start a fresh session in most analytics
+  tools and break attribution for the visit they interrupt.
 - Write down, in the PR, the number that decides whether this stays, and when
   you will look at it.
 
 **Don't**
 
 - Ship a bare internal `<a>` as an experiment's main CTA.
+- Add tracking attributes without checking that a delegate in
+  `PostHogAnalytics.astro` actually reads them.
 - Rely on "we'll add analytics later". Later is after the data you needed.
 
-**Check:** can you answer "how many people clicked this last week, and what did
-they do next?" without writing new code? If not, it is not instrumented.
+**Check:** render the component in a unit test and assert the hook is on the
+element (see `tests/unit/experiment-flags.test.ts`). Then answer "how many
+people clicked this last week, and what did they do next?" without writing new
+code. If you cannot, it is not instrumented.
 
 ---
 

@@ -1,5 +1,7 @@
+import { experimental_AstroContainer as AstroContainer } from 'astro/container';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import MiniMaxPromo from '../../src/components/hub/MiniMaxPromo.astro';
 import {
   experimentFlags,
   isExperimentEnabled,
@@ -10,6 +12,7 @@ const OVERRIDE_KEY = 'EXPERIMENT_MINIMAX_H3_DEMO';
 
 afterEach(() => {
   delete process.env[OVERRIDE_KEY];
+  delete process.env.VERCEL_ENV;
 });
 
 describe('experiment flags', () => {
@@ -49,9 +52,54 @@ describe('experiment flags', () => {
     }
   });
 
+  it('ignores the override entirely in a production build', () => {
+    // Otherwise a stray variable in Vercel project settings silently outranks
+    // the committed JSON, and CI's kill switch reports success while the next
+    // production build keeps serving the broken experiment.
+    process.env.VERCEL_ENV = 'production';
+    process.env[OVERRIDE_KEY] = 'on';
+    expect(isExperimentEnabled('minimaxH3Demo')).toBe(experimentFlags.minimaxH3Demo.enabled);
+
+    process.env.VERCEL_ENV = 'preview';
+    expect(isExperimentEnabled('minimaxH3Demo')).toBe(true);
+  });
+
   it('exposes a frozen object so nothing can flip a flag at runtime', () => {
     const name: ExperimentName = 'minimaxH3Demo';
     expect(Object.isFrozen(experimentFlags)).toBe(true);
     expect(Object.isFrozen(experimentFlags[name])).toBe(true);
+  });
+});
+
+describe('experiment entry points are measurable', () => {
+  // PostHog runs with `autocapture: false` and tracks only via delegation on
+  // specific hooks (see PostHogAnalytics.astro), so a plain <a> is invisible.
+  // The demo originally shipped exactly that way, which is why nobody could
+  // say how much traffic it diverted off the hub's browse flow.
+  it('gives the hub promo CTA the hook PostHog delegates on', async () => {
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(MiniMaxPromo, {
+      props: { locale: 'en' },
+      request: new Request('https://comfy.org/workflows/'),
+    });
+
+    const cta = /<a\b[^>]*data-experiment="minimaxH3Demo"[^>]*>/.exec(html)?.[0];
+    expect(cta, 'the promo CTA carries no data-experiment hook').toBeDefined();
+    expect(cta).toContain('data-location="hub_index_promo"');
+    // The Cloud-CTA class would report this internal navigation as a signup CTA.
+    expect(cta).not.toContain('run-cloud-btn');
+  });
+
+  it('ships no HTML comments to the browser', async () => {
+    // Astro emits <!-- --> verbatim; only {/* */} is stripped. The notes in
+    // this component explain internal analytics wiring and have no business
+    // being in a page anyone can view-source.
+    const container = await AstroContainer.create();
+    const html = await container.renderToString(MiniMaxPromo, {
+      props: { locale: 'en' },
+      request: new Request('https://comfy.org/workflows/'),
+    });
+
+    expect(html).not.toContain('<!--');
   });
 });

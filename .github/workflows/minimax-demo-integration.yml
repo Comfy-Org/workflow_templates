@@ -107,9 +107,18 @@ jobs:
             echo "| **Flag before this run** | $WAS_ENABLED |"
           } >> "$GITHUB_STEP_SUMMARY"
 
-          # First assertion message names the actual cause (router 404 vs CSRF
-          # 403 vs backend 502) rather than just "a test failed".
-          reason=$(grep -m1 -oP 'AssertionError: \K.*' "$RUNNER_TEMP/integration.log" | tr -d '\r\n' | cut -c1-300 || true)
+          # First error line names the actual cause (router 404 vs CSRF 403 vs
+          # backend 502) rather than just "a test failed". This string is posted
+          # to Slack AND committed into experiment-flags.json as the flag's
+          # permanent reason, so it has to be right.
+          #
+          # TypeError is matched, not just AssertionError: a down origin fails
+          # as `TypeError: fetch failed` before any assertion runs — the single
+          # most likely outage, given the backend is private beta. Matching only
+          # assertions would skip past it to a downstream guard and record
+          # "nothing to poll", which reads like a diagnosis and is not one.
+          reason=$(grep -m1 -oP '^\s*(?:AssertionError|TypeError|ReferenceError|SyntaxError|Error):.*' \
+            "$RUNNER_TEMP/integration.log" | tr -d '\r\n' | cut -c1-300 || true)
           [ -n "$reason" ] || reason="See the workflow run for details."
           echo "reason=$reason" >> "$GITHUB_OUTPUT"
 
@@ -170,7 +179,7 @@ jobs:
         if: >-
           steps.disable.outputs.changed == 'true'
           || steps.disable.outcome == 'failure'
-          || (github.event_name == 'workflow_dispatch' && steps.test.outcome == 'success')
+          || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -178,6 +187,11 @@ jobs:
           DISABLED: ${{ steps.disable.outputs.changed }}
           DISABLE_OUTCOME: ${{ steps.disable.outcome }}
           COMMITTED: ${{ steps.commit.outcome }}
+          OUTCOME: ${{ steps.test.outcome }}
+          # Through the environment like everything else in this file — never
+          # interpolated into the script below, where a value containing $( )
+          # or a backtick would execute.
+          FLAG_ENABLED: ${{ steps.flag.outputs.enabled }}
           REASON: ${{ steps.summary.outputs.reason }}
           BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -202,8 +216,16 @@ jobs:
               TEXT="${TEXT}"$'\n'":rotating_light: The flag could not be committed to \`main\`, so *the demo is still live*. Someone needs to switch it off by hand."
             fi
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$OUTCOME" = "success" ]; then
+            TEXT=":white_check_mark: *MiniMax H3 demo integration passes* against ${BASE_URL} (flag is currently \`${FLAG_ENABLED}\`). Turning it on is a deliberate call: set the flag and deploy when you want it in front of users. <${RUN_URL}|View run>"
           else
-            TEXT=":white_check_mark: *MiniMax H3 demo integration passes* against ${BASE_URL} (flag is currently \`${{ steps.flag.outputs.enabled }}\`). Turning it on is a deliberate call: set the flag and deploy when you want it in front of users. <${RUN_URL}|View run>"
+            # Reached on a hand-run dispatch that failed without flipping anything
+            # — the flag was already off, or a preview origin was tested. The run
+            # is green because the test is continue-on-error, so without this the
+            # operator who dispatched it would be told nothing at all.
+            TEXT=":x: *MiniMax H3 demo integration failed* against ${BASE_URL}. The flag was left as \`${FLAG_ENABLED}\` — no change was made, either because it is already off or because this was not a production run."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
           fi
 
           BODY=$(jq -n --arg ch "$SLACK_CHANNEL_ID" --arg text "$TEXT" '{channel: $ch, text: $text}')

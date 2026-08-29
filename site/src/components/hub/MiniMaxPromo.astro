@@ -12,6 +12,7 @@
  */
 import { localizeUrl } from '../../i18n/utils';
 import type { Locale } from '../../i18n/config';
+import { EXAMPLE_VIDEO_URL, exampleKeyframeUrl } from '../../lib/demos/mmh3/config';
 
 interface Props {
   /** Active locale, used to localize the link to the demo page. */
@@ -19,20 +20,20 @@ interface Props {
 }
 
 const { locale } = Astro.props;
-
-const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
 ---
 
 <section class="mb-12 grid overflow-hidden rounded-5xl bg-hub-surface p-2 lg:grid-cols-3">
   <div
     class="media-frame relative aspect-video min-h-56 overflow-hidden rounded-4xl bg-black lg:aspect-auto lg:min-h-80"
   >
-    <!-- metadata-only preload + a poster keep the clip's megabytes off the
-         page's critical path; the frame paints before any video bytes. -->
+    {
+      /* metadata-only preload + a poster keep the clip's megabytes off the
+        page's critical path; the frame paints before any video bytes. */
+    }
     <video
       id="mmh3-promo-video"
-      src={`${EXAMPLE_ROOT}/example.mp4`}
-      poster={`${EXAMPLE_ROOT}/keyframes/kf_1.webp`}
+      src={EXAMPLE_VIDEO_URL}
+      poster={exampleKeyframeUrl(1)}
       autoplay
       muted
       loop
@@ -59,14 +60,19 @@ const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
       Guide one continuous shot with three reference images pinned to exact moments — no install,
       runs on a live deployment.
     </p>
-    <!--
+    {
+      /*
       `data-*` rather than `utm_*`: this is an internal navigation, and UTM
       params on an internal link start a new session in most analytics tools,
-      breaking attribution for the visit it interrupts. These attributes match
-      the ones the template CTAs carry, so existing click tracking picks the
-      promo up and diversions into the demo are measurable — which they were
-      not when this shipped. See docs/shipping-experiments-policy.md, Rule 3.
-    -->
+      breaking attribution for the visit it interrupts.
+
+      `data-experiment` is the hook PostHogAnalytics delegates on for experiment
+      entry points; it fires `hub:experiment_cta_clicked`. Deliberately not the
+      Cloud-CTA class, whose path reports a signup CTA that this internal link
+      is not. Without these attributes the click is silent, which is how the
+      demo shipped. See docs/shipping-experiments-policy.md, Rule 3.
+    */
+    }
     <a
       href={localizeUrl('/workflows/minimax-h3-multiref/', locale)}
       data-location="hub_index_promo"

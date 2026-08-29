@@ -28,10 +28,11 @@
  */
 import { afterAll, describe, expect, it } from 'vitest';
 
+import { exampleKeyframeUrl } from '../../src/lib/demos/mmh3/config';
+
 const BASE_URL = (process.env.DEMO_BASE_URL ?? 'https://comfy.org').replace(/\/+$/, '');
 const API = `${BASE_URL}/api/workflows/minimax-h3-multiref`;
 const PAGE = `${BASE_URL}/workflows/minimax-h3-multiref/`;
-const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const SUBMIT_TIMEOUT_MS = 90_000;
@@ -128,7 +129,7 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     // and posts the bytes. A 404 here fails Run Workflow before it starts.
     const results = await Promise.all(
       [1, 2, 3].map(async (i) => {
-        const url = `${EXAMPLE_ROOT}/keyframes/kf_${i}.webp`;
+        const url = exampleKeyframeUrl(i);
         const res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
         return { url, status: res.status, bytes: (await res.arrayBuffer()).byteLength };
       })
@@ -155,7 +156,7 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     form.append('settings', JSON.stringify({ seconds: 5, steps: 4, enabledKeyframes: [1, 2, 3] }));
 
     for (const i of [1, 2, 3]) {
-      const res = await fetch(`${EXAMPLE_ROOT}/keyframes/kf_${i}.webp`, {
+      const res = await fetch(exampleKeyframeUrl(i), {
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       });
       const blob = await res.blob();
@@ -183,8 +184,12 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     expect(HEALTHY_STATUSES, `unexpected submit status. ${detail}`).toContain(json.status);
   });
 
-  it('reports status for the submitted job', async () => {
-    expect(jobId, 'no job was submitted, so there is nothing to poll').not.toBeNull();
+  it('reports status for the submitted job', async (ctx) => {
+    // Skipped rather than failed when submit did not get that far. A cascade of
+    // "there is nothing to poll" failures buries the real error, and CI reads
+    // the first error line out of this log to decide what to report and what to
+    // record as the reason the demo was switched off.
+    if (!jobId) ctx.skip();
 
     const deadline = Date.now() + POLL_WINDOW_MS;
     let seen = 0;
@@ -211,8 +216,8 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     expect(seen, 'the poll endpoint was never successfully read').toBeGreaterThan(0);
   });
 
-  it('cancels the submitted job', async () => {
-    expect(jobId, 'no job was submitted, so there is nothing to cancel').not.toBeNull();
+  it('cancels the submitted job', async (ctx) => {
+    if (!jobId) ctx.skip();
 
     const { res, body, detail } = await request(`/job/${jobId}`, {
       method: 'DELETE',

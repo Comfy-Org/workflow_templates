@@ -11,6 +11,7 @@
     trackDownloadButtonClicked,
     trackShareButtonClicked,
     trackTemplateViewed,
+    trackExperimentCtaClicked,
   } from '../lib/posthog';
 
   initPostHog();
@@ -41,6 +42,18 @@
       } else {
         trackSignupCtaClicked(location);
       }
+      return;
+    }
+
+    // Entry point into a gated experiment. Checked before the buttons below
+    // and after `.run-cloud-btn`, so an experiment's outbound Cloud CTA still
+    // reports as a signup CTA and only its internal links land here.
+    const experimentCta = target.closest('[data-experiment]');
+    if (experimentCta) {
+      trackExperimentCtaClicked(
+        experimentCta.getAttribute('data-experiment') || 'unknown',
+        experimentCta.getAttribute('data-location') || 'unknown'
+      );
       return;
     }
 

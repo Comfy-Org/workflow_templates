@@ -42,15 +42,23 @@ export const experimentFlags: Readonly<Record<ExperimentName, ExperimentFlag>> =
  * Local/preview override, so working on a disabled experiment does not require
  * dirtying a tracked file: `EXPERIMENT_MINIMAX_H3_DEMO=on pnpm dev`.
  *
- * Only ever consulted for a value of exactly `on` or `off`. Production builds
- * set nothing, so the committed JSON stays the single source of truth there.
+ * Ignored entirely in production builds. It must never be possible for a stray
+ * variable in Vercel project settings to outrank the committed JSON: CI would
+ * switch a broken experiment off, commit, and announce it, while the next
+ * production build kept serving the thing that is broken — a kill switch that
+ * reports success and does nothing.
  */
 function envOverride(name: ExperimentName): boolean | null {
+  if (process.env.VERCEL_ENV === 'production') return null;
+
   const key = `EXPERIMENT_${name.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase()}`;
   const raw = process.env[key] ?? import.meta.env?.[key];
-  if (raw === 'on') return true;
-  if (raw === 'off') return false;
-  return null;
+  if (raw !== 'on' && raw !== 'off') return null;
+
+  // Surfaced in the deploy log so an override is never a silent explanation for
+  // "the flag says off but the demo is up".
+  console.warn(`[experiment-flags] ${name} forced ${raw} by ${key}; committed value ignored.`);
+  return raw === 'on';
 }
 
 export function isExperimentEnabled(name: ExperimentName): boolean {

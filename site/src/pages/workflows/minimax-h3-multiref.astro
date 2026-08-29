@@ -5,7 +5,13 @@ import SiteFooter from '@/components/hub/SiteFooter.astro';
 import Breadcrumbs from '@/components/template-detail/Breadcrumbs.astro';
 import MiniMaxH3Demo from '@/components/demos/MiniMaxH3Demo.vue';
 import graph from '@/lib/demos/mmh3/workflow-api.json';
-import { KEYFRAMES, INPUT_NODES } from '@/lib/demos/mmh3/config';
+import {
+  KEYFRAMES,
+  INPUT_NODES,
+  AGENT_PROMPT_URL,
+  EXAMPLE_VIDEO_URL,
+  exampleKeyframeUrl,
+} from '@/lib/demos/mmh3/config';
 import { DEFAULT_LOCALE } from '@/i18n/config';
 import { isExperimentEnabled } from '@/config/experimentFlags';
 import { getCloudLandingUrl } from '@/lib/urls';
@@ -25,26 +31,20 @@ const demoEnabled = isExperimentEnabled('minimaxH3Demo');
 /** Seed the prompt editor with the text the workflow ships with. */
 const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ?? '');
 
-// These assets are served from media.comfy.org (source files stay committed
-// under public/demos/mmh3). Root-relative URLs 404 in production because the
-// comfy.org router resolves them against the website app, which does not have
-// the hub's /demos tree — absolute CDN URLs work on every origin, and the
-// bucket sends access-control-allow-origin: * so the on-click prompt fetch
-// still works cross-origin.
-const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
-
-const exampleKeyframes = KEYFRAMES.map((slot) => `${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`);
-
-/** The example result, played before the first run. */
-const exampleVideo = `${EXAMPLE_ROOT}/example.mp4`;
-
-/**
- * A system prompt for writing this workflow's prompts with an agent. Fetched
- * on click rather than inlined, so its ~19 KB stays out of the page payload.
- */
-const agentPromptUrl = 'https://media.comfy.org/website/demos/mmh3/agent-prompt.md';
+const exampleKeyframes = KEYFRAMES.map((slot) => exampleKeyframeUrl(slot.index));
+const exampleVideo = EXAMPLE_VIDEO_URL;
+const agentPromptUrl = AGENT_PROMPT_URL;
 
 const pageTitle = 'MiniMax H3 - Motion Context';
+
+/**
+ * The heading and title promise a runner only when there is one. With the demo
+ * off, "Live workflow / run the workflow" is contradicted by body copy three
+ * sections below saying the runner is turned off — the first thing a visitor
+ * reads should not be the one thing the page cannot do.
+ */
+const eyebrow = demoEnabled ? 'Live workflow' : 'Workflow preview';
+const titleSuffix = demoEnabled ? ' — run the workflow' : ' — workflow preview';
 const description =
   'Guide one continuous shot with three reference images pinned to exact moments, and get video with matching audio.';
 
@@ -61,7 +61,7 @@ const noindex = true;
 ---
 
 <BaseLayout
-  title={`${pageTitle} — run the workflow`}
+  title={`${pageTitle}${titleSuffix}`}
   {description}
   theme="dark"
   {noindex}
@@ -74,7 +74,7 @@ const noindex = true;
       <Breadcrumbs locale={locale} title={pageTitle} class="mb-6 lg:mb-8" />
 
       <header class="mb-12 max-w-4xl">
-        <p class="text-sm font-semibold uppercase tracking-wider text-brand">Live workflow</p>
+        <p class="text-sm font-semibold uppercase tracking-wider text-brand">{eyebrow}</p>
         <h1
           class="mt-4 font-display text-4xl font-light leading-none tracking-[-0.03em] text-content sm:text-5xl lg:text-6xl"
         >
@@ -165,14 +165,18 @@ const noindex = true;
                   has no shareId to hand getCloudCtaUrl. Promising a one-click run
                   the link cannot deliver would rebuild, in the fallback, the dead
                   end the fallback exists to replace.
+
+                  `run-cloud-btn` is what PostHogAnalytics delegates on; with no
+                  `data-template` it reports as a signup CTA at `mmh3_fallback`.
+                  The class is the tracking hook, not styling — dropping it makes
+                  the click silent.
                 */}
                 <a
                   href={getCloudLandingUrl('minimax_h3_multiref_fallback')}
                   target="_blank"
                   rel="noopener noreferrer"
                   data-location="mmh3_fallback"
-                  data-experiment="minimaxH3Demo"
-                  class="inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+                  class="run-cloud-btn inline-flex h-10 shrink-0 items-center justify-center whitespace-nowrap rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
                 >
                   Open Comfy Cloud
                 </a>
