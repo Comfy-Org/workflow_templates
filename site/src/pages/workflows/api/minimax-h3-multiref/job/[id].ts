@@ -8,9 +8,12 @@ import {
   type JobOutput,
   type JobStatusResponse,
 } from '@/lib/demos/mmh3/config';
-import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
+import { comfyClient, crossSiteRejection, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
 
-export const DELETE: APIRoute = async ({ params }) => {
+export const DELETE: APIRoute = async ({ params, request }) => {
+  const rejected = crossSiteRejection(request);
+  if (rejected) return rejected;
+
   const id = params.id;
   if (!id) return jsonResponse({ error: 'Missing job id' }, 400);
 

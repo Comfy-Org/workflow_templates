@@ -253,6 +253,15 @@ export default defineConfig({
     skewProtection: true,
   }),
 
+  // The site is served through comfy.org's Framer rewrite, so browsers send
+  // `Origin: https://comfy.org` while requests reach Astro addressed to the
+  // Vercel host — Astro's origin check can never pass and 403s every form
+  // POST (e.g. the MiniMax demo's /run). On-demand mutating routes enforce
+  // their own origin allowlist instead (see src/lib/demos/mmh3/server.ts).
+  security: {
+    checkOrigin: false,
+  },
+
   build: {
     concurrency: Math.max(1, os.cpus().length),
     inlineStylesheets: 'auto',
