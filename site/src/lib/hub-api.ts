@@ -11,7 +11,10 @@ import { applyRanking, fetchRankingMap, readEnv, type RankingMap } from './ranki
 
 // readEnv, not import.meta.env directly: `scripts/` runs this module under plain
 // Node, where import.meta.env is undefined and a direct read throws.
-const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(/\/$/, '');
+const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(
+  /\/$/,
+  ''
+);
 
 // ---------------------------------------------------------------------------
 // Types — mirrors backend OpenAPI schemas
@@ -356,6 +359,10 @@ export function serializeIndexEntry(
     shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
+    // Whatever the index declares, with the pre-existing 'image' default when it
+    // declares nothing. That default is itself a frontend-owned guess and is on
+    // the list for the backend contract fix; it is left as-is here so this PR
+    // changes no classification behaviour.
     mediaType: entry.mediaType || 'image',
     tags: entry.tags || [],
     models: entry.models || [],
@@ -503,12 +510,26 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function inferMediaType(workflow: HubWorkflowSummary): MediaType {
-  const tags = (workflow.tags || []).map((t) => t.name.toLowerCase());
+/**
+ * Media type from tag names, by EXACT tag match.
+ *
+ * Deliberately not substring: widening it to phrase-shaped tags ("Image to
+ * Video") changes which category a workflow claims on the detail page, and the
+ * breadcrumb there links straight to that category. With classification now
+ * coming from the index, video and 3d hold no entries, so a widened match sends
+ * the reader to a category page that is empty in English and 404s in every
+ * locale. Same rule as before this PR; one definition instead of two.
+ */
+function mediaTypeFromTagNames(names: readonly string[]): MediaType {
+  const tags = names.map((name) => name.toLowerCase());
   if (tags.includes('video') || tags.includes('animation')) return 'video';
   if (tags.includes('audio')) return 'audio';
   if (tags.includes('3d')) return '3d';
   return 'image';
+}
+
+function inferMediaType(workflow: HubWorkflowSummary): MediaType {
+  return mediaTypeFromTagNames((workflow.tags || []).map((t) => t.name));
 }
 
 function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
