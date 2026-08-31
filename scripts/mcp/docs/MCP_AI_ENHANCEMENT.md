@@ -31,7 +31,7 @@ flowchart LR
 
 | Step | Script | Nature | Output |
 |------|--------|--------|--------|
-| Step 1 | `scripts/mcp/sync_index.py` | Deterministic | Template list, `capabilities` (from tags), `model`, `io`, `usage`, etc. |
+| Step 1 | `scripts/mcp/sync_index.py` | Deterministic | Template list, `capabilities` (from tags), `model`, `io`, `usage`, `minComfyUIVersion`, etc. |
 | Step 2a | `scripts/mcp/enhance_models_registry.py` | AI-assisted | Model `summary`, `strengths`, `capabilities` in `models_registry.json` |
 | Step 2b | `scripts/mcp/enhance_descriptions.py` | AI-assisted | Polished template `description` (references registry + category context) |
 
