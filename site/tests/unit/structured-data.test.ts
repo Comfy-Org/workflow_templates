@@ -7,7 +7,10 @@ import {
   serializeJsonLdForScript,
 } from '../../src/lib/structured-data';
 import type { WorkflowEntityGraph } from '../../src/data/workflow-entity-graphs';
-import { WORKFLOW_ENTITY_GRAPHS } from '../../src/data/workflow-entity-graphs';
+import {
+  WORKFLOW_ENTITY_GRAPHS,
+  getWorkflowEntityGraph,
+} from '../../src/data/workflow-entity-graphs';
 import { buildSiteEntityNodes } from '../../src/lib/site-entities';
 
 // Every node id ends in a `#fragment`; collapse to that fragment for order
@@ -1002,4 +1005,28 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
       });
     });
   }
+});
+
+describe('getWorkflowEntityGraph', () => {
+  // The map is keyed by the snake_case filename, but preview/prod builds pass the
+  // hub share id — both must resolve to the same curated graph.
+  const cases: Array<[shareId: string, key: string]> = [
+    ['b37902cee452', 'video_ltx2_5_i2v'],
+    ['cd0c4f9f61a4', 'api_seedance2_5_r2v'],
+    ['a781503cf508', 'video_minimax_h3_i2v'],
+    ['9394f9968da3', 'video_wan_animate2'],
+  ];
+
+  for (const [shareId, key] of cases) {
+    it(`resolves ${key} by filename and by share id (${shareId})`, () => {
+      const byKey = getWorkflowEntityGraph(key);
+      const byShareId = getWorkflowEntityGraph(shareId);
+      expect(byKey).toBe(WORKFLOW_ENTITY_GRAPHS[key]);
+      expect(byShareId).toBe(byKey);
+    });
+  }
+
+  it('returns undefined for an unknown name', () => {
+    expect(getWorkflowEntityGraph('not-a-real-template')).toBeUndefined();
+  });
 });

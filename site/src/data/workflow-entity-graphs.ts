@@ -1,10 +1,12 @@
 /**
  * Curated `DefinedTerm`/`DefinedTermSet` entity data for `buildWorkflowGraphJsonLd`
- * (see ../lib/structured-data.ts), keyed by the template's `name` field in
- * templates/index.json. Transcribed verbatim from the client-provided schema
- * recommendation — do not add entries by automatic detection or extrapolation.
- * `id` values are local `@graph` fragment identifiers, resolved against the
- * page's own canonical URL at build time (e.g. `{canonicalUrl}#e-api`).
+ * (see ../lib/structured-data.ts), keyed by the template's snake_case `name`
+ * (its `templates/index.json` filename). Look these up via `getWorkflowEntityGraph`,
+ * which also accepts the hub share id (see `SHARE_ID_TO_KEY` at the bottom).
+ * Transcribed verbatim from the client-provided schema recommendation — do not
+ * add entries by automatic detection or extrapolation. `id` values are local
+ * `@graph` fragment identifiers, resolved against the page's own canonical URL
+ * at build time (e.g. `{canonicalUrl}#e-api`).
  */
 
 export interface WorkflowEntityCoreTopic {
@@ -755,6 +757,23 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
   },
 };
 
-export function getWorkflowEntityGraph(templateName: string): WorkflowEntityGraph | undefined {
-  return WORKFLOW_ENTITY_GRAPHS[templateName];
+/**
+ * The `@graph` builder is called with the workflow's `name` from whichever index
+ * the build used. The local content collection (`templates/index.json`) exposes
+ * the snake_case filename, but the hub API (`/api/hub/workflows/index`, the
+ * primary source in preview/prod builds) exposes the share id instead — so a
+ * bare `WORKFLOW_ENTITY_GRAPHS[name]` lookup misses on deployed pages. Map the
+ * share id back to the filename key here so both indexes resolve.
+ */
+const SHARE_ID_TO_KEY: Record<string, string> = {
+  b37902cee452: 'video_ltx2_5_i2v',
+  cd0c4f9f61a4: 'api_seedance2_5_r2v',
+  a781503cf508: 'video_minimax_h3_i2v',
+  '9394f9968da3': 'video_wan_animate2',
+};
+
+export function getWorkflowEntityGraph(nameOrShareId: string): WorkflowEntityGraph | undefined {
+  return (
+    WORKFLOW_ENTITY_GRAPHS[nameOrShareId] ?? WORKFLOW_ENTITY_GRAPHS[SHARE_ID_TO_KEY[nameOrShareId]]
+  );
 }
