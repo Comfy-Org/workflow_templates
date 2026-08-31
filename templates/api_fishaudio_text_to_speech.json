@@ -1,0 +1,325 @@
+{
+  "id": "1c3621ae-965c-43f9-ba79-dc0b92fcd468",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 8,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "FishAudioTextToSpeech",
+      "pos": [
+        160,
+        220
+      ],
+      "size": [
+        440,
+        362
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.voices.voice0",
+          "shape": 7,
+          "type": "FISHAUDIO_VOICE",
+          "link": 6
+        },
+        {
+          "name": "model.voices.voice1",
+          "shape": 7,
+          "type": "FISHAUDIO_VOICE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioTextToSpeech"
+      },
+      "widgets_values": [
+        "[sigh] Yes, this voice is AI generated. \n[excited] Now in ComfyUI. Type text, add tags like this, and boom. Instant voice.",
+        "s2.1-pro",
+        0.7,
+        0.7,
+        1,
+        0,
+        true,
+        1481145631,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "text": "[sigh] Yes, this voice is AI generated. \n[excited] Now in ComfyUI. Type text, add tags like this, and boom. Instant voice.",
+        "model": "s2.1-pro",
+        "model.temperature": 0.7,
+        "model.top_p": 0.7,
+        "model.speed": 1,
+        "model.volume": 0,
+        "model.normalize": true,
+        "seed": 1481145631,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        650,
+        220
+      ],
+      "size": [
+        730,
+        218
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Fish_audio_t2s",
+        "mp3",
+        "V0"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/Fish_audio_t2s",
+        "format": "mp3",
+        "format.quality": "V0"
+      }
+    },
+    {
+      "id": 6,
+      "type": "FishAudioVoiceSelector",
+      "pos": [
+        -420,
+        220
+      ],
+      "size": [
+        280,
+        86
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "FISHAUDIO_VOICE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioVoiceSelector"
+      },
+      "widgets_values": [
+        "Energetic Male (en)"
+      ],
+      "widgets_values_named": {
+        "voice": "Energetic Male (en)"
+      }
+    },
+    {
+      "id": 9,
+      "type": "MarkdownNote",
+      "pos": [
+        -1190,
+        140
+      ],
+      "size": [
+        500,
+        886.875
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Guide",
+      "properties": {},
+      "widgets_values": [
+        "## Fish Audio Text to Speech\n\nGenerate speech from text with a preset Fish Audio voice.\n\n### How to use\n\n1. Sign in with your ComfyUI account. API nodes are pay per use.\n2. Type your script in the `text` field of the Fish Audio Text to Speech node.\n3. A preset voice is already connected. To change it, pick another voice in the Voice Selector, or switch to `custom` and paste a voice model ID from fish.audio.\n4. Keep parameters at their defaults unless needed.\n5. Queue the prompt, then preview or save the audio.\n\n### Inline tags\n\nWrite tags directly in the text. A tag applies from where it appears to the end of the sentence, or until the next tag.\n\n**Emotion** (start of sentence, one per sentence):\n\n- [happy] [sad] [angry] [excited] [calm]\n- [nervous] [confident] [surprised] [scared] [worried]\n- [frustrated] [empathetic] [proud] [relaxed] [curious]\n- ...and more: [sarcastic] [nostalgic] [determined] [hopeful] [bored] ...\n\n**Tone** (control volume and intensity):\n\n- [whispering] [shouting] [screaming]\n- [soft tone] [in a hurry tone] [emphasis]\n\n**Sound effects** (add matching text after, e.g. \"Ha, ha\" after [laughing]):\n\n- [laughing] [chuckling] [sobbing] [crying loudly]\n- [sighing] [groaning] [panting] [gasping]\n- [yawning] [snoring] [clear throat]\n\n**Pause and background:**\n\n- [break] [short pause] [long pause] [long-break]\n- [audience laughing] [background laughter] [crowd laughing]\n\n### Tag rules\n\n- One main emotion per sentence, max 3 tags combined\n- Pair physical tags with emotions: [whispering][scared], [panting][tired], [shouting][angry]\n- Intensity modifiers: [slightly sad], [very excited], [extremely angry]\n- Free-form descriptions work: [tired, end of a long shift]\n\n### Example\n\n[excited] Welcome back!\n[chuckling] You missed a lot.\n[calm] Let's get started.\n\n### Multi-speaker\n\nWith two or more voices connected, mark speaker changes:\n\n@Voice1 [nervous] Who's there?\n@Voice2 [calm] Just me. Relax.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Fish Audio Text to Speech\n\nGenerate speech from text with a preset Fish Audio voice.\n\n### How to use\n\n1. Sign in with your ComfyUI account. API nodes are pay per use.\n2. Type your script in the `text` field of the Fish Audio Text to Speech node.\n3. A preset voice is already connected. To change it, pick another voice in the Voice Selector, or switch to `custom` and paste a voice model ID from fish.audio.\n4. Keep parameters at their defaults unless needed.\n5. Queue the prompt, then preview or save the audio.\n\n### Inline tags\n\nWrite tags directly in the text. A tag applies from where it appears to the end of the sentence, or until the next tag.\n\n**Emotion** (start of sentence, one per sentence):\n\n- [happy] [sad] [angry] [excited] [calm]\n- [nervous] [confident] [surprised] [scared] [worried]\n- [frustrated] [empathetic] [proud] [relaxed] [curious]\n- ...and more: [sarcastic] [nostalgic] [determined] [hopeful] [bored] ...\n\n**Tone** (control volume and intensity):\n\n- [whispering] [shouting] [screaming]\n- [soft tone] [in a hurry tone] [emphasis]\n\n**Sound effects** (add matching text after, e.g. \"Ha, ha\" after [laughing]):\n\n- [laughing] [chuckling] [sobbing] [crying loudly]\n- [sighing] [groaning] [panting] [gasping]\n- [yawning] [snoring] [clear throat]\n\n**Pause and background:**\n\n- [break] [short pause] [long pause] [long-break]\n- [audience laughing] [background laughter] [crowd laughing]\n\n### Tag rules\n\n- One main emotion per sentence, max 3 tags combined\n- Pair physical tags with emotions: [whispering][scared], [panting][tired], [shouting][angry]\n- Intensity modifiers: [slightly sad], [very excited], [extremely angry]\n- Free-form descriptions work: [tired, end of a long shift]\n\n### Example\n\n[excited] Welcome back!\n[chuckling] You missed a lot.\n[calm] Let's get started.\n\n### Multi-speaker\n\nWith two or more voices connected, mark speaker changes:\n\n@Voice1 [nervous] Who's there?\n@Voice2 [calm] Just me. Relax.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 10,
+      "type": "FishAudioInstantVoiceClone",
+      "pos": [
+        -270,
+        470
+      ],
+      "size": [
+        350,
+        110
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "files.audio0",
+          "type": "AUDIO",
+          "link": 8
+        },
+        {
+          "name": "files.audio1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "FISHAUDIO_VOICE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioInstantVoiceClone"
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "enhance_audio_quality": true
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 11,
+      "type": "LoadAudio",
+      "pos": [
+        -630,
+        470
+      ],
+      "size": [
+        330,
+        170
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "fish_audio_example.mp3",
+        null,
+        null
+      ],
+      "widgets_values_named": {
+        "audio": "62d0a069159eda8931ad7a6bf2a867e2695cfeb088f6a6892ceb86744a516cd3.mp3",
+        "upload": null
+      }
+    }
+  ],
+  "links": [
+    [
+      3,
+      1,
+      0,
+      5,
+      0,
+      "AUDIO"
+    ],
+    [
+      6,
+      6,
+      0,
+      1,
+      0,
+      "FISHAUDIO_VOICE"
+    ],
+    [
+      8,
+      11,
+      0,
+      10,
+      0,
+      "AUDIO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Option 2: Voice Clone (Select the node, then press Ctrl‑B to enable)",
+      "bounding": [
+        -640,
+        390,
+        740,
+        330
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Option 1: Preset Audio",
+      "bounding": [
+        -640,
+        110,
+        740,
+        250
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6684863810589871,
+      "offset": [
+        1898.0274131242184,
+        276.01370087035906
+      ]
+    },
+    "frontendVersion": "1.52.5",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
