@@ -186,3 +186,59 @@ export function deriveModelGroups<T extends CatalogTemplate>(catalog: T[]): Mode
   }
   return result;
 }
+
+/**
+ * Fail the build if two families would answer to the same URL.
+ *
+ * Both model routes resolve a request by canonical slug first and by
+ * `redirectFrom` second, taking the first family that matches, so bad data does
+ * not error — it silently mis-serves one URL. Three ways that happens:
+ *
+ *   - two families derive the same canonical slug, and one page is unreachable;
+ *   - two families claim the same variant, and it redirects to whichever was
+ *     derived first;
+ *   - a variant is also another family's canonical slug, so the canonical lookup
+ *     shadows it and the variant never 301s. The deleted `redirects` map in
+ *     astro.config.mjs excluded this case by hand; asserting it keeps the
+ *     protection now that resolution happens in the route.
+ *
+ * Called from astro.config.mjs, which derives the same groups the sitemap uses.
+ * It used to run in the English route's `getStaticPaths`, which stopped running
+ * when that route became on-demand.
+ */
+export function assertUniqueModelSlugs(
+  groups: readonly Pick<ModelGroup<CatalogTemplate>, 'slug' | 'redirectFrom'>[]
+): void {
+  const canonical = new Set<string>();
+  for (const group of groups) {
+    if (canonical.has(group.slug)) {
+      throw new Error(
+        `Duplicate model slug "${group.slug}" across families; slugs must be unique.`
+      );
+    }
+    canonical.add(group.slug);
+  }
+
+  // Second pass, so a variant colliding with a canonical slug derived after it
+  // is still caught.
+  const variantOwners = new Map<string, string>();
+  for (const group of groups) {
+    for (const variant of group.redirectFrom) {
+      const owner = variantOwners.get(variant);
+      if (owner) {
+        throw new Error(
+          `Model variant slug "${variant}" is claimed by both "${owner}" and "${group.slug}"; ` +
+            `a variant must redirect to exactly one family.`
+        );
+      }
+      variantOwners.set(variant, group.slug);
+
+      if (canonical.has(variant)) {
+        throw new Error(
+          `Model variant slug "${variant}" (of "${group.slug}") is also a canonical family slug; ` +
+            `the canonical page shadows the redirect, so the variant would never 301.`
+        );
+      }
+    }
+  }
+}
