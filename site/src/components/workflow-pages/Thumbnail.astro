@@ -38,10 +38,11 @@ const posterSrc = src && isVideo ? hubMediaFor(src)?.poster : undefined;
         src={resolvedSrc}
         poster={posterSrc}
         class={imgClass}
-        autoplay
+        preload="none"
         muted
         loop
         playsinline
+        data-gated-video
         aria-label={alt}
         onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
       />
@@ -65,3 +66,45 @@ const posterSrc = src && isVideo ? hubMediaFor(src)?.poster : undefined;
     <path d={COMFY_GLYPH}></path>
   </svg>
 </span>
+
+<script>
+  /**
+   * Play only the card thumbnails the reader can see.
+   *
+   * These carried `autoplay`, which silently overrides `preload`, so every card
+   * on a landing page downloaded its full clip on first paint: eight of them,
+   * 11.49 MB, on /workflows/use-cases/ alone. This is the same gating the hub
+   * cards use in HubWorkflowCard.vue, written for Astro because these cards
+   * ship no framework runtime.
+   *
+   * Astro bundles this script once per page however many thumbnails render, so
+   * a single observer covers all of them.
+   */
+  const videos = document.querySelectorAll<HTMLVideoElement>('video[data-gated-video]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if ('IntersectionObserver' in window) {
+    // Deliberately never unobserved, so a card scrolled past and returned to
+    // plays again rather than staying frozen on its poster.
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const video = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting && !reducedMotion.matches) {
+            // Rejects when the browser declines playback. The poster stays
+            // visible, which is what the reader saw before playback started.
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    videos.forEach((video) => observer.observe(video));
+  } else {
+    // No observer support: fall back to today's behaviour rather than leaving
+    // a reader looking at posters that never move.
+    videos.forEach((video) => video.play().catch(() => {}));
+  }
+</script>
