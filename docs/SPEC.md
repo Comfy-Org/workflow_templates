@@ -52,6 +52,7 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 | `date` | string | ❌ | Creation/update date (YYYY-MM-DD format) |
 | `size` | number | ❌ | Size of the template in bytes |
 | `openSource` | boolean | ❌ | Whether the template is open source |
+| `minComfyUIVersion` | string | ❌ | Minimum ComfyUI version required to run this template (semver, e.g. `"0.31.0"`). Copied to locale indexes by `sync_data.py` and to `index.mcp.json` by MCP sync |
 | `isApp` | `true` | ❌ | Opens in App Mode rather than as a node graph. Derived from the workflow's own `extra.linearMode`; regenerate with `python scripts/sync/sync_is_app.py`. Only ever written as `true`: omitted means false, and the schema rejects a literal `false`. Do not infer this from a `.app` filename, which is wrong in both directions |
 | `status` | string | ❌ | Lifecycle status: "active", "archived", "deprecated" |
 | `requiresCustomNodes` | array of strings | ❌ | Custom node package IDs from the Custom Node Registry |

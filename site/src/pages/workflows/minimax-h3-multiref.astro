@@ -17,25 +17,26 @@ const locale = DEFAULT_LOCALE;
 /** Seed the prompt editor with the text the workflow ships with. */
 const defaultPrompt = String(nodes[INPUT_NODES.prompt.nodeId]?.inputs?.prompt ?? '');
 
-// These assets are committed (public/demos/mmh3/example/.gitignore whitelists
-// them), so the URLs are referenced directly. This page renders on demand, and
-// on Vercel `public/` is served from the CDN without existing on the
-// function's filesystem — an fs check here would wrongly report every asset
-// missing and hide the prompt-guide button and example media.
-const EXAMPLE_ROOT = 'demos/mmh3/example';
+// These assets are served from media.comfy.org (source files stay committed
+// under public/demos/mmh3). Root-relative URLs 404 in production because the
+// comfy.org router resolves them against the website app, which does not have
+// the hub's /demos tree — absolute CDN URLs work on every origin, and the
+// bucket sends access-control-allow-origin: * so the on-click prompt fetch
+// still works cross-origin.
+const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
 
 const exampleKeyframes = KEYFRAMES.map(
-  (slot) => `/${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`
+  (slot) => `${EXAMPLE_ROOT}/keyframes/kf_${slot.index}.webp`
 );
 
 /** The example result, played before the first run. */
-const exampleVideo = `/${EXAMPLE_ROOT}/example.mp4`;
+const exampleVideo = `${EXAMPLE_ROOT}/example.mp4`;
 
 /**
  * A system prompt for writing this workflow's prompts with an agent. Fetched
  * on click rather than inlined, so its ~19 KB stays out of the page payload.
  */
-const agentPromptUrl = '/demos/mmh3/agent-prompt.md';
+const agentPromptUrl = 'https://media.comfy.org/website/demos/mmh3/agent-prompt.md';
 
 const pageTitle = 'MiniMax H3 - Motion Context';
 const description =
