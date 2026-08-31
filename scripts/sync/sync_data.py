@@ -111,8 +111,11 @@ class TemplateSyncer:
             "includeOnDistributions",
             "logos",
             "io",
-            "isApp"
+            "isApp",
+            "minComfyUIVersion",
         }
+        # Legacy alias written on a few new templates; normalize to minComfyUIVersion.
+        self.version_field_alias = "comfyuiVersion"
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
         
@@ -213,6 +216,15 @@ class TemplateSyncer:
             self.logger.info(f"Saved i18n data: {len(self.i18n_data['templates'])} templates, {len(self.i18n_data['tags'])} tags")
         except Exception as e:
             self.logger.error(f"Failed to save i18n data: {e}")
+
+    def normalize_version_field(self, template: Dict[str, Any]) -> bool:
+        """Rename legacy comfyuiVersion onto minComfyUIVersion. Returns True if changed."""
+        alias = template.pop(self.version_field_alias, None)
+        if alias is None:
+            return False
+        if not template.get("minComfyUIVersion"):
+            template["minComfyUIVersion"] = alias
+        return True
             
     def translate_tag(self, tag: str, target_lang: str) -> str:
         """Translate a tag to target language using i18n data"""
@@ -560,6 +572,9 @@ class TemplateSyncManager:
 
         # Drop the retired vram field (values were never measured; often copied from size)
         if updated_template.pop("vram", None) is not None:
+            changes_made = True
+
+        if self.syncer.normalize_version_field(updated_template):
             changes_made = True
         
         # Handle tags - always translate using i18n data
@@ -1242,6 +1257,7 @@ class TemplateSyncManager:
         master_data = self.syncer.load_json_file(self.syncer.master_file)
         changes_made = False
         stripped_templates = []
+        renamed_version_templates = []
 
         for category in master_data:
             for template in category.get("templates", []):
@@ -1249,9 +1265,11 @@ class TemplateSyncManager:
                     template.pop("vram", None)
                     changes_made = True
                     stripped_templates.append(template.get("name", ""))
+                if self.syncer.normalize_version_field(template):
+                    changes_made = True
+                    renamed_version_templates.append(template.get("name", ""))
 
-        if changes_made:
-            self.syncer.save_json_file(self.syncer.master_file, master_data)
+        if stripped_templates:
             self.syncer.logger.info(
                 f"  💾 Removed vram from {len(stripped_templates)} templates "
                 f"in master file"
@@ -1260,6 +1278,17 @@ class TemplateSyncManager:
                 self.syncer.logger.info(f"    - {template}")
         else:
             self.syncer.logger.info("  ✅ Master file has no vram field")
+
+        if renamed_version_templates:
+            self.syncer.logger.info(
+                f"  💾 Renamed comfyuiVersion to minComfyUIVersion on "
+                f"{len(renamed_version_templates)} template(s)"
+            )
+            for template in renamed_version_templates:
+                self.syncer.logger.info(f"    - {template}")
+
+        if changes_made:
+            self.syncer.save_json_file(self.syncer.master_file, master_data)
 
     def run_spellcheck(self) -> None:
         """Run all three spellchecks (index.json, workflow notes, i18n.json)."""

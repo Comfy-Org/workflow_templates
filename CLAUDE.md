@@ -180,7 +180,7 @@ Each template in `templates/index.json` has:
 - `mediaSubtype` — Usually "webp"
 - `thumbnailVariant` — "compareSlider" | "hoverDissolve" | "hoverZoom" | "zoomHover" | null
 - `tags`, `models`, `logos`, `date`, `usage`, `size`, `searchRank`
-- `tutorialUrl`, `openSource`, `requiresCustomNodes`, `io`
+- `tutorialUrl`, `openSource`, `minComfyUIVersion`, `requiresCustomNodes`, `io`
 
 ### Workflow JSON Files
 

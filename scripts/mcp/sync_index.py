@@ -73,7 +73,8 @@ INDEX_GROUP_TO_MCP_CATEGORY: dict[str, str] = {
     "Video": "Video",
     "Audio": "Audio",
     "3D Model": "3D Model",
-    "Utility": "Utility",
+    "Image Tools": "Image Tools",
+    "Video Tools": "Video Tools",
 }
 
 EXCLUDED_MCP_CATEGORIES = frozenset({
@@ -104,9 +105,13 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
         "General-purpose workflow templates for native 3D model generation, including image-to-3D "
         "and other core 3D workflows supported out of the box."
     ),
-    "Utility": (
-        "Tooling and utility workflows for supporting tasks such as upscaling, background removal, "
-        "image preprocessing, and other image or video processing helpers."
+    "Image Tools": (
+        "Tooling workflows for image processing helpers such as upscaling, background removal, "
+        "inpainting, outpainting, relighting, pose and depth extraction, and layer decomposition."
+    ),
+    "Video Tools": (
+        "Tooling workflows for video processing helpers such as upscaling, frame interpolation, "
+        "background removal, video extend, pose and depth extraction, and clip editing."
     ),
 }
 
@@ -674,6 +679,9 @@ def build_template_entry(
         "description": desc,
         "io": io_info,
     }
+    min_version = str(tpl.get("minComfyUIVersion") or "").strip()
+    if min_version:
+        entry["minComfyUIVersion"] = min_version
     if capabilities:
         entry["capabilities"] = capabilities
     if cached.get("io") and cache_matches_workflow(name, cached):
