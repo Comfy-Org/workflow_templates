@@ -224,7 +224,7 @@ function httpErrorMessage(status: number, body: string): string {
 
 async function refreshQueue() {
   try {
-    const res = await fetch('/api/workflows/minimax-h3-multiref/queue');
+    const res = await fetch('/workflows/api/minimax-h3-multiref/queue');
     const body = await readResponse<QueueState>(res);
     queue.value = { available: false, ...body };
     queueAgeMs.value = body.sampledAt ? Date.now() - new Date(body.sampledAt).getTime() : 0;
@@ -422,7 +422,7 @@ function startJobTimers(pollDelay = 2000) {
 async function poll() {
   if (!jobId.value) return;
   try {
-    const res = await fetch(`/api/workflows/minimax-h3-multiref/job/${jobId.value}`);
+    const res = await fetch(`/workflows/api/minimax-h3-multiref/job/${jobId.value}`);
     const body = await readResponse<JobStatusResponse>(res);
     if (!res.ok) throw new Error(body.error ?? `Status check failed (${res.status})`);
 
@@ -487,7 +487,7 @@ async function cancelJob() {
   statusMessage.value = null;
 
   try {
-    const res = await fetch(`/api/workflows/minimax-h3-multiref/job/${id}`, {
+    const res = await fetch(`/workflows/api/minimax-h3-multiref/job/${id}`, {
       method: 'DELETE',
     });
     const body = await readResponse<JobActionResponse>(res);
@@ -549,7 +549,7 @@ async function run() {
       return;
     }
 
-    const res = await fetch('/api/workflows/minimax-h3-multiref/run', {
+    const res = await fetch('/workflows/api/minimax-h3-multiref/run', {
       method: 'POST',
       body: form,
     });
