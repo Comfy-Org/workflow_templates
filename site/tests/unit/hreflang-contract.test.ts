@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
 import {
   checkHreflangContract,
   declaresOnDemandRendering,
@@ -7,6 +9,7 @@ import {
   parseCanonical,
   parseNoindex,
   pathForHref,
+  NON_DETAIL_SEGMENTS,
   type Alternate,
   type RenderedPage,
 } from '../../scripts/hreflang-contract';
@@ -94,8 +97,12 @@ describe('pathForHref', () => {
   });
 });
 
-/** The locales the hub routes, so a label can be checked against its target path. */
-const LOCALES = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
+/**
+ * The locales the hub routes, so a label can be checked against its target path.
+ * A fixed list rather than an import of `LOCALES`: these tests assert on exact
+ * messages, and adding a locale to the site should not rewrite them.
+ */
+const LOCALES = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR', 'it'];
 
 /** Detail pages are a prerendered route; the policy, not an observation. */
 const DETAIL_PRERENDERED = true;
@@ -452,13 +459,79 @@ describe('checkHreflangContract', () => {
     ]);
   });
 
-  it('holds for the full eleven-locale cluster the hub ships', () => {
-    const locales = ['en', 'zh', 'zh-tw', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-br'];
+  it('holds for the full cluster the hub ships on a listing page', () => {
+    // Every configured locale, not just the indexable ones: a page that passes no
+    // explicit locale list advertises all of them, which is what /workflows/ does.
+    const locales = ['en', 'zh', 'zh-tw', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-br', 'it'];
     const pathFor = (locale: string) => (locale === 'en' ? '/workflows/' : `/${locale}/workflows/`);
     const cluster = locales.map((locale) => alt(locale, pathFor(locale)));
     const pages = locales.map((locale) =>
       page(pathFor(locale), [...cluster, alt('x-default', '/workflows/')])
     );
     expect(problems(pages)).toEqual([]);
+  });
+});
+
+/**
+ * The one hand-written fact in the rules: which segments under
+ * /<locale>/workflows/ head a non-detail family. It is only right for as long as
+ * it agrees with the routes, and nothing about adding a route would say so.
+ *
+ * Both directions are failures a build would not show. An on-demand family left
+ * out of the set makes every locale of it look like a page the build owes, so CI
+ * goes red on correct output. A prerendered family listed in it excuses the
+ * absence of pages that really are missing, so CI goes green on broken output.
+ *
+ * Derived here rather than in the checker so `checkHreflangContract` stays a pure
+ * function over data, with no filesystem of its own.
+ */
+describe('NON_DETAIL_SEGMENTS against the routes on disk', () => {
+  const ROUTES_DIR = path.join(process.cwd(), 'src', 'pages', '[locale]', 'workflows');
+
+  function astroFilesIn(dir: string): string[] {
+    return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) return astroFilesIn(full);
+      return entry.name.endsWith('.astro') ? [full] : [];
+    });
+  }
+
+  const onDemand = (file: string) => declaresOnDemandRendering(fs.readFileSync(file, 'utf-8'));
+
+  /**
+   * Segments a route contributes as the literal third part of the URL, paired
+   * with whether that whole family is served on demand. `[param].astro` names no
+   * segment (it is the detail shape, governed by the route's own render policy),
+   * and `index.astro` is the listing one level up. A directory counts as on demand
+   * only when every route under it is, so a prerendered page anywhere inside keeps
+   * the family's absences reportable.
+   */
+  const families = fs
+    .readdirSync(ROUTES_DIR, { withFileTypes: true })
+    .flatMap((entry) => {
+      if (entry.isDirectory()) {
+        const routes = astroFilesIn(path.join(ROUTES_DIR, entry.name));
+        return [{ segment: entry.name, onDemand: routes.length > 0 && routes.every(onDemand) }];
+      }
+      if (!entry.name.endsWith('.astro')) return [];
+      const base = entry.name.slice(0, -'.astro'.length);
+      if (base.startsWith('[') || base === 'index') return [];
+      return [{ segment: base, onDemand: onDemand(path.join(ROUTES_DIR, entry.name)) }];
+    })
+    .sort((a, b) => a.segment.localeCompare(b.segment));
+
+  it('finds the routes it is meant to be checking', () => {
+    // Without this the comparison below would pass vacuously if the tree moved.
+    expect(families.map((f) => f.segment)).toContain('creators');
+  });
+
+  it('lists exactly the on-demand families the routes declare', () => {
+    const declared = families.filter((f) => f.onDemand).map((f) => f.segment);
+    expect(
+      [...NON_DETAIL_SEGMENTS].sort(),
+      `NON_DETAIL_SEGMENTS in scripts/hreflang-contract.ts no longer matches ` +
+        `src/pages/[locale]/workflows/. Families found: ` +
+        `${families.map((f) => `${f.segment}${f.onDemand ? '' : ' (prerendered)'}`).join(', ')}`
+    ).toEqual(declared.sort());
   });
 });

@@ -191,8 +191,26 @@ export interface ContractResult {
   unverifiable: number;
 }
 
-/** Route segments under /<locale>/workflows/ that belong to a non-detail family. */
-const NON_DETAIL_SEGMENTS = new Set(['category', 'tag', 'model', 'creators']);
+/**
+ * Route segments under /<locale>/workflows/ that belong to a non-detail family,
+ * every one of them served on demand. A path shaped like a detail page but headed
+ * by one of these is a listing, not a workflow, so its absence from the build
+ * proves nothing.
+ *
+ * Hand-written because the rules stay free of the filesystem, and held to the
+ * routes by `tests/unit/hreflang-contract.test.ts`, which derives the same set
+ * from `src/pages/[locale]/workflows/` and fails when the two disagree. Adding a
+ * localized route therefore cannot silently change what this check is willing to
+ * assert, in either direction: an unlisted on-demand family would report every
+ * locale of it as a missing page, and a listed prerendered one would excuse the
+ * absence of pages the build owes.
+ */
+export const NON_DETAIL_SEGMENTS: ReadonlySet<string> = new Set([
+  'category',
+  'tag',
+  'model',
+  'creators',
+]);
 
 /** The locale of `/<locale>/workflows/<slug>/`, or null when the path is not one. */
 function detailLocaleOf(path: string, locales: readonly string[]): string | null {
