@@ -19,6 +19,9 @@ import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { loadModelContent } from '../../../lib/workflow-pages/content-loaders';
 import { useCasesFeaturingModel } from '../../../lib/workflow-pages/use-case-resolver';
+import { DEFAULT_LOCALE } from '../../../i18n/config';
+import { INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
+import { alternatesFor } from '../../../lib/i18n/listing-indexing';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../lib/workflow-pages/seo-page';
 import {
   loadCatalog,
@@ -95,6 +98,19 @@ const { hasQualityContent, h1, title, description, subheading } = buildModelPage
 const qualityContent = hasQualityContent ? content : null;
 
 const noindex = !isModelPageIndexable(group, templates.length, content);
+// This English page is always locale-indexable itself; the only reason to
+// withhold its alternates is its own noindex, same reconciliation the
+// localized sibling page uses. hreflangLocalized={true} previously advertised
+// BaseLayout's full-LANGUAGES default, which includes "it" (unbuilt, 404s).
+const hreflangLocales = alternatesFor(
+  {
+    indexable: true,
+    canonicalPath: basePath,
+    noindex: false,
+    hreflangLocales: [DEFAULT_LOCALE, ...INDEXABLE_LOCALES],
+  },
+  noindex
+);
 
 const leadShareId = templates.find((template) => template.shareId)?.shareId;
 const modelCtaUrl = (placement: string) =>
@@ -169,7 +185,7 @@ const relatedCards = resolveRailImages(relatedCardData, group.templates, {
   structuredData={structuredData}
   locale={locale}
   hreflangBasePath={basePath}
-  hreflangLocalized={true}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   noindex={noindex}
   hideDefaultFooter
