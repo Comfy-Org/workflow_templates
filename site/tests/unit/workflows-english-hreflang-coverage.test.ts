@@ -70,12 +70,15 @@ describe('English /workflows/* hreflang coverage', () => {
     // A page could pass the hreflangLocales= check above while still reaching
     // for the wrong source set (e.g. Object.keys(LANGUAGES) or LOCALES instead
     // of INDEXABLE_LOCALES). Flag any route whose hreflangLocales computation
-    // touches one of those wider sets directly.
+    // touches one of those wider sets directly: spread (...LANGUAGES),
+    // Object.keys(LANGUAGES), or a bare assignment (= LOCALES).
+    const WIDE_LOCALE_SETS = 'LANGUAGES|LOCALES|SUPPORTED_HUB_LOCALES|AVAILABLE_APP_LOCALES';
     const wrongSource = routes
       .filter(({ source }) => /hreflangLocales=\{/.test(source))
       .filter(({ source }) =>
-        /\.\.\.(LANGUAGES|LOCALES|SUPPORTED_HUB_LOCALES|AVAILABLE_APP_LOCALES)\b/.test(source) ||
-        /Object\.keys\(LANGUAGES\)/.test(source)
+        new RegExp(`\\.\\.\\.(${WIDE_LOCALE_SETS})\\b`).test(source) ||
+        /Object\.keys\(LANGUAGES\)/.test(source) ||
+        new RegExp(`(?:hreflangLocales|hreflangLocales:\\s*Locale\\[\\])\\s*(?::\\s*Locale\\[\\])?\\s*=\\s*(${WIDE_LOCALE_SETS})\\b`).test(source)
       )
       .map(({ route }) => route);
 
