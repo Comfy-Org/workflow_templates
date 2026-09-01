@@ -13,6 +13,8 @@ import { buildToolbarLabels } from '../../../lib/toolbar';
 import { badgeVariants } from '../../../components/ui/badge';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../lib/structured-data';
 import { loadSerializedTemplates, type MediaType } from '../../../lib/hub-api';
+import { DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 
 const categoryTranslationKeys: Record<MediaType, string> = {
   image: 'category.image',
@@ -41,6 +43,10 @@ const templates = allSerialized.filter((tmpl) => tmpl.mediaType === type);
 
 const basePath = categoryPath(type);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+// This English page is always indexable itself; advertise only the locales
+// actually flipped on, not BaseLayout's full-LANGUAGES default (which
+// includes "it", unbuilt and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -168,9 +174,10 @@ const serialized = templates;
   title={title}
   description={description}
   canonicalUrl={canonicalUrl}
-  hreflangBasePath={basePath}
   ogImage="/brand/og-default-v3.png"
   structuredData={structuredData}
+  hreflangBasePath={basePath}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >

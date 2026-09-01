@@ -13,6 +13,8 @@ import { badgeVariants } from '../../../components/ui/badge';
 import { loadSerializedTemplates, type SerializedTemplate } from '../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../lib/structured-data';
+import { DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 
 export async function getStaticPaths() {
   const allSerialized = await loadSerializedTemplates(() => getCollection('templates'));
@@ -51,6 +53,10 @@ const { tag } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
 const basePath = `/workflows/tag/${tag}/`;
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+// This English page is always indexable itself; advertise only the locales
+// actually flipped on, not BaseLayout's full-LANGUAGES default (which
+// includes "it", unbuilt and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const title = `${tagName} ${SITE_NAME} - ${t('nav.templates', locale)}`;
 const description = `Browse ${templates.length} ComfyUI workflow templates tagged with "${tagName}". Free, ready-to-use AI generation workflows.`;
@@ -73,9 +79,10 @@ const serialized = templates;
   title={title}
   description={description}
   canonicalUrl={canonicalUrl}
-  hreflangBasePath={basePath}
   ogImage="/brand/og-default-v3.png"
   structuredData={structuredData}
+  hreflangBasePath={basePath}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
