@@ -73,6 +73,14 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      # Whether this run is judging the origin users are actually served, which
+      # is what licenses it to touch the flag. Computed once, with the trailing
+      # slash allowed, because a dispatch typed as "https://comfy.org/" would
+      # otherwise test production and then silently decline to act on it.
+      IS_PRODUCTION: >-
+        ${{ (inputs.base_url || 'https://comfy.org') == 'https://comfy.org'
+        || (inputs.base_url || 'https://comfy.org') == 'https://comfy.org/' }}
     # Skip when the triggering deploy itself failed — the demo being unreachable
     # is then a symptom of that failure, not a reason to switch the demo off.
     if: >-
@@ -122,6 +130,14 @@ jobs:
           BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
           WAS_ENABLED: ${{ steps.flag.outputs.enabled }}
         run: |
+          # What production is actually serving, which is what decides whether
+          # a flag flip would change anything for a visitor. Emitted by the page
+          # spec as a fixed token; absent when the page never answered, and an
+          # unknown state must not arm the kill switch.
+          demo_live=$(grep -m1 -oE 'DEMO_RUNNER_LIVE=(true|false)' \
+            "$RUNNER_TEMP/integration.log" | cut -d= -f2 || true)
+          echo "demo_live=$demo_live" >> "$GITHUB_OUTPUT"
+
           {
             echo "## MiniMax H3 demo integration"
             echo
@@ -129,7 +145,8 @@ jobs:
             echo "|---|---|"
             echo "| **Target** | $BASE_URL |"
             echo "| **Result** | $([ "$OUTCOME" = success ] && echo '✅ passing' || echo '❌ failing') |"
-            echo "| **Flag before this run** | $WAS_ENABLED |"
+            echo "| **Flag on \`main\`** | $WAS_ENABLED |"
+            echo "| **Runner on the deployed page** | ${demo_live:-unknown} |"
           } >> "$GITHUB_STEP_SUMMARY"
 
           # First error line names the actual cause (router 404 vs CSRF 403 vs
@@ -144,7 +161,11 @@ jobs:
           # those to a downstream guard and record "nothing to poll", which reads
           # like a diagnosis and is not one.
           reason=$(grep -m1 -oP '^\s*(?:[A-Za-z]*Error|DOMException)(?: \[[^\]]+\])?:.*' \
-            "$RUNNER_TEMP/integration.log" | tr -d '\r\n' | cut -c1-300 || true)
+            "$RUNNER_TEMP/integration.log" | tr -d '\r\n' || true)
+          # Bash substring, not `cut -c`: several of these diagnoses contain em
+          # dashes, and GNU cut counts bytes, so it can slice a UTF-8 character
+          # in half and leave the committed reason ending in a replacement char.
+          reason=${reason:0:300}
           [ -n "$reason" ] || reason="See the workflow run for details."
           echo "reason=$reason" >> "$GITHUB_OUTPUT"
 
@@ -152,15 +173,20 @@ jobs:
         id: disable
         # Three conditions, all required:
         #   - the test failed
-        #   - the flag on `main` is on (a failing test against a demo that is
-        #     already switched off is expected, and must not commit or re-alert
-        #     every 6 hours)
+        #   - the deployed page is serving the runner. NOT the flag on `main`:
+        #     those two disagree either way around a deploy, and keying on the
+        #     repo made this wrong in both directions — it would revert a flag
+        #     someone had just turned on but not yet shipped, and stay silent
+        #     when `main` said off while production still served a broken
+        #     runner. What a visitor is being shown is the only thing a flag
+        #     flip can change, and it is also self-limiting: once the fallback
+        #     ships, this stops firing instead of re-alerting every 6 hours.
         #   - production was what we tested. A dispatch against a preview origin
         #     is for debugging; it must never flip the flag users are served.
         if: >-
           steps.test.outcome == 'failure'
-          && steps.flag.outputs.enabled == 'true'
-          && (inputs.base_url || 'https://comfy.org') == 'https://comfy.org'
+          && steps.summary.outputs.demo_live == 'true'
+          && env.IS_PRODUCTION == 'true'
         # The kill switch must not take the job down with it: if this step
         # fails, the steps below still run and Slack still says the demo is
         # stuck on. Without this, the alert is silent exactly when it matters.
@@ -255,9 +281,14 @@ jobs:
           echo "Opened $url"
 
       - name: Notify Slack
-        # Three reasons to speak, and nothing else:
+        # Four reasons to speak, and nothing else:
         #   - a kill-switch PR was just opened
         #   - we tried to open one and could not, so it is stuck on and broken
+        #   - visitors are being served a broken runner that no flag flip can
+        #     fix, because `main` already has the flag off and only a deploy
+        #     will ship the fallback. Silence here was the gap that keying on
+        #     the repo flag created; it ends at the next deploy, so it cannot
+        #     repeat indefinitely.
         #   - somebody ran this by hand and is waiting for the answer
         #
         # Keyed on `opened`, not on `changed`: while a kill-switch PR sits
@@ -273,6 +304,10 @@ jobs:
           steps.pr.outputs.opened == 'true'
           || steps.disable.outcome == 'failure'
           || steps.pr.outcome == 'failure'
+          || (steps.test.outcome == 'failure'
+              && steps.summary.outputs.demo_live == 'true'
+              && steps.flag.outputs.enabled != 'true'
+              && env.IS_PRODUCTION == 'true')
           || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
@@ -282,6 +317,7 @@ jobs:
           PR_OPENED: ${{ steps.pr.outputs.opened }}
           PR_URL: ${{ steps.pr.outputs.pr_url }}
           PR_OUTCOME: ${{ steps.pr.outcome }}
+          DEMO_LIVE: ${{ steps.summary.outputs.demo_live }}
           OUTCOME: ${{ steps.test.outcome }}
           # Through the environment like everything else in this file — never
           # interpolated into the script below, where a value containing $( )
@@ -315,6 +351,11 @@ jobs:
             TEXT=":warning: *MiniMax H3 demo failed its integration check.* A PR switching the \`minimaxH3Demo\` flag off is open and *waiting on a human* — the demo stays live until it is merged and deployed."
             TEXT="${TEXT}"$'\n'">${REASON}"
             TEXT="${TEXT}"$'\n'"<${PR_URL}|Review and merge the kill-switch PR>, then <${DEPLOY_URL}|run Deploy Template Site> to serve the static fallback."
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$OUTCOME" != "success" ] && [ "$DEMO_LIVE" = "true" ] && [ "$FLAG_ENABLED" != "true" ]; then
+            TEXT=":rotating_light: *MiniMax H3 demo is broken in front of users and the flag cannot fix it.* The integration test failed against ${BASE_URL} and the deployed page is still serving the runner, but \`main\` already has \`minimaxH3Demo\` off — so there is nothing to switch and *only a deploy will replace it with the fallback*."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"<${DEPLOY_URL}|Run Deploy Template Site> to ship the flag that is already committed."
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
           elif [ "$OUTCOME" = "success" ]; then
             TEXT=":white_check_mark: *MiniMax H3 demo integration passes* against ${BASE_URL} (flag is currently \`${FLAG_ENABLED}\`). Turning it on is a deliberate call: set the flag and deploy when you want it in front of users. <${RUN_URL}|View run>"

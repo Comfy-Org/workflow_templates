@@ -81,10 +81,13 @@ let queueReadout = 'not read';
 const REQUEST_TIMEOUT_MS = 30_000;
 const SUBMIT_TIMEOUT_MS = 90_000;
 /**
- * Long enough to absorb a cold worker start, which on a scheduled check is the
- * normal case rather than the exception; not a wait for the render.
+ * Long enough to absorb a cold worker start, which on a 6-hourly check is the
+ * normal case rather than the exception, and generous because failing this
+ * window opens a kill-switch PR. Still not a wait for the render: it ends as
+ * soon as the job leaves `queued`, so a warm deployment finishes in under a
+ * second and only a genuinely stalled one pays the full cost.
  */
-const POLL_WINDOW_MS = 120_000;
+const POLL_WINDOW_MS = 240_000;
 const POLL_INTERVAL_MS = 5_000;
 
 /**
@@ -141,6 +144,25 @@ async function request(path: string, init: RequestInit = {}, timeoutMs = REQUEST
   return { res, body, detail: `${diagnose(res.status, path)}${hop}\nBody: ${body.slice(0, 400)}` };
 }
 
+/**
+ * A GET that survives one blip. Used only where vitest's own `retry` cannot
+ * reach: inside a spec that must not be rerun as a whole.
+ */
+async function fetchRetrying(url: string, attempts = 3): Promise<Response> {
+  let last: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      if (res.ok) return res;
+      last = new Error(`${url} returned ${res.status}`);
+    } catch (err) {
+      last = err;
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_000 * (i + 1)));
+  }
+  throw last instanceof Error ? last : new Error(`${url} could not be fetched`);
+}
+
 function tryParseJson(body: string): Record<string, unknown> | null {
   try {
     return JSON.parse(body) as Record<string, unknown>;
@@ -185,6 +207,12 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     // merge and the deploy that ships it.
     pageHtml = await res.text();
     demoIsLive = pageHtml.includes(DEMO_COMPONENT);
+
+    // Machine-readable because CI gates the kill switch on it: switching the
+    // flag off only helps when production is actually serving the runner, and
+    // the committed flag cannot say whether it is. Parsed out of this log by
+    // the Summarize step, so keep the token stable.
+    console.info(`DEMO_RUNNER_LIVE=${demoIsLive}`);
     console.info(
       demoIsLive
         ? `${PAGE} is serving the runner, so the API checks below cover what visitors can reach.`
@@ -336,11 +364,12 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     const form = new FormData();
     form.append('settings', JSON.stringify({ seconds: 5, steps: 4, enabledKeyframes: [1, 2, 3] }));
 
+    // Retried here even though this spec cannot be (a rerun would queue a
+    // second GPU job): these are CDN reads, the sibling spec above already
+    // retries the identical URLs, and a transient 502 from a marketing bucket
+    // must not be what switches the demo off.
     for (const i of [1, 2, 3]) {
-      const res = await fetch(exampleKeyframeUrl(i), {
-        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-      });
-      const blob = await res.blob();
+      const blob = await fetchRetrying(exampleKeyframeUrl(i)).then((r) => r.blob());
       form.append(`keyframe_${i}`, new File([blob], `kf_${i}.webp`, { type: 'image/webp' }));
     }
 
@@ -387,9 +416,21 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     // Poll like the page does. We are proving the job is accepted and moving,
     // not waiting for a finished video — a full render costs GPU minutes and
     // would make this check too slow and too expensive to run on a schedule.
+    let transient: string | null = null;
+
     while (Date.now() < deadline) {
       const { res, body, detail } = await request(`/job/${jobId}`);
-      expect(res.status, detail).toBe(200);
+
+      // This spec cannot use vitest's `retry` — a rerun would poll a job the
+      // previous attempt cancelled — so one bad response is absorbed here
+      // instead. Two in a row still fails: the loop only forgives a blip.
+      if (res.status !== 200) {
+        expect(transient, `the poll endpoint failed twice running. ${detail}`).toBeNull();
+        transient = detail;
+        await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
+        continue;
+      }
+      transient = null;
 
       const json = parseJson(body, detail);
       expect(json.jobId, `poll returned a different job. ${detail}`).toBe(jobId);
@@ -408,38 +449,26 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     }
 
     expect(seen, 'the poll endpoint was never successfully read').toBeGreaterThan(0);
-    if (started) return;
 
-    // `queued` is in HEALTHY_STATUSES, so a job that is accepted and then never
-    // runs would satisfy every assertion above and report green — a deployment
-    // with no live worker, and the likeliest way this demo breaks.
+    // `queued` is in HEALTHY_STATUSES, so without this a job that is accepted
+    // and then never scheduled satisfies every assertion above and the check
+    // reports green forever, while visitors watch a permanent spinner. That is
+    // the likeliest way this demo breaks: compute revoked, or every worker
+    // throttled or unhealthy.
     //
-    // But "slow" and "dead" look identical from the job alone, and a cold video
-    // worker can legitimately exceed any window short enough to run 4x a day.
-    // Failing on the timeout alone would flip a working demo off. So the verdict
-    // needs positive evidence, and the only source of it is the worker census:
-    // red when the deployment says nothing can run this, inconclusive when it
-    // will not say. Inconclusive passes — this check flips a user-visible
-    // switch, and guessing in that direction is the more expensive mistake.
-    const workers = (queueState?.workers ?? null) as Record<string, number> | null;
-    const capacity = workers
-      ? (workers.idle ?? 0) +
-        (workers.ready ?? 0) +
-        (workers.running ?? 0) +
-        (workers.initializing ?? 0)
-      : null;
-
-    if (capacity === null) {
-      console.warn(
-        `The job was still "queued" after ${POLL_WINDOW_MS / 1000}s and the queue readout carries no worker census, so this run cannot tell a slow start from a dead deployment. Treating it as healthy. Last saw ${lastSeen}; queue said ${queueReadout}`
-      );
-      return;
-    }
+    // An earlier version only failed when the queue readout proved there was no
+    // worker. That never fires: the deployment's control-plane URL is unset in
+    // production, so the readout carries no worker census and the check was
+    // dead code. The census is quoted below when present, but the verdict must
+    // not depend on it — POLL_WINDOW_MS absorbs a cold start instead.
+    const census = queueState?.workers
+      ? ` Deployment reported workers: ${JSON.stringify(queueState.workers)}.`
+      : ` The queue readout carried no worker census (${queueReadout}).`;
 
     expect(
-      capacity,
-      `the job was still "queued" after ${POLL_WINDOW_MS / 1000}s and the deployment reports no worker that could ever run it (${JSON.stringify(workers)}). The submit was accepted but nothing is serving — a visitor would be watching a spinner. Last saw ${lastSeen}`
-    ).toBeGreaterThan(0);
+      started,
+      `the job never left "queued" in ${POLL_WINDOW_MS / 1000}s. The submit was accepted but nothing started running it — a visitor would be watching a spinner.${census} Last saw ${lastSeen}`
+    ).toBe(true);
   });
 
   it('cancels the submitted job', async (ctx) => {
@@ -455,11 +484,15 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     expect(json.jobId, detail).toBe(jobId);
 
     // A 200 is the control plane saying it accepted the request, not that the
-    // job stopped. Both terminal-ward states count: `canceling` is the normal
-    // answer for a job already on a worker, `canceled` for one still queued.
-    // Anything else — `running`, `queued` — means the GPU is still busy.
+    // job stopped. `canceling` is the normal answer for a job already on a
+    // worker, `canceled` for one still queued. `succeeded` belongs here too:
+    // the SDK leaves a job that already reached a terminal state in it, so a
+    // deployment fast enough to finish a 5-second clip between the poll and
+    // this call answers `succeeded` — the healthiest outcome there is, and one
+    // that must not read as a failure to stop. Anything else — `running`,
+    // `queued` — means the GPU is still busy.
     expect(
-      ['canceling', 'canceled'],
+      ['canceling', 'canceled', 'succeeded'],
       `cancel returned 200 but the job is not stopping. ${detail}`
     ).toContain(json.status);
 

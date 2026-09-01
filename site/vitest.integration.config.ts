@@ -12,8 +12,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['tests/integration/**/*.test.ts'],
-    // A submit round trip is ~8s and the poll window is 120s.
-    testTimeout: 210_000,
+    // A submit round trip is ~8s and the poll window is 240s.
+    testTimeout: 300_000,
     hookTimeout: 60_000,
     // The specs are ordered steps against one shared job: submit, then poll,
     // then cancel. Running them concurrently would poll a job that does not
