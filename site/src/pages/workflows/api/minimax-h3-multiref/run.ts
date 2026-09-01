@@ -10,7 +10,7 @@ import {
   type DemoSettings,
   type JobActionResponse,
 } from '@/lib/demos/mmh3/config';
-import { comfyClient, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
+import { comfyClient, crossSiteRejection, describeError, jsonResponse } from '@/lib/demos/mmh3/server';
 
 function coerceSettings(raw: unknown): DemoSettings {
   const input = (raw ?? {}) as Partial<DemoSettings>;
@@ -35,6 +35,9 @@ function coerceSettings(raw: unknown): DemoSettings {
 }
 
 export const POST: APIRoute = async ({ request }) => {
+  const rejected = crossSiteRejection(request);
+  if (rejected) return rejected;
+
   let form: FormData;
   try {
     form = await request.formData();

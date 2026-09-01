@@ -38,3 +38,36 @@ export function describeError(err: unknown): string {
   if (err instanceof Error) return err.message;
   return String(err);
 }
+
+/**
+ * Origin guard for the demo's mutating routes (POST /run, DELETE /job/[id]).
+ *
+ * Astro's built-in `security.checkOrigin` compares the Origin header against
+ * the host the request arrived on, which can never match here: the page is
+ * served through comfy.org's Framer rewrite, so browsers send
+ * `Origin: https://comfy.org` while Astro receives the request addressed to
+ * the Vercel deployment. That check is therefore disabled in astro.config.mjs
+ * and replaced by this allowlist, which accepts the sites this demo actually
+ * runs on and still keeps third-party pages from driving the GPU deployment
+ * from their visitors' browsers.
+ */
+export function crossSiteRejection(request: Request): Response | null {
+  const origin = request.headers.get('origin');
+  // Non-browser clients (curl, server-to-server) send no Origin header; the
+  // guard only exists to stop other *websites*, so let those through.
+  if (!origin) return null;
+
+  try {
+    const host = new URL(origin).hostname;
+    const allowed =
+      host === 'comfy.org' ||
+      host.endsWith('.comfy.org') ||
+      host.endsWith('.vercel.app') || // preview + production deployments
+      host === 'localhost' ||
+      host === '127.0.0.1'; // local dev
+    if (allowed) return null;
+  } catch {
+    // Malformed Origin header — treat as cross-site.
+  }
+  return jsonResponse({ error: 'Cross-site requests are not allowed.' }, 403);
+}
