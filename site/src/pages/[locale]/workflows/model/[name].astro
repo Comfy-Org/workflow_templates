@@ -5,7 +5,6 @@
  */
 export const prerender = false;
 
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
@@ -16,11 +15,9 @@ import { localizeUrl } from '../../../../i18n/utils';
 import { t } from '../../../../i18n/ui';
 import { absoluteUrl } from '../../../../config/site';
 import { modelPath, modelsIndexPath } from '../../../../lib/routes';
-import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
 import { loadModelContent } from '../../../../lib/workflow-pages/content-loaders';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../../lib/workflow-pages/seo-page';
 import { badgeVariants } from '../../../../components/ui/badge';
-import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
 import { buildTemplateItemListEntries } from '../../../../lib/workflow-pages/item-list';
 import {
@@ -31,11 +28,7 @@ import {
 import { buildLocalizedModelJsonLd } from '../../../../lib/workflow-pages/model-page-jsonld';
 import { listingIndexing, alternatesFor } from '../../../../lib/i18n/listing-indexing';
 import { localizeCards } from '../../../../lib/i18n/localize-cards';
-
-const buildGroups = async () =>
-  deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
-let groupsCache: ReturnType<typeof buildGroups> | null = null;
-const loadModelGroups = () => (groupsCache ??= buildGroups());
+import { loadModelGroups } from '../../../../lib/workflow-pages/model-route-cache';
 
 const { locale, name } = Astro.params;
 
