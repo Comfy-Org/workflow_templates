@@ -25,6 +25,8 @@ export function buildSiteEntityNodes(): Record<string, unknown>[] {
       '@id': ORGANIZATION_ID,
       name: 'Comfy Org',
       url: SITE_ORIGIN,
+      // Kept for Google's Organization logo rich result, though not in the
+      // client schema recommendation.
       logo: `${SITE_ORIGIN}/favicon-96x96.png`,
       sameAs: [
         'https://github.com/Comfy-Org',
