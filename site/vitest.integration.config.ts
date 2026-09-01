@@ -12,15 +12,18 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     include: ['tests/integration/**/*.test.ts'],
-    // A submit round trip is ~8s and the poll window is 45s.
-    testTimeout: 120_000,
+    // A submit round trip is ~8s and the poll window is 120s.
+    testTimeout: 210_000,
     hookTimeout: 60_000,
     // The specs are ordered steps against one shared job: submit, then poll,
     // then cancel. Running them concurrently would poll a job that does not
     // exist yet, and would put two GPU jobs on a single-deployment demo.
     fileParallelism: false,
     sequence: { concurrent: false },
-    // One live deployment, one job: a retry would submit a second one.
+    // Default off: one live deployment, one job, and a retry of the submit
+    // would put a second GPU job on it. The idempotent GETs set their own
+    // `retry` instead, because a failed run here prepares a kill switch and a
+    // single blip from the marketing CDN must not switch a working demo off.
     retry: 0,
   },
 });

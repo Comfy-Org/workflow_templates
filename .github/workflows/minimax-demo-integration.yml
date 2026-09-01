@@ -11,12 +11,11 @@
 # i18n-update-hub.yml opens a PR from a stable branch, sync-template-index.yml
 # and generate-upload-json.yml push to a PR head.
 #
-# That makes the flip land in one click instead of on its own, so be clear about
-# what this does and does not buy: it does NOT take the demo down unattended. It
-# never could — the flag is read at build time, so even a merged flip only
-# reaches users on the next site build. What it does is remove every judgement
-# call from the human's path: the diagnosis, the flag edit and the deploy
-# trigger are already prepared, and merging is the whole remaining action.
+# So be clear about what this does and does not buy: it does NOT take the demo
+# down unattended, and it never could — the flag is read at build time, so even
+# a merged flip only reaches users on the next site build. What it removes is
+# the judgement: the diagnosis is written and the flag edit is made, leaving a
+# human to merge the PR and run the deploy.
 #
 # It deliberately does NOT fail. The demo is served by the Comfy dev platform
 # (private beta) through comfy-router (pre-alpha); both are expected to have
@@ -97,6 +96,11 @@ jobs:
         working-directory: site
         env:
           DEMO_BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          # What the deployed page is supposed to be serving, so the check can
+          # tell "the runner is absent because the flag is off" from "the runner
+          # is absent because it failed to build" — otherwise a demo that never
+          # renders looks identical to one deliberately switched off.
+          DEMO_EXPECTED_ENABLED: ${{ steps.flag.outputs.enabled }}
           # Plain output so the reason can be parsed out below without ANSI codes.
           NO_COLOR: '1'
         run: |
@@ -204,13 +208,18 @@ jobs:
             "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
 
           # Branched off the main this run checked out, so the PR carries the
-          # flag flip and nothing else. force-with-lease rather than force: the
-          # branch is this workflow's alone and runs are serialized, so a lease
-          # failure means something unexpected touched it and should stop here.
+          # flag flip and nothing else.
           git checkout -B "$BRANCH"
           git commit --file="$RUNNER_TEMP/commit-msg.txt"
-          git fetch origin "$BRANCH" || true
-          git push --force-with-lease origin "$BRANCH"
+
+          # The lease has to name the sha explicitly. The bare --force-with-lease
+          # checks refs/remotes/origin/$BRANCH, which any fetch of that branch
+          # silently refreshes to whatever the remote now holds — the lease then
+          # matches by construction and degrades to a plain --force. An empty
+          # $head means the branch does not exist yet, which git reads as
+          # "must not already exist", exactly the right expectation for a create.
+          head=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          git push --force-with-lease="refs/heads/$BRANCH:$head" origin "HEAD:refs/heads/$BRANCH"
 
           # Body via --body-file: $REASON is an origin server's response body
           # and must never be word-split or re-expanded by the shell. The
@@ -276,7 +285,16 @@ jobs:
         run: |
           set -euo pipefail
           if [ -z "${SLACK_BOT_TOKEN:-}" ] || [ -z "${SLACK_CHANNEL_ID:-}" ]; then
-            echo "::warning::SLACK_BOT_TOKEN or SLACK_HUB_ALERTS_CHANNEL_ID is unset — skipping Slack notification."
+            # Loud when there was an outage to report, quiet otherwise. A
+            # missing credential on the healthy path costs nothing; on the
+            # failing path it is the difference between "a human was told" and
+            # "nobody was", which must not be a line buried in a green log.
+            if [ "$OUTCOME" != "success" ]; then
+              echo "::error::Demo integration failed and Slack is not configured (SLACK_BOT_TOKEN / SLACK_HUB_ALERTS_CHANNEL_ID) — nobody was notified."
+              echo "> :warning: **Slack is not configured, so this outage was not announced.**" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::warning::SLACK_BOT_TOKEN or SLACK_HUB_ALERTS_CHANNEL_ID is unset — skipping Slack notification."
+            fi
             exit 0
           fi
 

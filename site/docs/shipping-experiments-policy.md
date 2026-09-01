@@ -181,8 +181,8 @@ carries the diagnosis and the flag change ready to merge.
 experiment's markup and its links:
 
 ```bash
-pnpm exec astro build
-grep -c "minimax-h3-multiref" dist/client/workflows/index.html   # expect 0
+pnpm build   # not `astro build` — that skips prebuild, so there is no content to render
+! grep -q "minimax-h3-multiref" dist/client/workflows/index.html   # passes when absent
 ```
 
 Grep the HTML specifically, not the whole output directory. Astro detects
@@ -196,7 +196,8 @@ be emitted under `_astro/`, and a fallback may legitimately serve the same
 
 - [ ] Target keyword chosen, and checked against what already ranks (Rule 2)
 - [ ] Not the page's most prominent CTA; before/after screenshots in the PR (Rule 1)
-- [ ] All CTAs tagged with the shared `utm_*` helpers and matching `data-*` (Rule 3)
+- [ ] Outbound CTAs use the shared `utm_*` helpers; internal ones carry
+      `data-experiment` and no `utm_*` (Rule 3)
 - [ ] `noindex` until proven; not wired to any automatic toggle (Rule 2)
 - [ ] Flag added, **default off**, read at build time (Rule 4)
 - [ ] Static fallback exists, resembles neighbouring pages, CTAs go somewhere live (Rule 4)
