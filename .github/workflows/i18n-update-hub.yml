@@ -114,16 +114,19 @@ jobs:
             # that list rather than the directory, so it rides the PR diff instead
             # of re-entering the build.
             #
-            # locales/ is deliberately absent. It is not purely generated: it is
-            # lobe's entry (locales/en.json) plus its outputLocales, and `it` is in
-            # this workflow's SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales,
-            # so nothing regenerates locales/it.json at all. Resuming that layer is
-            # also worth nothing: locale:ui fills only MISSING keys, so the branch
-            # can never hold a UI string main lacks, while main routinely holds one
-            # the branch has not caught up to yet. #1200 added date.today to main on
-            # 2026-08-28 and no run carried it onto the branch until 2026-09-01, and
-            # locales/it.json still lacks it because `it` is not an outputLocale.
-            # Copying this layer back could only ever discard merged strings.
+            # locales/ is deliberately absent, for reasons that outlive any
+            # snapshot. It is not purely generated: locales/en.json is lobe's entry
+            # and is hand-edited, which is what made taking the branch's older copy
+            # delete the navbar keys on 2026-08-12; and `it` is in this workflow's
+            # SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales, so nothing
+            # regenerates locales/it.json at all. Nothing prunes this layer either:
+            # locale:ui fills only MISSING keys, so a bad string that once lands
+            # here is never corrected by a later run.
+            #
+            # Unlike the generated paths, the branch CAN legitimately be ahead here:
+            # a prior run's locale:ui output sits on it until that PR merges. Not
+            # resuming it costs one UI pass over the missing keys, which is the
+            # price of never carrying a hand-edited file backwards.
             #
             # Per path, not one command. A multi-pathspec checkout is refused as a
             # whole when any one path is absent from the branch, so naming content/
@@ -432,15 +435,17 @@ jobs:
           # locale:ui fills only MISSING keys, so an invalid UI string banked
           # here would restore and fail validate forever. (Content is safe:
           # enforce prunes it to disk and re-prunes restored content nightly.)
+          # This deliberately drops the run's own locale:ui output too, at the
+          # cost of one UI pass next time; permanence is the worse trade.
           #
-          # Always main, never the branch. The branch's copy is only ever as new
-          # as the last night that wrote it, so preferring it banks a regression
-          # for as long as a merged UI string has not been carried over yet, a gap
-          # that is routinely nights wide (date.today, #1200, sat on main from
-          # 2026-08-28 to 2026-09-01). Since the restore step above no longer reads
-          # this layer from the branch, there is no banked UI progress here left to
-          # preserve.
-          git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
+          # Pinned to the commit this job checked out, not HEAD. The publish step
+          # above runs `git checkout -B "$STABLE_BRANCH"` and commits, so a failure
+          # after that point leaves HEAD on the automation commit, where --source
+          # would mean "the branch" and bank exactly what this line exists to drop.
+          # Nothing reaches that today (the tree is clean by then, so the guard
+          # below exits first), but the rule should hold by construction rather
+          # than by control flow.
+          git restore --source="$GITHUB_SHA" --staged --worktree -- site/src/i18n/locales
           if git diff --cached --quiet; then
             echo "Run failed before producing any translation changes; nothing to save."
             exit 0
