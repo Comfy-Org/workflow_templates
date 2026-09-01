@@ -105,6 +105,15 @@ jobs:
             # path costs one re-translation of that path, where forgetting to name
             # a hand-written path deleted it, silently whenever it was data.
             #
+            # It also retires the restore-not-checkout dance the old code needed to
+            # stop the blanket checkout resurrecting a human-authored file deleted
+            # on main: nothing shadows those layers now. A checkout still merges
+            # into the worktree rather than mirroring the branch, so a generated
+            # file for a locale dropped from SUPPORTED_HUB_LOCALES comes back if
+            # the branch still has it, exactly as before. enforce and validate walk
+            # that list rather than the directory, so it rides the PR diff instead
+            # of re-entering the build.
+            #
             # locales/ is deliberately absent. It is not purely generated: it is
             # lobe's entry (locales/en.json) plus its outputLocales, and `it` is in
             # this workflow's SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales,
