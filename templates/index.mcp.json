@@ -200,20 +200,14 @@
         "freshness": "current",
         "usage": 1053,
         "recommend": "top",
-        "description": "Generate cinematic videos from up to four reference images and a text prompt using Seedance 2.0 via API. The model preserves subject identity, composition, and style while adding expressive motion, smooth camera movement, and optionally synchronized audio.",
+        "description": "Generate cinematic videos from reference images and text prompts. Preserve subject identity and composition while adding expressive motion with synchronized audio. Control camera movement and lighting through detailed prompts.",
         "io": {
-          "inputs": [
-            "image×4: Reference images to guide video generation (subject, style, composition)",
-            "text: Text prompt describing desired motion, camera movement, and scene"
-          ],
-          "outputs": ["video: Generated cinematic video with synchronized audio"]
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
         },
         "minComfyUIVersion": "0.26.2",
         "capabilities": {
-          "workflow": ["api", "image-to-video"],
-          "model_options": {
-            "ByteDance2ReferenceNode": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
-          }
+          "workflow": ["api", "image-to-video"]
         }
       },
       {
@@ -266,6 +260,40 @@
           "outputs": ["video: Generated video"]
         },
         "minComfyUIVersion": "0.33.4",
+        "capabilities": {
+          "workflow": ["api", "text-to-video"]
+        }
+      },
+      {
+        "name": "api_pixverse6_i2v",
+        "title": "PixVerse 6.0: Image to Video",
+        "task": "Image to Video",
+        "model": "PixVerse",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Turn a still image into a moving video clip with PixVerse V6, generating up to 15 seconds of footage at resolutions from 360p to 1080p. Supports multiple aspect ratios, integrated audio generation, and multi-shot direction for cohesive narrative flow. Ideal for social media ads, product demonstrations, and short-form storytelling.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-to-video"]
+        }
+      },
+      {
+        "name": "api_pixverse6_t2v",
+        "title": "PixVerse 6.0: Text to Video",
+        "task": "Text to Video",
+        "model": "PixVerse",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate videos up to 15 seconds at 1080p from text prompts with PixVerse V6, supporting multiple aspect ratios, optional integrated audio, and multi-shot scene direction in a single generation. Ideal for social media ads, product concept testing, and short-form storytelling where narrative continuity and distribution-ready framing matter.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
         "capabilities": {
           "workflow": ["api", "text-to-video"]
         }
@@ -533,17 +561,14 @@
         "freshness": "recent",
         "usage": 244,
         "recommend": "medium",
-        "description": "Generate cinematic video from a reference image and text prompt using Seedance 2.0 Mini via API. The model produces a short animated clip with AI-driven camera motion and consistent character generation, ideal for storytelling and branded content.",
+        "description": "Generate cinematic video from two reference images using Seedance 2.0 Mini, producing a single video output with AI-driven camera motion and consistent character generation. Ideal for storytelling, branded content, and short film creation where shot composition and visual continuity are essential.",
         "io": {
           "inputs": ["image: Reference image", "text: Motion or style prompt"],
           "outputs": ["video: Animated video"]
         },
         "minComfyUIVersion": "0.26.2",
         "capabilities": {
-          "workflow": ["api", "image-to-video", "reference-to-video"],
-          "model_options": {
-            "ByteDance2ReferenceNode": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
-          }
+          "workflow": ["api", "image-to-video", "reference-to-video"]
         }
       },
       {
@@ -593,7 +618,7 @@
         "title": "MiniMax H3: Reference to Video",
         "task": "Reference to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 433,
         "recommend": "medium",
         "description": "Generate video from a reference image or set of multimodal inputs using MiniMax H3, which interprets text, images, video, and audio together to produce coherent 5–15 second clips with native stereo audio. Input up to 2 images for first/last frame control, or up to 9 images, 3 video clips, and 3 audio clips in Omni Reference mode, and output a single video in your chosen aspect ratio. Ideal for commercial content creation, character-driven storytelling, and rapid visual concept validation.",
@@ -614,9 +639,9 @@
         "title": "MiniMax H3: Text to Video",
         "task": "Text to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 87,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate video directly from text using the MiniMax H3 model, producing a 5-15 second clip with native stereo audio. Ideal for rapid concept visualization, short-form social media content, and pre-visualization for film or advertising projects.",
         "io": {
           "inputs": ["text: Video prompt"],
@@ -635,9 +660,9 @@
         "title": "MiniMax H3: FLF2V",
         "task": "FLF2V",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 158,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate a video from a first and last frame using MiniMax H3, producing a smooth animation between the two images. You provide 2 images, and the workflow outputs a single video clip. Ideal for creating seamless transitions in animation, visualizing before-and-after transformations, and generating consistent motion for character or scene sequences.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -947,7 +972,7 @@
         "title": "Grok Imagine Video 1.5: Image to Video",
         "task": "Image to Video",
         "model": "Grok",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 333,
         "recommend": "medium",
         "description": "This workflow uses xAI’s Grok Imagine Video 1.5 API to animate a static image into a video, optionally guided by a text prompt. It produces native audio, realistic motion, and outputs up to 720p resolution. Execution depends on the third-party API, so processing time may vary.",
@@ -1031,17 +1056,14 @@
         "freshness": "recent",
         "usage": 21,
         "recommend": "not_recommended",
-        "description": "Generate cinematic video from natural language prompts using Gemini Omni Flash, transforming text descriptions into a single video output with world-aware motion, lighting, and sound. This API workflow enables rapid video prototyping and iterative visual storytelling through simple text inputs.",
+        "description": "Generate cinematic video from natural language prompts using Gemini Omni Flash, transforming text descriptions into a single video output with world-aware motion, lighting, and sound. Ideal for social media content creation, rapid video prototyping, and iterative visual storytelling with conversational editing.",
         "io": {
           "inputs": ["text: Video prompt"],
           "outputs": ["video: Generated video"]
         },
         "minComfyUIVersion": "0.28.3",
         "capabilities": {
-          "workflow": ["api", "text-to-video"],
-          "model_options": {
-            "GeminiVideoOmni": ["Omni Flash"]
-          }
+          "workflow": ["api", "text-to-video"]
         }
       },
       {
@@ -1675,11 +1697,7 @@
         "recommend": "low",
         "description": "This workflow transforms a source video using Kling O1’s Video‑to‑Video API, accepting a video, a reference image for character or style guidance, and a text prompt. It outputs a transformed video with modified content, style, or characters, leveraging the model’s support for up to 10 reference images with tags. Execution depends on server‑side response as it calls a third‑party API.",
         "io": {
-          "inputs": [
-            "video: Source video to transform",
-            "image: Reference image for style or character guidance",
-            "text: Text prompt describing the desired transformation"
-          ],
+          "inputs": ["video: Source video to transform", "image: Reference image for style or character guidance", "text: Text prompt describing the desired transformation"],
           "outputs": ["video: Transformed output video"]
         },
         "minComfyUIVersion": "0.8.0",
@@ -2774,10 +2792,7 @@
         "recommend": "not_recommended",
         "description": "This workflow generates a video from a text prompt using Wan2.5 model variants (wan2.5-t2v-preview, wan2.6-t2v). Optionally, you can sync an audio file (3–30 seconds, under 15MB) to enhance motion quality. The output is a video with synchronized audio. This workflow uses a third‑party API, so execution time depends on server‑side response.",
         "io": {
-          "inputs": [
-            "text: Text prompt describing the desired video content",
-            "audio: Optional audio input to synchronize with generated video (3-30 seconds, under 15MB)"
-          ],
+          "inputs": ["text: Text prompt describing the desired video content", "audio: Optional audio input to synchronize with generated video (3-30 seconds, under 15MB)"],
           "outputs": ["video: Generated video with synchronized audio and enhanced motion quality"]
         },
         "minComfyUIVersion": "0.3.60",
@@ -3378,16 +3393,16 @@
         "freshness": "established",
         "usage": 3051,
         "recommend": "highly_recommended",
-        "description": "Upload an image to edit with the Grok model via a third-party API, producing a modified version with expressive, cinematic visuals. The workflow accepts an image as input and returns the edited image after applying adjustments like style transfer. Response time depends on server availability.",
+        "description": "Upload an image to edit with the Grok model. Generate a modified version with expressive, cinematic visuals",
         "io": {
-          "inputs": ["image: Input image to be edited"],
-          "outputs": ["image: Edited image with cinematic style"]
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
         },
         "minComfyUIVersion": "0.11.1",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
-            "GrokImageEditNode": ["grok-imagine-image-quality", "grok-imagine-image-pro", "grok-imagine-image"]
+            "GrokImageEditNodeV2": ["grok-imagine-image-quality", "grok-imagine-image-pro", "grok-imagine-image"]
           }
         }
       },
@@ -3438,17 +3453,14 @@
         "freshness": "recent",
         "usage": 4151,
         "recommend": "highly_recommended",
-        "description": "Edit images with precision using Seedream 5.0 Pro via API, targeting specific regions while preserving lighting, depth, and texture. The workflow takes a text prompt as input and outputs a generated image, ideal for product photography edits, portrait consistency adjustments, and structured layouts with multilingual text.",
+        "description": "Edit images with precision using Seedream 5.0 Pro, targeting specific regions while preserving lighting, depth, and texture. The workflow takes 1 input image and produces 2 output images through an optional Painter node and preview. Ideal for product photography edits, portrait consistency adjustments, and creating structured layouts with multilingual text.",
         "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
         },
         "minComfyUIVersion": "0.31.0",
         "capabilities": {
-          "workflow": ["api", "image-edit"],
-          "model_options": {
-            "ByteDanceSeedreamNodeV2": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
-          }
+          "workflow": ["api", "image-edit"]
         }
       },
       {
@@ -3579,17 +3591,14 @@
         "freshness": "recent",
         "usage": 1871,
         "recommend": "top",
-        "description": "Generate images from text prompts using Seedream 5.0 Pro via API, producing one high-quality output. Ideal for creative concept art, marketing visual mockups, and rapid design ideation.",
+        "description": "Generate images from text prompts using Seedream 5.0 Pro, producing one high-quality output. Ideal for creative concept art, marketing visual mockups, and rapid ideation for design projects.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated image"]
         },
         "minComfyUIVersion": "0.31.0",
         "capabilities": {
-          "workflow": ["api", "text-to-image"],
-          "model_options": {
-            "ByteDanceSeedreamNodeV2": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
-          }
+          "workflow": ["api", "text-to-image"]
         }
       },
       {
@@ -3600,17 +3609,14 @@
         "freshness": "established",
         "usage": 973,
         "recommend": "high",
-        "description": "This API-based workflow uses ByteDance's Seedream model for text-to-image generation and image editing, supporting versions 4.0 through 5.0 Lite. It accepts an optional reference image and a text prompt to produce a 2K resolution output. Execution depends on the third-party API's response time.",
+        "description": "Multi-modal AI model for text-to-image and image editing. Generate 2K images in under 2 seconds with natural language control.",
         "io": {
-          "inputs": ["image: Optional reference image for editing", "text: Text prompt describing the desired image"],
-          "outputs": ["image: Generated or edited 2K image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
-          "workflow": ["api", "image-edit", "text-to-image"],
-          "model_options": {
-            "ByteDanceSeedreamNode": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
-          }
+          "workflow": ["api", "image-edit", "text-to-image"]
         }
       },
       {
@@ -3621,17 +3627,14 @@
         "freshness": "established",
         "usage": 791,
         "recommend": "high",
-        "description": "Edit an image using a text prompt with ByteDance's Seedream 5.0 Lite. The model employs deep reasoning and web search to understand your edit instructions. This API workflow takes an image and prompt as input, producing a modified image that aligns with your description.",
+        "description": "Upload an image and a text prompt to edit it. Generate a modified image where the details align with your instructions.",
         "io": {
-          "inputs": ["image×2: Input images for editing or style reference", "text: Text prompt describing the desired edit"],
-          "outputs": ["image: Edited image matching the text prompt"]
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
         },
         "minComfyUIVersion": "0.31.0",
         "capabilities": {
-          "workflow": ["api", "image-edit"],
-          "model_options": {
-            "ByteDanceSeedreamNodeV2": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
-          }
+          "workflow": ["api", "image-edit"]
         }
       },
       {
@@ -3699,9 +3702,9 @@
         "title": "Ideogram P-Image: Text to Image",
         "task": "Text to Image",
         "model": "Ideogram",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 43,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Generate images from text descriptions using Ideogram's fast P-Image model, which delivers quality comparable to leading image models at significantly lower cost and latency. One text prompt is accepted and one image is output, with controls for quality level and resolution. Ideal for rapid iteration in design workflows, high-volume content production, and cost-sensitive A/B testing of visual concepts.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -3918,17 +3921,14 @@
         "freshness": "established",
         "usage": 200,
         "recommend": "medium",
-        "description": "Input a text prompt to generate a detailed image using ByteDance’s Seedream 5.0 Lite model, which supports multiple Seedream versions. This API-based workflow creates a visual representation of your description with control over style and layout, outputting a single generated image.",
+        "description": "Input your text prompt to generate a detailed image. This workflow creates a visual representation of your description with precise control over style and layout.",
         "io": {
-          "inputs": ["text: Text prompt describing the desired image"],
-          "outputs": ["image: Generated image matching the text prompt"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated image"]
         },
         "minComfyUIVersion": "0.31.0",
         "capabilities": {
-          "workflow": ["api", "text-to-image"],
-          "model_options": {
-            "ByteDanceSeedreamNode": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
-          }
+          "workflow": ["api", "text-to-image"]
         }
       },
       {
@@ -4362,7 +4362,7 @@
         "title": "LongCat Image: Text to Image",
         "task": "Text to Image",
         "model": "LongCat",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 32,
         "recommend": "not_recommended",
         "description": "Generate an image from a text prompt using the LongCat model. Input your desired scene description and the model performs a direct text-to-image conversion. This is a straightforward workflow suitable for simple image generation tasks, optimized for ease of use and quick results.",
@@ -4383,14 +4383,17 @@
         "freshness": "established",
         "usage": 198,
         "recommend": "low",
-        "description": "This workflow uses FLUX.2 [max], a fast model for high‑precision object swapping. It accepts three images—a scene and two objects—and outputs a single edited image with the objects replaced while preserving lighting and perspective. Execution requires a third‑party API call.",
+        "description": "Replace objects in images with unmatched quality using FLUX.2 [max]. Perfect for product photography, furniture swaps, and maintaining scene consistency with highest editing precision.",
         "io": {
-          "inputs": ["image×3: Scene image and objects to swap into the scene"],
-          "outputs": ["image: Image with object replaced while maintaining scene consistency"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
-          "workflow": ["api", "image-edit"]
+          "workflow": ["api", "image-edit"],
+          "model_options": {
+            "Flux2ImageNode": ["Flux.2 [pro]", "Flux.2 [max]"]
+          }
         }
       },
       {
@@ -5697,16 +5700,16 @@
         "freshness": "established",
         "usage": 122,
         "recommend": "low",
-        "description": "Generate images from an input reference image and text prompt using OpenAI's GPT-Image-1 API. This intelligent model provides sharp semi-realistic output with strong prompt adherence. Supported model variants include gpt-image-1, gpt-image-1.5, and gpt-image-2. Note this workflow executes via a third-party API.",
+        "description": "Generate images from input images using OpenAI GPT Image 1 API.",
         "io": {
-          "inputs": ["image: Input reference image to guide generation", "text: Text prompt describing the desired output"],
-          "outputs": ["image: Generated output image"]
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
         },
         "minComfyUIVersion": "0.3.30",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
-            "OpenAIGPTImage1": ["gpt-image-1", "gpt-image-1.5", "gpt-image-2"]
+            "OpenAIGPTImageNodeV2": ["gpt-image-2", "gpt-image-1.5", "gpt-image-1"]
           }
         }
       },
@@ -5754,16 +5757,16 @@
         "freshness": "established",
         "usage": 84,
         "recommend": "low",
-        "description": "Edit images using inpainting with the OpenAI GPT-Image-1 API. This workflow takes an input image, a mask specifying the area to modify, and a text prompt to describe the desired fill. It generates an inpainted result via a third‑party API. The model is an older ChatGPT‑based generator known for intelligent prompt adherence and sharp semi‑realistic output.",
+        "description": "Edit images using inpainting with OpenAI GPT Image 1 API.",
         "io": {
-          "inputs": ["image×2: Input image and mask specifying the area to inpaint", "text: Text prompt describing the desired fill content"],
-          "outputs": ["image: Inpainted result image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.3.30",
         "capabilities": {
           "workflow": ["inpainting", "api"],
           "model_options": {
-            "OpenAIGPTImage1": ["gpt-image-1", "gpt-image-1.5", "gpt-image-2"]
+            "OpenAIGPTImageNodeV2": ["gpt-image-2", "gpt-image-1.5", "gpt-image-1"]
           }
         }
       },
@@ -5775,16 +5778,16 @@
         "freshness": "established",
         "usage": 17,
         "recommend": "not_recommended",
-        "description": "Generate images from text prompts using OpenAI's GPT-Image-1 API, an older model known for intelligent prompt adherence and sharp semi-realistic output. This text-to-image workflow requires only a text description as input and supports multiple model versions (gpt-image-1, 1.5, and 2) via third-party API.",
+        "description": "Generate images from text prompts using OpenAI GPT Image 1 API.",
         "io": {
-          "inputs": ["text: Text prompt describing the desired image"],
+          "inputs": ["text: Prompt"],
           "outputs": ["image: Generated image"]
         },
         "minComfyUIVersion": "0.3.30",
         "capabilities": {
           "workflow": ["api", "text-to-image"],
           "model_options": {
-            "OpenAIGPTImage1": ["gpt-image-1", "gpt-image-1.5", "gpt-image-2"]
+            "OpenAIGPTImageNodeV2": ["gpt-image-2", "gpt-image-1.5", "gpt-image-1"]
           }
         }
       },
@@ -6131,10 +6134,7 @@
         "recommend": "low",
         "description": "Upload an input video and a text prompt specifying the object to remove (e.g., \"Remove the red car from the foreground\"). The fast, high-quality LTX-2.3 model, designed for fast video generation with native audio and start/end frame support, applies the Obscura Remova LoRA to erase the target from every frame, outputting a clean edited video.",
         "io": {
-          "inputs": [
-            "video: Input video containing the object to remove",
-            "text: Text prompt specifying which object to remove (e.g. 'Remove the {object} from the foreground.')"
-          ],
+          "inputs": ["video: Input video containing the object to remove", "text: Text prompt specifying which object to remove (e.g. 'Remove the {object} from the foreground.')"],
           "outputs": ["video: Output video with the object removed"]
         },
         "minComfyUIVersion": "0.19.0",
@@ -6602,11 +6602,7 @@
         "recommend": "low",
         "description": "This workflow seamlessly swaps a product into a reference scene while preserving the original composition and lighting. You provide a reference scene image and a product image; an optional text prompt can guide scene description. The model outputs a product video that naturally integrates the placed item into the scene.",
         "io": {
-          "inputs": [
-            "image: Reference scene image for product placement",
-            "image: Product image to place into the scene",
-            "text: Optional text prompt for scene description"
-          ],
+          "inputs": ["image: Reference scene image for product placement", "image: Product image to place into the scene", "text: Optional text prompt for scene description"],
           "outputs": ["video: Product video with the placed item in the scene"]
         },
         "minComfyUIVersion": "0.20.3",
@@ -6744,11 +6740,7 @@
         "recommend": "low",
         "description": "Use Kling 3.0’s image-to-video and native audio to create a multi-shot product commercial. Upload a start frame and reference images, then set duration and shot count—Gemini nodes automatically generate tailored prompts for each segment. The model outputs a coherent video sequence with up to 15 seconds of high-quality footage.",
         "io": {
-          "inputs": [
-            "image: Start frame / reference image for the video",
-            "image: Product reference image",
-            "text: Total duration and number of shots for the multishot video"
-          ],
+          "inputs": ["image: Start frame / reference image for the video", "image: Product reference image", "text: Total duration and number of shots for the multishot video"],
           "outputs": ["video: Generated multishot product video with multiple scenes"]
         },
         "minComfyUIVersion": "0.16.1",
@@ -6850,10 +6842,7 @@
         "recommend": "medium",
         "description": "One-click workflow that generates a character portrait, refines skin details, and upscales to 4K in under 60 seconds. Leverages Z-Image-Turbo’s fast inference to enhance facial textures while upscaling the input image with sharp, realistic results.",
         "io": {
-          "inputs": [
-            "image: Face or person reference image for portrait generation",
-            "text: Text prompt describing desired facial features (e.g. freckles, blush, facial hair)"
-          ],
+          "inputs": ["image: Face or person reference image for portrait generation", "text: Text prompt describing desired facial features (e.g. freckles, blush, facial hair)"],
           "outputs": ["image: Generated refined and upscaled portrait image"]
         },
         "minComfyUIVersion": "0.9.0",
@@ -7136,7 +7125,7 @@
         "title": "AnimateDiff -  IPAdapters Looping Animation",
         "task": "Image to Video",
         "model": "SD1.5",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 23,
         "recommend": "low",
         "description": "This workflow creates a seamless looping animation from three input images using AnimateDiff with Weighted IPAdapters on Stable Diffusion 1.5. Each image smoothly morphs into the next, producing a continuous video loop. Simply supply three images; the workflow outputs the animated video.",
@@ -7154,7 +7143,7 @@
         "title": "Video Restyle",
         "task": "Video to Video",
         "model": "Wan2.1 VACE",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 13,
         "recommend": "low",
         "description": "Restyle any video by combining a base video with a stylized reference image using Wan2.1 VACE, which adds video editing and inpainting capabilities. The workflow preserves the original video structure through depth or canny conditioning while applying the chosen style. Provide a video and a style image; the output is a seamlessly restyled video.",
@@ -7193,7 +7182,7 @@
         "title": "Change Any Objects",
         "task": "Image Generation",
         "model": "SAM3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 17,
         "recommend": "low",
         "description": "Replace specific objects in videos using text prompts and optional reference images. SAM3 performs zero-shot segmentation to mask target objects, then Wan2.1 VACE inpainting seamlessly fills the region based on your prompt. Provide a video and a text prompt; optionally include a reference image for guidance. The output is a modified video with the objects changed.",
@@ -7211,7 +7200,7 @@
         "title": "Single Image to 3D model",
         "task": "Image to 3D",
         "model": "Hunyuan3D",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 13,
         "recommend": "low",
         "description": "Use one frontal image to generate a high-quality 3D mesh with PBR textures via Hunyuan3D’s image-to-3D capability. The model produces detailed geometry and realistic materials from the single view. This workflow can be run via API for efficient 3D asset pipeline.",
@@ -7232,7 +7221,7 @@
         "title": "AIrt MAchIne",
         "task": "FLF2V",
         "model": "Wan2.2",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 20,
         "recommend": "low",
         "description": "Generate a unique, looping AI video by providing a text prompt. The FLF2V workflow leverages Wan2.2’s fast text-to-video capabilities to create a cinematic clip with crisp textures and realistic colors, then stitches frames into a seamless loop.",
@@ -7487,7 +7476,7 @@
         "title": "AIrt MAchIne (API version)",
         "task": "FLF2V",
         "model": "Google Gemini",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 10,
         "recommend": "low",
         "description": "Generate a looping AI-driven video from a text prompt using Google Gemini's multi-modal API. The user provides a descriptive prompt, and Gemini's capabilities produce coherent, high-quality video output. This API workflow leverages Gemini's text-to-video generation to create the final clip.",
@@ -7508,7 +7497,7 @@
         "title": "Looped Restyler",
         "task": "Image to Video",
         "model": "Nano Banana",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 6,
         "recommend": "low",
         "description": "Upload a starting image and prompt to generate a looping video. The Nano Banana model ensures precise prompt adherence for smooth transitions. Designed for image-to-video tasks, it creates an infinite loop from first to last frame. Executable via API for automated workflows.",
@@ -7649,7 +7638,7 @@
         "title": "Noise Injected VideoGen",
         "task": "Image to Video",
         "model": "SD1.5",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 12,
         "recommend": "low",
         "description": "User provides a text prompt to guide the AI in generating a dynamic video. The SD1.5 foundational model, extended via AnimateDiff, injects controlled noise patterns into the scene to create motion. The workflow outputs a short video driven entirely by the prompt.",
@@ -8078,10 +8067,10 @@
         "freshness": "current",
         "usage": 120,
         "recommend": "low",
-        "description": "Input a short text description of sound, music, or an effect. The workflow expands your prompt with Qwen and generates a stereo audio clip using Stable Audio 3’s text-to-audio capability.",
+        "description": "Input a short text description of a sound, music, or effect. The workflow expands your prompt with Qwen and generates a stereo audio clip from Stable Audio 3.",
         "io": {
-          "inputs": ["text: Audio description prompt"],
-          "outputs": ["audio: Generated audio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.19.2",
         "capabilities": {
@@ -8096,10 +8085,10 @@
         "freshness": "current",
         "usage": 111,
         "recommend": "low",
-        "description": "Given a text prompt, this workflow generates stereo audio — music, sound effects, or instruments — using Stable Audio 3.0. Optional duration, seed, and category settings allow fine control. The model transforms text directly into audio without requiring any audio input.",
+        "description": "Input a short text idea, optional duration, seed, and category. Generate stereo audio (music, SFX, or instruments) using Stable Audio 3 with optional AI-driven text expansion.",
         "io": {
-          "inputs": ["text: Audio description prompt"],
-          "outputs": ["audio: Generated audio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.19.2",
         "capabilities": {
@@ -8122,6 +8111,57 @@
         "minComfyUIVersion": "0.28.1",
         "capabilities": {
           "workflow": ["api", "text-to-speech"]
+        }
+      },
+      {
+        "name": "api_fishaudio_text_to_speech",
+        "title": "Fish Audio: Text to Speech",
+        "task": "Text to Speech",
+        "model": "Fish Audio",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate natural, expressive speech from text with Fish Audio S2 Pro, a text-to-speech model supporting 80+ languages and fine-grained control over emotion, tone, and pacing using inline tags like [whisper] or [excited]. Input your text and receive one high-quality audio output, with optional style tags woven directly into the script. Ideal for voiceover production, multilingual content creation, and character dialogue in games or animations.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "tts"]
+        }
+      },
+      {
+        "name": "api_fishaudio_voice_clone_tts",
+        "title": "Fish Audio: Voice Clone to Speech",
+        "task": "Text to Speech",
+        "model": "Fish Audio",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Clone any voice from a short recording, then use it to speak any script with Fish Audio. Record 2-3 clips of 15-20 seconds, connect them to the Instant Voice Clone node, and the cloned voice feeds straight into text to speech with no training wait. Add emotion tags to control how your cloned voice delivers each line. Great for personalized narration, character voices, and content in your own voice.\n",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "tts", "voice-cloning"]
+        }
+      },
+      {
+        "name": "api_fishaudio_speech_to_text",
+        "title": "Fish Audio: Speech to Text",
+        "task": "Audio Generation",
+        "model": "Fish Audio",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Transcribe audio to text with Fish Audio ASR. Language is detected automatically across 13+ languages, with optional word-level timestamps returned as JSON segments. Use it to create subtitles, transcribe recordings, or generate text prompts from audio clips. A sample audio is pre-loaded so you can test it right away.\n",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "speech-to-text"]
         }
       },
       {
@@ -8168,10 +8208,10 @@
         "freshness": "current",
         "usage": 315,
         "recommend": "medium",
-        "description": "This workflow generates music from a text prompt using the ACE-Step 1.5XL Turbo model. It produces high-quality audio output in just 8 inference steps, leveraging the fast Turbo variant for efficient music generation. The key input is a descriptive text prompt, and the output is a waveform image of the generated audio.",
+        "description": "Generate high-quality music from text prompts using the distilled 4B ACE-Step model. Produces commercial-ready audio in just 8 inference steps without CFG.",
         "io": {
-          "inputs": ["text: Text prompt describing the music"],
-          "outputs": ["audio: Generated music"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.12.0",
         "capabilities": {
@@ -8204,10 +8244,10 @@
         "freshness": "established",
         "usage": 355,
         "recommend": "medium",
-        "description": "Convert text into ultra-realistic speech using ElevenLabs models (eleven_multilingual_v2 or eleven_v3). An optional audio sample enables instant voice cloning. Outputs a synthesized speech audio file. Execution is via third-party API, so processing time depends on server-side response.",
+        "description": "Input text to generate speech with ultra-realistic voices, or upload a voice sample to clone it for synthesis.",
         "io": {
-          "inputs": ["text: Text content to be converted into speech", "audio: Optional audio sample for instant voice cloning"],
-          "outputs": ["audio: Synthesized speech audio from the text input using ElevenLabs"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.15.0",
         "capabilities": {
@@ -8225,10 +8265,10 @@
         "freshness": "established",
         "usage": 28,
         "recommend": "not_recommended",
-        "description": "Generate emotionally expressive dialogue audio from text via the ElevenLabs API using the eleven_v3 model. The user provides dialogue text and optionally an audio sample for instant voice cloning of characters. The workflow outputs synthesized dialogue speech with natural intonation, relying on server-side API execution.",
+        "description": "Input text and select a voice profile to generate a high-quality, emotionally expressive audio dialogue.",
         "io": {
-          "inputs": ["text: Dialogue text content to be converted into speech", "audio: Optional audio sample for instant voice cloning of characters"],
-          "outputs": ["audio: Synthesized dialogue audio with expressive voices using ElevenLabs"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.15.0",
         "capabilities": {
@@ -8246,10 +8286,10 @@
         "freshness": "established",
         "usage": 69,
         "recommend": "low",
-        "description": "Convert a source audio file into speech with a different voice or a cloned voice using ElevenLabs. The workflow accepts two audio inputs: source audio to transform and an optional voice clone sample. Output is the converted speech audio. This workflow executes via the ElevenLabs API and supports models like `eleven_multilingual_sts_v2`.",
+        "description": "Upload a source audio file to apply a new voice tone or clone a different voice, generating a modified audio output.",
         "io": {
-          "inputs": ["audio×2: Source audio to convert (input 1) and optional voice clone sample (input 2)"],
-          "outputs": ["audio: Converted speech audio with the target voice using ElevenLabs"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.15.0",
         "capabilities": {
@@ -8267,10 +8307,10 @@
         "freshness": "established",
         "usage": 5,
         "recommend": "not_recommended",
-        "description": "This workflow takes an audio file containing voice mixed with background noise and uses the ElevenLabs API to isolate and output a clean voice track. The model’s voice isolation capability removes unwanted noise, producing a clear audio file. As a third‑party API workflow, execution time depends on server‑side response.",
+        "description": "Upload an audio file containing background noise. Use the ElevenLabs API to isolate and output a clean voice track.",
         "io": {
-          "inputs": ["audio: Audio file with voice and background noise to be isolated"],
-          "outputs": ["audio: Clean isolated voice track with background noise removed"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.15.0",
         "capabilities": {
@@ -8306,10 +8346,10 @@
         "freshness": "established",
         "usage": 43,
         "recommend": "not_recommended",
-        "description": "Generate custom sound effects and ambient audio from text descriptions using ElevenLabs. Provide a text prompt as input; the API workflow returns a generated audio file. This is a third-party API call, so execution time depends on server-side response. The model supports sound effects generation.",
+        "description": "Input a text prompt to generate custom sound effects and ambient audio.",
         "io": {
-          "inputs": ["text: Text prompt describing the desired sound effect or ambient audio"],
-          "outputs": ["audio: Generated sound effect audio from the text prompt"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.15.0",
         "capabilities": {
@@ -8345,10 +8385,10 @@
         "freshness": "established",
         "usage": 5,
         "recommend": "not_recommended",
-        "description": "This workflow uses ACE-Step with an external LLM (e.g., Gemini) to first generate lyrics from a music style and optional user prompt, then produces a complete song with AI-created lyrics and audio. It supports text-to-audio generation for full songs or instrumentals via API execution.",
+        "description": "Input a music style and optional lyrics. Generate a full song with AI-created lyrics and audio.",
         "io": {
-          "inputs": ["text: Music style description and optional lyrics text for song generation"],
-          "outputs": ["audio: Generated song audio with AI-composed lyrics and music using ACE-Step 1.5"]
+          "inputs": ["text: User prompt"],
+          "outputs": ["text: Model response"]
         },
         "minComfyUIVersion": "0.12.0",
         "capabilities": {
@@ -8729,7 +8769,7 @@
         "title": "TripoSplat: Image to Gaussian Splat",
         "task": "Image to 3D",
         "model": "TripoSplat",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 264,
         "recommend": "medium",
         "description": "Use TripoSplat to reconstruct a 3D Gaussian splat scene from four multi-view images. The workflow outputs a high-quality 3D representation with controllable density and budget, enabling fast and efficient rendering of the scene.",
@@ -9983,7 +10023,7 @@
         "title": "Pose Map: SDPose-OOD",
         "task": "Image Generation",
         "model": "SDPose-OOD",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 36,
         "recommend": "not_recommended",
         "description": "Upload an image to extract multi-person pose keypoints and generate a reliable pose map. The SDPose-OOD model handles out-of-distribution poses and varying body orientations for accurate pose estimation.",
@@ -10253,15 +10293,7 @@
         "capabilities": {
           "workflow": ["video-upscale", "api"],
           "model_options": {
-            "HitPawVideoEnhance": [
-              "Portrait Restore Model (1x)",
-              "Portrait Restore Model (2x)",
-              "General Restore Model (1x)",
-              "General Restore Model (2x)",
-              "General Restore Model (4x)",
-              "Ultra HD Model (2x)",
-              "Generative Model (1x)"
-            ]
+            "HitPawVideoEnhance": ["Portrait Restore Model (1x)", "Portrait Restore Model (2x)", "General Restore Model (1x)", "General Restore Model (2x)", "General Restore Model (4x)", "Ultra HD Model (2x)", "Generative Model (1x)"]
           }
         }
       },
@@ -10641,11 +10673,7 @@
         "recommend": "not_recommended",
         "description": "Upload a source video and a reference image, then describe the desired edits with a text prompt using Beeble SwitchX. The workflow outputs an edited video where masked regions follow your prompt and reference, while unmasked areas preserve original pixels and motion, and includes an alpha matte for compositing. This workflow calls a third-party API, so execution time depends on server response.",
         "io": {
-          "inputs": [
-            "video: Source video to edit",
-            "image: Optional reference image for style, lighting, and background guidance",
-            "text: Text prompt describing desired edits and environment"
-          ],
+          "inputs": ["video: Source video to edit", "image: Optional reference image for style, lighting, and background guidance", "text: Text prompt describing desired edits and environment"],
           "outputs": ["video: Edited video with prompt-guided regions and preserved original areas"]
         },
         "minComfyUIVersion": "0.23.0",
@@ -10694,7 +10722,7 @@
         "title": "Pose Map: SDPose-OOD",
         "task": "Video Generation",
         "model": "SDPose-OOD",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 19,
         "recommend": "not_recommended",
         "description": "This workflow converts a video into a pose map by extracting body keypoints for each frame. The SDPose-OOD model supports multi-person detection and accurately handles out-of-distribution poses, producing reliable pose maps for downstream utility tasks.",
