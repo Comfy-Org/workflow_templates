@@ -1,10 +1,12 @@
 /**
  * Curated `DefinedTerm`/`DefinedTermSet` entity data for `buildWorkflowGraphJsonLd`
- * (see ../lib/structured-data.ts), keyed by the template's `name` field in
- * templates/index.json. Transcribed verbatim from the client-provided schema
- * recommendation — do not add entries by automatic detection or extrapolation.
- * `id` values are local `@graph` fragment identifiers, resolved against the
- * page's own canonical URL at build time (e.g. `{canonicalUrl}#e-api`).
+ * (see ../lib/structured-data.ts), keyed by the template's snake_case `name`
+ * (its `templates/index.json` filename). Look these up via `getWorkflowEntityGraph`,
+ * which also accepts the hub share id (see `SHARE_ID_TO_KEY` at the bottom).
+ * Transcribed verbatim from the client-provided schema recommendation — do not
+ * add entries by automatic detection or extrapolation. `id` values are local
+ * `@graph` fragment identifiers, resolved against the page's own canonical URL
+ * at build time (e.g. `{canonicalUrl}#e-api`).
  */
 
 export interface WorkflowEntityCoreTopic {
@@ -30,12 +32,30 @@ export interface WorkflowEntityGraph {
   /** Node/model identifier surfaced as the workflow node's `identifier`, if given. */
   identifier?: string;
   keywords?: string;
+  /**
+   * `datePublished` for the workflow and WebPage nodes when the client schema
+   * pins a specific date. Overrides the value derived from the hub index so the
+   * emitted graph matches the recommendation verbatim; omit to use the page date.
+   */
+  datePublished?: string;
   isRelatedTo?: { name: string; url: string }[];
   /** Topic-level DefinedTerms referenced directly under `about` (not in a DefinedTermSet). */
   coreTopics: WorkflowEntityCoreTopic[];
   categories: WorkflowEntityCategory[];
-  /** All DefinedTerms referenced under `mentions` (both categorized and standalone). */
+  /**
+   * All DefinedTerms — both categorized and standalone. This array's order is
+   * the order DefinedTerm nodes are emitted and the order they appear in each
+   * `DefinedTermSet.hasDefinedTerm`; keep entries grouped by category.
+   */
   entities: WorkflowEntityTerm[];
+  /**
+   * Explicit `@id` order for the WebPage `mentions` array, when the client
+   * schema lists mentions in a different order than the DefinedTermSet grouping
+   * above. Each string is a `WorkflowEntityTerm.id`. Any entity omitted here is
+   * appended in `entities` order; unknown ids are ignored. Omit to fall back to
+   * `entities` order.
+   */
+  mentionsOrder?: string[];
 }
 
 export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
@@ -43,9 +63,42 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
   video_ltx2_5_i2v: {
     identifier: '6e397a2b-68f7-48f6-8930-f3a5491a163c',
     keywords: 'Image Generation, Image to Video, LTX-2.5, ComfyUI Workflow',
+    datePublished: '2026-08-12',
     isRelatedTo: [
       { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
       { name: 'Image to Video Workflows', url: 'https://comfy.org/workflows/tag/image-to-video/' },
+    ],
+    // WebPage `mentions` order from the client schema — grouped differently than
+    // the DefinedTermSet membership below (software terms lead footage/camera,
+    // image-format trails the business group).
+    mentionsOrder: [
+      'e-api',
+      'e-open-source',
+      'e-codec',
+      'e-data',
+      'e-accessibility',
+      'e-hdr',
+      'e-motion-interp',
+      'e-hardware',
+      'e-gpu',
+      'e-prompt-eng',
+      'e-library',
+      'e-load',
+      'e-footage',
+      'e-camera',
+      'e-rendering',
+      'e-quality',
+      'e-manufacturing',
+      'e-image-format',
+      'e-display-res',
+      'e-pixel',
+      'e-frame-rate',
+      'e-aspect-ratio',
+      'e-subtitles',
+      'e-sound',
+      'e-1080p',
+      'e-motion-blur',
+      'e-mpeg4',
     ],
     coreTopics: [
       { id: 'e-video', name: 'Video', sameAs: 'https://en.wikipedia.org/wiki/Video' },
@@ -227,6 +280,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
   api_seedance2_5_r2v: {
     keywords:
       'Image Generation, Partner Nodes, Video, Reference to Video, Seedance 2.5, ComfyUI Workflow',
+    datePublished: '2026-08-08',
     isRelatedTo: [
       { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
       { name: 'Partner Node Workflows', url: 'https://comfy.org/workflows/tag/partner-nodes/' },
@@ -400,6 +454,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
   // MiniMax H3: Image to Video
   video_minimax_h3_i2v: {
     keywords: 'Image Generation, Video, Image to Video, MiniMax H3, ComfyUI Workflow',
+    datePublished: '2026-08-03',
     isRelatedTo: [
       { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
       { name: 'Video Workflows', url: 'https://comfy.org/workflows/tag/video/' },
@@ -566,6 +621,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
   video_wan_animate2: {
     keywords:
       'Image Generation, Motion Control, Video, Motion Transfer, Wan Animate 2, ComfyUI Workflow',
+    datePublished: '2026-08-08',
     isRelatedTo: [
       { name: 'Image Generation Workflows', url: 'https://comfy.org/workflows/category/image/' },
       { name: 'Motion Control Workflows', url: 'https://comfy.org/workflows/tag/motion-control/' },
@@ -701,6 +757,23 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
   },
 };
 
-export function getWorkflowEntityGraph(templateName: string): WorkflowEntityGraph | undefined {
-  return WORKFLOW_ENTITY_GRAPHS[templateName];
+/**
+ * The `@graph` builder is called with the workflow's `name` from whichever index
+ * the build used. The local content collection (`templates/index.json`) exposes
+ * the snake_case filename, but the hub API (`/api/hub/workflows/index`, the
+ * primary source in preview/prod builds) exposes the share id instead — so a
+ * bare `WORKFLOW_ENTITY_GRAPHS[name]` lookup misses on deployed pages. Map the
+ * share id back to the filename key here so both indexes resolve.
+ */
+const SHARE_ID_TO_KEY: Record<string, string> = {
+  b37902cee452: 'video_ltx2_5_i2v',
+  cd0c4f9f61a4: 'api_seedance2_5_r2v',
+  a781503cf508: 'video_minimax_h3_i2v',
+  '9394f9968da3': 'video_wan_animate2',
+};
+
+export function getWorkflowEntityGraph(nameOrShareId: string): WorkflowEntityGraph | undefined {
+  return (
+    WORKFLOW_ENTITY_GRAPHS[nameOrShareId] ?? WORKFLOW_ENTITY_GRAPHS[SHARE_ID_TO_KEY[nameOrShareId]]
+  );
 }
