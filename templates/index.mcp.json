@@ -211,6 +211,66 @@
         }
       },
       {
+        "name": "api_minimax_h3_max_i2v",
+        "title": "MiniMax H3 Max: Image to Video",
+        "task": "Image to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video from a source image using MiniMax H3 Max, animating your still frame while preserving its composition, visual identity, and aspect ratio. The model delivers faster-than-real-time generation with strong prompt adherence and polished cinematic aesthetics. Ideal for bringing character art to life, animating product shots, and creating motion from concept images.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-to-video"],
+          "model_options": {
+            "MinimaxHailuo03FirstLastFrameNode": ["MiniMax H3"]
+          }
+        }
+      },
+      {
+        "name": "api_minimax_h3_max_flf2v",
+        "title": "MiniMax H3 Max: FLF2V",
+        "task": "FLF2V",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate polished, prompt-faithful videos faster than real time with MiniMax H3 Max, a post-trained model tuned for stronger prompt adherence and vivid cinematic aesthetics. This workflow supports text-to-video, image-to-video animation, and directed first-to-last-frame transitions, delivering clean compositions and cohesive lighting directly from the model. Ideal for rapid concept exploration, cinematic motion graphics, and high-throughput video comparison.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "flf2v"],
+          "model_options": {
+            "MinimaxHailuo03FirstLastFrameNode": ["MiniMax H3"]
+          }
+        }
+      },
+      {
+        "name": "api_minimax_h3_max_t2v",
+        "title": "MiniMax H3 Max: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate polished, prompt-faithful video from text using Minimax H3 Max, producing a single finished video clip with no input files required. Ideal for rapid concept exploration, cinematic text-to-video scenes, and high-throughput creative iteration where speed and visual quality matter.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-video"],
+          "model_options": {
+            "MinimaxHailuo03TextToVideoNode": ["MiniMax H3"]
+          }
+        }
+      },
+      {
         "name": "api_wan3_0_r2v",
         "title": "Wan3.0: Reference to Video",
         "task": "Reference to Video",
@@ -7573,22 +7633,19 @@
       {
         "name": "templates-car_product",
         "title": "1 Image to Car Product Shots",
-        "task": "Image to Video",
-        "model": "Seedream",
+        "task": "FLF2V",
+        "model": "Kling",
         "freshness": "established",
         "usage": 19,
         "recommend": "low",
-        "description": "Upload a single vehicle photo to generate a professional multi‑angle product video for marketing. Leveraging the Seedream high‑quality model, it provides flexible resolution support and studio‑quality output. This workflow uses third‑party API execution via Seedream to produce multiple camera angle clips of your car.",
+        "description": "Upload a photo of your vehicle and generate a studio quality video of the vehicle from multiple angles.",
         "io": {
-          "inputs": ["image: Photo of a vehicle for product video generation"],
-          "outputs": ["video: Studio-quality multi-angle vehicle product video"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
-          "workflow": ["image-to-video", "api", "flf2v"],
-          "model_options": {
-            "ByteDanceSeedreamNode": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
-          }
+          "workflow": ["api", "flf2v", "image-to-video"]
         }
       },
       {
@@ -7857,17 +7914,14 @@
         "freshness": "established",
         "usage": 17,
         "recommend": "low",
-        "description": "Upload a product image and generate a dynamic product scene transformation using Nano Banana Pro and Wan VACE 2.1. Outputs two transformed videos plus a style reference image.",
+        "description": "Upload a product video and generate a dynamic product scene transformation using Nano Banana Pro & Wan VACE 2.1",
         "io": {
-          "inputs": ["image: Product image to transform into a dynamic scene"],
-          "outputs": ["video×2: Transformed product scene videos", "image: Style reference image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
-          "workflow": ["api", "style-transfer"],
-          "model_options": {
-            "GeminiImage2Node": ["gemini-3-pro-image-preview", "Nano Banana 2 (Gemini 3.1 Flash Image)"]
-          }
+          "workflow": ["api", "style-transfer"]
         }
       },
       {
@@ -7955,21 +8009,18 @@
         "name": "templates-led_billboard",
         "title": "LED Billboard Message",
         "task": "Brand Design",
-        "model": "Kling",
+        "model": "Gemini3 Pro Image Preview",
         "freshness": "established",
         "usage": 1,
         "recommend": "low",
-        "description": "Upload a blank billboard image and a text message. Kling’s Start-End Frame model generates a cinematic zoom-in video that reveals your message on the billboard. Optionally use Gemini to create the final frame with your overlay text. This workflow runs via a third-party API; response time varies with server load.",
+        "description": "Upload a blank billboard and overlay text. Generate a smooth zoom in shot revealing your message.",
         "io": {
-          "inputs": ["image×2: First and last frames for start-end frame video generation", "text: Text message to display on the billboard"],
-          "outputs": ["video: Smooth zoom-in video revealing the billboard message"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
-          "workflow": ["api", "brand-design"],
-          "model_options": {
-            "GeminiImage2Node": ["gemini-3-pro-image-preview", "Nano Banana 2 (Gemini 3.1 Flash Image)"]
-          }
+          "workflow": ["api", "brand-design"]
         }
       }
     ]
