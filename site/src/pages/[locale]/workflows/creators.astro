@@ -47,7 +47,10 @@ try {
   );
 } catch (err) {
   console.error('Hub API failed for creators page:', err);
-  // API failed — show empty page
+  // API failed — show empty page, but never let the CDN keep it. The ISR policy
+  // set above would cache an empty creators page for 60s and go on serving it
+  // stale for 10 minutes after the hub API had already recovered.
+  Astro.response.headers.set('CDN-Cache-Control', 'no-store');
 }
 
 // Group templates by username

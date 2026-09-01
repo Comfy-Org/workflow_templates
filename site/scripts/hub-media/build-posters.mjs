@@ -1,11 +1,16 @@
 /**
- * Generate poster frames and right-sized video copies for the hub's card media,
- * upload them to GCS, and emit a manifest the site can look assets up in.
+ * Generate poster frames for the hub's card videos, upload them to GCS, and emit
+ * the manifest of asset ids that `encode-video.mjs` then works through.
  *
- * Encoder settings were chosen from measured SSIM against the originals, not by
- * taste: native resolution kept (capped at 1280 wide), libx264 crf 30, which
- * scored 0.9827 and is 93.7% smaller. Anything above 0.98 is visually
- * transparent, so this does not trade quality for bytes.
+ * Posters only. This script used to also encode and upload a crf30, 1280-wide
+ * copy of every video, which was wrong twice over: those settings were gated on
+ * SSIM, which `encode-video.mjs` replaced with VMAF after SSIM passed a file at
+ * 0.9665 that VMAF scored 78.8 and that was visibly degraded; and downscaling to
+ * the card box ignored that the same asset is the detail-page hero at up to
+ * 2044 px. It also published to `video/<id>.mp4` before any quality gate had
+ * run, so an interrupted pipeline left an ungated encode sitting at the path the
+ * gated one is meant to occupy. Video is encoded, judged and uploaded in exactly
+ * one place now.
  *
  * Idempotent: an asset already present in the manifest is skipped, so a partial
  * run can simply be re-run.
@@ -20,18 +25,17 @@ import os from 'node:os';
 
 const run = promisify(execFile);
 
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
-const FFPROBE = '/opt/homebrew/bin/ffprobe';
+/** Resolved from PATH, so the task runs wherever ffmpeg is installed rather
+ *  than only on an Apple-Silicon Homebrew box. Set FFMPEG/FFPROBE to point at a
+ *  specific build. */
+const FFMPEG = process.env.FFMPEG || 'ffmpeg';
+const FFPROBE = process.env.FFPROBE || 'ffprobe';
 const BUCKET = 'gs://comfy-org-videos/hub-media';
 const PUBLIC_BASE = 'https://media.comfy.org/hub-media';
 
-/** The card box is at most ~1044 device px and centre-crops a 16:9 source to 4:3,
- *  so 1280 covers every measured viewport. Never upscale past the source. */
-const MAX_VIDEO_WIDTH = 1280;
 /** The poster is a placeholder that a playing video replaces within a moment,
  *  so it is sized for the crop, not for pixel-perfect stills. */
 const POSTER_WIDTH = 640;
-const VIDEO_CRF = 30;
 
 const args = process.argv.slice(2);
 const limit = Number(args.find((a) => a.startsWith('--limit='))?.split('=')[1] ?? Infinity);
@@ -65,10 +69,9 @@ for (const url of sources) {
 
   const src = path.join(tmp, `${id}.src`);
   const poster = path.join(tmp, `${id}.jpg`);
-  const video = path.join(tmp, `${id}.mp4`);
 
   try {
-    // Download once; both outputs derive from the same local copy.
+    // Probe and poster both read the same local copy, so fetch it once.
     await run('curl', ['-sSL', '--max-time', '300', '-o', src, url]);
     const srcBytes = fs.statSync(src).size;
 
@@ -91,52 +94,34 @@ for (const url of sources) {
       '-q:v', '4', poster,
     ]);
 
-    // Only scale down, never up: an 800px source stays 800px.
-    const vf = w > MAX_VIDEO_WIDTH
-      ? `scale=${MAX_VIDEO_WIDTH}:-2:flags=lanczos`
-      : 'scale=trunc(iw/2)*2:trunc(ih/2)*2';
-
-    await run(FFMPEG, [
-      '-hide_banner', '-loglevel', 'error', '-y', '-i', src,
-      '-vf', vf,
-      '-c:v', 'libx264', '-crf', String(VIDEO_CRF), '-preset', 'slow',
-      '-profile:v', 'high', '-pix_fmt', 'yuv420p',
-      '-an',                       // cards are always muted; audio is dead weight
-      '-movflags', '+faststart',   // moov atom first so playback can start early
-      video,
-    ], { maxBuffer: 1 << 26 });
-
     const posterBytes = fs.statSync(poster).size;
-    const videoBytes = fs.statSync(video).size;
-    const outW = w > MAX_VIDEO_WIDTH ? MAX_VIDEO_WIDTH : w;
-    const outH = Math.round((h / w) * outW / 2) * 2;
 
     if (!dryRun) {
       await run('gcloud', ['storage', 'cp', poster, `${BUCKET}/posters/${id}.jpg`,
         '--cache-control=public, max-age=31536000, immutable']);
-      await run('gcloud', ['storage', 'cp', video, `${BUCKET}/video/${id}.mp4`,
-        '--cache-control=public, max-age=31536000, immutable']);
     }
 
+    // Source dimensions, recorded for the runbook's bucket-vs-manifest diff. No
+    // video URL: `encode-video.mjs` decides whether a gated copy exists at all,
+    // and the site reads that decision from `hub-media-assets.json`, never from
+    // this intermediate manifest.
     manifest[id] = {
       poster: `${PUBLIC_BASE}/posters/${id}.jpg`,
-      video: `${PUBLIC_BASE}/video/${id}.mp4`,
-      width: outW,
-      height: outH,
+      width: w,
+      height: h,
     };
 
-    bytesIn += srcBytes; bytesOut += videoBytes + posterBytes;
+    bytesIn += srcBytes; bytesOut += posterBytes;
     done++;
     console.log(
       `  ${id}  ${w}x${h} ${(srcBytes / 1048576).toFixed(2)}MB` +
-      ` -> video ${(videoBytes / 1024).toFixed(0)}KB + poster ${(posterBytes / 1024).toFixed(0)}KB` +
-      `  (${(100 - (videoBytes + posterBytes) * 100 / srcBytes).toFixed(1)}% off)`
+      ` -> poster ${(posterBytes / 1024).toFixed(0)}KB`
     );
   } catch (err) {
     failed++;
     console.error(`  FAILED ${id}: ${String(err.message).split('\n')[0]}`);
   } finally {
-    for (const f of [src, poster, video]) fs.rmSync(f, { force: true });
+    for (const f of [src, poster]) fs.rmSync(f, { force: true });
   }
 
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
@@ -145,6 +130,5 @@ for (const url of sources) {
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(
   `\ndone=${done} skipped=${skipped} failed=${failed}` +
-  (bytesIn ? `  ${(bytesIn / 1048576).toFixed(1)}MB in -> ${(bytesOut / 1048576).toFixed(1)}MB out` +
-    ` (${(100 - bytesOut * 100 / bytesIn).toFixed(1)}% off)` : '')
+  (bytesIn ? `  ${(bytesIn / 1048576).toFixed(1)}MB of source -> ${(bytesOut / 1024).toFixed(0)}KB of posters` : '')
 );

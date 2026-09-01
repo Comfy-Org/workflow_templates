@@ -23,8 +23,12 @@ import path from 'node:path';
 import os from 'node:os';
 
 const run = promisify(execFile);
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
-const FFPROBE = '/opt/homebrew/bin/ffprobe';
+/** Resolved from PATH, so the task runs wherever ffmpeg is installed rather
+ *  than only on an Apple-Silicon Homebrew box. Set FFMPEG/FFPROBE to point at a
+ *  specific build: the stock ffmpeg often ships without libvmaf, which this
+ *  script needs. */
+const FFMPEG = process.env.FFMPEG || 'ffmpeg';
+const FFPROBE = process.env.FFPROBE || 'ffprobe';
 const BUCKET = 'gs://comfy-org-videos/hub-media';
 const MAX_WIDTH = 1920;
 const FLOOR = Number(process.argv.slice(2).find((a) => a.startsWith('--floor='))?.split('=')[1] ?? 93);
@@ -148,6 +152,18 @@ async function processOne(id, dir) {
       report[id] = { pass: true, vmaf: chosen.score, crf: chosen.crf, srcBytes, outBytes: chosen.bytes, reviewed: true };
       done++;
       console.log(`  ${id.slice(0, 8)}  crf${chosen.crf}  VMAF ${chosen.score?.toFixed(1)}  REVIEWED OVERRIDE, shipped`);
+      return;
+    }
+
+    // The ladder leaves `chosen` holding the LAST candidate when none of them
+    // reached the floor, so the floor has to be asserted here rather than
+    // inferred from the loop. Without this a file that topped out at VMAF 90
+    // still shipped, purely because it was 25% smaller, which is precisely the
+    // outcome the floor exists to prevent.
+    if (chosen.score === null || chosen.score < FLOOR) {
+      report[id] = { pass: false, skip: 'below-floor', vmaf: chosen.score, crf: chosen.crf };
+      kept++;
+      console.log(`  ${id.slice(0, 8)}  keep original (best VMAF ${chosen.score?.toFixed(1) ?? 'n/a'} < floor ${FLOOR})`);
       return;
     }
 

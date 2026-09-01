@@ -20,8 +20,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const run = promisify(execFile);
-const FFMPEG = '/opt/homebrew/bin/ffmpeg';
-const FFPROBE = '/opt/homebrew/bin/ffprobe';
+/** Resolved from PATH, so the task runs wherever ffmpeg is installed rather
+ *  than only on an Apple-Silicon Homebrew box. Set FFMPEG/FFPROBE to point at a
+ *  specific build. */
+const FFMPEG = process.env.FFMPEG || 'ffmpeg';
+const FFPROBE = process.env.FFPROBE || 'ffprobe';
 const PUBLIC_BASE = 'https://media.comfy.org/hub-media';
 const MAX_WIDTH = 2048;
 const JPEG_Q = 4;

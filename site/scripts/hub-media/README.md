@@ -12,16 +12,23 @@ images shipped as raw PNG averaging ~2 MB into a box about 400 px wide.
 `ffmpeg` (with `libvmaf`), `ffprobe`, and an authenticated `gcloud`. Not run in
 CI: it is a maintenance task, like `refresh-ashby-snapshot`.
 
+Both binaries are resolved from `PATH`. Set `FFMPEG` and `FFPROBE` to override,
+which you will need if the `ffmpeg` on your `PATH` was built without `libvmaf`:
+
+```sh
+FFMPEG=/opt/homebrew/opt/ffmpeg/bin/ffmpeg node scripts/hub-media/encode-video.mjs ...
+```
+
 ## Running
 
 ```sh
 # 1. current catalog, since the site builds against the LIVE hub API
 curl -s https://comfy.org/workflows/grid.json -o /tmp/grid.json
 
-# 2. posters
+# 2. posters, and the manifest of ids step 3 works through
 node scripts/hub-media/build-posters.mjs --grid=/tmp/grid.json --manifest=/tmp/media.json
 
-# 3. video, quality-gated
+# 3. video, quality-gated. The ONLY step that writes video/<id>.mp4.
 node scripts/hub-media/encode-video.mjs \
   --grid=/tmp/grid.json --manifest=/tmp/media.json --report=/tmp/vmaf.json \
   --stage=/tmp/stage --floor=95 --min-saving=0.25 --jobs=8
@@ -61,6 +68,17 @@ already `loading="lazy"`, so visibility was never their problem.
 **Compare like with like.** Reset presentation timestamps (`setpts=PTS-STARTPTS`)
 and match dimensions before scoring. An edit-list offset once made a fine file
 read as 0.7966, and the repair step wasted bitrate "fixing" it.
+
+**Nothing publishes a video before the gate has judged it.** `build-posters.mjs`
+used to upload its own crf30 copy to `video/<id>.mp4` in step 2, which is the
+path step 3's gated encode occupies. An interrupted run then left an ungated
+file sitting where a judged one was meant to be. Step 3 is the only writer now.
+
+**The VMAF floor is asserted, not assumed.** The crf ladder stops early when a
+candidate clears the floor, so when *none* of them does it simply ends holding
+the last one. Passing that to the byte-saving check shipped sub-floor files that
+happened to be small enough. The floor is checked explicitly before upload; only
+`reviewed-overrides.json` bypasses it.
 
 **Regenerate immediately before shipping.** The site builds against the live hub
 API, so a manifest built days earlier misses new assets. That once left the

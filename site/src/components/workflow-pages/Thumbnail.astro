@@ -12,6 +12,7 @@
 import { COMFY_GLYPH } from './comfy-glyph';
 import { isVideoFile } from '../../lib/media-utils';
 import { hubImageFor, hubMediaFor } from '../../lib/hub-media';
+import { getVideoFrameUrl } from '../../lib/video-thumbnail';
 
 interface Props {
   src?: string | null;
@@ -28,7 +29,12 @@ const isVideo = Boolean(src && isVideoFile(src));
 const resolvedSrc = src
   ? (isVideo ? hubMediaFor(src)?.video : hubImageFor(src)) ?? src
   : src;
-const posterSrc = src && isVideo ? hubMediaFor(src)?.poster : undefined;
+// Falls back to the Cloudflare frame transform when the asset has no generated
+// poster, matching ThumbnailDisplay and the carousel. This matters more here
+// than anywhere: the video below is `preload="none"` and gated on visibility,
+// so with no poster the card paints an empty box until it scrolls into view.
+const posterSrc =
+  src && isVideo ? (hubMediaFor(src)?.poster ?? getVideoFrameUrl(src) ?? undefined) : undefined;
 ---
 
 {
@@ -102,9 +108,10 @@ const posterSrc = src && isVideo ? hubMediaFor(src)?.poster : undefined;
       { rootMargin: '200px' }
     );
     videos.forEach((video) => observer.observe(video));
-  } else {
+  } else if (!reducedMotion.matches) {
     // No observer support: fall back to today's behaviour rather than leaving
-    // a reader looking at posters that never move.
+    // a reader looking at posters that never move. Still gated on the motion
+    // preference, exactly as the observer path above is.
     videos.forEach((video) => video.play().catch(() => {}));
   }
 </script>

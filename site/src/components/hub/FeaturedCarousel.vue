@@ -4,10 +4,10 @@
  * Auto-rotates the most-used templates, pauses on hover, loops, and is fully
  * click-through to each template's workflow page. Renders one hero card per view.
  */
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, type ComponentPublicInstance } from 'vue';
 import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
-import { usePreferredReducedMotion, useTemplateRefsList } from '@vueuse/core';
+import { usePreferredReducedMotion } from '@vueuse/core';
 import type { IslandTemplate } from '@/lib/hub-api';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
@@ -117,19 +117,30 @@ function onVideoError(key: string) {
  * Every slide carried `autoplay`, so all six hero videos downloaded on load to
  * show one. Slide one still autoplays exactly as before; the rest load nothing
  * until they become active, which is the first moment they are visible.
+ *
+ * Keyed by slide, not collected into a positional list. A still-image slate
+ * renders no `<video>` at all, so a list holds only the video slides and its
+ * indexes stop matching the carousel's own slide index the moment an image
+ * comes first: slide 1 would play the video belonging to slide 2 and pause the
+ * one on screen. The same divergence appears mid-session when a video errors
+ * and is replaced by its poster `<img>`. Not reactive: nothing renders from it.
  */
-const videoRefs = useTemplateRefsList<HTMLVideoElement>();
+const videoEls = new Map<string, HTMLVideoElement>();
+function setVideoEl(key: string, el: Element | ComponentPublicInstance | null) {
+  if (el instanceof HTMLVideoElement) videoEls.set(key, el);
+  // Vue passes null on unmount, which is also how the error swap unregisters.
+  else videoEls.delete(key);
+}
 
 onMounted(() => {
   const api = emblaApi.value;
   if (!api) return;
   api.on('select', () => {
-    const active = api.selectedScrollSnap();
-    videoRefs.value.forEach((video, index) => {
-      if (!video) return;
-      if (index === active && autoplayEnabled) video.play().catch(() => {});
+    const activeKey = slides.value[api.selectedScrollSnap()]?.key;
+    for (const [key, video] of videoEls) {
+      if (key === activeKey && autoplayEnabled) video.play().catch(() => {});
       else video.pause();
-    });
+    }
   });
 });
 
@@ -158,7 +169,7 @@ onUnmounted(() => {
             :src="slide.videoUrl"
             :poster="slide.posterUrl || undefined"
             class="h-full w-full object-cover"
-            :ref="videoRefs.set"
+            :ref="(el) => setVideoEl(slide.key, el)"
             :preload="index === 0 ? 'auto' : 'none'"
             :autoplay="autoplayEnabled && index === 0"
             muted
