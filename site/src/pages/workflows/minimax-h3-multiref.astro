@@ -51,11 +51,12 @@ const description =
 /**
  * Held noindex in BOTH states, deliberately, and NOT wired to the experiment flag.
  *
- * The flag flips unattended when the demo's backend goes down, and indexability
- * that flaps with backend uptime teaches crawlers this URL is unreliable —
- * strictly worse for the ranking this page was built to capture. Ranking capture
- * gets earned by promoting a proven page in one reviewed commit, not by an
- * automated kill switch. See docs/shipping-experiments-policy.md.
+ * The flag moves whenever the demo's backend goes down — a health check opens
+ * the flag-off PR, a human merges it and the next build ships it — so tying
+ * indexability to it would let this URL's crawlability flap with backend
+ * uptime, which teaches crawlers it is unreliable and is strictly worse for the
+ * ranking this page was built to capture. Ranking gets earned by promoting a
+ * proven page in one reviewed commit. See docs/shipping-experiments-policy.md.
  */
 const noindex = true;
 ---

@@ -21,9 +21,14 @@ export default defineConfig({
     fileParallelism: false,
     sequence: { concurrent: false },
     // Default off: one live deployment, one job, and a retry of the submit
-    // would put a second GPU job on it. The idempotent GETs set their own
-    // `retry` instead, because a failed run here prepares a kill switch and a
-    // single blip from the marketing CDN must not switch a working demo off.
+    // would put a second GPU job on it. Specs that cannot queue work set their
+    // own `retry` instead — the read-only GETs, and the /run probe, whose empty
+    // body is rejected before any GPU time. A failed run here prepares a kill
+    // switch, so one blip from the marketing CDN must not switch a demo off.
+    // The three that stay at 0 are the ones tied to a real job — submit, poll
+    // and cancel. A rerun would re-queue, orphan or chase a job the previous
+    // attempt already dealt with, so submit and poll hand-roll narrower
+    // in-place retries instead.
     retry: 0,
   },
 });

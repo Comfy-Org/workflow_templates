@@ -35,11 +35,13 @@
 # a judgement call about whether it is worth showing, not something a passing
 # health check should decide on its own.
 #
-# Requires, in this repo's settings:
+# Uses, from this repo's settings, all optional:
 #   secrets.SLACK_BOT_TOKEN               — same bot used by ComfyUI_frontend
 #   vars.SLACK_HUB_ALERTS_CHANNEL_ID      — channel for these alerts
-# Both are optional at runtime: the notify step warns and skips if either is
-# unset, so the PR still gets opened.
+#   secrets.PERSONAL_ACCESS_TOKEN         — same PAT as i18n-update-hub.yml, so
+#                                           the site's checks run on the PR
+# Without the first two the notify step says so and skips, and the PR is still
+# opened; without the PAT the PR is opened by GITHUB_TOKEN instead.
 name: MiniMax Demo Integration
 
 on:
@@ -132,11 +134,18 @@ jobs:
         run: |
           # What production is actually serving, which is what decides whether
           # a flag flip would change anything for a visitor. Emitted by the page
-          # spec as a fixed token; absent when the page never answered, and an
-          # unknown state must not arm the kill switch.
+          # spec as a fixed token.
+          #
+          # Three states, not two. The token is printed after the page spec's
+          # status assertion, so a page that does not answer at all produces
+          # neither `true` nor `false`. That case must not arm the kill switch —
+          # a flag flip cannot fix a missing page — but it must still be spoken
+          # about, so it is named `unknown` rather than left empty: an empty
+          # string matched no notify clause either, and the worst outage the
+          # demo can have was the one thing this workflow said nothing about.
           demo_live=$(grep -m1 -oE 'DEMO_RUNNER_LIVE=(true|false)' \
             "$RUNNER_TEMP/integration.log" | cut -d= -f2 || true)
-          echo "demo_live=$demo_live" >> "$GITHUB_OUTPUT"
+          echo "demo_live=${demo_live:-unknown}" >> "$GITHUB_OUTPUT"
 
           {
             echo "## MiniMax H3 demo integration"
@@ -289,6 +298,10 @@ jobs:
         #     will ship the fallback. Silence here was the gap that keying on
         #     the repo flag created; it ends at the next deploy, so it cannot
         #     repeat indefinitely.
+        #   - the page did not answer at all, so we cannot tell what is being
+        #     served and the kill switch is deliberately not armed. That is the
+        #     demo's worst outage and the one a flag cannot address, so saying
+        #     nothing is the wrong answer even though acting would be too.
         #   - somebody ran this by hand and is waiting for the answer
         #
         # Keyed on `opened`, not on `changed`: while a kill-switch PR sits
@@ -308,6 +321,9 @@ jobs:
               && steps.summary.outputs.demo_live == 'true'
               && steps.flag.outputs.enabled != 'true'
               && env.IS_PRODUCTION == 'true')
+          || (steps.test.outcome == 'failure'
+              && steps.summary.outputs.demo_live == 'unknown'
+              && env.IS_PRODUCTION == 'true')
           || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
@@ -318,6 +334,10 @@ jobs:
           PR_URL: ${{ steps.pr.outputs.pr_url }}
           PR_OUTCOME: ${{ steps.pr.outcome }}
           DEMO_LIVE: ${{ steps.summary.outputs.demo_live }}
+          # DEMO_LIVE describes whichever origin was tested, but FLAG_ENABLED
+          # always describes `main`. Comparing them is only meaningful for
+          # production, so the branches that do do it check this first.
+          IS_PRODUCTION: ${{ env.IS_PRODUCTION }}
           OUTCOME: ${{ steps.test.outcome }}
           # Through the environment like everything else in this file — never
           # interpolated into the script below, where a value containing $( )
@@ -352,7 +372,12 @@ jobs:
             TEXT="${TEXT}"$'\n'">${REASON}"
             TEXT="${TEXT}"$'\n'"<${PR_URL}|Review and merge the kill-switch PR>, then <${DEPLOY_URL}|run Deploy Template Site> to serve the static fallback."
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
-          elif [ "$OUTCOME" != "success" ] && [ "$DEMO_LIVE" = "true" ] && [ "$FLAG_ENABLED" != "true" ]; then
+          elif [ "$OUTCOME" != "success" ] && [ "$DEMO_LIVE" = "unknown" ] && [ "$IS_PRODUCTION" = "true" ]; then
+            TEXT=":rotating_light: *The MiniMax H3 demo page did not answer.* The integration test failed against ${BASE_URL} before it could tell what the page is serving, so the flag was left alone — switching it off cannot bring back a page that is not there."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"Check that the site deployed and that the router still forwards \`/workflows/*\`."
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$OUTCOME" != "success" ] && [ "$DEMO_LIVE" = "true" ] && [ "$FLAG_ENABLED" != "true" ] && [ "$IS_PRODUCTION" = "true" ]; then
             TEXT=":rotating_light: *MiniMax H3 demo is broken in front of users and the flag cannot fix it.* The integration test failed against ${BASE_URL} and the deployed page is still serving the runner, but \`main\` already has \`minimaxH3Demo\` off — so there is nothing to switch and *only a deploy will replace it with the fallback*."
             TEXT="${TEXT}"$'\n'">${REASON}"
             TEXT="${TEXT}"$'\n'"<${DEPLOY_URL}|Run Deploy Template Site> to ship the flag that is already committed."

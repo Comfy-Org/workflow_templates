@@ -1,8 +1,11 @@
 /**
  * End-to-end integration check for the MiniMax H3 multi-reference demo.
  *
- * Drives the same four calls the page makes, in the same order, against a
- * REAL deployment: queue readout -> submit three references -> poll -> cancel.
+ * Drives the four calls the page makes, in the same order, against a REAL
+ * deployment — queue readout -> submit three references -> poll -> cancel —
+ * and, around them, the things those calls depend on and would otherwise be
+ * green without: the page itself, the island bundles that make it interactive,
+ * the CDN reads it uploads, and the URL forms it requests before redirects.
  * Nothing is mocked, because every regression this guards against lived in the
  * space between components that unit tests stub out:
  *
@@ -289,12 +292,29 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
 
-    if (res.status < 300 || res.status >= 400) return;
+    if (res.status >= 300 && res.status < 400) {
+      expect(
+        res.status,
+        `${API}/run answered ${res.status}, which browsers replay as a GET without the upload. Only 307/308 preserve a multipart POST.`
+      ).toBeGreaterThan(306);
 
+      const target = new URL(res.headers.get('location') ?? '', `${API}/run`).href;
+      expect(
+        target,
+        `${API}/run redirected to ${target}, which is not the form the submit spec drives.`
+      ).toBe(`${API}/run/`);
+      return;
+    }
+
+    // Served without a redirect, so the status has to prove the handler ran.
+    // An empty body is exactly what it rejects with 400; a 404, 403, 405 or 5xx
+    // means the page's own URL never reached it. Returning early on any non-3xx
+    // — as this did — made the spec assert nothing at all on precisely the
+    // outage it exists to catch, while the sibling GET probe above failed.
     expect(
       res.status,
-      `${API}/run answered ${res.status}, which browsers replay as a GET without the upload. Only 307/308 preserve a multipart POST.`
-    ).toBeGreaterThan(306);
+      `${API}/run is what the page posts to, and it answered ${res.status} rather than reaching the handler (which rejects an empty body with 400). ${diagnose(res.status, '/run')}`
+    ).toBe(400);
   });
 
   it('serves the reference images the page uploads, with CORS', { retry: 2 }, async () => {
