@@ -315,6 +315,7 @@ def infer_task(name: str, group_type: str, tags: list[str]) -> str:
         (["vid2vid", "video_to_video", "video-to-video"], "Video to Video"),
         (["frame_interpolation", "slowmo"], "Frame Interpolation"),
         (["text_to_music", "text-to-music", "t2m"], "Text to Music"),
+        (["speech_to_text", "speech-to-text"], "Speech to Text"),
         (["text_to_speech", "text-to-speech", "tts"], "Text to Speech"),
         (["audio_to_audio", "audio-to-audio", "a2a"], "Audio to Audio"),
         (["voice_conversion", "voice_convert"], "Voice Conversion"),
@@ -369,6 +370,12 @@ def infer_task_type(name: str) -> str:
         return "t2-3d"
     if any(x in name_l for x in ["img2_3d", "img2-3d", "image_to_3d", "image-to-3d"]):
         return "i2-3d"
+    if any(x in name_l for x in ["speech_to_text", "speech-to-text"]):
+        return "stt"
+    if any(x in name_l for x in ["voice_clone", "voice-clone"]):
+        return "voice-clone"
+    if any(x in name_l for x in ["text_to_speech", "text-to-speech", "tts"]):
+        return "tts"
     if any(x in name_l for x in ["text_to_audio", "text-to-audio", "text_to_music", "text-to-music"]):
         return "t2a"
     if any(x in name_l for x in ["text_gen", "llm", "chat"]):
@@ -534,6 +541,24 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
         return _io(
             inputs=[_encode_slot("text", "Audio prompt")],
             outputs=[_encode_slot("audio", "Generated audio")],
+        )
+    if task_type == "tts":
+        return _io(
+            inputs=[_encode_slot("text", "Prompt")],
+            outputs=[_encode_slot("audio", "Generated speech")],
+        )
+    if task_type == "voice-clone":
+        return _io(
+            inputs=[
+                _encode_slot("audio", "Reference voice recording"),
+                _encode_slot("text", "Prompt"),
+            ],
+            outputs=[_encode_slot("audio", "Generated speech")],
+        )
+    if task_type == "stt":
+        return _io(
+            inputs=[_encode_slot("audio", "Audio to transcribe")],
+            outputs=[_encode_slot("text", "Transcription")],
         )
     out_type = "video" if has_vid else "image"
     return _io(
