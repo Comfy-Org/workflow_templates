@@ -25,10 +25,13 @@ export default defineConfig({
     // own `retry` instead — the read-only GETs, and the /run probe, whose empty
     // body is rejected before any GPU time. A failed run here prepares a kill
     // switch, so one blip from the marketing CDN must not switch a demo off.
-    // The three that stay at 0 are the ones tied to a real job — submit, poll
-    // and cancel. A rerun would re-queue, orphan or chase a job the previous
-    // attempt already dealt with, so submit and poll hand-roll narrower
-    // in-place retries instead.
+    // The three that stay at 0 are the ones tied to a real job, for two
+    // different reasons. Rerunning the submit would queue a second one, and
+    // rerunning the poll would chase a job the earlier attempt had moved past,
+    // so those two hand-roll narrower in-place retries instead. Cancel could
+    // safely retry — a repeated DELETE answers with the same terminal status
+    // the spec accepts — and is left at 0 only because a failure there costs a
+    // spurious alert rather than a leaked job: afterAll still releases it.
     retry: 0,
   },
 });
