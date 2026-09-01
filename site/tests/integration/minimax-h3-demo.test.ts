@@ -6,12 +6,16 @@
  * Nothing is mocked, because every regression this guards against lived in the
  * space between components that unit tests stub out:
  *
- *   - FE-1932: the edge router had no rule for `/api/workflows/*`, so the page
+ *   - FE-1932: the edge router had no rule for the demo's API path, so the page
  *     rendered but every call landed on the marketing origin and 404'd. Both
- *     origins were individually healthy.
- *   - The CSRF follow-on: Astro compares `Origin` against its own computed
- *     origin, which behind the router is the proxied host, so a browser POST
- *     from comfy.org is rejected 403 unless `security.allowedDomains` names it.
+ *     origins were individually healthy. #1213 fixed it by moving the routes
+ *     under `/workflows/api/*`, which the router's existing `/workflows/*` rule
+ *     already forwards — so what needs guarding now is that they stay there.
+ *   - The CSRF follow-on (#1215): behind the router Astro computes its origin
+ *     from the Vercel host it was addressed as, while the browser sends
+ *     `Origin: https://comfy.org`, so the built-in check can never pass. It is
+ *     switched off, and the mutating routes run their own origin allowlist in
+ *     `src/lib/demos/mmh3/server.ts` instead.
  *   - workflow_templates#1208: the reference images 404'd on the CDN, so the
  *     page could not assemble an upload at all.
  *
@@ -31,8 +35,18 @@ import { afterAll, describe, expect, it } from 'vitest';
 import { exampleKeyframeUrl } from '../../src/lib/demos/mmh3/config';
 
 const BASE_URL = (process.env.DEMO_BASE_URL ?? 'https://comfy.org').replace(/\/+$/, '');
-const API = `${BASE_URL}/api/workflows/minimax-h3-multiref`;
+const API = `${BASE_URL}/workflows/api/minimax-h3-multiref`;
 const PAGE = `${BASE_URL}/workflows/minimax-h3-multiref/`;
+
+/**
+ * The trailing slash is load-bearing. comfy.org redirects the slashless form to
+ * this one (301 on GET, 308 on POST/DELETE), and Node's fetch does not re-send
+ * the multipart `Content-Type` boundary across that redirect — the submit
+ * arrives unparseable and the origin answers `400 Expected multipart/form-data`.
+ * Browsers replay the body correctly, so dropping the slash reports a healthy
+ * demo as broken, and this check switches the demo off when it goes red.
+ */
+const endpoint = (path: string) => `${API}${path}/`;
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const SUBMIT_TIMEOUT_MS = 90_000;
@@ -65,14 +79,16 @@ function diagnose(status: number, path: string, kind: 'api' | 'page' = 'api'): s
   const where = `${path} returned ${status}`;
   if (status === 404) {
     return kind === 'api'
-      ? `${where}. The request did not reach the hub app. The edge router (comfy-router) forwards /workflows/* but must also forward /api/workflows/* to the workflows origin — this is the FE-1932 failure exactly.`
+      ? `${where}. The request did not reach the hub app. These routes live under /workflows/api/* precisely so the router's existing /workflows/* rule forwards them (#1213); a 404 means either they moved back out of that prefix, or that rule stopped forwarding to the workflows origin — the FE-1932 failure again.`
       : `${where}. The page itself is missing from the deployed site — check that it built, and that the router still forwards /workflows/* here.`;
   }
   if (kind === 'page') return where;
 
   switch (status) {
     case 403:
-      return `${where}. Astro's CSRF check rejected the request: its computed origin does not match the browser's "Origin: ${BASE_URL}". Behind the comfy.org router this needs security.allowedDomains in astro.config.mjs to name the proxied host (hostname only — adding a protocol makes Astro drop X-Forwarded-Proto).`;
+      return `${where}. The origin allowlist rejected "Origin: ${BASE_URL}". These routes do not use Astro's built-in CSRF check — it cannot pass behind the router, so astro.config.mjs sets security.checkOrigin: false and crossSiteRejection() in src/lib/demos/mmh3/server.ts guards the mutating routes instead. Add the host there (#1215).`;
+    case 400:
+      return `${where}. The origin reached the route but could not read the request. If the body says "Expected multipart/form-data", the request was redirected on the way in and lost its Content-Type boundary — see the trailing-slash note on \`endpoint\` above.`;
     case 502:
       return `${where}. The hub app was reached but the Comfy deployment behind it errored or is down. Expected while the dev platform is in private beta.`;
     case 413:
@@ -83,12 +99,13 @@ function diagnose(status: number, path: string, kind: 'api' | 'page' = 'api'): s
 }
 
 async function request(path: string, init: RequestInit = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
-  const res = await fetch(`${API}${path}`, {
+  const res = await fetch(endpoint(path), {
     ...init,
     signal: AbortSignal.timeout(timeoutMs),
   });
   const body = await res.text();
-  return { res, body, detail: `${diagnose(res.status, path)}\nBody: ${body.slice(0, 400)}` };
+  const hop = res.redirected ? `\nRedirected to ${res.url} instead of being served directly.` : '';
+  return { res, body, detail: `${diagnose(res.status, path)}${hop}\nBody: ${body.slice(0, 400)}` };
 }
 
 function parseJson(body: string, detail: string): Record<string, unknown> {
@@ -107,7 +124,7 @@ afterAll(async () => {
   // mid-flight. A leaked job would keep occupying the demo's single deployment.
   if (!jobId) return;
   try {
-    await fetch(`${API}/job/${jobId}`, {
+    await fetch(endpoint(`/job/${jobId}`), {
       method: 'DELETE',
       headers: browserHeaders(),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
@@ -164,11 +181,17 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     }
 
     // No explicit content-type: fetch sets multipart/form-data with the
-    // boundary, which is exactly the shape the CSRF check inspects.
+    // boundary, which is the shape the route's FormData parser requires.
     const { res, body, detail } = await request(
       '/run',
       { method: 'POST', headers: browserHeaders(), body: form },
       SUBMIT_TIMEOUT_MS
+    );
+
+    // Before the status, not after: a redirect is the cause and the 400 it
+    // produces is only the symptom, so asserting status first hides it.
+    expect(res.redirected, `the multipart submit was redirected to ${res.url}. ${detail}`).toBe(
+      false
     );
 
     expect(res.status, detail).toBe(200);

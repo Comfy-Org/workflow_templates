@@ -141,7 +141,14 @@ code. If you cannot, it is not instrumented.
 ## Rule 4 — Ship it behind a flag, with a health check that flips it
 
 Anything depending on a pre-alpha or private-beta backend ships switched off by
-default and switches itself off when it breaks.
+default, and has a health check that prepares the flip when it breaks.
+
+"Prepares", not "performs": `main` is protected by a ruleset requiring a pull
+request with one approval, and no automation here can bypass it. The flag is
+also read at build time, so even a merged flip only reaches users on the next
+site build. A health check therefore cannot take a surface down unattended — what
+it can do is leave nothing for the human to work out, by opening a PR that
+carries the diagnosis and the flag change ready to merge.
 
 **Do**
 
@@ -153,8 +160,11 @@ default and switches itself off when it breaks.
   with CTAs that go somewhere that works. A page whose only outcome is "try
   again later" is the dead end this policy exists to prevent.
 - Add an integration test that drives the real user path against production, and
-  a scheduled workflow that switches the flag off and posts to Slack when it
-  fails. `.github/workflows/minimax-demo-integration.yml` is the worked example.
+  a scheduled workflow that opens a flag-off PR and posts to Slack when it fails.
+  `.github/workflows/minimax-demo-integration.yml` is the worked example.
+- Make the alert fire once per outage, not once per run. Keying it on "the flag
+  on `main` is still on" re-posts every scheduled run until someone merges; key
+  it on having just opened the PR.
 
 **Don't**
 
@@ -191,14 +201,18 @@ be emitted under `_astro/`, and a fallback may legitimately serve the same
 - [ ] Flag added, **default off**, read at build time (Rule 4)
 - [ ] Static fallback exists, resembles neighbouring pages, CTAs go somewhere live (Rule 4)
 - [ ] Integration test drives the real user path against production (Rule 4)
-- [ ] Scheduled health check flips the flag off and notifies Slack (Rule 4)
+- [ ] Scheduled health check opens a flag-off PR and notifies Slack once (Rule 4)
 - [ ] PR names the success metric and the date you will review it
 
 ## Turning one off
 
 1. `pnpm experiment-flag <name> off --reason "..."` in `site/`
-2. Commit `site/src/data/experiment-flags.json`
+2. Commit `site/src/data/experiment-flags.json` and open a PR — `main` requires
+   one, so this is the step that decides how fast the flag actually moves
 3. Run **Deploy Template Site**, or wait for the nightly rebuild
+
+When a health check has already opened the PR for you, steps 1 and 2 are done:
+merge it and run the deploy.
 
 The code stays. Switching it back on is the same command with `on`, plus a
 deploy — and should be a deliberate decision, not an automatic consequence of a

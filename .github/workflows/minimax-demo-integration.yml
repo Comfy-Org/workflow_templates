@@ -1,14 +1,29 @@
 # Health gate for the MiniMax H3 in-browser demo (FE-1932).
 #
 # Runs the end-to-end integration test against production and, when it fails,
-# switches the `minimaxH3Demo` experiment flag off and says so in Slack.
+# opens a PR switching the `minimaxH3Demo` experiment flag off, and says so in
+# Slack.
+#
+# A PR rather than a push, because ruleset 9388637 ("Main branch protection")
+# governs refs/heads/main with a `pull_request` rule, one required approval and
+# no bypass actors. A direct push is rejected by the rule, not by a race, so
+# retrying cannot get around it. Every other automation here does the same:
+# i18n-update-hub.yml opens a PR from a stable branch, sync-template-index.yml
+# and generate-upload-json.yml push to a PR head.
+#
+# That makes the flip land in one click instead of on its own, so be clear about
+# what this does and does not buy: it does NOT take the demo down unattended. It
+# never could — the flag is read at build time, so even a merged flip only
+# reaches users on the next site build. What it does is remove every judgement
+# call from the human's path: the diagnosis, the flag edit and the deploy
+# trigger are already prepared, and merging is the whole remaining action.
 #
 # It deliberately does NOT fail. The demo is served by the Comfy dev platform
 # (private beta) through comfy-router (pre-alpha); both are expected to have
 # downtime, and a red check on a pre-alpha dependency must never hold up an
 # unrelated template release. "Blocking the deploy" is achieved by shipping the
 # feature switched off rather than by blocking the pipeline: the next site build
-# picks up the committed flag and serves the static fallback instead of a runner
+# picks up the merged flag and serves the static fallback instead of a runner
 # nobody can run.
 #
 # Recovery is deliberately NOT automatic. A green run only reports that the demo
@@ -20,7 +35,7 @@
 #   secrets.SLACK_BOT_TOKEN               — same bot used by ComfyUI_frontend
 #   vars.SLACK_HUB_ALERTS_CHANNEL_ID      — channel for these alerts
 # Both are optional at runtime: the notify step warns and skips if either is
-# unset, so the flag flip still happens.
+# unset, so the PR still gets opened.
 name: MiniMax Demo Integration
 
 on:
@@ -41,14 +56,15 @@ on:
     types: [completed]
     branches: [main]
 
-# One run at a time: two concurrent runs would race on the flag file and could
-# put two GPU jobs on a single-deployment demo.
+# One run at a time: two concurrent runs would race on the kill-switch branch
+# and could put two GPU jobs on a single-deployment demo.
 concurrency:
   group: minimax-demo-integration
   cancel-in-progress: false
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   check:
@@ -150,89 +166,104 @@ jobs:
             --by "ci:minimax-demo-integration" \
             --reason "Integration test failed against ${BASE_URL}: ${REASON}"
 
-      - name: Commit the flag flip
-        id: commit
+      - name: Open the kill-switch PR
+        id: pr
         if: steps.disable.outputs.changed == 'true'
+        # The kill switch must not take the job down with it: if this step
+        # fails, Slack below still runs and still says the demo is stuck on.
         continue-on-error: true
         env:
+          # The PAT is what the other automations here use, and it lets the
+          # site's own checks run on the PR. GITHUB_TOKEN is enough to open one
+          # if the PAT is not configured; no ruleset requires a status check.
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
           REASON: ${{ steps.summary.outputs.reason }}
           BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
+          BRANCH="ci/minimax-demo-kill-switch"
+
+          # An unmerged PR from an earlier run already says everything this run
+          # would. Stopping here keeps a demo that stays broken for days from
+          # force-pushing a fresh timestamp and re-pinging Slack every 6 hours;
+          # `opened` stays empty, which is what silences the notify step.
+          existing=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // ""')
+          if [ -n "$existing" ]; then
+            echo "pr_url=$existing" >> "$GITHUB_OUTPUT"
+            echo "A kill-switch PR is already open and unmerged: $existing"
+            exit 0
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          commit_flip() {
-            git add site/src/data/experiment-flags.json
-            printf '%s\n\n%s\n\nRun: %s\n' \
-              'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
-              "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
-            git commit --file="$RUNNER_TEMP/commit-msg.txt"
-          }
+          git add site/src/data/experiment-flags.json
+          printf '%s\n\n%s\n\nRun: %s\n' \
+            'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
+            "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
 
-          commit_flip
+          # Branched off the main this run checked out, so the PR carries the
+          # flag flip and nothing else. force-with-lease rather than force: the
+          # branch is this workflow's alone and runs are serialized, so a lease
+          # failure means something unexpected touched it and should stop here.
+          git checkout -B "$BRANCH"
+          git commit --file="$RUNNER_TEMP/commit-msg.txt"
+          git fetch origin "$BRANCH" || true
+          git push --force-with-lease origin "$BRANCH"
 
-          # The integration test takes minutes, so main can move underneath this
-          # checkout and reject the push. Retrying matters: the whole point of the
-          # kill switch is that a broken demo goes off without waiting for a
-          # human, and losing this race would leave it live until someone acted
-          # on the Slack ping.
-          for attempt in 1 2 3; do
-            if git push origin HEAD:main; then
-              echo "Pushed on attempt ${attempt}."
-              exit 0
-            fi
+          # Body via --body-file: $REASON is an origin server's response body
+          # and must never be word-split or re-expanded by the shell. The
+          # formats stay single-quoted for that reason, so their backticks are
+          # literal markdown rather than substitutions (SC2016 reads them as a
+          # mistake; here they are the point).
+          # shellcheck disable=SC2016
+          {
+            printf 'The [integration check](%s) failed against `%s`, so this switches the `minimaxH3Demo` experiment flag off.\n\n' \
+              "$RUN_URL" "$BASE_URL"
+            printf '> %s\n\n' "$REASON"
+            printf 'Opened by `%s`. Merging is not enough on its own — the flag is read at build time, so run **Deploy Template Site** (or wait for the nightly rebuild) to put the static fallback in front of users.\n' \
+              "$GITHUB_WORKFLOW"
+          } > "$RUNNER_TEMP/pr-body.md"
 
-            echo "Push rejected (attempt ${attempt}); refreshing main and reapplying."
-            git fetch origin main
-            # Safe here and nowhere else: this is an ephemeral runner whose only
-            # local change is the commit we just made, which is reapplied
-            # deterministically below. It never discards anyone else's work.
-            git reset --hard origin/main
+          url=$(gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title 'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
+            --body-file "$RUNNER_TEMP/pr-body.md")
 
-            # GITHUB_OUTPUT is cleared so this rerun cannot append a second
-            # `changed=` line to the step's outputs. Explicit '' rather than a
-            # bare `=` so the intent reads as a prefix assignment (ShellCheck
-            # SC1007) instead of a suspected typo.
-            GITHUB_OUTPUT='' pnpm --dir site run experiment-flag minimaxH3Demo off \
-              --by "ci:minimax-demo-integration" \
-              --reason "Integration test failed against ${BASE_URL}: ${REASON}"
-
-            # Someone else — or an earlier attempt — may have already switched it
-            # off on the refreshed main. Nothing left to say.
-            if git diff --quiet -- site/src/data/experiment-flags.json; then
-              echo "The refreshed main already has the demo off; nothing to push."
-              exit 0
-            fi
-            commit_flip
-          done
-
-          echo "Could not push the flag flip after 3 attempts; the demo is still enabled." >&2
-          exit 1
+          echo "pr_url=$url" >> "$GITHUB_OUTPUT"
+          echo "opened=true" >> "$GITHUB_OUTPUT"
+          echo "Opened $url"
 
       - name: Notify Slack
         # Three reasons to speak, and nothing else:
-        #   - we just switched the demo off
-        #   - we tried to and could not, so it is stuck on and broken
+        #   - a kill-switch PR was just opened
+        #   - we tried to open one and could not, so it is stuck on and broken
         #   - somebody ran this by hand and is waiting for the answer
+        #
+        # Keyed on `opened`, not on `changed`: while a kill-switch PR sits
+        # unmerged the flag on main is still `true`, so `changed` is true on
+        # every run and would re-post the same alert 4x a day until someone
+        # merges. `opened` is set only by the run that actually created the PR.
         #
         # Recovery is NOT announced on schedule/deploy runs. This workflow keeps
         # no state between runs, and "healthy while switched off" is the shipped
         # steady state — alerting on it would post the same message 4x a day
         # forever. Scheduled recovery shows up in the step summary instead.
         if: >-
-          steps.disable.outputs.changed == 'true'
+          steps.pr.outputs.opened == 'true'
           || steps.disable.outcome == 'failure'
+          || steps.pr.outcome == 'failure'
           || github.event_name == 'workflow_dispatch'
         continue-on-error: true
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           SLACK_CHANNEL_ID: ${{ vars.SLACK_HUB_ALERTS_CHANNEL_ID }}
-          DISABLED: ${{ steps.disable.outputs.changed }}
           DISABLE_OUTCOME: ${{ steps.disable.outcome }}
-          COMMITTED: ${{ steps.commit.outcome }}
+          PR_OPENED: ${{ steps.pr.outputs.opened }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          PR_OUTCOME: ${{ steps.pr.outcome }}
           OUTCOME: ${{ steps.test.outcome }}
           # Through the environment like everything else in this file — never
           # interpolated into the script below, where a value containing $( )
@@ -249,28 +280,28 @@ jobs:
             exit 0
           fi
 
-          if [ "$DISABLE_OUTCOME" = "failure" ]; then
-            TEXT=":rotating_light: *MiniMax H3 demo is broken and could not be switched off.* The integration test failed against ${BASE_URL} and the kill switch itself errored, so *the demo is still live*. Switch it off by hand: \`pnpm experiment-flag minimaxH3Demo off\` in \`site/\`, commit, deploy."
+          if [ "$DISABLE_OUTCOME" = "failure" ] || [ "$PR_OUTCOME" = "failure" ]; then
+            TEXT=":rotating_light: *MiniMax H3 demo is broken and the kill switch failed.* The integration test failed against ${BASE_URL} and the flag flip could not be prepared, so *the demo is still live*. Switch it off by hand: \`pnpm experiment-flag minimaxH3Demo off\` in \`site/\`, open a PR, merge, deploy."
             TEXT="${TEXT}"$'\n'">${REASON}"
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
-          elif [ "$DISABLED" = "true" ]; then
-            TEXT=":warning: *MiniMax H3 demo switched off automatically.* The integration test failed against ${BASE_URL}, so the \`minimaxH3Demo\` experiment flag is now off and the page will serve its static fallback."
+          elif [ "$PR_OPENED" = "true" ]; then
+            TEXT=":warning: *MiniMax H3 demo failed its integration check.* A PR switching the \`minimaxH3Demo\` flag off is open and *waiting on a human* — the demo stays live until it is merged and deployed."
             TEXT="${TEXT}"$'\n'">${REASON}"
-            if [ "$COMMITTED" = "success" ]; then
-              TEXT="${TEXT}"$'\n'"The flip is committed to \`main\`. It reaches users on the next site build — <${DEPLOY_URL}|run Deploy Template Site> to apply it now."
-            else
-              TEXT="${TEXT}"$'\n'":rotating_light: The flag could not be committed to \`main\`, so *the demo is still live*. Someone needs to switch it off by hand."
-            fi
+            TEXT="${TEXT}"$'\n'"<${PR_URL}|Review and merge the kill-switch PR>, then <${DEPLOY_URL}|run Deploy Template Site> to serve the static fallback."
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
           elif [ "$OUTCOME" = "success" ]; then
             TEXT=":white_check_mark: *MiniMax H3 demo integration passes* against ${BASE_URL} (flag is currently \`${FLAG_ENABLED}\`). Turning it on is a deliberate call: set the flag and deploy when you want it in front of users. <${RUN_URL}|View run>"
           else
-            # Reached on a hand-run dispatch that failed without flipping anything
-            # — the flag was already off, or a preview origin was tested. The run
-            # is green because the test is continue-on-error, so without this the
-            # operator who dispatched it would be told nothing at all.
-            TEXT=":x: *MiniMax H3 demo integration failed* against ${BASE_URL}. The flag was left as \`${FLAG_ENABLED}\` — no change was made, either because it is already off or because this was not a production run."
+            # Reached on a hand-run dispatch that failed without opening anything
+            # — the flag was already off, a preview origin was tested, or a
+            # kill-switch PR from an earlier run is still open. The run is green
+            # because the test is continue-on-error, so without this the operator
+            # who dispatched it would be told nothing at all.
+            TEXT=":x: *MiniMax H3 demo integration failed* against ${BASE_URL}. The flag on \`main\` is \`${FLAG_ENABLED}\` and this run changed nothing."
             TEXT="${TEXT}"$'\n'">${REASON}"
+            if [ -n "${PR_URL:-}" ]; then
+              TEXT="${TEXT}"$'\n'"A kill-switch PR is already open and unmerged: <${PR_URL}|review and merge it>."
+            fi
             TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
           fi
 
