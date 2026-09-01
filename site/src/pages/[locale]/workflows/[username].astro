@@ -28,6 +28,7 @@ import {
 } from '../../../lib/hub-api';
 import { fetchRankingMap } from '../../../lib/ranking';
 import { localizeCards } from '../../../lib/i18n/localize-cards';
+import { INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 import { creatorOgUrl } from '../../../lib/og-url';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { getSocialDisplay } from '../../../lib/social-links';
@@ -162,6 +163,10 @@ if (!profileFound && serialized.length === 0) {
 }
 
 const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
+// Same content/cluster as the English creator-profile page; advertise only
+// the locales actually flipped on, not BaseLayout's full-LANGUAGES default
+// (which includes "it", unbuilt and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
 const structuredData = {
@@ -180,6 +185,8 @@ const structuredData = {
   ogImage={creatorOgUrl(displayName, slug!, avatarUrl || undefined)}
   structuredData={structuredData}
   locale={typedLocale}
+  hreflangBasePath={`/workflows/${slug}/`}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
