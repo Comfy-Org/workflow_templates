@@ -1,8 +1,13 @@
 # Health gate for the MiniMax H3 in-browser demo (FE-1932).
 #
-# Runs the end-to-end integration test against production and, when it fails,
-# opens a PR switching the `minimaxH3Demo` experiment flag off, and says so in
-# Slack.
+# Runs the integration test against production and, when it fails, opens a PR
+# switching the `minimaxH3Demo` experiment flag off, and says so in Slack.
+#
+# Scope: it drives the path a visitor takes as far as a job being accepted and
+# started, then cancels. Generation is NOT covered — a full render costs GPU
+# minutes and this runs four times a day on a demo with one deployment. Read a
+# green run as "the page, the routing and the submit path work", not as "the
+# video comes out".
 #
 # A PR rather than a push, because ruleset 9388637 ("Main branch protection")
 # governs refs/heads/main with a `pull_request` rule, one required approval and
@@ -96,11 +101,11 @@ jobs:
         working-directory: site
         env:
           DEMO_BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
-          # What the deployed page is supposed to be serving, so the check can
-          # tell "the runner is absent because the flag is off" from "the runner
-          # is absent because it failed to build" — otherwise a demo that never
-          # renders looks identical to one deliberately switched off.
-          DEMO_EXPECTED_ENABLED: ${{ steps.flag.outputs.enabled }}
+          # Deliberately NOT passed the committed flag. The flag is consumed at
+          # build time, so it and production disagree between a merge and the
+          # deploy that ships it; a check that read the repo would treat that
+          # window as a fault and revert a flag someone had just turned on. It
+          # reads the deployed page instead.
           # Plain output so the reason can be parsed out below without ANSI codes.
           NO_COLOR: '1'
         run: |
@@ -147,8 +152,9 @@ jobs:
         id: disable
         # Three conditions, all required:
         #   - the test failed
-        #   - the demo is currently on (a failing test against an already-off
-        #     demo is expected, and must not commit or re-alert every 6 hours)
+        #   - the flag on `main` is on (a failing test against a demo that is
+        #     already switched off is expected, and must not commit or re-alert
+        #     every 6 hours)
         #   - production was what we tested. A dispatch against a preview origin
         #     is for debugging; it must never flip the flag users are served.
         if: >-
@@ -178,8 +184,11 @@ jobs:
         continue-on-error: true
         env:
           # The PAT is what the other automations here use, and it lets the
-          # site's own checks run on the PR. GITHUB_TOKEN is enough to open one
-          # if the PAT is not configured; no ruleset requires a status check.
+          # site's own checks run on the PR. The GITHUB_TOKEN fallback opens one
+          # only if the org permits Actions to create PRs; when it does not,
+          # this step fails and the Slack branch below reports the demo as stuck
+          # on, which is the honest outcome. Note the branch itself is pushed
+          # with the credentials actions/checkout persisted, not with GH_TOKEN.
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
           REASON: ${{ steps.summary.outputs.reason }}
           BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
@@ -333,6 +342,14 @@ jobs:
             -d "$BODY" \
             https://slack.com/api/chat.postMessage)
           if ! jq -e '.ok == true' <<<"$RESPONSE" >/dev/null; then
-            echo "Slack rejected the notification: $(jq -r '.error // "unparseable response"' <<<"$RESPONSE")"
+            SLACK_ERR=$(jq -r '.error // "unparseable response"' <<<"$RESPONSE")
+            # As loud as a missing credential, and for the same reason: this
+            # step is continue-on-error inside a job that is green by design, so
+            # a rejected outage alert would otherwise be a line in a green log.
+            if [ "$OUTCOME" != "success" ]; then
+              echo "::error::Demo integration failed and Slack rejected the alert ($SLACK_ERR) — nobody was notified."
+              echo "> :warning: **Slack rejected this outage alert (\`$SLACK_ERR\`), so nobody was notified.**" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "Slack rejected the notification: $SLACK_ERR"
             exit 1
           fi

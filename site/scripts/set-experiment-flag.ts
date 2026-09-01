@@ -62,7 +62,7 @@ if (changed) {
     writeFileSync(tempPath, `${JSON.stringify(flags, null, 2)}\n`, 'utf8');
     renameSync(tempPath, flagsPath);
   } finally {
-    // A crash between write and rename would otherwise leave an untracked
+    // A throw between write and rename would otherwise leave an untracked
     // sibling of a tracked file behind in the checkout.
     rmSync(tempPath, { force: true });
   }

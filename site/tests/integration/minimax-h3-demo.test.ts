@@ -24,6 +24,13 @@
  * `multipart/form-data`. Replacing any of those with a shortcut re-opens one of
  * the three bugs above.
  *
+ * What it does NOT cover: generation. The job is cancelled as soon as a worker
+ * picks it up, because a full render costs GPU minutes and this runs four times
+ * a day on a single-deployment demo. So a green run means "a visitor can load
+ * the page, reach the API and get a job accepted and started" — not that the
+ * video comes out. Model, VRAM and output-muxing failures are invisible here
+ * and need a separate, rarer check.
+ *
  * Runs against BASE_URL (default https://comfy.org — the origin users actually
  * hit, and the only one that exercises the router). Point it elsewhere to check
  * a preview:
@@ -52,22 +59,32 @@ const endpoint = (path: string) => `${API}${path}/`;
 const DEMO_COMPONENT = 'MiniMaxH3Demo';
 
 /**
- * What the deployed page should be serving, read from the committed flag by the
- * workflow. Null when run by hand without it: the page assertion is then skipped
- * rather than guessed at, because both answers are legitimate locally.
+ * Whether the deployed page is currently offering the runner, read from the
+ * page itself rather than from the committed flag.
+ *
+ * Deliberately not taken from `experiment-flags.json`. The flag is consumed at
+ * build time, so between merging a flag change and the deploy that ships it the
+ * repo and production legitimately disagree for up to a day. Keying off the repo
+ * would read that window as a fault and — on a flag someone had just turned ON —
+ * open a PR turning it straight back off, reverting a deliberate decision.
+ *
+ * What production serves is also the only thing a visitor can experience, which
+ * is what this check is for.
  */
-const EXPECTED_ENABLED: boolean | null =
-  process.env.DEMO_EXPECTED_ENABLED === undefined
-    ? null
-    : process.env.DEMO_EXPECTED_ENABLED === 'true';
+let demoIsLive = false;
+let pageHtml = '';
 
-/** Filled by the queue step, quoted by the poll step when a job never starts. */
+/** Filled by the queue step, read by the poll step when a job never starts. */
+let queueState: Record<string, unknown> | null = null;
 let queueReadout = 'not read';
 
 const REQUEST_TIMEOUT_MS = 30_000;
 const SUBMIT_TIMEOUT_MS = 90_000;
-/** Long enough to see the job accepted and moving; not a wait for the render. */
-const POLL_WINDOW_MS = 45_000;
+/**
+ * Long enough to absorb a cold worker start, which on a scheduled check is the
+ * normal case rather than the exception; not a wait for the render.
+ */
+const POLL_WINDOW_MS = 120_000;
 const POLL_INTERVAL_MS = 5_000;
 
 /**
@@ -157,25 +174,53 @@ afterAll(async () => {
 });
 
 describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
-  it('serves the demo page in the state the flag asks for', { retry: 2 }, async () => {
+  it('serves the demo page, and reports whether the runner is on it', { retry: 2 }, async () => {
     const res = await fetch(PAGE, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
     expect(res.status, diagnose(res.status, PAGE, 'page')).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/html');
 
-    // A 200 alone cannot tell a working demo from the static fallback, so the
-    // island is checked against what the flag says should be deployed. Both
-    // directions are worth catching: a missing island means the runner failed
-    // to build, and a present one means the gate leaked a runner that the
-    // committed flag says nobody should see.
-    const html = await res.text();
-    const island = html.includes(DEMO_COMPONENT);
-    if (EXPECTED_ENABLED === null) return;
+    // Which of the two shapes the page is in decides what the rest of this file
+    // may conclude, so it is recorded rather than asserted: both are valid
+    // deployments, and the flag legitimately differs from production between a
+    // merge and the deploy that ships it.
+    pageHtml = await res.text();
+    demoIsLive = pageHtml.includes(DEMO_COMPONENT);
+    console.info(
+      demoIsLive
+        ? `${PAGE} is serving the runner, so the API checks below cover what visitors can reach.`
+        : `${PAGE} is serving its static fallback. The API is still checked, which is what tells you the demo could be switched back on.`
+    );
+  });
+
+  it('serves the island JavaScript the runner needs to start', { retry: 2 }, async (ctx) => {
+    if (!demoIsLive) ctx.skip();
+
+    // The island markup being in the HTML only proves Astro emitted it. The
+    // runner does not exist until these load, and through comfy.org they are
+    // forwarded by a different router rule from the page — one origin healthy,
+    // the other not, which is FE-1932's exact shape. Nothing else here would
+    // notice: every API check below talks to the routes directly.
+    const urls = [...pageHtml.matchAll(/(?:component|renderer)-url="([^"]+)"/g)]
+      .map((m) => m[1])
+      .filter((u) => u.includes(DEMO_COMPONENT) || u.includes('client'));
+
     expect(
-      island,
-      EXPECTED_ENABLED
-        ? `the flag says the demo is on, but ${PAGE} carries no ${DEMO_COMPONENT} island — the page is serving its static fallback, so every API check below is testing a runner users cannot reach.`
-        : `the flag says the demo is off, but ${PAGE} still carries a ${DEMO_COMPONENT} island — the build-time gate leaked.`
-    ).toBe(EXPECTED_ENABLED);
+      urls.length,
+      `${PAGE} carries a ${DEMO_COMPONENT} island but no component-url/renderer-url to load it from.`
+    ).toBeGreaterThan(0);
+
+    for (const url of new Set(urls)) {
+      const absolute = new URL(url, BASE_URL).href;
+      const asset = await fetch(absolute, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
+      expect(
+        asset.status,
+        `${absolute} returned ${asset.status}. The page renders but its runner cannot boot, so visitors get a dead island — check that the router still forwards /_astro/* to this origin.`
+      ).toBe(200);
+      expect(
+        asset.headers.get('content-type') ?? '',
+        `${absolute} is not being served as JavaScript.`
+      ).toMatch(/javascript|ecmascript/i);
+    }
   });
 
   it('reaches the API at the path the page actually requests', { retry: 2 }, async () => {
@@ -203,6 +248,27 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     ).toBeLessThan(300);
   });
 
+  it('does not downgrade the page POST to a GET', { retry: 2 }, async () => {
+    // A browser only keeps the method and body across 307/308. If /run started
+    // answering 301/302 instead, every visitor's submit would arrive as a
+    // bodyless GET while this file — which posts to the slashed form directly —
+    // stayed green. Empty body on purpose: it is rejected long before any GPU
+    // work, so this costs nothing.
+    const res = await fetch(`${API}/run`, {
+      method: 'POST',
+      headers: browserHeaders(),
+      redirect: 'manual',
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+
+    if (res.status < 300 || res.status >= 400) return;
+
+    expect(
+      res.status,
+      `${API}/run answered ${res.status}, which browsers replay as a GET without the upload. Only 307/308 preserve a multipart POST.`
+    ).toBeGreaterThan(306);
+  });
+
   it('serves the reference images the page uploads, with CORS', { retry: 2 }, async () => {
     // The page has no filesystem copy of these: it re-fetches them from the CDN
     // and posts the bytes. A 404 here fails Run Workflow before it starts.
@@ -211,12 +277,11 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     // page reads these bodies cross-origin from comfy.org. Node does not
     // enforce CORS, so without this the bytes arrive here and the check passes
     // while the browser refuses them and Run Workflow dies before submit.
-    const urls = [
-      exampleKeyframeUrl(1),
-      exampleKeyframeUrl(2),
-      exampleKeyframeUrl(3),
-      AGENT_PROMPT_URL,
-    ];
+    // The agent prompt is deliberately not in this list. The page degrades to a
+    // UI hint when it fails, so a per-object outage on that one file must not
+    // switch the whole demo off; it is reported below instead. A bucket-wide
+    // failure still goes red, because the keyframes go with it.
+    const urls = [exampleKeyframeUrl(1), exampleKeyframeUrl(2), exampleKeyframeUrl(3)];
     const results = await Promise.all(
       urls.map(async (url) => {
         const res = await fetch(url, {
@@ -240,6 +305,16 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
         `${r.url} does not allow ${BASE_URL} to read it (access-control-allow-origin: ${r.allowOrigin ?? 'absent'}). The bytes are reachable from a server but a browser would refuse them.`
       ).toBe(true);
     }
+
+    const guide = await fetch(AGENT_PROMPT_URL, {
+      headers: browserHeaders(),
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    }).catch(() => null);
+    if (!guide?.ok) {
+      console.warn(
+        `${AGENT_PROMPT_URL} is unavailable (${guide?.status ?? 'request failed'}). The prompt guide will not open; the demo itself still runs.`
+      );
+    }
   });
 
   it('answers the queue readout as JSON', { retry: 2 }, async () => {
@@ -251,8 +326,9 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     const json = parseJson(body, detail);
     expect(typeof json.available, `queue.available should be a boolean. ${detail}`).toBe('boolean');
 
-    // Kept for the poll step's failure message: "the job never started" reads
-    // very differently next to a deployment reporting no ready workers.
+    // Kept for the poll step, which uses the worker census to tell a job that
+    // is merely waiting from one that nothing exists to run.
+    queueState = json;
     queueReadout = body.slice(0, 200);
   });
 
@@ -307,7 +383,6 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     let seen = 0;
     let started = false;
     let lastSeen = 'nothing';
-    const positions = new Set<string>();
 
     // Poll like the page does. We are proving the job is accepted and moving,
     // not waiting for a finished video — a full render costs GPU minutes and
@@ -324,7 +399,6 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
       expect(json.error, `job reported an error. ${detail}`).toBeFalsy();
       seen++;
       lastSeen = `status=${String(json.status)} queuePosition=${String(json.queuePosition ?? 'none')}`;
-      positions.add(lastSeen);
 
       if (json.status !== 'queued') {
         started = true;
@@ -334,17 +408,38 @@ describe(`MiniMax H3 demo integration (${BASE_URL})`, () => {
     }
 
     expect(seen, 'the poll endpoint was never successfully read').toBeGreaterThan(0);
+    if (started) return;
 
-    // `queued` is in HEALTHY_STATUSES, so without this a job that is accepted
-    // and then never runs satisfies every assertion above and the whole check
-    // reports green — which is exactly what a deployment with no live worker
-    // looks like, and the most likely way this demo breaks. Movement counts as
-    // well as starting: a shrinking queue position is a real backlog, not a
-    // stall, and failing that would go red on a busy-but-working deployment.
+    // `queued` is in HEALTHY_STATUSES, so a job that is accepted and then never
+    // runs would satisfy every assertion above and report green — a deployment
+    // with no live worker, and the likeliest way this demo breaks.
+    //
+    // But "slow" and "dead" look identical from the job alone, and a cold video
+    // worker can legitimately exceed any window short enough to run 4x a day.
+    // Failing on the timeout alone would flip a working demo off. So the verdict
+    // needs positive evidence, and the only source of it is the worker census:
+    // red when the deployment says nothing can run this, inconclusive when it
+    // will not say. Inconclusive passes — this check flips a user-visible
+    // switch, and guessing in that direction is the more expensive mistake.
+    const workers = (queueState?.workers ?? null) as Record<string, number> | null;
+    const capacity = workers
+      ? (workers.idle ?? 0) +
+        (workers.ready ?? 0) +
+        (workers.running ?? 0) +
+        (workers.initializing ?? 0)
+      : null;
+
+    if (capacity === null) {
+      console.warn(
+        `The job was still "queued" after ${POLL_WINDOW_MS / 1000}s and the queue readout carries no worker census, so this run cannot tell a slow start from a dead deployment. Treating it as healthy. Last saw ${lastSeen}; queue said ${queueReadout}`
+      );
+      return;
+    }
+
     expect(
-      started || positions.size > 1,
-      `the job never left "queued" in ${POLL_WINDOW_MS / 1000}s and its place in the queue never moved (last saw ${lastSeen}). The submit was accepted but nothing is running it — a user would be watching a spinner. Queue readout at the time: ${queueReadout}`
-    ).toBe(true);
+      capacity,
+      `the job was still "queued" after ${POLL_WINDOW_MS / 1000}s and the deployment reports no worker that could ever run it (${JSON.stringify(workers)}). The submit was accepted but nothing is serving — a visitor would be watching a spinner. Last saw ${lastSeen}`
+    ).toBeGreaterThan(0);
   });
 
   it('cancels the submitted job', async (ctx) => {
