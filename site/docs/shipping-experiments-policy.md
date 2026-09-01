@@ -138,7 +138,7 @@ code. If you cannot, it is not instrumented.
 
 ---
 
-## Rule 4 — Ship it behind a flag, with a health check that flips it
+## Rule 4 — Ship it behind a flag, with a health check that prepares the flip
 
 Anything depending on a pre-alpha or private-beta backend ships switched off by
 default, and has a health check that prepares the flip when it breaks.

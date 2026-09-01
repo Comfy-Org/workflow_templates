@@ -14,7 +14,11 @@
 import { renameSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-import { experimentFlags, type ExperimentName } from '../src/config/experimentFlags';
+import {
+  experimentFlags,
+  type ExperimentFlag,
+  type ExperimentName,
+} from '../src/config/experimentFlags';
 
 import current from '../src/data/experiment-flags.json' with { type: 'json' };
 
@@ -49,7 +53,21 @@ const reason = readOption(argv, '--reason') ?? `Set ${state} via set-experiment-
 const updatedBy = readOption(argv, '--by') ?? (process.env.GITHUB_ACTIONS ? 'ci' : 'manual');
 
 const flags: Record<string, unknown> = { ...current };
-const existing = current[name as ExperimentName];
+
+// The name was checked against experimentFlags, which is the config module; the
+// record itself comes from the JSON. Those are two sources, and a flag present
+// in the first but not the second reads as `undefined` here. `tsc` catches that
+// divergence, so it takes deliberate effort to reach — but if it ever is
+// reached, the bare property access throws a Node stack trace before the
+// `changed` output is written, which leaves CI's kill switch silently disarmed.
+// Cheap to say what actually went wrong instead.
+const existing = (current as Record<string, ExperimentFlag | undefined>)[name];
+if (!existing) {
+  fail(
+    `"${name}" is declared in src/config/experimentFlags.ts but missing from src/data/experiment-flags.json. Add it there first.`
+  );
+}
+
 const changed = existing.enabled !== enabled;
 
 // `updatedAt`/`reason` are only rewritten on a real state change. A no-op run

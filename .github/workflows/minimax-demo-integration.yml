@@ -75,6 +75,12 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # The suite's own ceiling is around six minutes (a 240s poll window, a 90s
+    # submit, retried GETs). This caps the job well under the 6-hourly schedule
+    # because the concurrency group above does not cancel in progress: a run
+    # wedged on a hung socket or a stuck runner would otherwise sit on GitHub's
+    # 360-minute default and block every scheduled and post-deploy run behind it.
+    timeout-minutes: 20
     env:
       # Whether this run is judging the origin users are actually served, which
       # is what licenses it to touch the flag. Computed once, with the trailing
