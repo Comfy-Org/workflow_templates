@@ -109,19 +109,42 @@ jobs:
             # lobe's entry (locales/en.json) plus its outputLocales, and `it` is in
             # this workflow's SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales,
             # so nothing regenerates locales/it.json at all. Resuming that layer is
-            # also worth nothing: main is ahead of the branch on every locale (206
-            # keys against 205, and Italian 1 against 0, the date.today key added by
-            # #1200), and lobe skips keys that are already translated. Copying it
-            # back could only ever discard merged strings.
+            # also worth nothing: locale:ui fills only MISSING keys, so the branch
+            # can never hold a UI string main lacks, while main routinely holds one
+            # the branch has not caught up to yet. #1200 added date.today to main on
+            # 2026-08-28 and no run carried it onto the branch until 2026-09-01, and
+            # locales/it.json still lacks it because `it` is not an outputLocale.
+            # Copying this layer back could only ever discard merged strings.
             #
-            # Per path, not one command, so a path this branch has not created yet
-            # only loses its own progress instead of discarding every path's.
+            # Per path, not one command. A multi-pathspec checkout is refused as a
+            # whole when any one path is absent from the branch, so naming content/
+            # and review/ together would, on any night review/ is missing, also
+            # decline to restore content/. That discards banked translations to
+            # avoid re-reviewing them, spending the expensive half to save the
+            # cheap one.
+            #
+            # Splitting that pair is not free. Review verdicts are keyed by a hash
+            # of the text they judge, so content restored without its verdicts
+            # re-reviews every entry whose translation differs from main's. The
+            # cost is bounded by the branch's unmerged delta rather than the whole
+            # corpus, and those entries have no reusable verdict on either side
+            # anyway: the branch's verdicts describe the branch's text, main's
+            # describe main's.
+            #
+            # Absence is probed with cat-file rather than inferred from a failed
+            # checkout, because a checkout can fail for reasons that are not
+            # absence. Reporting those as "not there yet" would let a half-restored
+            # tree carry on behind a reassuring log line; anything that is not
+            # plain absence stays fatal under set -e.
             for generated in \
               site/src/i18n/content \
               site/src/i18n/review \
               site/src/i18n/manifest.json; do
-              git checkout "origin/$STABLE_BRANCH" -- "$generated" 2>/dev/null \
-                || echo "No $generated on $STABLE_BRANCH yet; it will be regenerated."
+              if git cat-file -e "origin/$STABLE_BRANCH:$generated" 2>/dev/null; then
+                git checkout "origin/$STABLE_BRANCH" -- "$generated"
+              else
+                echo "No $generated on $STABLE_BRANCH yet; it will be regenerated."
+              fi
             done
             echo "Restored generated translation state from $STABLE_BRANCH (everything else kept from main)."
           else
@@ -403,10 +426,11 @@ jobs:
           #
           # Always main, never the branch. The branch's copy is only ever as new
           # as the last night that wrote it, so preferring it banks a regression
-          # the moment someone merges a UI string: right now main carries 206 keys
-          # and the branch 205, the difference being date.today from #1200. Since
-          # the restore step above no longer reads this layer from the branch,
-          # there is no banked UI progress here left to preserve.
+          # for as long as a merged UI string has not been carried over yet, a gap
+          # that is routinely nights wide (date.today, #1200, sat on main from
+          # 2026-08-28 to 2026-09-01). Since the restore step above no longer reads
+          # this layer from the branch, there is no banked UI progress here left to
+          # preserve.
           git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
           if git diff --cached --quiet; then
             echo "Run failed before producing any translation changes; nothing to save."
