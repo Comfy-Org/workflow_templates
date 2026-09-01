@@ -439,12 +439,12 @@ jobs:
           # cost of one UI pass next time; permanence is the worse trade.
           #
           # Pinned to the commit this job checked out, not HEAD. The publish step
-          # above runs `git checkout -B "$STABLE_BRANCH"` and commits, so a failure
-          # after that point leaves HEAD on the automation commit, where --source
-          # would mean "the branch" and bank exactly what this line exists to drop.
-          # Nothing reaches that today (the tree is clean by then, so the guard
-          # below exits first), but the rule should hold by construction rather
-          # than by control flow.
+          # above commits before it pushes, so a failed push or `gh pr create`
+          # lands here with HEAD already on the automation branch, where
+          # --source=HEAD would mean "the branch" and re-bank the very UI output
+          # this line exists to drop. Pinning also makes the revert real instead of
+          # a no-op against HEAD, so the save below still runs and carries the
+          # content progress forward with locales/ back at main's copy.
           git restore --source="$GITHUB_SHA" --staged --worktree -- site/src/i18n/locales
           if git diff --cached --quiet; then
             echo "Run failed before producing any translation changes; nothing to save."
