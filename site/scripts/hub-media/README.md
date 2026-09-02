@@ -54,7 +54,7 @@ every file accepted scored 94.2 or better.
 
 **Never downscale to fit the card.** The card box needs ~1044 device px, but the
 same asset is the detail-page hero at up to **2044**. Downscaling to 1280 cost
-3 to 4 VMAF points *at the same file size*, and on one file the native encode
+3 to 4 VMAF points _at the same file size_, and on one file the native encode
 was both better and 5.5 MB smaller.
 
 **Keep the original when the saving is under 25%.** An already-compressed source
@@ -75,10 +75,22 @@ path step 3's gated encode occupies. An interrupted run then left an ungated
 file sitting where a judged one was meant to be. Step 3 is the only writer now.
 
 **The VMAF floor is asserted, not assumed.** The crf ladder stops early when a
-candidate clears the floor, so when *none* of them does it simply ends holding
+candidate clears the floor, so when _none_ of them does it simply ends holding
 the last one. Passing that to the byte-saving check shipped sub-floor files that
 happened to be small enough. The floor is checked explicitly before upload; only
-`reviewed-overrides.json` bypasses it.
+`reviewed-overrides.json` bypasses it. The default is 95, so omitting `--floor`
+cannot quietly widen it.
+
+**A staged file is not trusted, it is verified.** `--stage` survives between
+runs and the thresholds do not: this corpus was encoded at floor 93 and then
+re-judged at 95, so a leftover stage directory holds files today's floor
+rejects. Before uploading one, `encode-video.mjs` checks the report entry that
+produced it: the file's size must match the judged encode, its recorded VMAF
+must clear the _current_ floor, and its saving must still meet the _current_
+minimum. Anything that fails is re-encoded rather than published, and under
+`--upload-only`, where there is nothing to fall through to, it is recorded as
+`stage-unverified` and skipped. Only `reviewed-overrides.json` bypasses this,
+for the same reason it bypasses the floor.
 
 **Regenerate immediately before shipping.** The site builds against the live hub
 API, so a manifest built days earlier misses new assets. That once left the
