@@ -2,8 +2,7 @@
 import type { Locale } from '../../i18n/config';
 import { hasStillThumbnail, heroTemplateFor, isVideoFile } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
-import { hubMediaFor, landingHeroImage } from '../../lib/hub-media';
-import { getVideoFrameUrl } from '../../lib/video-thumbnail';
+import { hubMediaFor, landingHeroImage, landingHeroPreload } from '../../lib/hub-media';
 import { externalLinkAttrs } from '../../lib/urls';
 import type { SerializedTemplate } from '../../lib/hub-api';
 import { resolveTemplateLogos } from '../../lib/model-logos';
@@ -71,8 +70,10 @@ const heroVideoSrc = heroVideoOriginal
 // Falls back to the Cloudflare frame transform when the asset has no generated
 // poster, which is what the carousel and the detail hero already do. Without it
 // a visibility-gated hero paints nothing at all until playback starts.
+// Resolved through the same helper the page's <link rel="preload"> uses, so the
+// poster and the preload are one request rather than two.
 const heroVideoPoster = heroVideoOriginal
-  ? (hubMediaFor(heroVideoOriginal)?.poster ?? getVideoFrameUrl(heroVideoOriginal) ?? undefined)
+  ? (landingHeroPreload(heroTemplate?.thumbnails) ?? undefined)
   : undefined;
 // Shared with the page's <link rel="preload"> so the two cannot resolve to
 // different URLs, which would fetch the hero twice.

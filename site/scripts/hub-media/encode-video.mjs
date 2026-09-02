@@ -31,23 +31,46 @@ const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const FFPROBE = process.env.FFPROBE || 'ffprobe';
 const BUCKET = 'gs://comfy-org-videos/hub-media';
 const MAX_WIDTH = 1920;
+/**
+ * Both thresholds below fail OPEN if they parse to NaN, which is a third route
+ * to shipping an unjudged file: `chosen.score < NaN` is false, so the floor
+ * check waves everything through, and `bytes >= srcBytes * (1 - NaN)` is false,
+ * so the saving check does too. `--floor=95%` or a typo is enough to trigger it.
+ * Range-checked at parse time rather than trusted.
+ */
+function threshold(flag, value, min, max) {
+  if (!Number.isFinite(value) || value < min || value > max)
+    throw new Error(`--${flag} must be a number between ${min} and ${max}, got: ${value}`);
+  return value;
+}
+
 /** 95, matching the runbook. Every file rejected on sight scored 91 to 93.3 and
  *  every file accepted scored 94.2 or better, so 93 was a floor that let the
  *  whole rejected band through whenever a caller omitted the flag. */
-const FLOOR = Number(
-  process.argv
-    .slice(2)
-    .find((a) => a.startsWith('--floor='))
-    ?.split('=')[1] ?? 95
+const FLOOR = threshold(
+  'floor',
+  Number(
+    process.argv
+      .slice(2)
+      .find((a) => a.startsWith('--floor='))
+      ?.split('=')[1] ?? 95
+  ),
+  0,
+  100
 );
 /** Start where the old pass ended, then step down only as far as needed. */
 const LADDER = [26, 23, 20, 18];
 /** Below this, keeping the original beats shipping a second copy. */
-const MIN_SAVING = Number(
-  process.argv
-    .slice(2)
-    .find((a) => a.startsWith('--min-saving='))
-    ?.split('=')[1] ?? 0.25
+const MIN_SAVING = threshold(
+  'min-saving',
+  Number(
+    process.argv
+      .slice(2)
+      .find((a) => a.startsWith('--min-saving='))
+      ?.split('=')[1] ?? 0.25
+  ),
+  0,
+  1
 );
 
 /** Encoded files are kept here, not in a temp dir that vanishes. An upload can

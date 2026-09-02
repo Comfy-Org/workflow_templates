@@ -24,8 +24,9 @@
  */
 import generatedAssets from '@/data/hub-media-assets.json';
 import generatedImages from '@/data/hub-media-images.json';
-import { firstStillThumbnail } from '@/lib/media-utils';
+import { firstStillThumbnail, isVideoFile } from '@/lib/media-utils';
 import { thumbnailPath } from '@/lib/routes';
+import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 
 const MEDIA_BASE = 'https://media.comfy.org/hub-media';
 
@@ -106,10 +107,35 @@ export function hubAssetUrl(url: string): string {
   return hubMediaFor(url)?.video ?? hubImageFor(url) ?? url;
 }
 
-/** The still worth preloading for a detail hero, or null when there is none. */
+/** The image worth preloading for a detail hero, or null when there is none. */
 export function detailHeroPreload(thumbnail: string | null | undefined): string | null {
   if (!thumbnail) return null;
   const url = thumbnailPath(thumbnail);
-  // A video hero paints its poster first, so that is the image to fetch early.
-  return hubMediaFor(url)?.poster ?? hubImageFor(url);
+  // A video hero paints its poster first, so that is the image to fetch early,
+  // and the frame-transform fallback matters as much as the generated poster:
+  // 27 of the catalog's videos have no generated copy, ThumbnailDisplay renders
+  // exactly this URL for them, and without it their LCP image is preloaded not
+  // at all. `thumbnailPath` is character-for-character what ThumbnailDisplay's
+  // own `thumbUrl` produces, so the two cannot become separate requests.
+  if (isVideoFile(url)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
+  return hubImageFor(url);
+}
+
+/**
+ * The image a landing hero will actually paint: its still, or, when the hero is
+ * video-led, that video's poster.
+ *
+ * `LandingHero` renders a `<video>` exactly when no thumbnail is a still, which
+ * is the same condition under which `landingHeroImage` returns null, so the two
+ * branches are complementary rather than overlapping. Both the page's
+ * `<link rel="preload">` and the element's `poster` read from here, so they
+ * cannot resolve to two different requests.
+ */
+export function landingHeroPreload(thumbnails: string[] | undefined): string | null {
+  const still = landingHeroImage(thumbnails);
+  if (still) return still;
+  const video = thumbnails?.find(isVideoFile);
+  if (!video) return null;
+  const url = thumbnailPath(video);
+  return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
 }

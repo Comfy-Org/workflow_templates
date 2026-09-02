@@ -102,29 +102,38 @@ for (const [id, url] of sources) {
       continue;
     }
 
-    // An rgba PNG is usually fully opaque; only real transparency blocks JPEG.
-    if (/a$|rgba|argb/.test(pix ?? '')) {
-      const out = await run(
-        FFMPEG,
-        [
-          '-hide_banner',
-          '-i',
-          src,
-          '-vf',
-          'alphaextract,signalstats,metadata=print:key=lavfi.signalstats.YMIN',
-          '-f',
-          'null',
-          '-',
-        ],
-        { maxBuffer: 1 << 26 }
-      ).catch((e) => ({ stderr: e.stderr ?? '' }));
-      const min = /YMIN=(\d+)/.exec(out.stderr ?? '')?.[1];
-      if (min !== undefined && Number(min) < 255) {
-        manifest[id] = { skip: 'transparent', pix, w, h, srcBytes };
-        transparent++;
-        console.log(`  ${id.slice(0, 8)}  skip: real transparency`);
-        continue;
-      }
+    // Only real transparency blocks JPEG, and an alpha channel is usually fully
+    // opaque, so the picture has to be measured rather than inferred from the
+    // pixel format. Ask ffmpeg instead of matching on the format's NAME, which
+    // is what this used to do: `/a$|rgba|argb/` misses `yuva420p`, which is
+    // exactly what a WebP carrying alpha decodes to, and also `gbrap`, `ya8` and
+    // `pal8`. Those images skipped the check and were flattened onto black.
+    //
+    // Running it unconditionally is safe because `alphaextract` fails at filter
+    // setup on a stream with no alpha plane, and that failure IS the "opaque"
+    // answer: no YMIN is printed, so we fall through to the encode. Verified
+    // both ways on this ffmpeg: rgba and yuva420p report YMIN, rgb24 and
+    // yuvj420p fail without decoding the file.
+    const alphaProbe = await run(
+      FFMPEG,
+      [
+        '-hide_banner',
+        '-i',
+        src,
+        '-vf',
+        'alphaextract,signalstats,metadata=print:key=lavfi.signalstats.YMIN',
+        '-f',
+        'null',
+        '-',
+      ],
+      { maxBuffer: 1 << 26 }
+    ).catch((e) => ({ stderr: e.stderr ?? '' }));
+    const min = /YMIN=(\d+)/.exec(alphaProbe.stderr ?? '')?.[1];
+    if (min !== undefined && Number(min) < 255) {
+      manifest[id] = { skip: 'transparent', pix, w, h, srcBytes };
+      transparent++;
+      console.log(`  ${id.slice(0, 8)}  skip: real transparency`);
+      continue;
     }
 
     const outFile = path.join(outDir, `${id}.jpg`);

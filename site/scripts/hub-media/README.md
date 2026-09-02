@@ -49,8 +49,11 @@ at all, which is worse than an unoptimised asset.
 high-frequency detail, which is most of this corpus. It passed a file at 0.9665
 that VMAF scored **78.8**, and that file was visibly degraded.
 
-**The floor is 95, not 93.** Every file rejected on sight scored 91 to 93.3;
-every file accepted scored 94.2 or better.
+**The floor is 95, not 93.** Those two numbers describe the visual review that
+_set_ the floor, not what ships: every file rejected on sight scored 91 to 93.3,
+and every file accepted scored 94.2 or better. 95 is the round number above that
+boundary, and it is what the pipeline enforces, so nothing below 95 ships except
+through `reviewed-overrides.json`.
 
 **Never downscale to fit the card.** The card box needs ~1044 device px, but the
 same asset is the detail-page hero at up to **2044**. Downscaling to 1280 cost
