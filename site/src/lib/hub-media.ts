@@ -7,6 +7,8 @@ import { getStillImageUrl, getVideoFrameUrl } from '@/lib/video-thumbnail';
 const MEDIA_BASE = 'https://media.comfy.org/hub-media';
 const LANDING_HERO_WIDTH = 1280;
 
+export const HERO_STILL_WIDTH = 640;
+
 const generatedVideoIds = new Set<string>(generatedAssets as string[]);
 const generatedImageExt = generatedImages as Record<string, string>;
 
@@ -50,18 +52,38 @@ export function landingHeroImage(thumbnails: string[] | undefined): string | nul
   return hubImageFor(url) ?? getStillImageUrl(url, LANDING_HERO_WIDTH) ?? url;
 }
 
+const STILL_PREEMPTING_VARIANTS = new Set(['compareSlider', 'hoverDissolve']);
+
+export function heroPaintsAnimatedStill(
+  thumbnails: readonly string[] | undefined,
+  variant?: string | null
+): boolean {
+  if (!thumbnails?.length) return false;
+  return !(thumbnails.length > 1 && STILL_PREEMPTING_VARIANTS.has(variant ?? ''));
+}
+
 export function detailHeroPreload(
-  thumbnail: string | null | undefined,
-  mediaSubtype?: string
+  thumbnails: readonly string[] | null | undefined,
+  mediaSubtype?: string,
+  variant?: string | null
 ): string | null {
-  if (!thumbnail) return null;
-  const url = thumbnailPath(thumbnail);
-  if (isVideoFile(url)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
+  const primary = thumbnails?.[0];
+  if (!primary) return null;
+  const url = thumbnailPath(primary);
+
   if (isAudioFile(url)) return null;
-  const generated = hubImageFor(url);
-  if (generated) return generated;
-  if (mediaSubtype === 'webp') return getStillImageUrl(url, 640) ?? url;
-  return url;
+  if (isVideoFile(url)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
+
+  const secondary = thumbnails?.[1];
+  if (variant === 'compareSlider' && secondary) {
+    const secondaryUrl = thumbnailPath(secondary);
+    if (!isVideoFile(secondaryUrl) && !isAudioFile(secondaryUrl)) return hubAssetUrl(secondaryUrl);
+  }
+
+  if (mediaSubtype === 'webp' && heroPaintsAnimatedStill(thumbnails, variant)) {
+    return hubImageFor(url) ?? getStillImageUrl(url, HERO_STILL_WIDTH) ?? url;
+  }
+  return hubAssetUrl(url);
 }
 
 export function landingHeroPreload(thumbnails: string[] | undefined): string | null {

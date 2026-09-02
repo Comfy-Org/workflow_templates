@@ -12,7 +12,12 @@
 
 import type { ThumbnailVariant } from '../lib/hub-api';
 import { getStillImageUrl, getVideoFrameUrl } from '../lib/video-thumbnail';
-import { hubAssetUrl, hubMediaFor } from '../lib/hub-media';
+import {
+  HERO_STILL_WIDTH,
+  heroPaintsAnimatedStill,
+  hubAssetUrl,
+  hubMediaFor,
+} from '../lib/hub-media';
 import { isVideoFile, isAudioFile } from '../lib/media-utils';
 
 interface Props {
@@ -55,9 +60,11 @@ const secondaryOriginal = secondaryThumb ? thumbUrl(secondaryThumb) : '';
 const primarySrc = hubAssetUrl(primaryOriginal);
 const secondarySrc = hubAssetUrl(secondaryOriginal);
 const isAnimated = mediaSubtype === 'webp';
-const HERO_STILL_WIDTH = 640;
 const heroStillSrc =
-  isAnimated && loading === 'eager' && primarySrc === primaryOriginal
+  isAnimated &&
+  loading === 'eager' &&
+  primarySrc === primaryOriginal &&
+  heroPaintsAnimatedStill(thumbnails, variant)
     ? getStillImageUrl(primaryOriginal, HERO_STILL_WIDTH)
     : null;
 const hasSecondImage = thumbnails.length > 1;
@@ -279,7 +286,11 @@ const secondaryVideoPosterUrl = isSecondaryVideo
         draggable="false"
         sizes={sizes}
         class={imgClass}
-        onerror={heroStillSrc ? `this.onerror=null;this.src='${primarySrc}'` : undefined}
+        onerror={
+          heroStillSrc
+            ? 'this.onerror=null;const s=this.dataset.animatedSrc;delete this.dataset.animatedSrc;if(s)this.src=s'
+            : undefined
+        }
       />
     </div>
   ) : variant === 'zoomHover' ? (
