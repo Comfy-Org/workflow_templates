@@ -207,8 +207,12 @@ async function uploadStaged(id, file) {
  */
 function stagedGateFailure(id, bytes) {
   // A human looked at this one and accepted it; that decision outranks the
-  // thresholds, which is the entire point of reviewed-overrides.json.
-  if (overrides[id] || report[id]?.reviewed) return null;
+  // thresholds, which is the entire point of reviewed-overrides.json. Read from
+  // that file and NOT from `report[id].reviewed`, which is only an echo of it:
+  // deleting an entry is how an approval gets revoked, and trusting the echo
+  // would keep honouring a decision that had been withdrawn. That is the same
+  // failure the overrides file exists to prevent, pointing the other way.
+  if (overrides[id]) return null;
 
   const prev = report[id];
   if (!prev) return 'no report entry, so nothing says what it scored';

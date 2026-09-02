@@ -69,8 +69,16 @@ describe('hero preload resolvers', () => {
     expect(detailHeroPreload(url)).toContain('cdn-cgi/media/mode=frame');
   });
 
-  it('returns null for a hero that is neither generated nor a video', () => {
-    expect(detailHeroPreload(upstream(unseen, 'webp'))).toBeNull();
+  it('preloads the original still when no copy was generated', () => {
+    // ThumbnailDisplay renders the upstream url for these, so there IS an LCP
+    // image to fetch early. Returning null here meant every asset left out of
+    // the image manifest - the ones saving under 15%, and every animated WebP -
+    // painted a hero that was never preloaded.
+    expect(detailHeroPreload(upstream(unseen, 'webp'))).toBe(upstream(unseen, 'webp'));
+  });
+
+  it('preloads nothing for an audio hero, which paints an icon', () => {
+    expect(detailHeroPreload(upstream(unseen, 'mp3'))).toBeNull();
     expect(detailHeroPreload(null)).toBeNull();
   });
 

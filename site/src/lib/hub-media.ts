@@ -24,7 +24,7 @@
  */
 import generatedAssets from '@/data/hub-media-assets.json';
 import generatedImages from '@/data/hub-media-images.json';
-import { firstStillThumbnail, isVideoFile } from '@/lib/media-utils';
+import { firstStillThumbnail, isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { thumbnailPath } from '@/lib/routes';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 
@@ -117,8 +117,16 @@ export function detailHeroPreload(thumbnail: string | null | undefined): string 
   // exactly this URL for them, and without it their LCP image is preloaded not
   // at all. `thumbnailPath` is character-for-character what ThumbnailDisplay's
   // own `thumbUrl` produces, so the two cannot become separate requests.
+  //
+  // Mirrors what ThumbnailDisplay paints, branch for branch: a video shows its
+  // poster, audio shows an icon and so has no image worth fetching, and a still
+  // falls back to its ORIGINAL url. That last one was returning null, which
+  // meant the assets deliberately left out of the image manifest - the ones
+  // that saved under 15%, plus every animated WebP - rendered an LCP still that
+  // was never preloaded. `hubAssetUrl` already ends in the same `?? url`.
   if (isVideoFile(url)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
-  return hubImageFor(url);
+  if (isAudioFile(url)) return null;
+  return hubImageFor(url) ?? url;
 }
 
 /**
