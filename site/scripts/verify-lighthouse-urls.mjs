@@ -18,7 +18,9 @@ const config = JSON.parse(readFileSync(join(siteDir, 'lighthouserc.json'), 'utf-
 
 const urls = config.ci?.collect?.url ?? [];
 if (urls.length === 0) {
-  console.error('No URLs configured in lighthouserc.json. Refusing to pass a check that tests nothing.');
+  console.error(
+    'No URLs configured in lighthouserc.json. Refusing to pass a check that tests nothing.'
+  );
   process.exit(1);
 }
 

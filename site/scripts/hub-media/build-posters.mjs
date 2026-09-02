@@ -56,15 +56,23 @@ const manifest = fs.existsSync(manifestPath)
 const catalog = JSON.parse(fs.readFileSync(gridPath, 'utf8'));
 const sources = [...new Set(catalog.flatMap((t) => t.thumbnails ?? []).filter(isVideo))];
 
-console.log(`${sources.length} distinct video assets, ${Object.keys(manifest).length} already in manifest`);
+console.log(
+  `${sources.length} distinct video assets, ${Object.keys(manifest).length} already in manifest`
+);
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'hub-media-'));
-let done = 0, skipped = 0, failed = 0;
-let bytesIn = 0, bytesOut = 0;
+let done = 0,
+  skipped = 0,
+  failed = 0;
+let bytesIn = 0,
+  bytesOut = 0;
 
 for (const url of sources) {
   const id = assetId(url);
-  if (manifest[id]) { skipped++; continue; }
+  if (manifest[id]) {
+    skipped++;
+    continue;
+  }
   if (done >= limit) break;
 
   const src = path.join(tmp, `${id}.src`);
@@ -76,9 +84,15 @@ for (const url of sources) {
     const srcBytes = fs.statSync(src).size;
 
     const probe = await run(FFPROBE, [
-      '-v', 'error', '-select_streams', 'v:0',
-      '-show_entries', 'stream=width,height:format=duration',
-      '-of', 'json', src,
+      '-v',
+      'error',
+      '-select_streams',
+      'v:0',
+      '-show_entries',
+      'stream=width,height:format=duration',
+      '-of',
+      'json',
+      src,
     ]);
     const meta = JSON.parse(probe.stdout);
     const { width: w, height: h } = meta.streams[0];
@@ -88,17 +102,33 @@ for (const url of sources) {
     const seek = duration > 1.5 ? '1' : '0';
 
     await run(FFMPEG, [
-      '-hide_banner', '-loglevel', 'error', '-y',
-      '-ss', seek, '-i', src, '-frames:v', '1',
-      '-vf', `scale='min(${POSTER_WIDTH},iw)':-2:flags=lanczos`,
-      '-q:v', '4', poster,
+      '-hide_banner',
+      '-loglevel',
+      'error',
+      '-y',
+      '-ss',
+      seek,
+      '-i',
+      src,
+      '-frames:v',
+      '1',
+      '-vf',
+      `scale='min(${POSTER_WIDTH},iw)':-2:flags=lanczos`,
+      '-q:v',
+      '4',
+      poster,
     ]);
 
     const posterBytes = fs.statSync(poster).size;
 
     if (!dryRun) {
-      await run('gcloud', ['storage', 'cp', poster, `${BUCKET}/posters/${id}.jpg`,
-        '--cache-control=public, max-age=31536000, immutable']);
+      await run('gcloud', [
+        'storage',
+        'cp',
+        poster,
+        `${BUCKET}/posters/${id}.jpg`,
+        '--cache-control=public, max-age=31536000, immutable',
+      ]);
     }
 
     // Source dimensions, recorded for the runbook's bucket-vs-manifest diff. No
@@ -111,11 +141,12 @@ for (const url of sources) {
       height: h,
     };
 
-    bytesIn += srcBytes; bytesOut += posterBytes;
+    bytesIn += srcBytes;
+    bytesOut += posterBytes;
     done++;
     console.log(
       `  ${id}  ${w}x${h} ${(srcBytes / 1048576).toFixed(2)}MB` +
-      ` -> poster ${(posterBytes / 1024).toFixed(0)}KB`
+        ` -> poster ${(posterBytes / 1024).toFixed(0)}KB`
     );
   } catch (err) {
     failed++;
@@ -130,5 +161,7 @@ for (const url of sources) {
 fs.rmSync(tmp, { recursive: true, force: true });
 console.log(
   `\ndone=${done} skipped=${skipped} failed=${failed}` +
-  (bytesIn ? `  ${(bytesIn / 1048576).toFixed(1)}MB of source -> ${(bytesOut / 1024).toFixed(0)}KB of posters` : '')
+    (bytesIn
+      ? `  ${(bytesIn / 1048576).toFixed(1)}MB of source -> ${(bytesOut / 1024).toFixed(0)}KB of posters`
+      : '')
 );

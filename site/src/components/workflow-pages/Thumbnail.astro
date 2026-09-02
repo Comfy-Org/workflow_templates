@@ -26,9 +26,7 @@ const isVideo = Boolean(src && isVideoFile(src));
 // Prefer our re-encoded copy of the asset. Shared by every landing-page card,
 // so this one line covers all of them; anything without a generated copy keeps
 // its original URL untouched.
-const resolvedSrc = src
-  ? (isVideo ? hubMediaFor(src)?.video : hubImageFor(src)) ?? src
-  : src;
+const resolvedSrc = src ? ((isVideo ? hubMediaFor(src)?.video : hubImageFor(src)) ?? src) : src;
 // Falls back to the Cloudflare frame transform when the asset has no generated
 // poster, matching ThumbnailDisplay and the carousel. This matters more here
 // than anywhere: the video below is `preload="none"` and gated on visibility,

@@ -21,13 +21,16 @@ describe('hubMediaFor', () => {
   });
 
   it('ignores a query string when reading the id', () => {
-    expect(hubMediaFor(`https://comfy-hub-assets.comfy.org/uploads/${known}.mp4?v=2`)).not.toBeNull();
+    expect(
+      hubMediaFor(`https://comfy-hub-assets.comfy.org/uploads/${known}.mp4?v=2`)
+    ).not.toBeNull();
   });
 
   it('returns null for an asset with no generated copy', () => {
     // The safe degradation: a workflow uploaded since the last run keeps its
     // upstream URL and the Cloudflare poster, rather than 404ing on ours.
-    const unseen = 'https://comfy-hub-assets.comfy.org/uploads/00000000-0000-0000-0000-000000000000.mp4';
+    const unseen =
+      'https://comfy-hub-assets.comfy.org/uploads/00000000-0000-0000-0000-000000000000.mp4';
     expect(hubMediaFor(unseen)).toBeNull();
   });
 
