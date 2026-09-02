@@ -4,11 +4,28 @@
     "description": "General-purpose workflow templates for native video generation, including text-to-video, image-to-video, and other core video workflows supported out of the box.",
     "templates": [
       {
+        "name": "api_pixverse6_r2v",
+        "title": "PixVerse 6.0: Reference to Video",
+        "task": "Reference to Video",
+        "model": "PixVerse",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Create reference-driven videos with PixVerse V6, generating clips that follow the style, motion, and subject traits of your uploaded reference footage. Ideal for matching a specific visual identity across variations, extending a character or scene’s look to new actions, and producing consistent branded content from a single source clip.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "reference-to-video"]
+        }
+      },
+      {
         "name": "video_minimax_h3_i2v",
         "title": "MiniMax H3: Image to Video",
         "task": "Image to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 25423,
         "recommend": "highly_recommended",
         "description": "Turn a starting image into a short, high-quality video clip with MiniMax H3, a unified multimodal model that generates visuals and synchronized audio in a single pass. The workflow takes 1 input image and produces 1 video output, with optional text or reference media to steer motion, style, or sound. Ideal for rapid concept visualization, character-driven animation tests, and creating shareable social media clips with built-in sound design.",
@@ -26,7 +43,7 @@
         "title": "MiniMax H3: Reference to Video",
         "task": "Reference to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 11461,
         "recommend": "highly_recommended",
         "description": "Generate a new video by feeding MiniMax H3 a reference image, up to nine images, three videos, and three audio clips alongside a text prompt, letting the model match character identity, motion, camera, voice, or style from those sources while producing native stereo audio in a single pass. Output is a single MP4 video at up to 2K resolution and 24fps for roughly 15 seconds. Ideal for character-consistent animation, style-transfer video generation, and audio-synced content creation.",
@@ -44,7 +61,7 @@
         "title": "MiniMax H3: Text to Video",
         "task": "Text to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 8424,
         "recommend": "highly_recommended",
         "description": "Generate video with native stereo audio directly from a text prompt using MiniMax H3, an omni-modal model that synthesizes voice, sound effects, and music in a single pass. Output is up to 2K resolution, 24fps, and roughly 15 seconds long, with no file inputs required — just a prompt to one video output. Ideal for rapid concept visualization, social media content creation, and audio-synced storytelling.",
@@ -228,6 +245,26 @@
           "workflow": ["api", "image-to-video"],
           "model_options": {
             "MinimaxHailuo03FirstLastFrameNode": ["MiniMax H3"]
+          }
+        }
+      },
+      {
+        "name": "api_minimax_h3_max_r2v",
+        "title": "MiniMax H3 Max: Reference to Video",
+        "task": "Reference to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video from an image reference using MiniMax H3 Max, which animates your still frame while preserving its composition, visual identity, and aspect ratio. The model generates faster than real time with strong prompt adherence and polished cinematic motion. Ideal for bringing character art to life, animating product shots, and creating video from concept images.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "capabilities": {
+          "workflow": ["api", "reference-to-video"],
+          "model_options": {
+            "MinimaxHailuo03ReferenceNode": ["MiniMax H3"]
           }
         }
       },
@@ -492,7 +529,7 @@
         "title": "LTX-2.3: Image to Video",
         "task": "Image to Video",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 20990,
         "recommend": "highly_recommended",
         "description": "Upload an image to generate a video with improved motion consistency and fine details, including enhanced support for portrait formats and audio quality.",
@@ -834,7 +871,7 @@
         "title": "LTX-2.3: Text to Video",
         "task": "Text to Video",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 772,
         "recommend": "high",
         "description": "Generate video from a text prompt using LTX-2.3, a fast model from Lightricks. The workflow outputs a high-quality video with native audio and support for start/end frame control. It is optimized for portrait or landscape formats.",
@@ -3783,7 +3820,7 @@
         "title": "Ideogram v4: Text to Image",
         "task": "Text to Image",
         "model": "Ideogram",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 119,
         "recommend": "low",
         "description": "Generate high-fidelity images from text prompts using Ideogram 4.0, with strong text rendering and 2K photorealistic output. Ideal for design tasks, flat and graphic styles, with precise control over layout, color, and aesthetics.",
@@ -3897,7 +3934,7 @@
         "title": "Ideogram v4: Text to Image (API)",
         "task": "Text to Image",
         "model": "Ideogram",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 35,
         "recommend": "not_recommended",
         "description": "Generate 2K images from text prompts via the Ideogram v4 API. The open model excels at design, text rendering, and photorealistic output. Provide a structured or natural language prompt—optionally refined by a Gemini node—and the workflow returns a high-quality image with precise layout and color support. Execution is server-side.",
@@ -9766,6 +9803,23 @@
           "model_options": {
             "HitPawGeneralImageEnhance": ["generative_portrait", "generative"]
           }
+        }
+      },
+      {
+        "name": "utility_bria_increase_resolution",
+        "title": "Image Upscale: Bria Increase Resolution",
+        "task": "Image Upscale",
+        "model": "BRIA",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Upscale any image to higher resolutions using Bria's dedicated resolution enhancement API, which preserves original content without adding new details or regenerating the image. The workflow accepts a single input image and produces one enhanced, higher-resolution output, supporting JPEG and PNG files in RGB, RGBA, or CMYK color modes up to a maximum area of 8192x8192 pixels. Built-in content moderation scans both the input image and generated output to ensure safe, policy-compliant processing. Ideal for preparing images for print, enlarging photos for digital display, or increasing resolution of assets for professional design work.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-upscale"]
         }
       },
       {
