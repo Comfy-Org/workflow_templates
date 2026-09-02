@@ -40,7 +40,7 @@ const posterSrc =
     (isVideo ? (
       <video
         src={resolvedSrc}
-        data-poster={posterSrc}
+        poster={posterSrc}
         class={imgClass}
         preload="none"
         muted
@@ -87,14 +87,6 @@ const posterSrc =
   const videos = document.querySelectorAll<HTMLVideoElement>('video[data-gated-video]');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  /** Move `data-poster` onto the element, once, when the card is worth painting. */
-  function applyPoster(video: HTMLVideoElement) {
-    const poster = video.dataset.poster;
-    if (!poster) return;
-    video.poster = poster;
-    delete video.dataset.poster;
-  }
-
   if ('IntersectionObserver' in window) {
     // Deliberately never unobserved, so a card scrolled past and returned to
     // plays again rather than staying frozen on its poster.
@@ -102,10 +94,6 @@ const posterSrc =
       (entries) => {
         for (const entry of entries) {
           const video = entry.target as HTMLVideoElement;
-          // A `<video poster>` downloads immediately whatever `preload` says, so
-          // the poster is attached here rather than server-rendered: otherwise
-          // every card on the page fetches one on load, off screen or not.
-          if (entry.isIntersecting) applyPoster(video);
           if (entry.isIntersecting && !reducedMotion.matches) {
             // Rejects when the browser declines playback. The poster stays
             // visible, which is what the reader saw before playback started.
@@ -122,9 +110,6 @@ const posterSrc =
     // No observer support: fall back to today's behaviour rather than leaving
     // a reader looking at posters that never move. Still gated on the motion
     // preference, exactly as the observer path above is.
-    videos.forEach((video) => {
-      applyPoster(video);
-      video.play().catch(() => {});
-    });
+    videos.forEach((video) => video.play().catch(() => {}));
   }
 </script>
