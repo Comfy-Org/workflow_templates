@@ -14,10 +14,11 @@ describe('assets we deliberately did not re-encode', () => {
   const upstream = (id: string) => `https://comfy-hub-assets.comfy.org/uploads/${id}.mp4`;
 
   it('leaves a dropped asset pointing upstream, untouched', () => {
-    // Any id absent from the manifest must resolve to its original. Reading one
-    // out of the data rather than hardcoding keeps this true as the set changes:
-    // an earlier version pinned a specific id, which went stale the moment that
-    // file was reviewed and shipped.
+    // Asserts the RULE - any id absent from the manifest resolves to its
+    // original - rather than naming a real dropped asset. An earlier version
+    // pinned one, and it went stale the moment that file was reviewed and
+    // shipped. A synthetic id can never join the manifest, and the assertion
+    // below proves it has not.
     const dropped = '00000000-1111-2222-3333-444444444444';
     expect(assets).not.toContain(dropped);
     expect(hubMediaFor(upstream(dropped))).toBeNull();
@@ -26,9 +27,7 @@ describe('assets we deliberately did not re-encode', () => {
 
   it('still rewrites an asset we did re-encode', () => {
     const kept = (assets as string[])[0];
-    expect(hubAssetUrl(upstream(kept))).toBe(
-      `https://media.comfy.org/hub-media/video/${kept}.mp4`
-    );
+    expect(hubAssetUrl(upstream(kept))).toBe(`https://media.comfy.org/hub-media/video/${kept}.mp4`);
   });
 
   it('leaves an asset nobody has ever processed alone', () => {

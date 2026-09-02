@@ -3,16 +3,24 @@
  *
  * The hub's uploads are delivered at their original encode, which for card
  * thumbnails means multi-megabyte files: one measured 9.67 Mbps for a five
- * second loop. Every video in the catalog was re-encoded once, offline, at its
- * native resolution (capped at 1280 wide, which covers the largest measured
- * card box) and paired with a poster frame, then uploaded to `media.comfy.org`.
- * Quality was verified per file against the source with SSIM rather than
- * assumed from an encoder setting.
+ * second loop. The catalog was re-encoded once, offline, at each source's own
+ * resolution (capped at 1920, NOT at the card box: the same asset is the
+ * detail-page hero at up to 2044 device px, and downscaling to 1280 cost 3 to 4
+ * VMAF points at the same file size) and paired with a poster frame, then
+ * uploaded to `media.comfy.org`.
  *
- * A source with no generated copy falls back to the original URL and the
- * Cloudflare frame transform, so a workflow uploaded after the last run keeps
- * working exactly as it does today. Re-run `scripts/hub-media/build.mjs` to
- * pick those up.
+ * Quality was gated per file against the source on VMAF >= 95, not assumed from
+ * an encoder setting and not measured with SSIM, which passed a visibly
+ * degraded file at 0.9665 that VMAF scored 78.8.
+ *
+ * This is a partial manifest by design. An asset is absent when re-encoding it
+ * could not clear the floor, or cleared it while saving under 25%, which buys a
+ * second copy to maintain for almost no bytes. Absent means "keep the original
+ * URL and the Cloudflare frame transform", so those cards and a workflow
+ * uploaded since the last run both keep working exactly as they do today.
+ *
+ * The pipeline that regenerates these manifests, and the rules above with the
+ * evidence behind each, are in `scripts/hub-media/README.md`.
  */
 import generatedAssets from '@/data/hub-media-assets.json';
 import generatedImages from '@/data/hub-media-images.json';
@@ -34,19 +42,24 @@ function assetId(url: string): string | null {
 export interface HubMedia {
   /** Still frame, 640 wide. A placeholder the video replaces once it plays. */
   poster: string;
-  /** Re-encoded video at the source's own resolution. */
+  /** Re-encoded video at the source's own resolution, capped at 1920 wide. */
   video: string;
 }
 
 /**
- * Extension of our copy, keyed by asset id. Stills become `jpg`; animated WebP
- * stays `webp` so the loop keeps looping. Assets that gained nothing from
- * re-encoding, or that carry real transparency, are absent and keep their
- * original URL.
+ * Extension of our copy, keyed by asset id. Every entry is `jpg` today: stills
+ * re-encode to JPEG, and animated WebP is deliberately left alone, because
+ * re-encoding it introduced visible blocking in smooth gradients for about 3%
+ * of the total saving on files that are already `loading="lazy"`. The extension
+ * is stored rather than assumed so reintroducing a second output format does
+ * not require changing every call site.
+ *
+ * Assets that gained nothing from re-encoding, or that carry real transparency
+ * a JPEG would flatten, are absent and keep their original URL.
  */
 const generatedImageExt = generatedImages as Record<string, string>;
 
-/** Our re-encoded still or animation for a card image, when one exists. */
+/** Our re-encoded still for a card image, when one exists. */
 export function hubImageFor(sourceUrl: string): string | null {
   const id = assetId(sourceUrl);
   if (!id) return null;
