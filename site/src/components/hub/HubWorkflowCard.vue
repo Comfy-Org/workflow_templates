@@ -86,10 +86,7 @@ const videoUrl = computed(() => {
   return thumbnailPath(primaryFile.value!);
 });
 
-/** Our re-encoded copy of this asset, when one has been generated. */
 const hubMedia = computed(() => (videoUrl.value ? hubMediaFor(videoUrl.value) : null));
-
-/** Prefer our copy; an asset uploaded since the last run falls back upstream. */
 const playbackUrl = computed(() => hubMedia.value?.video ?? videoUrl.value);
 
 const posterUrl = computed(() => {
@@ -103,36 +100,9 @@ function onVideoError() {
   videoFailed.value = true;
 }
 
-/**
- * Play only what the reader can see.
- *
- * Every card carried `autoplay`, which silently overrides `preload="metadata"`,
- * so all 28 videos on the listing downloaded in full to show the two actually on
- * screen. Playback is gated on visibility instead: a card the reader can see
- * behaves exactly as it did before, and one they cannot see costs them nothing.
- *
- * The element is deliberately never unobserved, so a card scrolled past and
- * returned to plays again, and a long scroll does not accumulate videos left
- * decoding off screen.
- */
 const videoEl = useTemplateRef<HTMLVideoElement>('videoEl');
 const reducedMotion = usePreferredReducedMotion();
 
-/**
- * The poster is fetched only once the card is near the viewport.
- *
- * A `<video poster>` downloads IMMEDIATELY, whatever `preload` says - the two
- * attributes are unrelated, and `preload="none"` does not cover it. Giving every
- * card a poster is what made the cards paint before their video arrives, but it
- * also meant the 30 related cards on a workflow detail page fetched 30 posters on
- * load. Measured there: ~25 poster requests of 11-61 KB each, all below the fold,
- * saturating the link and leaving the 16 KB hero still queued behind them with
- * 7.3 s of LCP load time.
- *
- * Separate observer from the playback one below, and deliberately a wider margin:
- * the poster should already be there when the card scrolls in, whereas playback
- * should start only when it actually is.
- */
 const posterReady = ref(false);
 useIntersectionObserver(
   videoEl,
@@ -146,8 +116,6 @@ useIntersectionObserver(videoEl, ([entry]) => {
   const el = videoEl.value;
   if (!el) return;
   if (entry?.isIntersecting && reducedMotion.value !== 'reduce') {
-    // Rejects when the browser declines playback. The poster stays visible,
-    // which is the same thing the reader sees before a video has started.
     el.play().catch(() => {});
   } else {
     el.pause();
@@ -158,9 +126,6 @@ const primaryUrl = computed(() => {
   const f = primaryFile.value;
   if (!f || isMediaFile(f)) return null;
   const url = thumbnailPath(f);
-  // Prefer our re-encoded copy. Card images are the largest remaining cost on
-  // the page: 283 of them ship as raw PNG, averaging ~2 MB, into a box roughly
-  // 400 px wide. Dimensions are unchanged; only the encoding is.
   return hubImageFor(url) ?? url;
 });
 

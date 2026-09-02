@@ -1,13 +1,3 @@
-/**
- * Fail fast when a page pinned in lighthouserc.json no longer exists.
- *
- * The budgets are pinned to four specific URLs, one per page type. If a template
- * is archived or a use-case page is renamed, Lighthouse would otherwise audit a
- * 404 and report a suspiciously good score against a byte budget, which reads as
- * "the page got faster" rather than "the page is gone".
- *
- * Run against the built output before LHCI.
- */
 import { readFileSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,7 +21,6 @@ if (!existsSync(distDir)) {
 
 const missing = [];
 for (const url of urls) {
-  // Paths in the config are http://localhost/<path>; LHCI swaps in a real port.
   const path = new URL(url).pathname;
   const file = join(distDir, path, 'index.html');
   if (!existsSync(file)) missing.push({ path, file });

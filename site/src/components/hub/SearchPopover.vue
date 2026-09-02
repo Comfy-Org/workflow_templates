@@ -516,8 +516,6 @@ function getImageThumb(file: string | undefined | null): string | null {
   if (!file) return null;
   if (isAudioFile(file)) return null;
   const url = thumbnailPath(file);
-  // Prefer our generated poster/copy; fall back to the frame transform or the
-  // original for anything generated after the last run.
   if (isVideoFile(file)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
   return hubImageFor(url) ?? url;
 }

@@ -113,39 +113,7 @@ const ogAlternateLocales: readonly Locale[] = clusterLocales(
 <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
-<!--
-  Google Fonts: Inter, loaded off the critical path.
-
-  As a plain `rel="stylesheet"` this was the single largest render-blocking
-  resource on mobile: Lighthouse attributed 1,204 ms to it on the use-case
-  detail page and 1,210 ms on the workflow detail page, for 1.2 KB of CSS. It
-  held up FIRST PAINT on a third-party round trip, which is why FCP and LCP came
-  out identical at 3.7 s on the use-case page - nothing could paint until Google
-  answered.
-
-  Preloading it as a stylesheet and promoting it in `onload` keeps the same
-  font, the same weights and the same `display=swap`, and gives up nothing: the
-  font FILE was always going to arrive after first paint and swap in, because
-  that is what `display=swap` asks for. All this changes is that the text now
-  paints in the fallback face immediately instead of waiting on the round trip.
-  The preconnects stay, so the promoted stylesheet resolves without a fresh
-  DNS/TCP/TLS handshake.
-
-  The pattern is a `preload` for priority plus a `media="print"` stylesheet that
-  is promoted in `onload`. The media attribute is what does the work: a
-  stylesheet whose media query does not match is non-render-blocking BY SPEC,
-  where `rel="preload"` promoted to `rel="stylesheet"` can still land before
-  first paint and block anyway. The preload is what stops the print sheet being
-  fetched at low priority.
-
-  The further step, if the swap window is judged too visible, is self-hosting
-  Inter next to PP Formula in `public/fonts/` - identical rendering, and it
-  drops two third-party origins rather than just moving them off the critical
-  path. Inter v20 is a variable font, so that is 7 woff2 files (one per unicode
-  subset) covering all three weights, not 21. Deliberately not bundled here: it
-  touches every locale, and dropping a subset is an i18n decision, not a perf
-  one.
--->
+<!-- Google Fonts: Inter -->
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link

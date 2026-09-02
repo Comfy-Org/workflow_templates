@@ -28,12 +28,7 @@ const locale = getLocaleFromPath(Astro.url.pathname);
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
 
 const featured = getFeatured(serialized);
-// `description` is ~96 KB of the island props and nothing in the island reads
-// it: no card renders it, and SearchPopover indexes grid.json, which already
-// strips it. Server-side uses above are unaffected, they just don't ship.
 const forIsland = serialized.map(({ description: _description, ...rest }) => rest);
-// The hero island does not read `description` either; only the server-side
-// `featured` above needs the full record, for the LCP preload.
 const featuredForIsland = featured.map(({ description: _description, ...rest }) => rest);
 const featuredLcpImage = featuredPreloadImage(featured);
 

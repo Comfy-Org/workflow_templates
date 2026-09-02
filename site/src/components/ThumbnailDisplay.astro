@@ -50,36 +50,12 @@ const imgClass = mediaClass;
 
 const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
-// This is the hero of every workflow detail page, the worst-LCP page type in
-// the baseline at 15.9 s. Resolve to our re-encoded copy where one exists;
-// anything newer than the last generation run keeps its original URL.
 const primaryOriginal = primaryThumb ? thumbUrl(primaryThumb) : '';
 const secondaryOriginal = secondaryThumb ? thumbUrl(secondaryThumb) : '';
 const primarySrc = hubAssetUrl(primaryOriginal);
 const secondarySrc = hubAssetUrl(secondaryOriginal);
 const isAnimated = mediaSubtype === 'webp';
-/**
- * Width the hero still is requested at. The box is declared 640x360 and the
- * animated sources are 350px wide, so Cloudflare returns the source size rather
- * than upscaling; 640 simply states the box we are sizing for.
- */
 const HERO_STILL_WIDTH = 640;
-/**
- * An eagerly-loaded animated WebP is the worst LCP element on the site.
- * Measured on the LTX-2.3 detail hero: 350x350, 52 frames, 1,870 KB, painted
- * into a 640x360 box, LCP 16.7 s on Lighthouse mobile with 16.0 s of that in
- * RENDER delay - the bytes land at 1.9 s and the rest is decoding 52 frames on
- * a throttled CPU. The still costs 18.9 KB and one frame.
- *
- * So the hero paints the still, and the script below swaps the animation in
- * after `load`, once it is no longer competing with anything. Lazy cards are
- * untouched: they are off screen, so they are not the LCP element, and giving
- * them a second URL would just fetch the same picture twice.
- *
- * Only when there is no re-encoded copy, which for animated WebP is always
- * (they are deliberately absent from the manifest) - if one exists, `primarySrc`
- * is already our own right-sized still and there is nothing to improve.
- */
 const heroStillSrc =
   isAnimated && loading === 'eager' && primarySrc === primaryOriginal
     ? getStillImageUrl(primaryOriginal, HERO_STILL_WIDTH)
@@ -88,8 +64,6 @@ const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb ? isAudioFile(primaryThumb) : false;
 const isVideo = primaryThumb ? isVideoFile(primaryThumb) : false;
 const isSecondaryVideo = secondaryThumb ? isVideoFile(secondaryThumb) : false;
-// Posters resolve from the ORIGINAL url: our manifest is keyed by the upstream
-// asset id, and primarySrc may already point at our bucket.
 const videoPosterUrl = isVideo
   ? (hubMediaFor(primaryOriginal)?.poster ?? getVideoFrameUrl(primaryOriginal))
   : null;
@@ -342,33 +316,6 @@ const secondaryVideoPosterUrl = isSecondaryVideo
 }
 
 <script>
-  /**
-   * Swap the animation in behind the hero still, once it costs nothing.
-   *
-   * The hero renders a one-frame still so it is not the LCP element paying for
-   * a 52-frame, 1.9 MB decode. The animation is still the intended design, so
-   * it is fetched after `load`, when it is no longer competing with the first
-   * paint. Assigning `src` on an already-painted <img> swaps the picture with
-   * no reflow: the element keeps its box and its declared dimensions.
-   *
-   * Honours `prefers-reduced-motion`, which also means those readers never pay
-   * for the animated file at all - the same gating the video work in this change
-   * applies everywhere else.
-   */
-  /**
-   * Wide viewports only.
-   *
-   * Measured: swapping on mobile just moves the cost rather than removing it.
-   * The still paints at 16 KB and render delay drops from 16.0 s to 0.35 s, but
-   * assigning the 1.9 MB original repaints the same element, so LCP follows the
-   * swap and comes back as 9.2 s of LOAD time instead. On a 412 px screen that
-   * is 1.9 MB to animate a 350x350 source that is being upscaled anyway.
-   *
-   * Desktop already scores 99-100 and loads the original today, so it keeps the
-   * animation and is no worse than before. This is the one deliberate product
-   * change in the fix: on phones the detail hero is a still. Delete this check
-   * to restore animation everywhere.
-   */
   const WIDE_VIEWPORT = 1024;
 
   function loadHeroAnimations() {
@@ -377,14 +324,13 @@ const secondaryVideoPosterUrl = isSecondaryVideo
     document.querySelectorAll<HTMLImageElement>('img[data-animated-src]').forEach((img) => {
       const src = img.dataset.animatedSrc;
       if (!src) return;
-      // Decode off the main thread first, so the swap cannot drop a frame.
-      const full = new Image();
-      full.decoding = 'async';
-      full.onload = () => {
+      const animation = new Image();
+      animation.decoding = 'async';
+      animation.onload = () => {
         img.src = src;
         delete img.dataset.animatedSrc;
       };
-      full.src = src;
+      animation.src = src;
     });
   }
 

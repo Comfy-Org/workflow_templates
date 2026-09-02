@@ -60,23 +60,13 @@ const heroVideoThumb =
   heroTemplate && !hasStillThumbnail(heroTemplate.thumbnails)
     ? heroTemplate.thumbnails?.find((thumb) => isVideoFile(thumb))
     : undefined;
-// The hero is this page's LCP element, so it is the one image most worth
-// serving from our re-encoded copy. Falls back to the original when the asset
-// predates the last generation run.
 const heroVideoOriginal = heroVideoThumb ? thumbnailPath(heroVideoThumb) : null;
 const heroVideoSrc = heroVideoOriginal
   ? (hubMediaFor(heroVideoOriginal)?.video ?? heroVideoOriginal)
   : null;
-// Falls back to the Cloudflare frame transform when the asset has no generated
-// poster, which is what the carousel and the detail hero already do. Without it
-// a visibility-gated hero paints nothing at all until playback starts.
-// Resolved through the same helper the page's <link rel="preload"> uses, so the
-// poster and the preload are one request rather than two.
 const heroVideoPoster = heroVideoOriginal
   ? (landingHeroPreload(heroTemplate?.thumbnails) ?? undefined)
   : undefined;
-// Shared with the page's <link rel="preload"> so the two cannot resolve to
-// different URLs, which would fetch the hero twice.
 const heroSrc = landingHeroImage(heroTemplate?.thumbnails);
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
 // The hero visual links to the override (page CTA) or the hero template's detail page.
