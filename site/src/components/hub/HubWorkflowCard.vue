@@ -118,6 +118,30 @@ function onVideoError() {
 const videoEl = useTemplateRef<HTMLVideoElement>('videoEl');
 const reducedMotion = usePreferredReducedMotion();
 
+/**
+ * The poster is fetched only once the card is near the viewport.
+ *
+ * A `<video poster>` downloads IMMEDIATELY, whatever `preload` says - the two
+ * attributes are unrelated, and `preload="none"` does not cover it. Giving every
+ * card a poster is what made the cards paint before their video arrives, but it
+ * also meant the 30 related cards on a workflow detail page fetched 30 posters on
+ * load. Measured there: ~25 poster requests of 11-61 KB each, all below the fold,
+ * saturating the link and leaving the 16 KB hero still queued behind them with
+ * 7.3 s of LCP load time.
+ *
+ * Separate observer from the playback one below, and deliberately a wider margin:
+ * the poster should already be there when the card scrolls in, whereas playback
+ * should start only when it actually is.
+ */
+const posterReady = ref(false);
+useIntersectionObserver(
+  videoEl,
+  ([entry]) => {
+    if (entry?.isIntersecting) posterReady.value = true;
+  },
+  { rootMargin: '300px' }
+);
+
 useIntersectionObserver(videoEl, ([entry]) => {
   const el = videoEl.value;
   if (!el) return;
@@ -317,7 +341,7 @@ function handleCardClick() {
         v-else-if="isVideoPrimary && videoUrl"
         ref="videoEl"
         :src="playbackUrl || undefined"
-        :poster="posterUrl || undefined"
+        :poster="(posterReady && posterUrl) || undefined"
         class="w-full h-full object-cover"
         preload="none"
         muted
