@@ -35,8 +35,14 @@ describe('buildTemplateItemListEntries', () => {
         name: 'Flux Schnell',
         url: 'https://comfy.org/workflows/flux_schnell-abc123/',
         image: undefined,
+        itemType: 'CreativeWork',
       },
-      { name: 'Qwen Edit', url: 'https://comfy.org/workflows/qwen_edit-def456/', image: undefined },
+      {
+        name: 'Qwen Edit',
+        url: 'https://comfy.org/workflows/qwen_edit-def456/',
+        image: undefined,
+        itemType: 'CreativeWork',
+      },
     ]);
   });
 
@@ -81,7 +87,32 @@ describe('buildTemplateItemListEntries', () => {
       template({ name: '', shareId: '' }),
       template({ name: 'flux_schnell', shareId: 'abc123' }),
     ]);
-    expect(entries).toHaveLength(1);
     expect(entries[0].name).toBe('Flux Schnell');
+  });
+
+  it('populates keywords and creator object when metadata is present', () => {
+    const entries = buildTemplateItemListEntries([
+      template({
+        name: 'full_featured',
+        shareId: 'xyz789',
+        title: 'Full Featured Workflow',
+        tags: ['Video', 'Animation'],
+        models: ['Wan Animate 2', 'SDXL'],
+        username: 'animator_pro',
+        creatorDisplayName: 'Animator Pro',
+      }),
+    ]);
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'Full Featured Workflow',
+      url: 'https://comfy.org/workflows/full_featured-xyz789/',
+      itemType: 'CreativeWork',
+      keywords: 'Video, Animation, Wan Animate 2, SDXL',
+      creator: {
+        '@type': 'Person',
+        name: 'Animator Pro',
+        url: 'https://comfy.org/workflows/animator_pro/',
+      },
+    });
   });
 });

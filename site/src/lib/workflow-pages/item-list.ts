@@ -22,6 +22,20 @@ export function buildTemplateItemListEntries(
         name: tpl.title,
         url: absoluteUrl(path),
         image: resolveAbsoluteThumbnail(firstStillThumbnail(tpl.thumbnails)),
+        itemType: 'CreativeWork',
+        ...(tpl.description ? { description: tpl.description } : {}),
+        ...([...(tpl.tags || []), ...(tpl.models || [])].length > 0
+          ? { keywords: [...(tpl.tags || []), ...(tpl.models || [])].join(', ') }
+          : {}),
+        ...(tpl.username
+          ? {
+              creator: {
+                '@type': 'Person',
+                name: tpl.creatorDisplayName || tpl.username,
+                url: absoluteUrl(`/workflows/${tpl.username}/`),
+              },
+            }
+          : {}),
       },
     ];
   });

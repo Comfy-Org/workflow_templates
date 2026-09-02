@@ -130,12 +130,14 @@ const breadcrumbTrail = [
   { label: t('template.useCases', locale), href: useCasesIndexPath(locale) },
 ];
 
-const structuredData = buildCollectionPageJsonLd({
-  name: title,
-  description,
-  url: canonicalUrl,
-  items: noindex ? undefined : buildTemplateItemListEntries(templates, locale),
-});
+const structuredData = noindex
+  ? undefined
+  : buildCollectionPageJsonLd({
+      name: title,
+      description,
+      url: canonicalUrl,
+      items: buildTemplateItemListEntries(templates, locale),
+    });
 const breadcrumbStructuredData = buildWorkflowBreadcrumb(locale, { name: h1 }, [
   {
     name: t('breadcrumb.workflows', locale),
