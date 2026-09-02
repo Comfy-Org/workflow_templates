@@ -45,6 +45,19 @@ jobs:
           PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
           PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PRODUCTION }}
           PUBLIC_APPROVED_ONLY: 'true'
+          # Without these the preview orders the catalog differently from
+          # production, which makes every preview misleading for anything
+          # order-related. `applyRanking` overrides `usage` with Algolia
+          # `run_clicks`; with no credentials `fetchRankingMap` returns an empty
+          # map and every template falls back to the backend `usage`, which is
+          # an editorial number (400000, 99999, 3000, 0) rather than a measured
+          # one. Measured on PR #1216: 435 of 622 templates carried a different
+          # `usage` on the preview than on production, so the popular-first sort
+          # that HubBrowse applies by default produced a visibly different grid.
+          # Same non-secret literals deploy-site.yml and cron-rebuild-site.yml
+          # already use; the search key is public by design.
+          PUBLIC_ALGOLIA_APP_ID: 4E0RO38HS8
+          PUBLIC_ALGOLIA_SEARCH_KEY: 684d998c36b67a9a9fce8fc2d8860579
 
       - name: Deploy preview to Vercel
         id: deploy
