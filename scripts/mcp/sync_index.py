@@ -306,7 +306,7 @@ def infer_task(name: str, group_type: str, tags: list[str]) -> str:
         (["r2v", "reference_to_video"], "Reference to Video"),
         (["img_edit", "img2img"], "Image to Image"),
         (["text_to_image", "text-to-image", "t2i"], "Text to Image"),
-        (["upscale"], "Image Upscaling"),
+        (["upscale", "increase_resolution"], "Image Upscaling"),
         (["inpaint"], "Image Inpainting"),
         (["segment"], "Image Segmentation"),
         (["remove"], "Remove Background"),
@@ -358,7 +358,7 @@ def infer_task_type(name: str) -> str:
         return "video-upscale"
     if any(x in name_l for x in ["segment", "matting"]):
         return "seg"
-    if "upscale" in name_l:
+    if "upscale" in name_l or "increase_resolution" in name_l:
         return "upscale"
     if "depth" in name_l:
         return "depth"
