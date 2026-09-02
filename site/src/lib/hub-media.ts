@@ -26,7 +26,7 @@ import generatedAssets from '@/data/hub-media-assets.json';
 import generatedImages from '@/data/hub-media-images.json';
 import { firstStillThumbnail, isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { thumbnailPath } from '@/lib/routes';
-import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { getStillImageUrl, getVideoFrameUrl } from '@/lib/video-thumbnail';
 
 const MEDIA_BASE = 'https://media.comfy.org/hub-media';
 
@@ -87,11 +87,24 @@ export function hubMediaFor(sourceUrl: string): HubMedia | null {
  *
  * Returns null when the hero is a video, which carries its own poster instead.
  */
+/** Width the landing hero is requested at: the box is `aspect-940/516`, so 1280
+ *  covers it at DPR 2 on mobile and 1x on desktop. Cloudflare will not upscale. */
+const LANDING_HERO_WIDTH = 1280;
+
 export function landingHeroImage(thumbnails: string[] | undefined): string | null {
   const still = firstStillThumbnail(thumbnails);
   if (!still) return null;
   const url = thumbnailPath(still);
-  return hubImageFor(url) ?? url;
+  const generated = hubImageFor(url);
+  if (generated) return generated;
+  // No generated copy: size it at the edge rather than shipping the original.
+  // This hero is the page's eager, high-priority image and the originals are
+  // not sized for it - Lighthouse reported 1,105 KB of `uses-responsive-images`
+  // waste on the use-case detail page, 589 KB of it this one file. Measured on
+  // that asset: a 604,696-byte PNG comes back as 35,612 bytes of JPEG at
+  // width=1280, a 94% cut, and 960 and 1280 return the same bytes because the
+  // source is narrower than both.
+  return getStillImageUrl(url, LANDING_HERO_WIDTH) ?? url;
 }
 
 /**
@@ -107,8 +120,19 @@ export function hubAssetUrl(url: string): string {
   return hubMediaFor(url)?.video ?? hubImageFor(url) ?? url;
 }
 
-/** The image worth preloading for a detail hero, or null when there is none. */
-export function detailHeroPreload(thumbnail: string | null | undefined): string | null {
+/**
+ * The image worth preloading for a detail hero, or null when there is none.
+ *
+ * `mediaSubtype` is needed because it is what `ThumbnailDisplay` branches on to
+ * decide the hero is an animated WebP and paint a still instead of the 1.9 MB
+ * original. The preload has to name the URL the element actually renders, so
+ * the two read the same inputs and reach the same answer; naming the original
+ * here would fetch both.
+ */
+export function detailHeroPreload(
+  thumbnail: string | null | undefined,
+  mediaSubtype?: string
+): string | null {
   if (!thumbnail) return null;
   const url = thumbnailPath(thumbnail);
   // A video hero paints its poster first, so that is the image to fetch early,
@@ -126,7 +150,14 @@ export function detailHeroPreload(thumbnail: string | null | undefined): string 
   // was never preloaded. `hubAssetUrl` already ends in the same `?? url`.
   if (isVideoFile(url)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
   if (isAudioFile(url)) return null;
-  return hubImageFor(url) ?? url;
+  const generated = hubImageFor(url);
+  if (generated) return generated;
+  // No generated copy and the hero is animated: ThumbnailDisplay paints the
+  // Cloudflare still and swaps the animation in after load, so the still is the
+  // LCP image and the only thing worth fetching early. HERO_STILL_WIDTH is
+  // mirrored there; both ask for 640, the box they render into.
+  if (mediaSubtype === 'webp') return getStillImageUrl(url, 640) ?? url;
+  return url;
 }
 
 /**

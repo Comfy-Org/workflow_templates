@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { detailHeroPreload, hubMediaFor, landingHeroPreload } from '../../src/lib/hub-media';
-import { getVideoFrameUrl } from '../../src/lib/video-thumbnail';
+import { getStillImageUrl, getVideoFrameUrl } from '../../src/lib/video-thumbnail';
 import generatedAssets from '../../src/data/hub-media-assets.json';
 
 /** A real id from the generated set, so the test breaks if the data is dropped. */
@@ -77,15 +77,27 @@ describe('hero preload resolvers', () => {
     expect(detailHeroPreload(upstream(unseen, 'webp'))).toBe(upstream(unseen, 'webp'));
   });
 
+  it('preloads the still, not the original, for an animated WebP hero', () => {
+    // The measured case: a 350x350, 52-frame, 1,870 KB animated WebP was the
+    // LCP element at 16.7 s. ThumbnailDisplay paints the Cloudflare still and
+    // swaps the animation in after load, so the preload has to name the still
+    // or the page fetches both. 640 is mirrored from HERO_STILL_WIDTH there.
+    const url = upstream(unseen, 'webp');
+    expect(detailHeroPreload(url, 'webp')).toBe(getStillImageUrl(url, 640));
+    expect(detailHeroPreload(url, 'webp')).toContain('anim=false');
+  });
+
   it('preloads nothing for an audio hero, which paints an icon', () => {
     expect(detailHeroPreload(upstream(unseen, 'mp3'))).toBeNull();
     expect(detailHeroPreload(null)).toBeNull();
   });
 
-  it('prefers the still when a landing hero has one', () => {
+  it('prefers the still when a landing hero has one, sized at the edge', () => {
     // LandingHero renders the <img> branch here, so the still is what paints.
+    // With no generated copy it is sized by Cloudflare rather than shipped at
+    // full size: measured 604,696 -> 35,612 bytes on the real use-case hero.
     const still = upstream(unseen, 'webp');
-    expect(landingHeroPreload([still, upstream(known, 'mp4')])).toBe(still);
+    expect(landingHeroPreload([still, upstream(known, 'mp4')])).toBe(getStillImageUrl(still, 1280));
   });
 
   it('preloads the video poster when a landing hero is video-led', () => {
