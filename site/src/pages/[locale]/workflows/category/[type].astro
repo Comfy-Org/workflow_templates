@@ -46,12 +46,10 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
   return Astro.redirect(`/workflows/category/${type || ''}/`);
 }
 
-// Validate type
+// Validate type. `image|video|audio|3d` are the only categories; a removed or
+// made-up one 301s to the localized hub rather than 404.
 if (!type || !validTypes.includes(type as MediaType)) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect(`/${locale}/workflows/`, 301);
 }
 
 const typedLocale = locale as Locale;
@@ -72,11 +70,10 @@ const allSerialized = localizeCards(
 );
 const templates = allSerialized.filter((tmpl) => tmpl.mediaType === mediaType);
 
+// This locale's catalogue has nothing of this media type. 301 to the localized
+// hub rather than 404.
 if (templates.length === 0) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect(`/${locale}/workflows/`, 301);
 }
 
 const basePath = categoryPath(mediaType);

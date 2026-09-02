@@ -210,6 +210,7 @@ export const NON_DETAIL_SEGMENTS: ReadonlySet<string> = new Set([
   'tag',
   'model',
   'creators',
+  'use-cases',
 ]);
 
 /** The locale of `/<locale>/workflows/<slug>/`, or null when the path is not one. */
