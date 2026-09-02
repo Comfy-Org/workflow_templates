@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { detailHeroPreload, hubMediaFor, landingHeroPreload } from '../../src/lib/hub-media';
+import {
+  HERO_STILL_WIDTH,
+  detailHeroPreload,
+  heroPaintsAnimatedStill,
+  hubAssetUrl,
+  hubMediaFor,
+  landingHeroPreload,
+} from '../../src/lib/hub-media';
 import { getStillImageUrl, getVideoFrameUrl } from '../../src/lib/video-thumbnail';
 import generatedAssets from '../../src/data/hub-media-assets.json';
 
@@ -58,15 +65,15 @@ describe('hero preload resolvers', () => {
     `https://comfy-hub-assets.comfy.org/uploads/${id}.${ext}`;
 
   it('preloads the generated poster for a detail hero that has one', () => {
-    expect(detailHeroPreload(upstream(known, 'mp4'))).toBe(
+    expect(detailHeroPreload([upstream(known, 'mp4')])).toBe(
       `https://media.comfy.org/hub-media/posters/${known}.jpg`
     );
   });
 
   it('falls back to the frame transform for a video with no generated copy', () => {
     const url = upstream(unseen, 'mp4');
-    expect(detailHeroPreload(url)).toBe(getVideoFrameUrl(url));
-    expect(detailHeroPreload(url)).toContain('cdn-cgi/media/mode=frame');
+    expect(detailHeroPreload([url])).toBe(getVideoFrameUrl(url));
+    expect(detailHeroPreload([url])).toContain('cdn-cgi/media/mode=frame');
   });
 
   it('preloads the original still when no copy was generated', () => {
@@ -74,7 +81,7 @@ describe('hero preload resolvers', () => {
     // image to fetch early. Returning null here meant every asset left out of
     // the image manifest - the ones saving under 15%, and every animated WebP -
     // painted a hero that was never preloaded.
-    expect(detailHeroPreload(upstream(unseen, 'webp'))).toBe(upstream(unseen, 'webp'));
+    expect(detailHeroPreload([upstream(unseen, 'webp')])).toBe(upstream(unseen, 'webp'));
   });
 
   it('preloads the still, not the original, for an animated WebP hero', () => {
@@ -83,13 +90,14 @@ describe('hero preload resolvers', () => {
     // swaps the animation in after load, so the preload has to name the still
     // or the page fetches both. 640 is mirrored from HERO_STILL_WIDTH there.
     const url = upstream(unseen, 'webp');
-    expect(detailHeroPreload(url, 'webp')).toBe(getStillImageUrl(url, 640));
-    expect(detailHeroPreload(url, 'webp')).toContain('anim=false');
+    expect(detailHeroPreload([url], 'webp')).toBe(getStillImageUrl(url, HERO_STILL_WIDTH));
+    expect(detailHeroPreload([url], 'webp')).toContain('anim=false');
   });
 
   it('preloads nothing for an audio hero, which paints an icon', () => {
-    expect(detailHeroPreload(upstream(unseen, 'mp3'))).toBeNull();
+    expect(detailHeroPreload([upstream(unseen, 'mp3')])).toBeNull();
     expect(detailHeroPreload(null)).toBeNull();
+    expect(detailHeroPreload([])).toBeNull();
   });
 
   it('prefers the still when a landing hero has one, sized at the edge', () => {
@@ -121,5 +129,81 @@ describe('hero preload resolvers', () => {
     expect(landingHeroPreload([])).toBeNull();
     expect(landingHeroPreload(undefined)).toBeNull();
     expect(landingHeroPreload(['track.mp3'])).toBeNull();
+  });
+});
+
+/**
+ * The still is only what the page paints when ThumbnailDisplay actually reaches
+ * its animated-thumb branch. `compareSlider` and `hoverDissolve` are checked
+ * first there and win whenever a second thumbnail exists.
+ *
+ * 45 pages in the live catalog were in that state. Each preloaded an `anim=false`
+ * still at `fetchpriority="high"` that the slider never rendered, in front of the
+ * multi-megabyte images it did - verified on `api_wan2_7_video_edit` in the PR
+ * preview: 19 KB preloaded, 1,892 KB and 2,079 KB painted, neither preloaded.
+ */
+describe('detailHeroPreload follows the variant branches', () => {
+  const id = (n: string) => `https://comfy-hub-assets.comfy.org/uploads/${n}.webp`;
+  const before = id('00000000-0000-0000-0000-000000000000');
+  const after = id('11111111-1111-1111-1111-111111111111');
+
+  it('names the compare slider\'s "After" layer, which carries fetchpriority', () => {
+    // ThumbnailDisplay renders `secondarySrc` first with `fetchpriority`, and
+    // clips `primarySrc` over its left half. Preloading the first would promote
+    // the lower-priority layer ahead of the one that is the hero.
+    expect(detailHeroPreload([before, after], 'webp', 'compareSlider')).toBe(hubAssetUrl(after));
+    expect(detailHeroPreload([before, after], 'webp', 'compareSlider')).not.toContain('anim=false');
+  });
+
+  it('never asks for a still the compare slider will not paint', () => {
+    expect(heroPaintsAnimatedStill([before, after], 'compareSlider')).toBe(false);
+    expect(heroPaintsAnimatedStill([before, after], 'hoverDissolve')).toBe(false);
+  });
+
+  it('names the original for hover dissolve, where fetchpriority stays first', () => {
+    expect(detailHeroPreload([before, after], 'webp', 'hoverDissolve')).toBe(hubAssetUrl(before));
+  });
+
+  it('falls back to the animated branch when the variant has one thumbnail', () => {
+    // Both variants need a second image to win; with one, ThumbnailDisplay drops
+    // through to the animated branch and the still IS what renders.
+    expect(heroPaintsAnimatedStill([before], 'compareSlider')).toBe(true);
+    expect(detailHeroPreload([before], 'webp', 'compareSlider')).toBe(
+      getStillImageUrl(before, HERO_STILL_WIDTH)
+    );
+  });
+
+  it('leaves every other variant on the still path', () => {
+    for (const variant of [undefined, null, '', 'zoomHover', 'hoverZoom']) {
+      expect(heroPaintsAnimatedStill([before, after], variant)).toBe(true);
+      expect(detailHeroPreload([before, after], 'webp', variant)).toBe(
+        getStillImageUrl(before, HERO_STILL_WIDTH)
+      );
+    }
+  });
+
+  it('keeps the video branch ahead of the variant branches', () => {
+    // ThumbnailDisplay checks `isVideo` on the PRIMARY before any variant, so a
+    // video-led compare slider still paints - and preloads - its poster.
+    const video = `https://comfy-hub-assets.comfy.org/uploads/${known}.mp4`;
+    expect(detailHeroPreload([video, after], 'webp', 'compareSlider')).toBe(
+      `https://media.comfy.org/hub-media/posters/${known}.jpg`
+    );
+  });
+
+  it('will not preload a non-image second layer as an image', () => {
+    const video = `https://comfy-hub-assets.comfy.org/uploads/${known}.mp4`;
+    expect(detailHeroPreload([before, video], 'webp', 'compareSlider')).not.toContain('.mp4');
+  });
+
+  it('has nothing to paint without thumbnails', () => {
+    expect(heroPaintsAnimatedStill([], 'compareSlider')).toBe(false);
+    expect(heroPaintsAnimatedStill(undefined)).toBe(false);
+  });
+
+  it('exports the width both sides ask for', () => {
+    // The preload and ThumbnailDisplay read this one constant; two copies of the
+    // number would be two chances to drift into two separate downloads.
+    expect(HERO_STILL_WIDTH).toBe(640);
   });
 });

@@ -12,7 +12,12 @@
 
 import type { ThumbnailVariant } from '../lib/hub-api';
 import { getStillImageUrl, getVideoFrameUrl } from '../lib/video-thumbnail';
-import { hubAssetUrl, hubMediaFor } from '../lib/hub-media';
+import {
+  HERO_STILL_WIDTH,
+  heroPaintsAnimatedStill,
+  hubAssetUrl,
+  hubMediaFor,
+} from '../lib/hub-media';
 import { isVideoFile, isAudioFile } from '../lib/media-utils';
 
 interface Props {
@@ -59,12 +64,6 @@ const primarySrc = hubAssetUrl(primaryOriginal);
 const secondarySrc = hubAssetUrl(secondaryOriginal);
 const isAnimated = mediaSubtype === 'webp';
 /**
- * Width the hero still is requested at. The box is declared 640x360 and the
- * animated sources are 350px wide, so Cloudflare returns the source size rather
- * than upscaling; 640 simply states the box we are sizing for.
- */
-const HERO_STILL_WIDTH = 640;
-/**
  * An eagerly-loaded animated WebP is the worst LCP element on the site.
  * Measured on the LTX-2.3 detail hero: 350x350, 52 frames, 1,870 KB, painted
  * into a 640x360 box, LCP 16.7 s on Lighthouse mobile with 16.0 s of that in
@@ -79,9 +78,23 @@ const HERO_STILL_WIDTH = 640;
  * Only when there is no re-encoded copy, which for animated WebP is always
  * (they are deliberately absent from the manifest) - if one exists, `primarySrc`
  * is already our own right-sized still and there is nothing to improve.
+ *
+ * `heroPaintsAnimatedStill` is the same guard the page's `<link rel="preload">`
+ * uses, and it is what keeps the two in step: the compare-slider and
+ * hover-dissolve branches below are checked BEFORE the animated one and win
+ * whenever there is a second thumbnail, in which case this still is never
+ * rendered and must not be preloaded either.
+ *
+ * The animation URL travels in `data-animated-src` and the `onerror` handler
+ * reads it from there rather than being built by interpolating the URL into a
+ * quoted JS string. A thumbnail filename is upstream data; one apostrophe in it
+ * would close that string and leave the rest as executable script.
  */
 const heroStillSrc =
-  isAnimated && loading === 'eager' && primarySrc === primaryOriginal
+  isAnimated &&
+  loading === 'eager' &&
+  primarySrc === primaryOriginal &&
+  heroPaintsAnimatedStill(thumbnails, variant)
     ? getStillImageUrl(primaryOriginal, HERO_STILL_WIDTH)
     : null;
 const hasSecondImage = thumbnails.length > 1;
@@ -305,7 +318,11 @@ const secondaryVideoPosterUrl = isSecondaryVideo
         draggable="false"
         sizes={sizes}
         class={imgClass}
-        onerror={heroStillSrc ? `this.onerror=null;this.src='${primarySrc}'` : undefined}
+        onerror={
+          heroStillSrc
+            ? 'this.onerror=null;const s=this.dataset.animatedSrc;delete this.dataset.animatedSrc;if(s)this.src=s'
+            : undefined
+        }
       />
     </div>
   ) : variant === 'zoomHover' ? (

@@ -121,43 +121,95 @@ export function hubAssetUrl(url: string): string {
 }
 
 /**
+ * Width the detail hero still is requested at. Read by `ThumbnailDisplay` as
+ * well as by `detailHeroPreload` below: the preload and the element have to name
+ * the same URL, and two copies of the number are two chances to drift.
+ */
+export const HERO_STILL_WIDTH = 640;
+
+/**
+ * The variants `ThumbnailDisplay` checks BEFORE its animated-thumb branch. Each
+ * needs a second thumbnail to win, and when one does the still is never painted.
+ */
+const STILL_PREEMPTING_VARIANTS = new Set(['compareSlider', 'hoverDissolve']);
+
+/**
+ * Whether `ThumbnailDisplay` reaches the branch that paints a still and swaps
+ * the animation in after load. Exported so the component decides it from the
+ * same predicate `detailHeroPreload` below uses.
+ */
+export function heroPaintsAnimatedStill(
+  thumbnails: readonly string[] | undefined,
+  variant?: string | null
+): boolean {
+  if (!thumbnails?.length) return false;
+  const hasSecondImage = thumbnails.length > 1;
+  return !(hasSecondImage && STILL_PREEMPTING_VARIANTS.has(variant ?? ''));
+}
+
+/**
  * The image worth preloading for a detail hero, or null when there is none.
  *
- * `mediaSubtype` is needed because it is what `ThumbnailDisplay` branches on to
- * decide the hero is an animated WebP and paint a still instead of the 1.9 MB
- * original. The preload has to name the URL the element actually renders, so
- * the two read the same inputs and reach the same answer; naming the original
- * here would fetch both.
+ * Mirrors `ThumbnailDisplay` branch for branch, in its order, because a preload
+ * that names a URL the element does not render is a whole extra request for a
+ * picture nobody sees - and it takes `fetchpriority="high"` away from the one
+ * that IS the hero. Measured on `api_wan2_7_video_edit` in the PR preview: a
+ * 19 KB AVIF still preloaded at high priority that the compare slider never
+ * painted, in front of the 1,892 KB and 2,079 KB WebPs it did.
+ *
+ * So it reads the same three inputs the component branches on - the thumbnail
+ * list, the variant, and `mediaSubtype` - rather than only the first thumbnail.
  */
 export function detailHeroPreload(
-  thumbnail: string | null | undefined,
-  mediaSubtype?: string
+  thumbnails: readonly string[] | null | undefined,
+  mediaSubtype?: string,
+  variant?: string | null
 ): string | null {
-  if (!thumbnail) return null;
-  const url = thumbnailPath(thumbnail);
+  const primary = thumbnails?.[0];
+  if (!primary) return null;
+  const url = thumbnailPath(primary);
+
+  // Audio paints an icon, so there is no image worth fetching early.
+  if (isAudioFile(url)) return null;
+
   // A video hero paints its poster first, so that is the image to fetch early,
   // and the frame-transform fallback matters as much as the generated poster:
   // 27 of the catalog's videos have no generated copy, ThumbnailDisplay renders
   // exactly this URL for them, and without it their LCP image is preloaded not
   // at all. `thumbnailPath` is character-for-character what ThumbnailDisplay's
   // own `thumbUrl` produces, so the two cannot become separate requests.
-  //
-  // Mirrors what ThumbnailDisplay paints, branch for branch: a video shows its
-  // poster, audio shows an icon and so has no image worth fetching, and a still
-  // falls back to its ORIGINAL url. That last one was returning null, which
-  // meant the assets deliberately left out of the image manifest - the ones
-  // that saved under 15%, plus every animated WebP - rendered an LCP still that
-  // was never preloaded. `hubAssetUrl` already ends in the same `?? url`.
   if (isVideoFile(url)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
-  if (isAudioFile(url)) return null;
-  const generated = hubImageFor(url);
-  if (generated) return generated;
-  // No generated copy and the hero is animated: ThumbnailDisplay paints the
-  // Cloudflare still and swaps the animation in after load, so the still is the
-  // LCP image and the only thing worth fetching early. HERO_STILL_WIDTH is
-  // mirrored there; both ask for 640, the box they render into.
-  if (mediaSubtype === 'webp') return getStillImageUrl(url, 640) ?? url;
-  return url;
+
+  // The compare slider layers two full-size images and puts `fetchpriority` on
+  // the SECOND one - the "After" - with the "Before" clipped over its left half.
+  // The second is therefore the one to fetch early; preloading the first would
+  // promote the lower-priority layer ahead of it. Skipped when the second is not
+  // an image, which `as="image"` could not fetch anyway.
+  const secondary = thumbnails?.[1];
+  if (variant === 'compareSlider' && secondary) {
+    const secondaryUrl = thumbnailPath(secondary);
+    if (!isVideoFile(secondaryUrl) && !isAudioFile(secondaryUrl)) return hubAssetUrl(secondaryUrl);
+  }
+
+  // Hover dissolve also needs a second thumbnail, but `fetchpriority` stays on
+  // the first, so the answer is the same as the default branch: the original,
+  // never the still, because that branch is checked before the animated one.
+  if (heroPaintsAnimatedStill(thumbnails, variant) && mediaSubtype === 'webp') {
+    const generated = hubImageFor(url);
+    // A generated copy IS already a right-sized still, so there is nothing to
+    // improve and `primarySrc` names it directly.
+    if (generated) return generated;
+    // Otherwise ThumbnailDisplay paints the Cloudflare still and swaps the
+    // animation in after load, so the still is the LCP image. Both sides read
+    // HERO_STILL_WIDTH, so they ask for the same box.
+    return getStillImageUrl(url, HERO_STILL_WIDTH) ?? url;
+  }
+
+  // zoomHover, hoverDissolve and the default: `primarySrc`, which is our copy
+  // when one exists and the ORIGINAL when it does not. Returning null here was
+  // why every asset left out of the image manifest rendered an LCP still that
+  // was never preloaded at all.
+  return hubAssetUrl(url);
 }
 
 /**
