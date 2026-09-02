@@ -38,7 +38,24 @@ const PUBLIC_BASE = 'https://media.comfy.org/hub-media';
 const POSTER_WIDTH = 640;
 
 const args = process.argv.slice(2);
-const limit = Number(args.find((a) => a.startsWith('--limit='))?.split('=')[1] ?? Infinity);
+/**
+ * A count argument, validated at parse time.
+ *
+ * `Number('bad')` is NaN and every comparison against NaN is false, so an
+ * unvalidated count fails in whichever direction the surrounding code happens to
+ * compare: `done >= limit` never fires and the whole corpus runs, while
+ * `slice(0, limit)` and `Array.from({ length: jobs })` both yield nothing and the
+ * run silently does no work. Neither is a thing to discover from the output.
+ */
+function count(flag, raw, fallback) {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1)
+    throw new Error(`--${flag} must be a whole number of at least 1, got: ${raw}`);
+  return n;
+}
+
+const limit = count('limit', args.find((a) => a.startsWith('--limit='))?.split('=')[1], Infinity);
 const dryRun = args.includes('--dry-run');
 const manifestPath = args.find((a) => a.startsWith('--manifest='))?.split('=')[1];
 if (!manifestPath) throw new Error('--manifest=<path> is required');

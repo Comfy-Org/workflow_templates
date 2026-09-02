@@ -84,6 +84,16 @@ happened to be small enough. The floor is checked explicitly before upload; only
 `reviewed-overrides.json` bypasses it. The default is 95, so omitting `--floor`
 cannot quietly widen it.
 
+**Every numeric argument is validated at parse time.** Three separate fail-open
+bugs in `encode-video.mjs` had the same shape - a documented rule that nothing
+enforced - so rather than wait for a fourth, all six were audited at once.
+`Number('bad')` is NaN and every comparison against NaN is false, so an
+unvalidated number fails in whichever direction the surrounding code compares:
+`--floor=95%` disabled BOTH quality gates, while a bad `--limit` either ran the
+whole corpus (`done >= limit` never fires) or silently did nothing at all
+(`slice(0, limit)`, `Array.from({ length: jobs })`). `--floor`, `--min-saving`,
+`--limit` and `--jobs` are now range-checked before any file is read.
+
 **A staged file is not trusted, it is verified.** `--stage` survives between
 runs and the thresholds do not: this corpus was encoded at floor 93 and then
 re-judged at 95, so a leftover stage directory holds files today's floor

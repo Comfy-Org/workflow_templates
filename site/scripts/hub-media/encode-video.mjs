@@ -84,7 +84,28 @@ const arg = (n) =>
 const gridPath = arg('grid'),
   manifestPath = arg('manifest'),
   reportPath = arg('report');
-const limit = Number(arg('limit') ?? Infinity);
+/**
+ * A count argument, validated at parse time.
+ *
+ * `Number('bad')` is NaN and every comparison against NaN is false, so an
+ * unvalidated count fails in whichever direction the surrounding code happens to
+ * compare: `done >= limit` never fires and the whole corpus runs, while
+ * `slice(0, limit)` and `Array.from({ length: jobs })` both yield nothing and the
+ * run silently does no work. Neither is a thing to discover from the output.
+ */
+function count(flag, raw, fallback) {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1)
+    throw new Error(`--${flag} must be a whole number of at least 1, got: ${raw}`);
+  return n;
+}
+
+const limit = count('limit', arg('limit'), Infinity);
+// Parsed here rather than beside its use further down, so every argument is
+// validated before the first file is read: a bad --jobs used to surface only
+// after the grid and manifest had been parsed, behind whatever they threw.
+const CONCURRENCY = count('jobs', arg('jobs'), 4);
 const stageDir = arg('stage') ?? '/tmp/hub-video-stage';
 fs.mkdirSync(stageDir, { recursive: true });
 const uploadOnly = process.argv.includes('--upload-only');
@@ -139,7 +160,6 @@ async function vmaf(candidate, source, w, h) {
   return m ? Number(m[1]) : null;
 }
 
-const CONCURRENCY = Number(arg('jobs') ?? 4);
 const ids = Object.keys(manifest);
 console.log(
   `${ids.length} videos, floor VMAF ${FLOOR}, ${Object.keys(report).length} already done`

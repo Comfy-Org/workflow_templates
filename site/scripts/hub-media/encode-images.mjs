@@ -38,7 +38,24 @@ const arg = (n) =>
 const gridPath = arg('grid'),
   outDir = arg('out'),
   manifestPath = arg('manifest');
-const limit = Number(arg('limit') ?? Infinity);
+/**
+ * A count argument, validated at parse time.
+ *
+ * `Number('bad')` is NaN and every comparison against NaN is false, so an
+ * unvalidated count fails in whichever direction the surrounding code happens to
+ * compare: `done >= limit` never fires and the whole corpus runs, while
+ * `slice(0, limit)` and `Array.from({ length: jobs })` both yield nothing and the
+ * run silently does no work. Neither is a thing to discover from the output.
+ */
+function count(flag, raw, fallback) {
+  if (raw === undefined) return fallback;
+  const n = Number(raw);
+  if (!Number.isInteger(n) || n < 1)
+    throw new Error(`--${flag} must be a whole number of at least 1, got: ${raw}`);
+  return n;
+}
+
+const limit = count('limit', arg('limit'), Infinity);
 if (!gridPath || !outDir || !manifestPath) throw new Error('--grid= --out= --manifest= required');
 fs.mkdirSync(outDir, { recursive: true });
 
