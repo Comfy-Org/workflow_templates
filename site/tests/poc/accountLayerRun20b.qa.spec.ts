@@ -66,7 +66,10 @@ test('RUN20B staging-real account matrix', async ({ page }) => {
   page.on('response', async (response: Response) => {
     const url = new URL(response.url());
     if (!url.pathname.includes('/api/billing/')) return;
-    const body = await response.text().catch(() => '');
+    const body = (await response.text().catch(() => '')).replace(
+      /("url":"https:[^"]+\?secret=)[^"]+/,
+      '$1[redacted]'
+    );
     requests.push(
       `${new Date().toISOString()} ${response.request().method()} ${url.pathname} ${response.status()} ${body}`
     );
@@ -127,7 +130,10 @@ test('RUN20B staging-real account matrix', async ({ page }) => {
     () => (Reflect.get(window, '__accountLayerPoc') as Run20bSeam).lastOpenedUrl
   );
   expect(portal).toMatch(/^https:\/\//);
-  await writeFile(`${evidenceDir}/portal.json`, `${JSON.stringify({ url: portal }, null, 2)}\n`);
+  await writeFile(
+    `${evidenceDir}/portal.json`,
+    `${JSON.stringify({ https: true, host: new URL(portal ?? '').host }, null, 2)}\n`
+  );
 
   await page.reload();
   await expect(page.getByTestId('sign-out')).toBeVisible({ timeout: 30_000 });
