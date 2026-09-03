@@ -3,6 +3,7 @@ import type { Page, Response } from '@playwright/test';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 
 const evidenceDir =
+  process.env.ACCOUNT_LAYER_EVIDENCE_DIR ??
   '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20o-astro';
 const fixtureEmail = process.env.FIXTURE_EMAIL;
 const fixturePassword = process.env.FIXTURE_PASSWORD;
@@ -60,12 +61,34 @@ async function signIn(page: Page) {
 }
 
 async function snapshot(page: Page, name: string) {
+  const firstBalanceResponse = page.waitForResponse((response) =>
+    response.url().includes('/api/billing/balance')
+  );
   const state = await page.evaluate(async () => {
     const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
     await value.refreshCredits();
     const status = await value.refreshBillingStatus();
     return { status, balance: value.getCredits() };
   });
+  const firstResponse = await firstBalanceResponse;
+  await writeFile(
+    `${evidenceDir}/${name}-balance-response-1.json`,
+    `${JSON.stringify({ status: firstResponse.status(), body: await firstResponse.text() }, null, 2)}\n`
+  );
+  if (firstResponse.status() === 500) {
+    await new Promise((resolve) => setTimeout(resolve, 5_000));
+    const secondBalanceResponse = page.waitForResponse((response) =>
+      response.url().includes('/api/billing/balance')
+    );
+    await page.evaluate(() =>
+      (Reflect.get(window, '__accountLayerPoc') as Run20bSeam).refreshCredits()
+    );
+    const secondResponse = await secondBalanceResponse;
+    await writeFile(
+      `${evidenceDir}/${name}-balance-response-2.json`,
+      `${JSON.stringify({ status: secondResponse.status(), body: await secondResponse.text() }, null, 2)}\n`
+    );
+  }
   await writeFile(
     `${evidenceDir}/${name}-status.json`,
     `${JSON.stringify(state.status, null, 2)}\n`
