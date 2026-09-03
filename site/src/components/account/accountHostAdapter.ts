@@ -34,6 +34,7 @@ export interface AccountLayerDebug extends Partial<AccountLayerPocSeam> {
   operationStore: AccountLayerOperationRecord | null;
   injectOperationResponse(response: BillingOperationResponse): Promise<void>;
   projectPaymentState?(state: BillingState): Promise<void>;
+  getBillingStatus?(): Promise<Record<string, unknown>>;
 }
 
 export function createAccountBillingCommands(
@@ -131,6 +132,7 @@ export function createAccountBillingCommands(
       },
     },
   });
+  debug.getBillingStatus = () => client.getStatus() as Promise<Record<string, unknown>>;
   commands.subscribeState((state) => {
     debug.payment = state;
   });

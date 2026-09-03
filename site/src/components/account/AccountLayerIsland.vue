@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  AccountError,
   AccountLayerReadinessTimeoutError,
   billingCopyKeys,
   createBillingClient,
@@ -86,9 +87,20 @@ async function whenAuthenticated(timeoutMs = readinessTimeoutMs): Promise<void> 
 }
 
 async function readyMutation(mutation: () => Promise<void>): Promise<void> {
-  if (auth.currentUser) await initializeUser(auth.currentUser);
-  await whenAuthenticated();
-  await mutation();
+  error.value = '';
+  try {
+    if (auth.currentUser) await initializeUser(auth.currentUser);
+    await whenAuthenticated();
+    await mutation();
+  } catch (cause) {
+    error.value =
+      cause instanceof AccountError
+        ? JSON.stringify({ status: cause.status, body: cause.body })
+        : cause instanceof Error
+          ? cause.message
+          : 'Billing request failed';
+    throw cause;
+  }
 }
 
 async function resolveWorkspace(identityToken: string): Promise<string> {
@@ -183,6 +195,15 @@ const seam: AccountLayerPocSeam = {
   },
 };
 Object.assign(debug, seam);
+Object.assign(debug, {
+  getCurrentEmail: () => auth.currentUser?.email ?? null,
+  topUpWithIdempotency: (amount_cents: number, idempotency_key: string) =>
+    readyMutation(() => paymentCommands.topUp({ amount_cents, idempotency_key })),
+  cancelWithIdempotency: (idempotency_key: string) =>
+    readyMutation(() => paymentCommands.cancelSubscription({ idempotency_key })),
+  resubscribeWithIdempotency: (idempotency_key: string) =>
+    readyMutation(() => paymentCommands.resubscribe({ idempotency_key })),
+});
 Object.assign(window, { __accountLayerPoc: debug });
 
 const unsubscribeAuth = onIdTokenChanged(auth, (user) => {
