@@ -1,0 +1,15 @@
+---
+import AccountLayerIsland from '../../components/account/AccountLayerIsland.vue';
+import CoreSsrProbe from '../../components/account/CoreSsrProbe.astro';
+
+const enabled = import.meta.env.PUBLIC_ACCOUNT_LAYER_POC === 'true';
+---
+
+<!doctype html>
+<html lang="en">
+  <head><meta charset="UTF-8" /><title>Account layer PoC</title></head>
+  <body>
+    <CoreSsrProbe />
+    {enabled ? <AccountLayerIsland client:only="vue" /> : <p>PoC disabled</p>}
+  </body>
+</html>
