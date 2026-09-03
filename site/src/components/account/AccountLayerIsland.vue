@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { billingCopyKeys, createBillingClient, createSessionClient } from '@comfyorg/account/core';
+import type { AccountLayerPocSeam, BillingState } from '@comfyorg/account/core';
 import {
   billingClientKey,
   CheckoutSteps,
@@ -36,8 +37,9 @@ const debug: AccountLayerDebug = {
   billingPosts: 0,
   openUrlCalls: 0,
   lastCheckoutUrl: null,
+  lastOpenedUrl: null,
   payment: { step: 'select', noChargeConfirmed: false },
-  operationStore: { activeId: null },
+  operationStore: null,
   injectOperationResponse: async () => undefined,
 };
 const adapter = createAccountHostAdapter(
@@ -60,12 +62,11 @@ const topUp = useTopUp(paymentCommands);
 const injectedPaymentState = ref<typeof checkout.state.value | null>(null);
 const paymentState = computed(() => injectedPaymentState.value ?? checkout.state.value);
 const paymentCopyKey = computed(() => billingCopyKeys(paymentState.value).body);
-debug.projectPaymentState = (state) => {
+debug.projectPaymentState = async (state) => {
   injectedPaymentState.value = state;
 };
 provide(billingClientKey, billing);
 debug.refreshCredits = () => billing.refreshCredits();
-Object.assign(window, { __accountLayerPoc: debug });
 let initialization: Promise<void> | undefined;
 
 async function resolveWorkspace(identityToken: string): Promise<string> {
@@ -105,10 +106,11 @@ async function initializeUser(user: User): Promise<void> {
 }
 
 async function subscribe(): Promise<void> {
+  const returnBase = `${window.location.origin}/poc/account-layer`;
   await checkout.submit({
     plan_slug: 'pro-monthly',
-    return_url: 'https://platform.comfy.org/payment/success',
-    cancel_url: 'https://platform.comfy.org/payment/failed',
+    return_url: `${returnBase}?payment=success`,
+    cancel_url: `${returnBase}?payment=failed`,
   });
 }
 
@@ -122,6 +124,37 @@ async function logout(): Promise<void> {
   authenticated.value = false;
   workspaceId.value = null;
 }
+
+const seam: AccountLayerPocSeam = {
+  subscribe: (planId = 'pro-monthly') =>
+    checkout.submit({
+      plan_slug: planId,
+      return_url: `${window.location.origin}/poc/account-layer?payment=success`,
+      cancel_url: `${window.location.origin}/poc/account-layer?payment=failed`,
+    }),
+  topUp: (amount = 500) =>
+    topUp.submit({ amount_cents: amount, idempotency_key: crypto.randomUUID() }),
+  cancelSubscription: () => paymentCommands.cancelSubscription({}),
+  resubscribe: () => paymentCommands.resubscribe({ plan_slug: 'pro-monthly' }),
+  openPaymentPortal: async () => {
+    await paymentCommands.openPaymentPortal({
+      return_url: `${window.location.origin}/poc/account-layer`,
+    });
+  },
+  projectPaymentState: async (state: BillingState) => {
+    injectedPaymentState.value = state;
+  },
+  getPaymentState: () => paymentState.value,
+  getOperationStore: () => debug.operationStore,
+  refreshCredits: () => billing.refreshCredits(),
+  getCredits: () => billing.getCreditsState(),
+  signOut: logout,
+  get lastOpenedUrl() {
+    return debug.lastOpenedUrl ?? null;
+  },
+};
+Object.assign(debug, seam);
+Object.assign(window, { __accountLayerPoc: debug });
 
 const unsubscribeAuth = onIdTokenChanged(auth, (user) => {
   if (!user) {

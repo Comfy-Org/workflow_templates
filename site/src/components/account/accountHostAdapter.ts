@@ -6,6 +6,8 @@ import {
 } from '@comfyorg/account/core';
 import type {
   AccountHostAdapter,
+  AccountLayerOperationRecord,
+  AccountLayerPocSeam,
   BillingBalanceResponse,
   BillingCommands,
   BillingOperationResponse,
@@ -17,7 +19,7 @@ import type {
 } from '@comfyorg/account/core';
 import type { Auth } from 'firebase/auth';
 
-export interface AccountLayerDebug {
+export interface AccountLayerDebug extends Partial<AccountLayerPocSeam> {
   billingRequests: number;
   sessionExchanges: number;
   lastBillingSessionExchange: number | null;
@@ -29,9 +31,9 @@ export interface AccountLayerDebug {
   openUrlCalls: number;
   lastCheckoutUrl: string | null;
   payment: BillingState;
-  operationStore: { activeId: string | null };
+  operationStore: AccountLayerOperationRecord | null;
   injectOperationResponse(response: BillingOperationResponse): Promise<void>;
-  projectPaymentState?(state: BillingState | null): void;
+  projectPaymentState?(state: BillingState): Promise<void>;
 }
 
 export function createAccountBillingCommands(
@@ -42,22 +44,30 @@ export function createAccountBillingCommands(
   debug: AccountLayerDebug
 ): BillingCommands {
   let injectedResponse: BillingOperationResponse | undefined;
+  let operationContext: Omit<AccountLayerOperationRecord, 'id'> = {
+    kind: 'subscribe',
+    started_at: Date.now(),
+    return_url: null,
+  };
   const key = () =>
     `comfy-hub-account-layer-poc:${auth.currentUser?.uid ?? 'signed-out'}:${getActiveWorkspace() ?? 'no-workspace'}:billing:active-operation`;
   const operationStore = {
     namespace: 'comfy-hub-account-layer-poc',
     async getActiveId() {
-      const id = localStorage.getItem(key());
-      debug.operationStore.activeId = id;
-      return id;
+      const value = localStorage.getItem(key());
+      if (!value) return null;
+      const record = JSON.parse(value) as AccountLayerOperationRecord;
+      debug.operationStore = record;
+      return record.id;
     },
     async setActiveId(id: string) {
-      localStorage.setItem(key(), id);
-      debug.operationStore.activeId = id;
+      const record = { id, ...operationContext };
+      localStorage.setItem(key(), JSON.stringify(record));
+      debug.operationStore = record;
     },
     async clearActiveId() {
       localStorage.removeItem(key());
-      debug.operationStore.activeId = null;
+      debug.operationStore = null;
     },
   };
   const client = createBillingApiClient({
@@ -102,6 +112,7 @@ export function createAccountBillingCommands(
       async openUrl(url) {
         debug.openUrlCalls++;
         debug.lastCheckoutUrl = url;
+        debug.lastOpenedUrl = url;
         return { opened: window.open(url, '_blank') !== null };
       },
     },
@@ -111,18 +122,22 @@ export function createAccountBillingCommands(
   });
   debug.injectOperationResponse = async (response) => {
     if (response.status === 'pending' && response.action_url) {
-      debug.projectPaymentState?.({
+      await debug.projectPaymentState?.({
         step: 'verifying',
         actionUrl: response.action_url,
         noChargeConfirmed: false,
       });
       return;
     }
-    debug.projectPaymentState?.(null);
     injectedResponse = response;
+    operationContext = {
+      kind: 'subscribe',
+      started_at: Date.now(),
+      return_url: `${window.location.origin}/poc/account-layer`,
+    };
     await operationStore.setActiveId('injected-operation');
     await commands.start();
-    debug.projectPaymentState?.(debug.payment);
+    await debug.projectPaymentState?.(debug.payment);
   };
   return commands;
 }
