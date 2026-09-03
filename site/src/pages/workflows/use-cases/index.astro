@@ -6,6 +6,7 @@ import { t } from '../../../i18n/ui';
 import { useCasesIndexPath } from '../../../lib/routes';
 import { loadSerializedTemplates } from '../../../lib/hub-api';
 import { resolveUseCasePageCards } from '../../../lib/workflow-pages/index-cards';
+import { SOFTWARE_NODE_ID } from '../../../lib/structured-data';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const catalog = await loadSerializedTemplates(() => getCollection('templates'));
@@ -22,4 +23,13 @@ const description =
   heading={heading}
   description={description}
   cards={cards}
+  about={[{ '@type': 'Thing', name: 'Workflow', sameAs: 'https://en.wikipedia.org/wiki/Workflow' }]}
+  mentions={[
+    { '@id': SOFTWARE_NODE_ID },
+    {
+      '@type': 'Thing',
+      name: 'Template',
+      sameAs: 'https://en.wikipedia.org/wiki/Template_(file_format)',
+    },
+  ]}
 />
