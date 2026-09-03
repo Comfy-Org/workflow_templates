@@ -22,15 +22,14 @@ const auth = getAuth(app);
 const debug: AccountLayerDebug = {
   billingRequests: 0,
   sessionExchanges: 0,
-  lastBillingToken: null,
-  lastSessionToken: null,
+  lastBillingSessionExchange: null,
   credentialLifetimeMs: null,
   refreshScheduleDelayMs: null,
   runScheduledRefresh: () => undefined,
 };
 const adapter = createAccountHostAdapter(
   auth,
-  import.meta.env.PUBLIC_API_BASE_URL,
+  import.meta.env.PUBLIC_CLOUD_BASE_URL,
   () => workspaceId.value,
   debug
 );
@@ -41,7 +40,7 @@ debug.refreshCredits = () => billing.refreshCredits();
 Object.assign(window, { __accountLayerPoc: debug });
 
 async function resolveWorkspace(identityToken: string): Promise<string> {
-  const response = await fetch(`${import.meta.env.PUBLIC_API_BASE_URL}/api/workspaces`, {
+  const response = await fetch(`${import.meta.env.PUBLIC_CLOUD_BASE_URL}/api/workspaces`, {
     headers: { Authorization: `Bearer ${identityToken}` },
   });
   const body: unknown = await response.json();

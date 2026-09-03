@@ -11,8 +11,7 @@ import type { Auth } from 'firebase/auth';
 export interface AccountLayerDebug {
   billingRequests: number;
   sessionExchanges: number;
-  lastBillingToken: string | null;
-  lastSessionToken: string | null;
+  lastBillingSessionExchange: number | null;
   credentialLifetimeMs: number | null;
   refreshScheduleDelayMs: number | null;
   runScheduledRefresh(): void;
@@ -101,7 +100,6 @@ export function createAccountHostAdapter(
           decode(value) {
             const credential = decodeCredential(value);
             debug.sessionExchanges++;
-            debug.lastSessionToken = credential.token.slice(0, 8);
             debug.credentialLifetimeMs = credential.expiresAt - Date.now();
             return credential;
           },
@@ -111,7 +109,7 @@ export function createAccountHostAdapter(
       balance: {
         idempotent: true,
         makeRequest: ({ credential }, signal) => {
-          debug.lastBillingToken = credential.token.slice(0, 8);
+          debug.lastBillingSessionExchange = debug.sessionExchanges;
           return {
             method: 'GET',
             path: '/api/billing/balance',

@@ -7,8 +7,7 @@ const evidenceDir =
 interface DebugSnapshot {
   billingRequests: number;
   sessionExchanges: number;
-  lastBillingToken: string | null;
-  lastSessionToken: string | null;
+  lastBillingSessionExchange: number | null;
   credentialLifetimeMs: number | null;
   refreshScheduleDelayMs: number | null;
   refreshCredits(): Promise<void>;
@@ -33,18 +32,20 @@ test('proves account lifecycle, refresh, replay, and error handling', async ({ p
     return {
       billingRequests: value.billingRequests,
       sessionExchanges: value.sessionExchanges,
-      lastBillingToken: value.lastBillingToken,
-      lastSessionToken: value.lastSessionToken,
+      lastBillingSessionExchange: value.lastBillingSessionExchange,
       credentialLifetimeMs: value.credentialLifetimeMs,
       refreshScheduleDelayMs: value.refreshScheduleDelayMs,
     };
   });
   expect(initial.sessionExchanges).toBeGreaterThan(0);
   expect(initial.billingRequests).toBeGreaterThan(0);
-  expect(initial.lastBillingToken).toBe(initial.lastSessionToken);
+  expect(initial.lastBillingSessionExchange).toBe(initial.sessionExchanges);
   expect(
     (initial.credentialLifetimeMs ?? 0) - (initial.refreshScheduleDelayMs ?? 0)
   ).toBeGreaterThanOrEqual(299_000);
+  expect(
+    (initial.credentialLifetimeMs ?? 0) - (initial.refreshScheduleDelayMs ?? 0)
+  ).toBeLessThanOrEqual(301_000);
   await page.screenshot({ path: `${evidenceDir}/signed-in-credits.png` });
 
   await page.evaluate(() =>
@@ -57,6 +58,9 @@ test('proves account lifecycle, refresh, replay, and error handling', async ({ p
       )
     )
     .toBeGreaterThan(initial.sessionExchanges);
+  const refreshedSessionExchanges = await page.evaluate(
+    () => (Reflect.get(window, '__accountLayerPoc') as DebugSnapshot).sessionExchanges
+  );
 
   let attempts = 0;
   await page.route('**/api/billing/balance', async (route) => {
@@ -68,6 +72,11 @@ test('proves account lifecycle, refresh, replay, and error handling', async ({ p
     (Reflect.get(window, '__accountLayerPoc') as DebugSnapshot).refreshCredits()
   );
   expect(attempts).toBe(2);
+  const replayed = await page.evaluate(
+    () => (Reflect.get(window, '__accountLayerPoc') as DebugSnapshot).sessionExchanges
+  );
+  expect(replayed).toBe(refreshedSessionExchanges + 1);
+  await page.screenshot({ path: `${evidenceDir}/balance-401-replay.png` });
   await page.unroute('**/api/billing/balance');
 
   await page.route('**/api/billing/balance', (route) => route.fulfill({ status: 500, body: '{}' }));
@@ -75,6 +84,7 @@ test('proves account lifecycle, refresh, replay, and error handling', async ({ p
     (Reflect.get(window, '__accountLayerPoc') as DebugSnapshot).refreshCredits()
   );
   await expect(panel.getByRole('alert')).toHaveText('Error');
+  await page.screenshot({ path: `${evidenceDir}/balance-500-error.png` });
   await page.unroute('**/api/billing/balance');
 
   await page.getByTestId('sign-out').click();
@@ -90,10 +100,14 @@ test('proves account lifecycle, refresh, replay, and error handling', async ({ p
         initial: {
           billingRequests: initial.billingRequests,
           sessionExchanges: initial.sessionExchanges,
-          tokenContinuity: initial.lastBillingToken === initial.lastSessionToken,
+          billingUsedSessionExchange: initial.lastBillingSessionExchange,
           bufferMs: (initial.credentialLifetimeMs ?? 0) - (initial.refreshScheduleDelayMs ?? 0),
         },
-        replay: { attempts, reminted: true },
+        naturalRefresh: {
+          exchangesBefore: initial.sessionExchanges,
+          exchangesAfter: refreshedSessionExchanges,
+        },
+        replay: { attempts, exchangesAfter: replayed, reminted: true },
         signOut: { storageCleared: true },
       },
       null,

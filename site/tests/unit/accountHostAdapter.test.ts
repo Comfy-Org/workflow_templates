@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { decodeBalance, decodeCredential } from './accountHostAdapter';
+import {
+  decodeBalance,
+  decodeCredential,
+} from '../../src/components/account/accountHostAdapter';
 
 describe('account host response decoders', () => {
   it('maps staging credential and balance responses', () => {
