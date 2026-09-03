@@ -3,10 +3,10 @@ import type { Page, Response } from '@playwright/test';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 
 const evidenceDir =
-  '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20m-astro';
+  '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20n-astro';
 const fixtureEmail = process.env.FIXTURE_EMAIL;
 const fixturePassword = process.env.FIXTURE_PASSWORD;
-const topUpKey = 'RUN20M-topup-500-2';
+const topUpKey = 'RUN20N-topup-500';
 
 interface Run20bSeam {
   whenAuthenticated(timeout?: number): Promise<void>;
@@ -64,6 +64,8 @@ test.setTimeout(180_000);
 
 test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
   const project = testInfo.project.name;
+  const attempt = Date.now();
+  const projectTopUpKey = `${topUpKey}-${project}-${attempt}`;
   const requests: string[] = [];
   const operations: string[] = [];
   page.on('response', async (response: Response) => {
@@ -89,7 +91,7 @@ test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
     await page.evaluate(async (key) => {
       const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
       await value.resubscribeWithIdempotency(key);
-    }, `RUN20M-resubscribe-${project}`);
+    }, `RUN20N-resubscribe-${project}-${attempt}`);
     await expect
       .poll(
         () =>
@@ -109,7 +111,7 @@ test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
   await page.evaluate(async (key) => {
     const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
     await value.cancelWithIdempotency(key);
-  }, `RUN20M-cancel-4-${project}`);
+  }, `RUN20N-cancel-${project}-${attempt}`);
   await expect
     .poll(
       () =>
@@ -132,7 +134,7 @@ test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
       const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
       await value.topUpWithIdempotency(amount, key);
     },
-    { amount: 500, key: topUpKey }
+    { amount: 500, key: projectTopUpKey }
   );
   await expect
     .poll(
@@ -181,7 +183,7 @@ test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
     await page.evaluate(async (key) => {
       const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
       await value.topUpWithIdempotency(500, key);
-    }, topUpKey);
+    }, projectTopUpKey);
     duplicate = await snapshot(page, 'post-idempotency');
   } catch (error) {
     duplicate = String(error);
@@ -195,7 +197,7 @@ test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
     page.evaluate(async () => {
       const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
       try {
-        await value.topUpWithIdempotency(100, 'RUN20B-malformed');
+        await value.topUpWithIdempotency(100, 'RUN20N-malformed');
       } catch {
         return true;
       }
