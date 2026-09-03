@@ -28,6 +28,20 @@ import {
 } from './src/lib/workflow-pages/landing-content.ts';
 import { assertBrandSafe } from './src/lib/workflow-pages/governance.ts';
 
+/** @type {import('astro').AstroIntegration} */
+const accountLayerPocIntegration = {
+  name: 'account-layer-poc',
+  hooks: {
+    'astro:config:setup': ({ injectRoute }) => {
+      injectRoute({
+        pattern: '/poc/account-layer',
+        entrypoint: './src/poc/account-layer.astro',
+        prerender: true,
+      });
+    },
+  },
+};
+
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const templateDates = new Map();
 /**
@@ -185,6 +199,7 @@ export default defineConfig({
     },
   },
   integrations: [
+    ...(process.env.PUBLIC_ACCOUNT_LAYER_POC === 'true' ? [accountLayerPocIntegration] : []),
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
       filenameBase: 'sitemap-workflows',
