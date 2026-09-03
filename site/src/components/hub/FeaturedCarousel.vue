@@ -4,21 +4,22 @@
  * Auto-rotates the most-used templates, pauses on hover, loops, and is fully
  * click-through to each template's workflow page. Renders one hero card per view.
  */
-import { computed, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, type ComponentPublicInstance } from 'vue';
 import emblaCarouselVue from 'embla-carousel-vue';
 import Autoplay from 'embla-carousel-autoplay';
 import { usePreferredReducedMotion } from '@vueuse/core';
-import type { SerializedTemplate } from '@/lib/hub-api';
+import type { IslandTemplate } from '@/lib/hub-api';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { hubMediaFor } from '@/lib/hub-media';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 
 interface Props {
-  templates: SerializedTemplate[];
+  templates: IslandTemplate[];
   locale: string;
   isRtl: boolean;
   featuredLabel: string;
@@ -90,8 +91,9 @@ const slides = computed<FeaturedSlide[]>(() =>
       providerName: badge?.name ?? null,
       logoPath: badge?.src ?? null,
       imageUrl: isVideo ? null : mediaUrl,
-      videoUrl: isVideo ? mediaUrl : null,
-      posterUrl: isVideo && mediaUrl ? getVideoFrameUrl(mediaUrl) : null,
+      videoUrl: isVideo && mediaUrl ? (hubMediaFor(mediaUrl)?.video ?? mediaUrl) : null,
+      posterUrl:
+        isVideo && mediaUrl ? (hubMediaFor(mediaUrl)?.poster ?? getVideoFrameUrl(mediaUrl)) : null,
       creatorName: t.creatorDisplayName || 'ComfyUI',
       creatorAvatarUrl: t.creatorAvatarUrl,
       creatorUrl: t.username ? creatorPath(t.username, props.locale) : null,
@@ -108,6 +110,24 @@ const videoFailed = ref<Record<string, boolean>>({});
 function onVideoError(key: string) {
   videoFailed.value[key] = true;
 }
+
+const videoEls = new Map<string, HTMLVideoElement>();
+function setVideoEl(key: string, el: Element | ComponentPublicInstance | null) {
+  if (el instanceof HTMLVideoElement) videoEls.set(key, el);
+  else videoEls.delete(key);
+}
+
+onMounted(() => {
+  const api = emblaApi.value;
+  if (!api) return;
+  api.on('select', () => {
+    const activeKey = slides.value[api.selectedScrollSnap()]?.key;
+    for (const [key, video] of videoEls) {
+      if (key === activeKey && autoplayEnabled) video.play().catch(() => {});
+      else video.pause();
+    }
+  });
+});
 
 onUnmounted(() => {
   emblaApi.value?.destroy();
@@ -134,8 +154,9 @@ onUnmounted(() => {
             :src="slide.videoUrl"
             :poster="slide.posterUrl || undefined"
             class="h-full w-full object-cover"
-            :preload="index === 0 ? 'auto' : 'metadata'"
-            :autoplay="autoplayEnabled"
+            :ref="(el) => setVideoEl(slide.key, el)"
+            :preload="index === 0 ? 'auto' : 'none'"
+            :autoplay="autoplayEnabled && index === 0"
             muted
             loop
             playsinline

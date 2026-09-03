@@ -1,16 +1,66 @@
 {
   "ci": {
     "collect": {
-      "staticDistDir": "site/dist",
-      "url": ["http://localhost/workflows/"]
+      "staticDistDir": "site/dist/client",
+      "numberOfRuns": 3,
+      "url": [
+        "http://localhost/workflows/",
+        "http://localhost/workflows/use-cases/",
+        "http://localhost/workflows/use-cases/ai-anime-generator/",
+        "http://localhost/workflows/video_ltx2_3_i2v-7cc1d3bd2802/"
+      ]
     },
     "assert": {
-      "assertions": {
-        "categories:performance": ["warn", { "minScore": 0.8 }],
-        "categories:accessibility": ["warn", { "minScore": 0.9 }],
-        "categories:best-practices": ["warn", { "minScore": 0.9 }],
-        "categories:seo": ["warn", { "minScore": 0.9 }]
-      }
+      "assertMatrix": [
+        {
+          "matchingUrlPattern": "^http://[^/]+/workflows/$",
+          "assertions": {
+            "total-byte-weight": ["error", { "maxNumericValue": 7340032 }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+            "total-blocking-time": ["error", { "maxNumericValue": 500 }],
+            "categories:performance": ["warn", { "minScore": 0.6 }],
+            "categories:accessibility": ["warn", { "minScore": 0.9 }],
+            "categories:best-practices": ["warn", { "minScore": 0.9 }],
+            "categories:seo": ["warn", { "minScore": 0.9 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^http://[^/]+/workflows/use-cases/$",
+          "assertions": {
+            "total-byte-weight": ["error", { "maxNumericValue": 6291456 }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+            "total-blocking-time": ["error", { "maxNumericValue": 500 }],
+            "categories:performance": ["warn", { "minScore": 0.6 }],
+            "categories:accessibility": ["warn", { "minScore": 0.9 }],
+            "categories:best-practices": ["warn", { "minScore": 0.9 }],
+            "categories:seo": ["warn", { "minScore": 0.9 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^http://[^/]+/workflows/use-cases/[^/]+/$",
+          "assertions": {
+            "total-byte-weight": ["error", { "maxNumericValue": 2621440 }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+            "total-blocking-time": ["error", { "maxNumericValue": 500 }],
+            "categories:performance": ["warn", { "minScore": 0.6 }],
+            "categories:accessibility": ["warn", { "minScore": 0.9 }],
+            "categories:best-practices": ["warn", { "minScore": 0.9 }],
+            "categories:seo": ["warn", { "minScore": 0.9 }]
+          }
+        },
+        {
+          "matchingUrlPattern": "^http://[^/]+/workflows/video_ltx2_3_i2v",
+          "assertions": {
+            "total-byte-weight": ["error", { "maxNumericValue": 4194304 }],
+            "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
+            "total-blocking-time": ["error", { "maxNumericValue": 500 }],
+            "categories:performance": ["warn", { "minScore": 0.6 }],
+            "categories:accessibility": ["warn", { "minScore": 0.9 }],
+            "categories:best-practices": ["warn", { "minScore": 0.9 }],
+            "categories:seo": ["warn", { "minScore": 0.9 }]
+          }
+        }
+      ]
     },
     "upload": {
       "target": "temporary-public-storage"
