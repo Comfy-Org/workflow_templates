@@ -3,15 +3,16 @@ import type { Page, Response } from '@playwright/test';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 
 const evidenceDir =
-  '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20b-astro';
+  '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20m-astro';
 const fixtureEmail = process.env.FIXTURE_EMAIL;
 const fixturePassword = process.env.FIXTURE_PASSWORD;
-const topUpKey = 'RUN20B-topup-500-recovery-1';
+const topUpKey = 'RUN20M-topup-500-2';
 
 interface Run20bSeam {
   whenAuthenticated(timeout?: number): Promise<void>;
   getCurrentEmail(): string | null;
   getBillingStatus(): Promise<Record<string, unknown>>;
+  refreshBillingStatus(): Promise<Record<string, unknown>>;
   getCredits(): { phase: string; value?: { balance?: number } };
   refreshCredits(): Promise<void>;
   getPaymentState(): { step: string; operationId?: string };
@@ -40,7 +41,8 @@ async function snapshot(page: Page, name: string) {
   const state = await page.evaluate(async () => {
     const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
     await value.refreshCredits();
-    return { status: await value.getBillingStatus(), balance: value.getCredits() };
+    const status = await value.refreshBillingStatus();
+    return { status, balance: value.getCredits() };
   });
   await writeFile(
     `${evidenceDir}/${name}-status.json`,
@@ -60,7 +62,8 @@ function balance(state: Awaited<ReturnType<typeof snapshot>>) {
 test.beforeAll(() => mkdir(evidenceDir, { recursive: true }));
 test.setTimeout(180_000);
 
-test('RUN20B staging-real account matrix', async ({ page }) => {
+test('RUN20B staging-real account matrix', async ({ page }, testInfo) => {
+  const project = testInfo.project.name;
   const requests: string[] = [];
   const operations: string[] = [];
   page.on('response', async (response: Response) => {
@@ -73,6 +76,7 @@ test('RUN20B staging-real account matrix', async ({ page }) => {
     requests.push(
       `${new Date().toISOString()} ${response.request().method()} ${url.pathname} ${response.status()} ${body}`
     );
+    await appendFile(`${evidenceDir}/requests-live.log`, `${requests.at(-1)}\n`);
     if (url.pathname.includes('/ops/')) operations.push(body);
   });
 
@@ -85,7 +89,18 @@ test('RUN20B staging-real account matrix', async ({ page }) => {
     await page.evaluate(async (key) => {
       const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
       await value.resubscribeWithIdempotency(key);
-    }, 'RUN20B-resubscribe-recovery-2');
+    }, `RUN20M-resubscribe-${project}`);
+    await expect
+      .poll(
+        () =>
+          page.evaluate(async () => {
+            const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
+            const status = await value.refreshBillingStatus();
+            return status.subscription_status;
+          }),
+        { timeout: 180_000, intervals: [1_000, 3_000, 8_000] }
+      )
+      .toBe('active');
   }
   const active = await snapshot(page, 'post-resubscribe');
   expect(active.status.subscription_status).toBe('active');
@@ -94,8 +109,19 @@ test('RUN20B staging-real account matrix', async ({ page }) => {
   await page.evaluate(async (key) => {
     const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
     await value.cancelWithIdempotency(key);
-  }, 'RUN20B-cancel-recovery-2');
-  const canceled = await snapshot(page, 'post-cancel');
+  }, `RUN20M-cancel-4-${project}`);
+  await expect
+    .poll(
+      () =>
+        page.evaluate(async () => {
+          const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
+          const status = await value.refreshBillingStatus();
+          return status.subscription_status;
+        }),
+      { timeout: 180_000, intervals: [1_000, 3_000, 8_000] }
+    )
+    .toBe('canceled');
+  const canceled = await snapshot(page, `post-cancel-${project}`);
   expect(canceled.status.subscription_status).toBe('canceled');
   expect(canceled.status.cancel_at).toBeTruthy();
   await expect(page.getByTestId('account-layer-poc')).not.toContainText('Nothing was charged');
@@ -113,7 +139,7 @@ test('RUN20B staging-real account matrix', async ({ page }) => {
       () =>
         page.evaluate(async () => {
           const value = Reflect.get(window, '__accountLayerPoc') as Run20bSeam;
-          return (await value.getBillingStatus()).pending_billing_op_id ?? null;
+          return (await value.refreshBillingStatus()).pending_billing_op_id ?? null;
         }),
       { timeout: 120_000 }
     )

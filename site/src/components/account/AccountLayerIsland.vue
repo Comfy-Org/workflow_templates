@@ -161,6 +161,7 @@ async function logout(): Promise<void> {
 
 const seam: AccountLayerPocSeam & {
   getBillingStatus: () => ReturnType<typeof paymentCommands.getBillingStatus>;
+  refreshBillingStatus: () => Promise<ReturnType<typeof paymentCommands.getBillingStatus>>;
 } = {
   getSessionPhase: () => session.getState().phase,
   whenAuthenticated,
@@ -189,6 +190,10 @@ const seam: AccountLayerPocSeam & {
   },
   getPaymentState: () => paymentState.value,
   getBillingStatus: () => paymentCommands.getBillingStatus(),
+  refreshBillingStatus: async () => {
+    await paymentCommands.start();
+    return paymentCommands.getBillingStatus();
+  },
   getOperationStore: () => debug.operationStore,
   refreshCredits: () => billing.refreshCredits(),
   getCredits: () => billing.getCreditsState(),
