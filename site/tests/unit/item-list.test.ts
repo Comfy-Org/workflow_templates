@@ -87,6 +87,7 @@ describe('buildTemplateItemListEntries', () => {
       template({ name: '', shareId: '' }),
       template({ name: 'flux_schnell', shareId: 'abc123' }),
     ]);
+    expect(entries).toHaveLength(1);
     expect(entries[0].name).toBe('Flux Schnell');
   });
 
