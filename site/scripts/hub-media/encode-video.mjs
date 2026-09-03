@@ -1,21 +1,3 @@
-/**
- * Re-encode the hub's card videos against a VMAF floor.
- *
- * The first pass used SSIM >= 0.96 and shipped crf30. That was wrong: SSIM
- * under-penalises loss of high-frequency detail, so files full of bubbles, hair
- * and water scored 0.966 while VMAF scored them 78. Sampling the shipped corpus
- * put most files in the mid-80s. VMAF correlates far better with what a viewer
- * actually sees, so it is the gate now.
- *
- * The cap is 1920, not 1280. 1280 was chosen from the card box (max 1044 device
- * px) and ignored that the same file is the detail-page hero at up to 2044.
- * Measured on two files: 1280@crf18 and 1920@crf23 come out the same size, and
- * native scores 3 to 4 VMAF points higher. Downscaling bought nothing.
- *
- * Both inputs are scaled to the SOURCE dimensions and have their timestamps
- * reset before scoring: mismatched size makes VMAF refuse, and an edit-list
- * offset makes it compare the wrong frames. Both bit this project already.
- */
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
@@ -23,30 +5,16 @@ import path from 'node:path';
 import os from 'node:os';
 
 const run = promisify(execFile);
-/** Resolved from PATH, so the task runs wherever ffmpeg is installed rather
- *  than only on an Apple-Silicon Homebrew box. Set FFMPEG/FFPROBE to point at a
- *  specific build: the stock ffmpeg often ships without libvmaf, which this
- *  script needs. */
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const FFPROBE = process.env.FFPROBE || 'ffprobe';
 const BUCKET = 'gs://comfy-org-videos/hub-media';
 const MAX_WIDTH = 1920;
-/**
- * Both thresholds below fail OPEN if they parse to NaN, which is a third route
- * to shipping an unjudged file: `chosen.score < NaN` is false, so the floor
- * check waves everything through, and `bytes >= srcBytes * (1 - NaN)` is false,
- * so the saving check does too. `--floor=95%` or a typo is enough to trigger it.
- * Range-checked at parse time rather than trusted.
- */
 function threshold(flag, value, min, max) {
   if (!Number.isFinite(value) || value < min || value > max)
     throw new Error(`--${flag} must be a number between ${min} and ${max}, got: ${value}`);
   return value;
 }
 
-/** 95, matching the runbook. Every file rejected on sight scored 91 to 93.3 and
- *  every file accepted scored 94.2 or better, so 93 was a floor that let the
- *  whole rejected band through whenever a caller omitted the flag. */
 const FLOOR = threshold(
   'floor',
   Number(
@@ -58,9 +26,7 @@ const FLOOR = threshold(
   0,
   100
 );
-/** Start where the old pass ended, then step down only as far as needed. */
 const LADDER = [26, 23, 20, 18];
-/** Below this, keeping the original beats shipping a second copy. */
 const MIN_SAVING = threshold(
   'min-saving',
   Number(
@@ -73,9 +39,6 @@ const MIN_SAVING = threshold(
   1
 );
 
-/** Encoded files are kept here, not in a temp dir that vanishes. An upload can
- *  then be retried without paying for the encode again: a gcloud token expiring
- *  mid-run once cost 186 files' worth of CPU for nothing. */
 const arg = (n) =>
   process.argv
     .slice(2)
@@ -84,16 +47,7 @@ const arg = (n) =>
 const gridPath = arg('grid'),
   manifestPath = arg('manifest'),
   reportPath = arg('report');
-/**
- * A count argument, validated at parse time.
- *
- * `Number('bad')` is NaN and every comparison against NaN is false, so an
- * unvalidated count fails in whichever direction the surrounding code happens to
- * compare: `done >= limit` never fires and the whole corpus runs, while
- * `slice(0, limit)` and `Array.from({ length: jobs })` both yield nothing and the
- * run silently does no work. Neither is a thing to discover from the output.
- */
-function count(flag, raw, fallback) {
+function positiveInt(flag, raw, fallback) {
   if (raw === undefined) return fallback;
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 1)
@@ -101,11 +55,8 @@ function count(flag, raw, fallback) {
   return n;
 }
 
-const limit = count('limit', arg('limit'), Infinity);
-// Parsed here rather than beside its use further down, so every argument is
-// validated before the first file is read: a bad --jobs used to surface only
-// after the grid and manifest had been parsed, behind whatever they threw.
-const CONCURRENCY = count('jobs', arg('jobs'), 4);
+const limit = positiveInt('limit', arg('limit'), Infinity);
+const CONCURRENCY = positiveInt('jobs', arg('jobs'), 4);
 const stageDir = arg('stage') ?? '/tmp/hub-video-stage';
 fs.mkdirSync(stageDir, { recursive: true });
 const uploadOnly = process.argv.includes('--upload-only');
@@ -127,14 +78,6 @@ for (const t of JSON.parse(fs.readFileSync(gridPath, 'utf8')))
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
 
-/**
- * Assets a human reviewed and approved, overriding the automated rules.
- *
- * Without this, a rerun re-applies the thresholds and silently drops a file
- * somebody looked at and accepted. That happened once: a reviewed encode was
- * deleted from the bucket by the next reconcile, reverting the decision with no
- * signal at all.
- */
 const overridePath = new URL('./reviewed-overrides.json', import.meta.url);
 const overrides = JSON.parse(fs.readFileSync(overridePath, 'utf8')).keep ?? {};
 const report = fs.existsSync(reportPath) ? JSON.parse(fs.readFileSync(reportPath, 'utf8')) : {};
@@ -172,7 +115,6 @@ let done = 0,
 const queue = ids.filter((id) => !report[id]?.pass).slice(0, limit);
 let cursor = 0;
 
-/** Upload with a couple of retries, since a transient auth blip should not cost an encode. */
 async function uploadStaged(id, file) {
   let lastErr;
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -192,32 +134,11 @@ async function uploadStaged(id, file) {
   throw lastErr;
 }
 
-/**
- * Why a staged file is not trusted on sight.
- *
- * `stageDir` survives between runs, and the thresholds do not: this corpus was
- * encoded once at floor 93 and then re-judged at 95. A stage directory left over
- * from the earlier pass therefore holds files that today's floor rejects, and the
- * upload path below would have published them and written `pass: true`, which is
- * the same class of bug as the ladder leaving `chosen` on a sub-floor candidate.
- *
- * The report already records what each staged file scored, so provenance is a
- * lookup rather than a re-encode. Returns null when the file is publishable, or
- * the reason it is not.
- */
 function stagedGateFailure(id, bytes) {
-  // A human looked at this one and accepted it; that decision outranks the
-  // thresholds, which is the entire point of reviewed-overrides.json. Read from
-  // that file and NOT from `report[id].reviewed`, which is only an echo of it:
-  // deleting an entry is how an approval gets revoked, and trusting the echo
-  // would keep honouring a decision that had been withdrawn. That is the same
-  // failure the overrides file exists to prevent, pointing the other way.
   if (overrides[id]) return null;
 
   const prev = report[id];
   if (!prev) return 'no report entry, so nothing says what it scored';
-  // Ties the bytes on disk to the encode that was judged. Without this the
-  // checks below would vouch for whatever happens to sit at that path.
   if (prev.outBytes !== bytes)
     return `size ${bytes} does not match the judged encode (${prev.outBytes})`;
   if (typeof prev.vmaf !== 'number') return 'no recorded VMAF';
@@ -228,18 +149,12 @@ function stagedGateFailure(id, bytes) {
   return null;
 }
 
-/** One asset, start to finish. Each worker gets its own directory so the
- *  temp filenames cannot collide between concurrent jobs. */
 async function processOne(id, dir) {
-  // Already encoded on a previous run, just needs pushing.
   const staged = path.join(stageDir, `${id}.mp4`);
   if (fs.existsSync(staged)) {
     const stagedBytes = fs.statSync(staged).size;
     const ungated = stagedGateFailure(id, stagedBytes);
     if (ungated) {
-      // Re-encoding IS the re-check: the run below scores the file against the
-      // current floor and overwrites this one. In --upload-only there is nothing
-      // to fall through to, so record it rather than publishing it unjudged.
       report[id] = { ...(report[id] ?? {}), pass: false, skip: 'stage-unverified', note: ungated };
       fs.writeFileSync(reportPath, JSON.stringify(report, null, 2) + '\n');
       console.warn(
@@ -333,12 +248,7 @@ async function processOne(id, dir) {
       if (score !== null && score >= FLOOR) break;
     }
 
-    // A file whose source is already efficiently encoded cannot be improved
-    // without visible loss: reaching the floor saves so little that we would be
-    // trading quality for nothing, and adding an asset to maintain for nothing.
-    // One measured case: 42% off at VMAF 93.3, but 22% at 96.2 and 0% at 97.5.
     if (overrides[id]) {
-      // Reviewed and approved: ship it whatever the thresholds say.
       const staged = path.join(stageDir, `${id}.mp4`);
       fs.copyFileSync(chosen.file, staged);
       await uploadStaged(id, staged);
@@ -357,11 +267,6 @@ async function processOne(id, dir) {
       return;
     }
 
-    // The ladder leaves `chosen` holding the LAST candidate when none of them
-    // reached the floor, so the floor has to be asserted here rather than
-    // inferred from the loop. Without this a file that topped out at VMAF 90
-    // still shipped, purely because it was 25% smaller, which is precisely the
-    // outcome the floor exists to prevent.
     if (chosen.score === null || chosen.score < FLOOR) {
       report[id] = { pass: false, skip: 'below-floor', vmaf: chosen.score, crf: chosen.crf };
       kept++;
@@ -385,7 +290,6 @@ async function processOne(id, dir) {
     try {
       await uploadStaged(id, staged);
     } catch {
-      // Encode survives in stageDir; rerun with --upload-only to push it.
       report[id] = {
         pass: false,
         skip: 'upload-failed',

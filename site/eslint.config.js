@@ -11,7 +11,6 @@ export default tseslint.config(
     ignores: ['dist/', 'node_modules/', '.astro/', '.vercel/'],
   },
   {
-    // Maintenance scripts run under Node, not in the browser or Astro.
     files: ['scripts/**/*.mjs'],
     languageOptions: {
       globals: {

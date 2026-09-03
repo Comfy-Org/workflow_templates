@@ -157,11 +157,6 @@ export interface SerializedTemplate {
   mediaSubtype?: string;
 }
 
-/**
- * What an Astro page hands a hub island. `description` is deliberately absent:
- * it is ~96 KB of serialized props on the listing and nothing in the islands
- * reads it, since SearchPopover indexes `grid.json`, which strips it too.
- */
 export type IslandTemplate = Omit<SerializedTemplate, 'description'>;
 
 /**

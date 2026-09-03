@@ -111,24 +111,9 @@ function onVideoError(key: string) {
   videoFailed.value[key] = true;
 }
 
-/**
- * Only the slide the reader is looking at holds a playing video.
- *
- * Every slide carried `autoplay`, so all six hero videos downloaded on load to
- * show one. Slide one still autoplays exactly as before; the rest load nothing
- * until they become active, which is the first moment they are visible.
- *
- * Keyed by slide, not collected into a positional list. A still-image slate
- * renders no `<video>` at all, so a list holds only the video slides and its
- * indexes stop matching the carousel's own slide index the moment an image
- * comes first: slide 1 would play the video belonging to slide 2 and pause the
- * one on screen. The same divergence appears mid-session when a video errors
- * and is replaced by its poster `<img>`. Not reactive: nothing renders from it.
- */
 const videoEls = new Map<string, HTMLVideoElement>();
 function setVideoEl(key: string, el: Element | ComponentPublicInstance | null) {
   if (el instanceof HTMLVideoElement) videoEls.set(key, el);
-  // Vue passes null on unmount, which is also how the error swap unregisters.
   else videoEls.delete(key);
 }
 

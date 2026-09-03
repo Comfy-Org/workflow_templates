@@ -23,14 +23,7 @@ interface Props {
 const { src, alt, class: imgClass } = Astro.props;
 const isVideo = Boolean(src && isVideoFile(src));
 
-// Prefer our re-encoded copy of the asset. Shared by every landing-page card,
-// so this one line covers all of them; anything without a generated copy keeps
-// its original URL untouched.
 const resolvedSrc = src ? ((isVideo ? hubMediaFor(src)?.video : hubImageFor(src)) ?? src) : src;
-// Falls back to the Cloudflare frame transform when the asset has no generated
-// poster, matching ThumbnailDisplay and the carousel. This matters more here
-// than anywhere: the video below is `preload="none"` and gated on visibility,
-// so with no poster the card paints an empty box until it scrolls into view.
 const posterSrc =
   src && isVideo ? (hubMediaFor(src)?.poster ?? getVideoFrameUrl(src) ?? undefined) : undefined;
 ---
@@ -72,31 +65,15 @@ const posterSrc =
 </span>
 
 <script>
-  /**
-   * Play only the card thumbnails the reader can see.
-   *
-   * These carried `autoplay`, which silently overrides `preload`, so every card
-   * on a landing page downloaded its full clip on first paint: eight of them,
-   * 11.49 MB, on /workflows/use-cases/ alone. This is the same gating the hub
-   * cards use in HubWorkflowCard.vue, written for Astro because these cards
-   * ship no framework runtime.
-   *
-   * Astro bundles this script once per page however many thumbnails render, so
-   * a single observer covers all of them.
-   */
   const videos = document.querySelectorAll<HTMLVideoElement>('video[data-gated-video]');
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
   if ('IntersectionObserver' in window) {
-    // Deliberately never unobserved, so a card scrolled past and returned to
-    // plays again rather than staying frozen on its poster.
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
           const video = entry.target as HTMLVideoElement;
           if (entry.isIntersecting && !reducedMotion.matches) {
-            // Rejects when the browser declines playback. The poster stays
-            // visible, which is what the reader saw before playback started.
             video.play().catch(() => {});
           } else {
             video.pause();
@@ -107,9 +84,6 @@ const posterSrc =
     );
     videos.forEach((video) => observer.observe(video));
   } else if (!reducedMotion.matches) {
-    // No observer support: fall back to today's behaviour rather than leaving
-    // a reader looking at posters that never move. Still gated on the motion
-    // preference, exactly as the observer path above is.
     videos.forEach((video) => video.play().catch(() => {}));
   }
 </script>

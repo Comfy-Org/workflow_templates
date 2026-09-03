@@ -73,8 +73,6 @@ describe('featuredPreloadImage', () => {
   });
 
   it('preloads the poster for a video slate, which is the usual slide one', () => {
-    // Returning null here is the bug that left the live listing with zero
-    // preloads while its LCP element was this very slate.
     const generated =
       'https://comfy-hub-assets.comfy.org/uploads/306cccad-6557-40d5-9bea-db46db4ab789.mp4';
     expect(featuredPreloadImage([template({ thumbnails: [generated] })])).toBe(

@@ -33,9 +33,6 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-// ISR: cache for 60s, serve stale for up to 10 min while revalidating.
-// Set after the redirect above so only a rendered page carries it; a returned
-// Response replaces Astro.response and would drop it anyway.
 Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
 
 // Cards come from the hub index, which is English only. Resolve the same text
@@ -47,12 +44,7 @@ const serialized = localizeCards(
 );
 
 const featured = getFeatured(serialized);
-// `description` is ~96 KB of the island props and nothing in the island reads
-// it: no card renders it, and SearchPopover indexes grid.json, which already
-// strips it. Server-side uses above are unaffected, they just don't ship.
 const forIsland = serialized.map(({ description: _description, ...rest }) => rest);
-// The hero island does not read `description` either; only the server-side
-// `featured` above needs the full record, for the LCP preload.
 const featuredForIsland = featured.map(({ description: _description, ...rest }) => rest);
 const featuredLcpImage = featuredPreloadImage(featured);
 

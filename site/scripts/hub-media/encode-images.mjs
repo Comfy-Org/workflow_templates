@@ -1,29 +1,9 @@
-/**
- * Right-size the hub's card images. Companion to encode-video.mjs; the rules
- * behind the thresholds below are in README.md.
- *
- * Routes per file rather than per format, because the corpus is mixed:
- *   - animated WebP  -> skipped, needs a WebP encoder this ffmpeg build lacks
- *   - real alpha     -> skipped, JPEG would flatten transparency
- *   - everything else-> JPEG at its own native size, capped at 2048 wide
- *
- * 2048 is not arbitrary: the detail-page hero measures 1022x767 CSS at DPR 2,
- * so 2044 device px. Capping lower would visibly soften that page. The saving
- * comes from format, not from shrinking: one 2048x2048 PNG went 5,871 KB to
- * 827 KB at identical dimensions.
- *
- * Generates locally; uploading is a separate pass so a lapsed gcloud token
- * cannot waste an hour of encoding.
- */
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const run = promisify(execFile);
-/** Resolved from PATH, so the task runs wherever ffmpeg is installed rather
- *  than only on an Apple-Silicon Homebrew box. Set FFMPEG/FFPROBE to point at a
- *  specific build. */
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const FFPROBE = process.env.FFPROBE || 'ffprobe';
 const PUBLIC_BASE = 'https://media.comfy.org/hub-media';
@@ -38,16 +18,7 @@ const arg = (n) =>
 const gridPath = arg('grid'),
   outDir = arg('out'),
   manifestPath = arg('manifest');
-/**
- * A count argument, validated at parse time.
- *
- * `Number('bad')` is NaN and every comparison against NaN is false, so an
- * unvalidated count fails in whichever direction the surrounding code happens to
- * compare: `done >= limit` never fires and the whole corpus runs, while
- * `slice(0, limit)` and `Array.from({ length: jobs })` both yield nothing and the
- * run silently does no work. Neither is a thing to discover from the output.
- */
-function count(flag, raw, fallback) {
+function positiveInt(flag, raw, fallback) {
   if (raw === undefined) return fallback;
   const n = Number(raw);
   if (!Number.isInteger(n) || n < 1)
@@ -55,7 +26,7 @@ function count(flag, raw, fallback) {
   return n;
 }
 
-const limit = count('limit', arg('limit'), Infinity);
+const limit = positiveInt('limit', arg('limit'), Infinity);
 if (!gridPath || !outDir || !manifestPath) throw new Error('--grid= --out= --manifest= required');
 fs.mkdirSync(outDir, { recursive: true });
 
@@ -119,18 +90,6 @@ for (const [id, url] of sources) {
       continue;
     }
 
-    // Only real transparency blocks JPEG, and an alpha channel is usually fully
-    // opaque, so the picture has to be measured rather than inferred from the
-    // pixel format. Ask ffmpeg instead of matching on the format's NAME, which
-    // is what this used to do: `/a$|rgba|argb/` misses `yuva420p`, which is
-    // exactly what a WebP carrying alpha decodes to, and also `gbrap`, `ya8` and
-    // `pal8`. Those images skipped the check and were flattened onto black.
-    //
-    // Running it unconditionally is safe because `alphaextract` fails at filter
-    // setup on a stream with no alpha plane, and that failure IS the "opaque"
-    // answer: no YMIN is printed, so we fall through to the encode. Verified
-    // both ways on this ffmpeg: rgba and yuva420p report YMIN, rgb24 and
-    // yuvj420p fail without decoding the file.
     const alphaProbe = await run(
       FFMPEG,
       [
@@ -145,8 +104,8 @@ for (const [id, url] of sources) {
       ],
       { maxBuffer: 1 << 26 }
     ).catch((e) => ({ stderr: e.stderr ?? '' }));
-    const min = /YMIN=(\d+)/.exec(alphaProbe.stderr ?? '')?.[1];
-    if (min !== undefined && Number(min) < 255) {
+    const minAlpha = /YMIN=(\d+)/.exec(alphaProbe.stderr ?? '')?.[1];
+    if (minAlpha !== undefined && Number(minAlpha) < 255) {
       manifest[id] = { skip: 'transparent', pix, w, h, srcBytes };
       transparent++;
       console.log(`  ${id.slice(0, 8)}  skip: real transparency`);
@@ -172,7 +131,6 @@ for (const [id, url] of sources) {
     ]);
 
     const outBytes = fs.statSync(outFile).size;
-    // Never ship a "smaller" file that is bigger than the original.
     if (outBytes >= srcBytes) {
       fs.rmSync(outFile, { force: true });
       manifest[id] = { skip: 'no-gain', srcBytes, outBytes };

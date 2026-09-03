@@ -21,14 +21,6 @@ export function getFeatured(
 
 /**
  * URL of the first featured card's image for an LCP `<link rel="preload">`.
- *
- * A video slate is the normal case for slide one, and it still paints an image
- * first: its poster. Returning null for those is why the preload tag written in
- * `index.astro` never actually rendered, and why the live listing carries zero
- * preloads while its LCP element is that very slate.
- *
- * Audio slates still return null. They render an icon placeholder rather than an
- * image, so there is nothing worth fetching early.
  */
 export function featuredPreloadImage(featured: SerializedTemplate[]): string | null {
   const primary = featured[0]?.thumbnails?.[0];
