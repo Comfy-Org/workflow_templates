@@ -33,6 +33,7 @@ import {
 } from '../../lib/structured-data';
 import { getWorkflowEntityGraph } from '../../data/workflow-entity-graphs';
 import { buildToolbarLabels } from '../../lib/toolbar';
+import { isPlaceholderVideo, isVideoFile } from '../../lib/media-utils';
 
 import { localizeUrl } from '../../i18n/utils';
 import { t } from '../../i18n/ui';
@@ -137,6 +138,20 @@ const hreflangLocales = data.shareId
 const thumbnails = data.thumbnails;
 const primaryThumbnail = thumbnails[0] || null;
 const heroPreload = detailHeroPreload(thumbnails, data.mediaSubtype, data.thumbnailVariant);
+
+// The hub serves one shared placeholder clip as the "video" for workflows with
+// no real preview yet. While the preview is missing, TemplateDetailPage renders
+// its poster instead of a <video>, and this opts the page out of video indexing
+// so Google does not flag it as "Video isn't on a watch page". A real preview
+// (primary or comparison) keeps normal video treatment.
+const secondaryThumbnail = thumbnails[1] || null;
+const suppressVideoIndexing =
+  isPlaceholderVideo(primaryThumbnail) &&
+  !(
+    secondaryThumbnail &&
+    isVideoFile(secondaryThumbnail) &&
+    !isPlaceholderVideo(secondaryThumbnail)
+  );
 const ogImage = workflowOgUrl(
   data.title || data.name,
   primaryThumbnail ? primaryThumbnail : undefined,
@@ -205,6 +220,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   structuredData={workflowGraphStructuredData ?? structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
+  suppressVideoIndexing={suppressVideoIndexing}
   theme="dark"
   hideDefaultFooter
 >
