@@ -159,7 +159,9 @@ async function logout(): Promise<void> {
   workspaceId.value = null;
 }
 
-const seam: AccountLayerPocSeam = {
+const seam: AccountLayerPocSeam & {
+  getBillingStatus: () => ReturnType<typeof paymentCommands.getBillingStatus>;
+} = {
   getSessionPhase: () => session.getState().phase,
   whenAuthenticated,
   subscribe: (planId = 'pro-monthly') =>
@@ -186,6 +188,7 @@ const seam: AccountLayerPocSeam = {
     injectedPaymentState.value = state;
   },
   getPaymentState: () => paymentState.value,
+  getBillingStatus: () => paymentCommands.getBillingStatus(),
   getOperationStore: () => debug.operationStore,
   refreshCredits: () => billing.refreshCredits(),
   getCredits: () => billing.getCreditsState(),

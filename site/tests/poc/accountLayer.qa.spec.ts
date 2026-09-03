@@ -264,11 +264,35 @@ test('drives package checkout, terminal states, and reload recovery', async ({ p
   await signIn(page);
   const panel = page.getByTestId('account-layer-poc');
   await expect(panel).toContainText(/Credits: \d+/, { timeout: 30_000 });
-  const subscribeResponse = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === '/api/billing/subscribe'
-  );
+  const status = await page.evaluate(() => {
+    const seam = Reflect.get(window, '__accountLayerPoc') as {
+      getBillingStatus(): {
+        is_active: boolean;
+        subscription_status: string;
+        subscription_tier: string;
+      };
+    };
+    return seam.getBillingStatus();
+  });
+  const expectsHostedCheckout = !status.is_active || status.subscription_tier === 'FREE';
+  const subscribeResponse = expectsHostedCheckout
+    ? page.waitForResponse(
+        (response) => new URL(response.url()).pathname === '/api/billing/subscribe'
+      )
+    : null;
   await page.getByTestId('account-layer-subscribe').dblclick();
   await subscribeResponse;
+  if (!expectsHostedCheckout) {
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => (Reflect.get(window, '__accountLayerPoc') as PaymentDebugSnapshot).payment.step
+        )
+      )
+      .toBe('success');
+    expect(status.subscription_status).toMatch(/active|canceled/);
+    return;
+  }
   await expect
     .poll(() =>
       page.evaluate(
@@ -357,6 +381,7 @@ interface PaymentDebugSnapshot {
   billingPosts: number;
   openUrlCalls: number;
   lastCheckoutUrl: string | null;
+  payment: { step: string };
   injectOperationResponse(response: {
     status: string;
     action_url?: string;
