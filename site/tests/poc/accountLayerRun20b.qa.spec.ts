@@ -3,7 +3,7 @@ import type { Page, Response } from '@playwright/test';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 
 const evidenceDir =
-  '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20n-astro';
+  '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/08-qa/evidence/run-20o-astro';
 const fixtureEmail = process.env.FIXTURE_EMAIL;
 const fixturePassword = process.env.FIXTURE_PASSWORD;
 const topUpKey = 'RUN20N-topup-500';
@@ -27,9 +27,31 @@ interface Run20bSeam {
 async function signIn(page: Page) {
   if (!fixtureEmail || !fixturePassword) throw new Error('Fixture credentials are unavailable');
   await page.goto('/poc/account-layer');
+  const currentEmail = await page.evaluate(() =>
+    (Reflect.get(window, '__accountLayerPoc') as Run20bSeam | undefined)?.getCurrentEmail()
+  );
+  if (currentEmail === fixtureEmail) {
+    await writeFile(`${evidenceDir}/firebase-password-signins-${Date.now()}.txt`, '0\n');
+    return;
+  }
   await page.getByTestId('email').fill(fixtureEmail);
   await page.getByTestId('password').fill(fixturePassword);
+  const signInResponse = page.waitForResponse((response) =>
+    response.url().includes('identitytoolkit.googleapis.com/v1/accounts:signInWithPassword')
+  );
   await page.getByRole('button', { name: 'Sign in' }).click();
+  const response = await signInResponse;
+  const body = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+  const redacted = { ...body, idToken: undefined, refreshToken: undefined };
+  await writeFile(
+    `${evidenceDir}/signin-response-${Date.now()}.json`,
+    `${JSON.stringify({ status: response.status(), body: redacted }, null, 2)}\n`
+  );
+  await writeFile(`${evidenceDir}/firebase-password-signins-${Date.now()}.txt`, '1\n');
+  if (!response.ok()) {
+    const error = body.error as { message?: string } | undefined;
+    throw new Error(`Firebase sign-in failed: ${error?.message ?? response.status()}`);
+  }
   await expect(page.getByTestId('sign-out')).toBeVisible({ timeout: 30_000 });
   const email = await page.evaluate(() =>
     (Reflect.get(window, '__accountLayerPoc') as Run20bSeam).getCurrentEmail()
