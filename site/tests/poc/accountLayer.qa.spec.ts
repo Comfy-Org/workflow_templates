@@ -15,6 +15,34 @@ interface DebugSnapshot {
   runScheduledRefresh(): void;
 }
 
+async function waitForStableUrl(page: import('@playwright/test').Page, stableMs = 1_500) {
+  let previous = page.url();
+  let stableSince = Date.now();
+  await expect
+    .poll(() => {
+      const current = page.url();
+      if (current !== previous) {
+        previous = current;
+        stableSince = Date.now();
+      }
+      return Date.now() - stableSince;
+    })
+    .toBeGreaterThanOrEqual(stableMs);
+  await page.waitForLoadState('domcontentloaded');
+}
+
+async function requireAuthenticated(page: import('@playwright/test').Page) {
+  const phase = await page.evaluate(async () => {
+    const seam = Reflect.get(window, '__accountLayerPoc') as {
+      whenAuthenticated(timeoutMs?: number): Promise<void>;
+      getSessionPhase(): string;
+    };
+    await seam.whenAuthenticated(30_000);
+    return seam.getSessionPhase();
+  });
+  expect(phase).toBe('authenticated');
+}
+
 async function signIn(page: import('@playwright/test').Page) {
   const email = process.env.E2E_EMAIL;
   const password = process.env.E2E_PASSWORD;
@@ -23,6 +51,7 @@ async function signIn(page: import('@playwright/test').Page) {
   await page.getByTestId('email').fill(email);
   await page.getByTestId('password').fill(password);
   await page.getByRole('button', { name: 'Sign in' }).click();
+  await waitForStableUrl(page);
 }
 
 async function refresh(page: import('@playwright/test').Page) {
@@ -50,6 +79,7 @@ test('pre-load 401 causes one exchange and one replay only', async ({ page }) =>
     if (armed && request.url().includes('/api/auth/token')) exchanges++;
   });
   await signIn(page);
+  await requireAuthenticated(page);
   const panel = page.getByTestId('account-layer-poc');
   await expect(panel).toContainText(/Credits: \d+/, { timeout: 30_000 });
   armed = true;
