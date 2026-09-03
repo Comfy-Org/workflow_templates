@@ -13,6 +13,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | Sync App Mode flag | `python scripts/sync/sync_is_app.py` (`--dry-run`, `--check`) |
 | Validate templates | `python scripts/validate/validate_templates.py` |
 | Validate manifests | `python scripts/validate/validate_manifests.py` |
+| Audit duplicate thumbnails | `python scripts/validate/check_duplicate_thumbnails.py --audit` |
 | ComfyUI node compatibility | `npm run validate:comfyui-nodes` |
 | Maintainer smoke check | `./scripts/maintenance/check_templates.sh` |
 
@@ -59,6 +60,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | Workflow | Scripts |
 |----------|---------|
 | `validate-templates.yml` | `validate/validate_templates.py`, `validate/validate_thumbnails.py`, `lib/locale_index_files.py` |
+| `check-duplicate-thumbnails.yml` | `validate/check_duplicate_thumbnails.py` |
 | `validate-manifests.yml` | `sync/sync_bundles.py`, `sync/sync_blueprints.py`, `validate/validate_manifests.py`, `validate/list_pip_excluded.py` |
 | `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
@@ -102,6 +104,25 @@ npm run mcp:models   # AI model registry
 - **`data/krea_registry_aliases.json`**, **`data/krea_*_models.json`** — Temporary Krea snapshots for one-off registry seeding (delete when seeding is complete).
 
 Generated output goes to `scripts/.output/` (gitignored) or repo root (`model_analysis_report.md`, `asset_validation_report.md`, `comfyui-node-compat.log`, `comfyui-node-compat.latest.log`).
+
+## Duplicate thumbnail check
+
+Install Pillow, then audit every effective image thumbnail:
+
+```bash
+python -m pip install Pillow
+python scripts/validate/check_duplicate_thumbnails.py --audit
+```
+
+The checker covers explicit image paths in `templates/index.json` and implicit
+`{template}-N.webp` assets, while ignoring multiple images owned by one template. Audit mode
+reports legacy duplicates without failing. Before committing a thumbnail change, run the CI gate:
+
+```bash
+python scripts/validate/check_duplicate_thumbnails.py --base-ref origin/main
+```
+
+It fails only for duplicate pairs involving a changed asset or image-thumbnail mapping.
 
 ## ComfyUI node compatibility check
 
