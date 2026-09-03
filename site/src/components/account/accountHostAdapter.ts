@@ -79,6 +79,20 @@ export function createAccountBillingCommands(
       if (state.phase !== 'authenticated' && state.phase !== 'refreshing') {
         throw new AccountError('Account session is unavailable');
       }
+      if (request.method === 'POST') {
+        const kind = request.path.includes('/topup')
+          ? 'topup'
+          : request.path.includes('/resubscribe')
+            ? 'resubscribe'
+            : request.path.includes('/cancel')
+              ? 'cancel'
+              : 'subscribe';
+        operationContext = {
+          kind,
+          started_at: Date.now(),
+          return_url: kind === 'subscribe' ? `${window.location.origin}/poc/account-layer` : null,
+        };
+      }
       if (request.method === 'POST') debug.billingPosts++;
       const response = await fetch(`${cloudBaseUrl}${request.path}`, {
         method: request.method,

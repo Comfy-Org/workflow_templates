@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { billingCopyKeys, createBillingClient, createSessionClient } from '@comfyorg/account/core';
+import {
+  AccountLayerReadinessTimeoutError,
+  billingCopyKeys,
+  createBillingClient,
+  createSessionClient,
+} from '@comfyorg/account/core';
 import type { AccountLayerPocSeam, BillingState } from '@comfyorg/account/core';
 import {
   billingClientKey,
@@ -68,6 +73,23 @@ debug.projectPaymentState = async (state) => {
 provide(billingClientKey, billing);
 debug.refreshCredits = () => billing.refreshCredits();
 let initialization: Promise<void> | undefined;
+const readinessTimeoutMs = 10_000;
+
+async function whenAuthenticated(timeoutMs = readinessTimeoutMs): Promise<void> {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    const phase = session.getState().phase;
+    if (phase === 'authenticated' || phase === 'refreshing') return;
+    await new Promise((resolve) => setTimeout(resolve, 25));
+  }
+  throw new AccountLayerReadinessTimeoutError(timeoutMs);
+}
+
+async function readyMutation(mutation: () => Promise<void>): Promise<void> {
+  if (auth.currentUser) await initializeUser(auth.currentUser);
+  await whenAuthenticated();
+  await mutation();
+}
 
 async function resolveWorkspace(identityToken: string): Promise<string> {
   const response = await fetch(`${import.meta.env.PUBLIC_CLOUD_BASE_URL}/api/workspaces`, {
@@ -126,21 +148,28 @@ async function logout(): Promise<void> {
 }
 
 const seam: AccountLayerPocSeam = {
+  getSessionPhase: () => session.getState().phase,
+  whenAuthenticated,
   subscribe: (planId = 'pro-monthly') =>
-    checkout.submit({
-      plan_slug: planId,
-      return_url: `${window.location.origin}/poc/account-layer?payment=success`,
-      cancel_url: `${window.location.origin}/poc/account-layer?payment=failed`,
-    }),
+    readyMutation(() =>
+      checkout.submit({
+        plan_slug: planId,
+        return_url: `${window.location.origin}/poc/account-layer?payment=success`,
+        cancel_url: `${window.location.origin}/poc/account-layer?payment=failed`,
+      })
+    ),
   topUp: (amount = 500) =>
-    topUp.submit({ amount_cents: amount, idempotency_key: crypto.randomUUID() }),
-  cancelSubscription: () => paymentCommands.cancelSubscription({}),
-  resubscribe: () => paymentCommands.resubscribe({ plan_slug: 'pro-monthly' }),
-  openPaymentPortal: async () => {
-    await paymentCommands.openPaymentPortal({
-      return_url: `${window.location.origin}/poc/account-layer`,
-    });
-  },
+    readyMutation(() =>
+      topUp.submit({ amount_cents: amount, idempotency_key: crypto.randomUUID() })
+    ),
+  cancelSubscription: () => readyMutation(() => paymentCommands.cancelSubscription({})),
+  resubscribe: () => readyMutation(() => paymentCommands.resubscribe({ plan_slug: 'pro-monthly' })),
+  openPaymentPortal: () =>
+    readyMutation(async () => {
+      await paymentCommands.openPaymentPortal({
+        return_url: `${window.location.origin}/poc/account-layer`,
+      });
+    }),
   projectPaymentState: async (state: BillingState) => {
     injectedPaymentState.value = state;
   },
