@@ -63,6 +63,8 @@ const firstMatchingTag =
   matchingTemplates[0].tags?.find((t: string) => tagSlug(t) === tag) || tag || '';
 const tagName = tagDisplayName(firstMatchingTag);
 
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
 const basePath = `/workflows/tag/${tag}/`;
 // Gated until this locale completes native review — see listing-indexing.
 const indexing = listingIndexing(basePath, typedLocale);

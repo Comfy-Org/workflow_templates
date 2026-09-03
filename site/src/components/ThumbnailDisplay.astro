@@ -11,7 +11,13 @@
  */
 
 import type { ThumbnailVariant } from '../lib/hub-api';
-import { getVideoFrameUrl } from '../lib/video-thumbnail';
+import { getStillImageUrl, getVideoFrameUrl } from '../lib/video-thumbnail';
+import {
+  HERO_STILL_WIDTH,
+  heroPaintsAnimatedStill,
+  hubAssetUrl,
+  hubMediaFor,
+} from '../lib/hub-media';
 import { isVideoFile, isAudioFile } from '../lib/media-utils';
 
 interface Props {
@@ -49,15 +55,28 @@ const imgClass = mediaClass;
 
 const primaryThumb = thumbnails[0];
 const secondaryThumb = thumbnails[1];
-const primarySrc = primaryThumb ? thumbUrl(primaryThumb) : '';
-const secondarySrc = secondaryThumb ? thumbUrl(secondaryThumb) : '';
+const primaryOriginal = primaryThumb ? thumbUrl(primaryThumb) : '';
+const secondaryOriginal = secondaryThumb ? thumbUrl(secondaryThumb) : '';
+const primarySrc = hubAssetUrl(primaryOriginal);
+const secondarySrc = hubAssetUrl(secondaryOriginal);
 const isAnimated = mediaSubtype === 'webp';
+const heroStillSrc =
+  isAnimated &&
+  loading === 'eager' &&
+  primarySrc === primaryOriginal &&
+  heroPaintsAnimatedStill(thumbnails, variant)
+    ? getStillImageUrl(primaryOriginal, HERO_STILL_WIDTH)
+    : null;
 const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb ? isAudioFile(primaryThumb) : false;
 const isVideo = primaryThumb ? isVideoFile(primaryThumb) : false;
 const isSecondaryVideo = secondaryThumb ? isVideoFile(secondaryThumb) : false;
-const videoPosterUrl = isVideo ? getVideoFrameUrl(primarySrc) : null;
-const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc) : null;
+const videoPosterUrl = isVideo
+  ? (hubMediaFor(primaryOriginal)?.poster ?? getVideoFrameUrl(primaryOriginal))
+  : null;
+const secondaryVideoPosterUrl = isSecondaryVideo
+  ? (hubMediaFor(secondaryOriginal)?.poster ?? getVideoFrameUrl(secondaryOriginal))
+  : null;
 ---
 
 {
@@ -256,7 +275,8 @@ const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc
   ) : isAnimated ? (
     <div class={`animated-thumb group relative overflow-hidden ${className}`}>
       <img
-        src={primarySrc}
+        src={heroStillSrc ?? primarySrc}
+        data-animated-src={heroStillSrc ? primarySrc : undefined}
         alt={title}
         loading={loading}
         fetchpriority={fetchpriority}
@@ -266,6 +286,11 @@ const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc
         draggable="false"
         sizes={sizes}
         class={imgClass}
+        onerror={
+          heroStillSrc
+            ? 'this.onerror=null;const s=this.dataset.animatedSrc;delete this.dataset.animatedSrc;if(s)this.src=s'
+            : undefined
+        }
       />
     </div>
   ) : variant === 'zoomHover' ? (
@@ -302,6 +327,27 @@ const secondaryVideoPosterUrl = isSecondaryVideo ? getVideoFrameUrl(secondarySrc
 }
 
 <script>
+  const WIDE_VIEWPORT = 1024;
+
+  function loadHeroAnimations() {
+    if (window.innerWidth < WIDE_VIEWPORT) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    document.querySelectorAll<HTMLImageElement>('img[data-animated-src]').forEach((img) => {
+      const src = img.dataset.animatedSrc;
+      if (!src) return;
+      const animation = new Image();
+      animation.decoding = 'async';
+      animation.onload = () => {
+        img.src = src;
+        delete img.dataset.animatedSrc;
+      };
+      animation.src = src;
+    });
+  }
+
+  if (document.readyState === 'complete') loadHeroAnimations();
+  else window.addEventListener('load', loadHeroAnimations, { once: true });
+
   import '../scripts/compare-slider';
 
   // Video fallback: show poster image if video fails to load, stalls, or autoplay is suppressed

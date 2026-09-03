@@ -16,6 +16,7 @@ import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { firstStillThumbnail, heroTemplateFor } from '../../../lib/media-utils';
 import { absoluteUrl } from '../../../config/site';
 import { useCasePath, useCasesIndexPath, modelPath } from '../../../lib/routes';
+import { landingHeroPreload } from '../../../lib/hub-media';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import {
@@ -112,6 +113,7 @@ const pinnedShareIds = (def.pins ?? []).filter((pin) => !pin.gate).map((pin) => 
 // The template LandingHero renders as the hero, reserved so no section reuses it
 // (lead-aware, so a video-led hero is the one excluded, not a later still).
 const heroTemplate = heroTemplateFor(templates);
+const heroPreload = landingHeroPreload(heroTemplate?.thumbnails);
 const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
@@ -213,6 +215,12 @@ const relatedCards = resolveRailImages(
   noindex={noindex}
   hideDefaultFooter
 >
+  {
+    heroPreload && (
+      <link slot="head" rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+    )
+  }
+
   <HubNavbar />
 
   <article class="bg-page min-h-screen text-content scroll-smooth hyphens-none wrap-normal">

@@ -157,6 +157,8 @@ export interface SerializedTemplate {
   mediaSubtype?: string;
 }
 
+export type IslandTemplate = Omit<SerializedTemplate, 'description'>;
+
 /**
  * The subset of template fields the SEO image-matcher / fallback pool reads.
  * Lets pages trim the catalog to a lean payload without an unsafe cast.

@@ -28,6 +28,8 @@ const locale = getLocaleFromPath(Astro.url.pathname);
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
 
 const featured = getFeatured(serialized);
+const forIsland = serialized.map(({ description: _description, ...rest }) => rest);
+const featuredForIsland = featured.map(({ description: _description, ...rest }) => rest);
 const featuredLcpImage = featuredPreloadImage(featured);
 
 const canonicalUrl = absoluteUrl(localizeUrl('/workflows/', locale));
@@ -77,7 +79,7 @@ const facetsConfig = buildFacetsConfig(locale);
     <!-- Featured hero carousel (Vue island) -->
     <FeaturedCarousel
       client:load
-      templates={featured}
+      templates={featuredForIsland}
       locale={locale}
       isRtl={isRTL(locale)}
       featuredLabel={t('hub.featured.label', locale)}
@@ -148,12 +150,12 @@ const facetsConfig = buildFacetsConfig(locale);
     </section>
 
     <!-- Inline search — shows among the filters, docks flush below the navbar once scrolled past. -->
-    <HubSearchBar templates={serialized} locale={locale} />
+    <HubSearchBar templates={forIsland} locale={locale} />
 
     <!-- Interactive browse (Vue island) -->
     <HubBrowse
       client:load
-      templates={serialized}
+      templates={forIsland}
       locale={locale}
       mediaTypes={mediaTypes}
       facetsConfig={facetsConfig}
