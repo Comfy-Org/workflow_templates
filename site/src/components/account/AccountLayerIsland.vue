@@ -163,7 +163,7 @@ const seam: AccountLayerPocSeam = {
       topUp.submit({ amount_cents: amount, idempotency_key: crypto.randomUUID() })
     ),
   cancelSubscription: () => readyMutation(() => paymentCommands.cancelSubscription({})),
-  resubscribe: () => readyMutation(() => paymentCommands.resubscribe({ plan_slug: 'pro-monthly' })),
+  resubscribe: () => readyMutation(() => paymentCommands.resubscribe({})),
   openPaymentPortal: () =>
     readyMutation(async () => {
       await paymentCommands.openPaymentPortal({
