@@ -115,7 +115,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       {
         id: 'e-ltx2-5',
         name: 'LTX-2.5',
-        sameAs: 'https://github.com/Lightricks/LTX-Video',
+        sameAs: 'https://huggingface.co/Lightricks/LTX-Video',
         categoryId: 'cat-technology',
       },
       {
@@ -391,7 +391,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       {
         id: 'e-seedance2-5',
         name: 'Seedance 2.5',
-        sameAs: 'https://www.bytedance.com/',
+        sameAs: 'https://seed.bytedance.com/en/seedance2_5',
         categoryId: 'cat-technology',
       },
       {
@@ -538,7 +538,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       {
         id: 'e-minimax-h3',
         name: 'MiniMax H3',
-        sameAs: 'https://hailuoai.video/',
+        sameAs: 'https://huggingface.co/MiniMaxAI/MiniMax-H3',
         categoryId: 'cat-technology',
       },
       {
@@ -659,7 +659,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       {
         id: 'e-wan-animate2',
         name: 'Wan Animate 2',
-        sameAs: 'https://github.com/Wan-Video/Wan2.1',
+        sameAs: 'https://huggingface.co/Wan-AI/Wan2.2-Animate-2-14B',
       },
       {
         id: 'e-character',
