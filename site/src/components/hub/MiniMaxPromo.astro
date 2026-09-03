@@ -4,9 +4,9 @@
  * hub index between the hero and the browse grid.
  *
  * Extracted from `pages/workflows/index.astro` so the `minimaxH3Demo`
- * experiment flag can gate it with a single conditional, and so the
- * reduced-motion script stays a normal processed <script> instead of being
- * escaped into a JSX expression.
+ * experiment flag can gate it with a single conditional, and so the playback
+ * gate stays a normal processed <script> instead of being escaped into a JSX
+ * expression.
  *
  * The caller owns the flag check — this component always renders.
  */
@@ -27,25 +27,73 @@ const { locale } = Astro.props;
     class="media-frame relative aspect-video min-h-56 overflow-hidden rounded-4xl bg-black lg:aspect-auto lg:min-h-80"
   >
     {
-      /* metadata-only preload + a poster keep the clip's megabytes off the
-        page's critical path; the frame paints before any video bytes. */
+      /* No `autoplay`. It overrides the preload hint, so pairing the two pulled
+        the whole 3.4 MB body during parse — reduced-motion users included, since
+        the old script could only strip the attribute after the fetch was already
+        committed. `preload="none"` plus the 34.5 KB poster paints the frame for
+        free and leaves the gate below to decide when, and whether, to spend the
+        body.
+
+        This is not a first-paint byte saving in the general case. The block's
+        offset tracks viewport width (the carousel above it is
+        `h-[clamp(300px,60vw,520px)]`), measuring ~571px on a phone up to ~860px
+        on a desktop, so it is usually already inside the initial viewport and
+        the gate opens straight away. What it does buy, measured: reduced-motion
+        users fetch zero bytes instead of 3.4 MB; the fetch leaves the parse-time
+        critical path, so it stops competing with the carousel's LCP video;
+        playback stops once scrolled away; and on short viewports it defers
+        outright. Moving the page's total byte weight needs the asset itself to
+        shrink — it lives outside the `hub-media` manifest, so the VMAF re-encode
+        pass never saw it. */
     }
     <video
       id="mmh3-promo-video"
       src={EXAMPLE_VIDEO_URL}
       poster={exampleKeyframeUrl(1)}
-      autoplay
       muted
       loop
       playsinline
-      preload="metadata"
+      preload="none"
       class="h-full w-full object-cover"></video>
     <script>
-      // Autoplay is a flourish — hold the poster for reduced-motion users.
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        const promo = document.getElementById('mmh3-promo-video') as HTMLVideoElement | null;
-        promo?.removeAttribute('autoplay');
-        promo?.pause();
+      // Mirrors the card-video gate `workflow-pages/Thumbnail.astro` picked up
+      // in #1216, copied rather than shared: Astro bundles a component's script
+      // only into pages that render that component, and Thumbnail is used
+      // exclusively by `workflow-pages/cards/*`, none of which appear on
+      // /workflows/ — so tagging this element for that script would silently do
+      // nothing.
+      //
+      // No fallback for a missing IntersectionObserver. Playing unconditionally
+      // is what this block is here to stop, and every browser the site builds
+      // for has had the API since 2019; without it the poster simply stays.
+      const promo = document.getElementById('mmh3-promo-video') as HTMLVideoElement | null;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      if (promo) {
+        let inView = false;
+
+        // Playback is a flourish, so reduced-motion users hold the poster and
+        // never pay for the body at all.
+        const sync = () => {
+          if (inView && !reducedMotion.matches) {
+            promo.play().catch(() => {});
+          } else {
+            promo.pause();
+          }
+        };
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) inView = entry.isIntersecting;
+            sync();
+          },
+          { rootMargin: '200px' }
+        );
+        observer.observe(promo);
+
+        // Re-read on toggle, not just at startup: switching the preference on
+        // mid-playback has to stop the clip, not wait for the next scroll.
+        reducedMotion.addEventListener('change', sync);
       }
     </script>
   </div>
