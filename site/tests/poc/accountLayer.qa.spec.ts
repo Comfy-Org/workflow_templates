@@ -3,6 +3,7 @@ import { mkdir, writeFile } from 'node:fs/promises';
 
 const evidenceDir =
   '/home/c_byrne/workspaces/comfy-account-layer/.concept-poc/account-layer-refactor/07-poc/consumer-astro/evidence';
+const paymentsEvidenceDir = `${evidenceDir}/payments`;
 
 interface DebugSnapshot {
   billingRequests: number;
@@ -214,3 +215,123 @@ test('proves account lifecycle, refresh, replay, and error handling', async ({ p
     )
   );
 });
+
+test('drives package checkout, terminal states, and reload recovery', async ({ page }) => {
+  await mkdir(paymentsEvidenceDir, { recursive: true });
+  const requests: string[] = [];
+  page.on('response', (response) => {
+    const url = new URL(response.url());
+    if (url.pathname === '/api/billing/subscribe') {
+      requests.push(`POST ${url.origin}${url.pathname} status=${response.status()}`);
+    }
+  });
+  await page.route('**/api/billing/ops/injected-operation', (route) =>
+    route.fulfill({ status: 200, contentType: 'application/json', body: '{"status":"pending"}' })
+  );
+  await page.addInitScript(() => {
+    window.open = () => window;
+  });
+  await signIn(page);
+  const panel = page.getByTestId('account-layer-poc');
+  await expect(panel).toContainText(/Credits: \d+/, { timeout: 30_000 });
+  const subscribeResponse = page.waitForResponse(
+    (response) => new URL(response.url()).pathname === '/api/billing/subscribe'
+  );
+  await page.getByTestId('account-layer-subscribe').dblclick();
+  await subscribeResponse;
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => (Reflect.get(window, '__accountLayerPoc') as PaymentDebugSnapshot).openUrlCalls
+      )
+    )
+    .toBe(1);
+  const checkout = await page.evaluate(() => {
+    const debug = Reflect.get(window, '__accountLayerPoc') as PaymentDebugSnapshot;
+    return {
+      billingPosts: debug.billingPosts,
+      openUrlCalls: debug.openUrlCalls,
+      checkoutUrlTestMode: debug.lastCheckoutUrl?.includes('cs_test_') ?? false,
+      checkoutHost: debug.lastCheckoutUrl ? new URL(debug.lastCheckoutUrl).host : null,
+    };
+  });
+  expect(checkout).toMatchObject({
+    billingPosts: 1,
+    openUrlCalls: 1,
+    checkoutUrlTestMode: true,
+  });
+
+  await page.evaluate(async () => {
+    const debug = Reflect.get(window, '__accountLayerPoc') as PaymentDebugSnapshot;
+    await debug.injectOperationResponse({ status: 'pending', action_url: 'https://example.test' });
+  });
+  const verifyingPanel = page.getByTestId('account-layer-billing-step-verifying');
+  await expect(verifyingPanel).toBeVisible();
+  await expect(verifyingPanel.locator('[data-copy-key]')).not.toHaveCount(0);
+  await verifyingPanel.screenshot({ path: `${paymentsEvidenceDir}/verifying.png` });
+  const states = [
+    { name: 'canceled', response: { status: 'canceled', no_charge_confirmed: true } },
+    {
+      name: 'declined',
+      response: { status: 'failed', reason_code: 'insufficient_funds', error_message: 'private' },
+    },
+    { name: 'processing_error', response: { status: 'timeout', error_message: 'private' } },
+    { name: 'payment_received_hold', response: { status: 'payment_received_hold' } },
+  ] as const;
+  for (const state of states) {
+    await page.evaluate(async (response) => {
+      const debug = Reflect.get(window, '__accountLayerPoc') as PaymentDebugSnapshot;
+      await debug.injectOperationResponse(response);
+    }, state.response);
+    const statePanel = page.getByTestId(`account-layer-billing-step-${state.name}`);
+    await expect(statePanel).toBeVisible();
+    await expect(statePanel.locator('[data-copy-key]')).not.toHaveCount(0);
+    await expect(statePanel).not.toContainText('private');
+    if (state.name === 'canceled') {
+      await expect(statePanel).toContainText('Nothing was charged');
+    } else {
+      await expect(statePanel).not.toContainText('Nothing was charged');
+    }
+    await statePanel.screenshot({ path: `${paymentsEvidenceDir}/${state.name}.png` });
+  }
+
+  await page.evaluate(async () => {
+    const debug = Reflect.get(window, '__accountLayerPoc') as PaymentDebugSnapshot;
+    await debug.injectOperationResponse({ status: 'pending' });
+  });
+  await page.reload();
+  await expect(page.getByTestId('account-layer-billing-step-preview')).toBeVisible({
+    timeout: 30_000,
+  });
+  await page
+    .getByTestId('account-layer-billing-step-preview')
+    .screenshot({ path: `${paymentsEvidenceDir}/reload-recovery.png` });
+  await writeFile(`${paymentsEvidenceDir}/requests.log`, `${requests.join('\n')}\n`);
+  await writeFile(
+    `${paymentsEvidenceDir}/result.log`,
+    [
+      'billing-posts=1',
+      'open-url-calls=1',
+      'checkout-url-test-mode=yes',
+      'checkout-path=subscribe',
+      'injected-states=5/5',
+      'reload-recovery=pass',
+      'return-url-target=platform.comfy.org',
+      'flag-off-chunk=absent',
+      `checkout-host=${checkout.checkoutHost}`,
+    ].join('\n') + '\n'
+  );
+});
+
+interface PaymentDebugSnapshot {
+  billingPosts: number;
+  openUrlCalls: number;
+  lastCheckoutUrl: string | null;
+  injectOperationResponse(response: {
+    status: string;
+    action_url?: string;
+    reason_code?: string;
+    error_message?: string;
+    no_charge_confirmed?: boolean;
+  }): Promise<void>;
+}

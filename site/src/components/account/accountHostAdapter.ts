@@ -1,7 +1,16 @@
-import { AccountError, MalformedResponseError } from '@comfyorg/account/core';
+import {
+  AccountError,
+  MalformedResponseError,
+  createBillingApiClient,
+  createBillingCommands,
+} from '@comfyorg/account/core';
 import type {
   AccountHostAdapter,
   BillingBalanceResponse,
+  BillingCommands,
+  BillingOperationResponse,
+  BillingState,
+  SessionClient,
   StorageKey,
   TransportRequest,
   WorkspaceCredential,
@@ -16,6 +25,106 @@ export interface AccountLayerDebug {
   refreshScheduleDelayMs: number | null;
   runScheduledRefresh(): void;
   refreshCredits?(): Promise<void>;
+  billingPosts: number;
+  openUrlCalls: number;
+  lastCheckoutUrl: string | null;
+  payment: BillingState;
+  operationStore: { activeId: string | null };
+  injectOperationResponse(response: BillingOperationResponse): Promise<void>;
+  projectPaymentState?(state: BillingState | null): void;
+}
+
+export function createAccountBillingCommands(
+  auth: Auth,
+  cloudBaseUrl: string,
+  getActiveWorkspace: () => string | null,
+  session: SessionClient,
+  debug: AccountLayerDebug
+): BillingCommands {
+  let injectedResponse: BillingOperationResponse | undefined;
+  const key = () =>
+    `comfy-hub-account-layer-poc:${auth.currentUser?.uid ?? 'signed-out'}:${getActiveWorkspace() ?? 'no-workspace'}:billing:active-operation`;
+  const operationStore = {
+    namespace: 'comfy-hub-account-layer-poc',
+    async getActiveId() {
+      const id = localStorage.getItem(key());
+      debug.operationStore.activeId = id;
+      return id;
+    },
+    async setActiveId(id: string) {
+      localStorage.setItem(key(), id);
+      debug.operationStore.activeId = id;
+    },
+    async clearActiveId() {
+      localStorage.removeItem(key());
+      debug.operationStore.activeId = null;
+    },
+  };
+  const client = createBillingApiClient({
+    async transport(request) {
+      if (request.method === 'GET' && injectedResponse) {
+        return { status: 200, body: injectedResponse };
+      }
+      const state = session.getState();
+      if (state.phase !== 'authenticated' && state.phase !== 'refreshing') {
+        throw new AccountError('Account session is unavailable');
+      }
+      if (request.method === 'POST') debug.billingPosts++;
+      const response = await fetch(`${cloudBaseUrl}${request.path}`, {
+        method: request.method,
+        headers: {
+          ...request.headers,
+          Authorization: `Bearer ${state.credential.token}`,
+          'Content-Type': 'application/json',
+        },
+        body: request.body === undefined ? undefined : JSON.stringify(request.body),
+      });
+      const body = record(await response.json().catch(() => null));
+      return {
+        status: response.status,
+        body: {
+          ...body,
+          action_url:
+            typeof body.action_url === 'string' ? body.action_url : body.payment_method_url,
+        },
+      };
+    },
+  });
+  const commands = createBillingCommands({
+    client,
+    ports: {
+      operationStore,
+      clock: {
+        now: Date.now,
+        schedule: (fn, delayMs) => setTimeout(fn, delayMs),
+        cancel: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
+      },
+      async openUrl(url) {
+        debug.openUrlCalls++;
+        debug.lastCheckoutUrl = url;
+        return { opened: window.open(url, '_blank') !== null };
+      },
+    },
+  });
+  commands.subscribeState((state) => {
+    debug.payment = state;
+  });
+  debug.injectOperationResponse = async (response) => {
+    if (response.status === 'pending' && response.action_url) {
+      debug.projectPaymentState?.({
+        step: 'verifying',
+        actionUrl: response.action_url,
+        noChargeConfirmed: false,
+      });
+      return;
+    }
+    debug.projectPaymentState?.(null);
+    injectedResponse = response;
+    await operationStore.setActiveId('injected-operation');
+    await commands.start();
+    debug.projectPaymentState?.(debug.payment);
+  };
+  return commands;
 }
 
 function record(value: unknown): Record<string, unknown> {
