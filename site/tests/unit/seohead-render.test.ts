@@ -32,6 +32,30 @@ describe('SEOHead rendered output', () => {
     expect(html).not.toContain('og:locale:alternate');
   });
 
+  it('emits no robots meta by default', async () => {
+    const html = await render('/workflows/tag/x/');
+    expect(html).not.toContain('name="robots"');
+  });
+
+  it('emits max-video-preview:0 when video indexing is suppressed', async () => {
+    const html = await render('/workflows/tag/x/', { suppressVideoIndexing: true });
+    expect(html).toContain('<meta name="robots" content="max-video-preview:0">');
+  });
+
+  it('merges noindex and max-video-preview:0 into one robots meta', async () => {
+    const html = await render('/ja/workflows/tag/x/', {
+      noindex: true,
+      suppressVideoIndexing: true,
+    });
+    expect(html).toContain('<meta name="robots" content="noindex,follow,max-video-preview:0">');
+    expect(html.match(/name="robots"/g)).toHaveLength(1);
+  });
+
+  it('keeps noindex,follow unchanged when video indexing is not suppressed', async () => {
+    const html = await render('/ja/workflows/tag/x/', { noindex: true });
+    expect(html).toContain('<meta name="robots" content="noindex,follow">');
+  });
+
   it('matches the hreflang cluster exactly', async () => {
     const html = await render('/ja/workflows/x/', { hreflangLocales: ['en', 'ja'] });
     const hreflangs = [...html.matchAll(/hreflang="([^"]+)"/g)].map((m) => m[1]);
