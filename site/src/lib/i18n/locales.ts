@@ -11,8 +11,8 @@
  *   CI asserts this is a subset of AVAILABLE_APP_LOCALES (you cannot support a
  *   hub locale the app cannot supply UI strings for).
  * - INDEXABLE_LOCALES: the reviewed subset whose canonicals/sitemap/hreflang are
- *   flipped on. Starts empty; each language is added in its own one-line PR after
- *   its native-review wave. Per-page gating still applies on top (see predicate).
+ *   flipped on. Each language is added after its native-review wave; per-page
+ *   gating still applies on top (see predicate).
  *
  * No `import.meta.env` here, so `astro.config.mjs` can import these at build.
  */
@@ -43,9 +43,9 @@ export const AVAILABLE_APP_LOCALES = [
 export const SUPPORTED_HUB_LOCALES: readonly Locale[] = LOCALES;
 
 /**
- * Reviewed locales whose pages may be indexed. EMPTY until a language completes
- * its native-review wave, at which point it is added here in a one-line PR.
- * Per-page freshness/completeness/review gating applies on top (see predicate).
+ * Reviewed locales whose pages may be indexed. A language is added here once it
+ * completes its native-review wave; per-page freshness/completeness/review
+ * gating applies on top (see predicate).
  */
 export const INDEXABLE_LOCALES: readonly Locale[] = [
   'zh',

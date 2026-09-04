@@ -22,6 +22,15 @@ interface Props {
   hreflangLocales?: readonly Locale[];
   /** Emit robots noindex (keeps follow) for thin/unverified pages. */
   noindex?: boolean;
+  /**
+   * Emit `max-video-preview:0`, which tells Google not to show an animated video
+   * preview for a `<video>` on this page in search results (a static thumbnail
+   * may still appear; page and video indexing are unaffected). For
+   * aggregation/navigation pages (tag, model, index, use-case, creator listings)
+   * that show a video for UX but are not a dedicated video "watch page" — paired
+   * with never emitting `VideoObject` or a video-sitemap entry for them.
+   */
+  suppressVideoPreview?: boolean;
 }
 
 const {
@@ -36,9 +45,17 @@ const {
   hreflangLocalized = true,
   hreflangLocales,
   noindex = false,
+  suppressVideoPreview = false,
 } = Astro.props;
 
 const pathname = Astro.url.pathname;
+
+// One robots meta, not two: `noindex` keeps its `noindex,follow` and
+// `suppressVideoPreview` appends `max-video-preview:0`.
+const robotsDirectives = [
+  ...(noindex ? ['noindex', 'follow'] : []),
+  ...(suppressVideoPreview ? ['max-video-preview:0'] : []),
+];
 
 const fullCanonicalUrl = canonicalUrl
   ? canonicalUrl
@@ -72,7 +89,7 @@ const ogAlternateLocales: readonly Locale[] = clusterLocales(
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>{title}</title>
 <meta name="description" content={description} />
-{noindex && <meta name="robots" content="noindex,follow" />}
+{robotsDirectives.length > 0 && <meta name="robots" content={robotsDirectives.join(',')} />}
 <link rel="canonical" href={fullCanonicalUrl} />
 
 {/* Hreflang tags for international SEO */}
