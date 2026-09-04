@@ -92,21 +92,73 @@ jobs:
           # a narrow refspec), so both the restore and the later force-with-lease
           # have a real base. Absent branch (first run) -> fetch fails, start fresh.
           if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
-            git checkout "origin/$STABLE_BRANCH" -- site/src/i18n || true
-            # The restore above shadows every file under site/src/i18n with the
-            # branch's older copy, so an edit landed on main since the branch was
-            # last updated comes back as a deletion (it took the navbar keys on
-            # 2026-08-12). Take the layers a person edits back from the checkout:
-            # the UI source nothing regenerates, the override layer nothing here
-            # writes, and the sign-off records, whose missing entries this pipeline
-            # would otherwise re-stamp as machine-authored. restore, not checkout,
-            # so a file deleted on main cannot be resurrected from the branch.
-            git restore --source=HEAD --staged --worktree -- \
-              site/src/i18n/locales/en.json \
-              site/src/i18n/overrides \
-              site/src/i18n/reviews \
-              site/src/i18n/human
-            echo "Restored partial translations from $STABLE_BRANCH (human-authored sources kept from the checkout)."
+            # Take back ONLY what this pipeline generates, rather than taking the
+            # whole tree and undoing the parts a person owns. An allowlist of
+            # things to protect has to be extended by hand every time someone adds
+            # a file, and three times nobody did, so the run proposed deleting
+            # their work: the navbar keys on 2026-08-12, the template.api.* strings
+            # on 2026-08-19, and clusterLocales, unlocalizePath, OG_LOCALES and
+            # Italian on 2026-08-27. An allowlist of things to copy cannot do that,
+            # because anything not named here is never touched.
+            #
+            # The failure direction inverts with it: forgetting to name a generated
+            # path costs one re-translation of that path, where forgetting to name
+            # a hand-written path deleted it, silently whenever it was data.
+            #
+            # It also retires the restore-not-checkout dance the old code needed to
+            # stop the blanket checkout resurrecting a human-authored file deleted
+            # on main: nothing shadows those layers now. A checkout still merges
+            # into the worktree rather than mirroring the branch, so a generated
+            # file for a locale dropped from SUPPORTED_HUB_LOCALES comes back if
+            # the branch still has it, exactly as before. enforce and validate walk
+            # that list rather than the directory, so it rides the PR diff instead
+            # of re-entering the build.
+            #
+            # locales/ is deliberately absent, for reasons that outlive any
+            # snapshot. It is not purely generated: locales/en.json is lobe's entry
+            # and is hand-edited, which is what made taking the branch's older copy
+            # delete the navbar keys on 2026-08-12; and `it` is in this workflow's
+            # SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales, so nothing
+            # regenerates locales/it.json at all. Nothing prunes this layer either:
+            # locale:ui fills only MISSING keys, so a bad string that once lands
+            # here is never corrected by a later run.
+            #
+            # Unlike the generated paths, the branch CAN legitimately be ahead here:
+            # a prior run's locale:ui output sits on it until that PR merges. Not
+            # resuming it costs one UI pass over the missing keys, which is the
+            # price of never carrying a hand-edited file backwards.
+            #
+            # Per path, not one command. A multi-pathspec checkout is refused as a
+            # whole when any one path is absent from the branch, so naming content/
+            # and review/ together would, on any night review/ is missing, also
+            # decline to restore content/. That discards banked translations to
+            # avoid re-reviewing them, spending the expensive half to save the
+            # cheap one.
+            #
+            # Splitting that pair is not free. Review verdicts are keyed by a hash
+            # of the text they judge, so content restored without its verdicts
+            # re-reviews every entry whose translation differs from main's. The
+            # cost is bounded by the branch's unmerged delta rather than the whole
+            # corpus, and those entries have no reusable verdict on either side
+            # anyway: the branch's verdicts describe the branch's text, main's
+            # describe main's.
+            #
+            # Absence is probed with cat-file rather than inferred from a failed
+            # checkout, because a checkout can fail for reasons that are not
+            # absence. Reporting those as "not there yet" would let a half-restored
+            # tree carry on behind a reassuring log line; anything that is not
+            # plain absence stays fatal under set -e.
+            for generated in \
+              site/src/i18n/content \
+              site/src/i18n/review \
+              site/src/i18n/manifest.json; do
+              if git cat-file -e "origin/$STABLE_BRANCH:$generated" 2>/dev/null; then
+                git checkout "origin/$STABLE_BRANCH" -- "$generated"
+              else
+                echo "No $generated on $STABLE_BRANCH yet; it will be regenerated."
+              fi
+            done
+            echo "Restored generated translation state from $STABLE_BRANCH (everything else kept from main)."
           else
             echo "No automation branch yet; starting fresh from main."
           fi
@@ -383,11 +435,17 @@ jobs:
           # locale:ui fills only MISSING keys, so an invalid UI string banked
           # here would restore and fail validate forever. (Content is safe:
           # enforce prunes it to disk and re-prunes restored content nightly.)
-          if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:site/src/i18n/locales" 2>/dev/null; then
-            git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- site/src/i18n/locales
-          else
-            git restore --source=HEAD --staged --worktree -- site/src/i18n/locales
-          fi
+          # This deliberately drops the run's own locale:ui output too, at the
+          # cost of one UI pass next time; permanence is the worse trade.
+          #
+          # Pinned to the commit this job checked out, not HEAD. The publish step
+          # above commits before it pushes, so a failed push or `gh pr create`
+          # lands here with HEAD already on the automation branch, where
+          # --source=HEAD would mean "the branch" and re-bank the very UI output
+          # this line exists to drop. Pinning also makes the revert real instead of
+          # a no-op against HEAD, so the save below still runs and carries the
+          # content progress forward with locales/ back at main's copy.
+          git restore --source="$GITHUB_SHA" --staged --worktree -- site/src/i18n/locales
           if git diff --cached --quiet; then
             echo "Run failed before producing any translation changes; nothing to save."
             exit 0
