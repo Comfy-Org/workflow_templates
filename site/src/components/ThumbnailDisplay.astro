@@ -18,7 +18,7 @@ import {
   hubAssetUrl,
   hubMediaFor,
 } from '../lib/hub-media';
-import { isVideoFile, isAudioFile } from '../lib/media-utils';
+import { isVideoFile, isAudioFile, isPlaceholderVideo } from '../lib/media-utils';
 
 interface Props {
   thumbnails: string[];
@@ -71,6 +71,11 @@ const hasSecondImage = thumbnails.length > 1;
 const isAudio = primaryThumb ? isAudioFile(primaryThumb) : false;
 const isVideo = primaryThumb ? isVideoFile(primaryThumb) : false;
 const isSecondaryVideo = secondaryThumb ? isVideoFile(secondaryThumb) : false;
+// The hub's shared placeholder clip is not a real preview — show its poster
+// frame instead of a <video> so hundreds of pages don't each embed the same
+// video (see isPlaceholderVideo).
+const primaryIsPlaceholderVideo = isVideo && isPlaceholderVideo(primaryThumb);
+const secondaryIsPlaceholderVideo = isSecondaryVideo && isPlaceholderVideo(secondaryThumb);
 const videoPosterUrl = isVideo
   ? (hubMediaFor(primaryOriginal)?.poster ?? getVideoFrameUrl(primaryOriginal))
   : null;
@@ -133,30 +138,54 @@ const secondaryVideoPosterUrl = isSecondaryVideo
   ) : isVideo ? (
     <div class={`video-thumb flex flex-col gap-2 ${className}`}>
       <div class="video-fallback-wrapper">
-        <video
-          src={primarySrc}
-          poster={videoPosterUrl || undefined}
-          class={mediaClass}
-          autoplay
-          controls
-          loop
-          muted
-          playsinline
-          preload="auto"
-          data-video-fallback
-        />
-        {videoPosterUrl && (
+        {primaryIsPlaceholderVideo ? (
           <img
-            src={videoPosterUrl}
+            src={videoPosterUrl || primarySrc}
             alt={title}
-            class={`${mediaClass} hidden`}
-            data-video-fallback-img
-            loading="lazy"
+            class={mediaClass}
+            loading={loading}
+            fetchpriority={fetchpriority}
             decoding="async"
+            data-hide-on-error
           />
+        ) : (
+          <Fragment>
+            <video
+              src={primarySrc}
+              poster={videoPosterUrl || undefined}
+              class={mediaClass}
+              autoplay
+              controls
+              loop
+              muted
+              playsinline
+              preload="auto"
+              data-video-fallback
+            />
+            {videoPosterUrl && (
+              <img
+                src={videoPosterUrl}
+                alt={title}
+                class={`${mediaClass} hidden`}
+                data-video-fallback-img
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+          </Fragment>
         )}
       </div>
-      {secondaryThumb && isSecondaryVideo && (
+      {secondaryThumb && isSecondaryVideo && secondaryIsPlaceholderVideo && (
+        <img
+          src={secondaryVideoPosterUrl || secondarySrc}
+          alt={`${title} - secondary`}
+          class={mediaClass}
+          loading="lazy"
+          decoding="async"
+          data-hide-on-error
+        />
+      )}
+      {secondaryThumb && isSecondaryVideo && !secondaryIsPlaceholderVideo && (
         <div class="video-fallback-wrapper">
           <video
             src={secondarySrc}
