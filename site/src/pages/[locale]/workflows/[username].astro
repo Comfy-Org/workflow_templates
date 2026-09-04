@@ -169,12 +169,34 @@ const canonicalUrl = absoluteUrl(`/workflows/${slug}/`);
 const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
+const mainEntity: Record<string, unknown> = {
+  '@type': slug === 'comfyui' ? 'Organization' : 'Person',
+  '@id': canonicalUrl,
+  name: displayName,
+  alternateName: `@${slug}`,
+  identifier: slug,
+  description: description || `Workflows by ${displayName}`,
+  url: canonicalUrl,
+};
+
+if (avatarUrl) {
+  mainEntity.image = {
+    '@type': 'ImageObject',
+    url: avatarUrl,
+  };
+}
+
+if (websiteUrls && websiteUrls.length > 0) {
+  mainEntity.sameAs = websiteUrls;
+}
+
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'ProfilePage',
   name: displayName,
   description: description || `Workflows by ${displayName}`,
   url: canonicalUrl,
+  mainEntity,
 };
 ---
 

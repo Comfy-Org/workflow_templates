@@ -72,6 +72,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
     // the DefinedTermSet membership below (software terms lead footage/camera,
     // image-format trails the business group).
     mentionsOrder: [
+      'e-ltx2-5',
       'e-api',
       'e-open-source',
       'e-codec',
@@ -111,6 +112,12 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       { id: 'cat-audiovideo', name: 'Audio & Video' },
     ],
     entities: [
+      {
+        id: 'e-ltx2-5',
+        name: 'LTX-2.5',
+        sameAs: 'https://huggingface.co/Lightricks/LTX-Video',
+        categoryId: 'cat-technology',
+      },
       {
         id: 'e-api',
         name: 'API',
@@ -382,6 +389,12 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       },
       // Technology
       {
+        id: 'e-seedance2-5',
+        name: 'Seedance 2.5',
+        sameAs: 'https://seed.bytedance.com/en/seedance2_5',
+        categoryId: 'cat-technology',
+      },
+      {
         id: 'e-display-res',
         name: 'Display Resolution',
         sameAs: 'https://en.wikipedia.org/wiki/Display_resolution',
@@ -523,6 +536,12 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       },
       // Technology
       {
+        id: 'e-minimax-h3',
+        name: 'MiniMax H3',
+        sameAs: 'https://huggingface.co/MiniMaxAI/MiniMax-H3',
+        categoryId: 'cat-technology',
+      },
+      {
         id: 'e-api',
         name: 'API',
         sameAs: 'https://en.wikipedia.org/wiki/API',
@@ -637,6 +656,11 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
     ],
     entities: [
       // Standalone mentions (no DefinedTermSet)
+      {
+        id: 'e-wan-animate2',
+        name: 'Wan Animate 2',
+        sameAs: 'https://huggingface.co/Wan-AI/Wan2.2-Animate-2-14B',
+      },
       {
         id: 'e-character',
         name: 'Character',
