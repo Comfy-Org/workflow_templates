@@ -11,6 +11,7 @@
     trackDownloadButtonClicked,
     trackShareButtonClicked,
     trackTemplateViewed,
+    trackExperimentCtaClicked,
   } from '../lib/posthog';
 
   initPostHog();
@@ -59,6 +60,19 @@
       const templateName = shareBtn.getAttribute('data-template') || '';
       const author = shareBtn.getAttribute('data-author') || undefined;
       if (templateName) trackShareButtonClicked(templateName, author);
+      return;
+    }
+
+    // Internal entry point into a gated experiment (see config/experimentFlags).
+    // Last on purpose: this is the only ancestor-matching attribute selector in
+    // the chain, so a future experiment that wraps a tracked control would
+    // otherwise swallow that control's own, more specific event.
+    const experimentCta = target.closest('[data-experiment]');
+    if (experimentCta) {
+      trackExperimentCtaClicked(
+        experimentCta.getAttribute('data-experiment') || 'unknown',
+        experimentCta.getAttribute('data-location') || 'unknown'
+      );
     }
   });
 </script>

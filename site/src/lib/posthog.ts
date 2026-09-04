@@ -112,3 +112,17 @@ export function trackSignupCtaClicked(location: string): void {
     location,
   });
 }
+
+/**
+ * A click on an entry point into a gated experiment (see
+ * `config/experimentFlags.ts`). Separate from the CTA events above because an
+ * experiment's own conversion rate is only meaningful next to how many people
+ * it diverted to get there — the number that was missing when the MiniMax H3
+ * demo shipped as an untracked link on the hub index.
+ */
+export function trackExperimentCtaClicked(experiment: string, location: string): void {
+  capture('hub:experiment_cta_clicked', {
+    experiment,
+    location,
+  });
+}
