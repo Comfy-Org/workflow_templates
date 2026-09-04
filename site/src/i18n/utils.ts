@@ -36,23 +36,3 @@ export function getLanguageInfo(locale: Locale) {
 export function isRTL(locale: Locale): boolean {
   return LANGUAGES[locale]?.dir === 'rtl';
 }
-
-/**
- * The locales a page declares as a cluster. Shared so the hreflang tags and the
- * og:locale tags cannot drift into contradicting each other: an explicit
- * per-page list wins, otherwise it is all locales or none by the boolean.
- */
-export function clusterLocales(localized: boolean, locales?: readonly Locale[]): readonly Locale[] {
-  return locales ?? (localized ? (Object.keys(LANGUAGES) as Locale[]) : []);
-}
-
-/**
- * The locale-independent form of a path, with a trailing slash: the base every
- * alternate URL is built from. SEOHead used to inline this, one copy of the
- * locale-prefix rule away from `getLocaleFromPath`.
- */
-export function unlocalizePath(pathname: string): string {
-  const locale = getLocaleFromPath(pathname);
-  const stripped = locale === DEFAULT_LOCALE ? pathname : pathname.slice(locale.length + 1) || '/';
-  return stripped.endsWith('/') ? stripped : `${stripped}/`;
-}
