@@ -141,11 +141,11 @@ const heroPreload = detailHeroPreload(thumbnails, data.mediaSubtype, data.thumbn
 
 // The hub serves one shared placeholder clip as the "video" for workflows with
 // no real preview yet. While the preview is missing, TemplateDetailPage renders
-// its poster instead of a <video>, and this opts the page out of video indexing
-// so Google does not flag it as "Video isn't on a watch page". A real preview
-// (primary or comparison) keeps normal video treatment.
+// its poster instead of a <video>, and this suppresses the video preview snippet
+// (max-video-preview:0) so Google stops flagging the page with "Video isn't on a
+// watch page". A real preview (primary or comparison) keeps normal video treatment.
 const secondaryThumbnail = thumbnails[1] || null;
-const suppressVideoIndexing =
+const suppressVideoPreview =
   isPlaceholderVideo(primaryThumbnail) &&
   !(
     secondaryThumbnail &&
@@ -220,7 +220,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   structuredData={workflowGraphStructuredData ?? structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
-  suppressVideoIndexing={suppressVideoIndexing}
+  suppressVideoPreview={suppressVideoPreview}
   theme="dark"
   hideDefaultFooter
 >

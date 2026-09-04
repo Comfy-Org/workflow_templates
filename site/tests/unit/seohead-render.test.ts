@@ -37,18 +37,18 @@ describe('SEOHead rendered output', () => {
     expect(html).not.toContain('name="robots"');
   });
 
-  it('emits max-video-preview:0 when video indexing is suppressed', async () => {
-    const html = await render('/workflows/x/', { suppressVideoIndexing: true });
+  it('emits max-video-preview:0 when the video preview is suppressed', async () => {
+    const html = await render('/workflows/x/', { suppressVideoPreview: true });
     expect(html).toContain('<meta name="robots" content="max-video-preview:0">');
   });
 
   it('merges noindex and max-video-preview:0 into one robots meta', async () => {
-    const html = await render('/ja/workflows/x/', { noindex: true, suppressVideoIndexing: true });
+    const html = await render('/ja/workflows/x/', { noindex: true, suppressVideoPreview: true });
     expect(html).toContain('<meta name="robots" content="noindex,follow,max-video-preview:0">');
     expect(html.match(/name="robots"/g)).toHaveLength(1);
   });
 
-  it('keeps noindex,follow unchanged when video indexing is not suppressed', async () => {
+  it('keeps noindex,follow unchanged when the video preview is not suppressed', async () => {
     const html = await render('/ja/workflows/x/', { noindex: true });
     expect(html).toContain('<meta name="robots" content="noindex,follow">');
   });

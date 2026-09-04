@@ -23,12 +23,13 @@ interface Props {
   /** Emit robots noindex (keeps follow) for thin/unverified pages. */
   noindex?: boolean;
   /**
-   * Emit `max-video-preview:0` so Google does not treat a `<video>` on this page
-   * as indexable video content. For pages that show a video for UX but are not a
-   * dedicated "watch page" (e.g. a workflow whose only clip is the shared
-   * placeholder).
+   * Emit `max-video-preview:0`, which tells Google not to show an animated video
+   * preview for a `<video>` on this page in search results (a static thumbnail
+   * may still appear; page and video indexing are unaffected). For pages that
+   * show a video for UX but are not a dedicated video "watch page" (e.g. a
+   * workflow whose only clip is the shared placeholder).
    */
-  suppressVideoIndexing?: boolean;
+  suppressVideoPreview?: boolean;
 }
 
 const {
@@ -43,16 +44,16 @@ const {
   hreflangLocalized = true,
   hreflangLocales,
   noindex = false,
-  suppressVideoIndexing = false,
+  suppressVideoPreview = false,
 } = Astro.props;
 
 const pathname = Astro.url.pathname;
 
 // One robots meta, not two: `noindex` keeps its `noindex,follow` and
-// `suppressVideoIndexing` appends `max-video-preview:0`.
+// `suppressVideoPreview` appends `max-video-preview:0`.
 const robotsDirectives = [
   ...(noindex ? ['noindex', 'follow'] : []),
-  ...(suppressVideoIndexing ? ['max-video-preview:0'] : []),
+  ...(suppressVideoPreview ? ['max-video-preview:0'] : []),
 ];
 
 const fullCanonicalUrl = canonicalUrl
