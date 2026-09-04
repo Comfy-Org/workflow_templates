@@ -50,8 +50,9 @@ export function getMainNavigation(locale: Locale): NavItem[] {
           items: [
             { label: t('nav.comfyLocal', locale), href: navRoutes.download },
             { label: t('nav.comfyCloud', locale), href: navRoutes.cloud },
-            { label: t('nav.comfyApi', locale), href: navRoutes.api, badge: 'new' },
+            { label: t('nav.developerPlatform', locale), href: navRoutes.platform, badge: 'new' },
             { label: t('nav.comfyEnterprise', locale), href: navRoutes.cloudEnterprise },
+            { label: t('nav.managedBuilds', locale), href: navRoutes.managedBuilds },
           ],
         },
         {
