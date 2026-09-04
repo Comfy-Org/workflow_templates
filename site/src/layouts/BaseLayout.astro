@@ -26,8 +26,8 @@ interface Props {
   theme?: 'light' | 'dark';
   hideDefaultFooter?: boolean;
   noindex?: boolean;
-  /** Emit `max-video-preview:0` — see SEOHead. */
-  suppressVideoIndexing?: boolean;
+  /** Emit `max-video-preview:0` (suppress the video preview snippet) — see SEOHead. */
+  suppressVideoPreview?: boolean;
 }
 
 const {
@@ -45,7 +45,7 @@ const {
   theme = 'light',
   hideDefaultFooter = false,
   noindex = false,
-  suppressVideoIndexing = false,
+  suppressVideoPreview = false,
 } = Astro.props;
 
 const hasCustomFooter = Astro.slots.has('footer');
@@ -94,7 +94,7 @@ const bodyClasses = isDark
       hreflangLocalized={hreflangLocalized}
       hreflangLocales={hreflangLocales}
       noindex={noindex}
-      suppressVideoIndexing={suppressVideoIndexing}
+      suppressVideoPreview={suppressVideoPreview}
     />
     <slot name="head" />
   </head>

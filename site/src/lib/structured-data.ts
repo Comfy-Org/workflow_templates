@@ -115,7 +115,7 @@ export interface ItemListEntry {
  * `CollectionPage` JSON-LD for an aggregation/navigation page (tag, model,
  * index, use-case, category listings). These pages are never video "watch
  * pages": do NOT add a `VideoObject` here even when the page shows a
- * representative video — they pass `suppressVideoIndexing` to `BaseLayout`
+ * representative video — they pass `suppressVideoPreview` to `BaseLayout`
  * instead (emits `max-video-preview:0`).
  */
 export function buildCollectionPageJsonLd(params: {
