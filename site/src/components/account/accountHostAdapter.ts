@@ -189,7 +189,6 @@ function storageName(key: StorageKey): string {
 }
 
 export function createAccountHostAdapter(
-  auth: Auth,
   apiBaseUrl: string,
   getActiveWorkspace: () => string | null,
   debug: AccountLayerDebug
@@ -204,11 +203,6 @@ export function createAccountHostAdapter(
         return setTimeout(fn, delayMs);
       },
       cancel: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>),
-    },
-    async acquireIdentity(options) {
-      const user = auth.currentUser;
-      if (!user) return null;
-      return { userId: user.uid, token: await user.getIdToken(options?.forceRefresh ?? false) };
     },
     getActiveWorkspace,
     storage: {

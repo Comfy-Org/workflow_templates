@@ -7,6 +7,7 @@ import {
   createSessionClient,
 } from '@comfyorg/account/core';
 import type { AccountLayerPocSeam, BillingState } from '@comfyorg/account/core';
+import { createFirebaseIdentity } from '@comfyorg/account/firebase';
 import {
   billingClientKey,
   CheckoutSteps,
@@ -14,8 +15,7 @@ import {
   useCheckout,
   useTopUp,
 } from '@comfyorg/account/vue';
-import { initializeApp } from 'firebase/app';
-import { getAuth, onIdTokenChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onIdTokenChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import type { User } from 'firebase/auth';
 import { computed, onUnmounted, provide, ref } from 'vue';
 import { createAccountBillingCommands, createAccountHostAdapter } from './accountHostAdapter';
@@ -26,13 +26,16 @@ const password = ref('');
 const authenticated = ref(false);
 const error = ref('');
 const workspaceId = ref<string | null>(null);
-const app = initializeApp({
-  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
-  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
-  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
+const identity = createFirebaseIdentity({
+  options: {
+    apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY,
+    authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN,
+    projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID,
+    appId: import.meta.env.PUBLIC_FIREBASE_APP_ID,
+  },
+  persistence: 'local',
 });
-const auth = getAuth(app);
+const auth = identity.auth;
 const debug: AccountLayerDebug = {
   billingRequests: 0,
   sessionExchanges: 0,
@@ -49,12 +52,11 @@ const debug: AccountLayerDebug = {
   injectOperationResponse: async () => undefined,
 };
 const adapter = createAccountHostAdapter(
-  auth,
   import.meta.env.PUBLIC_CLOUD_BASE_URL,
   () => workspaceId.value,
   debug
 );
-const session = createSessionClient(adapter);
+const session = createSessionClient(adapter, identity);
 const billing = createBillingClient(session, adapter);
 const paymentCommands = createAccountBillingCommands(
   auth,
@@ -223,7 +225,10 @@ const unsubscribeAuth = onIdTokenChanged(auth, (user) => {
     error.value = cause instanceof Error ? cause.message : 'Sign-in failed';
   });
 });
-onUnmounted(unsubscribeAuth);
+onUnmounted(() => {
+  unsubscribeAuth();
+  identity.dispose();
+});
 </script>
 
 <template>
