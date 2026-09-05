@@ -1754,6 +1754,45 @@
       }
     ]
   },
+  "148dc613d99c": {
+    "title": "Gemini Omni 1.1 Flash: Reference to Video",
+    "description": "Generate video that incorporates specific subjects from multiple reference images using Gemini Omni 1.1 Flash's reference mode: characters, products, and objects from your images appear in the scene while the image itself is never shown as a frame. Bind each image to a role with tags like <IMAGE_REF_0>, combine character references with style references, and direct the scene in plain language with native audio. Ideal for character-driven stories, product placement, and brand-consistent content.\n\n",
+    "metaDescription": "ComfyUI tutorial: Use Gemini Omni 1.1 Flash reference mode to inject characters and products from images into video without showing the source photos.",
+    "extendedDescription": "This workflow teaches you how to steer Gemini Omni 1.1 Flash to generate a video that features specific people, products, or objects without ever cutting to the original photos. It does this by binding each loaded reference image to a role tag (for example, <IMAGE_REF_0>, <IMAGE_REF_1>) and then using those tags inside your scene description so the model knows which visual subject to synthesize into the shot. The core is the GeminiVideoOmniV2 node running in reference mode, fed by one or more LoadImage nodes for character and style/product references, and finalized by a SaveVideo node to write the result to disk. A MarkdownNote in the graph documents the prompt pattern and tag usage.\n\nTechnically, each reference image is converted into a visual embedding that conditions Gemini Omni 1.1 Flash during generation. When you reference the bound tags in your prompt (for example, \"Use <IMAGE_REF_0> as the model; use <IMAGE_REF_1> as the makeup palette product\"), the model synthesizes frames that include those subjects while never showing the source images as frames. You can combine character references with a separate style or product board, direct the scene in plain language (actions, camera moves, lighting, location), and, when enabled in the node, generate native audio. This makes it ideal for brand-consistent shorts, character-driven storytelling, and product placement where control over who/what appears on screen matters.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and confirm your Gemini API setup for the GeminiVideoOmniV2 node (set your Google AI Studio API key in the node or as an environment variable as required).",
+      "Import your reference images with LoadImage nodes. For the example, place input/terracotta_eyeshadow_palette.png (required) and your model photo (e.g., input/asian_female_model_beige_suit.png) into the input folder and connect each LoadImage output to the GeminiVideoOmniV2 image reference inputs.",
+      "Open GeminiVideoOmniV2. In its prompt/instruction field, assign roles using tags that match your connections, then direct the scene. Example: \"Use <IMAGE_REF_0> as the hero makeup palette product. Use <IMAGE_REF_1> as the on-camera model. Warm studio lighting, slow push-in, the model opens the palette and applies the terracotta shade; include soft ambient music. Do not display the raw reference photos.\"",
+      "Optionally add a style board as another LoadImage and bind it to a tag (e.g., <IMAGE_REF_2> as style reference). Keep the prompt clear: location, action beats, camera movement, mood, and any brand tones. If the node exposes duration, resolution, or audio toggles, set them here.",
+      "Run the graph. The GeminiVideoOmniV2 node will generate the video conditioned on your references and pass it to SaveVideo. When complete, open the saved file from your ComfyUI output directory.",
+      "Iterate: if identity or product fidelity is weak, tighten the role lines (repeat the tag once in the opening sentence, name the role explicitly), simplify conflicting style requests, and ensure your reference images are clear, well-lit, and show the subject prominently."
+    ],
+    "suggestedUseCases": [
+      "Product showcases where a specific item (palette, shoe, gadget) must appear on screen without cutting to the original product photo.",
+      "Character-led social shorts that keep the same person across multiple scenes or episodes for consistency.",
+      "Brand-consistent explainer clips using a style board plus a presenter portrait as separate references.",
+      "In-situ product placement within lifestyle shots (e.g., a model interacts with a referenced item in a café or studio).",
+      "Pitch animatics or mood tests combining a character reference with a visual style sheet."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I correctly bind images to roles?",
+        "answer": "Load each image with a LoadImage node and connect it to the GeminiVideoOmniV2 image reference inputs. In your prompt, refer to them with the exact tags used by the node (e.g., <IMAGE_REF_0>, <IMAGE_REF_1>). Immediately assign a role: \"Use <IMAGE_REF_0> as the product\" or \"Use <IMAGE_REF_1> as the presenter.\" Keep those tags near the start of the prompt so the model prioritizes them."
+      },
+      {
+        "question": "Will the reference photos ever appear directly in the video?",
+        "answer": "No. In this workflow the images are used as visual references only. Gemini Omni 1.1 Flash conditions on their content to synthesize new frames; it does not insert the source photos as frames."
+      },
+      {
+        "question": "Can I mix character and style references in one generation?",
+        "answer": "Yes. Provide separate LoadImage nodes for character/product and style boards, bind each to its own tag, and clarify their roles in the prompt (e.g., \"<IMAGE_REF_0> character, <IMAGE_REF_1> product, <IMAGE_REF_2> style reference\"). Avoid conflicting instructions (e.g., opposing lighting or wardrobe notes) to maintain fidelity."
+      },
+      {
+        "question": "Why doesn’t the person or product look consistent with my reference?",
+        "answer": "Common causes are unclear role assignment, low-quality references, or conflicting prompt details. Put the tags at the start, describe each role plainly, use high-resolution, well-lit references where the subject is large in frame, and reduce competing style constraints. If needed, shorten the scene description and focus on essentials (location, key action, lighting)."
+      }
+    ]
+  },
   "15538e51d812": {
     "title": "Qwen-Image InstantX Inpainting ControlNet",
     "description": "Professional inpainting and image editing with Qwen-Image InstantX ControlNet. Supports object replacement, text modification, background changes, and outpainting.",
@@ -6008,39 +6047,39 @@
   "473606b441c6": {
     "title": "Wan3.0: Image to Video",
     "description": "Create up to 30 seconds of high-fidelity video from a single image using Wan 3.0, which supports text, image, audio, and document inputs for versatile scene generation. Produces authentic, realistic footage with unique facial details and believable motion in one pass. Ideal for cinematic storytelling, product visualization, and documentary-style scene recreation.\n",
-    "metaDescription": "ComfyUI image-to-video tutorial: animate a single image into up to 30s of video with Wan 3.0 using LoadImage → Wan3ImageToVideoApi → SaveVideo.",
-    "extendedDescription": "This ComfyUI tutorial shows how to turn a single still image into a high‑fidelity video clip (up to ~30 seconds) using Wan 3.0. The workflow is compact and predictable: LoadImage reads your source frame, Wan3ImageToVideoApi sends it to the Wan 3.0 image‑to‑video endpoint for temporal generation, and SaveVideo writes the returned clip to disk. A MarkdownNote in the graph provides quick tips and points to a ready‑to‑use example input.\n\nTechnically, Wan3ImageToVideoApi conditions the model with your image and passes generation parameters such as duration and resolution to the API. The node then waits for the job to complete and returns the video for saving. This template focuses on the image input path (text/audio/document modalities supported by Wan 3.0 are not wired here), making it a straightforward way to animate concept art, product shots, or documentary stills while preserving subject identity and adding believable motion.\n\nFor best results, start with a clean, high‑resolution image that roughly matches your target aspect ratio. Keep the main subject well framed, avoid heavy compression artifacts, and choose a sensible duration—shorter clips render faster and typically produce more stable motion.",
+    "metaDescription": "Create up to 30s of realistic video from a single image in ComfyUI using the Wan 3.0 Image-to-Video API with LoadImage and SaveVideo nodes.",
+    "extendedDescription": "This ComfyUI workflow turns a single still image into a high-fidelity video clip using the Wan 3.0 Image-to-Video API. It’s built around four nodes: LoadImage to bring your source frame into the graph, Wan3ImageToVideoApi to generate the animated sequence on a remote service, SaveVideo to encode the frames to a standard video file, and MarkdownNote for inline instructions. The pipeline is simple and reliable: your input image is loaded, sent to Wan 3.0 for temporal synthesis, and the returned frames are packaged into a playable video.\n\nTechnically, Wan 3.0 performs motion synthesis conditioned on the content of the single image, producing realistic camera/lens movement and subject dynamics in one pass. While the Wan 3.0 family supports multimodal inputs, this specific workflow is image-only and focuses on up to 30 seconds of output. You control the key generation settings in the Wan3ImageToVideoApi node (e.g., clip duration and any parameters exposed by your API endpoint), and finalize playback characteristics like FPS and file path in SaveVideo. This makes it well-suited for cinematic b-roll, product hero shots, and documentary-style scene recreation directly from a still.",
     "howToUse": [
-      "Open the workflow in ComfyUI and update to the latest version (and required custom nodes) as recommended in the MarkdownNote.",
-      "Place the provided sample image at input/beetle_rider.png, or edit the LoadImage node to point to your own source image.",
-      "Open Wan3ImageToVideoApi and set key options such as duration (up to ~30 seconds) and output resolution. Ensure your Wan 3.0 API credentials are configured so the node can reach the service.",
-      "Optionally add guidance (if your node build exposes a prompt or related fields) and align resolution/aspect ratio to your source image for more stable motion.",
-      "Click Queue Prompt to run. The API node will submit the job and wait for completion; you can monitor progress in the ComfyUI console/log.",
-      "When finished, SaveVideo will write the result to the path shown in its node. Play the exported file to review motion quality and iterate on settings as needed."
+      "Load the workflow in ComfyUI and ensure ComfyUI is up to date. The template references input/beetle_rider.png as the default image.",
+      "Open the LoadImage node and either keep input/beetle_rider.png or point it to your own high-resolution source image. Use a clean, well-lit image for best results.",
+      "Open the Wan3ImageToVideoApi node and enter your API credentials/endpoint as required. Configure the available parameters (e.g., target duration up to 30s and any size/aspect settings the node exposes).",
+      "Open the SaveVideo node and set your output path and FPS. FPS controls perceived motion smoothness when encoding the returned frames.",
+      "Queue the workflow. The input image will be sent to the Wan 3.0 service, which returns frames that SaveVideo encodes into a single video file.",
+      "Review the output. If you see artifacts or motion that’s too strong or too subtle, adjust the Wan3ImageToVideoApi parameters (and FPS in SaveVideo) and re-run."
     ],
     "suggestedUseCases": [
-      "Cinematic storytelling: animate keyframes or concept art into moving establishing shots.",
-      "Product visualization: turn a hero still into a short motion clip for web or ads.",
-      "Documentary-style scenes: add subtle motion to archival photos for edits and transitions.",
-      "Character and creature studies: bring a single character portrait to life with gentle camera or subject motion.",
-      "Social media teasers: create quick, eye-catching motion from a static post or thumbnail."
+      "Cinematic b-roll and establishing shots generated from a single still for film, trailers, or YouTube intros.",
+      "Product hero shots or lightweight turntable-style motion to showcase design and materials without a full 3D setup.",
+      "Documentary-style scene recreation from archival photos to visualize environments with subtle, believable motion.",
+      "Storyboard and previz beats from concept art or keyframes to explore pacing and camera movement quickly.",
+      "Social media loops and reels that bring static imagery to life with minimal setup."
     ],
     "faqItems": [
       {
-        "question": "How long can the generated video be?",
-        "answer": "The template is designed for clips up to about 30 seconds. Longer durations increase processing time and may be limited by your account or the API service."
+        "question": "Do I need an API key for the Wan3ImageToVideoApi node?",
+        "answer": "Yes. This node calls an external Wan 3.0 service and typically requires an API key and/or endpoint. Enter your credentials in the node’s fields before running."
       },
       {
-        "question": "Do I need an internet connection or API key?",
-        "answer": "Yes. Wan3ImageToVideoApi calls a remote Wan 3.0 service, so network access and valid API credentials are required. If authentication is missing, the node will fail with an API error."
+        "question": "What is the maximum video length this workflow can generate?",
+        "answer": "Up to 30 seconds, as supported by the Wan 3.0 Image-to-Video API. Set the desired duration in the Wan3ImageToVideoApi node if that parameter is exposed."
       },
       {
-        "question": "What kind of input images work best?",
-        "answer": "High-resolution, clean images with the main subject centered or clearly framed produce the most stable motion. Try to match output aspect ratio to the source to reduce warping or jitter."
+        "question": "Which settings control smoothness and playback speed?",
+        "answer": "Set the target duration in Wan3ImageToVideoApi and adjust FPS in the SaveVideo node. Higher FPS yields smoother playback from the same frame sequence."
       },
       {
-        "question": "Can I add text guidance or change FPS/aspect ratio?",
-        "answer": "This template wires image-to-video only. If your Wan3ImageToVideoApi build exposes fields for prompts, FPS, or aspect ratio, you can adjust them there. Otherwise, keep your source image close to the target aspect ratio for consistent results."
+        "question": "Can I add text or audio prompts in this workflow?",
+        "answer": "This template is image-only. While Wan 3.0 supports multimodal inputs, use additional or alternative nodes designed for text/audio/document inputs if you need those features."
       }
     ]
   },
@@ -10900,6 +10939,45 @@
       }
     ]
   },
+  "7caf5f067f8f": {
+    "title": "Gemini Omni 1.1 Flash: Text to Video",
+    "description": "Generate cinematic videos with audio from text prompts or reference images using Gemini Omni 1.1 Flash, supporting aspect ratio, resolution, and keyframe interpolation controls. Ideal for text-to-video storytelling, animating product shots or illustrations, and iterative conversational video editing.",
+    "metaDescription": "ComfyUI tutorial: Generate text-to-video (with optional audio) using Gemini Omni 1.1 Flash. Control aspect ratio, resolution, and keyframe interpolation.",
+    "extendedDescription": "This ComfyUI tutorial workflow turns a written prompt (and optionally a reference image) into a short, cinematic video using Google’s Gemini Omni 1.1 Flash via the GeminiVideoOmniV2 node. The node handles the API call to Gemini, then returns a generated clip and, when enabled, an accompanying audio track. You get direct control over aspect ratio and resolution so your outputs are ready for social, product pages, or widescreen edits.\n\nTechnically, GeminiVideoOmniV2 is the generator: you provide the prompt and any reference image, set visual parameters, and adjust keyframe interpolation to smooth motion and maintain subject continuity between beats. The SaveVideo node then encodes the frames (and audio, if present) to a file. Because the graph is compact—GeminiVideoOmniV2 feeding into SaveVideo—you can iterate quickly: tweak the prompt, adjust aspect ratio or interpolation strength, re-queue, and compare results for fast creative refinement.",
+    "howToUse": [
+      "Load the workflow JSON in ComfyUI and ensure the GeminiVideoOmniV2 and SaveVideo nodes are present.",
+      "Configure API access: open GeminiVideoOmniV2 and set your Gemini API key in the node or follow the custom-node docs to provide it via environment variable, then restart ComfyUI if required.",
+      "Open GeminiVideoOmniV2: enter a clear text prompt. Optionally connect a reference image to the node’s image/reference input to guide composition or style.",
+      "Set generation controls in GeminiVideoOmniV2: choose aspect ratio and resolution, define clip length and FPS if exposed, and adjust keyframe interpolation to smooth motion between frames. Enable audio if you want a soundtrack.",
+      "Check SaveVideo: confirm the output path/filename and make sure its FPS matches the generator’s FPS. Ensure the video (and audio, if available) outputs from GeminiVideoOmniV2 are connected to SaveVideo.",
+      "Queue the workflow. Review the preview, then iterate: refine the prompt, adjust aspect ratio or interpolation, and re-run until you get the desired result."
+    ],
+    "suggestedUseCases": [
+      "Text-to-video storytelling and mood pieces for social posts or pitch decks.",
+      "Animating still product shots into short showcase clips for e-commerce.",
+      "Bringing illustrations or key art to life for teaser intros and title cards.",
+      "Rapid ideation of ad concepts or motion boards with quick prompt iterations.",
+      "Explainer snippets with subtle motion and optional generated audio."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I provide my Gemini API key?",
+        "answer": "Open the GeminiVideoOmniV2 node and look for API/key configuration, or set the environment variable as documented by the custom node (then restart ComfyUI). If the node cannot find a key, the request will fail."
+      },
+      {
+        "question": "Can I start from an image and animate it?",
+        "answer": "Yes. Connect a reference image to GeminiVideoOmniV2’s image/reference input. The model will use it to inform composition and style. Keep your prompt consistent with the image content for better visual continuity."
+      },
+      {
+        "question": "How do I control video size and shape?",
+        "answer": "Use the aspect ratio and resolution settings in GeminiVideoOmniV2. Common choices are 16:9 for YouTube, 9:16 for vertical reels, and 1:1 for feeds. Match SaveVideo’s FPS to the generator’s FPS to preserve timing."
+      },
+      {
+        "question": "Why does motion look choppy or unstable?",
+        "answer": "Increase keyframe interpolation in GeminiVideoOmniV2 to smooth transitions and stabilize subjects. Also keep prompts precise and avoid large prompt changes between iterations. Lowering resolution can reduce artifacts on slower hardware or networks."
+      }
+    ]
+  },
   "7cc1d3bd2802": {
     "title": "LTX-2.3: Image to Video",
     "description": "Upload an image to generate a video with improved motion consistency and fine details, including enhanced support for portrait formats and audio quality.",
@@ -11969,39 +12047,39 @@
   "8bd8b493eb7a": {
     "title": "Wan3.0: Text to Video",
     "description": "Generate videos up to 30 seconds directly from text prompts using Wan3.0-Video, producing a single video output with lifelike visuals and synchronized sound. This workflow transforms written descriptions into immersive, production-ready footage with strong character consistency and cinematic quality. Ideal for cinematic storytelling, character-driven animations, and quick multimedia content creation.\n\n",
-    "metaDescription": "Text-to-video in ComfyUI with Wan3.0-Video: generate up to 30s cinematic clips from prompts, optional references, and save with SaveVideo.",
-    "extendedDescription": "This ComfyUI tutorial walks you through a compact text-to-video pipeline powered by the Wan3.0-Video model. The core of the workflow is the Wan3ReferenceToVideoApi node, which sends your prompt (and optional reference images) to the Wan3.0-Video service, then returns a single rendered clip. The SaveVideo node writes that clip to disk. You’ll control duration (up to 30 seconds), resolution/aspect, frame rate, seed, and other generation settings directly on the API node, making it easy to iterate from a single graph.\n\nTechnically, Wan3ReferenceToVideoApi handles the remote job lifecycle: it packages your text prompt and any reference inputs, submits the request, polls until completion, and outputs a finished video. The “Reference” capability helps maintain strong character or style consistency when you supply a face or character image. If your API plan/model supports it, the node can also return synchronized sound; otherwise you’ll receive a silent video you can score later. SaveVideo finalizes the output with your chosen filename pattern and fps, giving you a simple, reliable path from text to production-ready footage.",
+    "metaDescription": "Text-to-video in ComfyUI with Wan3.0: generate up to 30s cinematic clips from prompts, with character consistency and synchronized audio, saved in one step.",
+    "extendedDescription": "This ComfyUI workflow turns plain text into a single, production-ready video clip using the Wan3.0-Video model. At the core is the Wan3ReferenceToVideoApi node, which sends your prompt (and optionally a reference image) to the Wan3.0 text-to-video service and returns a finished clip with synchronized audio. The SaveVideo node then writes the returned clip to disk as a standard video file, giving you a straightforward, single-output pipeline from idea to result.\n\nTechnically, the Wan3ReferenceToVideoApi node handles the heavy lifting: it packages your prompt and settings (like duration up to 30 seconds and basic generation controls) and asynchronously retrieves the generated video. If you supply a character or style reference image, the node uses it to enforce visual consistency across the clip—useful for recurring characters or branded subjects. Because the output arrives as a complete video (not per-frame images), you avoid local rendering overhead and retain any audio embedded by the service, while SaveVideo ensures the file is properly saved and easy to share.",
     "howToUse": [
-      "Load the workflow in ComfyUI and locate the Wan3ReferenceToVideoApi and SaveVideo nodes. In Wan3ReferenceToVideoApi, set your API credentials/endpoint and choose the Wan3.0-Video model.",
-      "Enter a clear text prompt describing subject, setting, mood, and camera language (e.g., \"golden hour, dolly-in on a hero, dramatic backlight\"). Optionally add a negative prompt to avoid unwanted artifacts.",
-      "If you want character or style consistency, connect a reference image to the node’s reference input(s) and adjust the reference strength/weight so the model follows the look while allowing the motion you want.",
-      "Configure generation settings: duration (max ~30s), resolution/aspect ratio (e.g., 16:9, 9:16), fps, and seed (fixed for repeatability or random for variety). If available in your plan, enable audio so the clip returns with synchronized sound.",
-      "Queue/execute the graph. The API node will submit and track the job; when complete, preview the output. If needed, refine by adjusting the prompt (camera moves, pacing verbs), seed, or reference weight, then re-run.",
-      "In SaveVideo, set the output path/filename pattern and fps to match your project. Execute to write the final video file to disk."
+      "Load the workflow in ComfyUI and locate the Wan3ReferenceToVideoApi and SaveVideo nodes.",
+      "Open Wan3ReferenceToVideoApi: enter your API key/credentials if required by your setup, then write a clear prompt describing subject, setting, motion, and camera (e.g., \"a lone astronaut walks across a neon-lit bazaar, handheld camera, slow push-in\").",
+      "Optional: connect or select a reference image in Wan3ReferenceToVideoApi to maintain character or style consistency across the clip.",
+      "Set generation options in Wan3ReferenceToVideoApi, including the desired duration (up to 30 seconds). Adjust any available controls such as aspect ratio or seed if the node exposes them.",
+      "Queue/Run the workflow. The Wan3ReferenceToVideoApi node will generate a single video with audio (handled by the remote service) and pass it to SaveVideo.",
+      "In SaveVideo, confirm the output path/name and run. When complete, open the saved file to review motion, composition, and audio sync. Iterate by refining your prompt or reference image for improved results."
     ],
     "suggestedUseCases": [
-      "Cinematic story beats and teasers for pitch decks or previsualization",
-      "Character-driven shorts where a reference image ensures consistent identity",
-      "Quick social media promos and vertical Reels/TikToks with strong art direction",
-      "Explainer cutaways or B-roll generated from descriptive prompts",
-      "Animatics to explore camera moves and mood before full production"
+      "Cinematic teasers and trailers for pitches or mood boards",
+      "Character-driven shorts with consistent appearance across shots",
+      "Previsualization for storyboards and scene blocking",
+      "Quick social media microvideos with compelling motion and sound",
+      "Product reveals or branded bumps with a stable hero subject"
     ],
     "faqItems": [
       {
-        "question": "How long can the generated video be?",
-        "answer": "This workflow targets clips up to about 30 seconds. Longer runs may be limited by the API plan or timeout settings; keep to 30s or less for reliable results."
+        "question": "Do I need an API key to use this workflow?",
+        "answer": "Yes. The Wan3ReferenceToVideoApi node connects to the Wan3.0-Video service and typically requires an API key or credentials. Enter these in the node settings per your ComfyUI integration."
       },
       {
-        "question": "Does it generate audio?",
-        "answer": "If your Wan3.0-Video endpoint/plan supports audio, the API node can return synchronized sound. If not, you’ll receive a silent video—add music/FX in post."
+        "question": "How long can the generated videos be?",
+        "answer": "Up to 30 seconds. Set the duration in Wan3ReferenceToVideoApi within that limit. Longer requests may fail or be truncated by the service."
       },
       {
-        "question": "How do I keep a character’s look consistent?",
-        "answer": "Provide a clear reference image via Wan3ReferenceToVideoApi’s reference input and keep your prompt consistent across iterations. Reusing the same seed also helps stabilize identity."
+        "question": "How do I keep a character consistent across shots?",
+        "answer": "Provide a clear reference image in Wan3ReferenceToVideoApi and keep your prompt and seed (if available) consistent across runs. Describe defining traits (clothing, colors, hairstyle) explicitly in the prompt."
       },
       {
-        "question": "Can I batch multiple prompts in one run?",
-        "answer": "This graph is set up to produce a single video per execution. To batch, duplicate the API/SaveVideo branch for each prompt or iterate with a batching/loop mechanism."
+        "question": "Does the workflow include audio?",
+        "answer": "Yes. The Wan3.0 service returns a single video file with synchronized sound. SaveVideo writes the received video to disk, preserving the embedded audio. If you don’t hear sound, verify your media player and the saved container support audio."
       }
     ]
   },
@@ -12394,6 +12472,45 @@
       {
         "question": "How can I document my workflow process?",
         "answer": "Use the MarkdownNote node to add annotations and notes throughout your workflow. This will help you keep track of settings and modifications for future use."
+      }
+    ]
+  },
+  "8f82ff60ae5e": {
+    "title": "Gemini Omni 1.1 Flash: Video Edit",
+    "description": "Edit videos through natural language conversation with Gemini Omni 1.1 Flash. Upload a clip (10 seconds or less) and describe the change: swap backgrounds, restyle scenes, add or remove elements, and the model applies the edit while preserving everything you did not mention. Add \\\"Keep everything else the same\\\" for maximum consistency; simple prompts work best. Outputs video with native audio at 16:9 or 9:16, with 1080p/4K output available. Ideal for remixes, style changes, and iterative refinement without re-generating from scratch.\n\n",
+    "metaDescription": "Edit 10s videos by prompt with Gemini Omni 1.1 Flash in ComfyUI. Swap backgrounds, restyle, and export 16:9 or 9:16 with audio at 1080p/4K.",
+    "extendedDescription": "This ComfyUI workflow lets you edit a short video by simply describing the change you want. LoadVideo ingests your clip (the template includes input/hooded_wanderer_planet_bridge.mp4 as a ready-to-run test), and GeminiVideoOmniV2 sends both the video and your plain‑language instruction to Gemini Omni 1.1 Flash. The model applies targeted edits—like swapping backgrounds, restyling a scene, or adding/removing elements—while leaving everything else untouched. For maximum fidelity, include a line such as “Keep everything else the same.” Simple, direct prompts tend to produce the most consistent results.\n\nOn output, SaveVideo writes the edited clip to disk with the native audio preserved. You can choose 16:9 or 9:16 and render at 1080p or 4K, making it suitable for landscape or vertical content. A MarkdownNote in the graph provides quick tips. The recommended input duration is 10 seconds or less to ensure responsive processing and stable edits. This setup is ideal for rapid remixes and iterative refinement without regenerating entire scenes from scratch.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and ensure you’re on the latest version. Configure your Gemini API key in the ComfyUI settings or directly in the GeminiVideoOmniV2 node (as required by your setup).",
+      "In LoadVideo, set the input to input/hooded_wanderer_planet_bridge.mp4 (included) or drag in your own clip (10 seconds or less). Confirm the clip plays correctly in the node’s preview if available.",
+      "Select the GeminiVideoOmniV2 node and write a concise instruction describing just the change you want (e.g., “Replace the background with a neon city at night. Keep everything else the same.”). Choose the desired aspect ratio (16:9 or 9:16) and resolution (1080p or 4K) in the node’s settings.",
+      "Optionally add brief refinement details (color palette, time of day, or specific objects to add/remove), but avoid overloading the prompt. Keep the instruction simple and unambiguous.",
+      "Queue and run the workflow. The model processes the video and returns an edited clip; SaveVideo writes the result to your output directory, preserving the original audio track.",
+      "Review the output and iterate. If something drifted, make the prompt more explicit (e.g., “Do not change the subject’s clothing. Keep the camera motion identical.”) and re-run to refine."
+    ],
+    "suggestedUseCases": [
+      "Background replacement for B‑roll or social clips without re-shooting (e.g., turn a bridge scene into a futuristic city).",
+      "Style restyling and color grading matches (film look, seasonal changes, day-to-night) while preserving composition.",
+      "Object cleanup: remove a distracting sign, add a subtle prop, or hide a logo.",
+      "Format adaptation for platforms: convert landscape footage to vertical 9:16 with a matching style pass.",
+      "Quick concept remixes: iterate on visual ideas before committing to full production."
+    ],
+    "faqItems": [
+      {
+        "question": "What clip length works best?",
+        "answer": "Keep inputs to 10 seconds or less. Shorter clips process faster and maintain better temporal consistency. Longer inputs may be slower or less stable depending on API limits."
+      },
+      {
+        "question": "Will the original audio be preserved?",
+        "answer": "Yes. The workflow is designed to export the edited video with its native audio via SaveVideo. If your source has no audio, the output will be silent."
+      },
+      {
+        "question": "How do I maximize consistency across frames?",
+        "answer": "Use simple, specific instructions and include “Keep everything else the same.” Avoid bundling many changes at once, minimize rapid camera motion, and keep the subject’s key attributes explicit (e.g., clothing, colors) if they must not change."
+      },
+      {
+        "question": "Can it export vertical video for social media?",
+        "answer": "Yes. Set the aspect ratio to 9:16 in GeminiVideoOmniV2 (and select 1080p or 4K as needed). The workflow will render a vertical output with the edit applied."
       }
     ]
   },
@@ -12821,6 +12938,15 @@
         "answer": "No prior experience is necessary. The workflow is designed to be user-friendly and intuitive for beginners."
       }
     ]
+  },
+  "920c795f693a": {
+    "title": "Pixal3D & TRELLIS.2: Image to Model",
+    "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
+    "metaDescription": "",
+    "extendedDescription": "",
+    "howToUse": [],
+    "suggestedUseCases": [],
+    "faqItems": []
   },
   "924b279f0df1": {
     "title": "MiniMax: Image to Video",
@@ -17536,6 +17662,45 @@
       }
     ]
   },
+  "c0d1253e51dd": {
+    "title": "Gemini Omni 1.1 Flash: Image to Video",
+    "description": "Generate videos from text prompts or reference images using Gemini Omni 1.1 Flash, a multimodal model that handles text-to-video, image-to-video, keyframe interpolation, and iterative video editing with natural language. Outputs a single MP4 video with optional audio, supporting aspect ratios, resolutions up to 4K, and scene extension. Ideal for cinematic storytelling, product visualization, and rapid video prototyping.\n\n",
+    "metaDescription": "Create MP4 videos from prompts or a reference image in ComfyUI with Gemini Omni 1.1 Flash. Supports text/image-to-video, up to 4K, optional audio, and scene extension.",
+    "extendedDescription": "This ComfyUI tutorial workflow shows how to turn a text prompt or a single still image into a finished MP4 clip using Gemini Omni 1.1 Flash. The core of the pipeline is the GeminiVideoOmniV2 node, which accepts a prompt and (optionally) a reference image to drive image-to-video generation. You can target common aspect ratios and resolutions up to 4K, set clip duration and frame rate, and enable optional audio. The included MarkdownNote provides inline tips, while SaveVideo writes the final video to disk.\n\nTechnically, the flow is simple and robust: LoadImage brings in the provided blue_studio_car.png (or your own asset) and feeds it to GeminiVideoOmniV2 when you want image conditioning. The model handles text-to-video and image-to-video, along with internal keyframe interpolation and scene extension, controlled through your prompt and node parameters. GeminiVideoOmniV2 returns the generated clip, and SaveVideo outputs a single MP4 with your chosen fps and path. Leave the image input disconnected for pure text-to-video; connect it to anchor motion, style, and composition to your reference.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and ensure you’re on a recent version. If required by your setup, confirm GeminiVideoOmniV2 has valid API credentials configured.",
+      "Add a reference image: place input/blue_studio_car.png (provided) or your own image in the input folder, then set that path in the LoadImage node. Leave LoadImage disconnected if you want text-to-video only.",
+      "Open GeminiVideoOmniV2 and enter a clear prompt describing subject, motion, camera moves, and style (e.g., “studio-lit product shot, slow dolly, subtle reflections”). Configure resolution/aspect, duration, fps, and audio if those options are exposed.",
+      "Check SaveVideo for output path and fps. Match fps to what you request in GeminiVideoOmniV2 so timing is consistent.",
+      "Run the workflow. GeminiVideoOmniV2 will generate the clip, and SaveVideo will write a single MP4 to the specified location. Preview the result.",
+      "Iterate: refine the prompt, swap or remove the reference image to switch between image-to-video and text-to-video, adjust duration/fps for pacing, and re-run. Use shorter, lower-res drafts for quick previews, then render at higher resolution."
+    ],
+    "suggestedUseCases": [
+      "Cinematic product shots from a single packshot or studio still",
+      "Rapid storyboard-to-animatic previews for previsualization",
+      "Logo or key art motion treatments for social teasers",
+      "Extending a still photo into a short establishing shot with gentle camera motion",
+      "Quick turntable-style showcases of designs or prototypes"
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need to use a reference image?",
+        "answer": "No. Connect LoadImage to GeminiVideoOmniV2 for image-to-video, or leave it disconnected for text-to-video. Using a reference image helps lock style, layout, and subject appearance."
+      },
+      {
+        "question": "What resolutions and durations work best?",
+        "answer": "The workflow supports up to 4K, but start with lower resolutions and shorter durations for fast iteration. Higher resolution, longer clips, or higher fps will take longer to generate."
+      },
+      {
+        "question": "Can it generate audio?",
+        "answer": "Yes, optional audio can be enabled if exposed by the GeminiVideoOmniV2 node. If audio is returned, SaveVideo will include it in the MP4; otherwise, the clip will be silent."
+      },
+      {
+        "question": "I get errors or slow responses—how do I troubleshoot?",
+        "answer": "Update ComfyUI, verify your internet connection, and ensure the GeminiVideoOmniV2 node has valid API credentials if required. Reduce resolution/duration for tests, then scale up."
+      }
+    ]
+  },
   "c12e2c5512d1": {
     "title": "Grok: Image Edit",
     "description": "Upload an image to edit with the Grok model. Generate a modified version with expressive, cinematic visuals",
@@ -20758,6 +20923,44 @@
       {
         "question": "Can I batch process multiple images with this setup?",
         "answer": "This graph is configured for one base/guide pair at a time. ComfyUI can batch with additional nodes (e.g., directory loaders and iterators), but those are not included here. To batch, extend the workflow with batch‑friendly loaders and route them through the same ByteDanceSeedreamNodeV2 and SaveImageAdvanced pattern."
+      }
+    ]
+  },
+  "e2ceec4fc610": {
+    "title": "Gemini Omni 1.1 Flash: Video Extend",
+    "description": "Extend an existing video by up to 10 seconds per step, building stories up to 40 seconds total with Gemini Omni 1.1 Flash. The model analyzes the last 10 seconds of context, keeping characters, motion, and audio coherent as the scene continues from where it left off. Optionally attach reference images to introduce new characters mid-story. Works on uploaded clips and previously generated videos; describe how the scene should continue in plain language. Ideal for longer narratives, scene branching, and iterative storytelling.\n\n",
+    "metaDescription": "Extend videos up to 10s per step (max ~40s) with Gemini Omni 1.1 Flash in ComfyUI. Keep visual continuity and branch stories using prompts and image refs.",
+    "extendedDescription": "This ComfyUI tutorial workflow shows how to extend an existing video in coherent, story-aware chunks using the GeminiVideoOmniV2 node (Gemini Omni 1.1 Flash). It loads your clip with LoadVideo, extracts the final moments as context via Video Slice, and asks Gemini to continue the scene for up to 10 seconds per run. The model reads the last 10 seconds of visual context so characters, motion, camera framing, and scene layout carry forward naturally instead of restarting from scratch. SaveVideo then exports the extended result as a new clip.\n\nTechnically, the pipeline is a loop-friendly chain: LoadVideo → Video Slice (tail window) → GeminiVideoOmniV2 (prompted continuation) → SaveVideo. You can iterate this up to four times to build a 40-second story, or branch at any step by changing the prompt. The GeminiVideoOmniV2 node also supports optional image references, which you can attach mid-story to introduce new characters or props while maintaining continuity with the previous scene. The included MarkdownNote explains the required input asset path and tips for best results.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and review the MarkdownNote for input instructions and tips. Place your source clip at input/rooster_duel_western.mp4 (or update the LoadVideo path to your file).",
+      "Select the LoadVideo node and confirm your clip loads correctly (resolution, FPS). If you’re replacing the example, keep consistent dimensions for smoother extensions.",
+      "Configure the Video Slice node to use the last 10 seconds as the context window. This tail slice is what Gemini reads to continue the scene. If your clip is shorter, it will use whatever duration is available.",
+      "Open GeminiVideoOmniV2: enter your Gemini API key (if required), write a plain-language continuation prompt (what should happen next), and set the extension duration to 5–10 seconds. Optionally attach one or more image references to introduce new characters/props mid-story.",
+      "Set SaveVideo output filename and codec settings as needed. Click Queue Prompt to run. When complete, preview the result to ensure the continuation matches your intent.",
+      "Iterate or branch: feed the newly saved clip back into LoadVideo and repeat to build up to ~40 seconds total, or duplicate the node chain and vary the prompt to explore alternate story paths from the same context."
+    ],
+    "suggestedUseCases": [
+      "Narrative continuation for short films or storyboards, extending scenes in small, controllable beats.",
+      "A/B branching to explore multiple plot directions from the same ending context frame.",
+      "Previsualization for directors, quickly testing camera moves or blocking beyond the current cut.",
+      "Social media teasers or cliffhangers that extend viral clips while keeping subjects and motion consistent."
+    ],
+    "faqItems": [
+      {
+        "question": "How long can I extend a video with this template?",
+        "answer": "The workflow is tuned for up to 10 seconds per step and about 40 seconds total across iterations. You can run more steps, but visual quality and continuity may degrade as context drifts."
+      },
+      {
+        "question": "How do I keep characters and style consistent across steps?",
+        "answer": "Keep prompts consistent, describe key subjects and camera behavior clearly, and reuse the last 10 seconds as context via the Video Slice node. For stronger identity anchoring, attach one or more reference images to the GeminiVideoOmniV2 node."
+      },
+      {
+        "question": "Does the output include audio?",
+        "answer": "This template focuses on visual continuation. LoadVideo/SaveVideo in many ComfyUI setups export silent MP4s. If you need audio, keep your original track and re-sync or design new audio in post after export."
+      },
+      {
+        "question": "Can I branch the story and try alternative continuations?",
+        "answer": "Yes. Duplicate the GeminiVideoOmniV2 + SaveVideo segment, keep the same Video Slice tail input, and vary the prompt (and optional image refs). You’ll get multiple alternate continuations from the same context."
       }
     ]
   },
