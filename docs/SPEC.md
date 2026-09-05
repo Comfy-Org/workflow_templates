@@ -30,8 +30,8 @@ The `index.json` file is an array of category objects. See `templates/index.sche
 |-------|------|----------|-------------|
 | `moduleName` | string | ✅ | Module identifier (e.g., "default") |
 | `title` | string | ✅ | Display name for the category |
-| `type` | string | ❌ | Optional type hint: "image", "video", "audio", "3d" |
-| `category` | string | ❌ | Category label (e.g., "GENERATION TYPE") |
+| `type` | string | ❌ | Optional type hint: "image", "video", "audio", "3d", "llm" |
+| `category` | string | ❌ | Category group label (e.g., "Foundation", "Applied") |
 | `icon` | string | ❌ | Icon class (e.g., "icon-[lucide--star]") |
 | `isEssential` | boolean | ❌ | Whether this is a Getting Started category |
 | `templates` | array | ✅ | Array of template objects |
