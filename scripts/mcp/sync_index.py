@@ -94,15 +94,20 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
     ),
     "Product & Ads": (
         "Applied workflows for product shots, placements, UGC-style ads, and commercial sequences. "
-        "These are purpose-built examples for marketing and merchandising rather than general-purpose generation."
+        "These are purpose-built examples for marketing and merchandising "
+        "rather than general-purpose generation."
     ),
     "Character & Fashion": (
-        "Applied workflows for character sheets, multi-angle portraits, fashion, and identity-consistent looks. "
-        "These are purpose-built examples for character and apparel work rather than general-purpose generation."
+        "Applied workflows for character sheets, multi-angle portraits, "
+        "fashion, and identity-consistent looks. "
+        "These are purpose-built examples for character and apparel work "
+        "rather than general-purpose generation."
     ),
     "Brand & Design": (
-        "Applied workflows for brand systems, graphic redesign, posters, logos, and layout remixes. "
-        "These are purpose-built examples for design production rather than general-purpose generation."
+        "Applied workflows for brand systems, graphic redesign, posters, logos, "
+        "and layout remixes. "
+        "These are purpose-built examples for design production "
+        "rather than general-purpose generation."
     ),
     "Image": (
         "General-purpose workflow templates for native image generation, including text-to-image, "

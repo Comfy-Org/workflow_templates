@@ -236,7 +236,9 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 }
 ```
 
-Overrides win over usage tiers but still respect the Use Cases floor (cannot set `not_recommended` there).
+Overrides win over usage tiers but still respect the Applied / Use Cases floor
+(**Use Cases**, **Product & Ads**, **Character & Fashion**, **Brand & Design**):
+cannot set `not_recommended` there.
 
 ## API contract
 
