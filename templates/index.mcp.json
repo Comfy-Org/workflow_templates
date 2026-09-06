@@ -707,16 +707,16 @@
         "freshness": "current",
         "usage": 29,
         "recommend": "not_recommended",
-        "description": "Generate 2K images from text prompts via the Ideogram v4 API. The open model excels at design, text rendering, and photorealistic output. Provide a structured or natural language prompt—optionally refined by a Gemini node—and the workflow returns a high-quality image with precise layout and color support. Execution is server-side.",
+        "description": "Input a text prompt in structured JSON format. Generate a high-quality image with precise layout control, text rendering, and color palette support.",
         "io": {
-          "inputs": ["text: Structured JSON or natural language text prompt describing the desired image"],
-          "outputs": ["image: Generated high-quality image with precise layout and text rendering"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated image"]
         },
         "minComfyUIVersion": "0.24.0",
         "capabilities": {
           "workflow": ["api", "text-to-image"],
           "model_options": {
-            "GeminiNode": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-3-pro-preview", "gemini-3-1-pro", "gemini-3-1-flash-lite"]
+            "GeminiNodeV2": ["Gemini 3.7 Flash", "Gemini 3.5 Flash", "Gemini 3.1 Pro", "Gemini 3.1 Flash-Lite"]
           }
         }
       },
@@ -1424,14 +1424,17 @@
         "freshness": "established",
         "usage": 376,
         "recommend": "medium",
-        "description": "Generate photorealistic images at up to 4MP resolution using Flux.2 Pro, with enhanced realism and crisper text. Accepts a text prompt and up to four optional reference images for multi-consistency; returns one generated image. Workflow executes via a third-party API, so processing time varies with server response.",
+        "description": "Generate up to 4MP photorealistic images with multi-reference consistency and professional text rendering.",
         "io": {
-          "inputs": ["text: Text prompt describing the desired image", "image×4: Optional reference images for multi-reference consistency"],
-          "outputs": ["image: Generated photorealistic image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
-          "workflow": ["image-edit", "api", "text-to-image"]
+          "workflow": ["image-edit", "api", "text-to-image"],
+          "model_options": {
+            "Flux2ImageNode": ["Flux.2 [pro]", "Flux.2 [max]"]
+          }
         }
       },
       {
@@ -3719,10 +3722,10 @@
         "freshness": "current",
         "usage": 20,
         "recommend": "not_recommended",
-        "description": "Upload a single RGB image to this ComfyUI workflow and use MoGe for monocular geometry estimation. It produces a colored depth preview and raw depth map, with adjustable inference resolution and batch size, then reconstructs a 3D mesh from the image. Runs on Comfy Cloud for fast execution.",
+        "description": "Upload a single RGB image and adjust inference resolution and batch size. Generate a colored depth preview and raw depth map,",
         "io": {
-          "inputs": ["image: Perspective image for 3D mesh estimation"],
-          "outputs": ["model: 3D mesh from image"]
+          "inputs": ["image: Input image"],
+          "outputs": ["image: Depth map"]
         },
         "minComfyUIVersion": "0.22.0",
         "capabilities": {
@@ -4617,10 +4620,10 @@
         "freshness": "established",
         "usage": 1653,
         "recommend": "top",
-        "description": "Generate a high-quality video with synchronized lip movements by providing an image and an audio file to LTX-2.3. The model combines audio with an input image to produce a video with accurate lip sync, leveraging its native audio support and fast generation capabilities. Output is a rendered video.",
+        "description": "Upload an image and an audio file to generate a high-quality video with synchronized lip movements using LTX-2.3.",
         "io": {
-          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
-          "outputs": ["video: Animated video from the reference image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.16.4",
         "capabilities": {
@@ -4944,9 +4947,9 @@
         "freshness": "established",
         "usage": 690,
         "recommend": "high",
-        "description": "Generate video from a text prompt using LTX-2.3, a fast model from Lightricks. The workflow outputs a high-quality video with native audio and support for start/end frame control. It is optimized for portrait or landscape formats.",
+        "description": "Generate a video from a text prompt, optionally using an image for reference. Receive a high-quality video with improved motion, audio, and detail, optimized for portrait or landscape formats.",
         "io": {
-          "inputs": ["text: Text prompt describing the video"],
+          "inputs": ["text: Video prompt"],
           "outputs": ["video: Generated video"]
         },
         "minComfyUIVersion": "0.16.4",
@@ -4962,9 +4965,9 @@
         "freshness": "current",
         "usage": 377,
         "recommend": "medium",
-        "description": "Generate a lip-sync video by providing a text prompt, a reference image, and a short audio clip. The workflow uses ID-LoRA to adapt the subject’s appearance and voice, while LTX-2.3’s native audio support and frame controls produce a synchronized video with aligned audio.",
+        "description": "Generate personalized videos with synchronized audio from a text prompt, reference image, and short audio clip. Use ID-LoRA to adapt a person's appearance and voice in a single generative model.",
         "io": {
-          "inputs": ["text: Input prompt"],
+          "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.19.0",
@@ -5022,7 +5025,7 @@
         "freshness": "recent",
         "usage": 176,
         "recommend": "low",
-        "description": "Use Gemini Omni Flash to animate a single reference image with a natural language motion or style prompt. This API workflow produces a short video clip, interpreting text to control duration and aspect ratio. Ideal for dynamic social media content or iterative video edits via conversational prompting.",
+        "description": "Generate a video from two images using Gemini Omni Flash, which interprets natural language prompts to control duration and aspect ratio. The workflow accepts 2 input images and produces 1 video output. Ideal for creating short brand clips, dynamic social media content, and iterative video edits through conversational prompting.",
         "io": {
           "inputs": ["image: Reference image", "text: Motion or style prompt"],
           "outputs": ["video: Animated video"]
@@ -5031,7 +5034,7 @@
         "capabilities": {
           "workflow": ["api", "image-to-video"],
           "model_options": {
-            "GeminiVideoOmni": ["Omni Flash"]
+            "GeminiVideoOmniV2": ["Omni Flash 1.1", "Omni Flash"]
           }
         }
       },
@@ -5061,14 +5064,17 @@
         "freshness": "recent",
         "usage": 110,
         "recommend": "low",
-        "description": "Use Seedance 2.0 via API to generate a reference-based 4K video from a single image and text prompt, delivering native 10-bit output with cinematic motion and fine detail retention. The workflow inputs one reference image and one motion/style prompt, then outputs one animated video suitable for high-resolution VFX and professional production.",
+        "description": "Generate a reference-based video from a single input image using Seedance 2.0, producing native 4K output with 10-bit color depth and clean fine detail retention. The workflow takes 1 image and outputs 1 video. Ideal for high-resolution motion graphics, cinematic VFX shots requiring downstream grading, and professional video production where 4K finishing is essential.",
         "io": {
           "inputs": ["image: Reference image", "text: Motion or style prompt"],
           "outputs": ["video: Animated video"]
         },
         "minComfyUIVersion": "0.26.2",
         "capabilities": {
-          "workflow": ["api", "image-to-video", "reference-to-video"]
+          "workflow": ["api", "image-to-video", "reference-to-video"],
+          "model_options": {
+            "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
         }
       },
       {
@@ -5205,10 +5211,10 @@
         "freshness": "current",
         "usage": 234,
         "recommend": "medium",
-        "description": "Generate LTX-2.3 videos with IC-LoRA union control using aligned inputs like depth, pose, or edges. This workflow leverages Lightricks’ fast text-to-video or image-to-video model with native audio support and start/end frame control, outputting the generated video as an image sequence.",
+        "description": "Generate LTX 2.3 videos with IC-LoRA using aligned control inputs like depth, pose, or edges.",
         "io": {
-          "inputs": ["image: Control image (edge map/pose/depth)", "text: Text prompt"],
-          "outputs": ["image: Generated image with structural control"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.22.0",
         "capabilities": {
@@ -5439,10 +5445,10 @@
         "freshness": "established",
         "usage": 190,
         "recommend": "low",
-        "description": "Generate animated video from a static image using LTX-2's image-to-video workflow, with optional motion prompts and native synchronized audio. This cost-effective model produces fast inference and natural motion.",
+        "description": "Transform static images into dynamic videos with synchronized audio-video generation using LTX-2. Features expressive lip sync, natural motion, and efficient performance.",
         "io": {
-          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
-          "outputs": ["video: Animated video from the reference image"]
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
@@ -8714,10 +8720,10 @@
         "freshness": "current",
         "usage": 57,
         "recommend": "low",
-        "description": "This workflow uses ACE-Step 1.5XL SFT, a 4B parameter model optimized for high-quality audio, to generate music from a text prompt. Input a description and receive an audio file. It supports CFG for precise prompt adherence and runs on Comfy Cloud.",
+        "description": "Generate high-quality music from text prompts using a 4B parameter SFT model. Control output with CFG for precise prompt adherence. ",
         "io": {
-          "inputs": ["text: Text prompt describing the music"],
-          "outputs": ["audio: Generated music"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.12.0",
         "capabilities": {
@@ -8930,10 +8936,10 @@
         "freshness": "established",
         "usage": 67,
         "recommend": "low",
-        "description": "This workflow generates music from a text prompt using the ACE-Step 1.5 model, which produces high-quality instrumental or lyrical audio. It accepts a prompt as input and outputs the generated audio, supporting fast music generation suitable for consumer hardware.",
+        "description": "Input style tags and lyrics to generate a full song. The workflow uses the ACE-Step 1.5 model to produce commercial-grade music in under 10 seconds on consumer hardware.",
         "io": {
-          "inputs": ["text: Audio description prompt"],
-          "outputs": ["audio: Generated audio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.12.0",
         "capabilities": {
@@ -9020,10 +9026,10 @@
         "freshness": "established",
         "usage": 34,
         "recommend": "not_recommended",
-        "description": "Generate audio from a text prompt using Stability’s Stable Audio 1.0 model. This workflow accepts a descriptive text input and outputs a generated audio clip. It is designed for text‑to‑audio tasks and runs efficiently.",
+        "description": "Generate audio from text prompts using Stable Audio.",
         "io": {
-          "inputs": ["text: Audio description prompt"],
-          "outputs": ["audio: Generated audio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.3.35",
         "capabilities": {
@@ -9038,10 +9044,10 @@
         "freshness": "established",
         "usage": 37,
         "recommend": "not_recommended",
-        "description": "This workflow performs audio-to-audio editing using the ACE-Step v1 M2M model, enabling style and lyric changes to existing songs via text instructions. It accepts an audio file and a text prompt as input and outputs the edited audio. The model specializes in advanced music editing with high-quality results.",
+        "description": "Edit existing songs to change style and lyrics using ACE-Step v1 M2M.",
         "io": {
-          "inputs": ["image: Input image to edit", "text: Edit instructions"],
-          "outputs": ["image: Edited image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.3.35",
         "capabilities": {
