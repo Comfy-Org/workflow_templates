@@ -5,11 +5,13 @@
  * Visual structure: landscape thumbnail with the title and provider logo overlaid
  * on it; creator line + CTA and tag pills beneath.
  */
-import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
+import { computed, ref, watch, onMounted, onUnmounted, nextTick, useTemplateRef } from 'vue';
+import { useIntersectionObserver, usePreferredReducedMotion } from '@vueuse/core';
 import TagRow from '@/components/hub/TagRow.vue';
 import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { hubImageFor, hubMediaFor } from '@/lib/hub-media';
 import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
@@ -84,9 +86,12 @@ const videoUrl = computed(() => {
   return thumbnailPath(primaryFile.value!);
 });
 
+const hubMedia = computed(() => (videoUrl.value ? hubMediaFor(videoUrl.value) : null));
+const playbackUrl = computed(() => hubMedia.value?.video ?? videoUrl.value);
+
 const posterUrl = computed(() => {
   if (!videoUrl.value) return null;
-  return getVideoFrameUrl(videoUrl.value);
+  return hubMedia.value?.poster ?? getVideoFrameUrl(videoUrl.value);
 });
 
 const videoFailed = ref(false);
@@ -95,10 +100,33 @@ function onVideoError() {
   videoFailed.value = true;
 }
 
+const videoEl = useTemplateRef<HTMLVideoElement>('videoEl');
+const reducedMotion = usePreferredReducedMotion();
+
+const posterReady = ref(false);
+useIntersectionObserver(
+  videoEl,
+  ([entry]) => {
+    if (entry?.isIntersecting) posterReady.value = true;
+  },
+  { rootMargin: '300px' }
+);
+
+useIntersectionObserver(videoEl, ([entry]) => {
+  const el = videoEl.value;
+  if (!el) return;
+  if (entry?.isIntersecting && reducedMotion.value !== 'reduce') {
+    el.play().catch(() => {});
+  } else {
+    el.pause();
+  }
+});
+
 const primaryUrl = computed(() => {
   const f = primaryFile.value;
   if (!f || isMediaFile(f)) return null;
-  return thumbnailPath(f);
+  const url = thumbnailPath(f);
+  return hubImageFor(url) ?? url;
 });
 
 const hasSecondImage = computed(() => {
@@ -112,7 +140,8 @@ const hasSecondImage = computed(() => {
 
 const secondaryUrl = computed(() => {
   if (!hasSecondImage.value || !secondaryFile.value) return null;
-  return thumbnailPath(secondaryFile.value);
+  const url = thumbnailPath(secondaryFile.value);
+  return hubImageFor(url) ?? url;
 });
 
 const showCompare = computed(
@@ -275,11 +304,11 @@ function handleCardClick() {
 
       <video
         v-else-if="isVideoPrimary && videoUrl"
-        :src="videoUrl"
-        :poster="posterUrl || undefined"
+        ref="videoEl"
+        :src="playbackUrl || undefined"
+        :poster="(posterReady && posterUrl) || undefined"
         class="w-full h-full object-cover"
-        preload="metadata"
-        autoplay
+        preload="none"
         muted
         loop
         playsinline

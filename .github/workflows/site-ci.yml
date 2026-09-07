@@ -147,8 +147,6 @@ jobs:
 
   # ─── Lighthouse (uses shared build) ───────────────────────────────────
   lighthouse:
-    # TEMPORARILY DISABLED: staticDistDir path issues with artifact download, fix later
-    if: false
     name: Lighthouse
     needs: build
     runs-on: ubuntu-latest
@@ -166,7 +164,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: site-build
-          path: site
+          path: site/dist
+
+      - name: Verify the pinned Lighthouse pages still exist
+        run: node scripts/verify-lighthouse-urls.mjs
 
       - name: Run Lighthouse CI
         id: lhci

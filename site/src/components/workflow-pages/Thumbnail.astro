@@ -11,6 +11,8 @@
  */
 import { COMFY_GLYPH } from './comfy-glyph';
 import { isVideoFile } from '../../lib/media-utils';
+import { hubImageFor, hubMediaFor } from '../../lib/hub-media';
+import { getVideoFrameUrl } from '../../lib/video-thumbnail';
 
 interface Props {
   src?: string | null;
@@ -20,24 +22,30 @@ interface Props {
 
 const { src, alt, class: imgClass } = Astro.props;
 const isVideo = Boolean(src && isVideoFile(src));
+
+const resolvedSrc = src ? ((isVideo ? hubMediaFor(src)?.video : hubImageFor(src)) ?? src) : src;
+const posterSrc =
+  src && isVideo ? (hubMediaFor(src)?.poster ?? getVideoFrameUrl(src) ?? undefined) : undefined;
 ---
 
 {
   src &&
     (isVideo ? (
       <video
-        src={src}
+        src={resolvedSrc}
+        poster={posterSrc}
         class={imgClass}
-        autoplay
+        preload="none"
         muted
         loop
         playsinline
+        data-gated-video
         aria-label={alt}
         onerror="this.hidden=true;this.nextElementSibling.hidden=false;"
       />
     ) : (
       <img
-        src={src}
+        src={resolvedSrc}
         alt={alt}
         class={imgClass}
         loading="lazy"
@@ -55,3 +63,27 @@ const isVideo = Boolean(src && isVideoFile(src));
     <path d={COMFY_GLYPH}></path>
   </svg>
 </span>
+
+<script>
+  const videos = document.querySelectorAll<HTMLVideoElement>('video[data-gated-video]');
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const video = entry.target as HTMLVideoElement;
+          if (entry.isIntersecting && !reducedMotion.matches) {
+            video.play().catch(() => {});
+          } else {
+            video.pause();
+          }
+        }
+      },
+      { rootMargin: '200px' }
+    );
+    videos.forEach((video) => observer.observe(video));
+  } else if (!reducedMotion.matches) {
+    videos.forEach((video) => video.play().catch(() => {}));
+  }
+</script>
