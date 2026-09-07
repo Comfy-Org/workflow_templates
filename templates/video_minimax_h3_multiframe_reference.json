@@ -1,0 +1,2544 @@
+{
+  "id": "e3f2b845-8f2c-4b5a-9caf-eac1029d3e7e",
+  "revision": 0,
+  "last_node_id": 171,
+  "last_link_id": 334,
+  "nodes": [
+    {
+      "id": 92,
+      "type": "SaveVideo",
+      "pos": [
+        1920,
+        4220
+      ],
+      "size": [
+        1030,
+        126
+      ],
+      "flags": {},
+      "order": 40,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 260
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "video/MiniMax_H3",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/MiniMax_H3",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 115,
+      "type": "ResolutionSelector",
+      "pos": [
+        -1480,
+        4300
+      ],
+      "size": [
+        270,
+        170
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [
+        {
+          "name": "preview",
+          "shape": 7,
+          "type": "RESOLUTION_PREVIEW",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            276
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            277
+          ]
+        }
+      ],
+      "title": "Resolution Selector (Size)",
+      "properties": {
+        "Node name for S&R": "ResolutionSelector",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "16:9 (Widescreen)",
+        0.4,
+        32
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "16:9 (Widescreen)",
+        "megapixels": 0.4,
+        "multiple": 32
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 116,
+      "type": "MarkdownNote",
+      "pos": [
+        -2020,
+        4210
+      ],
+      "size": [
+        450,
+        1337.328125
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: MiniMax H3",
+      "properties": {},
+      "widgets_values": [
+        "## MiniMax H3\n\n[MiniMax H3](https://www.minimax.io/blog/minimax-h3) is MiniMax's general-purpose, omni-modal generation model. It jointly understands text, image, video, and audio, and generates video with **native stereo audio**: voice, sound effects, and music are modeled jointly in a single forward pass, not layered on afterward. Output is up to 2K resolution, 24fps, and up to about 15 seconds.\n\n## ComfyUI links\n- [ComfyUI#15224](https://github.com/Comfy-Org/ComfyUI/pull/15224)\n- [Add Guide for MiniMax H3](https://github.com/Comfy-Org/ComfyUI/pull/15439)\n- [🤗 Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n\n## About this workflow\n\nThis template runs the **reference-to-video (ref2va)** task using the **MiniMax H3 Reference to Video** node. It takes any mix of reference images, videos, and standalone audio, and weaves them into the generation to lock in a character's identity, a style, a motion, a camera move, or a voice.\n\nOn top of that, chained **Add Guide for MiniMax H3** nodes pin extra stills (or short clips, and optional audio) onto specific frames of the *output* timeline. The model can address guides anywhere on a continuous time axis, not only the first and last frame. That is the multi-frame / keyframe path in this graph.\n\n**Key inputs**\n\n- **ref_images / ref_videos / ref_video_audios / ref_audios** on **MiniMax H3 Reference to Video**: up to 9 reference images, 3 reference videos (each may carry its own paired soundtrack), and 3 standalone reference audio clips. These are semantic references. Name them in connection order as `<Picture 1>`, `<Video 1>`, `<Audio 1>`. They do not sit on a timeline by themselves.\n- **prompt** (**Input Text (Prompt)**): reference the inputs by tag, in the exact order they were connected, then describe the target scene, motion, and audio. In this template, also name each later picture as a shot's first frame or keyframe, and cut to it at the matching timestamp in `detailed_description`.\n- **ref_image_size**: `match` scales references down to the generation's resolution (faster); `max` keeps up to a 2048px short edge for stronger identity fidelity, at the cost of speed since reference tokens ride along every sampling step\n- **width / height**: set via **Resolution Selector (Size)**\n- **duration (seconds)** (**Float (Duration)**): converted to a valid frame `length` by the **Math Expression** node\n\n**Multi-frame guides (Add Guide for MiniMax H3)**\n\nEach **Add Guide for MiniMax H3** anchors a guide at `frame_idx` (negative values count from the end of the video):\n\n- a still image\n- a clip (image batches snap down to the model's valid clip lengths: 5, 22, 39... frames; batches shorter than 5 frames use only the first image)\n- audio, starting at the same position\n- any combination. Chain several nodes (`positive` in to `positive` out) for several guides\n\n`frame_idx` is in frames at 24fps. This template sets it from **Frame Index (Second)** through **Math Expression** `round(a * 24)` (1.5s → frame 36). The index plus the guide length must stay inside the generated `length`.\n\nThis graph wires four pictures as follows:\n\n- **Load Image** `h3_frame_ref_1.png` → first `ref_images` input on **MiniMax H3 Reference to Video**. This is `<Picture 1>`, the identity lock and the first frame of Shot 1. There is no Add Guide at 0s; the prompt tells the model the video starts from `<Picture 1>`.\n- **Load Image** `h3_frame_ref_2.png` → first **Add Guide for MiniMax H3** at **1.5s** (Shot 2 keyframe)\n- **Load Image** `h3_frame_ref_3.png` → second Add Guide at **3.0s** (Shot 3 keyframe)\n- **Load Image** `h3_frame_ref_4.png` → third Add Guide at **5.0s** (Shot 4 first frame)\n\nTo add more keyframes, copy the same block: **Load Image** + **Frame Index (Second)** + **Math Expression** + **Add Guide for MiniMax H3**. Keep `positive` in series (last guide → **Basic Guider**). Reuse the same video VAE, audio VAE, and `LATENT` from **MiniMax H3 Reference to Video**. Leave `audio` empty unless you also want a soundtrack anchored at that time.\n\n`<Picture N>` tags only bind to images actually connected on `ref_images`, in that order. Pictures 2-4 here are timeline anchors only. Also plug them into extra `ref_images` slots if you want the text encoder to see them as `<Picture 2>` / `<Picture 3>` / `<Picture 4>`.\n\nOther useful patterns from the same node: feed the first 22 frames of an existing video plus its audio into one Add Guide at `frame_idx` 0 to continue both streams, or drop a still at a mid-clip frame (for example frame 60 of 124) to force the shot to hit that frame.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## MiniMax H3\n\n[MiniMax H3](https://www.minimax.io/blog/minimax-h3) is MiniMax's general-purpose, omni-modal generation model. It jointly understands text, image, video, and audio, and generates video with **native stereo audio**: voice, sound effects, and music are modeled jointly in a single forward pass, not layered on afterward. Output is up to 2K resolution, 24fps, and up to about 15 seconds.\n\n## ComfyUI links\n- [ComfyUI#15224](https://github.com/Comfy-Org/ComfyUI/pull/15224)\n- [Add Guide for MiniMax H3](https://github.com/Comfy-Org/ComfyUI/pull/15439)\n- [🤗 Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n\n## About this workflow\n\nThis template runs the **reference-to-video (ref2va)** task using the **MiniMax H3 Reference to Video** node. It takes any mix of reference images, videos, and standalone audio, and weaves them into the generation to lock in a character's identity, a style, a motion, a camera move, or a voice.\n\nOn top of that, chained **Add Guide for MiniMax H3** nodes pin extra stills (or short clips, and optional audio) onto specific frames of the *output* timeline. The model can address guides anywhere on a continuous time axis, not only the first and last frame. That is the multi-frame / keyframe path in this graph.\n\n**Key inputs**\n\n- **ref_images / ref_videos / ref_video_audios / ref_audios** on **MiniMax H3 Reference to Video**: up to 9 reference images, 3 reference videos (each may carry its own paired soundtrack), and 3 standalone reference audio clips. These are semantic references. Name them in connection order as `<Picture 1>`, `<Video 1>`, `<Audio 1>`. They do not sit on a timeline by themselves.\n- **prompt** (**Input Text (Prompt)**): reference the inputs by tag, in the exact order they were connected, then describe the target scene, motion, and audio. In this template, also name each later picture as a shot's first frame or keyframe, and cut to it at the matching timestamp in `detailed_description`.\n- **ref_image_size**: `match` scales references down to the generation's resolution (faster); `max` keeps up to a 2048px short edge for stronger identity fidelity, at the cost of speed since reference tokens ride along every sampling step\n- **width / height**: set via **Resolution Selector (Size)**\n- **duration (seconds)** (**Float (Duration)**): converted to a valid frame `length` by the **Math Expression** node\n\n**Multi-frame guides (Add Guide for MiniMax H3)**\n\nEach **Add Guide for MiniMax H3** anchors a guide at `frame_idx` (negative values count from the end of the video):\n\n- a still image\n- a clip (image batches snap down to the model's valid clip lengths: 5, 22, 39... frames; batches shorter than 5 frames use only the first image)\n- audio, starting at the same position\n- any combination. Chain several nodes (`positive` in to `positive` out) for several guides\n\n`frame_idx` is in frames at 24fps. This template sets it from **Frame Index (Second)** through **Math Expression** `round(a * 24)` (1.5s → frame 36). The index plus the guide length must stay inside the generated `length`.\n\nThis graph wires four pictures as follows:\n\n- **Load Image** `h3_frame_ref_1.png` → first `ref_images` input on **MiniMax H3 Reference to Video**. This is `<Picture 1>`, the identity lock and the first frame of Shot 1. There is no Add Guide at 0s; the prompt tells the model the video starts from `<Picture 1>`.\n- **Load Image** `h3_frame_ref_2.png` → first **Add Guide for MiniMax H3** at **1.5s** (Shot 2 keyframe)\n- **Load Image** `h3_frame_ref_3.png` → second Add Guide at **3.0s** (Shot 3 keyframe)\n- **Load Image** `h3_frame_ref_4.png` → third Add Guide at **5.0s** (Shot 4 first frame)\n\nTo add more keyframes, copy the same block: **Load Image** + **Frame Index (Second)** + **Math Expression** + **Add Guide for MiniMax H3**. Keep `positive` in series (last guide → **Basic Guider**). Reuse the same video VAE, audio VAE, and `LATENT` from **MiniMax H3 Reference to Video**. Leave `audio` empty unless you also want a soundtrack anchored at that time.\n\n`<Picture N>` tags only bind to images actually connected on `ref_images`, in that order. Pictures 2-4 here are timeline anchors only. Also plug them into extra `ref_images` slots if you want the text encoder to see them as `<Picture 2>` / `<Picture 3>` / `<Picture 4>`.\n\nOther useful patterns from the same node: feed the first 22 frames of an existing video plus its audio into one Add Guide at `frame_idx` 0 to continue both streams, or drop a still at a mid-clip frame (for example frame 60 of 124) to force the shot to hit that frame.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 117,
+      "type": "MarkdownNote",
+      "pos": [
+        -2490,
+        4210
+      ],
+      "size": [
+        440,
+        1057.40625
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Model Links",
+      "properties": {},
+      "widgets_values": [
+        "## Input Assets\n- [h3_frame_ref_1.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_1.png)\n- [h3_frame_ref_2.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_2.png)\n- [h3_frame_ref_3.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_3.png)\n- [h3_frame_ref_4.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_4.png)\n\n\n## Model Links\n[🤗 Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**diffusion_models**\n\n- [minimax_h3_ref2va_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n**loras**\n\n- 4 steps: [minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/loras/minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors)\n\n**embeddings**\n\n- [10 style embeddings](https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/embeddings) (`minimaxh3_*.safetensors`), for example `minimaxh3_art_is_explosion`\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 vae/\n│   │   ├── minimax_h3_video_vae_fp16.safetensors\n│   │   └── minimax_h3_audio_vae_fp32.safetensors\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_ref2va_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n│   ├── 📂 loras/\n│   │   └── minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors\n│   └── 📂 embeddings/\n│       └── minimaxh3_art_is_explosion.safetensors\n```\n\n## Using Prompt Embeddings\n\nPrompt embeddings (supported since [ComfyUI#15697](https://github.com/Comfy-Org/ComfyUI/pull/15697)) add reusable style tokens to your prompt. Download one or more embeddings from the folder above into `ComfyUI/models/embeddings/`, then reference one in the prompt text with the `embedding:` prefix and the filename without its extension, for example:\n\n`embedding:minimaxh3_art_is_explosion`\n\nUsing an embedding is optional and the template runs fine without one.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Assets\n- [h3_frame_ref_1.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_1.png)\n- [h3_frame_ref_2.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_2.png)\n- [h3_frame_ref_3.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_3.png)\n- [h3_frame_ref_4.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/h3_frame_ref_4.png)\n\n\n## Model Links\n[🤗 Comfy-Org/MiniMax-H3](https://huggingface.co/Comfy-Org/MiniMax-H3)\n\n**vae**\n\n- [minimax_h3_video_vae_fp16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors)\n- [minimax_h3_audio_vae_fp32.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors)\n\n**diffusion_models**\n\n- [minimax_h3_ref2va_pruned_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors)\n\n**loras**\n\n- 4 steps: [minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors](https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/loras/minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors)\n\n**embeddings**\n\n- [10 style embeddings](https://huggingface.co/Comfy-Org/MiniMax-H3/tree/main/embeddings) (`minimaxh3_*.safetensors`), for example `minimaxh3_art_is_explosion`\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 vae/\n│   │   ├── minimax_h3_video_vae_fp16.safetensors\n│   │   └── minimax_h3_audio_vae_fp32.safetensors\n│   ├── 📂 diffusion_models/\n│   │   └── minimax_h3_ref2va_pruned_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors\n│   ├── 📂 loras/\n│   │   └── minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors\n│   └── 📂 embeddings/\n│       └── minimaxh3_art_is_explosion.safetensors\n```\n\n## Using Prompt Embeddings\n\nPrompt embeddings (supported since [ComfyUI#15697](https://github.com/Comfy-Org/ComfyUI/pull/15697)) add reusable style tokens to your prompt. Download one or more embeddings from the folder above into `ComfyUI/models/embeddings/`, then reference one in the prompt text with the `embedding:` prefix and the filename without its extension, for example:\n\n`embedding:minimaxh3_art_is_explosion`\n\nUsing an embedding is optional and the template runs fine without one.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 119,
+      "type": "VAELoader",
+      "pos": [
+        -1490,
+        5490
+      ],
+      "size": [
+        640,
+        70
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            251,
+            273,
+            294,
+            308,
+            324
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "models": [
+          {
+            "name": "minimax_h3_video_vae_fp16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_video_vae_fp16.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_video_vae_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_video_vae_fp16.safetensors"
+      }
+    },
+    {
+      "id": 120,
+      "type": "VAELoader",
+      "pos": [
+        -1490,
+        5630
+      ],
+      "size": [
+        650,
+        70
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            250,
+            274,
+            295,
+            309,
+            325
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAELoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "models": [
+          {
+            "name": "minimax_h3_audio_vae_fp32.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/vae/minimax_h3_audio_vae_fp32.safetensors",
+            "directory": "vae"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_audio_vae_fp32.safetensors"
+      ],
+      "widgets_values_named": {
+        "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+      }
+    },
+    {
+      "id": 121,
+      "type": "VAEDecodeAudio",
+      "pos": [
+        1220,
+        5750
+      ],
+      "size": [
+        230,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 38,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 281
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 250
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            259
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecodeAudio",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      }
+    },
+    {
+      "id": 122,
+      "type": "VAEDecode",
+      "pos": [
+        1220,
+        5650
+      ],
+      "size": [
+        230,
+        60
+      ],
+      "flags": {
+        "collapsed": false
+      },
+      "order": 37,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "samples",
+          "type": "LATENT",
+          "link": 280
+        },
+        {
+          "name": "vae",
+          "type": "VAE",
+          "link": 251
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            258
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VAEDecode",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      }
+    },
+    {
+      "id": 123,
+      "type": "KSamplerSelect",
+      "pos": [
+        1200,
+        5200
+      ],
+      "size": [
+        370,
+        70
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "SAMPLER",
+          "type": "SAMPLER",
+          "links": [
+            255
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KSamplerSelect",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "res_multistep"
+      ],
+      "widgets_values_named": {
+        "sampler_name": "res_multistep"
+      }
+    },
+    {
+      "id": 124,
+      "type": "BasicScheduler",
+      "pos": [
+        1200,
+        5320
+      ],
+      "size": [
+        370,
+        130
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 252
+        },
+        {
+          "name": "steps",
+          "type": "INT",
+          "widget": {
+            "name": "steps"
+          },
+          "link": 289
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            256
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicScheduler",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "simple",
+        20,
+        1
+      ],
+      "widgets_values_named": {
+        "scheduler": "simple",
+        "steps": 20,
+        "denoise": 1
+      }
+    },
+    {
+      "id": 125,
+      "type": "SamplerCustomAdvanced",
+      "pos": [
+        1610,
+        5120
+      ],
+      "size": [
+        230,
+        140
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "noise",
+          "type": "NOISE",
+          "link": 253
+        },
+        {
+          "name": "guider",
+          "type": "GUIDER",
+          "link": 254
+        },
+        {
+          "name": "sampler",
+          "type": "SAMPLER",
+          "link": 255
+        },
+        {
+          "name": "sigmas",
+          "type": "SIGMAS",
+          "link": 256
+        },
+        {
+          "name": "latent_image",
+          "type": "LATENT",
+          "link": 271
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "LATENT",
+          "links": [
+            280,
+            281
+          ]
+        },
+        {
+          "name": "denoised_output",
+          "type": "LATENT",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SamplerCustomAdvanced",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      }
+    },
+    {
+      "id": 126,
+      "type": "BasicGuider",
+      "pos": [
+        1200,
+        5090
+      ],
+      "size": [
+        360,
+        60
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 288
+        },
+        {
+          "name": "conditioning",
+          "type": "CONDITIONING",
+          "link": 330
+        }
+      ],
+      "outputs": [
+        {
+          "name": "GUIDER",
+          "type": "GUIDER",
+          "links": [
+            254
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BasicGuider",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      }
+    },
+    {
+      "id": 127,
+      "type": "UNETLoader",
+      "pos": [
+        -1490,
+        4980
+      ],
+      "size": [
+        640,
+        90
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            252,
+            285,
+            287
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "UNETLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "models": [
+          {
+            "name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+            "directory": "diffusion_models"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "default"
+      ],
+      "widgets_values_named": {
+        "unet_name": "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "weight_dtype": "default"
+      }
+    },
+    {
+      "id": 128,
+      "type": "CLIPLoader",
+      "pos": [
+        -1490,
+        5300
+      ],
+      "size": [
+        640,
+        120
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "links": [
+            272
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "models": [
+          {
+            "name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/text_encoders/qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "minimax",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+        "type": "minimax",
+        "device": "default"
+      }
+    },
+    {
+      "id": 129,
+      "type": "RandomNoise",
+      "pos": [
+        1200,
+        4950
+      ],
+      "size": [
+        360,
+        90
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "NOISE",
+          "type": "NOISE",
+          "links": [
+            253
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RandomNoise",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        148096032077131,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "noise_seed": 148096032077131,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 130,
+      "type": "CreateVideo",
+      "pos": [
+        1530,
+        5650
+      ],
+      "size": [
+        270,
+        140
+      ],
+      "flags": {},
+      "order": 39,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 258
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": 259
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            260
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        24,
+        "auto",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "fps": 24,
+        "bit_depth": "auto",
+        "color_space": "sRGB"
+      }
+    },
+    {
+      "id": 131,
+      "type": "ComfyMathExpression",
+      "pos": [
+        -1440,
+        4770
+      ],
+      "size": [
+        225,
+        0
+      ],
+      "flags": {
+        "collapsed": true
+      },
+      "order": 24,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "a",
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 261
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": []
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            275
+          ]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
+      ],
+      "widgets_values_named": {
+        "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17"
+      }
+    },
+    {
+      "id": 132,
+      "type": "PrimitiveFloat",
+      "pos": [
+        -1480,
+        4650
+      ],
+      "size": [
+        270,
+        70
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            261
+          ]
+        }
+      ],
+      "title": "Float (Duration)",
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        5
+      ],
+      "widgets_values_named": {
+        "value": 5
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 136,
+      "type": "MiniMaxH3ReferenceToVideo",
+      "pos": [
+        -600,
+        4940
+      ],
+      "size": [
+        400,
+        360
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 272
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 273
+        },
+        {
+          "name": "audio_vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 274
+        },
+        {
+          "label": "ref_image_0",
+          "name": "ref_images.ref_image_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 314
+        },
+        {
+          "name": "ref_images.ref_image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "label": "ref_video_0",
+          "name": "ref_videos.ref_video_0",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "label": "ref_video_audio_0",
+          "name": "ref_video_audios.ref_video_audio_0",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "label": "ref_audio_0",
+          "name": "ref_audios.ref_audio_0",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 333
+        },
+        {
+          "name": "width",
+          "type": "INT",
+          "widget": {
+            "name": "width"
+          },
+          "link": 276
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "widget": {
+            "name": "height"
+          },
+          "link": 277
+        },
+        {
+          "name": "length",
+          "type": "INT",
+          "widget": {
+            "name": "length"
+          },
+          "link": 275
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            292
+          ]
+        },
+        {
+          "name": "LATENT",
+          "type": "LATENT",
+          "links": [
+            271,
+            293,
+            307,
+            323
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3ReferenceToVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "",
+        1344,
+        768,
+        124,
+        "match"
+      ],
+      "widgets_values_named": {
+        "prompt": "",
+        "width": 1344,
+        "height": 768,
+        "length": 124,
+        "ref_image_size": "match"
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 138,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -720,
+        4270
+      ],
+      "size": [
+        480,
+        530
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            333
+          ]
+        }
+      ],
+      "title": "Input Text (Prompt)",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        "subject_definitions:\n<Subject 1> is the woman in <Picture 1>, featuring pale skin, bright red lipstick, wearing a white textured swim cap covered in raised bumps and a blue sleeveless collared shirt with white polka dots.\n<Picture 1> is the first frame of [Shot 1], showing <Subject 1> holding a green apple with a leaf over her right eye against a solid blue background.\n<Picture 2> is the keyframe of [Shot 2], showing the woman wearing a smooth teal green swim cap and a red swimsuit top, resting her chin on a red ball stacked on a soccer ball, while holding a red tennis racket that casts a grid shadow across her face.\n<Picture 3> is the keyframe of [Shot 3], showing the woman in a black geometric textured swim cap and a sleek black swimsuit leaning over a vivid blue table towards a yellow apple with a matchstick stuck in it on a red plate, with a mirror reflecting the arrangement against an ocean background.\n<Picture 4> is the first frame of [Shot 4], showing a blurry, ethereal white humanoid head and neck in profile against a soft blue-gray gradient background.\n\nsummary:\n[keyframe completion + reference generation] The target video is a dynamic fashion photography collection featuring <Subject 1> in various surreal, highly stylized vignettes. It begins with <Picture 1> as <Subject 1> dynamically poses with a green apple against a solid blue background. The video then progresses through rapid stylistic cuts: first matching <Picture 2> where she balances her chin on stacked balls while a racket casts a shifting grid shadow on her face, and then matching <Picture 3> where she leans over a table towards a yellow apple with a matchstick, set against a rippling ocean backdrop. The video concludes by cutting to the abstract, blurry white humanoid profile from <Picture 4>, which slightly vibrates before freezing to end the sequence.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): partially_preserved - <Subject 1>'s facial identity, pale skin, and distinct red lipstick are maintained across the first three shots, but her swim cap and clothing are explicitly changed in [Shot 2] and [Shot 3] to match the distinct fashion styles of those keyframes.\n<Picture 1> ([Shot 1] first frame): fully_preserved - the video starts exactly from <Picture 1>'s framing, subject state, and solid blue background.\n<Picture 2> ([Shot 2] keyframe): fully_preserved - the specific surreal arrangement of the red ball, soccer ball, tennis racket, and the resulting grid shadow on the face is accurately recreated in [Shot 2].\n<Picture 3> ([Shot 3] keyframe): fully_preserved - the precise composition of the black-clad model, the yellow apple with a matchstick on a red plate, the mirror reflection, and the outdoor ocean background is accurately established in [Shot 3].\n<Picture 4> ([Shot 4] first frame): fully_preserved - the blurry, abstract white humanoid profile is directly used as the static ending composition of [Shot 4].\n\ndetailed_description:\nThe target video is a dynamic fashion photography film collection presented in a highly stylized, cinematic live-action medium. The visuals are characterized by bold, contrasting primary colors, crisp lighting, and surreal, editorial compositions.\n\n[Shot 1] The shot begins from <Picture 1>. <Subject 1> is positioned centrally against a vibrant, solid blue background. She wears a striking white textured swim cap covered in small raised bumps, complementing her blue sleeveless collared shirt adorned with white polka dots. Her pale skin and bright red lipstick stand out vividly. She holds a bright green apple with a single, crisp green leaf directly over her right eye, gripping it lightly with her slender fingers. To fulfill the dynamic fashion intent, the camera pushes in sharply. As the framing tightens, <Subject 1> slowly lowers the green apple away from her face, revealing her intense, unblinking gaze. The crisp studio lighting highlights the textures of her cap and the smooth surface of the apple, establishing a high-fashion, editorial atmosphere.\n\n[Shot 2] At 00:01.500, the shot cuts to the next fashion vignette, whose keyframe corresponds to <Picture 2>. <Subject 1> is now seen in profile against a two-toned background of solid blue above and a vibrant red surface below. She wears a smooth teal green swim cap and a red swimsuit top. Her pose is sculptural: she rests her chin gracefully atop a small red ball, which is precariously stacked on a classic black-and-white soccer ball. In her hand, she holds a bright red tennis racket vertically near her face. The strong directional sunlight casts a distinct, sharp grid shadow from the racket's strings across her closed eyes and pale skin. The camera executes a smooth, continuous arc shot around her. This movement causes the harsh grid shadow to dynamically glide and warp across her facial contours, while she subtly tilts her head, maintaining her perfectly still, mannequin-like pose amidst the camera motion.\n\n[Shot 3] At 00:03.000, the shot cuts to an outdoor surreal composition, whose keyframe corresponds to <Picture 3>. The setting features a bright blue ocean and a clear sky in the background. <Subject 1>, now wearing a black textured swim cap featuring geometric triangular patterns and a sleek black swimsuit, leans dramatically forward over a vivid blue table. In front of her, a glossy red plate holds a perfectly smooth yellow apple, which has a single unlit matchstick pierced upright into its top. A round vanity mirror on a silver stand sits just behind the plate, perfectly reflecting the back of the apple, the matchstick, and a sliver of the ocean. The camera tracks slowly to the right as <Subject 1> continues to lean closer to the apple, her lips slightly parted. The natural sunlight creates sharp, defined shadows on the blue table, while the ocean waves in the background gently ripple and shift, adding environmental dynamism to the editorial shot.\n\n[Shot 4] At 00:05.000, the shot cuts to the concluding sequence, anchored by <Picture 4>. The scene shifts abruptly to a highly abstract, ethereal presentation. A heavily blurred, glowing white humanoid head and neck in profile are silhouetted against a soft blue-gray gradient background. The figure appears ghost-like, devoid of distinct facial features. The camera holds a static frame as the white silhouette exhibits a subtle, vibrating motion, its edges smearing gently into the blue background. After this brief, haunting movement, the figure completely freezes in place, providing a stark, arresting final image that concludes the dynamic fashion showcase.\n\noverall_soundscape:\nThe video features a stylized, rhythmic soundscape with subtle, crisp Foley effects like fabric swishes, ocean ripples, and gentle air movements synchronized to the camera motions, enhancing the high-end editorial aesthetic.\n\nnon_diegetic_music:\nA punchy, dynamic electronic beat with a fast tempo, ticking hi-hats, and heavy bass serves as the driving soundtrack, matching the high-energy, rapid-fire cuts of the fashion vignettes."
+      ],
+      "widgets_values_named": {
+        "value": "subject_definitions:\n<Subject 1> is the woman in <Picture 1>, featuring pale skin, bright red lipstick, wearing a white textured swim cap covered in raised bumps and a blue sleeveless collared shirt with white polka dots.\n<Picture 1> is the first frame of [Shot 1], showing <Subject 1> holding a green apple with a leaf over her right eye against a solid blue background.\n<Picture 2> is the keyframe of [Shot 2], showing the woman wearing a smooth teal green swim cap and a red swimsuit top, resting her chin on a red ball stacked on a soccer ball, while holding a red tennis racket that casts a grid shadow across her face.\n<Picture 3> is the keyframe of [Shot 3], showing the woman in a black geometric textured swim cap and a sleek black swimsuit leaning over a vivid blue table towards a yellow apple with a matchstick stuck in it on a red plate, with a mirror reflecting the arrangement against an ocean background.\n<Picture 4> is the first frame of [Shot 4], showing a blurry, ethereal white humanoid head and neck in profile against a soft blue-gray gradient background.\n\nsummary:\n[keyframe completion + reference generation] The target video is a dynamic fashion photography collection featuring <Subject 1> in various surreal, highly stylized vignettes. It begins with <Picture 1> as <Subject 1> dynamically poses with a green apple against a solid blue background. The video then progresses through rapid stylistic cuts: first matching <Picture 2> where she balances her chin on stacked balls while a racket casts a shifting grid shadow on her face, and then matching <Picture 3> where she leans over a table towards a yellow apple with a matchstick, set against a rippling ocean backdrop. The video concludes by cutting to the abstract, blurry white humanoid profile from <Picture 4>, which slightly vibrates before freezing to end the sequence.\n\nretention_analysis:\n<Subject 1> (appears in [Shot 1], [Shot 2], [Shot 3]): partially_preserved - <Subject 1>'s facial identity, pale skin, and distinct red lipstick are maintained across the first three shots, but her swim cap and clothing are explicitly changed in [Shot 2] and [Shot 3] to match the distinct fashion styles of those keyframes.\n<Picture 1> ([Shot 1] first frame): fully_preserved - the video starts exactly from <Picture 1>'s framing, subject state, and solid blue background.\n<Picture 2> ([Shot 2] keyframe): fully_preserved - the specific surreal arrangement of the red ball, soccer ball, tennis racket, and the resulting grid shadow on the face is accurately recreated in [Shot 2].\n<Picture 3> ([Shot 3] keyframe): fully_preserved - the precise composition of the black-clad model, the yellow apple with a matchstick on a red plate, the mirror reflection, and the outdoor ocean background is accurately established in [Shot 3].\n<Picture 4> ([Shot 4] first frame): fully_preserved - the blurry, abstract white humanoid profile is directly used as the static ending composition of [Shot 4].\n\ndetailed_description:\nThe target video is a dynamic fashion photography film collection presented in a highly stylized, cinematic live-action medium. The visuals are characterized by bold, contrasting primary colors, crisp lighting, and surreal, editorial compositions.\n\n[Shot 1] The shot begins from <Picture 1>. <Subject 1> is positioned centrally against a vibrant, solid blue background. She wears a striking white textured swim cap covered in small raised bumps, complementing her blue sleeveless collared shirt adorned with white polka dots. Her pale skin and bright red lipstick stand out vividly. She holds a bright green apple with a single, crisp green leaf directly over her right eye, gripping it lightly with her slender fingers. To fulfill the dynamic fashion intent, the camera pushes in sharply. As the framing tightens, <Subject 1> slowly lowers the green apple away from her face, revealing her intense, unblinking gaze. The crisp studio lighting highlights the textures of her cap and the smooth surface of the apple, establishing a high-fashion, editorial atmosphere.\n\n[Shot 2] At 00:01.500, the shot cuts to the next fashion vignette, whose keyframe corresponds to <Picture 2>. <Subject 1> is now seen in profile against a two-toned background of solid blue above and a vibrant red surface below. She wears a smooth teal green swim cap and a red swimsuit top. Her pose is sculptural: she rests her chin gracefully atop a small red ball, which is precariously stacked on a classic black-and-white soccer ball. In her hand, she holds a bright red tennis racket vertically near her face. The strong directional sunlight casts a distinct, sharp grid shadow from the racket's strings across her closed eyes and pale skin. The camera executes a smooth, continuous arc shot around her. This movement causes the harsh grid shadow to dynamically glide and warp across her facial contours, while she subtly tilts her head, maintaining her perfectly still, mannequin-like pose amidst the camera motion.\n\n[Shot 3] At 00:03.000, the shot cuts to an outdoor surreal composition, whose keyframe corresponds to <Picture 3>. The setting features a bright blue ocean and a clear sky in the background. <Subject 1>, now wearing a black textured swim cap featuring geometric triangular patterns and a sleek black swimsuit, leans dramatically forward over a vivid blue table. In front of her, a glossy red plate holds a perfectly smooth yellow apple, which has a single unlit matchstick pierced upright into its top. A round vanity mirror on a silver stand sits just behind the plate, perfectly reflecting the back of the apple, the matchstick, and a sliver of the ocean. The camera tracks slowly to the right as <Subject 1> continues to lean closer to the apple, her lips slightly parted. The natural sunlight creates sharp, defined shadows on the blue table, while the ocean waves in the background gently ripple and shift, adding environmental dynamism to the editorial shot.\n\n[Shot 4] At 00:05.000, the shot cuts to the concluding sequence, anchored by <Picture 4>. The scene shifts abruptly to a highly abstract, ethereal presentation. A heavily blurred, glowing white humanoid head and neck in profile are silhouetted against a soft blue-gray gradient background. The figure appears ghost-like, devoid of distinct facial features. The camera holds a static frame as the white silhouette exhibits a subtle, vibrating motion, its edges smearing gently into the blue background. After this brief, haunting movement, the figure completely freezes in place, providing a stark, arresting final image that concludes the dynamic fashion showcase.\n\noverall_soundscape:\nThe video features a stylized, rhythmic soundscape with subtle, crisp Foley effects like fabric swishes, ocean ripples, and gentle air movements synchronized to the camera motions, enhancing the high-end editorial aesthetic.\n\nnon_diegetic_music:\nA punchy, dynamic electronic beat with a fast tempo, ticking hi-hats, and heavy bass serves as the driving soundtrack, matching the high-energy, rapid-fire cuts of the fashion vignettes."
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 140,
+      "type": "MarkdownNote",
+      "pos": [
+        -1150,
+        4260
+      ],
+      "size": [
+        300,
+        540
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Video Settings",
+      "properties": {},
+      "widgets_values": [
+        "## Resolution Selector\nDelete the **Resolution Selector** node if you want to customize video size manually\n| megapixels | Aspect | Output (multiple=32) |\n|---|---|---|\n| 0.2 | 16:9 | 608 x 352 |\n| 0.3 | 16:9 | 736 x 416 |\n| 0.4 | 16:9 | 864 x 480 |\n| 0.5 | 16:9 | 960 x 544 |\n| 0.6 | 16:9 | 1056 x 608 |\n| 0.7 | 16:9 | 1152 x 640 |\n| 0.8 | 16:9 | 1216 x 672 |\n| 0.9 | 16:9 | 1280 x 736 |\n| 0.98 | 16:9 | 1344 x 768 (official 768p) |\n\n---\n\n## Lightning LoRA\n\nFor fast video generation, but scarce video quality\n\n---\n## Duration\n\nUp to 15s"
+      ],
+      "widgets_values_named": {
+        "text": "## Resolution Selector\nDelete the **Resolution Selector** node if you want to customize video size manually\n| megapixels | Aspect | Output (multiple=32) |\n|---|---|---|\n| 0.2 | 16:9 | 608 x 352 |\n| 0.3 | 16:9 | 736 x 416 |\n| 0.4 | 16:9 | 864 x 480 |\n| 0.5 | 16:9 | 960 x 544 |\n| 0.6 | 16:9 | 1056 x 608 |\n| 0.7 | 16:9 | 1152 x 640 |\n| 0.8 | 16:9 | 1216 x 672 |\n| 0.9 | 16:9 | 1280 x 736 |\n| 0.98 | 16:9 | 1344 x 768 (official 768p) |\n\n---\n\n## Lightning LoRA\n\nFor fast video generation, but scarce video quality\n\n---\n## Duration\n\nUp to 15s"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 141,
+      "type": "ComfySwitchNode",
+      "pos": [
+        -730,
+        5440
+      ],
+      "size": [
+        270,
+        110
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "MODEL",
+          "link": 287
+        },
+        {
+          "name": "on_true",
+          "type": "MODEL",
+          "link": 286
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": 290
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "MODEL",
+          "links": [
+            288
+          ]
+        }
+      ],
+      "title": "If/Else Switch (model)",
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "switch": false
+      }
+    },
+    {
+      "id": 142,
+      "type": "ComfySwitchNode",
+      "pos": [
+        -390,
+        5610
+      ],
+      "size": [
+        270,
+        110
+      ],
+      "flags": {},
+      "order": 25,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "type": "INT",
+          "link": 284
+        },
+        {
+          "name": "on_true",
+          "type": "INT",
+          "link": 283
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": 291
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "INT",
+          "links": [
+            289
+          ]
+        }
+      ],
+      "title": "If/Else Switch (Steps)",
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "switch": false
+      }
+    },
+    {
+      "id": 143,
+      "type": "PrimitiveInt",
+      "pos": [
+        -730,
+        5590
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            284
+          ]
+        }
+      ],
+      "title": "Int (Full)",
+      "properties": {
+        "Node name for S&R": "PrimitiveInt",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        20,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "value": 20,
+        "fixed": "fixed"
+      }
+    },
+    {
+      "id": 144,
+      "type": "PrimitiveInt",
+      "pos": [
+        -730,
+        5720
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            283
+          ]
+        }
+      ],
+      "title": "Int (Lightning LoRA)",
+      "properties": {
+        "Node name for S&R": "PrimitiveInt",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        4,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "value": 4,
+        "fixed": "fixed"
+      }
+    },
+    {
+      "id": 145,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -1490,
+        5140
+      ],
+      "size": [
+        640,
+        90
+      ],
+      "flags": {},
+      "order": 23,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 285
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            286
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0",
+        "models": [
+          {
+            "name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
+            "url": "https://huggingface.co/Comfy-Org/MiniMax-H3/resolve/main/loras/minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
+            "directory": "loras"
+          }
+        ]
+      },
+      "widgets_values": [
+        "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "minimax_h3_ref2v_turbo_4step_v0.1_comfyui_bf16.safetensors",
+        "strength_model": 1
+      }
+    },
+    {
+      "id": 146,
+      "type": "PrimitiveBoolean",
+      "pos": [
+        -1480,
+        4530
+      ],
+      "size": [
+        270,
+        70
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "BOOLEAN",
+          "type": "BOOLEAN",
+          "links": [
+            290,
+            291
+          ]
+        }
+      ],
+      "title": "Boolean (Enable Lightning LoRA)",
+      "properties": {
+        "Node name for S&R": "PrimitiveBoolean",
+        "cnr_id": "comfy-core",
+        "ver": "0.33.0"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "value": false
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 147,
+      "type": "MiniMaxH3AddGuide",
+      "pos": [
+        70,
+        5330
+      ],
+      "size": [
+        310,
+        180
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 292
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 293
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 294
+        },
+        {
+          "name": "audio_vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 295
+        },
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 304
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "frame_idx",
+          "type": "INT",
+          "widget": {
+            "name": "frame_idx"
+          },
+          "link": 303
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            312
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3AddGuide"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "frame_idx": 0
+      }
+    },
+    {
+      "id": 153,
+      "type": "ComfyMathExpression",
+      "pos": [
+        70,
+        5110
+      ],
+      "size": [
+        320,
+        150
+      ],
+      "flags": {},
+      "order": 26,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 301
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            303
+          ]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression"
+      },
+      "widgets_values": [
+        "round (a * 24)"
+      ],
+      "widgets_values_named": {
+        "expression": "round (a * 24)"
+      }
+    },
+    {
+      "id": 154,
+      "type": "PrimitiveFloat",
+      "pos": [
+        310,
+        4280
+      ],
+      "size": [
+        320,
+        70
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            301
+          ]
+        }
+      ],
+      "title": "Frame Index (Second)",
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        1.5
+      ],
+      "widgets_values_named": {
+        "value": 1.5
+      }
+    },
+    {
+      "id": 157,
+      "type": "LoadImage",
+      "pos": [
+        310,
+        4430
+      ],
+      "size": [
+        290,
+        330
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            304
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "h3_frame_ref_2.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "h3_frame_ref_2.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 159,
+      "type": "LoadImage",
+      "pos": [
+        760,
+        4430
+      ],
+      "size": [
+        290,
+        330
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            310
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "h3_frame_ref_3.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "h3_frame_ref_3.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 160,
+      "type": "PrimitiveFloat",
+      "pos": [
+        750,
+        4290
+      ],
+      "size": [
+        320,
+        70
+      ],
+      "flags": {},
+      "order": 18,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            305
+          ]
+        }
+      ],
+      "title": "Frame Index (Second)",
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        3
+      ],
+      "widgets_values_named": {
+        "value": 3
+      }
+    },
+    {
+      "id": 161,
+      "type": "ComfyMathExpression",
+      "pos": [
+        430,
+        5110
+      ],
+      "size": [
+        320,
+        150
+      ],
+      "flags": {},
+      "order": 27,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 305
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            311
+          ]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression"
+      },
+      "widgets_values": [
+        "round (a * 24)"
+      ],
+      "widgets_values_named": {
+        "expression": "round (a * 24)"
+      }
+    },
+    {
+      "id": 162,
+      "type": "MiniMaxH3AddGuide",
+      "pos": [
+        430,
+        5330
+      ],
+      "size": [
+        310,
+        180
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 312
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 307
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 308
+        },
+        {
+          "name": "audio_vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 309
+        },
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 310
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "frame_idx",
+          "type": "INT",
+          "widget": {
+            "name": "frame_idx"
+          },
+          "link": 311
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            329
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3AddGuide"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "frame_idx": 0
+      }
+    },
+    {
+      "id": 164,
+      "type": "LoadImage",
+      "pos": [
+        -80,
+        4430
+      ],
+      "size": [
+        290,
+        330
+      ],
+      "flags": {},
+      "order": 19,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            314
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "h3_frame_ref_1.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "h3_frame_ref_1.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 167,
+      "type": "LoadImage",
+      "pos": [
+        1200,
+        4430
+      ],
+      "size": [
+        290,
+        330
+      ],
+      "flags": {},
+      "order": 20,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            331
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "h3_frame_ref_4.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "h3_frame_ref_4.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 168,
+      "type": "PrimitiveFloat",
+      "pos": [
+        1190,
+        4290
+      ],
+      "size": [
+        320,
+        70
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": [
+            334
+          ]
+        }
+      ],
+      "title": "Frame Index (Second)",
+      "properties": {
+        "Node name for S&R": "PrimitiveFloat"
+      },
+      "widgets_values": [
+        5
+      ],
+      "widgets_values_named": {
+        "value": 5
+      }
+    },
+    {
+      "id": 169,
+      "type": "MiniMaxH3AddGuide",
+      "pos": [
+        790,
+        5330
+      ],
+      "size": [
+        310,
+        180
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "link": 329
+        },
+        {
+          "name": "latent",
+          "type": "LATENT",
+          "link": 323
+        },
+        {
+          "name": "vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 324
+        },
+        {
+          "name": "audio_vae",
+          "shape": 7,
+          "type": "VAE",
+          "link": 325
+        },
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 331
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "frame_idx",
+          "type": "INT",
+          "widget": {
+            "name": "frame_idx"
+          },
+          "link": 327
+        }
+      ],
+      "outputs": [
+        {
+          "name": "positive",
+          "type": "CONDITIONING",
+          "links": [
+            330
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MiniMaxH3AddGuide"
+      },
+      "widgets_values": [
+        0
+      ],
+      "widgets_values_named": {
+        "frame_idx": 0
+      }
+    },
+    {
+      "id": 170,
+      "type": "ComfyMathExpression",
+      "pos": [
+        800,
+        5110
+      ],
+      "size": [
+        320,
+        150
+      ],
+      "flags": {},
+      "order": 28,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 334
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": [
+            327
+          ]
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression"
+      },
+      "widgets_values": [
+        "round (a * 24)"
+      ],
+      "widgets_values_named": {
+        "expression": "round (a * 24)"
+      }
+    },
+    {
+      "id": 171,
+      "type": "MarkdownNote",
+      "pos": [
+        420,
+        5580
+      ],
+      "size": [
+        340,
+        100
+      ],
+      "flags": {},
+      "order": 22,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note",
+      "properties": {},
+      "widgets_values": [
+        "Follow the same pattern to add more video frame guidance"
+      ],
+      "widgets_values_named": {
+        "text": "Follow the same pattern to add more video frame guidance"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      250,
+      120,
+      0,
+      121,
+      1,
+      "VAE"
+    ],
+    [
+      251,
+      119,
+      0,
+      122,
+      1,
+      "VAE"
+    ],
+    [
+      252,
+      127,
+      0,
+      124,
+      0,
+      "MODEL"
+    ],
+    [
+      253,
+      129,
+      0,
+      125,
+      0,
+      "NOISE"
+    ],
+    [
+      254,
+      126,
+      0,
+      125,
+      1,
+      "GUIDER"
+    ],
+    [
+      255,
+      123,
+      0,
+      125,
+      2,
+      "SAMPLER"
+    ],
+    [
+      256,
+      124,
+      0,
+      125,
+      3,
+      "SIGMAS"
+    ],
+    [
+      258,
+      122,
+      0,
+      130,
+      0,
+      "IMAGE"
+    ],
+    [
+      259,
+      121,
+      0,
+      130,
+      1,
+      "AUDIO"
+    ],
+    [
+      260,
+      130,
+      0,
+      92,
+      0,
+      "VIDEO"
+    ],
+    [
+      261,
+      132,
+      0,
+      131,
+      0,
+      "FLOAT"
+    ],
+    [
+      271,
+      136,
+      1,
+      125,
+      4,
+      "LATENT"
+    ],
+    [
+      272,
+      128,
+      0,
+      136,
+      0,
+      "CLIP"
+    ],
+    [
+      273,
+      119,
+      0,
+      136,
+      1,
+      "VAE"
+    ],
+    [
+      274,
+      120,
+      0,
+      136,
+      2,
+      "VAE"
+    ],
+    [
+      275,
+      131,
+      1,
+      136,
+      11,
+      "INT"
+    ],
+    [
+      276,
+      115,
+      0,
+      136,
+      9,
+      "INT"
+    ],
+    [
+      277,
+      115,
+      1,
+      136,
+      10,
+      "INT"
+    ],
+    [
+      280,
+      125,
+      0,
+      122,
+      0,
+      "LATENT"
+    ],
+    [
+      281,
+      125,
+      0,
+      121,
+      0,
+      "LATENT"
+    ],
+    [
+      283,
+      144,
+      0,
+      142,
+      1,
+      "INT"
+    ],
+    [
+      284,
+      143,
+      0,
+      142,
+      0,
+      "INT"
+    ],
+    [
+      285,
+      127,
+      0,
+      145,
+      0,
+      "MODEL"
+    ],
+    [
+      286,
+      145,
+      0,
+      141,
+      1,
+      "MODEL"
+    ],
+    [
+      287,
+      127,
+      0,
+      141,
+      0,
+      "MODEL"
+    ],
+    [
+      288,
+      141,
+      0,
+      126,
+      0,
+      "MODEL"
+    ],
+    [
+      289,
+      142,
+      0,
+      124,
+      1,
+      "INT"
+    ],
+    [
+      290,
+      146,
+      0,
+      141,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      291,
+      146,
+      0,
+      142,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      292,
+      136,
+      0,
+      147,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      293,
+      136,
+      1,
+      147,
+      1,
+      "LATENT"
+    ],
+    [
+      294,
+      119,
+      0,
+      147,
+      2,
+      "VAE"
+    ],
+    [
+      295,
+      120,
+      0,
+      147,
+      3,
+      "VAE"
+    ],
+    [
+      301,
+      154,
+      0,
+      153,
+      0,
+      "FLOAT"
+    ],
+    [
+      303,
+      153,
+      1,
+      147,
+      6,
+      "INT"
+    ],
+    [
+      304,
+      157,
+      0,
+      147,
+      4,
+      "IMAGE"
+    ],
+    [
+      305,
+      160,
+      0,
+      161,
+      0,
+      "FLOAT"
+    ],
+    [
+      307,
+      136,
+      1,
+      162,
+      1,
+      "LATENT"
+    ],
+    [
+      308,
+      119,
+      0,
+      162,
+      2,
+      "VAE"
+    ],
+    [
+      309,
+      120,
+      0,
+      162,
+      3,
+      "VAE"
+    ],
+    [
+      310,
+      159,
+      0,
+      162,
+      4,
+      "IMAGE"
+    ],
+    [
+      311,
+      161,
+      1,
+      162,
+      6,
+      "INT"
+    ],
+    [
+      312,
+      147,
+      0,
+      162,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      314,
+      164,
+      0,
+      136,
+      3,
+      "IMAGE"
+    ],
+    [
+      323,
+      136,
+      1,
+      169,
+      1,
+      "LATENT"
+    ],
+    [
+      324,
+      119,
+      0,
+      169,
+      2,
+      "VAE"
+    ],
+    [
+      325,
+      120,
+      0,
+      169,
+      3,
+      "VAE"
+    ],
+    [
+      327,
+      170,
+      1,
+      169,
+      6,
+      "INT"
+    ],
+    [
+      329,
+      162,
+      0,
+      169,
+      0,
+      "CONDITIONING"
+    ],
+    [
+      330,
+      169,
+      0,
+      126,
+      1,
+      "CONDITIONING"
+    ],
+    [
+      331,
+      167,
+      0,
+      169,
+      4,
+      "IMAGE"
+    ],
+    [
+      333,
+      138,
+      0,
+      136,
+      8,
+      "STRING"
+    ],
+    [
+      334,
+      168,
+      0,
+      170,
+      0,
+      "FLOAT"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Models",
+      "bounding": [
+        -1520,
+        4840,
+        700,
+        990
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Sampling",
+      "bounding": [
+        1170,
+        4840,
+        690,
+        700
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Switch Model and Settings",
+      "bounding": [
+        -790,
+        5340,
+        730,
+        490
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Decoding and create video",
+      "bounding": [
+        1170,
+        5570,
+        690,
+        260
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "User Inputs",
+      "bounding": [
+        -1520,
+        4170,
+        3380,
+        650
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Conditioning",
+      "bounding": [
+        -790,
+        4840,
+        730,
+        480
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Extra Image Guidance Conditioning",
+      "bounding": [
+        -30,
+        4840,
+        1170,
+        990
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 8,
+      "title": "Video Settings",
+      "bounding": [
+        -1490,
+        4230,
+        292.3251232742416,
+        548.0986135774447
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.3034187631567999,
+      "offset": [
+        2890.802057872476,
+        -3552.5896920944283
+      ]
+    },
+    "frontendVersion": "1.51.9",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
