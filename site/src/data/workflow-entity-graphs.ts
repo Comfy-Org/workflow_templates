@@ -115,7 +115,7 @@ export const WORKFLOW_ENTITY_GRAPHS: Record<string, WorkflowEntityGraph> = {
       {
         id: 'e-ltx2-5',
         name: 'LTX-2.5',
-        sameAs: 'https://huggingface.co/Lightricks/LTX-Video',
+        sameAs: 'https://huggingface.co/Lightricks/LTX-2.5',
         categoryId: 'cat-technology',
       },
       {

@@ -116,4 +116,30 @@ describe('buildTemplateItemListEntries', () => {
       },
     });
   });
+
+  it('types comfyui as Organization and localizes creator URL when locale is provided', () => {
+    const entries = buildTemplateItemListEntries(
+      [
+        template({
+          name: 'official_workflow',
+          shareId: 'comfy001',
+          title: 'Official Workflow',
+          username: 'comfyui',
+          creatorDisplayName: 'ComfyUI',
+        }),
+      ],
+      'ja'
+    );
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({
+      name: 'Official Workflow',
+      url: 'https://comfy.org/ja/workflows/official_workflow-comfy001/',
+      itemType: 'CreativeWork',
+      creator: {
+        '@type': 'Organization',
+        name: 'ComfyUI',
+        url: 'https://comfy.org/ja/workflows/comfyui/',
+      },
+    });
+  });
 });

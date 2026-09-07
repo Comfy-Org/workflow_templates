@@ -79,7 +79,6 @@ export interface SeoPageCard {
   count: number;
   thumbnail: string | null;
   logos: CardBadge[];
-  itemType?: string;
 }
 
 /** Title-case a keyword for use inside a heading ("ai headshot" -> "AI Headshot"). */

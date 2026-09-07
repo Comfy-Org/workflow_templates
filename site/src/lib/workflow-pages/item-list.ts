@@ -1,6 +1,6 @@
 import type { SerializedTemplate } from '../hub-api';
 import { firstStillThumbnail } from '../media-utils';
-import { workflowDetailPath, resolveAbsoluteThumbnail } from '../routes';
+import { workflowDetailPath, resolveAbsoluteThumbnail, creatorPath } from '../routes';
 import { absoluteUrl } from '../../config/site';
 import type { ItemListEntry } from '../structured-data';
 
@@ -30,9 +30,9 @@ export function buildTemplateItemListEntries(
         ...(tpl.username
           ? {
               creator: {
-                '@type': 'Person',
+                '@type': tpl.username === 'comfyui' ? 'Organization' : 'Person',
                 name: tpl.creatorDisplayName || tpl.username,
-                url: absoluteUrl(`/workflows/${tpl.username}/`),
+                url: absoluteUrl(creatorPath(tpl.username, locale)),
               },
             }
           : {}),
