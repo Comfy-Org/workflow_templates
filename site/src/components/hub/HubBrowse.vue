@@ -16,7 +16,7 @@ import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 export interface SerializedTemplate {
   name: string;
   title: string;
-  description: string;
+  description?: string;
   mediaType: MediaType;
   tags: string[];
   models: string[];

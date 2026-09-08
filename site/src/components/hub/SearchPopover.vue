@@ -24,6 +24,7 @@ import { tagDisplayName } from '@/lib/tag-aliases';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { hubImageFor, hubMediaFor } from '@/lib/hub-media';
 import { workflowDetailPath, workflowDetailSlug, thumbnailPath, creatorPath } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -514,8 +515,9 @@ function formatUsage(usage: number): string {
 function getImageThumb(file: string | undefined | null): string | null {
   if (!file) return null;
   if (isAudioFile(file)) return null;
-  if (isVideoFile(file)) return getVideoFrameUrl(thumbnailPath(file));
-  return thumbnailPath(file);
+  const url = thumbnailPath(file);
+  if (isVideoFile(file)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
+  return hubImageFor(url) ?? url;
 }
 
 /**
@@ -525,7 +527,8 @@ function getImageThumb(file: string | undefined | null): string | null {
  */
 function videoThumbUrl(file: string | undefined | null): string | null {
   if (!file || !isVideoFile(file)) return null;
-  return thumbnailPath(file);
+  const url = thumbnailPath(file);
+  return hubMediaFor(url)?.video ?? url;
 }
 
 function handleFocus() {

@@ -68,9 +68,24 @@ describe('featuredPreloadImage', () => {
     expect(featuredPreloadImage([])).toBeNull();
   });
 
-  it('returns null when the primary asset is video/audio (not image-preloadable)', () => {
-    expect(featuredPreloadImage([template({ thumbnails: ['clip.mp4'] })])).toBeNull();
+  it('returns null for audio, which paints an icon rather than an image', () => {
     expect(featuredPreloadImage([template({ thumbnails: ['sound.mp3'] })])).toBeNull();
+  });
+
+  it('preloads the poster for a video slate, which is the usual slide one', () => {
+    const generated =
+      'https://comfy-hub-assets.comfy.org/uploads/306cccad-6557-40d5-9bea-db46db4ab789.mp4';
+    expect(featuredPreloadImage([template({ thumbnails: [generated] })])).toBe(
+      'https://media.comfy.org/hub-media/posters/306cccad-6557-40d5-9bea-db46db4ab789.jpg'
+    );
+  });
+
+  it('falls back to the frame transform when no copy has been generated', () => {
+    const unknown =
+      'https://comfy-hub-assets.comfy.org/uploads/00000000-0000-0000-0000-000000000000.mp4';
+    expect(featuredPreloadImage([template({ thumbnails: [unknown] })])).toBe(
+      'https://comfy-hub-assets.comfy.org/cdn-cgi/media/mode=frame,time=1s/uploads/00000000-0000-0000-0000-000000000000.mp4'
+    );
   });
 
   it('returns null when the item has no thumbnails', () => {

@@ -3,6 +3,10 @@
  * ProfileSidebar - User profile info sidebar
  * Avatar (overlapping banner), name with verified badge, handle, bio, link, stats
  */
+import { getStillImageUrl } from '../../lib/video-thumbnail';
+
+const AVATAR_WIDTH = 256;
+
 interface Props {
   displayName: string;
   handle: string;
@@ -39,8 +43,10 @@ const formatStat = (n: number): string => {
     {
       avatarUrl ? (
         <img
-          src={avatarUrl}
+          src={getStillImageUrl(avatarUrl, AVATAR_WIDTH) ?? avatarUrl}
           alt={displayName}
+          width="80"
+          height="80"
           class="size-20 rounded-full object-cover border-4 border-page"
         />
       ) : (

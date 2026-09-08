@@ -11,7 +11,7 @@ Step 1 of the MCP pipeline (deterministic sync):
   - Templates with 2+ API model nodes → skip model_options (logged to scripts/.output/sync_index.log)
   - freshness → semantic label derived from index.json `date`; see freshness_score.py
   - recommend → semantic label derived from usage; see recommend_score.py
-    Manual overrides in template_overrides.json; Use Cases never below `low`
+    Manual overrides in template_overrides.json; Applied/Use Cases never below `low`
   - Skips instructional categories: Node Basics, LLM, Getting Started
 
 Step 2 (separate): AI reads models_registry.json to polish descriptions.
@@ -69,6 +69,9 @@ SYNC_LOG_FILE = SCRIPTS_ROOT / ".output" / "sync_index.log"
 
 INDEX_GROUP_TO_MCP_CATEGORY: dict[str, str] = {
     "Use Cases": "Use Cases",
+    "Product & Ads": "Product & Ads",
+    "Character & Fashion": "Character & Fashion",
+    "Brand & Design": "Brand & Design",
     "Image": "Image",
     "Video": "Video",
     "Audio": "Audio",
@@ -88,6 +91,23 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
         "Concrete workflow examples that showcase specific applications, effects, and content. "
         "These are purpose-built workflows for fixed use cases rather than general-purpose generation, "
         "though they can be adapted with basic modifications."
+    ),
+    "Product & Ads": (
+        "Applied workflows for product shots, placements, UGC-style ads, and commercial sequences. "
+        "These are purpose-built examples for marketing and merchandising "
+        "rather than general-purpose generation."
+    ),
+    "Character & Fashion": (
+        "Applied workflows for character sheets, multi-angle portraits, "
+        "fashion, and identity-consistent looks. "
+        "These are purpose-built examples for character and apparel work "
+        "rather than general-purpose generation."
+    ),
+    "Brand & Design": (
+        "Applied workflows for brand systems, graphic redesign, posters, logos, "
+        "and layout remixes. "
+        "These are purpose-built examples for design production "
+        "rather than general-purpose generation."
     ),
     "Image": (
         "General-purpose workflow templates for native image generation, including text-to-image, "
@@ -315,6 +335,7 @@ def infer_task(name: str, group_type: str, tags: list[str]) -> str:
         (["vid2vid", "video_to_video", "video-to-video"], "Video to Video"),
         (["frame_interpolation", "slowmo"], "Frame Interpolation"),
         (["text_to_music", "text-to-music", "t2m"], "Text to Music"),
+        (["speech_to_text", "speech-to-text"], "Speech to Text"),
         (["text_to_speech", "text-to-speech", "tts"], "Text to Speech"),
         (["audio_to_audio", "audio-to-audio", "a2a"], "Audio to Audio"),
         (["voice_conversion", "voice_convert"], "Voice Conversion"),
@@ -369,6 +390,12 @@ def infer_task_type(name: str) -> str:
         return "t2-3d"
     if any(x in name_l for x in ["img2_3d", "img2-3d", "image_to_3d", "image-to-3d"]):
         return "i2-3d"
+    if any(x in name_l for x in ["speech_to_text", "speech-to-text"]):
+        return "stt"
+    if any(x in name_l for x in ["voice_clone", "voice-clone"]):
+        return "voice-clone"
+    if any(x in name_l for x in ["text_to_speech", "text-to-speech", "tts"]):
+        return "tts"
     if any(x in name_l for x in ["text_to_audio", "text-to-audio", "text_to_music", "text-to-music"]):
         return "t2a"
     if any(x in name_l for x in ["text_gen", "llm", "chat"]):
@@ -534,6 +561,24 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
         return _io(
             inputs=[_encode_slot("text", "Audio prompt")],
             outputs=[_encode_slot("audio", "Generated audio")],
+        )
+    if task_type == "tts":
+        return _io(
+            inputs=[_encode_slot("text", "Prompt")],
+            outputs=[_encode_slot("audio", "Generated speech")],
+        )
+    if task_type == "voice-clone":
+        return _io(
+            inputs=[
+                _encode_slot("audio", "Reference voice recording"),
+                _encode_slot("text", "Prompt"),
+            ],
+            outputs=[_encode_slot("audio", "Generated speech")],
+        )
+    if task_type == "stt":
+        return _io(
+            inputs=[_encode_slot("audio", "Audio to transcribe")],
+            outputs=[_encode_slot("text", "Transcription")],
         )
     out_type = "video" if has_vid else "image"
     return _io(

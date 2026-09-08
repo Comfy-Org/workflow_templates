@@ -1,15 +1,15 @@
 {
   "id": "f00629e2-972d-43fc-91d7-b1144ad3652d",
   "revision": 0,
-  "last_node_id": 76,
-  "last_link_id": 110,
+  "last_node_id": 79,
+  "last_link_id": 117,
   "nodes": [
     {
       "id": 10,
       "type": "LoadImage",
       "pos": [
-        289.9999994554245,
-        330.00012315095057
+        290,
+        330
       ],
       "size": [
         610,
@@ -37,14 +37,18 @@
       ],
       "title": "Load Billboard Image",
       "properties": {
+        "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "LoadImage"
+        "ver": "0.5.1"
       },
       "widgets_values": [
         "billboard.png",
         "image"
       ],
+      "widgets_values_named": {
+        "image": "billboard.png",
+        "upload": "image"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -52,8 +56,8 @@
       "id": 12,
       "type": "LoadImage",
       "pos": [
-        289.9999994554245,
-        969.9999406476643
+        290,
+        970
       ],
       "size": [
         610,
@@ -79,14 +83,18 @@
       ],
       "title": "Load Text Overlay Image",
       "properties": {
+        "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "LoadImage"
+        "ver": "0.5.1"
       },
       "widgets_values": [
         "comfyorg_logo.png",
         "image"
       ],
+      "widgets_values_named": {
+        "image": "comfyorg_logo.png",
+        "upload": "image"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -94,8 +102,8 @@
       "id": 19,
       "type": "SaveImage",
       "pos": [
-        1748.3331553544178,
-        331.6666109396672
+        1750,
+        330
       ],
       "size": [
         880,
@@ -113,7 +121,16 @@
           "link": 20
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            115,
+            116
+          ]
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.5.1",
@@ -121,18 +138,21 @@
       },
       "widgets_values": [
         "ComfyUI-last_frame"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI-last_frame"
+      }
     },
     {
       "id": 23,
       "type": "SaveVideo",
       "pos": [
-        5006.665317776263,
-        331.6666909707764
+        5010,
+        330
       ],
       "size": [
-        991.6666666666667,
-        671.5494791666667
+        1000,
+        150
       ],
       "flags": {},
       "order": 13,
@@ -141,10 +161,16 @@
         {
           "name": "video",
           "type": "VIDEO",
-          "link": 24
+          "link": 113
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.5.1",
@@ -153,15 +179,22 @@
       "widgets_values": [
         "video/ComfyUI-video",
         "auto",
+        "auto",
         "auto"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/ComfyUI-video",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
     },
     {
       "id": 21,
       "type": "SaveImage",
       "pos": [
-        3610.000173155156,
-        330.00012315095057
+        3600,
+        330
       ],
       "size": [
         880,
@@ -179,7 +212,15 @@
           "link": 59
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            117
+          ]
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.5.1",
@@ -187,14 +228,17 @@
       },
       "widgets_values": [
         "ComfyUI-first_frame"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ComfyUI-first_frame"
+      }
     },
     {
       "id": 11,
       "type": "GeminiImage2Node",
       "pos": [
-        1206.6666014672987,
-        331.6666109396672
+        1210,
+        330
       ],
       "size": [
         480,
@@ -222,9 +266,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            20,
-            68,
-            100
+            20
           ]
         },
         {
@@ -234,9 +276,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "GeminiImage2Node",
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "GeminiImage2Node"
+        "ver": "0.5.1"
       },
       "widgets_values": [
         "Task: Realistic composite of text content onto an LED billboard mockup, preserving original composition.\n\nInput Image(s):\n- Input 1 (Scene): Billboard mockup structure and environment. The screen area is the target destination.\n- Input 2 (Content): Source image containing text/logotype (NOT THE BACKGROUND COLOR)\n\nProcess:\n1. Identify the screen surface area in Input 1.\n2. Treat only the text of Input 2 (NOT the background color) as the content to be overlayed onto the screen.\n3. Apply a perspective transformation to the entire Input 2 content canvas so it perfectly matches the angle, orientation, and boundaries of the billboard screen in Input 1.\n4. Render the transformed content with an illuminated LED matrix aesthetic.\n\nTechnical Requirements:\n- **Composition & Scale Consistency (Crucial):** The relative scale and positioning of the text as seen within the boundaries of Input 2 MUST be maintained. Do NOT scale up the text object to fill the billboard screen. If the text is small in Input 2, it must remain small relative to the screen size in the final output, surrounded by the appropriate amount of black padding.\n- **Color & Light:** The active text pixels must be the exact hexadecimal color of image 2 text. They should emit a bright, illuminated glow (halation) typical of LED signage.\n- **Screen Texture:** The entire screen surface (both lit text and unlit background padding) must show a visible, realistic grid texture of individual LED pixel diodes.\n- **Integration:** The physical structure of the billboard framing and the surrounding environment from Input 1 must be preserved exactly.\n\nOutput: The final image showing the scene from Input 1, with the screen displaying the exact composition of Input 2 (without the solid background color) as a glowing, pixelated LED array.",
@@ -248,66 +290,16 @@
         "IMAGE+TEXT",
         "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
       ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
-    {
-      "id": 20,
-      "type": "KlingStartEndFrameNode",
-      "pos": [
-        4548.332596995868,
-        331.6666109396672
-      ],
-      "size": [
-        400,
-        566.6666666666667
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "start_frame",
-          "type": "IMAGE",
-          "link": 97
-        },
-        {
-          "name": "end_frame",
-          "type": "IMAGE",
-          "link": 100
-        }
-      ],
-      "outputs": [
-        {
-          "name": "VIDEO",
-          "type": "VIDEO",
-          "links": [
-            24
-          ]
-        },
-        {
-          "name": "video_id",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "duration",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "KlingStartEndFrameNode"
+      "widgets_values_named": {
+        "prompt": "Task: Realistic composite of text content onto an LED billboard mockup, preserving original composition.\n\nInput Image(s):\n- Input 1 (Scene): Billboard mockup structure and environment. The screen area is the target destination.\n- Input 2 (Content): Source image containing text/logotype (NOT THE BACKGROUND COLOR)\n\nProcess:\n1. Identify the screen surface area in Input 1.\n2. Treat only the text of Input 2 (NOT the background color) as the content to be overlayed onto the screen.\n3. Apply a perspective transformation to the entire Input 2 content canvas so it perfectly matches the angle, orientation, and boundaries of the billboard screen in Input 1.\n4. Render the transformed content with an illuminated LED matrix aesthetic.\n\nTechnical Requirements:\n- **Composition & Scale Consistency (Crucial):** The relative scale and positioning of the text as seen within the boundaries of Input 2 MUST be maintained. Do NOT scale up the text object to fill the billboard screen. If the text is small in Input 2, it must remain small relative to the screen size in the final output, surrounded by the appropriate amount of black padding.\n- **Color & Light:** The active text pixels must be the exact hexadecimal color of image 2 text. They should emit a bright, illuminated glow (halation) typical of LED signage.\n- **Screen Texture:** The entire screen surface (both lit text and unlit background padding) must show a visible, realistic grid texture of individual LED pixel diodes.\n- **Integration:** The physical structure of the billboard framing and the surrounding environment from Input 1 must be preserved exactly.\n\nOutput: The final image showing the scene from Input 1, with the screen displaying the exact composition of Input 2 (without the solid background color) as a glowing, pixelated LED array.",
+        "model": "gemini-3-pro-image-preview",
+        "seed": 11111,
+        "control_after_generate": "fixed",
+        "aspect_ratio": "auto",
+        "resolution": "2K",
+        "response_modalities": "IMAGE+TEXT",
+        "system_prompt": "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
       },
-      "widgets_values": [
-        "LED billboard text morphs, pixel glyphs flicker and cascade like a digital waterfall, individual LED cells pulse and brighten as new letters materialize, slight camera zoom in revealing more billboard detail and closer framing on screen, maintaining the textured LED grid with radiant glow against black panel. ",
-        "",
-        0.5,
-        "16:9",
-        "pro mode / 5s duration / kling-v2-5-turbo"
-      ],
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -315,12 +307,12 @@
       "id": 58,
       "type": "PrimitiveInt",
       "pos": [
-        2689.9993550836552,
-        331.6666109396672
+        2690,
+        330
       ],
       "size": [
         310,
-        82
+        90
       ],
       "flags": {},
       "order": 2,
@@ -337,14 +329,18 @@
       ],
       "title": "Expand Image Borders by %",
       "properties": {
+        "Node name for S&R": "PrimitiveInt",
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "PrimitiveInt"
+        "ver": "0.5.1"
       },
       "widgets_values": [
         300,
         "fixed"
       ],
+      "widgets_values_named": {
+        "value": 300,
+        "fixed": "fixed"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -352,12 +348,12 @@
       "id": 73,
       "type": "PrimitiveStringMultiline",
       "pos": [
-        2690.000022316296,
-        740.0000502532337
+        2690,
+        850
       ],
       "size": [
-        308.33333333333337,
-        158.33333333333334
+        310,
+        160
       ],
       "flags": {
         "collapsed": false
@@ -376,24 +372,27 @@
       ],
       "title": "Prompt Template",
       "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline",
         "cnr_id": "comfy-core",
-        "ver": "0.9.2",
-        "Node name for S&R": "PrimitiveStringMultiline"
+        "ver": "0.9.2"
       },
       "widgets_values": [
         "Task: Canvas Expansion and Content Cleanup\n\nInput Image: Contains main header text, subtext, and central visual content.\n\nProcess & Requirements:\n\n1.  **Text Cleanup (Removal):**\n    * Identify and completely remove the \"subtext\" element.\n    * Reconstruct the area beneath the removed subtext to match the immediate surrounding background texture and lighting flawlessly.\n\n2.  **Header Preservation (Constraint):**\n    * Isolate the \"main header text.\"\n    * Ensure this header remains in its exact original position. It must not shift during the canvas expansion process.\n\n3.  **Outpainting (Generation):**\n    * Expand the canvas borders to fill the transparent blank area. The original pixel information MUST remain, only generate within the transparent blank area.\n    * **Content Generation:** The newly generated areas must seamlessly extend outside the existing background context and MUST include the following elements if specified: <description>\n    * **Technical Consistency:** Ensure perfect continuity of lighting, shadows, color palette, texture, and perspective from the original image edges into the new expanded areas. The transition between original and new content must be invisible.\n\nOutput: A larger canvas image with the subtext removed, the main header locked in place, and the surrounding environment naturally expanded."
-      ]
+      ],
+      "widgets_values_named": {
+        "value": "Task: Canvas Expansion and Content Cleanup\n\nInput Image: Contains main header text, subtext, and central visual content.\n\nProcess & Requirements:\n\n1.  **Text Cleanup (Removal):**\n    * Identify and completely remove the \"subtext\" element.\n    * Reconstruct the area beneath the removed subtext to match the immediate surrounding background texture and lighting flawlessly.\n\n2.  **Header Preservation (Constraint):**\n    * Isolate the \"main header text.\"\n    * Ensure this header remains in its exact original position. It must not shift during the canvas expansion process.\n\n3.  **Outpainting (Generation):**\n    * Expand the canvas borders to fill the transparent blank area. The original pixel information MUST remain, only generate within the transparent blank area.\n    * **Content Generation:** The newly generated areas must seamlessly extend outside the existing background context and MUST include the following elements if specified: <description>\n    * **Technical Consistency:** Ensure perfect continuity of lighting, shadows, color palette, texture, and perspective from the original image edges into the new expanded areas. The transition between original and new content must be invisible.\n\nOutput: A larger canvas image with the subtext removed, the main header locked in place, and the surrounding environment naturally expanded."
+      }
     },
     {
       "id": 33,
       "type": "GeminiImage2Node",
       "pos": [
-        3056.6663640315073,
-        331.6666909707764
+        3060,
+        330
       ],
       "size": [
-        491.6666666666667,
-        566.6666666666667
+        500,
+        570
       ],
       "flags": {},
       "order": 10,
@@ -425,8 +424,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            59,
-            97
+            59
           ]
         },
         {
@@ -436,9 +434,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "GeminiImage2Node",
         "cnr_id": "comfy-core",
-        "ver": "0.5.1",
-        "Node name for S&R": "GeminiImage2Node"
+        "ver": "0.5.1"
       },
       "widgets_values": [
         "",
@@ -450,6 +448,16 @@
         "IMAGE+TEXT",
         "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
       ],
+      "widgets_values_named": {
+        "prompt": "",
+        "model": "gemini-3-pro-image-preview",
+        "seed": 12345,
+        "control_after_generate": "fixed",
+        "aspect_ratio": "auto",
+        "resolution": "2K",
+        "response_modalities": "IMAGE+TEXT",
+        "system_prompt": "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests."
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -457,12 +465,12 @@
       "id": 59,
       "type": "afac6e36-94b5-4d13-ae22-66f87405e994",
       "pos": [
-        959.9997583778531,
-        330.00012315095057
+        960,
+        330
       ],
       "size": [
-        200,
-        46
+        225,
+        102
       ],
       "flags": {
         "collapsed": false
@@ -493,20 +501,20 @@
       "properties": {
         "proxyWidgets": [],
         "cnr_id": "comfy-core",
-        "ver": "0.5.1"
-      },
-      "widgets_values": []
+        "ver": "0.5.1",
+        "previewExposures": []
+      }
     },
     {
       "id": 49,
       "type": "319c5e46-36eb-4854-a39e-1291507505e2",
       "pos": [
-        2689.9996752080924,
-        448.3333210339853
+        2690,
+        460
       ],
       "size": [
-        201.076171875,
-        46
+        225,
+        102
       ],
       "flags": {
         "collapsed": false
@@ -517,11 +525,12 @@
         {
           "name": "image",
           "type": "IMAGE",
-          "link": 68
+          "link": 115
         },
         {
           "label": "expand_img_percent",
           "name": "a",
+          "shape": 7,
           "type": "INT,FLOAT",
           "link": 76
         }
@@ -538,20 +547,26 @@
       "properties": {
         "proxyWidgets": [],
         "cnr_id": "comfy-core",
-        "ver": "0.5.1"
-      },
-      "widgets_values": []
+        "ver": "0.5.1",
+        "previewExposures": [
+          {
+            "name": "$$canvas-image-preview",
+            "sourceNodeId": "45",
+            "sourcePreviewName": "$$canvas-image-preview"
+          }
+        ]
+      }
     },
     {
       "id": 72,
       "type": "RegexReplace",
       "pos": [
-        2689.9996752080924,
-        539.9999932398391
+        2690,
+        610
       ],
       "size": [
-        210,
-        272
+        225,
+        0
       ],
       "flags": {
         "collapsed": true
@@ -586,9 +601,9 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "RegexReplace",
         "cnr_id": "comfy-core",
-        "ver": "0.9.2",
-        "Node name for S&R": "RegexReplace"
+        "ver": "0.9.2"
       },
       "widgets_values": [
         "",
@@ -598,18 +613,27 @@
         false,
         false,
         0
-      ]
+      ],
+      "widgets_values_named": {
+        "string": "",
+        "regex_pattern": "<description>",
+        "replace": "",
+        "case_insensitive": true,
+        "multiline": false,
+        "dotall": false,
+        "count": 0
+      }
     },
     {
       "id": 71,
       "type": "PrimitiveStringMultiline",
       "pos": [
-        2689.9993550836552,
-        598.3333082714436
+        2690,
+        670
       ],
       "size": [
-        308.33333333333337,
-        88
+        310,
+        126
       ],
       "flags": {},
       "order": 4,
@@ -626,15 +650,77 @@
       ],
       "title": "Describe the Outpainted Region",
       "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline",
         "cnr_id": "comfy-core",
-        "ver": "0.9.2",
-        "Node name for S&R": "PrimitiveStringMultiline"
+        "ver": "0.9.2"
       },
       "widgets_values": [
         ""
       ],
+      "widgets_values_named": {
+        "value": ""
+      },
       "color": "#232",
       "bgcolor": "#353"
+    },
+    {
+      "id": 79,
+      "type": "KlingFirstLastFrameNode",
+      "pos": [
+        4550,
+        330
+      ],
+      "size": [
+        410,
+        350
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": 117
+        },
+        {
+          "name": "end_frame",
+          "type": "IMAGE",
+          "link": 116
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            113
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "KlingFirstLastFrameNode"
+      },
+      "widgets_values": [
+        "LED billboard text morphs, pixel glyphs flicker and cascade like a digital waterfall, individual LED cells pulse and brighten as new letters materialize, slight camera zoom in revealing more billboard detail and closer framing on screen, maintaining the textured LED grid with radiant glow against black panel. ",
+        5,
+        true,
+        "kling-v3",
+        "1080p",
+        0,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "prompt": "LED billboard text morphs, pixel glyphs flicker and cascade like a digital waterfall, individual LED cells pulse and brighten as new letters materialize, slight camera zoom in revealing more billboard detail and closer framing on screen, maintaining the textured LED grid with radiant glow against black panel. ",
+        "duration": 5,
+        "generate_audio": true,
+        "model": "kling-v3",
+        "model.resolution": "1080p",
+        "seed": 0,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
@@ -647,26 +733,10 @@
       "IMAGE"
     ],
     [
-      24,
-      20,
-      0,
-      23,
-      0,
-      "VIDEO"
-    ],
-    [
       59,
       33,
       0,
       21,
-      0,
-      "IMAGE"
-    ],
-    [
-      68,
-      11,
-      0,
-      49,
       0,
       "IMAGE"
     ],
@@ -711,22 +781,6 @@
       "IMAGE"
     ],
     [
-      97,
-      33,
-      0,
-      20,
-      0,
-      "IMAGE"
-    ],
-    [
-      100,
-      11,
-      0,
-      20,
-      1,
-      "IMAGE"
-    ],
-    [
       102,
       73,
       0,
@@ -749,6 +803,38 @@
       33,
       2,
       "STRING"
+    ],
+    [
+      113,
+      79,
+      0,
+      23,
+      0,
+      "VIDEO"
+    ],
+    [
+      115,
+      19,
+      0,
+      49,
+      0,
+      "IMAGE"
+    ],
+    [
+      116,
+      19,
+      0,
+      79,
+      1,
+      "IMAGE"
+    ],
+    [
+      117,
+      21,
+      0,
+      79,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
@@ -759,8 +845,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 58,
-          "lastLinkId": 77,
+          "lastNodeId": 79,
+          "lastLinkId": 117,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -771,8 +857,8 @@
           "bounding": [
             1590,
             -144,
-            157.978515625,
-            80
+            165.978515625,
+            88
           ]
         },
         "outputNode": {
@@ -780,8 +866,8 @@
           "bounding": [
             3815.7569739090827,
             -157.0962556425554,
-            120,
-            60
+            128,
+            68
           ]
         },
         "inputs": [
@@ -795,8 +881,8 @@
             ],
             "localized_name": "image",
             "pos": [
-              1727.978515625,
-              -124
+              1731.978515625,
+              -120
             ]
           },
           {
@@ -808,8 +894,8 @@
             ],
             "label": "expand_img_percent",
             "pos": [
-              1727.978515625,
-              -104
+              1731.978515625,
+              -100
             ]
           }
         ],
@@ -823,8 +909,8 @@
             ],
             "localized_name": "IMAGE",
             "pos": [
-              3835.7569739090827,
-              -137.0962556425554
+              3839.7569739090827,
+              -133.0962556425554
             ]
           }
         ],
@@ -834,12 +920,12 @@
             "id": 28,
             "type": "SimpleMath+",
             "pos": [
-              2420,
-              -290
+              2410,
+              -360
             ],
             "size": [
               300,
-              80
+              114
             ],
             "flags": {},
             "order": 2,
@@ -879,13 +965,16 @@
             ],
             "title": "Calculate left/right pixel expand",
             "properties": {
+              "Node name for S&R": "SimpleMath+",
               "cnr_id": "comfyui_essentials",
-              "ver": "1.1.0",
-              "Node name for S&R": "SimpleMath+"
+              "ver": "1.1.0"
             },
             "widgets_values": [
               "(a * b) / 2"
-            ]
+            ],
+            "widgets_values_named": {
+              "value": "(a * b) / 2"
+            }
           },
           {
             "id": 32,
@@ -896,7 +985,7 @@
             ],
             "size": [
               300,
-              78
+              114
             ],
             "flags": {},
             "order": 3,
@@ -936,13 +1025,16 @@
             ],
             "title": "Calculate top/bottom pixel expand",
             "properties": {
+              "Node name for S&R": "SimpleMath+",
               "cnr_id": "comfyui_essentials",
-              "ver": "1.1.0",
-              "Node name for S&R": "SimpleMath+"
+              "ver": "1.1.0"
             },
             "widgets_values": [
               "(a * b) / 2"
-            ]
+            ],
+            "widgets_values_named": {
+              "value": "(a * b) / 2"
+            }
           },
           {
             "id": 47,
@@ -953,7 +1045,7 @@
             ],
             "size": [
               300,
-              78
+              114
             ],
             "flags": {},
             "order": 5,
@@ -993,24 +1085,27 @@
             ],
             "title": "Calculate % to decimal value",
             "properties": {
+              "Node name for S&R": "SimpleMath+",
               "cnr_id": "comfyui_essentials",
-              "ver": "1.1.0",
-              "Node name for S&R": "SimpleMath+"
+              "ver": "1.1.0"
             },
             "widgets_values": [
               "a / 100"
-            ]
+            ],
+            "widgets_values_named": {
+              "value": "a / 100"
+            }
           },
           {
             "id": 27,
             "type": "GetImageSize",
             "pos": [
-              2150,
-              -240
+              2110,
+              -360
             ],
             "size": [
-              140,
-              66
+              225,
+              98
             ],
             "flags": {},
             "order": 1,
@@ -1048,22 +1143,21 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "GetImageSize",
               "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "GetImageSize"
-            },
-            "widgets_values": []
+              "ver": "0.5.1"
+            }
           },
           {
-            "id": 58,
+            "id": 77,
             "type": "ImageScaleToTotalPixels",
             "pos": [
-              1850,
-              -240
+              1820,
+              -360
             ],
             "size": [
-              210,
-              106
+              225,
+              138
             ],
             "flags": {},
             "order": 6,
@@ -1087,15 +1181,20 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ImageScaleToTotalPixels",
               "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "ImageScaleToTotalPixels"
+              "ver": "0.5.1"
             },
             "widgets_values": [
               "lanczos",
               1,
               1
-            ]
+            ],
+            "widgets_values_named": {
+              "upscale_method": "lanczos",
+              "megapixels": 1,
+              "resolution_steps": 1
+            }
           },
           {
             "id": 45,
@@ -1119,13 +1218,19 @@
                 "link": 60
               }
             ],
-            "outputs": [],
+            "outputs": [
+              {
+                "localized_name": "images",
+                "name": "images",
+                "type": "IMAGE",
+                "links": null
+              }
+            ],
             "properties": {
+              "Node name for S&R": "PreviewImage",
               "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "PreviewImage"
-            },
-            "widgets_values": []
+              "ver": "0.5.1"
+            }
           },
           {
             "id": 24,
@@ -1135,8 +1240,8 @@
               -280
             ],
             "size": [
-              272.780859375,
-              174
+              280,
+              214
             ],
             "flags": {},
             "order": 0,
@@ -1203,9 +1308,9 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ImagePadForOutpaint",
               "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "ImagePadForOutpaint"
+              "ver": "0.5.1"
             },
             "widgets_values": [
               0,
@@ -1213,7 +1318,14 @@
               0,
               0,
               40
-            ]
+            ],
+            "widgets_values_named": {
+              "left": 0,
+              "top": 0,
+              "right": 0,
+              "bottom": 0,
+              "feathering": 40
+            }
           }
         ],
         "groups": [],
@@ -1318,13 +1430,13 @@
             "id": 76,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 58,
+            "target_id": 77,
             "target_slot": 0,
             "type": "IMAGE"
           },
           {
             "id": 77,
-            "origin_id": 58,
+            "origin_id": 77,
             "origin_slot": 0,
             "target_id": 27,
             "target_slot": 0,
@@ -1340,8 +1452,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 0,
-          "lastNodeId": 59,
-          "lastLinkId": 79,
+          "lastNodeId": 79,
+          "lastLinkId": 117,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -1420,7 +1532,7 @@
             ],
             "size": [
               180,
-              66
+              70
             ],
             "flags": {},
             "order": 1,
@@ -1458,11 +1570,10 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "GetImageSize",
               "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "GetImageSize"
-            },
-            "widgets_values": []
+              "ver": "0.5.1"
+            }
           },
           {
             "id": 15,
@@ -1515,27 +1626,33 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ResizeAndPadImage",
               "cnr_id": "comfy-core",
-              "ver": "0.5.1",
-              "Node name for S&R": "ResizeAndPadImage"
+              "ver": "0.5.1"
             },
             "widgets_values": [
               512,
               512,
               "black",
               "area"
-            ]
+            ],
+            "widgets_values_named": {
+              "target_width": 512,
+              "target_height": 512,
+              "padding_color": "black",
+              "interpolation": "area"
+            }
           },
           {
-            "id": 59,
+            "id": 78,
             "type": "BatchImagesNode",
             "pos": [
               940,
               470
             ],
             "size": [
-              169.23046875,
-              66
+              170,
+              90
             ],
             "flags": {},
             "order": 2,
@@ -1543,21 +1660,20 @@
             "inputs": [
               {
                 "label": "image0",
-                "localized_name": "images.image0",
+                "localized_name": "image0",
                 "name": "images.image0",
                 "type": "IMAGE",
                 "link": 77
               },
               {
-                "label": "image1",
-                "localized_name": "images.image1",
+                "localized_name": "image1",
                 "name": "images.image1",
+                "shape": 7,
                 "type": "IMAGE",
                 "link": 79
               },
               {
-                "label": "image2",
-                "localized_name": "images.image2",
+                "localized_name": "image2",
                 "name": "images.image2",
                 "shape": 7,
                 "type": "IMAGE",
@@ -1575,9 +1691,9 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "BatchImagesNode",
               "cnr_id": "comfy-core",
-              "ver": "0.9.2",
-              "Node name for S&R": "BatchImagesNode"
+              "ver": "0.9.2"
             }
           }
         ],
@@ -1619,13 +1735,13 @@
             "id": 77,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 59,
+            "target_id": 78,
             "target_slot": 0,
             "type": "IMAGE"
           },
           {
             "id": 78,
-            "origin_id": 59,
+            "origin_id": 78,
             "origin_slot": 0,
             "target_id": -20,
             "target_slot": 0,
@@ -1635,7 +1751,7 @@
             "id": 79,
             "origin_id": 15,
             "origin_slot": 0,
-            "target_id": 59,
+            "target_id": 78,
             "target_slot": 1,
             "type": "IMAGE"
           }
@@ -1649,13 +1765,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.598221654806138,
+      "scale": 0.4406997469281822,
       "offset": [
-        -934.5015891343473,
-        63.48896124928763
+        97.77024129764987,
+        674.5674845517191
       ]
     },
-    "frontendVersion": "1.36.14",
+    "frontendVersion": "1.52.5",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,

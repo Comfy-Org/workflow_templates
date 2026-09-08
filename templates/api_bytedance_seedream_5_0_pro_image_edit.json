@@ -1,84 +1,28 @@
 {
   "id": "745f0acb-85fe-4455-b8b8-5875bf15f808",
   "revision": 0,
-  "last_node_id": 7,
-  "last_link_id": 8,
+  "last_node_id": 9,
+  "last_link_id": 10,
   "nodes": [
-    {
-      "id": 1,
-      "type": "ByteDanceSeedreamNodeV2",
-      "pos": [
-        750,
-        420
-      ],
-      "size": [
-        400,
-        352
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "showAdvanced": false,
-      "inputs": [
-        {
-          "label": "image_1",
-          "name": "model.images.image_1",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": 7
-        },
-        {
-          "label": "image_2",
-          "name": "model.images.image_2",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            1
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ByteDanceSeedreamNodeV2"
-      },
-      "widgets_values": [
-        "Convert the entire collage into a cohesive, realistic interior design photo of a cozy living room. Render the sketched bay window area on the left into a real window filled with potted plants, including Swiss cheese plants and a fiddle-leaf fig, with a lush forest view outside. Transform the sketched snake plant in the bottom-left into a real potted snake plant. Blend the elements seamlessly under warm, natural afternoon sunlight.",
-        "seedream 5.0 pro",
-        "(1K) 1024x1024 (1:1)",
-        2048,
-        2048,
-        902695217,
-        "randomize",
-        false
-      ],
-      "color": "#432",
-      "bgcolor": "#653"
-    },
     {
       "id": 2,
       "type": "SaveImageAdvanced",
       "pos": [
-        1190,
+        1204,
         420
       ],
       "size": [
         560,
-        168
+        130
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 1
+          "link": 10
         }
       ],
       "outputs": [
@@ -89,6 +33,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
         "Node name for S&R": "SaveImageAdvanced"
       },
       "widgets_values": [
@@ -96,7 +42,13 @@
         "png",
         "8-bit",
         "sRGB"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Seedream5.0_Pro_image_edit",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
     },
     {
       "id": 3,
@@ -128,12 +80,18 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
         "interior_college.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "interior_college.png",
+        "upload": "image"
+      }
     },
     {
       "id": 5,
@@ -164,9 +122,10 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
         "Node name for S&R": "PreviewImage"
-      },
-      "widgets_values": []
+      }
     },
     {
       "id": 6,
@@ -188,6 +147,9 @@
       "widgets_values": [
         "Enable Node 2.0. If you can’t use the Painter node, use the [Partial Execution](https://docs.comfy.org/interface/features/partial-execution) feature on the Preview Image node. This way, you won’t need to run the entire workflow just to get the Painter preview working. With future updates, the preview can support live use.\n\nYou can run this workflow without updating it; if you want, you can use it to draw some marks on the input image."
       ],
+      "widgets_values_named": {
+        "text": "Enable Node 2.0. If you can’t use the Painter node, use the [Partial Execution](https://docs.comfy.org/interface/features/partial-execution) feature on the Preview Image node. This way, you won’t need to run the entire workflow just to get the Painter preview working. With future updates, the preview can support live use.\n\nYou can run this workflow without updating it; if you want, you can use it to draw some marks on the input image."
+      },
       "color": "#222",
       "bgcolor": "#000"
     },
@@ -195,15 +157,15 @@
       "id": 7,
       "type": "Painter",
       "pos": [
-        260,
-        430
+        258,
+        420
       ],
       "size": [
         450,
         820
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -218,8 +180,8 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            7,
-            8
+            8,
+            9
           ]
         },
         {
@@ -229,6 +191,8 @@
         }
       ],
       "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
         "Node name for S&R": "Painter"
       },
       "widgets_values": [
@@ -236,31 +200,116 @@
         1024,
         1024,
         "#000000"
-      ]
+      ],
+      "widgets_values_named": {
+        "mask": "",
+        "width": 1024,
+        "height": 1024,
+        "bg_color": "#000000"
+      }
+    },
+    {
+      "id": 8,
+      "type": "ByteDanceSeedreamNodeV3",
+      "pos": [
+        750,
+        420
+      ],
+      "size": [
+        400,
+        324
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 9
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            10
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.34.0",
+        "Node name for S&R": "ByteDanceSeedreamNodeV3"
+      },
+      "widgets_values": [
+        "Convert the entire collage into a cohesive, realistic interior design photo of a cozy living room. Render the sketched bay window area on the left into a real window filled with potted plants, including Swiss cheese plants and a fiddle-leaf fig, with a lush forest view outside. Transform the sketched snake plant in the bottom-left into a real potted snake plant. Blend the elements seamlessly under warm, natural afternoon sunlight.",
+        "seedream 5.0 pro",
+        "(1K) 1024x1024 (1:1)",
+        2048,
+        2048,
+        "standard",
+        42,
+        "randomize",
+        false,
+        true
+      ],
+      "widgets_values_named": {
+        "prompt": "Convert the entire collage into a cohesive, realistic interior design photo of a cozy living room. Render the sketched bay window area on the left into a real window filled with potted plants, including Swiss cheese plants and a fiddle-leaf fig, with a lush forest view outside. Transform the sketched snake plant in the bottom-left into a real potted snake plant. Blend the elements seamlessly under warm, natural afternoon sunlight.",
+        "model": "seedream 5.0 pro",
+        "model.size_preset": "(1K) 1024x1024 (1:1)",
+        "model.width": 2048,
+        "model.height": 2048,
+        "model.prompt_optimization": "standard",
+        "model.seed": 42,
+        "control_after_generate": "randomize",
+        "model.watermark": false,
+        "model.thinking": true
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 9,
+      "type": "MarkdownNote",
+      "pos": [
+        -870,
+        420
+      ],
+      "size": [
+        450,
+        320
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [interior_college.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/interior_college.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [interior_college.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/interior_college.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
-    [
-      1,
-      1,
-      0,
-      2,
-      0,
-      "IMAGE"
-    ],
     [
       6,
       3,
       0,
       7,
-      0,
-      "IMAGE"
-    ],
-    [
-      7,
-      7,
-      0,
-      1,
       0,
       "IMAGE"
     ],
@@ -271,19 +320,35 @@
       5,
       0,
       "IMAGE"
+    ],
+    [
+      9,
+      7,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      10,
+      8,
+      0,
+      2,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4248529411764706,
+      "scale": 0.4281562972381346,
       "offset": [
-        1274.2182632398751,
-        130.65463828314287
+        1626.3781994114943,
+        423.5013964476002
       ]
     },
-    "frontendVersion": "1.45.20"
+    "frontendVersion": "1.51.9"
   },
   "version": 0.4
 }
