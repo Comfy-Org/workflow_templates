@@ -1,0 +1,226 @@
+{
+  "id": "7a06a6de-067d-4d41-b7bf-7d6add20ec8c",
+  "revision": 0,
+  "last_node_id": 394,
+  "last_link_id": 575,
+  "nodes": [
+    {
+      "id": 375,
+      "type": "MarkdownNote",
+      "pos": [
+        -1720,
+        7010
+      ],
+      "size": [
+        360,
+        360
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [hairstyle_makeup_base_gpt_image25](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/hairstyle_makeup_base_gpt_image25)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [hairstyle_makeup_base_gpt_image25](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/hairstyle_makeup_base_gpt_image25)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 376,
+      "type": "LoadImage",
+      "pos": [
+        -1320,
+        7010
+      ],
+      "size": [
+        390,
+        450
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            573
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "hairstyle_makeup_base_gpt_image25.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "hairstyle_makeup_base_gpt_image25.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 391,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        -430,
+        7010
+      ],
+      "size": [
+        550,
+        434
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 572
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "GPT_Image_2.5_flare",
+        "png",
+        "8-bit",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "GPT_Image_2.5_flare",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
+    },
+    {
+      "id": 392,
+      "type": "OpenAIGPTImageNodeV2",
+      "pos": [
+        -880,
+        7010
+      ],
+      "size": [
+        400,
+        454
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 573
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            572
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "OpenAIGPTImageNodeV2"
+      },
+      "widgets_values": [
+        "Keep head, face, body, flowers, sweater, background, lighting unchanged. Only change hairstyle to retro bangs and makeup to classic red lip makeup",
+        "gpt-image-2.5-sunburst",
+        "auto",
+        1024,
+        1024,
+        "auto",
+        "low",
+        1,
+        553435342,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "prompt": "Keep head, face, body, flowers, sweater, background, lighting unchanged. Only change hairstyle to retro bangs and makeup to classic red lip makeup",
+        "model": "gpt-image-2.5-sunburst",
+        "model.size": "auto",
+        "model.custom_width": 1024,
+        "model.custom_height": 1024,
+        "model.background": "auto",
+        "model.quality": "low",
+        "n": 1,
+        "seed": 553435342,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      572,
+      392,
+      0,
+      391,
+      0,
+      "IMAGE"
+    ],
+    [
+      573,
+      376,
+      0,
+      392,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9605249571875009,
+      "offset": [
+        1948.7946967046905,
+        -6736.178548555797
+      ]
+    },
+    "frontendVersion": "1.51.10",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
