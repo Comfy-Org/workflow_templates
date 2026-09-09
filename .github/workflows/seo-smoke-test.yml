@@ -11,31 +11,35 @@ on:
 jobs:
   seo-checks:
     runs-on: ubuntu-latest
+    env:
+      COMFY_ORIGIN: https://comfy.org
+      VERCEL_ORIGIN: https://workflow-templates.vercel.app
+      WORKFLOW_FIXTURE_PATH: /workflows/flux_schnell-75fb83052003/
     steps:
       - name: Check canonical URLs point to comfy.org
         run: |
           echo "Checking canonical URLs..."
-          BODY=$(curl -s --max-time 15 "https://comfy.org/templates/flux_schnell")
-          if echo "$BODY" | grep -q 'rel="canonical" href="https://comfy.org/'; then
+          BODY=$(curl -fsSL --max-time 15 "$COMFY_ORIGIN$WORKFLOW_FIXTURE_PATH")
+          if echo "$BODY" | grep -q 'rel="canonical" href="https://comfy.org/workflows/'; then
             echo "✅ Canonical URL points to comfy.org"
           else
             echo "❌ Canonical URL does NOT point to comfy.org"
             exit 1
           fi
 
-      - name: Check comfy.org templates return 200
+      - name: Check comfy.org workflows return 200
         run: |
-          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" --max-time 15 "https://comfy.org/templates/")
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" --max-time 15 "$COMFY_ORIGIN/workflows/")
           if [ "$STATUS" = "200" ]; then
-            echo "✅ /templates/ returns 200"
+            echo "✅ /workflows/ returns 200"
           else
-            echo "❌ /templates/ returns $STATUS"
+            echo "❌ /workflows/ returns $STATUS"
             exit 1
           fi
 
       - name: Check sitemap is accessible
         run: |
-          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" --max-time 15 "https://comfy.org/sitemap-templates-index.xml")
+          STATUS=$(curl -sI -o /dev/null -w "%{http_code}" --max-time 15 "$COMFY_ORIGIN/sitemap-workflows-index.xml")
           if [ "$STATUS" = "200" ]; then
             echo "✅ Sitemap accessible"
           else
@@ -45,8 +49,8 @@ jobs:
 
       - name: Check Vercel URL has correct canonical (not self-referencing)
         run: |
-          BODY=$(curl -s --max-time 15 "https://workflow-templates.vercel.app/templates/flux_schnell")
-          if echo "$BODY" | grep -q 'rel="canonical" href="https://comfy.org/'; then
+          BODY=$(curl -fsSL --max-time 15 "$VERCEL_ORIGIN$WORKFLOW_FIXTURE_PATH")
+          if echo "$BODY" | grep -q 'rel="canonical" href="https://comfy.org/workflows/'; then
             echo "✅ Vercel deployment canonical points to comfy.org (not self)"
           else
             echo "❌ Vercel deployment canonical does NOT point to comfy.org"
@@ -55,18 +59,18 @@ jobs:
 
       - name: Check X-Served-By headers
         run: |
-          HEADER=$(curl -sI --max-time 15 "https://comfy.org/templates/" | grep -i "x-served-by")
+          HEADER=$(curl -sI --max-time 15 "$COMFY_ORIGIN/workflows/" | grep -i "x-served-by")
           if echo "$HEADER" | grep -qi "vercel"; then
-            echo "✅ Templates served by Vercel: $HEADER"
+            echo "✅ Workflows served by Vercel: $HEADER"
           else
-            echo "❌ Templates NOT served by Vercel: $HEADER"
+            echo "❌ Workflows NOT served by Vercel: $HEADER"
             exit 1
           fi
 
-          HEADER=$(curl -sI --max-time 15 "https://comfy.org/" | grep -i "x-served-by")
-          if echo "$HEADER" | grep -qi "framer"; then
-            echo "✅ Homepage served by Framer: $HEADER"
+          HEADER=$(curl -sI --max-time 15 "$COMFY_ORIGIN/" | grep -i "x-served-by")
+          if echo "$HEADER" | grep -qi "vercel-website"; then
+            echo "✅ Homepage served by Vercel website: $HEADER"
           else
-            echo "❌ Homepage NOT served by Framer: $HEADER"
+            echo "❌ Homepage NOT served by Vercel website: $HEADER"
             exit 1
           fi
