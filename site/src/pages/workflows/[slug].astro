@@ -32,6 +32,7 @@ import {
   buildWorkflowGraphJsonLd,
 } from '../../lib/structured-data';
 import { getWorkflowEntityGraph } from '../../data/workflow-entity-graphs';
+import { getWorkflowCopy } from '../../data/workflow-copy';
 import { buildToolbarLabels } from '../../lib/toolbar';
 
 import { localizeUrl } from '../../i18n/utils';
@@ -101,6 +102,9 @@ if (!entry) {
 }
 
 const locale = DEFAULT_LOCALE;
+// Client-approved copy for the handful of workflows that carry a curated entity
+// graph (see workflow-copy.ts); every other workflow renders the hub's own text.
+const curatedCopy = getWorkflowCopy(entry.name);
 const data = {
   name: entry.name,
   shareId: entry.shareId || '',
@@ -115,7 +119,7 @@ const data = {
   username: entry.profile?.username || entry.username || '',
   date: entry.date || '',
   tutorialUrl: entry.tutorialUrl,
-  extendedDescription: entry.extendedDescription || '',
+  extendedDescription: curatedCopy?.extendedDescription || entry.extendedDescription || '',
   metaDescription: entry.metaDescription || entry.description || '',
   howToUse: entry.howToUse || [],
   suggestedUseCases: entry.suggestedUseCases || [],
