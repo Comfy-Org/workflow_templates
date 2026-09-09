@@ -94,7 +94,7 @@ MCP templates. The normal `npm run sync` and release CI run MCP sync before bund
 | ≥ 50 | `low` |
 | < 50 | `not_recommended` |
 
-**Use Cases category floor:** never below `low` (no `not_recommended`).
+**Applied / Use Cases category floor:** never below `low` (no `not_recommended`). Applies to Product & Ads, Character & Fashion, Brand & Design, and legacy Use Cases.
 
 **New-template floor (≤30 days since `date`):** never below `medium` when usage is still low (same window as freshness `new`).
 
