@@ -32,6 +32,7 @@ import { INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 import { creatorOgUrl } from '../../../lib/og-url';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import { getSocialDisplay } from '../../../lib/social-links';
+import { isLegacyWorkflowSegment } from '../../../lib/legacy-workflow-redirects';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
@@ -40,11 +41,14 @@ Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while
 // slug (name-shareId) for a workflow not prerendered yet.
 const { locale, username: slug } = Astro.params;
 
+// Legacy `/{locale}/workflows/{id}.json` download scheme — retired, no per-id
+// mapping survives. A valid locale 301s to that localized hub; anything else
+// keeps the original 404.
 if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  if (locale && LOCALES.includes(locale as Locale) && locale !== DEFAULT_LOCALE) {
+    return Astro.redirect(`/${locale}/workflows/`, 301);
+  }
+  return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
 // Validate locale
@@ -58,6 +62,12 @@ if (!slug) {
   return Astro.redirect(`/${locale}/workflows/`);
 }
 
+// The hub's "ComfyUI" brand filter is served at the lowercase slug; the
+// capitalised form was linked externally and 404s. Normalise it.
+if (slug === 'ComfyUI') {
+  return Astro.redirect(`/${locale}/workflows/comfyui/`, 301);
+}
+
 // A `name-shareId` slug is a workflow detail request. The prerendered [slug] route
 // serves these (gated, English-canonical); anything reaching this SSR route is a
 // workflow added since the last build. Rather than render an un-gated localized
@@ -69,7 +79,9 @@ if (detailShareId) {
     await getWorkflow(detailShareId);
   } catch (err) {
     if (err instanceof HubApiError && err.status === 404) {
-      return new Response(null, { status: 404, statusText: 'Not Found' });
+      // A `{name}-{shareId}` slug the hub no longer knows is a retired detail
+      // page — 301 to the localized hub instead of a dead end.
+      return Astro.redirect(`/${locale}/workflows/`, 301);
     }
     console.error('Hub API error on ISR detail:', err);
     return new Response(null, {
@@ -159,6 +171,10 @@ if (indexFetchFailed) {
   });
 }
 if (!profileFound && serialized.length === 0) {
+  // Retired-workflow-shaped slugs 301 to the localized hub; genuine junk 404s.
+  if (isLegacyWorkflowSegment(slug)) {
+    return Astro.redirect(`/${locale}/workflows/`, 301);
+  }
   return new Response(null, { status: 404, statusText: 'Not Found' });
 }
 
