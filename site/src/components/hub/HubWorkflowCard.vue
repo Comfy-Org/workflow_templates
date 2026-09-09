@@ -12,7 +12,7 @@ import type { ThumbnailVariant } from '@/lib/hub-api';
 import { initCompareSlider } from '@/lib/initCompareSlider';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { hubImageFor, hubMediaFor } from '@/lib/hub-media';
-import { isVideoFile, isAudioFile, isMediaFile } from '@/lib/media-utils';
+import { isVideoFile, isAudioFile, isMediaFile, isPlaceholderVideo } from '@/lib/media-utils';
 import { workflowDetailPath, creatorPath, thumbnailPath } from '@/lib/routes';
 import { resolveTemplateLogos } from '@/lib/model-logos';
 import { ButtonPill } from '@/components/ui/button-pill';
@@ -85,6 +85,12 @@ const videoUrl = computed(() => {
   if (!isVideoPrimary.value) return null;
   return thumbnailPath(primaryFile.value!);
 });
+
+// The hub's shared "no preview yet" placeholder clip: render its poster instead
+// of a <video> so the same file is not embedded across hundreds of cards.
+const primaryIsPlaceholderVideo = computed(
+  () => isVideoPrimary.value && isPlaceholderVideo(primaryFile.value)
+);
 
 const hubMedia = computed(() => (videoUrl.value ? hubMediaFor(videoUrl.value) : null));
 const playbackUrl = computed(() => hubMedia.value?.video ?? videoUrl.value);
@@ -293,7 +299,9 @@ function handleCardClick() {
       </div>
 
       <img
-        v-else-if="isVideoPrimary && videoUrl && videoFailed && posterUrl"
+        v-else-if="
+          isVideoPrimary && videoUrl && (videoFailed || primaryIsPlaceholderVideo) && posterUrl
+        "
         :src="posterUrl"
         :alt="title"
         loading="lazy"
@@ -303,7 +311,7 @@ function handleCardClick() {
       />
 
       <video
-        v-else-if="isVideoPrimary && videoUrl"
+        v-else-if="isVideoPrimary && videoUrl && !primaryIsPlaceholderVideo"
         ref="videoEl"
         :src="playbackUrl || undefined"
         :poster="(posterReady && posterUrl) || undefined"
