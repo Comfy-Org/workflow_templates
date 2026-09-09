@@ -431,6 +431,7 @@ describe('buildWorkflowGraphJsonLd — LTX-2.5: Image to Video matches the clien
       '#e-video',
       '#e-image',
       '#cat-technology',
+      '#e-ltx2-5',
       '#e-api',
       '#e-open-source',
       '#e-codec',
@@ -486,6 +487,7 @@ describe('buildWorkflowGraphJsonLd — LTX-2.5: Image to Video matches the clien
       '#cat-audiovideo',
     ]);
     expect((webpage.mentions as Record<string, unknown>[]).map((r) => frag(r))).toEqual([
+      '#e-ltx2-5',
       '#e-api',
       '#e-open-source',
       '#e-codec',
@@ -544,6 +546,7 @@ describe('buildWorkflowGraphJsonLd — LTX-2.5: Image to Video matches the clien
     const members = (f: string) =>
       (byFrag(f).hasDefinedTerm as Record<string, unknown>[]).map((r) => frag(r));
     expect(members('#cat-technology')).toEqual([
+      '#e-ltx2-5',
       '#e-api',
       '#e-open-source',
       '#e-codec',
@@ -581,6 +584,7 @@ describe('buildWorkflowGraphJsonLd — LTX-2.5: Image to Video matches the clien
   });
 
   it('every categorized DefinedTerm points back at its set; core topics do not', () => {
+    expect(byFrag('#e-ltx2-5').inDefinedTermSet).toEqual({ '@id': `${CANONICAL}#cat-technology` });
     expect(byFrag('#e-api').inDefinedTermSet).toEqual({ '@id': `${CANONICAL}#cat-technology` });
     expect(byFrag('#e-image-format').inDefinedTermSet).toEqual({
       '@id': `${CANONICAL}#cat-technology`,
@@ -658,6 +662,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
         '#e-quality',
         '#e-business-process',
         '#cat-technology',
+        '#e-seedance2-5',
         '#e-display-res',
         '#e-aspect-ratio',
         '#e-image-stabilization',
@@ -700,6 +705,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
         '#e-footage',
         '#e-quality',
         '#e-business-process',
+        '#e-seedance2-5',
         '#e-display-res',
         '#e-aspect-ratio',
         '#e-image-stabilization',
@@ -723,6 +729,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
         ],
         '#cat-business': ['#e-camera', '#e-footage', '#e-quality', '#e-business-process'],
         '#cat-technology': [
+          '#e-seedance2-5',
           '#e-display-res',
           '#e-aspect-ratio',
           '#e-image-stabilization',
@@ -768,6 +775,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
         '#e-stereo-sound',
         '#e-aspect-ratio',
         '#cat-technology',
+        '#e-minimax-h3',
         '#e-api',
         '#e-point-click',
         '#e-data',
@@ -812,6 +820,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
         '#e-digital-audio',
         '#e-stereo-sound',
         '#e-aspect-ratio',
+        '#e-minimax-h3',
         '#e-api',
         '#e-point-click',
         '#e-data',
@@ -838,6 +847,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
           '#e-aspect-ratio',
         ],
         '#cat-technology': [
+          '#e-minimax-h3',
           '#e-api',
           '#e-point-click',
           '#e-data',
@@ -869,6 +879,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
         '#webpage',
         '#workflow',
         '#e-motion',
+        '#e-wan-animate2',
         '#e-character',
         '#e-camera',
         '#e-extraction',
@@ -899,6 +910,7 @@ describe('buildWorkflowGraphJsonLd — every curated workflow matches the recomm
       ],
       about: ['#workflow', '#e-motion', '#cat-computervision', '#cat-business', '#cat-audiovideo'],
       mentions: [
+        '#e-wan-animate2',
         '#e-character',
         '#e-camera',
         '#e-extraction',

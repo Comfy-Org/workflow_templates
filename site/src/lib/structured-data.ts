@@ -109,6 +109,10 @@ export interface ItemListEntry {
   url: string;
   /** Absolute image URL, omitted when the child has no still. */
   image?: string;
+  description?: string;
+  itemType?: string;
+  keywords?: string;
+  creator?: { '@type': string; name: string; url: string };
 }
 
 export function buildCollectionPageJsonLd(params: {
@@ -126,9 +130,23 @@ export function buildCollectionPageJsonLd(params: {
         itemListElement: params.items.map((entry, i) => ({
           '@type': 'ListItem',
           position: i + 1,
-          name: entry.name,
-          url: entry.url,
-          ...(entry.image ? { image: entry.image } : {}),
+          ...(entry.itemType
+            ? {
+                item: {
+                  '@type': entry.itemType,
+                  name: entry.name,
+                  url: entry.url,
+                  ...(entry.description ? { description: entry.description } : {}),
+                  ...(entry.image ? { image: entry.image } : {}),
+                  ...(entry.keywords ? { keywords: entry.keywords } : {}),
+                  ...(entry.creator ? { creator: entry.creator } : {}),
+                },
+              }
+            : {
+                name: entry.name,
+                url: entry.url,
+                ...(entry.image ? { image: entry.image } : {}),
+              }),
         })),
       }
     : undefined;
