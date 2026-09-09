@@ -52,7 +52,11 @@ export function getMainNavigation(locale: Locale): NavItem[] {
             { label: t('nav.comfyCloud', locale), href: navRoutes.cloud },
             { label: t('nav.developerPlatform', locale), href: navRoutes.platform, badge: 'beta' },
             { label: t('nav.comfyEnterprise', locale), href: navRoutes.cloudEnterprise },
-            { label: t('nav.managedBuilds', locale), href: navRoutes.managedBuilds },
+            {
+              label: t('nav.managedBuilds', locale),
+              href: navRoutes.managedBuilds,
+              badge: 'beta',
+            },
           ],
         },
         {
