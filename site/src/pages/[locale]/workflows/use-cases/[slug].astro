@@ -1,0 +1,61 @@
+---
+/**
+ * Localized use-case detail (on-demand rendered).
+ *
+ * The use-case pages carry no localized content of their own yet, so:
+ *  - a known slug whose grid resolves to something 302s to the English page
+ *    (same pattern the localized `[username]` catch-all uses for a not-yet-built
+ *    localized workflow detail);
+ *  - an unknown or empty slug 301s to the localized use-cases index.
+ *
+ * Before this route both cases 404'd (there was no `[locale]/workflows/use-cases/`
+ * route at all).
+ */
+export const prerender = false;
+
+import { getCollection } from 'astro:content';
+import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
+import { loadSerializedTemplates } from '../../../../lib/hub-api';
+import { localizeCards } from '../../../../lib/i18n/localize-cards';
+import { SEO_PAGES } from '../../../../lib/workflow-pages/use-cases';
+import { resolveUseCasePageTemplates } from '../../../../lib/workflow-pages/use-case-resolver';
+
+const { locale, slug } = Astro.params;
+
+if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// Validate locale
+if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
+  return Astro.redirect(`/workflows/use-cases/${slug || ''}/`);
+}
+
+const typedLocale = locale as Locale;
+
+if (!slug) {
+  return Astro.redirect(`/${locale}/workflows/use-cases/`, 301);
+}
+
+// Unknown / retired use-case slug → the localized use-cases index.
+const def = SEO_PAGES.find((page) => page.slug === slug);
+if (!def) {
+  return Astro.redirect(`/${locale}/workflows/use-cases/`, 301);
+}
+
+// A known slug only gets a page when its grid resolves to something — the same
+// rule the English route's getStaticPaths applies. localizeCards is a no-op for
+// the fields resolveUseCasePageTemplates filters on, but keeps this route in
+// step with the "localize wherever workflow data loads" guard.
+const catalog = localizeCards(
+  await loadSerializedTemplates(() => getCollection('templates')),
+  typedLocale
+);
+if (resolveUseCasePageTemplates(def, catalog).length === 0) {
+  return Astro.redirect(`/${locale}/workflows/use-cases/`, 301);
+}
+
+// Known + populated slug: serve the English page under a 302 so the localized
+// URL can take over once localized use-case content exists.
+return Astro.redirect(`/workflows/use-cases/${slug}/`, 302);
+---
