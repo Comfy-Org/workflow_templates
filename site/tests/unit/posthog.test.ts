@@ -79,3 +79,17 @@ describe('trackSearchPerformed', () => {
     expect(posthogMock.capture).not.toHaveBeenCalled();
   });
 });
+
+describe('experiment CTA tracking', () => {
+  it('tracks an experiment entry point with its flag name and placement', async () => {
+    const { initPostHog, trackExperimentCtaClicked } = await loadPostHog();
+
+    initPostHog();
+    trackExperimentCtaClicked('minimaxH3Demo', 'hub_index_promo');
+
+    expect(posthogMock.capture).toHaveBeenCalledWith('hub:experiment_cta_clicked', {
+      experiment: 'minimaxH3Demo',
+      location: 'hub_index_promo',
+    });
+  });
+});

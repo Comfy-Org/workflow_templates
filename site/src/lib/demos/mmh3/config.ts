@@ -15,6 +15,30 @@
  */
 export const DEPLOYMENT_URL = 'https://dep-5b1d092b-e1c5-437e-b3dc-67870425da2d.run.comfy.app';
 
+/**
+ * Where the demo's bundled example media lives (source files stay committed
+ * under `site/public/demos/mmh3`). Absolute CDN URLs rather than root-relative
+ * ones: the comfy.org router resolves `/demos/...` against the website app,
+ * which has no such tree, and the bucket sends `access-control-allow-origin: *`
+ * so the page can re-fetch these bytes to upload them.
+ *
+ * Declared here so the page, the hub promo and the integration check all read
+ * one value. Moving the assets while the check hard-coded its own copy would
+ * leave it green against URLs the site no longer uses.
+ */
+export const EXAMPLE_ROOT = 'https://media.comfy.org/website/demos/mmh3/example';
+
+/** Agent instructions for writing prompts for this workflow. */
+export const AGENT_PROMPT_URL = 'https://media.comfy.org/website/demos/mmh3/agent-prompt.md';
+
+/** The example clip, played before the first run and in the disabled fallback. */
+export const EXAMPLE_VIDEO_URL = `${EXAMPLE_ROOT}/example.mp4`;
+
+/** The three bundled reference images, in slot order. */
+export function exampleKeyframeUrl(index: number): string {
+  return `${EXAMPLE_ROOT}/keyframes/kf_${index}.webp`;
+}
+
 /** Frames per second the workflow renders at. */
 export const FPS = 24;
 
