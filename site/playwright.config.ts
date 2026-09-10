@@ -19,6 +19,8 @@ export default defineConfig({
 
   use: {
     baseURL: process.env.PLAYWRIGHT_TEST_URL ?? 'http://localhost:4321',
+    channel: 'chrome',
+    headless: false,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
