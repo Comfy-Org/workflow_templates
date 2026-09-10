@@ -44,20 +44,18 @@ const { locale, href, analytics } = Astro.props;
   </div>
 </section>
 
-{
-  analytics && (
-    <script is:inline>
-      document.querySelectorAll('.usecase-cta').forEach((link) => {
-        link.addEventListener('click', () => {
-          if (window.va) {
-            window.va('event', {
-              name: 'cta_click',
-              useCase: link.getAttribute('data-usecase'),
-              location: 'footer',
-            });
-          }
+<script is:inline>
+  // Only runs when the analytics CTA variant is rendered (.usecase-cta is
+  // added to the button only when the analytics prop is set).
+  document.querySelectorAll('.usecase-cta').forEach((link) => {
+    link.addEventListener('click', () => {
+      if (window.va) {
+        window.va('event', {
+          name: 'cta_click',
+          useCase: link.getAttribute('data-usecase'),
+          location: 'footer',
         });
-      });
-    </script>
-  )
-}
+      }
+    });
+  });
+</script>
