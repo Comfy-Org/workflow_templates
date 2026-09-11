@@ -86,6 +86,15 @@ export function serializeJsonLdForScript(value: unknown): string {
 }
 
 /**
+ * Hub copy occasionally carries trailing blank lines from the generator. They
+ * are invisible in rendered HTML but land verbatim inside JSON-LD strings, so
+ * every string this module emits from hub content is trimmed on the way in.
+ */
+function clean(value: string): string {
+  return value.trim();
+}
+
+/**
  * schema.org `FAQPage` JSON-LD for a workflow's FAQ section, or `null` when
  * there are no items (so the caller can skip emitting an empty graph).
  */
@@ -96,8 +105,8 @@ export function buildFaqJsonLd(faqItems: FaqItem[] | undefined) {
     '@type': 'FAQPage',
     mainEntity: faqItems.map((item) => ({
       '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: { '@type': 'Answer', text: item.answer },
+      name: clean(item.question),
+      acceptedAnswer: { '@type': 'Answer', text: clean(item.answer) },
     })),
   };
 }
@@ -184,10 +193,10 @@ export function buildSoftwareApplicationJsonLd(params: {
   return {
     '@context': 'https://schema.org',
     '@type': 'SoftwareApplication',
-    name: params.name,
+    name: clean(params.name),
     applicationCategory: 'MultimediaApplication',
     operatingSystem: 'Windows, macOS, Linux',
-    description: params.description,
+    description: clean(params.description),
     ...(featureList?.length ? { featureList } : {}),
   };
 }
@@ -333,7 +342,7 @@ export function buildWorkflowGraphJsonLd(params: {
     ...(entityGraph.identifier ? { identifier: entityGraph.identifier } : {}),
     ...(publishedDate ? { datePublished: publishedDate } : {}),
     ...(image ? { image } : {}),
-    description,
+    description: clean(description),
     ...(entityGraph.keywords ? { keywords: entityGraph.keywords } : {}),
     creator: { '@id': ORGANIZATION_ID },
     runtimePlatform: { '@id': COMFYUI_ID },
@@ -374,8 +383,8 @@ export function buildWorkflowGraphJsonLd(params: {
       '@id': faqId,
       mainEntity: faqItems!.map((f) => ({
         '@type': 'Question',
-        name: f.question,
-        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+        name: clean(f.question),
+        acceptedAnswer: { '@type': 'Answer', text: clean(f.answer) },
       })),
     });
   }
