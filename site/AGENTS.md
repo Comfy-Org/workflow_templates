@@ -2,7 +2,7 @@
 
 ## Overview
 
-Astro 5 static site with Vue 3 interactive islands. Consumes template data from `../templates/` and deploys to templates.comfy.org via Vercel.
+Astro 5 static site with Vue 3 interactive islands. Consumes template data from `../templates/` and deploys to [comfy.org/workflows](https://comfy.org/workflows/) via Vercel.
 
 ## ⚠️ Scope Boundaries
 

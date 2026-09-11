@@ -5,7 +5,7 @@ import { navRoutes, navExternalLinks, navFeatured } from './nav-routes';
 export type NavColumnItem = {
   label: string;
   href: string;
-  badge?: 'new';
+  badge?: 'new' | 'beta';
   external?: boolean;
 };
 
@@ -50,16 +50,22 @@ export function getMainNavigation(locale: Locale): NavItem[] {
           items: [
             { label: t('nav.comfyLocal', locale), href: navRoutes.download },
             { label: t('nav.comfyCloud', locale), href: navRoutes.cloud },
-            { label: t('nav.developerPlatform', locale), href: navRoutes.platform, badge: 'new' },
+            { label: t('nav.developerPlatform', locale), href: navRoutes.platform, badge: 'beta' },
             { label: t('nav.comfyEnterprise', locale), href: navRoutes.cloudEnterprise },
-            { label: t('nav.managedBuilds', locale), href: navRoutes.managedBuilds },
+            {
+              label: t('nav.managedBuilds', locale),
+              href: navRoutes.managedBuilds,
+              badge: 'beta',
+            },
           ],
         },
         {
           header: t('nav.colFeatures', locale),
           items: [
-            { label: t('nav.mcpServer', locale), href: navRoutes.mcp, badge: 'new' },
-            { label: t('nav.launches', locale), href: navRoutes.launches, badge: 'new' },
+            { label: t('nav.mcpServer', locale), href: navRoutes.mcp },
+            { label: t('nav.comfyAgent', locale), href: navRoutes.agent, badge: 'new' },
+            { label: t('nav.comfyCli', locale), href: navRoutes.cli, badge: 'new' },
+            { label: t('nav.launches', locale), href: navRoutes.launches },
             { label: t('nav.supportedModels', locale), href: navRoutes.models },
             { label: t('nav.docs', locale), href: navExternalLinks.docs, external: true },
           ],
@@ -86,7 +92,7 @@ export function getMainNavigation(locale: Locale): NavItem[] {
           items: [
             { label: t('nav.comfyHub', locale), href: navExternalLinks.workflows },
             { label: t('nav.fdct', locale), href: navRoutes.fdct, badge: 'new' },
-            { label: t('nav.gallery', locale), href: navRoutes.gallery },
+            { label: t('nav.customerStories', locale), href: navRoutes.customers },
             { label: t('nav.events', locale), href: navRoutes.events, badge: 'new' },
             { label: t('nav.affiliates', locale), href: navRoutes.affiliates, badge: 'new' },
             { label: t('nav.learning', locale), href: navRoutes.learning, badge: 'new' },

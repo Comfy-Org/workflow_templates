@@ -12,7 +12,9 @@ defineProps<{ item: NavColumnItem; locale: Locale }>();
   <span class="flex items-center gap-2">
     <span class="ppformula-text-center">{{ item.label }}</span>
     <Badge v-if="item.badge" size="xs" variant="accent">
-      <span class="ppformula-text-center">{{ t('nav.badgeNew', locale) }}</span>
+      <span class="ppformula-text-center">{{
+        t(item.badge === 'beta' ? 'nav.badgeBeta' : 'nav.badgeNew', locale)
+      }}</span>
     </Badge>
     <ArrowUpRight v-if="item.external" class="text-primary-comfy-yellow size-4" />
   </span>

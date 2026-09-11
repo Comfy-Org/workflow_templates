@@ -15,6 +15,8 @@ export const navRoutes = {
   cloudEnterprise: `${ORIGIN}/cloud/enterprise`,
   platform: `${ORIGIN}/platform`,
   managedBuilds: `${ORIGIN}/enterprise/managed-builds`,
+  agent: `${ORIGIN}/agent`,
+  cli: `${ORIGIN}/cli`,
   gallery: `${ORIGIN}/gallery`,
   about: `${ORIGIN}/about`,
   careers: `${ORIGIN}/careers`,
