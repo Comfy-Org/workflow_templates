@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyCuratedCopy,
   extractContent,
   hashContent,
   hashValue,
@@ -9,6 +10,7 @@ import {
   buildHumanSeed,
 } from '../../scripts/i18n/build-content-source';
 import type { WorkflowContent } from '../../src/lib/i18n/schema';
+import { hashHubText, type WorkflowCopy } from '../../src/data/workflow-copy';
 
 describe('extractContent', () => {
   it('normalizes the 7 fields and drops unknown keys', () => {
@@ -157,5 +159,55 @@ describe('hashValue', () => {
   it('is a stable 12-hex string', () => {
     expect(hashValue(['a', 'b'])).toMatch(/^[0-9a-f]{12}$/);
     expect(hashValue(['a', 'b'])).toBe(hashValue(['a', 'b']));
+  });
+});
+
+describe('applyCuratedCopy', () => {
+  const STALE_HUB_TEXT = 'Generated hub prose the client asked us to replace.';
+  const CURATED: Record<string, WorkflowCopy> = {
+    demo_workflow: {
+      replacesHubText: hashHubText(STALE_HUB_TEXT),
+      extendedDescription: ['Approved paragraph one.', 'Approved paragraph two.'],
+    },
+  };
+  const hubEntry = (extendedDescription: string): WorkflowContent => ({
+    title: 'T',
+    description: 'D',
+    metaDescription: 'M',
+    extendedDescription,
+    howToUse: ['h'],
+    suggestedUseCases: ['u'],
+    faqItems: [{ question: 'q', answer: 'a' }],
+  });
+
+  it('swaps in the curated extendedDescription while the hub still serves the replaced text', () => {
+    const out = applyCuratedCopy('demo_workflow', hubEntry(STALE_HUB_TEXT), CURATED);
+    expect(out.extendedDescription).toBe('Approved paragraph one.\n\nApproved paragraph two.');
+  });
+
+  it('touches no other field, so only extendedDescription goes stale for re-translation', () => {
+    const before = hubEntry(STALE_HUB_TEXT);
+    const after = applyCuratedCopy('demo_workflow', before, CURATED);
+    expect({ ...after, extendedDescription: before.extendedDescription }).toEqual(before);
+    expect(staleFields({ x: hashContent(before) }, { x: hashContent(after) })).toEqual({
+      x: ['extendedDescription'],
+    });
+  });
+
+  it('passes the hub text through once the hub record has changed', () => {
+    const updated = hubEntry(`${STALE_HUB_TEXT} Edited in the hub.`);
+    expect(applyCuratedCopy('demo_workflow', updated, CURATED)).toBe(updated);
+  });
+
+  it('leaves uncurated workflows untouched', () => {
+    const plain = hubEntry('Ordinary hub prose.');
+    expect(applyCuratedCopy('some_other_workflow', plain, CURATED)).toBe(plain);
+  });
+
+  it('resolves the real table by hub share id', () => {
+    // The pipeline keys everything by shareId; the curated table is keyed by
+    // template name, and the shared resolver bridges the two.
+    const out = applyCuratedCopy('b37902cee452', hubEntry(''));
+    expect(out.extendedDescription).toContain('LTX-2.5');
   });
 });
