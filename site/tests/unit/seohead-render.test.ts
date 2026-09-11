@@ -41,4 +41,53 @@ describe('SEOHead rendered output', () => {
     expect(hreflangs.sort()).toEqual(['en', 'ja', 'x-default']);
     expect(ogLocales.sort()).toEqual(['en_US', 'ja_JP']);
   });
+
+  it('renders matching self-canonical and hreflang alternates for localized creator profiles (jms)', async () => {
+    const examples = [
+      {
+        path: '/workflows/jms/',
+        locale: 'en',
+        expectedCanonical: 'https://comfy.org/workflows/jms/',
+      },
+      {
+        path: '/zh/workflows/jms/',
+        locale: 'zh',
+        expectedCanonical: 'https://comfy.org/zh/workflows/jms/',
+      },
+      {
+        path: '/ja/workflows/jms/',
+        locale: 'ja',
+        expectedCanonical: 'https://comfy.org/ja/workflows/jms/',
+      },
+      {
+        path: '/fr/workflows/jms/',
+        locale: 'fr',
+        expectedCanonical: 'https://comfy.org/fr/workflows/jms/',
+      },
+      {
+        path: '/tr/workflows/jms/',
+        locale: 'tr',
+        expectedCanonical: 'https://comfy.org/tr/workflows/jms/',
+      },
+    ];
+
+    for (const { path, locale, expectedCanonical } of examples) {
+      const html = await render(path, {
+        canonicalUrl: expectedCanonical,
+        hreflangBasePath: '/workflows/jms/',
+        hreflangLocales: ['en', 'zh', 'ja', 'fr', 'tr'],
+      });
+
+      expect(html).toContain(`<link rel="canonical" href="${expectedCanonical}">`);
+      if (locale !== 'en') {
+        expect(html).toContain(
+          `<link rel="alternate" hreflang="${locale}" href="${expectedCanonical}">`
+        );
+      }
+      expect(html).toContain(
+        '<link rel="alternate" hreflang="x-default" href="https://comfy.org/workflows/jms/">'
+      );
+      expect(html).not.toContain('name="robots" content="noindex');
+    }
+  });
 });
