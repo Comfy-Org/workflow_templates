@@ -8,7 +8,7 @@ This repo hosts the official ComfyUI **workflow templates** and **subgraph bluep
 |---------|-------------|----------|
 | **Workflow Templates** | Full standalone workflows for the template picker | `templates/`, `packages/` |
 | **Subgraph Blueprints** | Reusable node components that appear in the node palette | `blueprints/`, `packages/blueprints/` |
-| **Template Site** | Astro SSG that showcases templates at [templates.comfy.org](https://templates.comfy.org) | `site/` |
+| **Template Site** | Astro SSG that showcases templates at [comfy.org/workflows](https://comfy.org/workflows/) | `site/` |
 
 The repository uses a **package-per-media** structure for Python distribution:
 
