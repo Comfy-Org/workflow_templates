@@ -54,11 +54,9 @@ const family =
   groups.find((group) => group.slug === name) ??
   groups.find((group) => group.redirectFrom.includes(name!));
 
+// An unknown or removed model slug (such as `none`) 301s to the models index rather than 404ing.
 if (!family) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect(modelsIndexPath(), 301);
 }
 
 // A variant slug 301s to its family's canonical URL, matching the English route.
