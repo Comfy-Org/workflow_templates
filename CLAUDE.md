@@ -2,7 +2,7 @@
 
 ## What This Repo Is
 
-A monorepo managing **ComfyUI workflow templates** distributed as Python packages AND a public **Astro-based workflow hub website** at templates.comfy.org. Two distinct systems share the same template data.
+A monorepo managing **ComfyUI workflow templates** distributed as Python packages AND a public **Astro-based workflow hub website** at comfy.org/workflows. Two distinct systems share the same template data.
 
 ## Repository Map
 
@@ -66,7 +66,7 @@ templates/index.json + *.json + *.webp
   ├──→ scripts/sync/sync_bundles.py ──→ packages/media_*/
   └──→ site/scripts/sync-templates.ts ──→ site/src/content/templates/
        └──→ site/scripts/generate-ai.ts ──→ AI-enriched content
-            └──→ astro build ──→ templates.comfy.org (Vercel)
+            └──→ astro build ──→ comfy.org/workflows (Vercel)
 ```
 
 ## Key Commands
