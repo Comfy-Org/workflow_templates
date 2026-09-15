@@ -16,7 +16,7 @@
         540
       ],
       "flags": {},
-      "order": 9,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -96,12 +96,42 @@
               "z": 1
             }
           }
+        },
+        "Scene Config": {
+          "showGrid": true,
+          "backgroundColor": "#282828",
+          "backgroundImage": "",
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
         }
       },
       "widgets_values": [
         "5d5560bf-eda5-46cb-86bf-9b0d0c586fee.glb",
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "model_file": "5d5560bf-eda5-46cb-86bf-9b0d0c586fee.glb",
+        "image": ""
+      }
     },
     {
       "id": 32,
@@ -115,12 +145,12 @@
         550
       ],
       "flags": {},
-      "order": 10,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
           "name": "mesh",
-          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D_PLY,FILE_3D_SPLAT,FILE_3D_SPZ,FILE_3D_KSPLAT,FILE_3D_SPLAT_ANY,FILE_3D_POINT_CLOUD_ANY,FILE_3D",
           "link": 31
         }
       ],
@@ -183,68 +213,25 @@
       "widgets_values": [
         "3d/Tripo_P1",
         ""
-      ]
-    },
-    {
-      "id": 33,
-      "type": "TripoRefineNode",
-      "pos": [
-        -7560,
-        1680
       ],
-      "size": [
-        330,
-        120
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 4,
-      "inputs": [
-        {
-          "name": "model_task_id",
-          "type": "MODEL_TASK_ID",
-          "link": null
-        }
-      ],
-      "outputs": [
-        {
-          "name": "model_file",
-          "type": "STRING",
-          "links": null
-        },
-        {
-          "name": "model task_id",
-          "type": "MODEL_TASK_ID",
-          "links": null
-        },
-        {
-          "name": "GLB",
-          "type": "FILE_3D_GLB",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "TripoRefineNode",
-        "cnr_id": "comfy-core",
-        "ver": "0.16.3"
-      },
-      "widgets_values": [],
-      "color": "#432",
-      "bgcolor": "#653"
+      "widgets_values_named": {
+        "filename_prefix": "3d/Tripo_P1",
+        "image": ""
+      }
     },
     {
       "id": 34,
       "type": "TripoRigNode",
       "pos": [
         -7560,
-        1850
+        1846
       ],
       "size": [
         330,
-        120
+        205.90625
       ],
       "flags": {},
-      "order": 1,
+      "order": 0,
       "mode": 4,
       "inputs": [
         {
@@ -268,6 +255,11 @@
           "name": "GLB",
           "type": "FILE_3D_GLB",
           "links": null
+        },
+        {
+          "name": "FBX",
+          "type": "FILE_3D_FBX",
+          "links": null
         }
       ],
       "properties": {
@@ -275,7 +267,18 @@
         "cnr_id": "comfy-core",
         "ver": "0.16.3"
       },
-      "widgets_values": [],
+      "widgets_values": [
+        "v1.0-20240301",
+        "auto",
+        "tripo",
+        "glb"
+      ],
+      "widgets_values_named": {
+        "model_version": "v1.0-20240301",
+        "rig_type": "auto",
+        "spec": "tripo",
+        "out_format": "glb"
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -284,14 +287,14 @@
       "type": "TripoRetargetNode",
       "pos": [
         -7560,
-        1470
+        1603
       ],
       "size": [
         330,
-        160
+        190
       ],
       "flags": {},
-      "order": 2,
+      "order": 1,
       "mode": 4,
       "inputs": [
         {
@@ -315,6 +318,11 @@
           "name": "GLB",
           "type": "FILE_3D_GLB",
           "links": null
+        },
+        {
+          "name": "FBX",
+          "type": "FILE_3D_FBX",
+          "links": null
         }
       ],
       "properties": {
@@ -323,8 +331,17 @@
         "ver": "0.16.3"
       },
       "widgets_values": [
-        "preset:idle"
+        "preset:idle",
+        "glb",
+        true,
+        false
       ],
+      "widgets_values_named": {
+        "animation": "preset:idle",
+        "out_format": "glb",
+        "export_with_geometry": true,
+        "animate_in_place": false
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -333,23 +350,29 @@
       "type": "TripoConversionNode",
       "pos": [
         -7560,
-        2050
+        2104.90625
       ],
       "size": [
         330,
         470
       ],
       "flags": {},
-      "order": 3,
+      "order": 2,
       "mode": 4,
       "inputs": [
         {
           "name": "original_model_task_id",
-          "type": "MODEL_TASK_ID,RIG_TASK_ID,RETARGET_TASK_ID",
+          "type": "MODEL_TASK_ID,RIG_TASK_ID,RETARGET_TASK_ID,SEGMENT_TASK_ID",
           "link": null
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "model_3d",
+          "type": "FILE_3D",
+          "links": null
+        }
+      ],
       "properties": {
         "Node name for S&R": "TripoConversionNode",
         "cnr_id": "comfy-core",
@@ -375,6 +398,26 @@
         "default",
         false
       ],
+      "widgets_values_named": {
+        "format": "GLTF",
+        "quad": false,
+        "face_limit": -1,
+        "texture_size": 4096,
+        "texture_format": "JPEG",
+        "force_symmetry": false,
+        "flatten_bottom": false,
+        "flatten_bottom_threshold": 0,
+        "pivot_to_center_bottom": false,
+        "scale_factor": 1,
+        "with_animation": false,
+        "pack_uv": false,
+        "bake": false,
+        "part_names": "",
+        "fbx_preset": "blender",
+        "export_vertex_colors": false,
+        "export_orientation": "default",
+        "animate_in_place": false
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -387,15 +430,21 @@
       ],
       "size": [
         330,
-        210
+        340
       ],
       "flags": {},
-      "order": 4,
+      "order": 3,
       "mode": 4,
       "inputs": [
         {
           "name": "model_task_id",
-          "type": "MODEL_TASK_ID",
+          "type": "MODEL_TASK_ID,SEGMENT_TASK_ID",
+          "link": null
+        },
+        {
+          "name": "style_image",
+          "shape": 7,
+          "type": "IMAGE",
           "link": null
         }
       ],
@@ -414,6 +463,11 @@
           "name": "GLB",
           "type": "FILE_3D_GLB",
           "links": null
+        },
+        {
+          "name": "FBX",
+          "type": "FILE_3D_FBX",
+          "links": null
         }
       ],
       "properties": {
@@ -426,8 +480,23 @@
         true,
         42,
         "standard",
-        "original_image"
+        "original_image",
+        "",
+        "v3.0-20250812",
+        "none",
+        ""
       ],
+      "widgets_values_named": {
+        "texture": true,
+        "pbr": true,
+        "texture_seed": 42,
+        "texture_quality": "standard",
+        "texture_alignment": "original_image",
+        "texture_prompt": "",
+        "model_version": "v3.0-20250812",
+        "reference": "none",
+        "part_names": ""
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -443,7 +512,7 @@
         470
       ],
       "flags": {},
-      "order": 5,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -466,7 +535,11 @@
       "widgets_values": [
         "wooden_doll.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "wooden_doll.png",
+        "upload": "image"
+      }
     },
     {
       "id": 46,
@@ -476,11 +549,11 @@
         1160
       ],
       "size": [
-        285.4375,
-        402.65625
+        290,
+        360
       ],
       "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -544,6 +617,19 @@
         true,
         false
       ],
+      "widgets_values_named": {
+        "output_mode": "Textured",
+        "output_mode.pbr": true,
+        "output_mode.texture_quality": "detailed",
+        "output_mode.texture_alignment": "original_image",
+        "output_mode.orientation": "default",
+        "output_mode.texture_seed": 42,
+        "face_limit": -1,
+        "model_seed": 42,
+        "auto_size": false,
+        "export_uv": true,
+        "compress_geometry": false
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -559,7 +645,7 @@
         470
       ],
       "flags": {},
-      "order": 6,
+      "order": 5,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -582,7 +668,11 @@
       "widgets_values": [
         "wooden_doll_left.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "wooden_doll_left.png",
+        "upload": "image"
+      }
     },
     {
       "id": 48,
@@ -596,7 +686,7 @@
         470
       ],
       "flags": {},
-      "order": 7,
+      "order": 6,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -619,7 +709,11 @@
       "widgets_values": [
         "wooden_doll_back.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "wooden_doll_back.png",
+        "upload": "image"
+      }
     }
   ],
   "links": [
@@ -671,8 +765,8 @@
       "bounding": [
         -7690,
         1120,
-        630,
-        1430
+        640,
+        1540
       ],
       "color": "#3f789e",
       "flags": {}
@@ -681,13 +775,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.46052257854648604,
+      "scale": 0.43493618794783834,
       "offset": [
-        8003.505327401764,
-        -679.493663746234
+        8342.032222451857,
+        -598.0744581059523
       ]
     },
-    "frontendVersion": "1.44.19",
+    "frontendVersion": "1.52.7",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
