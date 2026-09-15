@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import shutil
+import subprocess
 from pathlib import Path
 from typing import Optional
 
@@ -123,7 +124,30 @@ def get_pip_excluded_template_names() -> frozenset[str]:
     return frozenset(excluded)
 
 
-def filter_index_for_pip(raw_json: bytes, excluded_names: frozenset[str]) -> bytes:
+def get_input_source_revisions(repo_root: Path = ROOT) -> dict[str, str]:
+    revision = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=repo_root, text=True
+    ).strip()
+    entries = subprocess.check_output(
+        ["git", "ls-tree", "-r", "-z", revision, "--", "input/"], cwd=repo_root
+    )
+    sources = {}
+    for entry in entries.split(b"\0"):
+        if not entry:
+            continue
+        metadata, path = entry.decode("utf-8").split("\t", 1)
+        mode, kind, _ = metadata.split()
+        filename = path.removeprefix("input/")
+        if kind == "blob" and mode in {"100644", "100755"} and "/" not in filename:
+            sources[filename] = revision
+    return sources
+
+
+def filter_index_for_pip(
+    raw_json: bytes,
+    excluded_names: frozenset[str],
+    input_source_revisions: Optional[dict[str, str]] = None,
+) -> bytes:
     """Return a rewritten index JSON with excluded templates removed.
 
     Works for both the primary ``index.json`` and every locale variant
@@ -136,6 +160,14 @@ def filter_index_for_pip(raw_json: bytes, excluded_names: frozenset[str]) -> byt
             t for t in category.get("templates", [])
             if t.get("name") not in excluded_names
         ]
+        for template in templates:
+            for sample in template.get("io", {}).get("inputs", []):
+                if not isinstance(sample, dict):
+                    continue
+                sample.pop("sourceRevision", None)
+                revision = (input_source_revisions or {}).get(sample.get("file"))
+                if revision:
+                    sample["sourceRevision"] = revision
         if templates:
             filtered.append({**category, "templates": templates})
     return json.dumps(filtered, indent=2, ensure_ascii=False).encode("utf-8")
@@ -368,6 +400,8 @@ def sync_bundle_directories(
     if dry_run:
         return
 
+    input_source_revisions = get_input_source_revisions()
+
     # The manifest passed in is already filtered by build_manifest(filter_pip=...).
     # We still need excluded_names here to rewrite the index JSON files on disk.
     if excluded_names is None:
@@ -409,7 +443,11 @@ def sync_bundle_directories(
                 dest = JSON_TARGET / Path(filename).name
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 if Path(filename).name in index_data_filenames:
-                    dest.write_bytes(filter_index_for_pip(src.read_bytes(), excluded_names))
+                    dest.write_bytes(
+                        filter_index_for_pip(
+                            src.read_bytes(), excluded_names, input_source_revisions
+                        )
+                    )
                 else:
                     shutil.copy2(src, dest)
                 continue
