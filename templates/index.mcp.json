@@ -821,7 +821,7 @@
         "title": "Nano Banana 2: Text to Image",
         "task": "Text to Image",
         "model": "Nano Banana 2",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 880,
         "recommend": "high",
         "description": "Generate images from text prompts using Google's Gemini 3.1 Flash Image model (Nano Banana 2), optimized for fast generation and up to 4K resolution. This API workflow takes a text prompt and outputs a single image, ideal for rapid prototyping, concept art, and creative exploration.",
@@ -891,10 +891,7 @@
         },
         "minComfyUIVersion": "0.24.0",
         "capabilities": {
-          "workflow": ["api", "text-to-image"],
-          "model_options": {
-            "GeminiNodeV2": ["Gemini 3.7 Flash", "Gemini 3.5 Flash", "Gemini 3.1 Pro", "Gemini 3.1 Flash-Lite"]
-          }
+          "workflow": ["api", "text-to-image"]
         }
       },
       {
@@ -4228,6 +4225,24 @@
     "description": "General-purpose workflow templates for native video generation, including text-to-video, image-to-video, and other core video workflows supported out of the box.",
     "templates": [
       {
+        "name": "video_fastvideo_fasth3_i2v",
+        "title": "FastVideo FastH3: Image to Video",
+        "task": "Image to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video with synchronized native audio from a single still image using MiniMax H3 and the FastH3 8-step checkpoint. One image produces one video output with matching voice, sound effects, and music in a single pass. Ideal for animating portraits, bringing product shots to life, and quick social media clips.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["image-to-video"]
+        }
+      },
+      {
         "name": "video_minimax_h3_i2v",
         "title": "MiniMax H3: Image to Video",
         "task": "Image to Video",
@@ -4282,24 +4297,39 @@
         }
       },
       {
-        "name": "api_seedance2_5_video_editing",
-        "title": "Seedance2.5: Video Editing",
-        "task": "Video Edit",
-        "model": "Seedance 2.5",
+        "name": "video_ltx2_5_i2v",
+        "title": "LTX-2.5: Image to Video",
+        "task": "Image to Video",
+        "model": "LTX-2.5",
         "freshness": "recent",
-        "usage": 827,
-        "recommend": "high",
-        "description": "Edit existing video clips with Seedance 2.5 by describing changes in natural language, enabling local object removal, background swaps, scene replacements, and style transfers while preserving the original composition and motion. Feed in 1 video and receive 1 edited video output with temporally consistent results across frames. Ideal for e-commerce background replacement, stylized remakes of footage, and ad re-editing with targeted retouching.",
+        "usage": 5313,
+        "recommend": "highly_recommended",
+        "description": "Generate video from a single image using LTX-2.5, producing a high-fidelity clip with industry-leading pixel quality and native multishot capability that holds character, environment, and lighting across connected scenes. Ideal for cinematic production, VFX shot creation, and content pipelines requiring fast, locally deployable video generation.",
         "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
         },
-        "minComfyUIVersion": "0.33.2",
+        "minComfyUIVersion": "0.32.0",
         "capabilities": {
-          "workflow": ["api", "video-edit"],
-          "model_options": {
-            "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
-          }
+          "workflow": ["image-to-video"]
+        }
+      },
+      {
+        "name": "video_ltx2_3_i2v",
+        "title": "LTX-2.3: Image to Video",
+        "task": "Image to Video",
+        "model": "LTX-2.3",
+        "freshness": "established",
+        "usage": 17949,
+        "recommend": "highly_recommended",
+        "description": "Upload an image to generate a video with improved motion consistency and fine details, including enhanced support for portrait formats and audio quality.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.16.4",
+        "capabilities": {
+          "workflow": ["image-to-video"]
         }
       },
       {
@@ -4366,6 +4396,45 @@
         }
       },
       {
+        "name": "api_seedance2_0_r2v",
+        "title": "Seedance 2.0: Reference to Video",
+        "task": "Image to Video",
+        "model": "Seedance 2.0",
+        "freshness": "current",
+        "usage": 848,
+        "recommend": "high",
+        "description": "Generate cinematic videos from reference images and text prompts. Preserve subject identity and composition while adding expressive motion with synchronized audio. Control camera movement and lighting through detailed prompts.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.26.2",
+        "capabilities": {
+          "workflow": ["api", "image-to-video"],
+          "model_options": {
+            "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
+        }
+      },
+      {
+        "name": "video_fastvideo_fasth3_t2v",
+        "title": "FastVideo FastH3: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate synchronized video and audio directly from text using a distilled eight-step model, producing one video output with no file inputs required. Ideal for rapid text-to-video prototyping, audio-visual content creation, and creative storytelling where fast generation matters more than maximum detail.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["text-to-video"]
+        }
+      },
+      {
         "name": "api_seedance2_5_t2v_1080p",
         "title": "Seedance2.5 1080P: Text to Video",
         "task": "Text to Video",
@@ -4408,24 +4477,6 @@
         }
       },
       {
-        "name": "video_ltx2_5_i2v",
-        "title": "LTX-2.5: Image to Video",
-        "task": "Image to Video",
-        "model": "LTX-2.5",
-        "freshness": "recent",
-        "usage": 5313,
-        "recommend": "highly_recommended",
-        "description": "Generate video from a single image using LTX-2.5, producing a high-fidelity clip with industry-leading pixel quality and native multishot capability that holds character, environment, and lighting across connected scenes. Ideal for cinematic production, VFX shot creation, and content pipelines requiring fast, locally deployable video generation.",
-        "io": {
-          "inputs": ["image: Reference image", "text: Motion or style prompt"],
-          "outputs": ["video: Animated video"]
-        },
-        "minComfyUIVersion": "0.32.0",
-        "capabilities": {
-          "workflow": ["image-to-video"]
-        }
-      },
-      {
         "name": "video_ltx2_5_t2v",
         "title": "LTX-2.5: Text to Video",
         "task": "Text to Video",
@@ -4444,24 +4495,6 @@
         }
       },
       {
-        "name": "video_ltx2_3_i2v",
-        "title": "LTX-2.3: Image to Video",
-        "task": "Image to Video",
-        "model": "LTX-2.3",
-        "freshness": "established",
-        "usage": 17949,
-        "recommend": "highly_recommended",
-        "description": "Upload an image to generate a video with improved motion consistency and fine details, including enhanced support for portrait formats and audio quality.",
-        "io": {
-          "inputs": ["image: Reference image", "text: Motion or style prompt"],
-          "outputs": ["video: Animated video"]
-        },
-        "minComfyUIVersion": "0.16.4",
-        "capabilities": {
-          "workflow": ["image-to-video"]
-        }
-      },
-      {
         "name": "video_ltx2_3_ia2v",
         "title": "LTX-2.3: Image Audio to Video",
         "task": "Image to Video",
@@ -4477,27 +4510,6 @@
         "minComfyUIVersion": "0.16.4",
         "capabilities": {
           "workflow": ["image-to-video", "lip-sync"]
-        }
-      },
-      {
-        "name": "api_seedance2_0_r2v",
-        "title": "Seedance 2.0: Reference to Video",
-        "task": "Image to Video",
-        "model": "Seedance 2.0",
-        "freshness": "current",
-        "usage": 848,
-        "recommend": "high",
-        "description": "Generate cinematic videos from reference images and text prompts. Preserve subject identity and composition while adding expressive motion with synchronized audio. Control camera movement and lighting through detailed prompts.",
-        "io": {
-          "inputs": ["image: Reference image", "text: Motion or style prompt"],
-          "outputs": ["video: Animated video"]
-        },
-        "minComfyUIVersion": "0.26.2",
-        "capabilities": {
-          "workflow": ["api", "image-to-video"],
-          "model_options": {
-            "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
-          }
         }
       },
       {
@@ -4683,6 +4695,27 @@
           "workflow": ["api", "image-to-video"],
           "model_options": {
             "Wan3ImageToVideoApi": ["wan3.0-video", "wan3.0-video-prime"]
+          }
+        }
+      },
+      {
+        "name": "api_seedance2_5_video_editing",
+        "title": "Seedance2.5: Video Editing",
+        "task": "Video Edit",
+        "model": "Seedance 2.5",
+        "freshness": "recent",
+        "usage": 827,
+        "recommend": "high",
+        "description": "Edit existing video clips with Seedance 2.5 by describing changes in natural language, enabling local object removal, background swaps, scene replacements, and style transfers while preserving the original composition and motion. Feed in 1 video and receive 1 edited video output with temporally consistent results across frames. Ideal for e-commerce background replacement, stylized remakes of footage, and ad re-editing with targeted retouching.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.33.2",
+        "capabilities": {
+          "workflow": ["api", "video-edit"],
+          "model_options": {
+            "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
           }
         }
       },
@@ -5352,7 +5385,7 @@
         "freshness": "recent",
         "usage": 51,
         "recommend": "low",
-        "description": "Edit videos with natural language using Gemini Omni Flash. This workflow transforms a single input video based on descriptive instructions, producing an edited video output. Specify duration and aspect ratio in your prompt for intuitive edits like changing backgrounds or adding atmosphere. Ideal for quick social media remixes and cinematic scene adjustments.",
+        "description": "Edit videos with natural language using Gemini Omni Flash, transforming a single input video into one edited output based on your descriptive instructions. Specify the duration and aspect ratio in your prompt, and leverage Omni's world knowledge for intuitive edits like changing backgrounds or adding atmosphere. Ideal for quick social media remixes, cinematic scene adjustments, and iterative video refinements without technical prompts.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
@@ -5361,7 +5394,7 @@
         "capabilities": {
           "workflow": ["api", "video-edit"],
           "model_options": {
-            "GeminiVideoOmni": ["Omni Flash"]
+            "GeminiVideoOmniV2": ["Omni Flash 1.1", "Omni Flash"]
           }
         }
       },
@@ -7713,7 +7746,7 @@
         "title": "Wan ATI Motion Control",
         "task": "Motion Control",
         "model": "Wan ATI",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 8,
         "recommend": "not_recommended",
         "description": "Upload a reference image and draw custom motion paths using the Animate Path node. The Wan ATI model generates a short video that follows the drawn trajectories, producing smooth, path-based animation. This creates viral, social‑media style looping clips from a single image.",
@@ -9515,10 +9548,10 @@
         "freshness": "current",
         "usage": 46,
         "recommend": "not_recommended",
-        "description": "Upload a reference image of your subject to generate a game-ready 3D model with clean topology and optimized polygon budgets using Tripo P1's advanced 3D generation. This workflow takes a single image as input and returns a GLB 3D model via a third-party API, with response time depending on server-side processing.",
+        "description": "Upload a reference image of your subject. Generate a game-ready 3D model with clean topology and optimized polygon budgets",
         "io": {
-          "inputs": ["image: Reference image of the subject for game-ready 3D model generation"],
-          "outputs": ["model: Generated game-ready 3D model with clean topology using Tripo P1"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.23.0",
         "capabilities": {
@@ -9533,10 +9566,10 @@
         "freshness": "current",
         "usage": 55,
         "recommend": "low",
-        "description": "Input a text prompt describing a 3D model. Tripo P1 generates a game-ready GLB model with clean topology, optimized polygons, auto-refine, auto-rig, auto-texture, and retargeting. This workflow calls a third-party API; execution time depends on server-side response.",
+        "description": "Input a text description of a 3D model. Generate a game-ready 3D model with clean topology and optimized polygon counts",
         "io": {
-          "inputs": ["text: Text prompt describing the desired 3D model"],
-          "outputs": ["model: Generated 3D model with textures in GLB format"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.23.0",
         "capabilities": {
@@ -9569,10 +9602,10 @@
         "freshness": "current",
         "usage": 30,
         "recommend": "not_recommended",
-        "description": "Tripo P1, an advanced text-to-3D generation model, accepts three multi-view reference images (front, side, back) to produce a clean low-poly 3D model. Outputs a GLB file with optimized topology, ready for game engines. Note: execution calls a third-party API and response time depends on the server.",
+        "description": "Upload an image or multi-view references to generate a clean low-poly 3D model with controlled polygon count and organized topology, ready for export to game engines.",
         "io": {
-          "inputs": ["image×3: Multi-view reference images (front, side, back) of the object"],
-          "outputs": ["model: Generated 3D model in GLB format with optimized topology"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.23.0",
         "capabilities": {
@@ -10175,7 +10208,7 @@
         "title": "Kling 3.0: 1 Click Multishot",
         "task": "Text to Video",
         "model": "Kling 3.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 43,
         "recommend": "low",
         "description": "Use Kling 3.0’s image-to-video and native audio to create a multi-shot product commercial. Upload a start frame and reference images, then set duration and shot count—Gemini nodes automatically generate tailored prompts for each segment. The model outputs a coherent video sequence with up to 15 seconds of high-quality footage.",
@@ -10502,10 +10535,10 @@
         "freshness": "current",
         "usage": 9,
         "recommend": "low",
-        "description": "Swap any character into an existing video using GPT Image 2 and Seedance 2.0. Upload a source video and a reference image; GPT Image 2, with its excellent prompt following and character editing, intelligently replaces the character in the first frame. Seedance 2.0 then generates the full swapped clip. This workflow relies on a third-party API, so execution depends on server response time.",
+        "description": "A one click workflow to recreate an input video with your character. All you need to do is upload the video and your character. This workflow uses Google Gemini LLM to analyze the input video and reverse engineer a prompt. You can prompt for specific details to inject into this analysis. The workflow extracts the first frame of the video and swaps your character into it, sends this into Seedance 2.0 Reference-to-Video and generates",
         "io": {
-          "inputs": ["video: Input video with the scene to recreate", "image: Reference image of the character to swap in"],
-          "outputs": ["video: Generated video with swapped character"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.26.2",
         "capabilities": {
@@ -10595,16 +10628,16 @@
         "freshness": "current",
         "usage": 31,
         "recommend": "low",
-        "description": "This workflow replaces a character throughout an input video using a reference image, preserving the original motion. It first generates a clean reference from the first frame with Nano Banana 2, then applies Wan 2.2 Animate for full scene swapping, optimized for human subjects. Execution runs via a third-party API, so completion depends on server response.",
+        "description": "Wan Animate 2.2 — Character & Scene Replacement - Uses Nano Banana 2 to generate a reference image from the first frame, then swaps the full scene. Optimized for human subjects.",
         "io": {
-          "inputs": ["video: Input video with the scene to animate", "image: Reference image of the character for replacement"],
-          "outputs": ["video: Generated animated video with character replacement"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.15.1",
         "capabilities": {
           "workflow": ["api", "character-replacement", "image-to-video"],
           "model_options": {
-            "GeminiNanoBanana2": ["Nano Banana 2 (Gemini 3.1 Flash Image)"]
+            "GeminiNanoBanana2V2": ["Nano Banana 2 (Gemini 3.1 Flash Image)", "Nano Banana 2 Lite"]
           }
         }
       },
@@ -10694,7 +10727,7 @@
         "title": "1 image input Split Stack - Qwen Multiangle + Wan 2.2",
         "task": "Image to Video",
         "model": "Qwen-Image-Edit",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 32,
         "recommend": "low",
         "description": "Generate 5 alternate 3D-aware angles from a single input image and prompt using Qwen-Image-Edit’s multi-view capability. These frames are intended as start points for Wan2.2 video synthesis; the workflow outputs a horizontally stacked composite image of the angles.",
