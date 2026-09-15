@@ -16,7 +16,7 @@ import { isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
 import { hubMediaFor } from '@/lib/hub-media';
 import { cn } from '@/lib/utils';
-import { Avatar } from '@/components/ui/avatar';
+import { AuthorLink } from '@/components/ui/author-link';
 
 interface Props {
   templates: IslandTemplate[];
@@ -221,33 +221,25 @@ onUnmounted(() => {
               {{ slide.title }}
             </h2>
             <div class="flex min-w-0 flex-wrap items-center gap-2 sm:gap-3">
-              <a
-                v-if="slide.creatorUrl"
+              <AuthorLink
                 :href="slide.creatorUrl"
-                class="author-link pointer-events-auto relative z-20 flex min-w-0 items-center gap-2 text-white/95 hover:text-white focus-visible:text-white"
-                style="--author-link-highlight: rgb(255 255 255 / 0.18)"
-                @click.stop
-              >
-                <Avatar
-                  :src="slide.creatorAvatarUrl"
-                  :name="slide.creatorName"
-                  class="author-link-avatar size-5 sm:size-6"
-                />
-                <span
-                  class="author-link-name ppformula-text-center-sm truncate text-sm sm:text-base"
-                  >{{ slide.creatorName }}</span
-                >
-              </a>
-              <div v-else class="flex min-w-0 items-center gap-2 text-white/95">
-                <Avatar
-                  :src="slide.creatorAvatarUrl"
-                  :name="slide.creatorName"
-                  class="size-5 sm:size-6"
-                />
-                <span class="ppformula-text-center-sm truncate text-sm sm:text-base">{{
-                  slide.creatorName
-                }}</span>
-              </div>
+                :avatar-url="slide.creatorAvatarUrl"
+                :name="slide.creatorName"
+                highlight-class="hover:bg-white/18 focus-visible:bg-white/18"
+                avatar-class="size-5 sm:size-6"
+                name-class="ppformula-text-center-sm text-sm sm:text-base"
+                :class="
+                  cn(
+                    'relative z-20 min-w-0 text-white/95',
+                    // Only the real link opts back into pointer events: without a creator
+                    // URL the wrapper must stay transparent (inheriting the overlay's
+                    // pointer-events-none) so clicks fall through to the whole-card link.
+                    slide.creatorUrl &&
+                      'pointer-events-auto hover:text-white focus-visible:text-white'
+                  )
+                "
+                @click="(event: MouseEvent) => slide.creatorUrl && event.stopPropagation()"
+              />
 
               <!-- Tags: only the first shows on the smallest screens; more reveal as width grows. -->
               <a
