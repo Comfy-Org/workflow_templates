@@ -22,6 +22,7 @@ ALL_PACKAGE_IDS = (
     "media_image",
     "media_other",
     "media_assets_01",
+    "media_assets_02",
     "blueprints",
     "meta",
 )
@@ -53,6 +54,7 @@ BUNDLE_PACKAGE_MAP = {
     "media-image": "media_image",
     "media-other": "media_other",
     "media-assets-01": "media_assets_01",
+    "media-assets-02": "media_assets_02",
 }
 
 
@@ -85,7 +87,7 @@ def _json_asset_fingerprints(manifest: dict) -> dict[str, str]:
 def _media_asset_fingerprints(manifest: dict, bundle: str) -> dict[str, str]:
     """Fingerprints for non-JSON assets that resolve from the given media bundle.
 
-    Honors per-asset ``bundle`` overrides (additive logos in media-assets-01).
+    Honors per-asset ``bundle`` overrides (additive logos in the active assets bundle).
     """
     fingerprints: dict[str, str] = {}
     for entry in manifest.get("templates", []):
@@ -385,7 +387,8 @@ def get_changed_packages() -> Set[str]:
             details = ", ".join(sorted(blocked))
             raise SystemExit(
                 "Frozen media packages need an update but are not auto-bumped: "
-                f"{details}. Move new assets to media-assets-01 (additive logos) "
+                f"{details}. Move new assets to the recommended asset bundle "
+                "(see scripts/data/version_policy.json) "
                 "or manually bump the frozen package version."
             )
 
@@ -412,6 +415,7 @@ def get_changed_packages() -> Set[str]:
             "media_image",
             "media_other",
             "media_assets_01",
+            "media_assets_02",
             "meta",
         }
 
@@ -489,6 +493,7 @@ def update_dependencies() -> None:
         "media_image": "packages/media_image/pyproject.toml",
         "media_other": "packages/media_other/pyproject.toml",
         "media_assets_01": "packages/media_assets_01/pyproject.toml",
+        "media_assets_02": "packages/media_assets_02/pyproject.toml",
     }
     
     frozen = get_frozen_packages()
