@@ -25,6 +25,7 @@ BUNDLE_PACKAGE_MAP = {
     "media-image": "comfyui_workflow_templates_media_image",
     "media-other": "comfyui_workflow_templates_media_other",
     "media-assets-01": "comfyui_workflow_templates_media_assets_01",
+    "media-assets-02": "comfyui_workflow_templates_media_assets_02",
 }
 
 JSON_PACKAGE = "comfyui_workflow_templates_json"
