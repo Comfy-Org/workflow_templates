@@ -22,10 +22,9 @@ import path from 'node:path';
 
 const ROUTES_DIR = path.join(process.cwd(), 'src', 'pages', 'workflows');
 
-// This page is unconditionally noindex — its hreflang cluster is moot for
-// crawling/indexing, and it is a one-off interactive demo, not part of the
-// hub's localization surface. Out of scope for this guard.
-const EXEMPT_ROUTES = new Set(['minimax-h3-multiref.astro']);
+// Routes that are unconditionally noindex (their hreflang cluster is moot
+// for crawling/indexing) and out of scope for this guard.
+const EXEMPT_ROUTES = new Set<string>([]);
 
 function astroFilesIn(dir: string): string[] {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -53,7 +52,8 @@ describe('English /workflows/* hreflang coverage', () => {
   it('never falls through to hreflangLocalized/BaseLayout defaults', () => {
     const uncovered = routes
       .filter(
-        ({ source }) => !/hreflangLocales=\{/.test(source) && !/hreflangLocalized=\{false\}/.test(source)
+        ({ source }) =>
+          !/hreflangLocales=\{/.test(source) && !/hreflangLocalized=\{false\}/.test(source)
       )
       .map(({ route }) => route);
 
@@ -75,10 +75,13 @@ describe('English /workflows/* hreflang coverage', () => {
     const WIDE_LOCALE_SETS = 'LANGUAGES|LOCALES|SUPPORTED_HUB_LOCALES|AVAILABLE_APP_LOCALES';
     const wrongSource = routes
       .filter(({ source }) => /hreflangLocales=\{/.test(source))
-      .filter(({ source }) =>
-        new RegExp(`\\.\\.\\.(${WIDE_LOCALE_SETS})\\b`).test(source) ||
-        /Object\.keys\(LANGUAGES\)/.test(source) ||
-        new RegExp(`(?:hreflangLocales|hreflangLocales:\\s*Locale\\[\\])\\s*(?::\\s*Locale\\[\\])?\\s*=\\s*(${WIDE_LOCALE_SETS})\\b`).test(source)
+      .filter(
+        ({ source }) =>
+          new RegExp(`\\.\\.\\.(${WIDE_LOCALE_SETS})\\b`).test(source) ||
+          /Object\.keys\(LANGUAGES\)/.test(source) ||
+          new RegExp(
+            `(?:hreflangLocales|hreflangLocales:\\s*Locale\\[\\])\\s*(?::\\s*Locale\\[\\])?\\s*=\\s*(${WIDE_LOCALE_SETS})\\b`
+          ).test(source)
       )
       .map(({ route }) => route);
 
