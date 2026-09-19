@@ -1754,6 +1754,45 @@
       }
     ]
   },
+  "148dc613d99c": {
+    "title": "Gemini Omni 1.1 Flash: Reference to Video",
+    "description": "Generate video that incorporates specific subjects from multiple reference images using Gemini Omni 1.1 Flash's reference mode: characters, products, and objects from your images appear in the scene while the image itself is never shown as a frame. Bind each image to a role with tags like <IMAGE_REF_0>, combine character references with style references, and direct the scene in plain language with native audio. Ideal for character-driven stories, product placement, and brand-consistent content.\n\n",
+    "metaDescription": "ComfyUI tutorial: Use Gemini Omni 1.1 Flash reference mode to inject characters and products from images into video without showing the source photos.",
+    "extendedDescription": "This workflow teaches you how to steer Gemini Omni 1.1 Flash to generate a video that features specific people, products, or objects without ever cutting to the original photos. It does this by binding each loaded reference image to a role tag (for example, <IMAGE_REF_0>, <IMAGE_REF_1>) and then using those tags inside your scene description so the model knows which visual subject to synthesize into the shot. The core is the GeminiVideoOmniV2 node running in reference mode, fed by one or more LoadImage nodes for character and style/product references, and finalized by a SaveVideo node to write the result to disk. A MarkdownNote in the graph documents the prompt pattern and tag usage.\n\nTechnically, each reference image is converted into a visual embedding that conditions Gemini Omni 1.1 Flash during generation. When you reference the bound tags in your prompt (for example, \"Use <IMAGE_REF_0> as the model; use <IMAGE_REF_1> as the makeup palette product\"), the model synthesizes frames that include those subjects while never showing the source images as frames. You can combine character references with a separate style or product board, direct the scene in plain language (actions, camera moves, lighting, location), and, when enabled in the node, generate native audio. This makes it ideal for brand-consistent shorts, character-driven storytelling, and product placement where control over who/what appears on screen matters.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and confirm your Gemini API setup for the GeminiVideoOmniV2 node (set your Google AI Studio API key in the node or as an environment variable as required).",
+      "Import your reference images with LoadImage nodes. For the example, place input/terracotta_eyeshadow_palette.png (required) and your model photo (e.g., input/asian_female_model_beige_suit.png) into the input folder and connect each LoadImage output to the GeminiVideoOmniV2 image reference inputs.",
+      "Open GeminiVideoOmniV2. In its prompt/instruction field, assign roles using tags that match your connections, then direct the scene. Example: \"Use <IMAGE_REF_0> as the hero makeup palette product. Use <IMAGE_REF_1> as the on-camera model. Warm studio lighting, slow push-in, the model opens the palette and applies the terracotta shade; include soft ambient music. Do not display the raw reference photos.\"",
+      "Optionally add a style board as another LoadImage and bind it to a tag (e.g., <IMAGE_REF_2> as style reference). Keep the prompt clear: location, action beats, camera movement, mood, and any brand tones. If the node exposes duration, resolution, or audio toggles, set them here.",
+      "Run the graph. The GeminiVideoOmniV2 node will generate the video conditioned on your references and pass it to SaveVideo. When complete, open the saved file from your ComfyUI output directory.",
+      "Iterate: if identity or product fidelity is weak, tighten the role lines (repeat the tag once in the opening sentence, name the role explicitly), simplify conflicting style requests, and ensure your reference images are clear, well-lit, and show the subject prominently."
+    ],
+    "suggestedUseCases": [
+      "Product showcases where a specific item (palette, shoe, gadget) must appear on screen without cutting to the original product photo.",
+      "Character-led social shorts that keep the same person across multiple scenes or episodes for consistency.",
+      "Brand-consistent explainer clips using a style board plus a presenter portrait as separate references.",
+      "In-situ product placement within lifestyle shots (e.g., a model interacts with a referenced item in a café or studio).",
+      "Pitch animatics or mood tests combining a character reference with a visual style sheet."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I correctly bind images to roles?",
+        "answer": "Load each image with a LoadImage node and connect it to the GeminiVideoOmniV2 image reference inputs. In your prompt, refer to them with the exact tags used by the node (e.g., <IMAGE_REF_0>, <IMAGE_REF_1>). Immediately assign a role: \"Use <IMAGE_REF_0> as the product\" or \"Use <IMAGE_REF_1> as the presenter.\" Keep those tags near the start of the prompt so the model prioritizes them."
+      },
+      {
+        "question": "Will the reference photos ever appear directly in the video?",
+        "answer": "No. In this workflow the images are used as visual references only. Gemini Omni 1.1 Flash conditions on their content to synthesize new frames; it does not insert the source photos as frames."
+      },
+      {
+        "question": "Can I mix character and style references in one generation?",
+        "answer": "Yes. Provide separate LoadImage nodes for character/product and style boards, bind each to its own tag, and clarify their roles in the prompt (e.g., \"<IMAGE_REF_0> character, <IMAGE_REF_1> product, <IMAGE_REF_2> style reference\"). Avoid conflicting instructions (e.g., opposing lighting or wardrobe notes) to maintain fidelity."
+      },
+      {
+        "question": "Why doesn’t the person or product look consistent with my reference?",
+        "answer": "Common causes are unclear role assignment, low-quality references, or conflicting prompt details. Put the tags at the start, describe each role plainly, use high-resolution, well-lit references where the subject is large in frame, and reduce competing style constraints. If needed, shorten the scene description and focus on essentials (location, key action, lighting)."
+      }
+    ]
+  },
   "15538e51d812": {
     "title": "Qwen-Image InstantX Inpainting ControlNet",
     "description": "Professional inpainting and image editing with Qwen-Image InstantX ControlNet. Supports object replacement, text modification, background changes, and outpainting.",
@@ -3046,6 +3085,45 @@
       }
     ]
   },
+  "25c14ca59910": {
+    "title": "Pixal3D: Multi Views to 3D",
+    "description": "Upload your own separate view images, or use one mixed multi-view turnaround sheet. The workflow prepares front, back, left and right views, then reconstructs a textured 3D model with Pixal3D Multi-View.\n\n",
+    "metaDescription": "Convert 4-view turnarounds into a textured 3D mesh with Pixal3D Multi-View. Clean backgrounds, generate shape, and bake textures with a Trellis2-based pipeline.",
+    "extendedDescription": "Pixal3D: Multi Views to 3D turns a 4-view character or product turnaround into a textured 3D mesh. The Preprocess Multiview Images group takes either a single multi-view sheet or separate front, back, left, and right images. It can optionally remove the background (LoadBackgroundRemovalModel + RemoveBackground) to isolate the subject and improve consistency. CLIPVisionLoader provides vision conditioning from the views that drives the multi-view reconstruction.\n\nUnder the hood, the workflow builds shape first, then texture, and finally bakes it to a UV map. Sparse Structure Generation initializes a 3D latent with EmptyTrellis2LatentStructure. Shape Generation uses Trellis2ShapeStage with ModelSamplingSD3 and KSampler to refine the latent volume into geometry, while CFGOverride and RescaleCFG keep guidance behavior aligned with the original pipeline. VaeDecodeStructureTrellis2/VaeDecodeShapeTrellis turn the latent into a dense voxel grid, VoxelToMesh converts it to a watertight mesh, and DecimateMesh reduces polygon count. Texture Generation uses Trellis2TextureStage (optionally boosted by Trellis2UpsampleStage) and VaeDecodeTextureTrellis to predict appearance, with VAELoader loading the trellis_2_texture_vae_bf16.safetensors VAE. Finally, UnwrapMesh creates UVs and BakeTextureFromVoxel transfers colors to a texture atlas. PreviewImage nodes provide quick visual checks throughout.\n\nThe result is a practical, view-consistent 3D model built directly from your turnaround sheet—ideal when you need a clean starting mesh and texture without manual modeling. The multi-view conditioning keeps silhouettes aligned across views and reduces guesswork compared to single-image reconstruction.",
+    "howToUse": [
+      "Load the workflow in ComfyUI, then load required models: VAELoader → trellis_2_texture_vae_bf16.safetensors, CLIPVisionLoader (vision encoder), and optionally LoadBackgroundRemovalModel if you plan to remove backgrounds.",
+      "Add your inputs: either one 4-view turnaround sheet into the Preprocess Multiview Images group or separate front/back/left/right images. Verify the view mapping is correct so each perspective is assigned to the right slot.",
+      "Optional cleanup: enable RemoveBackground to isolate the subject. Use PreviewImage nodes in the preprocess group to check alignment, scale, and crop consistency across views.",
+      "Generate shape: keep CFGOverride and RescaleCFG at their provided defaults (to match the reference behavior). Set KSampler steps, sampler/method, and seed, then run Sparse Structure Generation + Shape Generation. Inspect the decoded shape output and mesh (VoxelToMesh) and, if needed, adjust seed or steps.",
+      "Generate and refine texture: run Trellis2TextureStage (optionally enable Trellis2UpsampleStage for higher fidelity), then VaeDecodeTextureTrellis. Use PreviewImage to verify appearance across views.",
+      "Bake and post-process: run UnwrapMesh followed by BakeTextureFromVoxel to produce a texture atlas. Use DecimateMesh to lower polycount if needed. Right-click image previews to save baked textures; use the mesh output from VoxelToMesh/DecimateMesh for export in your preferred way."
+    ],
+    "suggestedUseCases": [
+      "Turn character concept turnaround sheets into a textured base mesh for rigging or further sculpting.",
+      "Create quick 3D product/packaging previews from front/back/side photography.",
+      "Block out stylized props for games from orthographic sketch sheets.",
+      "Generate printable base meshes from multi-view toy or figurine references.",
+      "Educational demos showing how multi-view constraints improve 3D reconstruction."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I have to use all four views? Will a single view work?",
+        "answer": "The workflow accepts a single mixed turnaround sheet or separate views. It works with fewer views, but geometry becomes more ambiguous. For best results, provide front, back, left, and right views with consistent scale and pose."
+      },
+      {
+        "question": "My mesh looks warped or has holes. How can I improve shape quality?",
+        "answer": "Ensure all views are aligned and similarly scaled, remove complex backgrounds (LoadBackgroundRemovalModel + RemoveBackground), increase KSampler steps, try a different seed, and keep CFGOverride/RescaleCFG at the provided defaults. Consistent, clean inputs yield more stable geometry."
+      },
+      {
+        "question": "How do I control polycount and texture detail?",
+        "answer": "Use DecimateMesh to reduce polygon count after VoxelToMesh. For textures, enable Trellis2UpsampleStage for higher fidelity and set your desired texture size in BakeTextureFromVoxel. Inspect results with PreviewImage before exporting."
+      },
+      {
+        "question": "What models are required, and why is VAE loading important?",
+        "answer": "VAELoader should load trellis_2_texture_vae_bf16.safetensors so the Trellis2 decoders (VaeDecodeStructureTrellis2/VaeDecodeTextureTrellis) can correctly decode shape and texture latents. CLIPVisionLoader provides vision conditioning from your views, and ModelSamplingSD3/KSampler control the diffusion sampling steps."
+      }
+    ]
+  },
   "260ed6c2147f": {
     "title": "Bria: Remove Video Background",
     "description": "Upload a video to remove the background. Generate a new video with a transparent or solid color background.",
@@ -4096,6 +4174,45 @@
       {
         "question": "Is it possible to edit the 3D model after generation?",
         "answer": "Yes, once the model is generated, you can export it and use 3D modeling software for further editing and refinement."
+      }
+    ]
+  },
+  "32f98268638e": {
+    "title": "Fish Audio: Voice Clone to Speech",
+    "description": "Clone any voice from a short recording, then use it to speak any script with Fish Audio. Record 2-3 clips of 15-20 seconds, connect them to the Instant Voice Clone node, and the cloned voice feeds straight into text to speech with no training wait. Add emotion tags to control how your cloned voice delivers each line. Great for personalized narration, character voices, and content in your own voice.\n\n",
+    "metaDescription": "Clone a voice from 2–3 short clips and synthesize speech instantly in ComfyUI with Fish Audio. Includes preset-voice option and flexible audio export.",
+    "extendedDescription": "This ComfyUI workflow lets you clone any voice from a few short recordings and immediately synthesize new speech with that voice using Fish Audio. In Option 1 (Voice Clone), you feed clean voice samples from RecordAudio or LoadAudio into FishAudioInstantVoiceClone. The node returns a clone handle that plugs straight into FishAudioTextToSpeech, so you can type any script and get an instant read—no training wait. In Option 2 (Preset Audio), you skip cloning entirely by selecting a built-in voice with FishAudioVoiceSelector and send it directly to FishAudioTextToSpeech for quick, predictable results.\n\nUnder the hood, the audio path is simple and fast: RecordAudio/LoadAudio → FishAudioInstantVoiceClone (Option 1) or FishAudioVoiceSelector (Option 2) → FishAudioTextToSpeech → SaveAudioAdvanced. Text prompts can include emotion/style tags supported by Fish Audio to influence delivery (tone, pacing, emphasis). SaveAudioAdvanced lets you export the result in your preferred format and quality. All Fish Audio nodes are API-based, so you’ll authenticate with your ComfyUI account and pay per use.\n\nFor best clones, provide 2–3 samples of 15–20 seconds each with clear, expressive speech and minimal background noise. Vary your prosody slightly (neutral, upbeat, calm) so the Instant Voice Clone has enough information to capture timbre and delivery. Then iterate quickly: adjust your script and tags, re-queue, and export takes until you land the read you want.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and sign in with your ComfyUI account to enable API nodes (Fish Audio nodes are pay-per-use).",
+      "Choose a path: select the Option 1: Voice Clone group or the Option 2: Preset Audio group, then press Ctrl‑B to enable it. Bypass or disable the other path.",
+      "Option 1 (Voice Clone): Provide 2–3 clean voice samples (15–20s each) via RecordAudio or LoadAudio, then connect them to FishAudioInstantVoiceClone. Wait for the clone handle to be ready.",
+      "Option 2 (Preset Audio): Use FishAudioVoiceSelector to pick a preset voice and connect its output to FishAudioTextToSpeech.",
+      "In FishAudioTextToSpeech, paste or type your script. Optionally add Fish Audio emotion/style tags to control tone, pacing, and emphasis (see the node’s help for supported tags). Ensure the voice input comes from your clone (Option 1) or the selector (Option 2).",
+      "Click Queue Prompt to generate audio. Review the preview/output, then configure SaveAudioAdvanced (format, sample rate/bitrate, filename) and run it to export your final file."
+    ],
+    "suggestedUseCases": [
+      "Personalized narration for tutorials, explainers, and product demos in your own voice.",
+      "Character voices for game prototypes, animatics, and storyboards without casting delays.",
+      "Podcast intros/outros and social video hooks where you need fast, consistent delivery.",
+      "Audiobook and e-learning samples to test tone, pacing, and clarity before full production.",
+      "Multilingual drafts using the same cloned voice to explore localization options."
+    ],
+    "faqItems": [
+      {
+        "question": "How many and what kind of samples do I need for a good clone?",
+        "answer": "Record or load 2–3 clips, each 15–20 seconds, with clean speech and minimal background noise. Speak naturally and vary prosody slightly (neutral, upbeat, calm). Avoid music, heavy compression, or room echo."
+      },
+      {
+        "question": "Do I need a GPU or model training to clone a voice?",
+        "answer": "No local training is required. FishAudioInstantVoiceClone and FishAudioTextToSpeech run through the Fish Audio API. Just authenticate in ComfyUI, provide your samples or select a preset voice, and generate speech instantly."
+      },
+      {
+        "question": "How do I control emotion, speed, or pauses in the speech?",
+        "answer": "Use the emotion/style tags supported by Fish Audio in the FishAudioTextToSpeech text field. You can influence tone, pacing, emphasis, and pauses by placing tags inline or at the start of lines. Refer to the node’s help/docs for the exact tag formats."
+      },
+      {
+        "question": "What’s the difference between Voice Clone and Preset Audio paths?",
+        "answer": "Voice Clone (RecordAudio/LoadAudio → FishAudioInstantVoiceClone) captures a specific speaker’s timbre for personalized results. Preset Audio (FishAudioVoiceSelector) uses ready-made voices for fast, predictable output without providing samples."
       }
     ]
   },
@@ -6008,39 +6125,39 @@
   "473606b441c6": {
     "title": "Wan3.0: Image to Video",
     "description": "Create up to 30 seconds of high-fidelity video from a single image using Wan 3.0, which supports text, image, audio, and document inputs for versatile scene generation. Produces authentic, realistic footage with unique facial details and believable motion in one pass. Ideal for cinematic storytelling, product visualization, and documentary-style scene recreation.\n",
-    "metaDescription": "ComfyUI image-to-video tutorial: animate a single image into up to 30s of video with Wan 3.0 using LoadImage → Wan3ImageToVideoApi → SaveVideo.",
-    "extendedDescription": "This ComfyUI tutorial shows how to turn a single still image into a high‑fidelity video clip (up to ~30 seconds) using Wan 3.0. The workflow is compact and predictable: LoadImage reads your source frame, Wan3ImageToVideoApi sends it to the Wan 3.0 image‑to‑video endpoint for temporal generation, and SaveVideo writes the returned clip to disk. A MarkdownNote in the graph provides quick tips and points to a ready‑to‑use example input.\n\nTechnically, Wan3ImageToVideoApi conditions the model with your image and passes generation parameters such as duration and resolution to the API. The node then waits for the job to complete and returns the video for saving. This template focuses on the image input path (text/audio/document modalities supported by Wan 3.0 are not wired here), making it a straightforward way to animate concept art, product shots, or documentary stills while preserving subject identity and adding believable motion.\n\nFor best results, start with a clean, high‑resolution image that roughly matches your target aspect ratio. Keep the main subject well framed, avoid heavy compression artifacts, and choose a sensible duration—shorter clips render faster and typically produce more stable motion.",
+    "metaDescription": "Create up to 30s of realistic video from a single image in ComfyUI using the Wan 3.0 Image-to-Video API with LoadImage and SaveVideo nodes.",
+    "extendedDescription": "This ComfyUI workflow turns a single still image into a high-fidelity video clip using the Wan 3.0 Image-to-Video API. It’s built around four nodes: LoadImage to bring your source frame into the graph, Wan3ImageToVideoApi to generate the animated sequence on a remote service, SaveVideo to encode the frames to a standard video file, and MarkdownNote for inline instructions. The pipeline is simple and reliable: your input image is loaded, sent to Wan 3.0 for temporal synthesis, and the returned frames are packaged into a playable video.\n\nTechnically, Wan 3.0 performs motion synthesis conditioned on the content of the single image, producing realistic camera/lens movement and subject dynamics in one pass. While the Wan 3.0 family supports multimodal inputs, this specific workflow is image-only and focuses on up to 30 seconds of output. You control the key generation settings in the Wan3ImageToVideoApi node (e.g., clip duration and any parameters exposed by your API endpoint), and finalize playback characteristics like FPS and file path in SaveVideo. This makes it well-suited for cinematic b-roll, product hero shots, and documentary-style scene recreation directly from a still.",
     "howToUse": [
-      "Open the workflow in ComfyUI and update to the latest version (and required custom nodes) as recommended in the MarkdownNote.",
-      "Place the provided sample image at input/beetle_rider.png, or edit the LoadImage node to point to your own source image.",
-      "Open Wan3ImageToVideoApi and set key options such as duration (up to ~30 seconds) and output resolution. Ensure your Wan 3.0 API credentials are configured so the node can reach the service.",
-      "Optionally add guidance (if your node build exposes a prompt or related fields) and align resolution/aspect ratio to your source image for more stable motion.",
-      "Click Queue Prompt to run. The API node will submit the job and wait for completion; you can monitor progress in the ComfyUI console/log.",
-      "When finished, SaveVideo will write the result to the path shown in its node. Play the exported file to review motion quality and iterate on settings as needed."
+      "Load the workflow in ComfyUI and ensure ComfyUI is up to date. The template references input/beetle_rider.png as the default image.",
+      "Open the LoadImage node and either keep input/beetle_rider.png or point it to your own high-resolution source image. Use a clean, well-lit image for best results.",
+      "Open the Wan3ImageToVideoApi node and enter your API credentials/endpoint as required. Configure the available parameters (e.g., target duration up to 30s and any size/aspect settings the node exposes).",
+      "Open the SaveVideo node and set your output path and FPS. FPS controls perceived motion smoothness when encoding the returned frames.",
+      "Queue the workflow. The input image will be sent to the Wan 3.0 service, which returns frames that SaveVideo encodes into a single video file.",
+      "Review the output. If you see artifacts or motion that’s too strong or too subtle, adjust the Wan3ImageToVideoApi parameters (and FPS in SaveVideo) and re-run."
     ],
     "suggestedUseCases": [
-      "Cinematic storytelling: animate keyframes or concept art into moving establishing shots.",
-      "Product visualization: turn a hero still into a short motion clip for web or ads.",
-      "Documentary-style scenes: add subtle motion to archival photos for edits and transitions.",
-      "Character and creature studies: bring a single character portrait to life with gentle camera or subject motion.",
-      "Social media teasers: create quick, eye-catching motion from a static post or thumbnail."
+      "Cinematic b-roll and establishing shots generated from a single still for film, trailers, or YouTube intros.",
+      "Product hero shots or lightweight turntable-style motion to showcase design and materials without a full 3D setup.",
+      "Documentary-style scene recreation from archival photos to visualize environments with subtle, believable motion.",
+      "Storyboard and previz beats from concept art or keyframes to explore pacing and camera movement quickly.",
+      "Social media loops and reels that bring static imagery to life with minimal setup."
     ],
     "faqItems": [
       {
-        "question": "How long can the generated video be?",
-        "answer": "The template is designed for clips up to about 30 seconds. Longer durations increase processing time and may be limited by your account or the API service."
+        "question": "Do I need an API key for the Wan3ImageToVideoApi node?",
+        "answer": "Yes. This node calls an external Wan 3.0 service and typically requires an API key and/or endpoint. Enter your credentials in the node’s fields before running."
       },
       {
-        "question": "Do I need an internet connection or API key?",
-        "answer": "Yes. Wan3ImageToVideoApi calls a remote Wan 3.0 service, so network access and valid API credentials are required. If authentication is missing, the node will fail with an API error."
+        "question": "What is the maximum video length this workflow can generate?",
+        "answer": "Up to 30 seconds, as supported by the Wan 3.0 Image-to-Video API. Set the desired duration in the Wan3ImageToVideoApi node if that parameter is exposed."
       },
       {
-        "question": "What kind of input images work best?",
-        "answer": "High-resolution, clean images with the main subject centered or clearly framed produce the most stable motion. Try to match output aspect ratio to the source to reduce warping or jitter."
+        "question": "Which settings control smoothness and playback speed?",
+        "answer": "Set the target duration in Wan3ImageToVideoApi and adjust FPS in the SaveVideo node. Higher FPS yields smoother playback from the same frame sequence."
       },
       {
-        "question": "Can I add text guidance or change FPS/aspect ratio?",
-        "answer": "This template wires image-to-video only. If your Wan3ImageToVideoApi build exposes fields for prompts, FPS, or aspect ratio, you can adjust them there. Otherwise, keep your source image close to the target aspect ratio for consistent results."
+        "question": "Can I add text or audio prompts in this workflow?",
+        "answer": "This template is image-only. While Wan 3.0 supports multimodal inputs, use additional or alternative nodes designed for text/audio/document inputs if you need those features."
       }
     ]
   },
@@ -6119,6 +6236,45 @@
       {
         "question": "How can I refine the video output?",
         "answer": "You can refine the video by adjusting the text prompt for more precise descriptions and uploading different reference images to influence visual details."
+      }
+    ]
+  },
+  "490b1f4c2d0f": {
+    "title": "MiniMax H3 Max: Text to Video",
+    "description": "Generate polished, prompt-faithful video from text using Minimax H3 Max, producing a single finished video clip with no input files required. Ideal for rapid concept exploration, cinematic text-to-video scenes, and high-throughput creative iteration where speed and visual quality matter.\n\n",
+    "metaDescription": "MiniMax H3 Max text-to-video in ComfyUI with optional prompt enhancement and 2K upscale. Generate polished clips from text—no input files required.",
+    "extendedDescription": "This ComfyUI template builds a complete text-to-video pipeline around MiniMax H3 Max (Hailuo 03). At its core, MinimaxHailuo03TextToVideoNode turns your prompt from PrimitiveStringMultiline into a polished video, which is then written to disk by SaveVideo. SaveText also records the exact prompt that reached the generator so you can reproduce results later.\n\nTwo optional stages are wired behind ComfySwitchNode gates (visually marked in red) and controlled from the Feature Flags group. First, the Prompt Enhancer (Optional) can route your text through MinimaxHailuo03ContextIRNode before generation, producing a context IR object that the downstream node can use. Second, the Upscale Video to 2K (Optional) stage uses MinimaxHailuo03RegenerateNode to request a higher-resolution version of the same result. Important: the upscale stage only accepts a 768p source; set the base generator to 768p if you enable the Upscale to 2K boolean. This design lets you move quickly from idea to finished clip, then optionally refine fidelity and resolution without changing your base prompt.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and confirm your MiniMax API settings in the MinimaxHailuo03* nodes (use your key or environment configuration as required).",
+      "Open the User Inputs group and write your prompt in PrimitiveStringMultiline. Be explicit about subject, motion, camera, lighting, and style for best results.",
+      "In Feature Flags, choose whether to enable the Prompt Enhancer and/or Upscale to 2K. The red ComfySwitchNode blocks on the canvas indicate which path will be active.",
+      "If you turn on Upscale to 2K, set the base generation resolution to 768p in MinimaxHailuo03TextToVideoNode. The upscale stage only works when the source video is 768p.",
+      "Run the Video Generation (Core) path. When optional stages are enabled, the switches will route through MinimaxHailuo03ContextIRNode (prompt enhancer) and then to MinimaxHailuo03RegenerateNode (2K upscale).",
+      "Retrieve your outputs: SaveVideo writes the final video to your ComfyUI output folder, and SaveText stores the resolved prompt for reference. Iterate by refining the prompt or toggling the feature flags as needed."
+    ],
+    "suggestedUseCases": [
+      "Rapid concept exploration for ads, trailers, and mood pieces with no input assets.",
+      "Cinematic establishing shots or short scenes generated from concise text direction.",
+      "Previsualization for storyboards and animatics before committing to full production.",
+      "Social media loops and shorts where quick iteration and prompt faithfulness matter.",
+      "High-throughput ideation sprints across multiple style and camera directions."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need any input images or footage?",
+        "answer": "No. This template is text-only. Enter your description in PrimitiveStringMultiline and the MinimaxHailuo03TextToVideoNode generates a complete clip."
+      },
+      {
+        "question": "How do the red switch nodes affect the run?",
+        "answer": "They are ComfySwitchNode gates for optional paths. Feature Flags toggles decide whether your prompt flows through MinimaxHailuo03ContextIRNode (enhancer) and whether the output is sent to MinimaxHailuo03RegenerateNode for a 2K upscale."
+      },
+      {
+        "question": "Why does the 2K upscale fail or get skipped?",
+        "answer": "The upscale stage only accepts a 768p source. Set MinimaxHailuo03TextToVideoNode to generate 768p before enabling the Upscale to 2K boolean. Other source resolutions are not supported for this step."
+      },
+      {
+        "question": "Where do I find the outputs and how can I reproduce a result?",
+        "answer": "SaveVideo writes the final clip to your ComfyUI output folder (path set in the node). SaveText stores the resolved prompt used for the run, helping you recreate or iterate on the same setup."
       }
     ]
   },
@@ -8064,6 +8220,44 @@
       }
     ]
   },
+  "5d1279276e1c": {
+    "title": "MiniMax H3 Max: FLF2V",
+    "description": "Generate polished, prompt-faithful videos faster than real time with MiniMax H3 Max, a post-trained model tuned for stronger prompt adherence and vivid cinematic aesthetics. This workflow supports text-to-video, image-to-video animation, and directed first-to-last-frame transitions, delivering clean compositions and cohesive lighting directly from the model. Ideal for rapid concept exploration, cinematic motion graphics, and high-throughput video comparison.\n\n",
+    "metaDescription": "Compare MiniMax H3 Max text-to-video vs first-frame vs first-to-last-frame guidance, with optional prompt enhancement and 2K upscaling in one ComfyUI workflow.",
+    "extendedDescription": "This comparison workflow pits three guidance modes of the MiniMax H3 Max model against each other: pure text-to-video, first-frame-to-video (animate from a single image), and first-to-last-frame-to-video (FLF2V). All three paths use the same base model but differ in how much visual constraint you provide. The text-only path is driven by your prompt (via MinimaxHailuo03ContextIRNode), the first-frame path anchors the opening composition, and the FLF2V path uses both the first and last frames (MinimaxHailuo03FirstLastFrameNode) to tightly direct motion, continuity, and lighting from start to finish. The graph also includes an optional Prompt Enhancer stage and an optional 2K upscale branch controlled by ComfySwitchNode and PrimitiveBoolean flags, so you can compare raw vs enhanced prompts and base vs upscaled output in one place.\n\nMethodologically, you run multiple passes with a shared prompt and seed, changing only the guidance mode and/or feature flags. SaveVideo captures each render, while SaveText logs the active settings (prompt, flags, and mode) so you can verify that only a single variable changed between runs. If you enable MinimaxHailuo03RegenerateNode, you can produce controlled alternates—holding the same inputs constant—so differences are attributable to sampling rather than setup drift. Compare the results for prompt faithfulness, motion between keyframes, lighting stability, composition cleanliness, and edge fidelity. For convenience, try the included example assets (dream_face_first.png and dream_face_last.png) to see how first-only vs FLF2V affects transitions.",
+    "howToUse": [
+      "Prepare inputs: Enter your prompt in PrimitiveStringMultiline (User Inputs). Optionally load dream_face_first.png and dream_face_last.png (LoadImage) for first/last-frame guidance. Set duration and base resolution. If you plan to upscale, generate at 768p.",
+      "Choose guidance mode and run baselines: a) Text-only (use the text path via MinimaxHailuo03ContextIRNode without supplying images), b) First-frame only (provide only the first image), c) FLF2V (provide both first and last images to MinimaxHailuo03FirstLastFrameNode). Keep seed and prompt constant across these runs.",
+      "Optional: Toggle the Prompt Enhancer (Prompt Enhancer group) with its ComfySwitchNode to compare raw vs enhanced prompts. SaveText will record which setting was active so you can attribute differences correctly.",
+      "Optional: Enable the PrimitiveBoolean flag for Upscale to 2K. Important: the upscale branch only accepts 768p source, so set base generation to 768p before enabling. Render again to compare base vs 2K upscaled outputs.",
+      "Generate controlled alternates: Use MinimaxHailuo03RegenerateNode to create 1–2 additional takes per mode with the same inputs. This reveals variability due to sampling while holding the guidance constant. Review the saved videos side-by-side and consult the SaveText logs to confirm run settings."
+    ],
+    "suggestedUseCases": [
+      "Select the right guidance level for a project: free-form text ideation vs anchored first-frame motion vs tightly directed first-to-last transitions.",
+      "Previsualization for cinematics: test how closely FLF2V can hit a target final frame and lighting continuity compared to text-only generation.",
+      "Brand and product shots: compare stability and composition cleanliness when anchoring with a designed first frame versus letting the model choose.",
+      "Motion graphics and title sequences: evaluate how prompt enhancement affects typography legibility, lighting, and consistency.",
+      "High-throughput A/B testing: run multiple controlled variants (with Regenerate) to pick the most prompt-faithful take at 768p, then selectively upscale to 2K."
+    ],
+    "faqItems": [
+      {
+        "question": "What’s the practical difference between text-only, first-frame, and first-to-last-frame (FLF2V) guidance?",
+        "answer": "Text-only relies entirely on the prompt (via MinimaxHailuo03ContextIRNode), giving the model maximum creative freedom but less deterministic composition. First-frame guidance anchors the opening look and layout, improving consistency at the start while allowing freer evolution later. FLF2V (MinimaxHailuo03FirstLastFrameNode) constrains both endpoints, producing the most directed motion, transitions, and lighting continuity across the clip."
+      },
+      {
+        "question": "How should I use the 2K upscale option without breaking the pipeline?",
+        "answer": "Turn on the PrimitiveBoolean flag for Upscale to 2K only when your source video is generated at 768p. The upscale branch accepts 768p input exclusively; other base resolutions are not supported. Generate at 768p first, then enable the upscale switch and re-run to produce the 2K comparison."
+      },
+      {
+        "question": "What does MinimaxHailuo03RegenerateNode change compared to simply re-running the graph?",
+        "answer": "Regenerate triggers a controlled new take from the same setup, preserving your prompt, images, and settings while varying the sampling. This helps you compare variability within a mode without accidentally changing other parameters. SaveText captures the run context so you can verify consistency."
+      },
+      {
+        "question": "Will enabling the Prompt Enhancer affect prompt adherence?",
+        "answer": "Often, yes. The Prompt Enhancer can clarify intent and structure, which may improve scene coherence and lighting consistency. However, it can also reduce open-ended creativity. Use the ComfySwitchNode to toggle it on/off and compare. The rewritten prompt and active flags are logged by SaveText for transparent A/B evaluation."
+      }
+    ]
+  },
   "5d72bed48e89": {
     "title": "ACE Step v1 Text to Song",
     "description": "Generate songs with vocals from text prompts using ACE-Step v1, supporting multilingual and style customization.",
@@ -8372,6 +8566,45 @@
       {
         "question": "What is the GeminiNanoBanana2 node doing here?",
         "answer": "It’s an auxiliary helper for generating on-brand caption ideas or keywords you can use in titles, descriptions, or filenames. It does not overlay text onto the thumbnail in this version."
+      }
+    ]
+  },
+  "60ed2d7ede2e": {
+    "title": "GPT Image 2.5 Sunburst: Text to Image",
+    "description": "GPT Image 2.5 Sunburst is a high-fidelity image editing and generation template for creating polished, detail-rich visuals. It preserves subject identity, complex materials, lighting consistency and scene structure across iterations. Suitable for concept refinement, product visuals, character scenes, cinematic backgrounds and finished artwork that requires precision, realism and visual depth.\n\n",
+    "metaDescription": "ComfyUI template for high-fidelity text-to-image via OpenAI. Use a structured Sunburst prompt to preserve identity, materials, and lighting across iterations.",
+    "extendedDescription": "GPT Image 2.5 Sunburst: Text to Image is a focused ComfyUI template that turns carefully structured prompts into polished, detail-rich images using OpenAI’s image generation API. The core of the workflow is OpenAIGPTImageNodeV2, which packages your prompt (using a \"Sunburst\" structure that calls out subject, materials, lighting, camera, and composition) and sends it to the selected OpenAI image model. The resulting image stream is then handed to SaveImage, which writes the outputs to your ComfyUI output directory.\n\nTechnically, the node exposes common OpenAI image parameters such as model, size/aspect, quality/style, number of outputs, and output format. The Sunburst prompt structure helps preserve subject identity, complex materials, lighting consistency, and scene layout by keeping a stable \"anchor\" block in your prompt across iterations. You iterate by adjusting only the variable parts (e.g., pose, background, or mood) while leaving the anchor descriptors unchanged—yielding high-fidelity refinements without rebuilding the entire scene each time.",
+    "howToUse": [
+      "Load the workflow: Open ComfyUI and import the \"GPT Image 2.5 Sunburst: Text to Image\" workflow JSON.",
+      "Configure API access: In OpenAIGPTImageNodeV2, select your OpenAI image model and set your API key (via the node’s field or the OPENAI_API_KEY environment variable).",
+      "Write a Sunburst prompt: Create a structured prompt with stable anchors (e.g., Subject, Materials, Lighting, Camera/Composition) and a small variable section for changes. Keep anchors identical across iterations.",
+      "Set generation parameters: In OpenAIGPTImageNodeV2, choose size/aspect, quality/style, number of images to generate, and output format. Use the same settings when iterating for consistent results.",
+      "Run the workflow: Queue the prompt. OpenAIGPTImageNodeV2 generates the image(s), and SaveImage writes them to your ComfyUI output folder.",
+      "Refine: For new variations, only edit the variable part of the prompt (e.g., pose or background). Keep the anchor block and node settings unchanged to preserve identity and materials."
+    ],
+    "suggestedUseCases": [
+      "Product hero shots that require consistent materials, finishes, and lighting across multiple angles.",
+      "Character concept frames where identity, costume details, and facial structure must remain stable over iterations.",
+      "Cinematic background plates with controlled mood, lensing, and scene composition for continuity.",
+      "Material and lighting studies to compare how different surfaces behave under a fixed lighting setup.",
+      "Refined key visuals for presentations where realism and repeatability are important."
+    ],
+    "faqItems": [
+      {
+        "question": "What model does this workflow use?",
+        "answer": "It uses OpenAIGPTImageNodeV2 to call OpenAI’s image generation API. You can select the model inside the node (e.g., an available OpenAI image model on your account). The node also exposes typical options like size/aspect, quality/style, and number of outputs."
+      },
+      {
+        "question": "How do I keep a character or product consistent across runs?",
+        "answer": "Repeat the same Sunburst anchor details every time (subject traits, materials, key props, lighting, lens/camera, and composition), and keep node parameters (model, size/aspect, quality) unchanged. OpenAI image models are non-deterministic, so exact pixel matches aren’t guaranteed, but stable anchors greatly improve identity and material consistency."
+      },
+      {
+        "question": "Where are my images saved, and can I change the location?",
+        "answer": "SaveImage writes files to your ComfyUI output directory. You can set a custom subfolder or filename prefix directly in the SaveImage node to organize outputs per project or prompt."
+      },
+      {
+        "question": "Does this work offline or with no API key?",
+        "answer": "No. OpenAIGPTImageNodeV2 sends requests to OpenAI’s servers, so you need an active internet connection and a valid OpenAI API key. Usage is billed by your OpenAI account based on the model and settings you choose."
       }
     ]
   },
@@ -10280,6 +10513,45 @@
       }
     ]
   },
+  "742eff2cf15d": {
+    "title": "Recraft V4: Style‑Reference Image Generation",
+    "description": "Generate images in the style of one or more reference images using Recraft V4 Styles, capturing texture, composition, and rendering without any training or fine‑tuning. Feed in multiple reference images to sharpen or broaden the style match, and receive a single styled output. Ideal for brand‑consistent asset creation, matching a client's existing campaign look, or adapting styles from any external image source.",
+    "metaDescription": "ComfyUI workflow: Create a reusable Recraft V4 style from reference images and generate prompt-based outputs that match the look without training.",
+    "extendedDescription": "This workflow builds a reusable, prompt-driven style from one or more reference images using Recraft V4. The LoadImage nodes bring in your style reference assets, which are passed to RecraftV4CreateStyleNode to generate a style_id that captures visual attributes like palette, material finish, lighting, and composition patterns. The style_id is saved with SaveText to ComfyUI/output/Recraft_Style_v4 for future reuse, so you do not need to retrain or fine-tune anything.\n\nOnce the style is created, RecraftV4TextToImageNode renders a new image from your text prompt while applying the saved style_id. This produces a single, styled output that mirrors the look and feel of your references without copying their content. SaveImageAdvanced handles output naming and export; adjust its filename_prefix to keep variations organized. The setup is ideal for brand-consistent asset creation or adapting a client’s existing campaign look, and you can feed multiple reference images to either sharpen or broaden the style match.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and verify that RecraftV4CreateStyleNode and RecraftV4TextToImageNode are present. If your Recraft nodes require authentication, enter your API key in the node settings or your environment.",
+      "Load or replace the provided reference images in the LoadImage nodes (e.g., recraft_v4_style_ref_1.png and recraft_v4_style_ref_2.png). Use visually consistent references for a tighter match; mix varied references to broaden the style.",
+      "Queue or execute the style creation branch. RecraftV4CreateStyleNode will return a style_id. SaveText writes this ID to ComfyUI/output/Recraft_Style_v4 so you can reuse it later.",
+      "In RecraftV4TextToImageNode, write your text prompt and ensure the style_id input is connected from the create-style node (or paste a previously saved style_id to skip style creation). Optionally adjust size or other exposed parameters.",
+      "Run the generation. SaveImageAdvanced will export the styled result; set filename_prefix to organize outputs by project, date, or style name.",
+      "For future sessions, skip the create-style step by loading or pasting the saved style_id directly into RecraftV4TextToImageNode to generate new images in the same style."
+    ],
+    "suggestedUseCases": [
+      "Brand-consistent social banners and ads that match an existing campaign look",
+      "Product hero shots rendered to align with prior catalog or e-commerce imagery",
+      "Editorial or blog illustration sets with a unified art direction",
+      "Iconography or UI assets generated in a cohesive visual style",
+      "Pitch decks and mockups that adapt a client’s reference style without manual repainting"
+    ],
+    "faqItems": [
+      {
+        "question": "Can I reuse the same style_id across different prompts and sessions?",
+        "answer": "Yes. The style_id saved by SaveText in ComfyUI/output/Recraft_Style_v4 is reusable. Paste it into RecraftV4TextToImageNode to apply the same style without recreating it."
+      },
+      {
+        "question": "How many reference images should I provide?",
+        "answer": "You can use one or multiple. Fewer, tightly aligned references tend to sharpen the match; a broader set can generalize the style. Keep them visually consistent for predictable results."
+      },
+      {
+        "question": "Does this copy the content of my references?",
+        "answer": "No. Recraft V4 applies stylistic attributes from your references to new, prompt-driven content. Your prompt controls subject and composition, while the style_id guides the look and rendering."
+      },
+      {
+        "question": "I get an authentication or network error. What should I check?",
+        "answer": "These nodes call the Recraft service. Confirm your internet connection and, if required by your setup, add a valid Recraft API key in the node settings or environment, then re-run the nodes."
+      }
+    ]
+  },
   "74335786d7e5": {
     "title": "Stability AI: Stable Image Ultra Text to Image",
     "description": "Generate high quality images with excellent prompt adherence. Perfect for professional GENERATION TYPE at 1 megapixel resolution.",
@@ -10900,6 +11172,45 @@
       }
     ]
   },
+  "7caf5f067f8f": {
+    "title": "Gemini Omni 1.1 Flash: Text to Video",
+    "description": "Generate cinematic videos with audio from text prompts or reference images using Gemini Omni 1.1 Flash, supporting aspect ratio, resolution, and keyframe interpolation controls. Ideal for text-to-video storytelling, animating product shots or illustrations, and iterative conversational video editing.",
+    "metaDescription": "ComfyUI tutorial: Generate text-to-video (with optional audio) using Gemini Omni 1.1 Flash. Control aspect ratio, resolution, and keyframe interpolation.",
+    "extendedDescription": "This ComfyUI tutorial workflow turns a written prompt (and optionally a reference image) into a short, cinematic video using Google’s Gemini Omni 1.1 Flash via the GeminiVideoOmniV2 node. The node handles the API call to Gemini, then returns a generated clip and, when enabled, an accompanying audio track. You get direct control over aspect ratio and resolution so your outputs are ready for social, product pages, or widescreen edits.\n\nTechnically, GeminiVideoOmniV2 is the generator: you provide the prompt and any reference image, set visual parameters, and adjust keyframe interpolation to smooth motion and maintain subject continuity between beats. The SaveVideo node then encodes the frames (and audio, if present) to a file. Because the graph is compact—GeminiVideoOmniV2 feeding into SaveVideo—you can iterate quickly: tweak the prompt, adjust aspect ratio or interpolation strength, re-queue, and compare results for fast creative refinement.",
+    "howToUse": [
+      "Load the workflow JSON in ComfyUI and ensure the GeminiVideoOmniV2 and SaveVideo nodes are present.",
+      "Configure API access: open GeminiVideoOmniV2 and set your Gemini API key in the node or follow the custom-node docs to provide it via environment variable, then restart ComfyUI if required.",
+      "Open GeminiVideoOmniV2: enter a clear text prompt. Optionally connect a reference image to the node’s image/reference input to guide composition or style.",
+      "Set generation controls in GeminiVideoOmniV2: choose aspect ratio and resolution, define clip length and FPS if exposed, and adjust keyframe interpolation to smooth motion between frames. Enable audio if you want a soundtrack.",
+      "Check SaveVideo: confirm the output path/filename and make sure its FPS matches the generator’s FPS. Ensure the video (and audio, if available) outputs from GeminiVideoOmniV2 are connected to SaveVideo.",
+      "Queue the workflow. Review the preview, then iterate: refine the prompt, adjust aspect ratio or interpolation, and re-run until you get the desired result."
+    ],
+    "suggestedUseCases": [
+      "Text-to-video storytelling and mood pieces for social posts or pitch decks.",
+      "Animating still product shots into short showcase clips for e-commerce.",
+      "Bringing illustrations or key art to life for teaser intros and title cards.",
+      "Rapid ideation of ad concepts or motion boards with quick prompt iterations.",
+      "Explainer snippets with subtle motion and optional generated audio."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I provide my Gemini API key?",
+        "answer": "Open the GeminiVideoOmniV2 node and look for API/key configuration, or set the environment variable as documented by the custom node (then restart ComfyUI). If the node cannot find a key, the request will fail."
+      },
+      {
+        "question": "Can I start from an image and animate it?",
+        "answer": "Yes. Connect a reference image to GeminiVideoOmniV2’s image/reference input. The model will use it to inform composition and style. Keep your prompt consistent with the image content for better visual continuity."
+      },
+      {
+        "question": "How do I control video size and shape?",
+        "answer": "Use the aspect ratio and resolution settings in GeminiVideoOmniV2. Common choices are 16:9 for YouTube, 9:16 for vertical reels, and 1:1 for feeds. Match SaveVideo’s FPS to the generator’s FPS to preserve timing."
+      },
+      {
+        "question": "Why does motion look choppy or unstable?",
+        "answer": "Increase keyframe interpolation in GeminiVideoOmniV2 to smooth transitions and stabilize subjects. Also keep prompts precise and avoid large prompt changes between iterations. Lowering resolution can reduce artifacts on slower hardware or networks."
+      }
+    ]
+  },
   "7cc1d3bd2802": {
     "title": "LTX-2.3: Image to Video",
     "description": "Upload an image to generate a video with improved motion consistency and fine details, including enhanced support for portrait formats and audio quality.",
@@ -11321,6 +11632,44 @@
       {
         "question": "Can I add more than six moodboards?",
         "answer": "Yes. Duplicate any Moodboard group (PrimitiveNodes → Krea2ImageNode → SaveImage), update the MarkdownNote label, and point the new PrimitiveNodes to your new moodboard_id and prompt."
+      }
+    ]
+  },
+  "8270f76ce235": {
+    "title": "MiniMax H3 Max: Image to Video",
+    "description": "Generate video from a source image using MiniMax H3 Max, animating your still frame while preserving its composition, visual identity, and aspect ratio. The model delivers faster-than-real-time generation with strong prompt adherence and polished cinematic aesthetics. Ideal for bringing character art to life, animating product shots, and creating motion from concept images.\n\n",
+    "metaDescription": "Animate a single image into video with MiniMax H3 Max. Preserve framing and identity, optionally upscale from 768p to 2K, and save reproducible results.",
+    "extendedDescription": "This ComfyUI template turns a single still image into a short, cinematic video using MiniMax H3 Max. The core path wires LoadImage and your prompt (PrimitiveStringMultiline) into MinimaxHailuo03ContextIRNode to package parameters like aspect ratio, duration, and guidance, then drives MinimaxHailuo03FirstLastFrameNode for image-to-video generation with first/last frame consistency. That first/last frame constraint helps preserve the source image’s composition and visual identity from the opening to the closing frame. The final clip is written with SaveVideo, while SaveText can log run metadata for reproducibility.\n\nTwo optional stages are provided and start off: a Prompt Enhancer path and a 2K upscale path. ComfySwitchNode routes either your base prompt or an enhanced prompt (if you choose to use it) into the core generator. For higher resolution delivery, the MinimaxHailuo03RegenerateNode can request a 2K version from a 768p base. A PrimitiveBoolean in the Feature Flags group controls this. Important: the 2K upscale only accepts a 768p source; generate the base at 768p before enabling Upscale to 2K, otherwise the upscale path will be skipped or fail.",
+    "howToUse": [
+      "Load the template in ComfyUI and update to the latest build. In each MiniMax node (MinimaxHailuo03ContextIRNode, MinimaxHailuo03FirstLastFrameNode, and Regenerate if used), enter your MiniMax API credentials and set any required API parameters.",
+      "Add your source image: open LoadImage and select your still (try the provided sneaker_black.png). Set the desired aspect ratio in the context settings to match your image to avoid unwanted cropping.",
+      "Enter your text prompt in the PrimitiveStringMultiline node inside the User Inputs group. If the Prompt Enhancer (Optional) group is used, write your refined prompt there and flip the related ComfySwitchNode to route it; otherwise leave the switch off to use the base prompt.",
+      "Configure generation in MinimaxHailuo03ContextIRNode: set clip duration, fps, motion strength, guidance/creativity settings, aspect ratio, and seed. Keep durations modest for best identity preservation.",
+      "If you want a 2K delivery, first set the base generation size to 768p, enable the PrimitiveBoolean (Upscale to 2K) in Feature Flags, and confirm the upscale path is connected to MinimaxHailuo03RegenerateNode. Note: the upscale only works from a 768p source.",
+      "Queue the workflow. The core video is produced by MinimaxHailuo03FirstLastFrameNode and saved via SaveVideo; if 2K is enabled, MinimaxHailuo03RegenerateNode will request the higher-res pass next. SaveText will write run metadata so you can reproduce or iterate later."
+    ],
+    "suggestedUseCases": [
+      "Animate product shots for e-commerce or social posts while preserving brand composition.",
+      "Bring character illustrations or concept art to life with subtle, camera-ready motion.",
+      "Create quick animatics from keyframes to previsualize scenes or motion ideas.",
+      "Add cinematic movement to still photography for reels, pitch decks, or mood pieces."
+    ],
+    "faqItems": [
+      {
+        "question": "How does this preserve the image’s framing and identity?",
+        "answer": "The core node MinimaxHailuo03FirstLastFrameNode runs an image-to-video process that uses the source still as the visual anchor from the first to the last frame. Combined with restrained motion settings, this reduces drift and keeps composition and subject identity consistent."
+      },
+      {
+        "question": "Why does the 2K upscale require 768p base generation?",
+        "answer": "The Upscale Video to 2K (Optional) stage is wired to accept only a 768p source. Generate your base clip at 768p, then enable the PrimitiveBoolean (Upscale to 2K) to route it through MinimaxHailuo03RegenerateNode for the higher-resolution pass."
+      },
+      {
+        "question": "Where do I put my MiniMax API key?",
+        "answer": "Open the MiniMax nodes (MinimaxHailuo03ContextIRNode, MinimaxHailuo03FirstLastFrameNode, and MinimaxHailuo03RegenerateNode if used) and enter your API credentials or key fields as required. Without valid credentials, the API requests will fail."
+      },
+      {
+        "question": "How can I reduce artifacts or motion drift?",
+        "answer": "Shorten the clip duration, lower motion intensity, and refine your prompt to avoid conflicting actions. Try a new seed and ensure the aspect ratio matches your source image. Keeping the base generation at moderate resolution (e.g., 768p) before upscaling can also help stability."
       }
     ]
   },
@@ -11966,42 +12315,81 @@
       }
     ]
   },
-  "8bd8b493eb7a": {
-    "title": "Wan3.0: Text to Video",
-    "description": "Generate videos up to 30 seconds directly from text prompts using Wan3.0-Video, producing a single video output with lifelike visuals and synchronized sound. This workflow transforms written descriptions into immersive, production-ready footage with strong character consistency and cinematic quality. Ideal for cinematic storytelling, character-driven animations, and quick multimedia content creation.\n\n",
-    "metaDescription": "Text-to-video in ComfyUI with Wan3.0-Video: generate up to 30s cinematic clips from prompts, optional references, and save with SaveVideo.",
-    "extendedDescription": "This ComfyUI tutorial walks you through a compact text-to-video pipeline powered by the Wan3.0-Video model. The core of the workflow is the Wan3ReferenceToVideoApi node, which sends your prompt (and optional reference images) to the Wan3.0-Video service, then returns a single rendered clip. The SaveVideo node writes that clip to disk. You’ll control duration (up to 30 seconds), resolution/aspect, frame rate, seed, and other generation settings directly on the API node, making it easy to iterate from a single graph.\n\nTechnically, Wan3ReferenceToVideoApi handles the remote job lifecycle: it packages your text prompt and any reference inputs, submits the request, polls until completion, and outputs a finished video. The “Reference” capability helps maintain strong character or style consistency when you supply a face or character image. If your API plan/model supports it, the node can also return synchronized sound; otherwise you’ll receive a silent video you can score later. SaveVideo finalizes the output with your chosen filename pattern and fps, giving you a simple, reliable path from text to production-ready footage.",
+  "8b24ee5765ae": {
+    "title": "Fish Audio: Text to Speech",
+    "description": "Generate natural, expressive speech from text with Fish Audio S2 Pro, a text-to-speech model supporting 80+ languages and fine-grained control over emotion, tone, and pacing using inline tags like [whisper] or [excited]. Input your text and receive one high-quality audio output, with optional style tags woven directly into the script. Ideal for voiceover production, multilingual content creation, and character dialogue in games or animations.\n\n",
+    "metaDescription": "ComfyUI workflow for Fish Audio S2 Pro TTS. Use preset voices or instant voice cloning, inline style tags, and save high‑quality audio in minutes.",
+    "extendedDescription": "This ComfyUI workflow turns written scripts into natural, expressive speech using the Fish Audio S2 Pro text‑to‑speech model. It supports over 80 languages and lets you direct performance with inline style tags (for example, adding [whisper] or [excited] directly in your text). The core path runs your text through the FishAudioTextToSpeech node and saves a single high‑quality audio file via SaveAudioAdvanced.\n\nYou can choose between two voice sources. Option 1 (Preset Audio) uses FishAudioVoiceSelector to supply a curated, ready‑to‑use voice to the TTS node. Option 2 (Voice Clone) uses LoadAudio plus FishAudioInstantVoiceClone to create a temporary voice profile from a short reference clip, then feeds that cloned voice to FishAudioTextToSpeech. Toggle between these options by enabling the corresponding workflow group (Ctrl‑B). A MarkdownNote node on the canvas provides quick reminders, while SaveAudioAdvanced writes the generated speech to disk in your chosen format. Because this uses API nodes, processing happens on the Fish Audio service and is pay‑per‑use once you’re signed in.",
     "howToUse": [
-      "Load the workflow in ComfyUI and locate the Wan3ReferenceToVideoApi and SaveVideo nodes. In Wan3ReferenceToVideoApi, set your API credentials/endpoint and choose the Wan3.0-Video model.",
-      "Enter a clear text prompt describing subject, setting, mood, and camera language (e.g., \"golden hour, dolly-in on a hero, dramatic backlight\"). Optionally add a negative prompt to avoid unwanted artifacts.",
-      "If you want character or style consistency, connect a reference image to the node’s reference input(s) and adjust the reference strength/weight so the model follows the look while allowing the motion you want.",
-      "Configure generation settings: duration (max ~30s), resolution/aspect ratio (e.g., 16:9, 9:16), fps, and seed (fixed for repeatability or random for variety). If available in your plan, enable audio so the clip returns with synchronized sound.",
-      "Queue/execute the graph. The API node will submit and track the job; when complete, preview the output. If needed, refine by adjusting the prompt (camera moves, pacing verbs), seed, or reference weight, then re-run.",
-      "In SaveVideo, set the output path/filename pattern and fps to match your project. Execute to write the final video file to disk."
+      "Load the workflow in ComfyUI and sign in to your account. API nodes (FishAudio*) require authentication and are pay‑per‑use.",
+      "Pick your voice source: enable Option 1: Preset Audio (default) to use FishAudioVoiceSelector, or enable Option 2: Voice Clone (select the group and press Ctrl‑B) to use LoadAudio + FishAudioInstantVoiceClone. Only enable one option at a time.",
+      "For preset voices: open FishAudioVoiceSelector and choose a voice. It will feed a voice ID to FishAudioTextToSpeech automatically.",
+      "For instant cloning: load a clean reference clip (speech only) with LoadAudio, then run FishAudioInstantVoiceClone to produce a temporary voice token/ID that connects to FishAudioTextToSpeech.",
+      "Enter your script in the text field of FishAudioTextToSpeech. Add inline tags like [whisper] or [excited] directly in the text where you want style changes. Then queue the workflow to generate audio.",
+      "In SaveAudioAdvanced, set your output filename and format (e.g., WAV/MP3) and run. Check the node’s output path for the saved file. Iterate by adjusting text, tags, or voice and re‑queue."
     ],
     "suggestedUseCases": [
-      "Cinematic story beats and teasers for pitch decks or previsualization",
-      "Character-driven shorts where a reference image ensures consistent identity",
-      "Quick social media promos and vertical Reels/TikToks with strong art direction",
-      "Explainer cutaways or B-roll generated from descriptive prompts",
-      "Animatics to explore camera moves and mood before full production"
+      "Multilingual voiceovers for tutorials, product demos, and explainer videos",
+      "Character dialogue for games, animations, or storyboards using cloned or preset voices",
+      "Podcast intros, ad reads, and quick pick‑ups without re‑recording",
+      "Rapid localization of training content across 80+ supported languages",
+      "Temp VO for animatics and client reviews before final studio recordings"
     ],
     "faqItems": [
       {
-        "question": "How long can the generated video be?",
-        "answer": "This workflow targets clips up to about 30 seconds. Longer runs may be limited by the API plan or timeout settings; keep to 30s or less for reliable results."
+        "question": "How do the inline style tags work?",
+        "answer": "Place a tag like [whisper] or [excited] directly in your script before the words you want to affect. The FishAudioTextToSpeech node forwards your text to the Fish Audio S2 Pro API, which interprets these tags to adjust tone, emotion, and pacing. For the full list of supported tags and syntax, consult the Fish Audio documentation."
       },
       {
-        "question": "Does it generate audio?",
-        "answer": "If your Wan3.0-Video endpoint/plan supports audio, the API node can return synchronized sound. If not, you’ll receive a silent video—add music/FX in post."
+        "question": "What’s the difference between preset voices and instant voice cloning?",
+        "answer": "Preset voices (FishAudioVoiceSelector) are curated, consistent, and ready to use. Instant cloning (LoadAudio + FishAudioInstantVoiceClone) adapts the TTS to a short reference clip so you can match a specific speaker. Cloning quality depends on the reference audio—clean speech with minimal noise typically yields better results."
       },
       {
-        "question": "How do I keep a character’s look consistent?",
-        "answer": "Provide a clear reference image via Wan3ReferenceToVideoApi’s reference input and keep your prompt consistent across iterations. Reusing the same seed also helps stabilize identity."
+        "question": "How long and what type of reference audio should I use for voice cloning?",
+        "answer": "Use 5–30 seconds of clear, solo speech with no music or heavy reverb. A dry, well‑recorded segment where the speaker talks at a natural pace works best. Load this file in the LoadAudio node, then run FishAudioInstantVoiceClone to generate the voice profile for the TTS node."
       },
       {
-        "question": "Can I batch multiple prompts in one run?",
-        "answer": "This graph is set up to produce a single video per execution. To batch, duplicate the API/SaveVideo branch for each prompt or iterate with a batching/loop mechanism."
+        "question": "Are there costs or limits when using this workflow?",
+        "answer": "Yes. Fish Audio API nodes are pay‑per‑use and require you to be signed in. Usage, quotas, and pricing are managed by your account with the service. If requests fail, check your authentication status, balance, and any rate limits in your account."
+      }
+    ]
+  },
+  "8bd8b493eb7a": {
+    "title": "Wan3.0: Text to Video",
+    "description": "Generate videos up to 30 seconds directly from text prompts using Wan3.0-Video, producing a single video output with lifelike visuals and synchronized sound. This workflow transforms written descriptions into immersive, production-ready footage with strong character consistency and cinematic quality. Ideal for cinematic storytelling, character-driven animations, and quick multimedia content creation.\n\n",
+    "metaDescription": "Text-to-video in ComfyUI with Wan3.0: generate up to 30s cinematic clips from prompts, with character consistency and synchronized audio, saved in one step.",
+    "extendedDescription": "This ComfyUI workflow turns plain text into a single, production-ready video clip using the Wan3.0-Video model. At the core is the Wan3ReferenceToVideoApi node, which sends your prompt (and optionally a reference image) to the Wan3.0 text-to-video service and returns a finished clip with synchronized audio. The SaveVideo node then writes the returned clip to disk as a standard video file, giving you a straightforward, single-output pipeline from idea to result.\n\nTechnically, the Wan3ReferenceToVideoApi node handles the heavy lifting: it packages your prompt and settings (like duration up to 30 seconds and basic generation controls) and asynchronously retrieves the generated video. If you supply a character or style reference image, the node uses it to enforce visual consistency across the clip—useful for recurring characters or branded subjects. Because the output arrives as a complete video (not per-frame images), you avoid local rendering overhead and retain any audio embedded by the service, while SaveVideo ensures the file is properly saved and easy to share.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and locate the Wan3ReferenceToVideoApi and SaveVideo nodes.",
+      "Open Wan3ReferenceToVideoApi: enter your API key/credentials if required by your setup, then write a clear prompt describing subject, setting, motion, and camera (e.g., \"a lone astronaut walks across a neon-lit bazaar, handheld camera, slow push-in\").",
+      "Optional: connect or select a reference image in Wan3ReferenceToVideoApi to maintain character or style consistency across the clip.",
+      "Set generation options in Wan3ReferenceToVideoApi, including the desired duration (up to 30 seconds). Adjust any available controls such as aspect ratio or seed if the node exposes them.",
+      "Queue/Run the workflow. The Wan3ReferenceToVideoApi node will generate a single video with audio (handled by the remote service) and pass it to SaveVideo.",
+      "In SaveVideo, confirm the output path/name and run. When complete, open the saved file to review motion, composition, and audio sync. Iterate by refining your prompt or reference image for improved results."
+    ],
+    "suggestedUseCases": [
+      "Cinematic teasers and trailers for pitches or mood boards",
+      "Character-driven shorts with consistent appearance across shots",
+      "Previsualization for storyboards and scene blocking",
+      "Quick social media microvideos with compelling motion and sound",
+      "Product reveals or branded bumps with a stable hero subject"
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need an API key to use this workflow?",
+        "answer": "Yes. The Wan3ReferenceToVideoApi node connects to the Wan3.0-Video service and typically requires an API key or credentials. Enter these in the node settings per your ComfyUI integration."
+      },
+      {
+        "question": "How long can the generated videos be?",
+        "answer": "Up to 30 seconds. Set the duration in Wan3ReferenceToVideoApi within that limit. Longer requests may fail or be truncated by the service."
+      },
+      {
+        "question": "How do I keep a character consistent across shots?",
+        "answer": "Provide a clear reference image in Wan3ReferenceToVideoApi and keep your prompt and seed (if available) consistent across runs. Describe defining traits (clothing, colors, hairstyle) explicitly in the prompt."
+      },
+      {
+        "question": "Does the workflow include audio?",
+        "answer": "Yes. The Wan3.0 service returns a single video file with synchronized sound. SaveVideo writes the received video to disk, preserving the embedded audio. If you don’t hear sound, verify your media player and the saved container support audio."
       }
     ]
   },
@@ -12394,6 +12782,45 @@
       {
         "question": "How can I document my workflow process?",
         "answer": "Use the MarkdownNote node to add annotations and notes throughout your workflow. This will help you keep track of settings and modifications for future use."
+      }
+    ]
+  },
+  "8f82ff60ae5e": {
+    "title": "Gemini Omni 1.1 Flash: Video Edit",
+    "description": "Edit videos through natural language conversation with Gemini Omni 1.1 Flash. Upload a clip (10 seconds or less) and describe the change: swap backgrounds, restyle scenes, add or remove elements, and the model applies the edit while preserving everything you did not mention. Add \\\"Keep everything else the same\\\" for maximum consistency; simple prompts work best. Outputs video with native audio at 16:9 or 9:16, with 1080p/4K output available. Ideal for remixes, style changes, and iterative refinement without re-generating from scratch.\n\n",
+    "metaDescription": "Edit 10s videos by prompt with Gemini Omni 1.1 Flash in ComfyUI. Swap backgrounds, restyle, and export 16:9 or 9:16 with audio at 1080p/4K.",
+    "extendedDescription": "This ComfyUI workflow lets you edit a short video by simply describing the change you want. LoadVideo ingests your clip (the template includes input/hooded_wanderer_planet_bridge.mp4 as a ready-to-run test), and GeminiVideoOmniV2 sends both the video and your plain‑language instruction to Gemini Omni 1.1 Flash. The model applies targeted edits—like swapping backgrounds, restyling a scene, or adding/removing elements—while leaving everything else untouched. For maximum fidelity, include a line such as “Keep everything else the same.” Simple, direct prompts tend to produce the most consistent results.\n\nOn output, SaveVideo writes the edited clip to disk with the native audio preserved. You can choose 16:9 or 9:16 and render at 1080p or 4K, making it suitable for landscape or vertical content. A MarkdownNote in the graph provides quick tips. The recommended input duration is 10 seconds or less to ensure responsive processing and stable edits. This setup is ideal for rapid remixes and iterative refinement without regenerating entire scenes from scratch.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and ensure you’re on the latest version. Configure your Gemini API key in the ComfyUI settings or directly in the GeminiVideoOmniV2 node (as required by your setup).",
+      "In LoadVideo, set the input to input/hooded_wanderer_planet_bridge.mp4 (included) or drag in your own clip (10 seconds or less). Confirm the clip plays correctly in the node’s preview if available.",
+      "Select the GeminiVideoOmniV2 node and write a concise instruction describing just the change you want (e.g., “Replace the background with a neon city at night. Keep everything else the same.”). Choose the desired aspect ratio (16:9 or 9:16) and resolution (1080p or 4K) in the node’s settings.",
+      "Optionally add brief refinement details (color palette, time of day, or specific objects to add/remove), but avoid overloading the prompt. Keep the instruction simple and unambiguous.",
+      "Queue and run the workflow. The model processes the video and returns an edited clip; SaveVideo writes the result to your output directory, preserving the original audio track.",
+      "Review the output and iterate. If something drifted, make the prompt more explicit (e.g., “Do not change the subject’s clothing. Keep the camera motion identical.”) and re-run to refine."
+    ],
+    "suggestedUseCases": [
+      "Background replacement for B‑roll or social clips without re-shooting (e.g., turn a bridge scene into a futuristic city).",
+      "Style restyling and color grading matches (film look, seasonal changes, day-to-night) while preserving composition.",
+      "Object cleanup: remove a distracting sign, add a subtle prop, or hide a logo.",
+      "Format adaptation for platforms: convert landscape footage to vertical 9:16 with a matching style pass.",
+      "Quick concept remixes: iterate on visual ideas before committing to full production."
+    ],
+    "faqItems": [
+      {
+        "question": "What clip length works best?",
+        "answer": "Keep inputs to 10 seconds or less. Shorter clips process faster and maintain better temporal consistency. Longer inputs may be slower or less stable depending on API limits."
+      },
+      {
+        "question": "Will the original audio be preserved?",
+        "answer": "Yes. The workflow is designed to export the edited video with its native audio via SaveVideo. If your source has no audio, the output will be silent."
+      },
+      {
+        "question": "How do I maximize consistency across frames?",
+        "answer": "Use simple, specific instructions and include “Keep everything else the same.” Avoid bundling many changes at once, minimize rapid camera motion, and keep the subject’s key attributes explicit (e.g., clothing, colors) if they must not change."
+      },
+      {
+        "question": "Can it export vertical video for social media?",
+        "answer": "Yes. Set the aspect ratio to 9:16 in GeminiVideoOmniV2 (and select 1080p or 4K as needed). The workflow will render a vertical output with the edit applied."
       }
     ]
   },
@@ -12822,6 +13249,15 @@
       }
     ]
   },
+  "920c795f693a": {
+    "title": "Pixal3D & TRELLIS.2: Image to Model",
+    "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
+    "metaDescription": "",
+    "extendedDescription": "",
+    "howToUse": [],
+    "suggestedUseCases": [],
+    "faqItems": []
+  },
   "924b279f0df1": {
     "title": "MiniMax: Image to Video",
     "description": "Generate refined videos from images and text with CGI integration using MiniMax.",
@@ -12897,6 +13333,45 @@
       {
         "question": "How long does the coloring process take?",
         "answer": "The processing time depends on the complexity of the illustration and your system's capabilities, but it typically completes within a few minutes."
+      }
+    ]
+  },
+  "92d04a68658a": {
+    "title": "PixVerse 6.0: Text to Video",
+    "description": "Generate videos up to 15 seconds at 1080p from text prompts with PixVerse V6, supporting multiple aspect ratios, optional integrated audio, and multi-shot scene direction in a single generation. Ideal for social media ads, product concept testing, and short-form storytelling where narrative continuity and distribution-ready framing matter.\n\n",
+    "metaDescription": "ComfyUI PixVerse V6 tutorial: generate up to 15s 1080p videos from text with multi-shot prompts, multiple aspect ratios, and optional audio, saved via SaveVideo.",
+    "extendedDescription": "This ComfyUI tutorial workflow uses PixverseV6TextToVideoNode to turn text prompts into distribution-ready video clips, then saves the result with SaveVideo. PixVerse V6 runs generation via API, so you don’t need a local GPU to produce smooth motion. You can target up to 15 seconds at 1080p, choose common aspect ratios (16:9, 9:16, 1:1), and optionally include integrated audio if enabled in the node. The node handles the request/response with the PixVerse V6 service and returns an encoded video that SaveVideo writes to disk.\n\nWhat makes this setup especially useful is multi-shot scene direction in a single pass. You can outline a short narrative as a sequence of labeled scenes within your prompt so the model maintains continuity across cuts (character, setting, lighting) without juggling multiple runs. The result is a fast way to prototype social clips, product teasers, and story snippets that are already framed correctly for your target platform.",
+    "howToUse": [
+      "Load the PixVerse 6.0: Text to Video workflow in ComfyUI. If prompted, install the custom PixverseV6TextToVideoNode and restart ComfyUI so the node becomes available.",
+      "Open PixverseV6TextToVideoNode and enter your text prompt. Set duration (up to 15s), choose aspect ratio (e.g., 16:9, 9:16, 1:1), and select 1080p for final resolution. If available, enable the audio option to embed a soundtrack.",
+      "For multi-shot direction, structure the prompt as clearly separated scenes (e.g., labeled lines like \"Shot 1:\", \"Shot 2:\"). Reuse key nouns for continuity (character name, product, setting) so the model keeps the same subject across shots.",
+      "If the node exposes reproducibility controls (such as a seed), set them now for consistent iterations. Keep prompts specific about subject, action, and style; avoid conflicting instructions.",
+      "Ensure PixverseV6TextToVideoNode’s video output connects to SaveVideo. In SaveVideo, choose an output filename (MP4) and verify the framerate matches your generation settings.",
+      "Click Queue/Execute. Wait for the API to finish rendering. When complete, open the saved MP4. If audio was enabled and provided by PixVerse, the exported file will include it; otherwise, you can add audio in post."
+    ],
+    "suggestedUseCases": [
+      "Social ads and story posts framed for 9:16 or 1:1, ready for platforms like TikTok, Reels, and Shorts.",
+      "Product concept teasers and motion mockups to validate ideas before full-scale production.",
+      "Short-form storytelling and sceneboards using multi-shot prompts for narrative continuity.",
+      "UI/UX micro-demos or explainer snippets where 15 seconds and 1080p clarity are sufficient.",
+      "Title cards and motion bumpers tailored to different aspect ratios from the same prompt."
+    ],
+    "faqItems": [
+      {
+        "question": "What are the maximum duration and resolution supported?",
+        "answer": "This workflow targets up to 15 seconds at 1080p. You can pick common aspect ratios like 16:9, 9:16, and 1:1 to match your distribution channel."
+      },
+      {
+        "question": "Do I need a powerful GPU to use this?",
+        "answer": "No. PixverseV6TextToVideoNode uses the PixVerse V6 API for generation. Your local machine runs ComfyUI and saves the output, while rendering happens on the service."
+      },
+      {
+        "question": "How do I write a good multi-shot prompt?",
+        "answer": "Break your idea into short, labeled scenes and keep the subject identifiers consistent. For example, name the character and setting in each scene. Limit the number of shots so each has enough time within the total duration, and avoid conflicting style directives across scenes."
+      },
+      {
+        "question": "Does the saved video include audio?",
+        "answer": "If you enable audio and PixVerse returns an encoded video with a soundtrack, SaveVideo will write that output to disk. If audio isn’t included or you prefer a custom track, add it later in a video editor."
       }
     ]
   },
@@ -13398,6 +13873,43 @@
       {
         "question": "Can I save the generated images automatically?",
         "answer": "Yes, the SaveImage node allows you to automatically store the generated images on your local system."
+      }
+    ]
+  },
+  "97f877b082ae": {
+    "title": "Fish Audio: Speech to Text",
+    "description": "Transcribe audio to text with Fish Audio ASR. Language is detected automatically across 80+ languages, with optional word-level timestamps returned as JSON segments. Use it to create subtitles, transcribe recordings, or generate text prompts from audio clips. A sample audio is pre-loaded so you can test it right away.\n\n",
+    "metaDescription": "ComfyUI workflow: Fish Audio ASR transcribes audio in 80+ languages with optional timestamped JSON segments and saved text transcript.",
+    "extendedDescription": "This ComfyUI tutorial workflow demonstrates end-to-end speech-to-text using the FishAudioSpeechToText node. Audio is loaded with LoadAudio (a sample file, fish_audio_example.mp3, is pre-connected so you can run it immediately), then sent to the Fish Audio ASR service for transcription. The node automatically detects the spoken language across 80+ languages and returns a clean transcript string along with an optional JSON payload of timestamped segments. The transcript is saved to disk via SaveText, while a MarkdownNote provides on-canvas tips.\n\nTechnically, LoadAudio decodes your file into an audio tensor and forwards it to FishAudioSpeechToText. When precise_timestamps is enabled on that node, it also returns segments_json containing per-segment text with start/end times (and, when available, finer word-level timing). SaveText writes the main transcript string to your ComfyUI output folder for easy reuse in subtitles, captions, or indexing pipelines. This setup is lightweight, API-driven, and practical for rapid transcription, subtitle prep, or generating text prompts from recorded audio.",
+    "howToUse": [
+      "Load the workflow in ComfyUI. Press Queue to test with the preloaded sample (fish_audio_example.mp3) or open the LoadAudio node and select your own audio file.",
+      "Open the FishAudioSpeechToText node. If you need timestamps, enable precise_timestamps to populate segments_json with per-segment (and, when available, word-level) timing.",
+      "Run the workflow. The node sends audio to the Fish Audio ASR service, auto-detects the language, and returns the transcript text plus segments_json.",
+      "Find the saved transcript from the SaveText node in your ComfyUI output folder (or the path you configured in the node).",
+      "Inspect segments_json in the FishAudioSpeechToText outputs. If precise_timestamps is off, segments_json will be empty; turn it on and re-run to get start/end times."
+    ],
+    "suggestedUseCases": [
+      "Auto-generate captions or subtitles for videos; convert segments_json to SRT/VTT with a simple post-processing step.",
+      "Transcribe interviews, lectures, or meeting recordings for searchable notes.",
+      "Podcast and voiceover indexing so you can quickly find and quote key moments.",
+      "Create text prompts or tags from voice memos for downstream creative workflows."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I get timestamps for subtitles?",
+        "answer": "Enable precise_timestamps in the FishAudioSpeechToText node. This fills segments_json with per-segment text and start/end times (and, when available, finer word-level timing)."
+      },
+      {
+        "question": "Which languages are supported?",
+        "answer": "The node auto-detects language across 80+ languages. You don’t need to set the language manually—just provide clear audio."
+      },
+      {
+        "question": "Where is my transcript saved?",
+        "answer": "SaveText writes the main transcript string to your ComfyUI output folder. Check the SaveText node’s path setting to see or change the exact location."
+      },
+      {
+        "question": "Does this require internet access or an API key?",
+        "answer": "Yes. FishAudioSpeechToText calls an external ASR service, so a network connection is required. If your installation requires credentials, configure them as instructed for your environment."
       }
     ]
   },
@@ -14443,6 +14955,45 @@
       }
     ]
   },
+  "a06aca6c5d8b": {
+    "title": "MiniMax H3 Max Turbo: Image to Video",
+    "description": "Generate video sequences from a starting image using MiniMax H3 Max Turbo, producing two video outputs from a single input frame. This rapid image-to-video workflow generates short clips in seconds, with optional prompt enhancement and 2K upscaling stages. Ideal for animating still photographs, creating quick motion previews for storyboards, and fast visual effects iteration.",
+    "metaDescription": "Animate a single image into two short videos with MiniMax H3 Max Turbo. Optional prompt enhancement and 2K upscale. Fast image-to-video in ComfyUI.",
+    "extendedDescription": "This MiniMax H3 Max Turbo image-to-video workflow turns a single still image into motion in seconds and saves two distinct clips per run. The core video generation happens in parallel through two MiniMax nodes: MinimaxHailuo03FirstLastFrameNode and MinimaxHailuo03ContextIRNode. Both consume the same start image from LoadImage and the same text prompt, then SaveVideo writes each result to disk. A ComfySwitchNode sits between your prompt and the generators, routing either your original text from PrimitiveStringMultiline or an auto-improved version from MinimaxHailuo03RegenerateNode when the Prompt Enhancer is enabled. For traceability, SaveText captures prompt metadata so you can reproduce strong results later.\n\nTwo optional stages are exposed via the Feature Flags group (PrimitiveBoolean). First, you can enable the Prompt Enhancer to have MinimaxHailuo03RegenerateNode refine your instruction before it is passed to both video generators. Second, you can enable 2K upscaling for higher-resolution deliverables. Important: the upscale stage only accepts 768p source video, so set the MiniMax generation resolution to 768p when you plan to upscale. The template also includes MarkdownNote guidance on-canvas and sensible defaults to get you from a single frame to dual video outputs fast, making it ideal for animating stills, storyboards, and quick VFX look-dev.",
+    "howToUse": [
+      "Load the template in ComfyUI and update ComfyUI to the latest version. In the User Inputs group, load your starting image with the LoadImage node (try the provided teal_hypercar_seaside.png to verify the setup).",
+      "Enter your description in PrimitiveStringMultiline. If you want automatic phrasing help, enable the Prompt Enhancer flag in Feature Flags to route your text through MinimaxHailuo03RegenerateNode via the ComfySwitchNode.",
+      "If you plan to use the 2K upscaling stage, set the output resolution on the MiniMax video nodes to 768p first. Then enable the Upscale to 2K flag. If you are not upscaling, choose any supported resolution for direct output.",
+      "Verify your MiniMax API configuration is set in your ComfyUI environment or node settings, since the MinimaxHailuo03* nodes make API calls.",
+      "Queue the workflow. Both MinimaxHailuo03FirstLastFrameNode and MinimaxHailuo03ContextIRNode will generate short clips from your single input frame. SaveVideo writes two separate files, while SaveText logs the prompt or request info for reference.",
+      "Review the two outputs. If the upscale flag was active and the sources were 768p, check the 2K versions as well. Iterate by refining your prompt or toggling the enhancer to compare guidance strength across both video variants."
+    ],
+    "suggestedUseCases": [
+      "Animating still photographs for social posts or portfolio reels",
+      "Quick motion previews for storyboards and pitch animatics",
+      "Fast VFX look development and reference motion from a single frame",
+      "Product shots and hero images turned into short motion clips",
+      "Environment plates with subtle motion for previsualization"
+    ],
+    "faqItems": [
+      {
+        "question": "What is the difference between the two video outputs?",
+        "answer": "They come from two MiniMax generators wired in parallel. MinimaxHailuo03FirstLastFrameNode uses first/last frame guidance to structure motion, while MinimaxHailuo03ContextIRNode relies on context inference. Both use the same image and prompt, so you can compare two motion interpretations side by side."
+      },
+      {
+        "question": "Why does the 2K upscaling stage fail or get skipped?",
+        "answer": "The upscale path only accepts 768p source video. Set the generation resolution on the MiniMax nodes to 768p before enabling the Upscale to 2K flag. If the source isn’t 768p, upscale will not run."
+      },
+      {
+        "question": "Do I need an API key for MiniMax?",
+        "answer": "Yes. The MinimaxHailuo03* nodes call the MiniMax H3 Max Turbo API. Ensure your MiniMax credentials are configured in ComfyUI or the node settings before running the workflow."
+      },
+      {
+        "question": "Can I control clip length or motion intensity?",
+        "answer": "The MiniMax nodes expose parameters (e.g., duration or motion behavior) depending on your installation and template version. Open MinimaxHailuo03FirstLastFrameNode and MinimaxHailuo03ContextIRNode to adjust available settings. Use SaveText logs to keep notes on parameter sets that work well."
+      }
+    ]
+  },
   "a084de008c94": {
     "title": "Wan2.6: Image to Video",
     "description": "Transform images into high-quality videos with enhanced image quality, smoother motion, 1080P resolution support, and natural movement generation for professional results.",
@@ -14478,6 +15029,45 @@
       {
         "question": "Is it possible to batch process multiple images into videos?",
         "answer": "Currently, the workflow is designed for single image processing. For batch processing, you would need to run the workflow separately for each image."
+      }
+    ]
+  },
+  "a088cfc66619": {
+    "title": "GPT Image 2.5 Flare: Text to Image",
+    "description": "GPT Image 2.5 Flare is a fast image generation and editing template optimized for rapid prototyping and creative iteration. It delivers quick previews for concept exploration, mood boards, poster drafts, character sketches and scene mockups. Balances solid visual quality with low latency, ideal for high-volume trial-and-error creative workflows.\n\n",
+    "metaDescription": "ComfyUI template for fast text-to-image and quick edits using OpenAIGPTImageNodeV2, optimized for rapid prototyping and saving outputs via SaveImage.",
+    "extendedDescription": "GPT Image 2.5 Flare: Text to Image is a lean ComfyUI template for rapid ideation and fast visual drafts. It centers on OpenAIGPTImageNodeV2 for generation and optional editing, then hands results to SaveImage for clean, consistent exports. With only two nodes to manage, you can move quickly from prompt to preview, making it ideal for mood boards, poster comps, character studies, and quick scene mockups.\n\nTechnically, OpenAIGPTImageNodeV2 sends your prompt (and, if provided, a source image and mask) to an OpenAI image model you select in the node’s model field (for example, gpt-image-1). The node returns generated images directly into ComfyUI for preview, and SaveImage writes them to disk with your chosen filename prefix and subfolder. The “Flare” preset emphasizes low latency: keep sizes modest, use standard quality, and generate a small batch to iterate quickly, then scale up resolution or quality once the concept is locked.",
+    "howToUse": [
+      "Load the workflow: Open ComfyUI and load the “GPT Image 2.5 Flare: Text to Image” workflow. Ensure the OpenAI integration/extension that provides OpenAIGPTImageNodeV2 is installed and your OpenAI API key is configured.",
+      "Configure the generator: Open the OpenAIGPTImageNodeV2 node. Select an OpenAI image model (e.g., gpt-image-1), enter a clear prompt, and set size and image count. For fastest previews, use standard quality and moderate resolutions (e.g., 768–1024 on the long side).",
+      "Optional image editing: If editing, provide a source image and a mask to indicate edit regions (refer to the node’s tooltip/docs for the expected mask format). Write a prompt that clearly describes the intended change (e.g., “replace the sky with a dramatic sunset”).",
+      "Set output naming: In the SaveImage node, set a filename_prefix (e.g., flare_draft) and an optional subfolder to keep iterations organized. This node will save images to your ComfyUI output directory.",
+      "Generate: Click Queue Prompt. Review the preview images in ComfyUI. If needed, refine the prompt, adjust size or count, and re-queue to iterate quickly.",
+      "Upscale or finalize: Once the concept is right, you can increase resolution or quality in OpenAIGPTImageNodeV2 for a cleaner output, then re-run and save with SaveImage."
+    ],
+    "suggestedUseCases": [
+      "Rapid concept thumbnails and mood boards for visual direction alignment",
+      "Poster and cover exploration with quick variations on layout and style",
+      "Character and prop studies to establish silhouette and vibe before detailing",
+      "Scene mockups and set dressing to evaluate composition and color palettes",
+      "Targeted image edits (object replacement, background changes) for fast revisions"
+    ],
+    "faqItems": [
+      {
+        "question": "Which model does this workflow use?",
+        "answer": "OpenAIGPTImageNodeV2 lets you choose the model in its settings (e.g., gpt-image-1). The “Flare” template is tuned for speed: start with standard quality and moderate resolutions for quick feedback."
+      },
+      {
+        "question": "Can it edit existing images?",
+        "answer": "Yes. Supply a source image and a mask to specify where changes should occur, then describe the edit in the prompt. Check the node’s documentation for the required mask format and channel (transparent vs. grayscale) to ensure accurate edits."
+      },
+      {
+        "question": "Does this run on my GPU or the cloud?",
+        "answer": "Image generation happens through the OpenAI API (cloud). ComfyUI handles the workflow and saving locally. You’ll need an internet connection and an active API key; usage may incur API costs and be subject to rate limits."
+      },
+      {
+        "question": "How do I get faster results or better quality?",
+        "answer": "For speed, use standard quality, smaller sizes, and fewer images per batch. For quality, increase resolution and/or quality after you’ve validated the concept. Iterating in small, fast steps is the core idea of this template."
       }
     ]
   },
@@ -14595,6 +15185,45 @@
       {
         "question": "Does this workflow handle audio?",
         "answer": "This workflow focuses on visual edits. If you need audio, export the edited video and remux it with the original audio track in a video editor or command-line tool."
+      }
+    ]
+  },
+  "a1b8c3be20ff": {
+    "title": "PixVerse 6.0: Image to Video",
+    "description": "Turn a still image into a moving video clip with PixVerse V6, generating up to 15 seconds of footage at resolutions from 360p to 1080p. Supports multiple aspect ratios, integrated audio generation, and multi-shot direction for cohesive narrative flow. Ideal for social media ads, product demonstrations, and short-form storytelling.\n\n",
+    "metaDescription": "Turn a single image into a 3–15s video in ComfyUI with PixVerse V6. Set aspect ratio and resolution, guide motion, and export with SaveVideo.",
+    "extendedDescription": "This ComfyUI workflow transforms a single still image into a short, cinematic video using the PixverseV6ImageToVideoNode. The graph is intentionally simple and production-focused: LoadImage brings in your source asset, PixverseV6ImageToVideoNode sends it to the PixVerse V6 image-to-video model via API for motion synthesis, and SaveVideo writes the returned clip to disk. The node exposes controls for duration (up to ~15 seconds), resolution selection from 360p through 1080p, and common aspect ratios, so you can quickly target platforms like TikTok, Instagram, or YouTube without additional resizing steps.\n\nTechnically, the PixverseV6ImageToVideoNode handles the heavy lifting off-device through the PixVerse service, so you don’t need a local GPU. You can guide motion and subject behavior with text direction in the node (for example, describing camera moves or the action you want). If your build of the node includes multi-shot/storyboard fields, you can specify timed beats or per-shot prompts for cohesive narrative flow; if not, stick with a single continuous shot. A MarkdownNote is included on-canvas to provide quick reminders. Finally, SaveVideo packages the generated clip to your ComfyUI output folder for immediate review and sharing.",
+    "howToUse": [
+      "Open ComfyUI, update to the latest version if needed (see the provided update guide), and load the PixVerse 6.0: Image to Video workflow.",
+      "In LoadImage, select your source still. You can test with the provided sunny_pink_high_tops.png from the author notes or drop in your own image.",
+      "Open PixverseV6ImageToVideoNode and enter your PixVerse API credentials if required. Set duration (up to ~15s), choose resolution (360p–1080p), and pick an aspect ratio that fits your target platform.",
+      "Add motion direction in the node’s prompt/description field (e.g., specify subtle camera pan, product spin, or environmental movement). If your node exposes multi-shot/storyboard inputs, add scene beats there; otherwise, keep it as one continuous shot.",
+      "Optionally refine look and feel with any available controls in the node (such as style intensity or motion strength, if present).",
+      "Run the workflow. When complete, check the SaveVideo output in your ComfyUI output folder for the rendered clip."
+    ],
+    "suggestedUseCases": [
+      "Product teasers from catalog photos (e.g., subtle 360° turns, parallax moves, or soft environmental motion).",
+      "Social media shorts and ads tailored to vertical, square, or landscape aspect ratios.",
+      "Storyboards and previsualization for creative concepts using multi-shot direction (if available in your node).",
+      "Animated cover images or hero banners for landing pages.",
+      "Quick motion studies from mood board stills to communicate camera intent."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need a GPU to run this workflow?",
+        "answer": "No. PixverseV6ImageToVideoNode calls the PixVerse V6 service over API, so the heavy compute happens remotely. Your local machine just orchestrates the request and saves the result."
+      },
+      {
+        "question": "What video lengths and resolutions are supported?",
+        "answer": "The node typically supports clips up to about 15 seconds and common resolutions from 360p to 1080p. Exact limits depend on the PixVerse service settings for your account and the options exposed by your node build."
+      },
+      {
+        "question": "Can this workflow generate audio?",
+        "answer": "This template is video-only. There is no audio-generation node in the graph. If you need music or sound effects, add audio in a video editor or extend the workflow with an audio node."
+      },
+      {
+        "question": "How do I get consistent results or iterate on a look?",
+        "answer": "Keep your direction text consistent and reuse the same settings. If the node exposes a seed or repeat parameter, lock it for reproducibility. For iterations, duplicate the node and tweak one setting at a time (duration, resolution, or motion phrasing) to see targeted changes."
       }
     ]
   },
@@ -15696,6 +16325,45 @@
       }
     ]
   },
+  "ad315e41d8c2": {
+    "title": "Character Turnaround Sheet Generator",
+    "description": "Create orthographic multi-view character turnaround sheet from one reference image, keep consistent character features across front, side and back views, for sci-fi mech and armor character design.\n\n",
+    "metaDescription": "Create consistent orthographic side and back views from one front reference using GeminiImage2Node in ComfyUI. Perfect for mech armor turnaround sheets.",
+    "extendedDescription": "This workflow generates a clean, orthographic character turnaround (front, side, and back) from a single reference image—ideal for sci‑fi mechs and armor designs. It starts with LoadImage to bring in a front orthographic reference (a sample white_mech_front_ortho.png is included). That image is then passed to GeminiImage2Node, which calls a Google Generative image API and uses your text instructions plus the reference to synthesize additional angles while preserving key features like silhouette, plate layout, decals, and color scheme. SaveImageAdvanced writes each view to disk with predictable filenames so you can assemble them into a final sheet in your design tool. A MarkdownNote in the graph provides inline guidance and prompt tips.\n\nTechnically, consistency across views is encouraged by conditioning GeminiImage2Node with the same reference image and carefully worded prompts (e.g., “orthographic side view of the same mech as the reference; match plating, helmet, and markings; no perspective; white background”). Because this template relies on an external API rather than local checkpoints, it’s quick to set up—no model downloads are required—making it a practical tool for concept artists and product designers who need fast, multi‑view explorations of a single design.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and update ComfyUI to the latest version. Ensure GeminiImage2Node is installed and configured with your Gemini/Google image API credentials per the node’s instructions.",
+      "In LoadImage, select your front orthographic reference (use the provided white_mech_front_ortho.png to test). Aim for a neutral, centered, no‑perspective image with clean background.",
+      "Open GeminiImage2Node and write a precise prompt for the side view, for example: “Orthographic side view of the same mech as the reference. Match armor plates, proportions, decals, and color palette. No perspective. White studio background.” Run the workflow to generate and preview the side view.",
+      "Repeat for the back view by adjusting the prompt to “Orthographic back view of the same mech as the reference...” Keep phrasing consistent across runs so features stay aligned. If you get perspective drift, explicitly say “flat orthographic, no lens, no foreshortening.”",
+      "Use SaveImageAdvanced to set a clear output path and file naming pattern (e.g., mech_turnaround_side, mech_turnaround_back). Run again to write final images to disk.",
+      "Assemble the exported front, side, and back renders into a single turnaround sheet in your image editor (or add a tiling step in ComfyUI if you prefer a one‑page layout)."
+    ],
+    "suggestedUseCases": [
+      "Sci‑fi mech and powered armor concept turnarounds for game or film pre‑production",
+      "Hard‑surface product design sheets (e.g., drones, helmets, tools) for design reviews",
+      "Cosplay or prop fabrication references with consistent front/side/back blueprints",
+      "Indie game dev character sheets for modeling and rigging handoff",
+      "Toy/figure concept art requiring multi‑view packaging or manufacturing references"
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need local Stable Diffusion models for this workflow?",
+        "answer": "No. The core generation is handled by GeminiImage2Node via an external Google image API. You just need a valid API configuration; no local checkpoints are required."
+      },
+      {
+        "question": "How do I keep features perfectly consistent across views?",
+        "answer": "Use the same reference image every time and keep prompts tightly scoped: specify “orthographic,” “no perspective,” and call out key elements to match (helmet shape, plating, decals, color). If results drift, tighten language (e.g., “exact same chest plate geometry and markings as the reference”) and keep background simple."
+      },
+      {
+        "question": "Can this make a single sheet with all views automatically?",
+        "answer": "This template saves each view as a separate file via SaveImageAdvanced. You can assemble them in your editor, or add a tiling/composition step in ComfyUI if you prefer an all‑in‑one sheet."
+      },
+      {
+        "question": "Will it work for organic characters or only mechs?",
+        "answer": "It works for both, but hard‑surface designs tend to hold consistency more easily. For organic characters, be extra explicit about proportions, clothing details, and pose (neutral T‑pose, arms down, etc.)."
+      }
+    ]
+  },
   "ad8614720882": {
     "title": "Looped Restyler",
     "description": "Upload a starting image and its prompt to generate a looping video from the first to the last frame.",
@@ -15925,6 +16593,45 @@
       {
         "question": "Is it possible to generate more than 9 icons at once?",
         "answer": "The current workflow is optimized for a 3x3 grid. For more icons, you can run the workflow multiple times with different parameters."
+      }
+    ]
+  },
+  "af9d2d3845c6": {
+    "title": "Muse Image 1.0: Image Edit",
+    "description": "Edit an image with precision using Muse Image 1.0, following natural language instructions to alter specific elements while preserving the rest of the scene. Takes 2 input images and produces 1 edited output image. Ideal for product photography touch-ups, creative style transfers, and iterative visual refinement.\n\n",
+    "metaDescription": "Edit images with Muse Image 1.0 via natural-language instructions. Two inputs (base + reference) in, one precise edited image out—no masking required.",
+    "extendedDescription": "This workflow uses Muse Image 1.0 to edit an image with natural-language instructions while preserving the rest of the scene. Two LoadImage nodes supply inputs: one is the primary image you want to edit, and the second is a visual reference that guides the look (style, color palette, material cues) of the edit. The MetaMuseImageEditApi node sends both images plus your instruction to the hosted Muse Image 1.0 service and returns a single edited image. SaveImageAdvanced then writes the result to disk with your chosen filename and subfolder.\n\nTechnically, the graph is simple and reliable: LoadImage → MetaMuseImageEditApi → SaveImageAdvanced, with a MarkdownNote included to summarize usage. The API node interprets your instruction (e.g., \"make the house red while keeping the desert sky unchanged\") and applies targeted changes while maintaining scene layout and context. Example inputs included with the template—deep_blue_whale_swim_scene.png and desert_red_modern_house.png—let you try style- or color-guided edits immediately.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and read the MarkdownNote for a quick overview.",
+      "In the two LoadImage nodes, set your files: use the first as the primary image to edit and the second as a visual reference (or keep the provided sample assets to test).",
+      "Open the MetaMuseImageEditApi node and enter a clear instruction describing exactly what to change and what to preserve (e.g., \"Recolor the house to deep red; keep the desert sky and lighting unchanged\"). Ensure your API endpoint/key are configured if required.",
+      "Optionally adjust SaveImageAdvanced to set the output subfolder and filename pattern so each iteration is saved distinctly.",
+      "Click Queue Prompt to run the graph. When it completes, view the saved output from SaveImageAdvanced.",
+      "Iterate: refine your instruction for more precise results or swap the reference image to steer style, color, or material closer to your target."
+    ],
+    "suggestedUseCases": [
+      "Product photography touch-ups: recolor packaging or materials while preserving background and lighting.",
+      "Creative style alignment: match a scene’s palette and texture to a brand or mood reference image.",
+      "Architectural concept tweaks: change facade color/materials or accents without altering overall composition.",
+      "Scene consistency for campaigns: harmonize color grading across shots using a single reference image.",
+      "Iterative visual refinement: quickly explore variations by adjusting text instructions and references."
+    ],
+    "faqItems": [
+      {
+        "question": "What are the two image inputs used for?",
+        "answer": "The first (primary) image is the one being edited. The second is a visual reference to guide the edit’s style, palette, or material cues. If you don’t want external guidance, you can use the same image for both inputs."
+      },
+      {
+        "question": "Do I need an internet connection or API key?",
+        "answer": "Yes. MetaMuseImageEditApi calls a hosted Muse Image 1.0 service. Ensure your endpoint and credentials are set in the node or ComfyUI’s API settings before running the workflow."
+      },
+      {
+        "question": "How can I get precise edits on just one object?",
+        "answer": "Be explicit and constraint-focused: name the object and change (\"Make the door matte black\"), and add preservation cues (\"keep walls, lighting, and background unchanged\"). Using a closely matched reference image further improves locality and style consistency."
+      },
+      {
+        "question": "Why did the background change slightly?",
+        "answer": "Increase instruction specificity (e.g., \"leave background untouched\"), choose a closer-matching reference image, and iterate. Small phrasing adjustments often reduce unintended global changes."
       }
     ]
   },
@@ -17536,6 +18243,45 @@
       }
     ]
   },
+  "c0d1253e51dd": {
+    "title": "Gemini Omni 1.1 Flash: Image to Video",
+    "description": "Generate videos from text prompts or reference images using Gemini Omni 1.1 Flash, a multimodal model that handles text-to-video, image-to-video, keyframe interpolation, and iterative video editing with natural language. Outputs a single MP4 video with optional audio, supporting aspect ratios, resolutions up to 4K, and scene extension. Ideal for cinematic storytelling, product visualization, and rapid video prototyping.\n\n",
+    "metaDescription": "Create MP4 videos from prompts or a reference image in ComfyUI with Gemini Omni 1.1 Flash. Supports text/image-to-video, up to 4K, optional audio, and scene extension.",
+    "extendedDescription": "This ComfyUI tutorial workflow shows how to turn a text prompt or a single still image into a finished MP4 clip using Gemini Omni 1.1 Flash. The core of the pipeline is the GeminiVideoOmniV2 node, which accepts a prompt and (optionally) a reference image to drive image-to-video generation. You can target common aspect ratios and resolutions up to 4K, set clip duration and frame rate, and enable optional audio. The included MarkdownNote provides inline tips, while SaveVideo writes the final video to disk.\n\nTechnically, the flow is simple and robust: LoadImage brings in the provided blue_studio_car.png (or your own asset) and feeds it to GeminiVideoOmniV2 when you want image conditioning. The model handles text-to-video and image-to-video, along with internal keyframe interpolation and scene extension, controlled through your prompt and node parameters. GeminiVideoOmniV2 returns the generated clip, and SaveVideo outputs a single MP4 with your chosen fps and path. Leave the image input disconnected for pure text-to-video; connect it to anchor motion, style, and composition to your reference.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and ensure you’re on a recent version. If required by your setup, confirm GeminiVideoOmniV2 has valid API credentials configured.",
+      "Add a reference image: place input/blue_studio_car.png (provided) or your own image in the input folder, then set that path in the LoadImage node. Leave LoadImage disconnected if you want text-to-video only.",
+      "Open GeminiVideoOmniV2 and enter a clear prompt describing subject, motion, camera moves, and style (e.g., “studio-lit product shot, slow dolly, subtle reflections”). Configure resolution/aspect, duration, fps, and audio if those options are exposed.",
+      "Check SaveVideo for output path and fps. Match fps to what you request in GeminiVideoOmniV2 so timing is consistent.",
+      "Run the workflow. GeminiVideoOmniV2 will generate the clip, and SaveVideo will write a single MP4 to the specified location. Preview the result.",
+      "Iterate: refine the prompt, swap or remove the reference image to switch between image-to-video and text-to-video, adjust duration/fps for pacing, and re-run. Use shorter, lower-res drafts for quick previews, then render at higher resolution."
+    ],
+    "suggestedUseCases": [
+      "Cinematic product shots from a single packshot or studio still",
+      "Rapid storyboard-to-animatic previews for previsualization",
+      "Logo or key art motion treatments for social teasers",
+      "Extending a still photo into a short establishing shot with gentle camera motion",
+      "Quick turntable-style showcases of designs or prototypes"
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need to use a reference image?",
+        "answer": "No. Connect LoadImage to GeminiVideoOmniV2 for image-to-video, or leave it disconnected for text-to-video. Using a reference image helps lock style, layout, and subject appearance."
+      },
+      {
+        "question": "What resolutions and durations work best?",
+        "answer": "The workflow supports up to 4K, but start with lower resolutions and shorter durations for fast iteration. Higher resolution, longer clips, or higher fps will take longer to generate."
+      },
+      {
+        "question": "Can it generate audio?",
+        "answer": "Yes, optional audio can be enabled if exposed by the GeminiVideoOmniV2 node. If audio is returned, SaveVideo will include it in the MP4; otherwise, the clip will be silent."
+      },
+      {
+        "question": "I get errors or slow responses—how do I troubleshoot?",
+        "answer": "Update ComfyUI, verify your internet connection, and ensure the GeminiVideoOmniV2 node has valid API credentials if required. Reduce resolution/duration for tests, then scale up."
+      }
+    ]
+  },
   "c12e2c5512d1": {
     "title": "Grok: Image Edit",
     "description": "Upload an image to edit with the Grok model. Generate a modified version with expressive, cinematic visuals",
@@ -18404,6 +19150,45 @@
       }
     ]
   },
+  "cb783cb4c20c": {
+    "title": "MiniMax H3 Max: Reference to Video",
+    "description": "Generate video from an image reference using MiniMax H3 Max, which animates your still frame while preserving its composition, visual identity, and aspect ratio. The model generates faster than real time with strong prompt adherence and polished cinematic motion. Ideal for bringing character art to life, animating product shots, and creating video from concept images.\n\n",
+    "metaDescription": "Animate a still image into video with MiniMax H3 Max in ComfyUI. Optional prompt enhancement and 2K upscale, with aspect ratio and identity preserved.",
+    "extendedDescription": "This ComfyUI tutorial template shows how to turn a single image into an animated video using MiniMax H3 Max via the MinimaxHailuo03ReferenceNode. The core path is simple: you load a still frame with LoadImage, describe the motion in PrimitiveStringMultiline, and the MinimaxHailuo03ReferenceNode generates a video while preserving the source composition and aspect ratio. SaveVideo writes the final clip to disk, and SaveText can archive the exact prompt and response metadata for reproducibility.\n\nTwo optional paths are controlled by red ComfySwitchNode gates. The Prompt Enhancer (Optional) stage lets you route an alternate or refined prompt into the generator if you want cleaner wording without changing your base prompt field. The Upscale Video to 2K (Optional) stage adds a post-process branch for higher-resolution output, but it only accepts a 768p source—so you must generate at 768p in the core node if you plan to upscale. For more advanced control, MinimaxHailuo03ContextIRNode can be added to supply context/image-reference signals for stronger identity retention, and MinimaxHailuo03RegenerateNode enables quick re-runs with new seeds without reconfiguring inputs. This makes the template practical for animating character portraits, product shots, and concept visuals with prompt-driven motion while keeping the original look intact.",
+    "howToUse": [
+      "Load the workflow and confirm MiniMax H3 Max nodes are installed and authenticated (configure the MiniMax API key per the node’s documentation).",
+      "In User Inputs, set your text prompt in PrimitiveStringMultiline and load your reference image with LoadImage (try the provided sample: burdened_warrior_in_dreamscape.png).",
+      "If you plan to upscale, set the MinimaxHailuo03ReferenceNode output to 768p and switch ON the PrimitiveBoolean for Upscale to 2K. Toggle the red ComfySwitchNode for the upscale branch to ON.",
+      "Optionally enable the Prompt Enhancer path by turning ON its red ComfySwitchNode and routing your refined prompt to the generator. You can also add MinimaxHailuo03ContextIRNode for extra identity/context guidance if provided in the template.",
+      "Queue and run the graph. The Create Video (Core) path will generate the base clip with MinimaxHailuo03ReferenceNode. If the upscale switch is ON and the source is 768p, the clip will pass through the 2K branch.",
+      "Use MinimaxHailuo03RegenerateNode to iterate quickly with new seeds or slight prompt tweaks, then check SaveVideo for your output and SaveText for the prompt/metadata log."
+    ],
+    "suggestedUseCases": [
+      "Animating character portraits or concept art while preserving facial structure and outfit details.",
+      "Creating subtle motion for product hero shots from a single still (e.g., camera drift, lighting shifts).",
+      "Turning mood boards or keyframes into short motion studies for pitch decks.",
+      "Adding cinematic micro-movements to static illustrations for social posts or trailers.",
+      "Rapidly exploring motion directions from a single design frame without full 3D or traditional animation."
+    ],
+    "faqItems": [
+      {
+        "question": "What do the red switches control?",
+        "answer": "They are ComfySwitchNode gates for optional branches. One toggles the Prompt Enhancer path, and the other toggles the Upscale to 2K path. Leave them OFF for a simple reference-to-video run, or turn them ON to enable those stages."
+      },
+      {
+        "question": "Why doesn’t the 2K upscale run?",
+        "answer": "The upscale branch only accepts a 768p source. Set the MinimaxHailuo03ReferenceNode to generate at 768p, turn ON the PrimitiveBoolean (Upscale to 2K), and toggle the upscale ComfySwitchNode to ON. If the source isn’t 768p, the upscale path will be skipped."
+      },
+      {
+        "question": "How do I preserve my character or product identity?",
+        "answer": "Use a clear, high-quality reference image with a stable composition. Keep your prompt descriptive but not contradictory to the image. If available in the template, route MinimaxHailuo03ContextIRNode to add context/image-reference signals, which can further stabilize identity."
+      },
+      {
+        "question": "How can I iterate quickly without re-entering everything?",
+        "answer": "Use MinimaxHailuo03RegenerateNode to re-run with a new seed or minor variations. SaveText logs your prompt and response metadata, so you can track what changed between iterations."
+      }
+    ]
+  },
   "cba1264de4b6": {
     "title": "Runway: Reference to Image",
     "description": "Generate new images based on reference styles and compositions with Runway's AI.",
@@ -18440,6 +19225,44 @@
       {
         "question": "Is this workflow suitable for non-technical users?",
         "answer": "Yes, while some technical setup is required, the workflow is designed to be user-friendly with guidance provided through MarkdownNote nodes."
+      }
+    ]
+  },
+  "cbca4aa41ae7": {
+    "title": "Muse Image 1.0: Text to Image",
+    "description": "Generate images from text prompts using Meta's Muse Image 1.0 model, which follows instructions faithfully, edits with precision, and composes from multiple references. The workflow takes no file inputs and produces 1 image output, with a Save Image Advanced node handling the final render. Ideal for creative concept exploration, rapid visual prototyping, and producing polished marketing or social media imagery.\n\n",
+    "metaDescription": "ComfyUI tutorial: Generate images from text using Meta’s Muse Image 1.0 with MetaMuseImageTextToImageApi and SaveImageAdvanced. Fast, precise text-to-image.",
+    "extendedDescription": "This ComfyUI workflow turns plain-language prompts into polished images using Meta’s Muse Image 1.0 model. The MetaMuseImageTextToImageApi node is the core of the pipeline: it takes your text prompt, sends it to the Muse Image 1.0 backend for inference, and returns a single generated image. Muse Image 1.0 is strong at following detailed instructions and composing multiple elements from text, making it well-suited for scenes with multiple subjects, specific styles, and clearly defined constraints—all without requiring any file inputs.\n\nOnce the image is generated, SaveImageAdvanced handles the final render to disk. You control where the file is written, how it’s named, and the output format, making it easy to organize iterations and compare variations. The minimal two-node design keeps the workflow fast and focused: edit the prompt in MetaMuseImageTextToImageApi, run, and collect results from SaveImageAdvanced. This is ideal for concept exploration, rapid prototyping, and producing on-brand visuals for marketing or social channels.",
+    "howToUse": [
+      "Load the Muse Image 1.0: Text to Image workflow JSON in ComfyUI.",
+      "Open the MetaMuseImageTextToImageApi node and enter your prompt. Be explicit about subjects, style, lighting, camera/angle, and any constraints (e.g., \"wide shot\", \"studio lighting\"). If the node exposes controls like seed or guidance, set them as needed.",
+      "Open the SaveImageAdvanced node and choose your output directory and filename pattern. Select your preferred file format (e.g., PNG or JPG) and confirm overwrite/metadata settings as desired.",
+      "Click Queue Prompt (or Run) to execute the workflow. The MetaMuseImageTextToImageApi node will generate one image per run.",
+      "When the run completes, find your image in the SaveImageAdvanced output folder. Review the result and refine your prompt for the next iteration (or change the seed if that control is available)."
+    ],
+    "suggestedUseCases": [
+      "Creative concept thumbnails for characters, environments, or products.",
+      "Marketing and social media imagery that follows a precise brief (style, color, composition).",
+      "Rapid visual prototyping for UI mockups, pitch decks, and mood boards.",
+      "Story beats and scene blocking from textual descriptions for previsualization.",
+      "Compositional studies for multi-subject scenes guided solely by text."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need an API key or special access to use this?",
+        "answer": "If MetaMuseImageTextToImageApi is configured to call a hosted Muse Image 1.0 endpoint, you’ll need valid access credentials (API key or token). Configure them in the node or your ComfyUI settings as directed by the node’s documentation. If your setup uses a local or proxied backend, follow that provider’s setup instructions instead."
+      },
+      {
+        "question": "How can I control output size or aspect ratio?",
+        "answer": "Output dimensions are determined by the MetaMuseImageTextToImageApi node (if those controls are exposed). SaveImageAdvanced only manages file saving, not image generation size. If size controls aren’t available, guide composition via prompt language (e.g., \"vertical poster\", \"ultra-wide panorama\") and optionally add a separate upscaler or resize node downstream if you need larger outputs."
+      },
+      {
+        "question": "Can this workflow use image references or edit existing images?",
+        "answer": "This workflow is text-only and takes no file inputs. To use image references or perform image-to-image edits, start from a workflow that includes image input nodes and reference/conditioning modules compatible with Muse Image 1.0."
+      },
+      {
+        "question": "How do I get repeatable or varied results?",
+        "answer": "If the MetaMuseImageTextToImageApi node exposes a seed parameter, set a fixed seed for repeatable outputs or switch to a new seed for variations. Without an explicit seed, results may vary between runs. Keep prompts versioned so you can return to a prior configuration easily."
       }
     ]
   },
@@ -18827,6 +19650,44 @@
       {
         "question": "Is this workflow suitable for batch processing?",
         "answer": "While this workflow is designed for individual image enhancement, it can be adapted for batch processing with additional configuration to handle multiple images sequentially."
+      }
+    ]
+  },
+  "cf1758be4e23": {
+    "title": "Image Upscale: Bria Increase Resolution",
+    "description": "Upscale any image to higher resolutions using Bria's dedicated resolution enhancement API, which preserves original content without adding new details or regenerating the image. The workflow accepts a single input image and produces one enhanced, higher-resolution output, supporting JPEG and PNG files in RGB, RGBA, or CMYK color modes up to a maximum area of 8192x8192 pixels. Built-in content moderation scans both the input image and generated output to ensure safe, policy-compliant processing. Ideal for preparing images for print, enlarging photos for digital display, or increasing resolution of assets for professional design work.\n\n",
+    "metaDescription": "ComfyUI tutorial: Upscale images with Bria’s resolution enhancement API. Preserve original content, pass moderation, and export clean high-res results.",
+    "extendedDescription": "This ComfyUI tutorial workflow shows you how to cleanly upscale a single image using Bria’s dedicated resolution enhancement API. The core BriaIncreaseResolution node takes an input from LoadImage, sends it to the Bria API, and returns a higher-resolution version that preserves the original content without inventing new details or regenerating the scene. It supports JPEG and PNG inputs in RGB, RGBA, or CMYK color modes, and enforces a maximum area of 8192×8192 pixels to keep processing fast and reliable. Built-in content moderation checks both the input and the enhanced output for policy compliance before finalizing results.\n\nTechnically, the graph is straightforward and focused: LoadImage feeds your source into BriaIncreaseResolution, where you specify your target dimensions or scale within the allowed limits. ImageCompare then places the original and the upscaled image side-by-side so you can evaluate edge fidelity, text clarity, and fine textures at a glance. Finally, SaveImageAdvanced writes the enhanced output with your preferred filename, folder, and format (PNG for lossless graphics and text, JPEG for smaller photo files), making it a practical tool for print prep, large digital displays, and professional design workflows that need reliable resolution increases without stylistic changes.",
+    "howToUse": [
+      "Load the workflow in ComfyUI and open the BriaIncreaseResolution node. Enter your Bria API credentials if required and confirm your connection settings.",
+      "Use LoadImage to select your source file (JPEG or PNG). The node accepts RGB, RGBA, or CMYK color modes within the 8192×8192 pixel area limit.",
+      "In BriaIncreaseResolution, set your target size (e.g., 2× or a specific width/height). Keep total area under 8192×8192 and maintain aspect ratio to avoid cropping.",
+      "Run the graph. The node will process moderation checks on the input and output and then return a higher-resolution image that preserves the original content.",
+      "Inspect results with ImageCompare to verify sharpness on edges, text, and fine patterns. If needed, adjust target size and rerun for optimal clarity.",
+      "Export using SaveImageAdvanced. Choose output folder, filename, and format (PNG for lossless graphics/text, JPEG for photos) and save your enhanced image."
+    ],
+    "suggestedUseCases": [
+      "Preparing photos and graphics for print layouts (posters, brochures, packaging) without stylistic changes.",
+      "Upscaling UI assets, app screenshots, and presentations for crisp display on high-resolution screens.",
+      "Enhancing e-commerce product images for marketplaces where higher-resolution listings improve clarity.",
+      "Resizing brand assets or raster logos for larger placements when vector files aren’t available."
+    ],
+    "faqItems": [
+      {
+        "question": "Does this workflow add new details or change the style of my image?",
+        "answer": "No. The BriaIncreaseResolution node preserves original content and structure. It enhances resolution and clarity without generating new details or altering the image’s style."
+      },
+      {
+        "question": "What are the size limits and how should I choose my target resolution?",
+        "answer": "The maximum area is 8192×8192 pixels. Start with moderate increases (e.g., 2×) and check results in ImageCompare. If you hit the area cap or see diminishing returns, reduce the target size."
+      },
+      {
+        "question": "Which file formats and color modes are supported?",
+        "answer": "Inputs and outputs support JPEG and PNG in RGB, RGBA, or CMYK. ComfyUI previews are typically sRGB-based; if you work in CMYK for print, verify color appearance after saving and before final production."
+      },
+      {
+        "question": "What happens if my image triggers content moderation?",
+        "answer": "The BriaIncreaseResolution node will not produce a final output if moderation flags the content. Adjust the image to meet policy guidelines and rerun the workflow."
       }
     ]
   },
@@ -20549,6 +21410,45 @@
       }
     ]
   },
+  "e001dfcb5ed0": {
+    "title": "MiniMax H3 Turbo: Text to Video",
+    "description": "Generate 5–15 second videos from text prompts using MiniMax H3 Max Turbo, a high-speed text-to-video model optimized for rapid inference. This workflow takes no file inputs and outputs a single video file, delivering 768p clips in roughly 1–3 seconds of generation time. Ideal for quick social media content, iterative creative exploration, and fast prototyping of video concepts.",
+    "metaDescription": "ComfyUI tutorial: Generate 5–15s 768p videos from text using MiniMax H3 Max Turbo, with optional prompt enhancement and 2K upscale via switchable branches.",
+    "extendedDescription": "MiniMax H3 Turbo: Text to Video is a lightweight ComfyUI template that turns a text prompt into a short video using the MinimaxHailuo03TextToVideoNode (MiniMax H3 Max Turbo). It requires no file inputs and produces a single 768p clip in roughly 1–3 seconds of model time, ideal for fast ideation, social-ready snippets, and quick A/B prompt testing. The core Create Video (Core) group feeds your prompt directly into the model, then SaveVideo writes the result to disk while SaveText logs the prompt and basic run info for reproducibility.\n\nTwo optional stages are controlled by red ComfySwitchNode elements. In Prompt Enhancer (Optional), the MinimaxHailuo03ContextIRNode can add structured context or style instructions to your prompt before generation. In Upscale Video to 2K (Optional), a PrimitiveBoolean flag (\"Upscale to 2K\") routes the 768p output through an upscaling branch. Per the author notes, the upscaler only accepts 768p input—so keep the base generation at 768p if you enable it. A MinimaxHailuo03RegenerateNode is also included to quickly request fresh variants without rewriting your prompt, making rapid iteration simple.",
+    "howToUse": [
+      "Load the MiniMax H3 Turbo: Text to Video workflow in ComfyUI. Review the groups: User Inputs, Prompt Enhancer (Optional), Create Video (Core), Upscale Video to 2K (Optional), and Feature Flags.",
+      "Enter your prompt in the PrimitiveStringMultiline node inside User Inputs. Keep it concise but descriptive (scene, subject, motion, style).",
+      "Optional – Prompt Enhancer: If you want the model to follow extra context or style rules, enable the red ComfySwitchNode in Prompt Enhancer (Optional) and add your guidance to the MinimaxHailuo03ContextIRNode.",
+      "Optional – 2K Upscale: In Feature Flags, toggle the PrimitiveBoolean labeled “Upscale to 2K” to ON if you want a higher-resolution output. Ensure the base generation remains at 768p, as the upscaler only accepts 768p inputs.",
+      "Run the workflow (Queue Prompt). The Create Video (Core) path sends your final text to MinimaxHailuo03TextToVideoNode, then SaveVideo writes the video file and SaveText records your prompt for later reference.",
+      "Iterate quickly: Use the MinimaxHailuo03RegenerateNode to request a new variant from the same prompt, or tweak the prompt/context and re-run. Compare results to refine motion, subject framing, and style."
+    ],
+    "suggestedUseCases": [
+      "Rapid social media teasers or story snippets generated directly from a text idea.",
+      "Fast previsualization for concept pitches or mood boards.",
+      "A/B testing prompts to lock down a look, motion style, or camera description.",
+      "Iterative ideation for ad concepts or short-form content prototypes.",
+      "Generating quick placeholder clips for editing timelines before full production."
+    ],
+    "faqItems": [
+      {
+        "question": "What do the optional stages do, and how do I enable them?",
+        "answer": "Two red ComfySwitchNode elements control optional branches: Prompt Enhancer (Optional) routes your text through MinimaxHailuo03ContextIRNode to add structured context/style before generation, and Upscale Video to 2K (Optional) uses a PrimitiveBoolean (\"Upscale to 2K\") to send the 768p result through an upscaling branch. Turn the relevant switch/boolean ON to include that stage."
+      },
+      {
+        "question": "Why must I generate at 768p to use the 2K upscale?",
+        "answer": "Per the author notes, the upscaler in this template only accepts 768p input. Keep the base model output at 768p when the “Upscale to 2K” flag is ON. Other base resolutions are not supported by the upscale branch."
+      },
+      {
+        "question": "How fast is the workflow and how long are the clips?",
+        "answer": "MiniMax H3 Max Turbo is optimized for rapid inference; the template typically returns a 768p video in about 1–3 seconds of generation time. The clips are short-form (about 5–15 seconds). Actual turnaround depends on network/API latency and your system."
+      },
+      {
+        "question": "What’s the difference between re-running and using the Regenerate node?",
+        "answer": "Re-running queues the full pipeline again from your current settings. MinimaxHailuo03RegenerateNode requests a fresh variant from the same prompt/context for quick iteration without editing inputs. Use it to explore more takes rapidly."
+      }
+    ]
+  },
   "e06088bda436": {
     "title": "Comfy for Advertising - Moodboard Creation",
     "description": "",
@@ -20758,6 +21658,44 @@
       {
         "question": "Can I batch process multiple images with this setup?",
         "answer": "This graph is configured for one base/guide pair at a time. ComfyUI can batch with additional nodes (e.g., directory loaders and iterators), but those are not included here. To batch, extend the workflow with batch‑friendly loaders and route them through the same ByteDanceSeedreamNodeV2 and SaveImageAdvanced pattern."
+      }
+    ]
+  },
+  "e2ceec4fc610": {
+    "title": "Gemini Omni 1.1 Flash: Video Extend",
+    "description": "Extend an existing video by up to 10 seconds per step, building stories up to 40 seconds total with Gemini Omni 1.1 Flash. The model analyzes the last 10 seconds of context, keeping characters, motion, and audio coherent as the scene continues from where it left off. Optionally attach reference images to introduce new characters mid-story. Works on uploaded clips and previously generated videos; describe how the scene should continue in plain language. Ideal for longer narratives, scene branching, and iterative storytelling.\n\n",
+    "metaDescription": "Extend videos up to 10s per step (max ~40s) with Gemini Omni 1.1 Flash in ComfyUI. Keep visual continuity and branch stories using prompts and image refs.",
+    "extendedDescription": "This ComfyUI tutorial workflow shows how to extend an existing video in coherent, story-aware chunks using the GeminiVideoOmniV2 node (Gemini Omni 1.1 Flash). It loads your clip with LoadVideo, extracts the final moments as context via Video Slice, and asks Gemini to continue the scene for up to 10 seconds per run. The model reads the last 10 seconds of visual context so characters, motion, camera framing, and scene layout carry forward naturally instead of restarting from scratch. SaveVideo then exports the extended result as a new clip.\n\nTechnically, the pipeline is a loop-friendly chain: LoadVideo → Video Slice (tail window) → GeminiVideoOmniV2 (prompted continuation) → SaveVideo. You can iterate this up to four times to build a 40-second story, or branch at any step by changing the prompt. The GeminiVideoOmniV2 node also supports optional image references, which you can attach mid-story to introduce new characters or props while maintaining continuity with the previous scene. The included MarkdownNote explains the required input asset path and tips for best results.",
+    "howToUse": [
+      "Open the workflow in ComfyUI and review the MarkdownNote for input instructions and tips. Place your source clip at input/rooster_duel_western.mp4 (or update the LoadVideo path to your file).",
+      "Select the LoadVideo node and confirm your clip loads correctly (resolution, FPS). If you’re replacing the example, keep consistent dimensions for smoother extensions.",
+      "Configure the Video Slice node to use the last 10 seconds as the context window. This tail slice is what Gemini reads to continue the scene. If your clip is shorter, it will use whatever duration is available.",
+      "Open GeminiVideoOmniV2: enter your Gemini API key (if required), write a plain-language continuation prompt (what should happen next), and set the extension duration to 5–10 seconds. Optionally attach one or more image references to introduce new characters/props mid-story.",
+      "Set SaveVideo output filename and codec settings as needed. Click Queue Prompt to run. When complete, preview the result to ensure the continuation matches your intent.",
+      "Iterate or branch: feed the newly saved clip back into LoadVideo and repeat to build up to ~40 seconds total, or duplicate the node chain and vary the prompt to explore alternate story paths from the same context."
+    ],
+    "suggestedUseCases": [
+      "Narrative continuation for short films or storyboards, extending scenes in small, controllable beats.",
+      "A/B branching to explore multiple plot directions from the same ending context frame.",
+      "Previsualization for directors, quickly testing camera moves or blocking beyond the current cut.",
+      "Social media teasers or cliffhangers that extend viral clips while keeping subjects and motion consistent."
+    ],
+    "faqItems": [
+      {
+        "question": "How long can I extend a video with this template?",
+        "answer": "The workflow is tuned for up to 10 seconds per step and about 40 seconds total across iterations. You can run more steps, but visual quality and continuity may degrade as context drifts."
+      },
+      {
+        "question": "How do I keep characters and style consistent across steps?",
+        "answer": "Keep prompts consistent, describe key subjects and camera behavior clearly, and reuse the last 10 seconds as context via the Video Slice node. For stronger identity anchoring, attach one or more reference images to the GeminiVideoOmniV2 node."
+      },
+      {
+        "question": "Does the output include audio?",
+        "answer": "This template focuses on visual continuation. LoadVideo/SaveVideo in many ComfyUI setups export silent MP4s. If you need audio, keep your original track and re-sync or design new audio in post after export."
+      },
+      {
+        "question": "Can I branch the story and try alternative continuations?",
+        "answer": "Yes. Duplicate the GeminiVideoOmniV2 + SaveVideo segment, keep the same Video Slice tail input, and vary the prompt (and optional image refs). You’ll get multiple alternate continuations from the same context."
       }
     ]
   },
@@ -21532,6 +22470,45 @@
       {
         "question": "Is there a limit to the number of images I can process?",
         "answer": "There is no inherent limit within the workflow, but processing time may vary depending on the image size and system capabilities."
+      }
+    ]
+  },
+  "e99bd5fc385c": {
+    "title": "MiniMax H3: Multiframe Reference",
+    "description": "Generate video from multiple still images with MiniMax H3, anchoring up to four reference frames anywhere along the timeline to control motion and composition. Ideal for creating video continuations from existing clips, forcing narrative beats at specific moments, and producing footage with synchronized native audio for cinematic or social media content.\n\n",
+    "metaDescription": "Generate MiniMax H3 videos with up to four image anchors timed on the timeline. Control motion, composition, and native stereo audio for precise video beats.",
+    "extendedDescription": "This workflow demonstrates how to drive MiniMax H3 video generation with multiple image anchors placed anywhere along the timeline. The core MiniMaxH3ReferenceToVideo node takes a long-form prompt (via PrimitiveStringMultiline) and up to four reference frames, each with its own timestamp and strength (PrimitiveInt and PrimitiveFloat), to steer motion, framing, and subject continuity at specific moments. ResolutionSelector and ComfyMathExpression set clean, multiple-of-32 dimensions, while RandomNoise provides a seed for reproducibility.\n\nUnder the hood, H3 returns video and native stereo audio as model latents. VAEDecode converts the video latents to RGB frames, and VAEDecodeAudio decodes the audio stream. CreateVideo assembles frames at the chosen FPS and muxes the decoded audio; SaveVideo then writes the final file to disk. ComfySwitchNode lets you quickly enable/disable individual reference anchors or the audio path. The workflow is grouped for clarity (User Inputs, Conditioning, Extra Image Guidance Conditioning, Video Settings, Decoding and create video), so you can focus on anchoring key frames to force narrative beats, continue an existing clip, or produce tightly timed social content with synchronized audio.\n\nAdvanced nodes like UNETLoader, CLIPLoader, VAELoader, BasicScheduler, SamplerCustomAdvanced, and BasicGuider are included for compatibility and potential extension, but the default H3 path works out of the box. If you want to customize dimensions beyond the presets, remove the ResolutionSelector and drive width/height directly (PrimitiveInt), keeping both divisible by 32 for stable decoding.",
+    "howToUse": [
+      "Open the MiniMax H3: Multiframe Reference workflow in ComfyUI and verify the MiniMaxH3ReferenceToVideo node is installed and authenticated (add your MiniMax H3 API credentials if your node requires them).",
+      "In User Inputs, enter your prompt in the PrimitiveStringMultiline node. Describe scene, subjects, motion, and any moments you want aligned to specific times.",
+      "Choose output size in ResolutionSelector (recommended presets like 736x416 or 960x544). If you prefer manual sizing, delete ResolutionSelector and set width/height (PrimitiveInt) to multiples of 32. Set FPS and duration in the Video Settings group.",
+      "Load up to four reference images into the MiniMaxH3ReferenceToVideo node. For each, set its anchor time (PrimitiveInt, usually seconds or frame index—match your node labels) and strength (PrimitiveFloat, e.g., 0.3–0.8). Use ComfySwitchNode to toggle individual anchors on/off when iterating.",
+      "Optionally fix the seed with RandomNoise for repeatability. Then queue the workflow. The node will generate video latents with native stereo audio, which are decoded by VAEDecode and VAEDecodeAudio.",
+      "Inspect the assembled result from CreateVideo and SaveVideo. If composition drifts, increase a reference strength or add a later anchor; if motion is too rigid, lower strengths or space anchors further apart."
+    ],
+    "suggestedUseCases": [
+      "Continue a shot from a still frame: carry forward subject identity and composition while introducing motion.",
+      "Enforce story beats: lock key poses or scenes at specific timestamps to match a script or storyboard.",
+      "Social media edits: craft short vertical or horizontal clips with precise framing changes synced to audio moments.",
+      "Product demos: anchor front/side hero angles at known times while letting the model animate transitions.",
+      "Music-driven visuals: time anchors to chorus or drop points to stabilize subjects during critical sections."
+    ],
+    "faqItems": [
+      {
+        "question": "How do I place anchors at the exact time I want?",
+        "answer": "Each reference input on MiniMaxH3ReferenceToVideo has a timestamp and strength. Set the timestamp to your target moment (check your node’s label—some builds expect seconds, others a frame index). If it expects frames, multiply seconds by FPS. Strength controls how strongly the frame is enforced at and around that moment."
+      },
+      {
+        "question": "How can I include, mute, or replace the audio?",
+        "answer": "The workflow decodes native stereo audio from H3 via VAEDecodeAudio and muxes it in CreateVideo. To mute, disconnect or toggle off the audio path with ComfySwitchNode before CreateVideo. To replace, route your own audio source into CreateVideo’s audio input instead of the decoded track."
+      },
+      {
+        "question": "What resolutions work best?",
+        "answer": "Use the ResolutionSelector presets to keep dimensions divisible by 32 and balanced for speed/quality. Good 16:9 options include 736×416 (~0.3MP) and 960×544 (~0.5MP). For custom sizes, ensure width and height are multiples of 32 to avoid decode artifacts."
+      },
+      {
+        "question": "My video drifts away from the reference look. How can I improve adherence?",
+        "answer": "Increase the anchor’s strength, place an additional anchor later in the timeline, or move the anchor slightly earlier. Also ensure your references match the intended aspect ratio, lighting, and camera angle. If everything is too locked, reduce strengths so the model can transition smoothly between anchors."
       }
     ]
   },
@@ -22386,6 +23363,45 @@
       {
         "question": "Do I need any specific models to use this workflow?",
         "answer": "No specific models are required for this workflow, making it accessible for users without additional resources."
+      }
+    ]
+  },
+  "f423e4de5251": {
+    "title": "GPT Image 2.5 Sunburst: Image Edit",
+    "description": "High-fidelity image editing template. Preserve original character pose, scene, lighting and composition. Only modify partial elements such as outfit, hairstyle, facial features or camera angle. Great for sequential frame generation with strong subject consistency.\n\n",
+    "metaDescription": "High‑fidelity image edit workflow using OpenAIGPTImageNodeV2. Preserve pose, lighting, and composition; make targeted changes for consistent, sequential frames.",
+    "extendedDescription": "This ComfyUI template demonstrates a high‑fidelity image editing pipeline that preserves the original subject, pose, lighting, and composition while making targeted changes. It’s built around a simple, reliable graph: LoadImage feeds a reference image into OpenAIGPTImageNodeV2 for natural‑language edits, and SaveImageAdvanced handles consistent output naming and metadata. The included sample asset (hairstyle_makeup_base_gpt_image25.png) lets you test the flow immediately.\n\nTechnically, OpenAIGPTImageNodeV2 calls an OpenAI GPT image model in image‑edit mode, using the source pixels as strong conditioning so that only requested elements (e.g., outfit, hairstyle, facial features, or camera angle) change. You guide the edit by writing a precise prompt that also states what must stay the same (for example: “Keep the same pose, lighting, background, and composition; only change the hairstyle to a short bob”). This makes the workflow excellent for sequential frames and subject‑consistent variations. SaveImageAdvanced then writes the results with versioned filenames so iterations are easy to track.",
+    "howToUse": [
+      "Load the template in ComfyUI and review the MarkdownNote for any in‑graph tips. Make sure ComfyUI is up to date.",
+      "Open the OpenAIGPTImageNodeV2 settings and ensure your OpenAI API key is configured (via environment variable or node settings as required).",
+      "Use LoadImage to import your base photo, or keep the provided sample (hairstyle_makeup_base_gpt_image25.png). Choose images with clear subjects and stable lighting for best results.",
+      "In OpenAIGPTImageNodeV2, enter a precise edit prompt that specifies both the change and the constraints (e.g., “Change hairstyle to a short bob. Keep the same pose, face shape, background, lighting, and composition.”). Optionally adjust output size or number of variations if the node exposes these parameters.",
+      "Queue and run the workflow. Inspect the outputs saved by SaveImageAdvanced; the node’s filename pattern helps you track iterations.",
+      "Iterate: refine your prompt with stronger preservation cues or more specific change requests. For sequential frames, reuse the same base image and prompt structure, changing only the small element you want varied."
+    ],
+    "suggestedUseCases": [
+      "Character look development: swap hairstyles, makeup, or wardrobe while keeping the pose and scene intact.",
+      "Product hero updates: change colorways, materials, or small details of a photographed item without altering lighting or camera composition.",
+      "Storyboard continuity: generate consistent frames for a scene while varying only minor attributes (e.g., facial expression intensity or camera angle).",
+      "E‑commerce image variants: create subtle, consistent edits across a catalog (e.g., label tweaks, accessory changes).",
+      "Portrait retouching tests: adjust eyebrows, hair length, or accessories while preserving the subject’s likeness and lighting."
+    ],
+    "faqItems": [
+      {
+        "question": "Do I need a mask to limit the edit area?",
+        "answer": "No mask is required for this template. OpenAIGPTImageNodeV2 performs semantic, instruction‑based edits that aim to preserve the rest of the image. If you need pixel‑precise masked edits, consider an inpainting workflow that includes mask nodes."
+      },
+      {
+        "question": "How do I ensure the pose and background don’t change?",
+        "answer": "Be explicit in your prompt about what must remain unchanged (e.g., “Keep the same pose, background, lighting, and framing”). Keep requested changes small and focused. Reusing the same base image and consistent phrasing across runs helps maintain fidelity."
+      },
+      {
+        "question": "What image size should I use?",
+        "answer": "Start with a moderate resolution that the API handles reliably (for example, around 1024 on the long side). Extremely large images may be resized by the API. If the node allows selecting output size, pick one that matches your use case and hardware/API limits."
+      },
+      {
+        "question": "Why do results vary between runs?",
+        "answer": "Text‑guided editing can introduce variation. Keep prompts specific, avoid contradictory instructions, and change only one variable at a time. If the node supports multiple variations, compare them and iterate toward your target look."
       }
     ]
   },
