@@ -240,7 +240,7 @@ def load_logo_bundle_config() -> tuple[set[str], str]:
     list update.
     """
     if not VERSION_POLICY_FILE.exists():
-        return set(), "media-assets-01"
+        return set(), "media-assets-02"
     with VERSION_POLICY_FILE.open("r", encoding="utf-8") as f:
         policy = json.load(f)
     frozen_logos = {str(path) for path in policy.get("frozen_logo_assets", [])}
@@ -257,7 +257,7 @@ def load_logo_bundle_config() -> tuple[set[str], str]:
     bundle = str(
         policy.get("additive_logo_bundle")
         or policy.get("recommended_asset_bundle")
-        or "media-assets-01"
+        or "media-assets-02"
     )
     if bundle not in BUNDLE_TARGETS:
         raise SystemExit(f"Unknown additive_logo_bundle in version policy: {bundle}")
@@ -385,13 +385,7 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
 
     manifest = {
         "manifest_version": 1,
-        "bundles": {
-            "media-api": {"version": "0.0.0"},
-            "media-video": {"version": "0.0.0"},
-            "media-image": {"version": "0.0.0"},
-            "media-other": {"version": "0.0.0"},
-            "media-assets-01": {"version": "0.0.0"},
-        },
+        "bundles": {name: {"version": "0.0.0"} for name in BUNDLE_TARGETS},
         "templates": templates,
     }
     return manifest
