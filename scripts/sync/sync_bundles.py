@@ -82,6 +82,12 @@ BUNDLE_TARGETS = {
     / "src"
     / "comfyui_workflow_templates_media_assets_01"
     / "templates",
+    "media-assets-02": ROOT
+    / "packages"
+    / "media_assets_02"
+    / "src"
+    / "comfyui_workflow_templates_media_assets_02"
+    / "templates",
 }
 BUNDLES_CONFIG = ROOT / "bundles.json"
 
