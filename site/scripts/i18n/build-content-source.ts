@@ -34,6 +34,7 @@ import {
   type WorkflowSourceHashes,
 } from '../../src/lib/i18n/schema';
 import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
+import { getWorkflowCopy, WORKFLOW_COPY, type WorkflowCopy } from '../../src/data/workflow-copy';
 import { LOCALE_INDEX_FILES } from '../lib/constants';
 
 const I18N_DIR = path.join(process.cwd(), 'src', 'i18n');
@@ -71,6 +72,26 @@ export function extractContent(entry: Record<string, unknown>): WorkflowContent 
     suggestedUseCases: asStringArray(entry.suggestedUseCases),
     faqItems: asFaqItems(entry.faqItems),
   };
+}
+
+/**
+ * Fold the curated English override (`src/data/workflow-copy.ts`) into one
+ * workflow's extracted content, so the English content-of-record — and every
+ * machine translation lobe derives from it — carries the text the English page
+ * renders rather than the hub prose it replaces. Same gate as the page: the copy
+ * applies only while the hub still serves the exact text the entry replaced;
+ * once the hub record is updated the hub text passes through and its changed
+ * hash re-translates the field like any other edit. Temporary stopgap, tracked
+ * in GTM-470; delete this together with workflow-copy.ts.
+ */
+export function applyCuratedCopy(
+  shareId: string,
+  content: WorkflowContent,
+  copy: Record<string, WorkflowCopy> = WORKFLOW_COPY
+): WorkflowContent {
+  const curated = getWorkflowCopy(shareId, content.extendedDescription, copy);
+  if (!curated.extendedDescription) return content;
+  return { ...content, extendedDescription: curated.extendedDescription };
 }
 
 /** Stable 12-hex sha256 of a value (deterministic: fields are built in fixed order). */
@@ -247,10 +268,21 @@ async function main(): Promise<void> {
 
   const english: Record<string, WorkflowContent> = {};
   const nameByShareId: Record<string, string> = {};
+  let curatedApplied = 0;
+  let curatedRetired = 0;
   for (const entry of entries) {
     const shareId = asString(entry.shareId);
     if (!shareId) continue;
-    english[shareId] = extractContent(entry);
+    const extracted = extractContent(entry);
+    const curated = getWorkflowCopy(shareId, extracted.extendedDescription);
+    if (curated.status === 'applied') curatedApplied += 1;
+    if (curated.status === 'retired') {
+      curatedRetired += 1;
+      console.warn(
+        `[i18n] hub record for ${shareId} changed; curated override retired — delete its entry in src/data/workflow-copy.ts (GTM-470)`
+      );
+    }
+    english[shareId] = applyCuratedCopy(shareId, extracted);
     nameByShareId[shareId] = asString(entry.name);
   }
 
@@ -300,7 +332,8 @@ async function main(): Promise<void> {
     `[i18n] content source: ${Object.keys(english).length} workflows, ` +
       `${seededTotal} human seeds across ${SUPPORTED_HUB_LOCALES.length - 1} locales, ` +
       `${staleFieldTotal} changed field(s) across ${Object.keys(stale).length} workflows pruned for re-translation, ` +
-      `${orphanTotal} orphaned machine entr(ies) removed for workflows no longer in the index.`
+      `${orphanTotal} orphaned machine entr(ies) removed for workflows no longer in the index, ` +
+      `${curatedApplied} curated override(s) applied, ${curatedRetired} retired.`
   );
 }
 
