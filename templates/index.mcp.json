@@ -3179,7 +3179,7 @@
         "title": "Pixel Sort Glitch Effect Image Transformation",
         "task": "Style Transfer",
         "model": "None",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 9,
         "recommend": "not_recommended",
         "description": "Apply a pixel sorting algorithm to transform your image into a glitch art piece. Upload any photo and control the effect's direction, threshold, and blend with the original. This utility workflow runs quickly without a generative AI model, producing a stylized, smeared version of your input.",
@@ -3497,17 +3497,14 @@
         "freshness": "established",
         "usage": 25,
         "recommend": "not_recommended",
-        "description": "This workflow uses Wan2.2 to upscale images in two controlled stages, enhancing resolution and detail while preserving fidelity. The model delivers cinematic outputs with crisp textures and realistic colors, though diversity and structure can be limited. Upload an image and optionally set a resize factor or generate an AI prompt. It supports API execution on Comfy Cloud.",
+        "description": "Upload an image and set a resize factor. Generate an AI prompt from your image and upscale it in two controlled stages to enhance detail and fidelity.",
         "io": {
-          "inputs": ["image: Image to upscale"],
-          "outputs": ["image: Upscaled high-resolution image"]
+          "inputs": ["image: Input image"],
+          "outputs": ["image: Upscaled image"]
         },
         "minComfyUIVersion": "0.9.0",
         "capabilities": {
-          "workflow": ["api", "image-upscale"],
-          "model_options": {
-            "GeminiNode": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-3-pro-preview", "gemini-3-1-pro", "gemini-3-1-flash-lite"]
-          }
+          "workflow": ["api", "image-upscale"]
         }
       },
       {
@@ -3635,16 +3632,16 @@
         "freshness": "established",
         "usage": 25,
         "recommend": "not_recommended",
-        "description": "Upload an image for professional enhancement using Topaz's Reimagine model, which applies face enhancement and detail restoration to improve overall quality and sharpness. The workflow outputs an enhanced image. This workflow calls a third-party API, so execution time depends on server-side response.",
+        "description": "Professional image enhancement using Topaz's Reimagine model with face enhancement and detail restoration.",
         "io": {
-          "inputs": ["image: Input image to enhance with Topaz Reimagine"],
-          "outputs": ["image: Output enhanced image with restored detail and face enhancement"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.3.71",
         "capabilities": {
-          "workflow": ["image-upscale", "api"],
+          "workflow": ["api", "image-upscale"],
           "model_options": {
-            "TopazImageEnhance": ["Reimagine"]
+            "TopazImageEnhanceV2": ["Reimagine", "Bloom 2", "Wonder 3.5"]
           }
         }
       },
@@ -3922,6 +3919,24 @@
         "minComfyUIVersion": "0.3.42",
         "capabilities": {
           "workflow": ["text-to-image"]
+        }
+      },
+      {
+        "name": "utility_moge3_geometry_estimation",
+        "title": "Geometry Estimation: MoGe 3",
+        "task": "Depth Estimation",
+        "model": "MoGe",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Estimate fine-detailed geometry from a single image with MoGe 3, the sparse-volumetric refinement version of MoGe. It lifts a coarse point map onto a sparse voxel shell and refines depth with lightweight sparse 3D convolutions, keeping thin structures and depth discontinuities that image-space decoders blur. Ships with the ViT-L checkpoint; the ViT-G file is selectable in the same Load MoGe Model dropdown for higher fine-detail accuracy. Takes 1 image input and outputs 1 depth map and 1 normal map.\n",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.37.0",
+        "capabilities": {
+          "workflow": ["depth-estimation", "normal-estimation"]
         }
       },
       {
@@ -4225,24 +4240,6 @@
     "description": "General-purpose workflow templates for native video generation, including text-to-video, image-to-video, and other core video workflows supported out of the box.",
     "templates": [
       {
-        "name": "video_fastvideo_fasth3_i2v",
-        "title": "FastVideo FastH3: Image to Video",
-        "task": "Image to Video",
-        "model": "MiniMax H3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate video with synchronized native audio from a single still image using MiniMax H3 and the FastH3 8-step checkpoint. One image produces one video output with matching voice, sound effects, and music in a single pass. Ideal for animating portraits, bringing product shots to life, and quick social media clips.",
-        "io": {
-          "inputs": ["image: Reference image", "text: Motion or style prompt"],
-          "outputs": ["video: Animated video"]
-        },
-        "minComfyUIVersion": "0.36.0",
-        "capabilities": {
-          "workflow": ["image-to-video"]
-        }
-      },
-      {
         "name": "video_minimax_h3_i2v",
         "title": "MiniMax H3: Image to Video",
         "task": "Image to Video",
@@ -4379,7 +4376,7 @@
         "title": "Seedance2.5 1080P: Image to Video",
         "task": "Image to Video",
         "model": "Seedance 2.5",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 1782,
         "recommend": "top",
         "description": "Generate cinematic 1080P video clips from a single image using Seedance 2.5, animating the still into a moving scene with synchronized sound, music, and dialogue for clips up to 30 seconds across any aspect ratio. Ideal for breathing life into product shots, extending concept art into motion, and creating engaging social media content from photographs.",
@@ -4393,6 +4390,42 @@
           "model_options": {
             "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
           }
+        }
+      },
+      {
+        "name": "video_fastvideo_fasth3_i2v",
+        "title": "FastVideo FastH3: Image to Video",
+        "task": "Image to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate video with synchronized native audio from a single still image using MiniMax H3 and the FastH3 8-step checkpoint. One image produces one video output with matching voice, sound effects, and music in a single pass. Ideal for animating portraits, bringing product shots to life, and quick social media clips.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["image-to-video"]
+        }
+      },
+      {
+        "name": "video_fastvideo_fasth3_t2v",
+        "title": "FastVideo FastH3: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate synchronized video and audio directly from text using a distilled eight-step model, producing one video output with no file inputs required. Ideal for rapid text-to-video prototyping, audio-visual content creation, and creative storytelling where fast generation matters more than maximum detail.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["text-to-video"]
         }
       },
       {
@@ -4417,31 +4450,13 @@
         }
       },
       {
-        "name": "video_fastvideo_fasth3_t2v",
-        "title": "FastVideo FastH3: Text to Video",
-        "task": "Text to Video",
-        "model": "MiniMax H3",
-        "freshness": "new",
-        "usage": 0,
-        "recommend": "medium",
-        "description": "Generate synchronized video and audio directly from text using a distilled eight-step model, producing one video output with no file inputs required. Ideal for rapid text-to-video prototyping, audio-visual content creation, and creative storytelling where fast generation matters more than maximum detail.",
-        "io": {
-          "inputs": ["text: Video prompt"],
-          "outputs": ["video: Generated video"]
-        },
-        "minComfyUIVersion": "0.36.0",
-        "capabilities": {
-          "workflow": ["text-to-video"]
-        }
-      },
-      {
         "name": "api_seedance2_5_t2v_1080p",
         "title": "Seedance2.5 1080P: Text to Video",
         "task": "Text to Video",
         "model": "Seedance 2.5",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 94,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate cinematic 1080P video clips from text descriptions using Seedance 2.5, supporting clips up to 30 seconds with synchronized sound, music, and dialogue across any aspect ratio. Ideal for short comedy scenes, product showcases, and creative storytelling.",
         "io": {
           "inputs": ["text: Video prompt"],
@@ -4877,6 +4892,42 @@
         }
       },
       {
+        "name": "api_pruna_p_video_i2v",
+        "title": "Prune P-Video 2: Image to Video",
+        "task": "Image to Video",
+        "model": "P-Video-2",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Turn a single image into video with Pruna P-Video-2. As Pruna's quality-focused video model, its image-to-video mode excels at identity consistency and subtle, natural motion — 720p/1080p, 1-20s duration, plus Draft mode for fast previews. Ideal for image animation, product motion, and poster cinemagraphs.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["api", "image-to-video"]
+        }
+      },
+      {
+        "name": "api_pruna_p_video_t2v",
+        "title": "Prune P-Video 2: Text to Video",
+        "task": "Text to Video",
+        "model": "P-Video-2",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate videos from a single text prompt with Pruna P-Video-2, producing 1-20 second clips up to 1080p at 48 fps with native audio, including ambience, sound effects, and lip-synced dialogue from an optional last-frame image. Ideal for narrative shorts, motion posters, ad B-roll, and dialogue shots.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["api", "text-to-video"]
+        }
+      },
+      {
         "name": "api_ltx2_5_flf2v",
         "title": "LTX-2.5 (Pro): FLF2V",
         "task": "FLF2V",
@@ -4979,7 +5030,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.31.0",
+        "minComfyUIVersion": "0.36.0",
         "capabilities": {
           "workflow": ["motion-control"]
         }
@@ -5943,7 +5994,7 @@
         "title": "Luma Ray 3.2: Text to Video",
         "task": "Text to Video",
         "model": "Luma",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 5,
         "recommend": "not_recommended",
         "description": "Generate videos from text prompts using the Luma Ray 3.2 API. This legacy Luma Labs model produces clips with natural motion. The workflow accepts a text description and outputs a short video, suitable for storyboards or quick visualizations.",
@@ -5961,7 +6012,7 @@
         "title": "Luma Ray 3.2: Image to Video",
         "task": "Image to Video",
         "model": "Luma",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 7,
         "recommend": "not_recommended",
         "description": "Use Luma Ray 3.2 to turn an input image and text prompt into a cinematic video, supporting API-based execution and iterative refinement via generation ID. This older medium model from Luma Labs produces natural motion, making it suitable for short films, marketing content, and professional video production.",
@@ -6423,10 +6474,10 @@
         "freshness": "established",
         "usage": 29,
         "recommend": "not_recommended",
-        "description": "Turn a static image and a motion prompt into a short animated video using the fast, cost-effective LTX-2 distilled model. The generated clip includes native synchronized sound with expressive lip sync and natural motion, ideal for quick image-to-video workflows.",
+        "description": "Transform static images into dynamic videos with synchronized audio-video generation using LTX-2 distilled model. Optimized for faster generation while maintaining quality. Features expressive lip sync, natural motion, and improved speed.",
         "io": {
-          "inputs": ["image: Reference image to animate", "text: Text prompt describing motion or style"],
-          "outputs": ["video: Animated video from the reference image"]
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
@@ -6627,14 +6678,17 @@
         "freshness": "current",
         "usage": 12,
         "recommend": "not_recommended",
-        "description": "This workflow uses Seedance 2.0’s real human identity verification to generate a video from a reference photo. You provide an image for identity validation and a text prompt; the model outputs a short, cinematic clip of that person matching your description. Execution is via API, so response time depends on server-side processing.",
+        "description": "Upload a reference video of a real person for identity verification. Use your own photo to validate and generate a personalized video output.",
         "io": {
-          "inputs": ["image: Reference image of a real person for identity verification", "text: Text prompt for video generation"],
-          "outputs": ["video: Generated video of the verified real person"]
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
         },
         "minComfyUIVersion": "0.26.2",
         "capabilities": {
-          "workflow": ["api", "reference-to-video"]
+          "workflow": ["api", "reference-to-video"],
+          "model_options": {
+            "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
+          }
         }
       },
       {
@@ -7930,19 +7984,19 @@
       {
         "name": "templates_mjm_looped_restyler",
         "title": "Looped Restyler",
-        "task": "Image to Video",
-        "model": "Nano Banana",
+        "task": "FLF2V",
+        "model": "Google Gemini",
         "freshness": "established",
         "usage": 6,
         "recommend": "not_recommended",
-        "description": "Upload a starting image and prompt to generate a looping video. The Nano Banana model ensures precise prompt adherence for smooth transitions. Designed for image-to-video tasks, it creates an infinite loop from first to last frame. Executable via API for automated workflows.",
+        "description": "Upload a starting image and its prompt to generate a looping video from the first to the last frame.",
         "io": {
-          "inputs": ["image: Starting image for the looped video generation"],
-          "outputs": ["video: Looped video generated from the starting frame"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.3.53",
         "capabilities": {
-          "workflow": ["api", "image-to-video", "flf2v"]
+          "workflow": ["api", "flf2v", "image-to-video"]
         }
       },
       {
@@ -8304,9 +8358,9 @@
         "title": "Video Extend: Seedance 2.5",
         "task": "Video Generation",
         "model": "Seedance 2.5",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 96,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Extend an existing video forward or backward by generating new segments that seamlessly preserve the original characters, scenes, and aspect ratio. The source video must be 1.9–30 seconds long, and you specify the duration of the new clip (4–30 seconds, default 5), with output delivered as MP4 or MOV. Ideal for continuing unfinished footage, creating extended narrative sequences, and building longer edit chains.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -9415,6 +9469,24 @@
     "description": "General-purpose workflow templates for native 3D model generation, including image-to-3D and other core 3D workflows supported out of the box.",
     "templates": [
       {
+        "name": "3d_pixal3d_trellis2_image_to_model",
+        "title": "Pixal3D & TRELLIS.2: Image to Model",
+        "task": "Image to 3D",
+        "model": "Pixal3D",
+        "freshness": "new",
+        "usage": 1107,
+        "recommend": "top",
+        "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.34.0",
+        "capabilities": {
+          "workflow": ["image-to-3d"]
+        }
+      },
+      {
         "name": "utility_sam3d_body",
         "title": "SAM 3D Body:  3D Human Mesh Extraction From Video",
         "task": "3D Generation",
@@ -9430,6 +9502,60 @@
         "minComfyUIVersion": "0.34.0"
       },
       {
+        "name": "api_tripo_p2_image_to_model",
+        "title": "Tripo P2: Image to Model",
+        "task": "Image to 3D",
+        "model": "Tripo P2",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a production-ready 3D model from a single reference image using Tripo P2.0 Preview, which builds native quad topology with clean edge flow suited for rigging and animation. It takes 1 input image, with optional multi-view references for better side and back accuracy. Ideal for game characters and props, hard-surface mechanical assets, and high-volume real-time pipelines.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["api", "image-to-3d"]
+        }
+      },
+      {
+        "name": "api_tripo_p2_text_to_model",
+        "title": "Tripo P2: Text to Model",
+        "task": "3D Generation",
+        "model": "Tripo",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate production-ready 3D meshes from text prompts with Tripo P2, featuring native quad topology and mesh budgets up to 50,000 triangles or 25,000 quads. Ideal for game characters and props, hard-surface assets, and high-volume pipelines needing clean, rig-ready geometry.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["api", "text-to-model"]
+        }
+      },
+      {
+        "name": "api_tripo_p2_multiview_to_model",
+        "title": "Tripo P2: Multiview to Model",
+        "task": "3D Generation",
+        "model": "Tripo P2",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate production-ready 3D models from up to four reference views using Tripo P2.0 Preview, which reconstructs geometry with native quad topology and triangle meshes up to 50,000 faces. Ideal for game characters and props ready for rigging, hard-surface mechanical assets, and high-volume real-time pipelines.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["api"]
+        }
+      },
+      {
         "name": "3d_pixal3d_multi_views",
         "title": "Pixal3D: Multi Views to 3D",
         "task": "Image to 3D",
@@ -9443,24 +9569,6 @@
           "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.35.0",
-        "capabilities": {
-          "workflow": ["image-to-3d"]
-        }
-      },
-      {
-        "name": "3d_pixal3d_trellis2_image_to_model",
-        "title": "Pixal3D & TRELLIS.2: Image to Model",
-        "task": "Image to 3D",
-        "model": "Pixal3D",
-        "freshness": "new",
-        "usage": 1107,
-        "recommend": "top",
-        "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
-        "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
-        },
-        "minComfyUIVersion": "0.34.0",
         "capabilities": {
           "workflow": ["image-to-3d"]
         }
@@ -10589,7 +10697,7 @@
         "title": "Wan Animate 2.2 Character Replacement Workflow",
         "task": "Image to Video",
         "model": "wan2.2 Animate",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 31,
         "recommend": "low",
         "description": "Wan Animate 2.2 — Character & Scene Replacement - Uses Nano Banana 2 to generate a reference image from the first frame, then swaps the full scene. Optimized for human subjects.",
@@ -11033,7 +11141,7 @@
         "title": "YouTube Thumbnail Generator",
         "task": "Image Edit",
         "model": "Nano Banana Pro",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 13,
         "recommend": "low",
         "description": "This workflow generates a high-contrast YouTube thumbnail from a subject reference image and text prompt. Nano Banana Pro leverages its superior prompt adherence to create dramatic compositions and bold color strategies for maximum engagement. Execution uses a third-party API, so run time depends on server response.",
@@ -11054,7 +11162,7 @@
         "title": "Realistic Poster Redesign With Character Transformation",
         "task": "Image Edit",
         "model": "Nano Banana Pro",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 9,
         "recommend": "low",
         "description": "Transform uploaded images into realistic poster designs by changing character poses, faces, and clothing while maintaining artistic style and color. Provide an image and text instructions, and Nano Banana Pro’s intelligent prompt adherence handles complex editing. As this workflow calls a third-party API, execution time depends on server response.",
