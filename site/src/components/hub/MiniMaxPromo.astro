@@ -1,0 +1,141 @@
+---
+/**
+ * MiniMaxPromo - Promo block for the in-browser MiniMax H3 demo, shown on the
+ * hub index between the hero and the browse grid.
+ *
+ * Extracted from `pages/workflows/index.astro` so the `minimaxH3Demo`
+ * experiment flag can gate it with a single conditional, and so the playback
+ * gate stays a normal processed <script> instead of being escaped into a JSX
+ * expression.
+ *
+ * The caller owns the flag check — this component always renders.
+ */
+import { localizeUrl } from '../../i18n/utils';
+import type { Locale } from '../../i18n/config';
+import { EXAMPLE_VIDEO_URL, exampleKeyframeUrl } from '../../lib/demos/mmh3/config';
+
+interface Props {
+  /** Active locale, used to localize the link to the demo page. */
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<section class="mb-12 grid overflow-hidden rounded-5xl bg-hub-surface p-2 lg:grid-cols-3">
+  <div
+    class="media-frame relative aspect-video min-h-56 overflow-hidden rounded-4xl bg-black lg:aspect-auto lg:min-h-80"
+  >
+    {
+      /* No `autoplay`. It overrides the preload hint, so pairing the two pulled
+        the whole 3.4 MB body during parse — reduced-motion users included, since
+        the old script could only strip the attribute after the fetch was already
+        committed. `preload="none"` plus the 34.5 KB poster paints the frame for
+        free and leaves the gate below to decide when, and whether, to spend the
+        body.
+
+        This is not a first-paint byte saving in the general case. The block's
+        offset tracks viewport width (the carousel above it is
+        `h-[clamp(300px,60vw,520px)]`), measuring ~571px on a phone up to ~860px
+        on a desktop, so it is usually already inside the initial viewport and
+        the gate opens straight away. What it does buy, measured: reduced-motion
+        users fetch zero bytes instead of 3.4 MB; the fetch leaves the parse-time
+        critical path, so it stops competing with the carousel's LCP video;
+        playback stops once scrolled away; and on short viewports it defers
+        outright. Moving the page's total byte weight needs the asset itself to
+        shrink — it lives outside the `hub-media` manifest, so the VMAF re-encode
+        pass never saw it. */
+    }
+    <video
+      id="mmh3-promo-video"
+      src={EXAMPLE_VIDEO_URL}
+      poster={exampleKeyframeUrl(1)}
+      muted
+      loop
+      playsinline
+      preload="none"
+      class="h-full w-full object-cover"></video>
+    <script>
+      // Mirrors the card-video gate `workflow-pages/Thumbnail.astro` picked up
+      // in #1216, copied rather than shared: Astro bundles a component's script
+      // only into pages that render that component, and Thumbnail is used
+      // exclusively by `workflow-pages/cards/*`, none of which appear on
+      // /workflows/ — so tagging this element for that script would silently do
+      // nothing.
+      //
+      // No fallback for a missing IntersectionObserver. Playing unconditionally
+      // is what this block is here to stop, and every browser the site builds
+      // for has had the API since 2019; without it the poster simply stays.
+      const promo = document.getElementById('mmh3-promo-video') as HTMLVideoElement | null;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+      if (promo) {
+        let inView = false;
+
+        // Playback is a flourish, so reduced-motion users hold the poster and
+        // never pay for the body at all.
+        const sync = () => {
+          if (inView && !reducedMotion.matches) {
+            promo.play().catch(() => {});
+          } else {
+            promo.pause();
+          }
+        };
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) inView = entry.isIntersecting;
+            sync();
+          },
+          { rootMargin: '200px' }
+        );
+        observer.observe(promo);
+
+        // Re-read on toggle, not just at startup: switching the preference on
+        // mid-playback has to stop the clip, not wait for the next scroll.
+        reducedMotion.addEventListener('change', sync);
+      }
+    </script>
+  </div>
+  <div
+    class="flex min-w-0 flex-col justify-center px-6 py-7 sm:px-8 lg:col-span-2 lg:px-10 lg:py-8"
+  >
+    <span class="text-xs font-semibold uppercase tracking-wider text-brand">
+      Run in your browser
+    </span>
+    <h2 class="mt-4 text-3xl font-normal text-content sm:text-4xl">MiniMax H3 - Motion Context</h2>
+    <p class="mt-4 max-w-2xl text-base leading-relaxed text-content-secondary">
+      Guide one continuous shot with three reference images pinned to exact moments — no install,
+      runs on a live deployment.
+    </p>
+    {
+      /*
+      `data-*` rather than `utm_*`: this is an internal navigation, and UTM
+      params on an internal link start a new session in most analytics tools,
+      breaking attribution for the visit it interrupts.
+
+      `data-experiment` is the hook PostHogAnalytics delegates on for experiment
+      entry points; it fires `hub:experiment_cta_clicked`. Deliberately not the
+      Cloud-CTA class, whose path reports a signup CTA that this internal link
+      is not. Without these attributes the click is silent, which is how the
+      demo shipped. See docs/shipping-experiments-policy.md, Rule 3.
+    */
+    }
+    <a
+      href={localizeUrl('/workflows/minimax-h3-multiref/', locale)}
+      data-location="hub_index_promo"
+      data-experiment="minimaxH3Demo"
+      class="mt-6 inline-flex h-10 w-fit items-center justify-center rounded-2xl bg-brand px-6 text-sm font-semibold uppercase tracking-wider text-page transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-page"
+    >
+      Try MiniMax H3
+    </a>
+    <div class="mt-8 flex flex-wrap gap-2">
+      <span class="rounded-full bg-white/4 px-4 py-2 text-sm text-content-secondary">
+        Live deployment
+      </span>
+      <span class="rounded-full bg-white/4 px-4 py-2 text-sm text-content-secondary">
+        Video + audio
+      </span>
+    </div>
+  </div>
+</section>
