@@ -7063,6 +7063,33 @@
         "minComfyUIVersion": "0.3.42"
       },
       {
+        "name": "utility_moge3_geometry_estimation",
+        "title": "Geometry Estimation: MoGe 3",
+        "description": "Estimate fine-detailed geometry from a single image with MoGe 3, the sparse-volumetric refinement version of MoGe. It lifts a coarse point map onto a sparse voxel shell and refines depth with lightweight sparse 3D convolutions, keeping thin structures and depth discontinuities that image-space decoders blur. Ships with the ViT-L checkpoint; the ViT-G file is selectable in the same Load MoGe Model dropdown for higher fine-detail accuracy. Takes 1 image input and outputs 1 depth map and 1 normal map.\n",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["Depth Estimation","Normal Estimation"],
+        "models": ["MoGe"],
+        "minComfyUIVersion": "0.37.0",
+        "date": "2026-09-18",
+        "openSource": true,
+        "size": 2469606195,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "cosmic_suitcase.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
         "name": "utility_moge_depth_estimation",
         "tutorialUrl": "https://docs.comfy.org/tutorials/utility/moge",
         "title": "Depth Estimation: MoGe",
@@ -9177,7 +9204,7 @@
           ]
         },
         "thumbnail": ["output/video_wan_animate2.mp4"],
-        "minComfyUIVersion": "0.31.0"
+        "minComfyUIVersion": "0.36.0"
       },
       {
         "name": "api_seedance2_0_flf2v",
@@ -16485,6 +16512,58 @@
     "type": "3d",
     "templates": [
       {
+        "name": "3d_pixal3d_trellis2_image_to_model",
+        "title": "Pixal3D & TRELLIS.2: Image to Model",
+        "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["3D","Image to 3D"],
+        "models": ["Pixal3D","TRELLIS.2"],
+        "date": "2026-08-25",
+        "openSource": true,
+        "size": 15354508083,
+        "usage": 1107,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 122,
+              "nodeType": "LoadImage",
+              "file": "viking_wolf_rune_axe.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.34.0"
+      },
+      {
+        "name": "utility_sam3d_body",
+        "title": "SAM 3D Body:  3D Human Mesh Extraction From Video",
+        "description": "Extract a full-body 3D human mesh from a single video frame using SAM 3D Body, guided by a text prompt to refine pose and shape estimation. The workflow loads one video and one text prompt, then outputs a reconstructed video showing the recovered human rig. Ideal for motion capture prototyping, biomechanics analysis, and character animation previsualization.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["3D"],
+        "models": ["SAM 3D Body"],
+        "date": "2026-08-25",
+        "openSource": true,
+        "size": 5476083302,
+        "usage": 694,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 85,
+              "nodeType": "LoadVideo",
+              "file": "woman_holding_water_glass.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.34.0"
+      },
+      {
         "name": "api_tripo_p2_image_to_model",
         "title": "Tripo P2: Image to Model",
         "description": "Generate a production-ready 3D model from a single reference image using Tripo P2.0 Preview, which builds native quad topology with clean edge flow suited for rigging and animation. It takes 1 input image, with optional multi-view references for better side and back accuracy. Ideal for game characters and props, hard-surface mechanical assets, and high-volume real-time pipelines.",
@@ -16539,30 +16618,42 @@
         "thumbnailVariant": "compareSlider"
       },
       {
-        "name": "utility_sam3d_body",
-        "title": "SAM 3D Body:  3D Human Mesh Extraction From Video",
-        "description": "Extract a full-body 3D human mesh from a single video frame using SAM 3D Body, guided by a text prompt to refine pose and shape estimation. The workflow loads one video and one text prompt, then outputs a reconstructed video showing the recovered human rig. Ideal for motion capture prototyping, biomechanics analysis, and character animation previsualization.",
+        "name": "api_tripo_p2_multiview_to_model",
+        "title": "Tripo P2: Multiview to Model",
+        "description": "Generate production-ready 3D models from up to four reference views using Tripo P2.0 Preview, which reconstructs geometry with native quad topology and triangle meshes up to 50,000 faces. Ideal for game characters and props ready for rigging, hard-surface mechanical assets, and high-volume real-time pipelines.",
         "mediaType": "image",
         "mediaSubtype": "webp",
-        "tags": ["3D"],
-        "models": ["SAM 3D Body"],
-        "date": "2026-08-25",
-        "openSource": true,
-        "size": 5476083302,
-        "usage": 694,
+        "tags": ["3D","API"],
+        "models": ["Tripo P2"],
+        "logos": [
+          {
+            "provider": "Tripo"
+          }
+        ],
+        "minComfyUIVersion": "0.36.0",
+        "date": "2026-09-18",
+        "openSource": false,
+        "size": 107374182,
+        "usage": 0,
         "searchRank": 0,
         "username": "ComfyUI",
         "io": {
           "inputs": [
             {
-              "nodeId": 85,
-              "nodeType": "LoadVideo",
-              "file": "woman_holding_water_glass.mp4",
-              "mediaType": "video"
+              "nodeId": 16,
+              "nodeType": "LoadImage",
+              "file": "worker_doll_front.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 19,
+              "nodeType": "LoadImage",
+              "file": "worker_doll_back.png",
+              "mediaType": "image"
             }
           ]
         },
-        "minComfyUIVersion": "0.34.0"
+        "thumbnailVariant": "compareSlider"
       },
       {
         "name": "3d_pixal3d_multi_views",
@@ -16589,32 +16680,6 @@
             }
           ]
         }
-      },
-      {
-        "name": "3d_pixal3d_trellis2_image_to_model",
-        "title": "Pixal3D & TRELLIS.2: Image to Model",
-        "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
-        "mediaType": "image",
-        "mediaSubtype": "webp",
-        "tags": ["3D","Image to 3D"],
-        "models": ["Pixal3D","TRELLIS.2"],
-        "date": "2026-08-25",
-        "openSource": true,
-        "size": 15354508083,
-        "usage": 1107,
-        "searchRank": 0,
-        "username": "ComfyUI",
-        "io": {
-          "inputs": [
-            {
-              "nodeId": 122,
-              "nodeType": "LoadImage",
-              "file": "viking_wolf_rune_axe.png",
-              "mediaType": "image"
-            }
-          ]
-        },
-        "minComfyUIVersion": "0.34.0"
       },
       {
         "name": "api_hunyuan3d_image_to_model",

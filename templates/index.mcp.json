@@ -3922,6 +3922,24 @@
         }
       },
       {
+        "name": "utility_moge3_geometry_estimation",
+        "title": "Geometry Estimation: MoGe 3",
+        "task": "Depth Estimation",
+        "model": "MoGe",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Estimate fine-detailed geometry from a single image with MoGe 3, the sparse-volumetric refinement version of MoGe. It lifts a coarse point map onto a sparse voxel shell and refines depth with lightweight sparse 3D convolutions, keeping thin structures and depth discontinuities that image-space decoders blur. Ships with the ViT-L checkpoint; the ViT-G file is selectable in the same Load MoGe Model dropdown for higher fine-detail accuracy. Takes 1 image input and outputs 1 depth map and 1 normal map.\n",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.37.0",
+        "capabilities": {
+          "workflow": ["depth-estimation", "normal-estimation"]
+        }
+      },
+      {
         "name": "utility_moge_depth_estimation",
         "title": "Depth Estimation: MoGe",
         "task": "Depth Estimation",
@@ -5012,7 +5030,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.31.0",
+        "minComfyUIVersion": "0.36.0",
         "capabilities": {
           "workflow": ["motion-control"]
         }
@@ -9451,6 +9469,39 @@
     "description": "General-purpose workflow templates for native 3D model generation, including image-to-3D and other core 3D workflows supported out of the box.",
     "templates": [
       {
+        "name": "3d_pixal3d_trellis2_image_to_model",
+        "title": "Pixal3D & TRELLIS.2: Image to Model",
+        "task": "Image to 3D",
+        "model": "Pixal3D",
+        "freshness": "new",
+        "usage": 1107,
+        "recommend": "top",
+        "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.34.0",
+        "capabilities": {
+          "workflow": ["image-to-3d"]
+        }
+      },
+      {
+        "name": "utility_sam3d_body",
+        "title": "SAM 3D Body:  3D Human Mesh Extraction From Video",
+        "task": "3D Generation",
+        "model": "SAM 3D Body",
+        "freshness": "new",
+        "usage": 694,
+        "recommend": "high",
+        "description": "Extract a full-body 3D human mesh from a single video frame using SAM 3D Body, guided by a text prompt to refine pose and shape estimation. The workflow loads one video and one text prompt, then outputs a reconstructed video showing the recovered human rig. Ideal for motion capture prototyping, biomechanics analysis, and character animation previsualization.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.34.0"
+      },
+      {
         "name": "api_tripo_p2_image_to_model",
         "title": "Tripo P2: Image to Model",
         "task": "Image to 3D",
@@ -9487,19 +9538,22 @@
         }
       },
       {
-        "name": "utility_sam3d_body",
-        "title": "SAM 3D Body:  3D Human Mesh Extraction From Video",
+        "name": "api_tripo_p2_multiview_to_model",
+        "title": "Tripo P2: Multiview to Model",
         "task": "3D Generation",
-        "model": "SAM 3D Body",
+        "model": "Tripo P2",
         "freshness": "new",
-        "usage": 694,
-        "recommend": "high",
-        "description": "Extract a full-body 3D human mesh from a single video frame using SAM 3D Body, guided by a text prompt to refine pose and shape estimation. The workflow loads one video and one text prompt, then outputs a reconstructed video showing the recovered human rig. Ideal for motion capture prototyping, biomechanics analysis, and character animation previsualization.",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate production-ready 3D models from up to four reference views using Tripo P2.0 Preview, which reconstructs geometry with native quad topology and triangle meshes up to 50,000 faces. Ideal for game characters and props ready for rigging, hard-surface mechanical assets, and high-volume real-time pipelines.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.34.0"
+        "minComfyUIVersion": "0.36.0",
+        "capabilities": {
+          "workflow": ["api"]
+        }
       },
       {
         "name": "3d_pixal3d_multi_views",
@@ -9515,24 +9569,6 @@
           "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.35.0",
-        "capabilities": {
-          "workflow": ["image-to-3d"]
-        }
-      },
-      {
-        "name": "3d_pixal3d_trellis2_image_to_model",
-        "title": "Pixal3D & TRELLIS.2: Image to Model",
-        "task": "Image to 3D",
-        "model": "Pixal3D",
-        "freshness": "new",
-        "usage": 1107,
-        "recommend": "top",
-        "description": "Upload a single image. Generate a high-fidelity 3D model with PBR textures using either Pixal3D or TRELLIS.2, toggled by a single switch. Both pipelines share the same DINOv3 encoder and shape/texture VAEs; Pixal3D adds MoGe camera estimation for pixel-aligned geometry. Includes background removal and a complete mesh post-processing pipeline: remesh, decimate, UV unwrap, and texture baking.",
-        "io": {
-          "inputs": ["text: Prompt"],
-          "outputs": ["image: Generated output"]
-        },
-        "minComfyUIVersion": "0.34.0",
         "capabilities": {
           "workflow": ["image-to-3d"]
         }
