@@ -97,6 +97,8 @@ Workflow JSON changes for frozen-bundle templates are **not** flagged — those 
 | Template / archive only (root version unchanged) | None |
 | Release PR (root version bumped) | `json`, `media-assets-02`, `core`, etc. — **not** `frozen_packages` |
 
+Frozen packages are **skipped** during bump analysis (no months-long `git log` / `git diff` since their last version). PR-scoped media edits under a frozen bundle are still detected via `merge_base..HEAD` and fail the release with a clear error. File-list git queries are cached across packages so post-`sync_bundles` working trees do not re-scan once per package.
+
 ### Publishing
 
 [`publish.yml`](../../.github/workflows/publish.yml) triggers on `pyproject.toml` changes on `main`, or manual dispatch.
