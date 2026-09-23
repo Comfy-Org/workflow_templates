@@ -16,6 +16,7 @@ import {
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
 import { useCasePageHasGrid } from './src/lib/workflow-pages/use-case-resolver.ts';
 import { buildCustomPages } from './src/lib/sitemap-custom-pages.ts';
+import { createSitemapFilter } from './src/lib/sitemap-filter.ts';
 import {
   loadHubCategories,
   loadHubModelCatalog,
@@ -263,65 +264,16 @@ export default defineConfig({
         item.priority = 0.5;
         return item;
       },
-      // Exclude OG image routes and legacy redirect pages. Legacy redirects are
-      // /workflows/{slug}/ without a 12-char hex share_id suffix; canonical detail
-      // pages are /workflows/{slug}-{shareId}/ (shareId = 12 hex chars).
-      filter: (page) => {
-        if (page.includes('/workflows/og/') || page.includes('/workflows/og.png')) return false;
-        // Only list indexable model pages. Non-qualifying families and
-        // variant-redirect slugs still resolve to a route but render noindex (or
-        // 301), so they must stay out of the sitemap.
-        const modelMatch = page.match(/\/workflows\/model\/([^/]+)\/$/);
-        if (modelMatch) {
-          return indexableModelSlugs.has(modelMatch[1]);
-        }
-
-        // English category pages are prerendered, so unlike the localized ones
-        // they render an empty grid rather than 404ing when the index has
-        // nothing of that type — and were advertised regardless. Same gate as
-        // the localized URLs, off the same manifest. Only applied when the
-        // manifest is non-empty: absent means prebuild did not run, not that
-        // every category is empty, and gating on that would drop the populated
-        // ones too.
-        const categoryMatch = page.match(/\/workflows\/category\/([^/]+)\/$/);
-        if (categoryMatch && hubCategories.length > 0) {
-          return hubCategories.includes(categoryMatch[1]);
-        }
-
-        // Same rule for use-case pages: only list slugs that actually get an
-        // indexable page, so a noindex/thin use-case never enters the sitemap.
-        const useCaseMatch = page.match(/\/workflows\/use-cases\/([^/]+)\/$/);
-        if (useCaseMatch) {
-          return indexableUseCaseSlugs.has(useCaseMatch[1]);
-        }
-
-        const match = page.match(/\/workflows\/([^/]+)\/$/);
-        if (match) {
-          const segment = match[1];
-          if (
-            ['category', 'tag', 'model', 'creators', 'use-cases'].some((p) =>
-              page.includes(`/workflows/${p}/`)
-            )
-          )
-            return true;
-          // Include only when the slug carries a share_id suffix (12 hex chars
-          // after the last hyphen); anything else is a legacy redirect.
-          const lastHyphen = segment.lastIndexOf('-');
-          if (lastHyphen === -1) return false;
-          const candidate = segment.slice(lastHyphen + 1);
-          if (candidate.length === 12 && /^[0-9a-f]+$/.test(candidate)) {
-            // Locale detail pages are prerendered now; only list them once their
-            // locale is flipped indexable. English detail pages have no prefix.
-            const localeMatch = page.match(/\/([a-z]{2}(?:-[A-Z]{2})?)\/workflows\//);
-            if (localeMatch && localeMatch[1] !== 'en' && !indexableLocales.has(localeMatch[1])) {
-              return false;
-            }
-            return true;
-          }
-          return false;
-        }
-        return true;
-      },
+      // Exclude OG image routes, non-qualifying models/categories/use-cases, legacy redirects,
+      // unreviewed/held locale workflow pages, and any prerendered page carrying noindex or
+      // non-self canonical tags.
+      filter: createSitemapFilter({
+        indexableModelSlugs,
+        hubCategories,
+        indexableUseCaseSlugs,
+        indexableLocales,
+        creatorUsernames,
+      }),
     }),
     vue(),
   ],

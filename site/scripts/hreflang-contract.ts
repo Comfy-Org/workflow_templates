@@ -21,11 +21,12 @@ export interface RenderedPage {
   noindex: boolean;
 }
 
-const ALTERNATE_TAG = /<link\b[^>]*\brel="alternate"[^>]*>/gi;
-const CANONICAL_TAG = /<link\b[^>]*\brel="canonical"[^>]*>/i;
-const HREFLANG_ATTR = /\bhreflang="([^"]*)"/i;
-const HREF_ATTR = /\bhref="([^"]*)"/i;
-const NOINDEX_META = /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i;
+const ALTERNATE_TAG = /<link\b[^>]*\brel\s*=\s*["']?alternate["']?[^>]*>/gi;
+const CANONICAL_TAG = /<link\b[^>]*\brel\s*=\s*["']?canonical["']?[^>]*>/i;
+const HREFLANG_ATTR = /\bhreflang\s*=\s*["']?([^"'>\s]*)/i;
+const HREF_ATTR = /\bhref\s*=\s*["']?([^"'>\s]*)/i;
+const NOINDEX_META =
+  /<meta\b[^>]*\b(?:name\s*=\s*["']?(?:robots|googlebot)["']?[^>]*\bcontent\s*=\s*["']?[^"'>]*\b(?:noindex|none)\b|content\s*=\s*["']?[^"'>]*\b(?:noindex|none)\b[^>]*\bname\s*=\s*["']?(?:robots|googlebot)["']?)/i;
 
 /**
  * V8 returns a regex capture as a slice that keeps its entire source string

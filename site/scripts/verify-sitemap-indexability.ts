@@ -82,6 +82,26 @@ function sitemapSlugs(section: Section): Set<string> {
   return slugs;
 }
 
+function collectAllSitemapUrls(): Set<string> {
+  const urls = new Set<string>();
+  const re = /<loc>([^<]+)<\/loc>/g;
+  for (const file of fs.readdirSync(STATIC_DIR)) {
+    if (!file.startsWith('sitemap') || !file.endsWith('.xml') || file.includes('index')) continue;
+    const xml = fs.readFileSync(path.join(STATIC_DIR, file), 'utf-8');
+    for (const m of xml.matchAll(re)) {
+      const raw = m[1].trim();
+      try {
+        const parsed = new URL(raw);
+        const normPath = parsed.pathname.endsWith('/') ? parsed.pathname : `${parsed.pathname}/`;
+        urls.add(`${parsed.origin}${normPath}`);
+      } catch {
+        urls.add(raw);
+      }
+    }
+  }
+  return urls;
+}
+
 /** Prerendered sections: the built page's own robots meta is the answer. */
 function renderedIndexableSlugs(section: Section): Set<string> {
   const dir = path.join(STATIC_DIR, 'workflows', section);
@@ -234,6 +254,42 @@ async function main(): Promise<void> {
 
   const pages = collectRenderedPages();
   const origin = resolveSiteOrigin(process.env.PUBLIC_SITE_ORIGIN);
+
+  // Enforce that no rendered page listed in any sitemap carries noindex or non-self canonical tags.
+  const sitemapUrls = collectAllSitemapUrls();
+  let noindexViolations = 0;
+  let nonCanonicalViolations = 0;
+  for (const page of pages) {
+    const fullUrl = `${origin}${page.path}`;
+    if (sitemapUrls.has(fullUrl)) {
+      if (page.noindex) {
+        noindexViolations++;
+        problems.push(`sitemap contains noindexed page: ${fullUrl}`);
+      }
+      if (page.canonical) {
+        let canonicalUrl = page.canonical.trim();
+        try {
+          const parsed = new URL(canonicalUrl, origin);
+          const normCanonPath = parsed.pathname.endsWith('/')
+            ? parsed.pathname
+            : `${parsed.pathname}/`;
+          canonicalUrl = `${parsed.origin}${normCanonPath}`;
+        } catch {
+          // Keep raw canonical URL if parsing fails
+        }
+        if (canonicalUrl !== fullUrl) {
+          nonCanonicalViolations++;
+          problems.push(
+            `sitemap contains non-self-canonical page: ${fullUrl} (canonicals to ${page.canonical})`
+          );
+        }
+      }
+    }
+  }
+  console.log(
+    `  sitemap indexability: verified ${sitemapUrls.size} URLs (${noindexViolations} noindex, ${nonCanonicalViolations} non-canonical)`
+  );
+
   const clustered = pages.filter((p) => p.alternates.length > 0).length;
   const result = checkHreflangContract(pages, origin, LOCALES, localizedDetailIsPrerendered());
   console.log(`  hreflang: ${clustered} of ${pages.length} pages emit alternates (${origin})`);

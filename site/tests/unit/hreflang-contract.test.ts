@@ -67,6 +67,12 @@ describe('parsing built HTML', () => {
     expect(parseNoindex('<meta name="robots" content="index, follow">')).toBe(false);
     expect(parseNoindex('<title>x</title>')).toBe(false);
   });
+
+  it('detects noindex with inverted attribute order, "none", and single quotes', () => {
+    expect(parseNoindex('<meta content="noindex, follow" name="robots">')).toBe(true);
+    expect(parseNoindex('<meta name="robots" content="none">')).toBe(true);
+    expect(parseNoindex("<meta name='googlebot' content='noindex'>")).toBe(true);
+  });
 });
 
 describe('pathForHref', () => {
