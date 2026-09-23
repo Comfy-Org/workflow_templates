@@ -63,6 +63,17 @@ export function __resetHtmlDirectiveCache(): void {
 }
 
 /**
+ * Extract an attribute value from an HTML tag string.
+ * Anchors the attribute name at an HTML attribute boundary (preceded by whitespace or tag start),
+ * and handles double-quoted, single-quoted, or unquoted values.
+ */
+function getHtmlAttr(tag: string, name: string): string | null {
+  const re = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i');
+  const m = tag.match(re);
+  return m ? (m[1] ?? m[2] ?? m[3] ?? '') : null;
+}
+
+/**
  * Check whether a prerendered HTML file on disk specifies "noindex", "none",
  * meta-refresh redirect, or non-self canonical.
  * Returns false if the page declares noindex or canonicalizes to another URL.
@@ -113,17 +124,23 @@ export function checkRenderedHtmlDirectives(distDir: string, pageUrl: string): b
     // 1. Meta refresh redirect check: pages that redirect via http-equiv are not indexable content
     const metaTags = html.match(/<meta\b[^>]*>/gi) ?? [];
     for (const meta of metaTags) {
-      if (/\bhttp-equiv\s*=\s*["']?refresh["']?/i.test(meta)) {
+      const httpEquiv = getHtmlAttr(meta, 'http-equiv')?.trim().toLowerCase();
+      if (httpEquiv === 'refresh') {
         htmlDirectiveCache.set(htmlPath, false);
         return false;
       }
     }
 
-    // 2. Meta robots / googlebot noindex / none check (handles attribute order, spaces, quotes)
+    // 2. Meta robots / googlebot noindex / none check (compares comma-separated tokens exactly)
     for (const meta of metaTags) {
-      if (/\bname\s*=\s*["']?(?:robots|googlebot)["']?/i.test(meta)) {
-        const contentMatch = meta.match(/\bcontent\s*=\s*["']?([^"'>]*)/i);
-        if (contentMatch && /\b(?:noindex|none)\b/i.test(contentMatch[1])) {
+      const metaName = getHtmlAttr(meta, 'name')?.trim().toLowerCase();
+      if (metaName === 'robots' || metaName === 'googlebot') {
+        const content = getHtmlAttr(meta, 'content') ?? '';
+        const tokens = content
+          .toLowerCase()
+          .split(',')
+          .map((t) => t.trim());
+        if (tokens.includes('noindex') || tokens.includes('none')) {
           htmlDirectiveCache.set(htmlPath, false);
           return false;
         }
@@ -133,34 +150,41 @@ export function checkRenderedHtmlDirectives(distDir: string, pageUrl: string): b
     // 3. Canonical URL check (handles both absolute and root-relative hrefs)
     const linkTags = html.match(/<link\b[^>]*>/gi) ?? [];
     for (const link of linkTags) {
-      if (/\brel\s*=\s*["']?canonical["']?/i.test(link)) {
-        const hrefMatch = link.match(/\bhref\s*=\s*["']?([^"'>\s]*)/i);
-        if (hrefMatch && hrefMatch[1]) {
-          const canonicalHref = hrefMatch[1].trim();
-          try {
-            const canonicalUrl = new URL(canonicalHref, url.origin);
-            const normCanonicalPath = canonicalUrl.pathname.endsWith('/')
-              ? canonicalUrl.pathname
-              : `${canonicalUrl.pathname}/`;
-            const normSelfPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
+      const rel = getHtmlAttr(link, 'rel');
+      if (rel) {
+        const relTokens = rel
+          .toLowerCase()
+          .split(/\s+/)
+          .map((t) => t.trim());
+        if (relTokens.includes('canonical')) {
+          const canonicalHref = getHtmlAttr(link, 'href')?.trim();
+          if (canonicalHref) {
+            try {
+              const canonicalUrl = new URL(canonicalHref, url.origin);
+              const normCanonicalPath = canonicalUrl.pathname.endsWith('/')
+                ? canonicalUrl.pathname
+                : `${canonicalUrl.pathname}/`;
+              const normSelfPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
 
-            const isLocalhost =
-              url.hostname === 'localhost' ||
-              url.hostname === '127.0.0.1' ||
-              canonicalUrl.hostname === 'localhost' ||
-              canonicalUrl.hostname === '127.0.0.1';
+              const isLocalhost =
+                url.hostname === 'localhost' ||
+                url.hostname === '127.0.0.1' ||
+                canonicalUrl.hostname === 'localhost' ||
+                canonicalUrl.hostname === '127.0.0.1';
 
-            // Canonical must match self path and hostname (unless testing on localhost)
-            if (
-              normCanonicalPath !== normSelfPath ||
-              (!isLocalhost && canonicalUrl.hostname.toLowerCase() !== url.hostname.toLowerCase())
-            ) {
+              // Canonical must match self path, query search, and hostname (unless testing on localhost)
+              if (
+                normCanonicalPath !== normSelfPath ||
+                canonicalUrl.search !== url.search ||
+                (!isLocalhost && canonicalUrl.hostname.toLowerCase() !== url.hostname.toLowerCase())
+              ) {
+                htmlDirectiveCache.set(htmlPath, false);
+                return false;
+              }
+            } catch {
               htmlDirectiveCache.set(htmlPath, false);
               return false;
             }
-          } catch {
-            htmlDirectiveCache.set(htmlPath, false);
-            return false;
           }
         }
       }

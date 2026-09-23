@@ -21,12 +21,16 @@ export interface RenderedPage {
   noindex: boolean;
 }
 
-const ALTERNATE_TAG = /<link\b[^>]*\brel\s*=\s*["']?alternate["']?[^>]*>/gi;
-const CANONICAL_TAG = /<link\b[^>]*\brel\s*=\s*["']?canonical["']?[^>]*>/i;
-const HREFLANG_ATTR = /\bhreflang\s*=\s*["']?([^"'>\s]*)/i;
-const HREF_ATTR = /\bhref\s*=\s*["']?([^"'>\s]*)/i;
-const NOINDEX_META =
-  /<meta\b[^>]*\b(?:name\s*=\s*["']?(?:robots|googlebot)["']?[^>]*\bcontent\s*=\s*["']?[^"'>]*\b(?:noindex|none)\b|content\s*=\s*["']?[^"'>]*\b(?:noindex|none)\b[^>]*\bname\s*=\s*["']?(?:robots|googlebot)["']?)/i;
+/**
+ * Extract an attribute value from an HTML tag string.
+ * Anchors the attribute name to an HTML attribute boundary (preceded by whitespace or tag start),
+ * and handles double-quoted, single-quoted, or unquoted values.
+ */
+function getHtmlAttr(tag: string, name: string): string | null {
+  const re = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i');
+  const m = tag.match(re);
+  return m ? (m[1] ?? m[2] ?? m[3] ?? '') : null;
+}
 
 /**
  * V8 returns a regex capture as a slice that keeps its entire source string
@@ -41,25 +45,59 @@ function detached(value: string): string {
 
 export function parseAlternates(html: string): Alternate[] {
   const alternates: Alternate[] = [];
-  for (const tag of html.match(ALTERNATE_TAG) ?? []) {
-    const hreflang = tag.match(HREFLANG_ATTR)?.[1];
-    const href = tag.match(HREF_ATTR)?.[1];
-    // rel="alternate" also carries RSS and media links; only the tags that
-    // declare an hreflang belong to the language cluster.
-    if (hreflang && href) {
-      alternates.push({ hreflang: detached(hreflang.toLowerCase()), href: detached(href) });
+  for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
+    const rel = getHtmlAttr(tag, 'rel');
+    if (rel) {
+      const relTokens = rel
+        .toLowerCase()
+        .split(/\s+/)
+        .map((t) => t.trim());
+      if (relTokens.includes('alternate')) {
+        const hreflang = getHtmlAttr(tag, 'hreflang');
+        const href = getHtmlAttr(tag, 'href');
+        // rel="alternate" also carries RSS and media links; only the tags that
+        // declare an hreflang belong to the language cluster.
+        if (hreflang && href) {
+          alternates.push({ hreflang: detached(hreflang.toLowerCase()), href: detached(href) });
+        }
+      }
     }
   }
   return alternates;
 }
 
 export function parseCanonical(html: string): string | null {
-  const href = html.match(CANONICAL_TAG)?.[0].match(HREF_ATTR)?.[1];
-  return href === undefined ? null : detached(href);
+  for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
+    const rel = getHtmlAttr(tag, 'rel');
+    if (rel) {
+      const relTokens = rel
+        .toLowerCase()
+        .split(/\s+/)
+        .map((t) => t.trim());
+      if (relTokens.includes('canonical')) {
+        const href = getHtmlAttr(tag, 'href');
+        return href ? detached(href) : null;
+      }
+    }
+  }
+  return null;
 }
 
 export function parseNoindex(html: string): boolean {
-  return NOINDEX_META.test(html);
+  for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
+    const name = getHtmlAttr(tag, 'name')?.trim().toLowerCase();
+    if (name === 'robots' || name === 'googlebot') {
+      const content = getHtmlAttr(tag, 'content') ?? '';
+      const tokens = content
+        .toLowerCase()
+        .split(',')
+        .map((t) => t.trim());
+      if (tokens.includes('noindex') || tokens.includes('none')) {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
 /**

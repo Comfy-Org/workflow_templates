@@ -320,6 +320,43 @@ describe('sitemap-filter', () => {
       expect(allowed).toBe(true);
     });
 
+    it('allows a page with robots directive max-image-preview:none and prefixed attributes', () => {
+      const pageDir = path.join(tmpDir, 'workflows', 'test-222222222222');
+      fs.mkdirSync(pageDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(pageDir, 'index.html'),
+        `<!DOCTYPE html><html><head>
+          <meta name="robots" content="index, follow, max-image-preview:none">
+          <meta data-name="robots" content="noindex">
+          <meta name="robots" data-content="noindex" content="index">
+          <link rel="canonical" href="https://comfy.org/workflows/test-222222222222/">
+        </head><body></body></html>`
+      );
+
+      const allowed = checkRenderedHtmlDirectives(
+        tmpDir,
+        'https://comfy.org/workflows/test-222222222222/'
+      );
+      expect(allowed).toBe(true);
+    });
+
+    it('excludes a page whose canonical URL has a different query string', () => {
+      const pageDir = path.join(tmpDir, 'workflows', 'test-333333333333');
+      fs.mkdirSync(pageDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(pageDir, 'index.html'),
+        `<!DOCTYPE html><html><head>
+          <link rel="canonical" href="https://comfy.org/workflows/test-333333333333/?variant=1">
+        </head><body></body></html>`
+      );
+
+      const allowed = checkRenderedHtmlDirectives(
+        tmpDir,
+        'https://comfy.org/workflows/test-333333333333/'
+      );
+      expect(allowed).toBe(false);
+    });
+
     it('allows localhost self URL with production canonical in local test runs', () => {
       const pageDir = path.join(tmpDir, 'workflows', 'test-111111111111');
       fs.mkdirSync(pageDir, { recursive: true });

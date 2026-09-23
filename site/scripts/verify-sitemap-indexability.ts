@@ -273,7 +273,7 @@ async function main(): Promise<void> {
           const normCanonPath = parsed.pathname.endsWith('/')
             ? parsed.pathname
             : `${parsed.pathname}/`;
-          canonicalUrl = `${parsed.origin}${normCanonPath}`;
+          canonicalUrl = `${parsed.origin}${normCanonPath}${parsed.search}`;
         } catch {
           // Keep raw canonical URL if parsing fails
         }
