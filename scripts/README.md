@@ -51,6 +51,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | Doc | Topic |
 |-----|-------|
 | [`docs/frozen_bundles.md`](docs/frozen_bundles.md) | Frozen legacy `media-*` bundles, inventory, CI, publishing |
+| [`docs/consumer_catalog_changes.md`](docs/consumer_catalog_changes.md) | Producer-side warnings for removal of frontend-visible catalog populations |
 | [`docs/whitelist.md`](docs/whitelist.md) | `whitelist.json` for link/model/custom-node checks |
 | [`docs/check_input_assets.md`](docs/check_input_assets.md) | Input asset validation |
 
@@ -68,7 +69,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
 | `sync-template-index.yml` | `sync/sync_data.py --index-only` (locale field sync; does not rewrite `usage`) |
 | `validate-is-app.yml` | `sync/sync_is_app.py --check` |
-| `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `ci/check_frozen_policy.py`, `sync/sync_bundles.py`, `sync/sync_frozen_inventory.py`, `ci/*` |
+| `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `ci/check_frozen_policy.py`, `ci/check_consumer_catalog_changes.py`, `sync/sync_bundles.py`, `sync/sync_frozen_inventory.py`, `ci/*` |
 | `build-test.yml` | `sync/sync_bundles.py` |
 
 ## Maintenance tools (not in CI)
