@@ -205,7 +205,12 @@ jobs:
                 per_page: 100,
               },
             );
-            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            const existing = comments.find(
+              (c) =>
+                c.body &&
+                c.body.includes(marker) &&
+                c.user?.login === 'github-actions[bot]',
+            );
             if (!fs.existsSync(commentPath)) {
               if (existing) {
                 await github.rest.issues.deleteComment({
