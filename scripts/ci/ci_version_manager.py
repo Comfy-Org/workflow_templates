@@ -22,6 +22,7 @@ ALL_PACKAGE_IDS = (
     "media_image",
     "media_other",
     "media_assets_01",
+    "media_assets_02",
     "blueprints",
     "meta",
 )
@@ -53,6 +54,7 @@ BUNDLE_PACKAGE_MAP = {
     "media-image": "media_image",
     "media-other": "media_other",
     "media-assets-01": "media_assets_01",
+    "media-assets-02": "media_assets_02",
 }
 
 
@@ -85,7 +87,7 @@ def _json_asset_fingerprints(manifest: dict) -> dict[str, str]:
 def _media_asset_fingerprints(manifest: dict, bundle: str) -> dict[str, str]:
     """Fingerprints for non-JSON assets that resolve from the given media bundle.
 
-    Honors per-asset ``bundle`` overrides (additive logos in media-assets-01).
+    Honors per-asset ``bundle`` overrides (additive logos in the active assets bundle).
     """
     fingerprints: dict[str, str] = {}
     for entry in manifest.get("templates", []):
@@ -164,11 +166,23 @@ def get_version_at_ref(pkg: str, ref: str) -> str:
         return "0.0.0"
 
 
-def find_version_intro_commit_on_branch(pkg: str, current_version: str, merge_base: str) -> str:
-    """Find where current_version was introduced on this branch (merge_base..HEAD only)."""
+def find_version_intro_commit(pkg: str, current_version: str, fallback_ref: str) -> str:
+    """Find the commit that introduced the package's current version.
+
+    Release PRs normally change only the root meta version.  Package changes to
+    release may already be on the default branch, so limiting this lookup to
+    ``merge_base..HEAD`` incorrectly makes every subpackage look up to date.
+
+    ``-G`` keeps the lookup cheap by visiting only commits that changed the
+    project version line.  The first matching commit is also the right boundary
+    after an auto-bump commit, preventing a second workflow run from bumping the
+    same package again.
+    """
     file_path = _pyproject_path(pkg)
     try:
-        log_output = run_git(["log", f"{merge_base}..HEAD", "--format=%H", "--", file_path])
+        log_output = run_git(
+            ["log", "--format=%H", "-G", r"^version[[:space:]]*=", "--", file_path]
+        )
         for commit_hash in log_output.splitlines():
             commit_hash = commit_hash.strip()
             if not commit_hash:
@@ -180,16 +194,13 @@ def find_version_intro_commit_on_branch(pkg: str, current_version: str, merge_ba
                 continue
     except Exception:
         pass
-    return merge_base
+    return fallback_ref
 
 
 def get_since_commit_for_package(pkg: str, merge_base: str) -> str:
-    """Reference commit for change detection: main merge-base, or last bump on this branch."""
+    """Reference commit for changes not yet covered by the current package version."""
     current = get_current_version(pkg)
-    base_version = get_version_at_ref(pkg, merge_base)
-    if current != base_version:
-        return find_version_intro_commit_on_branch(pkg, current, merge_base)
-    return merge_base
+    return find_version_intro_commit(pkg, current, merge_base)
 
 
 def _auto_bump_only_files(since_commit: str) -> set[str]:
@@ -385,7 +396,8 @@ def get_changed_packages() -> Set[str]:
             details = ", ".join(sorted(blocked))
             raise SystemExit(
                 "Frozen media packages need an update but are not auto-bumped: "
-                f"{details}. Move new assets to media-assets-01 (additive logos) "
+                f"{details}. Move new assets to the recommended asset bundle "
+                "(see scripts/data/version_policy.json) "
                 "or manually bump the frozen package version."
             )
 
@@ -412,6 +424,7 @@ def get_changed_packages() -> Set[str]:
             "media_image",
             "media_other",
             "media_assets_01",
+            "media_assets_02",
             "meta",
         }
 
@@ -489,6 +502,7 @@ def update_dependencies() -> None:
         "media_image": "packages/media_image/pyproject.toml",
         "media_other": "packages/media_other/pyproject.toml",
         "media_assets_01": "packages/media_assets_01/pyproject.toml",
+        "media_assets_02": "packages/media_assets_02/pyproject.toml",
     }
     
     frozen = get_frozen_packages()

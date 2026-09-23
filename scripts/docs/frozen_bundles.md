@@ -1,12 +1,12 @@
-# Frozen legacy media bundles
+# Frozen media bundles
 
-Legacy PyPI wheels `comfyui-workflow-templates-media-{api,image,video,other}` are **frozen**: version-pinned in root `pyproject.toml`, excluded from CI auto-bump, and not republished unless their package version is manually bumped.
+PyPI wheels listed in `frozen_packages` are **frozen**: version-pinned in root `pyproject.toml`, excluded from CI auto-bump, and not republished unless their package version is manually bumped.
 
 This is separate from **hub archive** (`archived/`, `archive_templates.py`) — archiving removes templates from the active hub index; frozen-bundle policy governs **pip wheel churn**.
 
 ## Why these bundles are frozen
 
-PyPI enforces a **~100 MB per-file** upload limit per wheel. The legacy media bundles are large; most pinned wheels are **85–99 MB** (queried from PyPI for versions in root `pyproject.toml`):
+PyPI enforces a **~100 MB per-file** upload limit per wheel. Filled media wheels are frozen so routine template work does **not** rebuild or republish them (which would consume PyPI project quota and risks hitting the 100 MB ceiling).
 
 | Bundle | PyPI package | Pinned version | Wheel size (PyPI) | Notes |
 |--------|--------------|----------------|-------------------|--------|
@@ -14,18 +14,19 @@ PyPI enforces a **~100 MB per-file** upload limit per wheel. The legacy media bu
 | `media-image` | `comfyui-workflow-templates-media-image` | 0.3.160 | **85.3 MB** | Near limit |
 | `media-video` | `comfyui-workflow-templates-media-video` | 0.3.101 | **99.5 MB** | At limit |
 | `media-other` | `comfyui-workflow-templates-media-other` | 0.3.229 | **85.0 MB** | Near limit |
+| `media-assets-01` | `comfyui-workflow-templates-media-assets-01` | 0.1.47 | **89.8 MB** | Near limit |
 
-Re-check sizes: `curl -s https://pypi.org/pypi/comfyui-workflow-templates-media-image/json` (wheel `size` field for the pinned version).
+Re-check sizes: `curl -s https://pypi.org/pypi/comfyui-workflow-templates-media-assets-01/json` (wheel `size` field for the pinned version).
 
-We freeze these wheels so routine template work does **not** rebuild or republish them (which would consume PyPI project quota and risks hitting the 100 MB ceiling). **New template media** goes to **`media-assets-01`** instead.
+**New template media** goes to **`media-assets-02`**. When that wheel approaches the limit, freeze it and open `media-assets-03`.
 
-Unfreezing and shipping a new legacy wheel should be a **deliberate, rare** decision — e.g. a major split, asset cleanup, or architectural change — not part of normal template PRs.
+Unfreezing and shipping a new frozen wheel should be a **deliberate, rare** decision — e.g. a major split, asset cleanup, or architectural change — not part of normal template PRs.
 
 ## Config files
 
 | File | Role |
 |------|------|
-| [`scripts/data/version_policy.json`](../data/version_policy.json) | `frozen_packages`, `frozen_bundles` map, `recommended_asset_bundle` (`media-assets-01`) |
+| [`scripts/data/version_policy.json`](../data/version_policy.json) | `frozen_packages`, `frozen_bundles` map, `recommended_asset_bundle` (`media-assets-02`) |
 | [`scripts/data/frozen_bundle_inventory.json`](../data/frozen_bundle_inventory.json) | Snapshot: which template IDs are assigned to each frozen bundle in `bundles.json` |
 
 Regenerate inventory after editing frozen-bundle rows in `bundles.json`:
@@ -49,8 +50,8 @@ CI: [`.github/workflows/version-check.yml`](../../.github/workflows/version-chec
 
 ### New templates
 
-- Put **media assets** (thumbnails, etc.) in bundle **`media-assets-01`** in `bundles.json`.
-- Do **not** add new templates to `media-api`, `media-image`, `media-video`, or `media-other`.
+- Put **media assets** (thumbnails, etc.) in bundle **`media-assets-02`** in `bundles.json`.
+- Do **not** add new templates to frozen bundles: `media-api`, `media-image`, `media-video`, `media-other`, or `media-assets-01`.
 
 Workflow / index JSON ships via the **`json`** package regardless of bundle assignment.
 
@@ -60,19 +61,19 @@ Workflow / index JSON ships via the **`json`** package regardless of bundle assi
 that wheel are listed once in `scripts/data/version_policy.json` → `frozen_logo_assets`.
 
 Any **new** file under `templates/logo/` that is **not** in that inventory automatically
-ships via `additive_logo_bundle` / `recommended_asset_bundle` (`media-assets-01`).
+ships via `additive_logo_bundle` / `recommended_asset_bundle` (`media-assets-02`).
 You do not need to update the policy list for each new provider logo.
 
 Prefer single-extension filenames (e.g. `sync_so.webp`, not `sync.so.webp`).
 
-The core manifest may attach a per-asset `"bundle": "media-assets-01"` override so the
+The core manifest may attach a per-asset `"bundle": "media-assets-02"` override so the
 loader resolves additive logos from the active package without republishing frozen
-`media-other`.
+`media-other` or `media-assets-01`.
 
 ### Archive / remove from frozen bundles
 
 - **Removing** template IDs from frozen bundles in `bundles.json` is OK (e.g. after `archive_templates.py`).
-- Does **not** require bumping legacy media package versions.
+- Does **not** require bumping frozen media package versions.
 - Does **not** trigger the frozen-bundle PR warning.
 
 Run `sync_frozen_inventory.py` after removals so the inventory matches `bundles.json`.
@@ -83,7 +84,7 @@ CI posts a PR comment (informational, non-blocking) when a PR:
 
 - **Adds** template IDs to a frozen bundle in `bundles.json`
 - Changes media assets (thumbnails, previews, etc.) for a template still assigned to a frozen bundle
-- Modifies `packages/media_*` tree or frozen pins in root `pyproject.toml`
+- Modifies a frozen `packages/media_*` or `packages/media_assets_*` tree, or frozen pins in root `pyproject.toml`
 
 Workflow JSON changes for frozen-bundle templates are **not** flagged — those ship via the `json` package.
 
@@ -94,7 +95,7 @@ Workflow JSON changes for frozen-bundle templates are **not** flagged — those 
 | PR type | Auto-bump |
 |---------|-----------|
 | Template / archive only (root version unchanged) | None |
-| Release PR (root version bumped) | `json`, `media-assets-01`, `core`, etc. — **not** `frozen_packages` |
+| Release PR (root version bumped) | `json`, `media-assets-02`, `core`, etc. — **not** `frozen_packages` |
 
 ### Publishing
 
@@ -104,15 +105,15 @@ Workflow JSON changes for frozen-bundle templates are **not** flagged — those 
 - With `release` label → publishes packages whose versions changed in the merge commit.
 - **Force publish** bypasses the label but still only uploads packages where **local version ≠ PyPI**.
 
-Frozen `media-*` wheels are **not** republished if their version was not bumped.
+Frozen media wheels are **not** republished if their version was not bumped.
 
 See also: [`docs/PUBLISHING.md`](../../docs/PUBLISHING.md), [`docs/cicd/README.md`](../../docs/cicd/README.md).
 
-## Intentional legacy media release
+## Intentional frozen media release
 
 To ship a new frozen wheel:
 
-1. Manually bump `packages/media_<bundle>/pyproject.toml`
+1. Manually bump `packages/media_<bundle>/pyproject.toml` (or `packages/media_assets_01/pyproject.toml`)
 2. Update the matching pin in root `pyproject.toml`
 3. Optionally remove the package from `frozen_packages` for one release PR
 4. Merge with `release` label (or force publish after merge)
