@@ -2,7 +2,7 @@
 
 ## What This Repo Is
 
-A monorepo managing **ComfyUI workflow templates** distributed as Python packages AND a public **Astro-based workflow hub website** at templates.comfy.org. Two distinct systems share the same template data.
+A monorepo managing **ComfyUI workflow templates** distributed as Python packages AND a public **Astro-based workflow hub website** at comfy.org/workflows. Two distinct systems share the same template data.
 
 ## Repository Map
 
@@ -22,6 +22,8 @@ workflow_templates/
 │   ├── media_image/        # Image generation templates
 │   ├── media_video/        # Video generation templates
 │   ├── media_other/        # Audio, 3D, utilities
+│   ├── media_assets_01/    # Frozen asset shard 01
+│   ├── media_assets_02/    # Active asset shard (new templates)
 │   ├── meta/               # Meta package aggregating all above
 │   └── blueprints/         # Subgraph blueprints package
 ├── scripts/                # Python: validation, sync, i18n (see scripts/README.md)
@@ -66,7 +68,7 @@ templates/index.json + *.json + *.webp
   ├──→ scripts/sync/sync_bundles.py ──→ packages/media_*/
   └──→ site/scripts/sync-templates.ts ──→ site/src/content/templates/
        └──→ site/scripts/generate-ai.ts ──→ AI-enriched content
-            └──→ astro build ──→ templates.comfy.org (Vercel)
+            └──→ astro build ──→ comfy.org/workflows (Vercel)
 ```
 
 ## Key Commands
@@ -205,9 +207,10 @@ Templates in `bundles.json` map to Python packages:
 | `media-image` | Image generation/editing      | **Frozen** (0.3.160, **85.3 MB** on PyPI) |
 | `media-video` | Video generation              | **Frozen** (0.3.101, **99.5 MB** on PyPI) |
 | `media-other` | Audio, 3D, utilities          | **Frozen** (0.3.229, **85.0 MB** on PyPI) |
-| `media-assets-01` | **New** template thumbnails/media | Active |
+| `media-assets-01` | Template thumbnails/media (shard 01) | **Frozen** (0.1.47, **89.8 MB** on PyPI) |
+| `media-assets-02` | **New** template thumbnails/media | Active |
 
-Frozen legacy `media-*` bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (why frozen, CI, publishing).
+Frozen media bundles: [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (why frozen, CI, publishing).
 
 ## Internationalization
 

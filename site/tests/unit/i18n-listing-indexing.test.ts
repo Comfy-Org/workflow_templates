@@ -123,3 +123,39 @@ describe('alternatesFor — pages withheld for a reason beyond the locale gate',
     }
   });
 });
+
+describe('listingIndexing — creator profile pages (/workflows/[username]/)', () => {
+  const creatorBase = '/workflows/jms/';
+  const flipped = ['zh', 'ja', 'fr', 'tr'] as readonly Locale[];
+
+  it('self-canonicals to localized path for active indexable locales', () => {
+    const zh = listingIndexing(creatorBase, 'zh' as Locale, flipped);
+    expect(zh.indexable).toBe(true);
+    expect(zh.canonicalPath).toBe('/zh/workflows/jms/');
+    expect(zh.noindex).toBe(false);
+    expect(zh.hreflangLocales).toEqual(['en', 'zh', 'ja', 'fr', 'tr']);
+
+    const ja = listingIndexing(creatorBase, 'ja' as Locale, flipped);
+    expect(ja.indexable).toBe(true);
+    expect(ja.canonicalPath).toBe('/ja/workflows/jms/');
+    expect(ja.noindex).toBe(false);
+
+    const fr = listingIndexing(creatorBase, 'fr' as Locale, flipped);
+    expect(fr.indexable).toBe(true);
+    expect(fr.canonicalPath).toBe('/fr/workflows/jms/');
+    expect(fr.noindex).toBe(false);
+
+    const tr = listingIndexing(creatorBase, 'tr' as Locale, flipped);
+    expect(tr.indexable).toBe(true);
+    expect(tr.canonicalPath).toBe('/tr/workflows/jms/');
+    expect(tr.noindex).toBe(false);
+  });
+
+  it('falls back to English canonical and noindex for non-indexable/gated locales', () => {
+    const itLocale = listingIndexing(creatorBase, 'it' as Locale, flipped);
+    expect(itLocale.indexable).toBe(false);
+    expect(itLocale.canonicalPath).toBe('/workflows/jms/');
+    expect(itLocale.noindex).toBe(true);
+    expect(itLocale.hreflangLocales).toEqual([]);
+  });
+});
