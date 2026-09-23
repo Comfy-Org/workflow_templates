@@ -1,8 +1,8 @@
 {
   "id": "ba12fba3-87d7-4910-8d49-b72be67b0936",
   "revision": 0,
-  "last_node_id": 14,
-  "last_link_id": 7,
+  "last_node_id": 18,
+  "last_link_id": 12,
   "nodes": [
     {
       "id": 1,
@@ -34,6 +34,7 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
         "ver": "0.22.0",
         "enableTabs": false,
@@ -42,13 +43,16 @@
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "LoadImage"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         "real_human_demo.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "real_human_demo.png",
+        "upload": "image"
+      }
     },
     {
       "id": 2,
@@ -76,18 +80,19 @@
           "name": "asset_id",
           "type": "STRING",
           "links": [
-            2
+            10
           ]
         },
         {
           "name": "group_id",
           "type": "STRING",
           "links": [
-            3
+            12
           ]
         }
       ],
       "properties": {
+        "Node name for S&R": "ByteDanceCreateImageAsset",
         "cnr_id": "comfy-core",
         "ver": "0.22.0",
         "enableTabs": false,
@@ -96,12 +101,14 @@
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "ByteDanceCreateImageAsset"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "group_id": ""
+      }
     },
     {
       "id": 3,
@@ -124,104 +131,11 @@
       "widgets_values": [
         "### Group ID Explanation  \n- **Purpose**: Groups same-person real-human assets for backend recognition.  \n- **Generation**: Auto-generated after the first verification via the \"ByteDance Create Image/Video Asset\" node.  \n- **Usage**: Save the Group ID. For future same-person assets, entering this ID skips verification."
       ],
+      "widgets_values_named": {
+        "text": "### Group ID Explanation  \n- **Purpose**: Groups same-person real-human assets for backend recognition.  \n- **Generation**: Auto-generated after the first verification via the \"ByteDance Create Image/Video Asset\" node.  \n- **Usage**: Save the Group ID. For future same-person assets, entering this ID skips verification."
+      },
       "color": "#222",
       "bgcolor": "#000"
-    },
-    {
-      "id": 4,
-      "type": "PreviewAny",
-      "pos": [
-        -700,
-        410
-      ],
-      "size": [
-        330,
-        180
-      ],
-      "flags": {},
-      "order": 6,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 2
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": [
-            6
-          ]
-        }
-      ],
-      "title": "Preview as Text (asset_id)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.22.0",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "PreviewAny"
-      },
-      "widgets_values": [
-        null,
-        null,
-        null
-      ]
-    },
-    {
-      "id": 5,
-      "type": "PreviewAny",
-      "pos": [
-        -700,
-        650
-      ],
-      "size": [
-        330,
-        190
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 3
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": null
-        }
-      ],
-      "title": "Preview as Text (group_id)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.22.0",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "PreviewAny"
-      },
-      "widgets_values": [
-        null,
-        null,
-        null
-      ]
     },
     {
       "id": 7,
@@ -241,11 +155,18 @@
         {
           "name": "video",
           "type": "VIDEO",
-          "link": 7
+          "link": 9
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
       "properties": {
+        "Node name for S&R": "SaveVideo",
         "cnr_id": "comfy-core",
         "ver": "0.22.0",
         "enableTabs": false,
@@ -254,14 +175,20 @@
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "SaveVideo"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         "video/Seedance2.0",
         "auto",
+        "auto",
         "auto"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/Seedance2.0",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
     },
     {
       "id": 8,
@@ -283,6 +210,9 @@
       "widgets_values": [
         "### [How to Use Real-Human Assets for Seedance2.0](https://docs.comfy.org/tutorials/partner-nodes/bytedance/seedance-2-0-real-human)\n\nTo comply with the model provider’s legal requirements, real-human assets must be verified before use.  \n\n1. **First-Time Asset Upload & Verification**: Use \"Load Image\" to upload a real-human image. Run the workflow; the \"ByteDance Create Image Asset\" or \"ByteDance Create Video Asset\" node generates a verification link. Complete verification to obtain an Asset ID and a Group ID.  \n2. **Reuse the Same Person’s Assets**: Save the Group ID. For future uploads of the same person’s images/videos, enter the saved Group ID in the \"Create Image/Video Asset\" node to skip verification, since the person is already verified.  \n3. **Video Generation**: Use the Asset ID in the \"ByteDance Seedance 2.0\" node to generate a video with a real human as a reference.\n---\n- A Group ID verified by a single account is usable only by that account and does not support cross-account use.\n- Please ensure the image/video used to create assets contains only one character\n"
       ],
+      "widgets_values_named": {
+        "text": "### [How to Use Real-Human Assets for Seedance2.0](https://docs.comfy.org/tutorials/partner-nodes/bytedance/seedance-2-0-real-human)\n\nTo comply with the model provider’s legal requirements, real-human assets must be verified before use.  \n\n1. **First-Time Asset Upload & Verification**: Use \"Load Image\" to upload a real-human image. Run the workflow; the \"ByteDance Create Image Asset\" or \"ByteDance Create Video Asset\" node generates a verification link. Complete verification to obtain an Asset ID and a Group ID.  \n2. **Reuse the Same Person’s Assets**: Save the Group ID. For future uploads of the same person’s images/videos, enter the saved Group ID in the \"Create Image/Video Asset\" node to skip verification, since the person is already verified.  \n3. **Video Generation**: Use the Asset ID in the \"ByteDance Seedance 2.0\" node to generate a video with a real human as a reference.\n---\n- A Group ID verified by a single account is usable only by that account and does not support cross-account use.\n- Please ensure the image/video used to create assets contains only one character\n"
+      },
       "color": "#222",
       "bgcolor": "#000"
     },
@@ -320,6 +250,7 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "ByteDanceCreateVideoAsset",
         "cnr_id": "comfy-core",
         "ver": "0.19.3",
         "enableTabs": false,
@@ -329,7 +260,6 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65,
-        "Node name for S&R": "ByteDanceCreateVideoAsset",
         "ue_properties": {
           "widget_ue_connectable": {},
           "version": "7.7",
@@ -339,6 +269,9 @@
       "widgets_values": [
         ""
       ],
+      "widgets_values_named": {
+        "group_id": ""
+      },
       "color": "#322",
       "bgcolor": "#533"
     },
@@ -363,54 +296,52 @@
       "widgets_values": [
         "The `image` and `video` inputs do not support real humans.\nTo use real human images or videos, first generate an asset ID via **ByteDance Create Image/Video Asset**.\n\nAsset limits:\n- Images: up to 9\n- Videos: up to 3\n- Audio: up to 3"
       ],
+      "widgets_values_named": {
+        "text": "The `image` and `video` inputs do not support real humans.\nTo use real human images or videos, first generate an asset ID via **ByteDance Create Image/Video Asset**.\n\nAsset limits:\n- Images: up to 9\n- Videos: up to 3\n- Audio: up to 3"
+      },
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 14,
-      "type": "ByteDance2ReferenceNode",
+      "id": 16,
+      "type": "ByteDance2ReferenceNodeV2",
       "pos": [
-        -310,
-        360
+        -300,
+        370
       ],
       "size": [
         400,
-        408
+        456
       ],
       "flags": {},
       "order": 8,
       "mode": 0,
       "inputs": [
         {
-          "label": "image_1",
           "name": "model.reference_images.image_1",
           "shape": 7,
           "type": "IMAGE",
           "link": null
         },
         {
-          "label": "video_1",
           "name": "model.reference_videos.video_1",
           "shape": 7,
           "type": "VIDEO",
           "link": null
         },
         {
-          "label": "audio_1",
           "name": "model.reference_audios.audio_1",
           "shape": 7,
           "type": "AUDIO",
           "link": null
         },
         {
-          "label": "asset_1",
           "name": "model.reference_assets.asset_1",
           "shape": 7,
           "type": "STRING",
-          "link": 6
+          "link": 11
         },
         {
-          "label": "asset_2",
           "name": "model.reference_assets.asset_2",
           "shape": 7,
           "type": "STRING",
@@ -422,37 +353,127 @@
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
-            7
+            9
           ]
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.22.0",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "ByteDance2ReferenceNode"
+        "Node name for S&R": "ByteDance2ReferenceNodeV2"
       },
       "widgets_values": [
-        "Seedance 2.0",
+        "Seedance 2.5",
         "Use @asset_1 as a reference character. A young person with curly auburn hair floats underwater, eyes gently closed, \nexpression weightless and serene. Prismatic light refractions drift and morph \nacross their face in slow waves — shifting between teal, peach, and white — \nas the camera glides gently around them in a slow orbital move. \nCaustic light patterns ripple continuously across skin and hair. \nThe water carries a soft teal glow; bubbles rise in lazy clusters. \nShallow depth of field, soft film grain, dreamlike stillness, \nslow motion, 4K, pastel-teal color grade.",
         "720p",
         "16:9",
-        7,
+        5,
         true,
+        "auto",
+        "mp4",
         true,
         false,
         0,
         "randomize",
         false
       ],
+      "widgets_values_named": {
+        "model": "Seedance 2.5",
+        "model.prompt": "Use @asset_1 as a reference character. A young person with curly auburn hair floats underwater, eyes gently closed, \nexpression weightless and serene. Prismatic light refractions drift and morph \nacross their face in slow waves — shifting between teal, peach, and white — \nas the camera glides gently around them in a slow orbital move. \nCaustic light patterns ripple continuously across skin and hair. \nThe water carries a soft teal glow; bubbles rise in lazy clusters. \nShallow depth of field, soft film grain, dreamlike stillness, \nslow motion, 4K, pastel-teal color grade.",
+        "model.resolution": "720p",
+        "model.ratio": "16:9",
+        "model.duration": 5,
+        "model.generate_audio": true,
+        "model.task_type": "auto",
+        "model.output_format": "mp4",
+        "model.auto_downscale": true,
+        "model.auto_upscale": false,
+        "seed": 0,
+        "control_after_generate": "randomize",
+        "watermark": false
+      },
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 17,
+      "type": "SaveText",
+      "pos": [
+        -680,
+        390
+      ],
+      "size": [
+        270,
+        170
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "SD2.5_RealHuman_Asset_id",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "SD2.5_RealHuman_Asset_id",
+        "format": "txt"
+      }
+    },
+    {
+      "id": 18,
+      "type": "SaveText",
+      "pos": [
+        -680,
+        660
+      ],
+      "size": [
+        280,
+        225.99999391981265
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "SD2.5_RealHuman_Group_id",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "SD2.5_RealHuman_Group_id",
+        "format": "txt"
+      }
     }
   ],
   "links": [
@@ -465,36 +486,36 @@
       "IMAGE"
     ],
     [
-      2,
-      2,
-      0,
-      4,
-      0,
-      "STRING"
-    ],
-    [
-      3,
-      2,
-      1,
-      5,
-      0,
-      "STRING"
-    ],
-    [
-      6,
-      4,
-      0,
-      14,
-      3,
-      "STRING"
-    ],
-    [
-      7,
-      14,
+      9,
+      16,
       0,
       7,
       0,
       "VIDEO"
+    ],
+    [
+      10,
+      2,
+      0,
+      17,
+      0,
+      "STRING"
+    ],
+    [
+      11,
+      17,
+      0,
+      16,
+      3,
+      "STRING"
+    ],
+    [
+      12,
+      2,
+      1,
+      18,
+      0,
+      "STRING"
     ]
   ],
   "groups": [
@@ -505,7 +526,7 @@
         -720,
         320,
         370,
-        560
+        580
       ],
       "color": "#3f789e",
       "flags": {}
@@ -526,13 +547,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.7469764101849885,
+      "scale": 0.44763641526959996,
       "offset": [
-        1913.13353247358,
-        224.59087462584034
+        2054.3796060748814,
+        427.8095779895702
       ]
     },
-    "frontendVersion": "1.44.19",
+    "frontendVersion": "1.53.6",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,
