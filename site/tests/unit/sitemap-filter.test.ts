@@ -435,20 +435,28 @@ describe('sitemap-filter', () => {
       expect(filter('https://comfy.org/es/workflows/my-workflow-222222222222/')).toBe(false);
     });
 
-    it('lazily resolves distDir on first call and filters out pages with noindex', () => {
-      const pageDir = path.join(tmpDir, 'workflows', 'test-lazy-111111');
+    it('filters out pages with rendered noindex through the factory', () => {
+      const pageDir = path.join(tmpDir, 'workflows', 'test-lazy-111111111111');
       fs.mkdirSync(pageDir, { recursive: true });
       fs.writeFileSync(
         path.join(pageDir, 'index.html'),
         `<!DOCTYPE html><html><head>
           <meta name="robots" content="noindex">
-          <link rel="canonical" href="https://comfy.org/workflows/test-lazy-111111/">
+          <link rel="canonical" href="https://comfy.org/workflows/test-lazy-111111111111/">
         </head><body></body></html>`
       );
 
       const filter = createSitemapFilter({ ...defaultOptions, distDir: tmpDir });
-      expect(filter('https://comfy.org/workflows/test-lazy-111111/')).toBe(false);
+      expect(filter('https://comfy.org/workflows/test-lazy-111111111111/')).toBe(false);
       expect(filter('https://comfy.org/workflows/my-workflow-c0d1253e51dd/')).toBe(true);
+
+      // Control: the same URL is allowed when HTML check is not applied
+      expect(
+        isSitemapUrlAllowed('https://comfy.org/workflows/test-lazy-111111111111/', {
+          ...defaultOptions,
+          distDir: null,
+        })
+      ).toBe(true);
     });
   });
 });
