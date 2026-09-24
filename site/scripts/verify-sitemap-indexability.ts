@@ -259,9 +259,15 @@ async function main(): Promise<void> {
   const sitemapUrls = collectAllSitemapUrls();
   let noindexViolations = 0;
   let nonCanonicalViolations = 0;
+  let checked = 0;
   for (const page of pages) {
-    const fullUrl = `${origin}${page.path}`;
+    const parsedPage = new URL(page.path, origin);
+    const normPagePath = parsedPage.pathname.endsWith('/')
+      ? parsedPage.pathname
+      : `${parsedPage.pathname}/`;
+    const fullUrl = `${parsedPage.origin}${normPagePath}`;
     if (sitemapUrls.has(fullUrl)) {
+      checked++;
       if (page.noindex) {
         noindexViolations++;
         problems.push(`sitemap contains noindexed page: ${fullUrl}`);
@@ -286,8 +292,13 @@ async function main(): Promise<void> {
       }
     }
   }
+  if (sitemapUrls.size > 0 && checked === 0) {
+    problems.push(
+      `sitemap indexability: no rendered page matched any of ${sitemapUrls.size} sitemap URLs (origin ${origin})`
+    );
+  }
   console.log(
-    `  sitemap indexability: verified ${sitemapUrls.size} URLs (${noindexViolations} noindex, ${nonCanonicalViolations} non-canonical)`
+    `  sitemap indexability: checked ${checked} of ${sitemapUrls.size} sitemap URLs (${noindexViolations} noindex, ${nonCanonicalViolations} non-canonical)`
   );
 
   const clustered = pages.filter((p) => p.alternates.length > 0).length;
