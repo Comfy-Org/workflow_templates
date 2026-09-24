@@ -21,27 +21,9 @@ export interface RenderedPage {
   noindex: boolean;
 }
 
-/**
- * Extract an attribute value from an HTML tag string.
- * Anchors the attribute name to an HTML attribute boundary (preceded by whitespace or tag start),
- * and handles double-quoted, single-quoted, or unquoted values.
- */
-function getHtmlAttr(tag: string, name: string): string | null {
-  const re = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i');
-  const m = tag.match(re);
-  return m ? (m[1] ?? m[2] ?? m[3] ?? '') : null;
-}
+import { detached, getHtmlAttr, parseCanonical, parseNoindex } from '../src/lib/html-directives';
 
-/**
- * V8 returns a regex capture as a slice that keeps its entire source string
- * alive. Hub detail pages are ~1.6 MB of HTML each, so keeping a few hrefs from
- * every page retains the whole build: measured at 2.1 GB of heap for 1,400 pages,
- * which is what took CI past its 4 GB limit. Copying through a Buffer yields a
- * standalone string and lets the page be collected.
- */
-function detached(value: string): string {
-  return Buffer.from(value, 'utf8').toString('utf8');
-}
+export { getHtmlAttr, parseCanonical, parseNoindex };
 
 export function parseAlternates(html: string): Alternate[] {
   const alternates: Alternate[] = [];
@@ -64,40 +46,6 @@ export function parseAlternates(html: string): Alternate[] {
     }
   }
   return alternates;
-}
-
-export function parseCanonical(html: string): string | null {
-  for (const tag of html.match(/<link\b[^>]*>/gi) ?? []) {
-    const rel = getHtmlAttr(tag, 'rel');
-    if (rel) {
-      const relTokens = rel
-        .toLowerCase()
-        .split(/\s+/)
-        .map((t) => t.trim());
-      if (relTokens.includes('canonical')) {
-        const href = getHtmlAttr(tag, 'href');
-        return href ? detached(href) : null;
-      }
-    }
-  }
-  return null;
-}
-
-export function parseNoindex(html: string): boolean {
-  for (const tag of html.match(/<meta\b[^>]*>/gi) ?? []) {
-    const name = getHtmlAttr(tag, 'name')?.trim().toLowerCase();
-    if (name === 'robots' || name === 'googlebot') {
-      const content = getHtmlAttr(tag, 'content') ?? '';
-      const tokens = content
-        .toLowerCase()
-        .split(',')
-        .map((t) => t.trim());
-      if (tokens.includes('noindex') || tokens.includes('none')) {
-        return true;
-      }
-    }
-  }
-  return false;
 }
 
 /**

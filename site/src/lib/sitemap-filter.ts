@@ -19,6 +19,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { resolveLocalizedWorkflow } from './i18n/resolver';
 import { LOCALES, type Locale } from '../i18n/config';
+import { parseCanonical, parseMetaRefresh, parseNoindex } from './html-directives';
 
 export interface SitemapFilterOptions {
   /** Families whose model pages render indexable (both English and localized). */
@@ -60,17 +61,6 @@ const htmlDirectiveCache = new Map<string, boolean>();
 /** Clear the HTML directive cache (used in tests). */
 export function __resetHtmlDirectiveCache(): void {
   htmlDirectiveCache.clear();
-}
-
-/**
- * Extract an attribute value from an HTML tag string.
- * Anchors the attribute name at an HTML attribute boundary (preceded by whitespace or tag start),
- * and handles double-quoted, single-quoted, or unquoted values.
- */
-function getHtmlAttr(tag: string, name: string): string | null {
-  const re = new RegExp(`(?:^|\\s)${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i');
-  const m = tag.match(re);
-  return m ? (m[1] ?? m[2] ?? m[3] ?? '') : null;
 }
 
 /**
@@ -122,71 +112,41 @@ export function checkRenderedHtmlDirectives(distDir: string, pageUrl: string): b
     const html = fs.readFileSync(targetFile, 'utf-8');
 
     // 1. Meta refresh redirect check: pages that redirect via http-equiv are not indexable content
-    const metaTags = html.match(/<meta\b[^>]*>/gi) ?? [];
-    for (const meta of metaTags) {
-      const httpEquiv = getHtmlAttr(meta, 'http-equiv')?.trim().toLowerCase();
-      if (httpEquiv === 'refresh') {
-        htmlDirectiveCache.set(htmlPath, false);
-        return false;
-      }
+    if (parseMetaRefresh(html)) {
+      htmlDirectiveCache.set(htmlPath, false);
+      return false;
     }
 
     // 2. Meta robots / googlebot noindex / none check (compares comma-separated tokens exactly)
-    for (const meta of metaTags) {
-      const metaName = getHtmlAttr(meta, 'name')?.trim().toLowerCase();
-      if (metaName === 'robots' || metaName === 'googlebot') {
-        const content = getHtmlAttr(meta, 'content') ?? '';
-        const tokens = content
-          .toLowerCase()
-          .split(',')
-          .map((t) => t.trim());
-        if (tokens.includes('noindex') || tokens.includes('none')) {
-          htmlDirectiveCache.set(htmlPath, false);
-          return false;
-        }
-      }
+    if (parseNoindex(html)) {
+      htmlDirectiveCache.set(htmlPath, false);
+      return false;
     }
 
     // 3. Canonical URL check (handles both absolute and root-relative hrefs)
-    const linkTags = html.match(/<link\b[^>]*>/gi) ?? [];
-    for (const link of linkTags) {
-      const rel = getHtmlAttr(link, 'rel');
-      if (rel) {
-        const relTokens = rel
-          .toLowerCase()
-          .split(/\s+/)
-          .map((t) => t.trim());
-        if (relTokens.includes('canonical')) {
-          const canonicalHref = getHtmlAttr(link, 'href')?.trim();
-          if (canonicalHref) {
-            try {
-              const canonicalUrl = new URL(canonicalHref, url.origin);
-              const normCanonicalPath = canonicalUrl.pathname.endsWith('/')
-                ? canonicalUrl.pathname
-                : `${canonicalUrl.pathname}/`;
-              const normSelfPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
+    const canonicalHref = parseCanonical(html);
+    if (canonicalHref) {
+      try {
+        const canonicalUrl = new URL(canonicalHref, url.origin);
+        const normCanonicalPath = canonicalUrl.pathname.endsWith('/')
+          ? canonicalUrl.pathname
+          : `${canonicalUrl.pathname}/`;
+        const normSelfPath = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
 
-              const isLocalhost =
-                url.hostname === 'localhost' ||
-                url.hostname === '127.0.0.1' ||
-                canonicalUrl.hostname === 'localhost' ||
-                canonicalUrl.hostname === '127.0.0.1';
+        const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
 
-              // Canonical must match self path, query search, and hostname (unless testing on localhost)
-              if (
-                normCanonicalPath !== normSelfPath ||
-                canonicalUrl.search !== url.search ||
-                (!isLocalhost && canonicalUrl.hostname.toLowerCase() !== url.hostname.toLowerCase())
-              ) {
-                htmlDirectiveCache.set(htmlPath, false);
-                return false;
-              }
-            } catch {
-              htmlDirectiveCache.set(htmlPath, false);
-              return false;
-            }
-          }
+        // Canonical must match self path, query search, and hostname (unless testing on localhost)
+        if (
+          normCanonicalPath !== normSelfPath ||
+          canonicalUrl.search !== url.search ||
+          (!isLocalhost && canonicalUrl.hostname.toLowerCase() !== url.hostname.toLowerCase())
+        ) {
+          htmlDirectiveCache.set(htmlPath, false);
+          return false;
         }
+      } catch {
+        htmlDirectiveCache.set(htmlPath, false);
+        return false;
       }
     }
 
@@ -325,5 +285,9 @@ export function isSitemapUrlAllowed(page: string, options: SitemapFilterOptions 
  * Creates the filter function for `@astrojs/sitemap`.
  */
 export function createSitemapFilter(options: SitemapFilterOptions = {}): (page: string) => boolean {
-  return (page: string) => isSitemapUrlAllowed(page, options);
+  let filterOptions: SitemapFilterOptions | undefined;
+  return (page: string) => {
+    filterOptions ??= { ...options, distDir: getDistDir(options.distDir) };
+    return isSitemapUrlAllowed(page, filterOptions);
+  };
 }

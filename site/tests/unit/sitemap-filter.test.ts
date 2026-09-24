@@ -374,6 +374,23 @@ describe('sitemap-filter', () => {
       expect(allowed).toBe(true);
     });
 
+    it('rejects a production self URL whose canonical points to localhost', () => {
+      const pageDir = path.join(tmpDir, 'workflows', 'test-leaked-local');
+      fs.mkdirSync(pageDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(pageDir, 'index.html'),
+        `<!DOCTYPE html><html><head>
+          <link rel="canonical" href="http://localhost:4321/workflows/test-leaked-local/">
+        </head><body></body></html>`
+      );
+
+      const allowed = checkRenderedHtmlDirectives(
+        tmpDir,
+        'https://comfy.org/workflows/test-leaked-local/'
+      );
+      expect(allowed).toBe(false);
+    });
+
     it('allows a page whose HTML is self-canonical and indexed', () => {
       const pageDir = path.join(tmpDir, 'es', 'workflows', 'test-111111111111');
       fs.mkdirSync(pageDir, { recursive: true });
@@ -400,11 +417,38 @@ describe('sitemap-filter', () => {
   });
 
   describe('createSitemapFilter', () => {
+    let tmpDir: string;
+
+    beforeEach(() => {
+      tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sitemap-filter-create-test-'));
+      __resetHtmlDirectiveCache();
+    });
+
+    afterEach(() => {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    });
+
     it('creates a callable filter function', () => {
       const filter = createSitemapFilter(defaultOptions);
       expect(typeof filter).toBe('function');
       expect(filter('https://comfy.org/workflows/my-workflow-c0d1253e51dd/')).toBe(true);
       expect(filter('https://comfy.org/es/workflows/my-workflow-222222222222/')).toBe(false);
+    });
+
+    it('lazily resolves distDir on first call and filters out pages with noindex', () => {
+      const pageDir = path.join(tmpDir, 'workflows', 'test-lazy-111111');
+      fs.mkdirSync(pageDir, { recursive: true });
+      fs.writeFileSync(
+        path.join(pageDir, 'index.html'),
+        `<!DOCTYPE html><html><head>
+          <meta name="robots" content="noindex">
+          <link rel="canonical" href="https://comfy.org/workflows/test-lazy-111111/">
+        </head><body></body></html>`
+      );
+
+      const filter = createSitemapFilter({ ...defaultOptions, distDir: tmpDir });
+      expect(filter('https://comfy.org/workflows/test-lazy-111111/')).toBe(false);
+      expect(filter('https://comfy.org/workflows/my-workflow-c0d1253e51dd/')).toBe(true);
     });
   });
 });
