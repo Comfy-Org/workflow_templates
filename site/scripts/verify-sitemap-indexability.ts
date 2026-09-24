@@ -110,9 +110,7 @@ function renderedIndexableSlugs(section: Section): Set<string> {
   for (const slug of fs.readdirSync(dir)) {
     const html = path.join(dir, slug, 'index.html');
     if (!fs.existsSync(html)) continue;
-    const noindex = /<meta[^>]+name="robots"[^>]+content="[^"]*noindex/i.test(
-      fs.readFileSync(html, 'utf-8')
-    );
+    const noindex = parseNoindex(fs.readFileSync(html, 'utf-8'));
     if (!noindex) slugs.add(slug);
   }
   return slugs;
