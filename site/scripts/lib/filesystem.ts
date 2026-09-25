@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { ASSET_EXTENSIONS, DEFAULT_LOCALE } from './constants';
+import { ASSET_EXTENSIONS, DEFAULT_LOCALE, LOGO_FILENAME_FIXES } from './constants';
 import {
   REPO_ROOT,
   TEMPLATES_DIR,
@@ -128,7 +128,8 @@ export function syncLogos(): number {
   for (const file of fs.readdirSync(LOGOS_SRC_DIR)) {
     if (!file.endsWith('.png') && !file.endsWith('.svg')) continue;
     const src = path.join(LOGOS_SRC_DIR, file);
-    const dest = path.join(LOGOS_DEST_DIR, file);
+    const destName = LOGO_FILENAME_FIXES[file] || file;
+    const dest = path.join(LOGOS_DEST_DIR, destName);
     if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
       fs.copyFileSync(src, dest);
       count++;

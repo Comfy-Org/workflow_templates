@@ -39,3 +39,6 @@ export const VIDEO_NODE_TYPES = new Set([
   'ImageOnlyCheckpointLoader',
 ]);
 
+export const LOGO_FILENAME_FIXES: Record<string, string> = {
+  'recarft.png': 'recraft.png',
+};
