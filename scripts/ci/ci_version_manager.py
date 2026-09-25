@@ -128,6 +128,8 @@ def get_frozen_packages() -> Set[str]:
 AUTO_BUMP_COMMIT_PREFIXES = ("Auto-bump package versions", "chore: bump version")
 
 _auto_bump_only_files_cache: dict[str, set[str]] = {}
+_committed_files_cache: dict[str, set[str]] = {}
+_unstaged_files_cache: Optional[set[str]] = None
 
 
 def get_merge_base() -> str:
@@ -225,6 +227,33 @@ def _auto_bump_only_files(since_commit: str) -> set[str]:
     return skipped
 
 
+def _committed_files_since(since_commit: str) -> set[str]:
+    """Cached ``git diff since..HEAD --name-only`` (shared across packages)."""
+    if since_commit not in _committed_files_cache:
+        try:
+            output = run_git(["diff", f"{since_commit}..HEAD", "--name-only"])
+            _committed_files_cache[since_commit] = {
+                line.strip() for line in output.splitlines() if line.strip()
+            }
+        except Exception:
+            _committed_files_cache[since_commit] = set()
+    return _committed_files_cache[since_commit]
+
+
+def _unstaged_files() -> set[str]:
+    """Cached working-tree changes vs HEAD (sync_bundles often leaves many)."""
+    global _unstaged_files_cache
+    if _unstaged_files_cache is None:
+        try:
+            output = run_git(["diff", "--name-only", "HEAD"])
+            _unstaged_files_cache = {
+                line.strip() for line in output.splitlines() if line.strip()
+            }
+        except Exception:
+            _unstaged_files_cache = set()
+    return _unstaged_files_cache
+
+
 def get_current_version(pkg: str) -> str:
     """Get current version of a package from its pyproject.toml"""
     if pkg == "meta":
@@ -243,19 +272,10 @@ def get_current_version(pkg: str) -> str:
 def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     """Get files that affect a specific package since the given commit, excluding CI auto-commits"""
     try:
-        # Get all files changed since the reference commit
-        committed_files = set(run_git(["diff", f"{since_commit}..HEAD", "--name-only"]).split('\n'))
-        
-        # Also check for unstaged changes in working directory (important for core package manifest.json)
-        # This handles the case where sync_bundles.py modified manifest.json but it's not yet committed
-        unstaged_set = set()
-        try:
-            unstaged_output = run_git(["diff", "--name-only", "HEAD"])
-            unstaged_set = set(unstaged_output.split('\n')) if unstaged_output.strip() else set()
-        except:
-            pass  # If we can't get unstaged files, continue with committed changes only
-        
-        # Combine committed and unstaged changes
+        # Cached across packages: after sync_bundles the unstaged set can be huge
+        # (entire media wheels), so never re-run these git commands per package.
+        committed_files = _committed_files_since(since_commit)
+        unstaged_set = _unstaged_files()
         all_changed_files = committed_files | unstaged_set
 
         auto_bump_files = _auto_bump_only_files(since_commit)
@@ -370,28 +390,36 @@ def get_publish_package_ids(base_ref: str) -> Set[str]:
 def get_changed_packages() -> Set[str]:
     """Determine which packages need version bumps based on changes vs main merge-base."""
     try:
-        packages = list(ALL_PACKAGE_IDS)
         affected = set()
         merge_base = get_merge_base()
+        frozen = get_frozen_packages()
         print(f"Comparing changes since merge-base with main: {merge_base[:12]}")
 
-        for pkg in packages:
+        # Frozen packages are never auto-bumped. Skip their (often months-long)
+        # version-intro + history scans; PR-scoped media edits are checked below.
+        for pkg in ALL_PACKAGE_IDS:
+            if pkg in frozen:
+                print(f"Package {pkg} frozen; skipping bump analysis")
+                continue
+
             current_version = get_current_version(pkg)
             since_commit = get_since_commit_for_package(pkg, merge_base)
             affecting_files = get_files_affecting_package(pkg, since_commit)
 
             if affecting_files:
                 affected.add(pkg)
-                print(f"Package {pkg} needs bump: {len(affecting_files)} files changed since version {current_version}")
-                for f in affecting_files[:5]:  # Show first 5 files
+                print(
+                    f"Package {pkg} needs bump: {len(affecting_files)} files changed "
+                    f"since version {current_version}"
+                )
+                for f in affecting_files[:5]:
                     print(f"  - {f}")
                 if len(affecting_files) > 5:
                     print(f"  ... and {len(affecting_files) - 5} more files")
             else:
                 print(f"Package {pkg} up to date since version {current_version}")
 
-        frozen = get_frozen_packages()
-        blocked = _blocked_frozen_media_updates(affected)
+        blocked = _blocked_frozen_media_updates(merge_base)
         if blocked:
             details = ", ".join(sorted(blocked))
             raise SystemExit(
@@ -400,12 +428,6 @@ def get_changed_packages() -> Set[str]:
                 "(see scripts/data/version_policy.json) "
                 "or manually bump the frozen package version."
             )
-
-        if frozen:
-            skipped = affected & frozen
-            if skipped:
-                print(f"Skipping frozen packages (no auto-bump): {sorted(skipped)}")
-            affected -= frozen
 
         # If any non-meta packages changed, also bump meta
         if affected - {"meta"}:
@@ -429,20 +451,20 @@ def get_changed_packages() -> Set[str]:
         }
 
 
-def _blocked_frozen_media_updates(affected: Set[str]) -> Set[str]:
-    """Return frozen packages that still require a media publish for this release."""
+def _blocked_frozen_media_updates(merge_base: str) -> Set[str]:
+    """Frozen packages with media-asset edits in this PR (merge_base..HEAD + unstaged).
+
+    Scoped to the PR range so we do not re-scan months of frozen-package history.
+    """
     policy = load_version_policy(VERSION_POLICY_FILE)
     frozen = get_frozen_packages()
-    if not (affected & frozen):
+    if not frozen:
         return set()
 
     bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
     blocked: Set[str] = set()
-    merge_base = get_merge_base()
-    for pkg in sorted(affected & frozen):
-        current_version = get_current_version(pkg)
-        since_commit = get_since_commit_for_package(pkg, merge_base)
-        for file in get_files_affecting_package(pkg, since_commit):
+    for pkg in sorted(frozen):
+        for file in get_files_affecting_package(pkg, merge_base):
             if not file.startswith("templates/"):
                 continue
             if _is_json_template_path(file):
@@ -486,14 +508,17 @@ def bump_versions(packages: Set[str]) -> None:
                 updated = re.sub(r'^version\s*=\s*"([^"]+)"', bump_version_match, text, flags=re.MULTILINE)
                 path.write_text(updated)
 
-def update_dependencies() -> None:
-    """Update root meta package dependencies to match auto-bumped individual packages"""
-    changed_packages = get_changed_packages()
+def update_dependencies(changed_packages: Set[str]) -> None:
+    """Pin root meta deps to the versions already written by ``bump_versions``.
+
+    Takes the detected package set so we do not re-run the full git change scan
+    (previously this called ``get_changed_packages()`` again and dominated CI time).
+    """
     non_meta_packages = changed_packages - {"meta"}
-    
+
     version_re = re.compile(r'^version\s*=\s*"([^"]+)"', re.MULTILINE)
     versions = {}
-    
+
     pyprojects = {
         "core": "packages/core/pyproject.toml",
         "json": "packages/json/pyproject.toml",
@@ -504,7 +529,7 @@ def update_dependencies() -> None:
         "media_assets_01": "packages/media_assets_01/pyproject.toml",
         "media_assets_02": "packages/media_assets_02/pyproject.toml",
     }
-    
+
     frozen = get_frozen_packages()
 
     # Get versions for packages that were auto-bumped
@@ -516,21 +541,21 @@ def update_dependencies() -> None:
             match = version_re.search(text)
             if match:
                 versions[pkg] = match.group(1)
-    
+
     if not versions:
         return
-    
+
     # Update root pyproject.toml dependencies to match bumped package versions
     meta_path = "pyproject.toml"
     if Path(meta_path).exists():
         text = Path(meta_path).read_text()
-        
+
         for pkg, version in versions.items():
             pip_name = f"comfyui-workflow-templates-{pkg.replace('_', '-')}"
             pattern = rf'("{re.escape(pip_name)})==([0-9.]+)(")'
             replacement = rf'\g<1>=={version}\g<3>'
             text = re.sub(pattern, replacement, text)
-        
+
         Path(meta_path).write_text(text)
 
 def _parse_args() -> argparse.Namespace:
@@ -568,7 +593,7 @@ def main() -> int:
 
     if non_meta_packages:
         bump_versions(packages)
-        update_dependencies()
+        update_dependencies(packages)
         print(f"Auto-bumped packages and updated dependencies: {sorted(non_meta_packages)}")
 
     # Output all packages that need building (including meta if changed)

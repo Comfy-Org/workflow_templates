@@ -106,6 +106,10 @@ jobs:
           echo "Pre-bump root version: $OLD_VERSION"
 
       - name: Auto-bump package versions if needed
+        env:
+          # Flush prints promptly so Actions logs are not stuck on the step echo
+          # while git scans run for several minutes with block-buffered stdout.
+          PYTHONUNBUFFERED: "1"
         run: |
           echo "=== Analyzing template changes and bumping versions ==="
           # This runs AFTER manifest sync so it can detect core package changes
