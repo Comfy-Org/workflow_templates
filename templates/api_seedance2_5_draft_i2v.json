@@ -1,0 +1,396 @@
+{
+  "id": "183969e6-818c-4684-96b4-eb50d8d2d450",
+  "revision": 0,
+  "last_node_id": 787,
+  "last_link_id": 1961,
+  "nodes": [
+    {
+      "id": 771,
+      "type": "SaveText",
+      "pos": [
+        3500,
+        -430
+      ],
+      "size": [
+        480,
+        230
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 1956
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "Seedance2.5_draft_task_id_%year%_%month%_%day%",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Seedance2.5_draft_task_id_%year%_%month%_%day%",
+        "format": "txt"
+      }
+    },
+    {
+      "id": 774,
+      "type": "ByteDance2DraftToFinalVideoNode",
+      "pos": [
+        2960,
+        320
+      ],
+      "size": [
+        400,
+        90
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 4,
+      "showAdvanced": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1947
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDance2DraftToFinalVideoNode"
+      },
+      "widgets_values": [
+        "",
+        false
+      ],
+      "widgets_values_named": {
+        "draft_task_id": "",
+        "watermark": false
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 775,
+      "type": "SaveVideo",
+      "pos": [
+        3390,
+        320
+      ],
+      "size": [
+        690,
+        460
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1947
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/Seedance2.5_draft_to_final_video",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/Seedance2.5_draft_to_final_video",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 776,
+      "type": "SaveVideo",
+      "pos": [
+        4010,
+        -600
+      ],
+      "size": [
+        580,
+        390
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1955
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/Seedance2.5_draft",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/Seedance2.5_draft",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 778,
+      "type": "MarkdownNote",
+      "pos": [
+        1800,
+        -670
+      ],
+      "size": [
+        590,
+        440
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input asset\n\n- [friends_enjoying_boba.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/friends_enjoying_boba.png)\n\n## Guide\n\n**Seedance 2.5 Draft mode** renders a fast, low-cost 480p preview so you can iterate on a prompt before committing to a full render. This workflow runs that in two stages.\n\n**Stage 1: Create and preview the draft video**\n\n1. Load your first frame in **Load Image** and keep **Seedance 2.5 Draft** as the model on the **ByteDance Seedance 2.5 First-Last-Frame to Video** node. Write your prompt, then run the workflow: you get the 480p preview plus its `draft_task_id`, which the **Save Text** node writes to a .txt file in the output folder. Connect a last frame on the node as well if you want to control the ending.\n\n2. Adjust the prompt or the first frame and rerun until you like the draft. Once you do, leave this stage bypassed: if the draft node runs again it creates a new draft instead of reusing the one you reviewed.\n\n**Stage 2: Render the final video from the draft**\n\n3. Select the nodes in the **Stage 1** group and press `Ctrl+B` to bypass them.\n\n4. Select the nodes in the **Stage 2** group and press `Ctrl+B` to enable them again.\n\n5. Paste the `draft_task_id` from the saved .txt file into the `draft_task_id` field on the **ByteDance Seedance 2.5 Draft to Final Video** node, then run the workflow. The final 1080p render keeps the draft's prompt, first frame, duration, aspect ratio, and audio setting, so there is nothing to re-enter.\n\nDrafts are kept for 7 days, so render the final within that window."
+      ],
+      "widgets_values_named": {
+        "text": "## Input asset\n\n- [friends_enjoying_boba.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/friends_enjoying_boba.png)\n\n## Guide\n\n**Seedance 2.5 Draft mode** renders a fast, low-cost 480p preview so you can iterate on a prompt before committing to a full render. This workflow runs that in two stages.\n\n**Stage 1: Create and preview the draft video**\n\n1. Load your first frame in **Load Image** and keep **Seedance 2.5 Draft** as the model on the **ByteDance Seedance 2.5 First-Last-Frame to Video** node. Write your prompt, then run the workflow: you get the 480p preview plus its `draft_task_id`, which the **Save Text** node writes to a .txt file in the output folder. Connect a last frame on the node as well if you want to control the ending.\n\n2. Adjust the prompt or the first frame and rerun until you like the draft. Once you do, leave this stage bypassed: if the draft node runs again it creates a new draft instead of reusing the one you reviewed.\n\n**Stage 2: Render the final video from the draft**\n\n3. Select the nodes in the **Stage 1** group and press `Ctrl+B` to bypass them.\n\n4. Select the nodes in the **Stage 2** group and press `Ctrl+B` to enable them again.\n\n5. Paste the `draft_task_id` from the saved .txt file into the `draft_task_id` field on the **ByteDance Seedance 2.5 Draft to Final Video** node, then run the workflow. The final 1080p render keeps the draft's prompt, first frame, duration, aspect ratio, and audio setting, so there is nothing to re-enter.\n\nDrafts are kept for 7 days, so render the final within that window."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 782,
+      "type": "ByteDance2FirstLastFrameNode",
+      "pos": [
+        3020,
+        -600
+      ],
+      "size": [
+        450,
+        350
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 1957
+        },
+        {
+          "name": "last_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1955
+          ]
+        },
+        {
+          "name": "draft_task_id",
+          "type": "STRING",
+          "links": [
+            1956
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDance2FirstLastFrameNode"
+      },
+      "widgets_values": [
+        "Seedance 2.5 Draft",
+        "A high-energy 2D flat vector animation, 5 seconds, in a bold contemporary editorial-illustration style: clean black ink outlines, smooth gradient shading, oversized proportions, and a saturated palette of hot pink, tangerine orange, electric violet, and soft blush white. Three stylish young friends wear oversized cropped sweatshirts, baggy track pants, baseball caps, and chunky platform sneakers with pastel laces while sipping boba milk tea. The mood is joyful, confident, and fashion-forward, like a trendy streetwear campaign cut rhythmically to an upbeat hip-hop beat.\n\nShot 1 (0–0.8s): Extreme close-up of a chunky orange sneaker stomping down on the beat against a glowing pink gradient backdrop, sending a burst of graphic sparkle shapes outward. Snap zoom out.\n\nShot 2 (0.8–1.6s): Whip pan to a low-angle hero shot. The three friends strike a layered group pose and sip boba in perfect sync. Tapioca pearls bounce inside the cups, and the center girl's long black hair flows in a stylized wave. A subtle camera push-in adds swagger.\n\nShot 3 (1.6–2.5s): Match cut on a cup raise into a new scene: a sunlit neon city crosswalk with pastel storefronts and graphic halftone shadows. The trio struts toward camera in a tracking shot, with oversized pants swishing and a cap tilted with attitude. Slight speed-ramp slow motion on a mid-stride pose.\n\nShot 4 (2.5–3.4s): Quick-cut montage in rapid succession. A close-up of a straw pierces a boba lid with a pop. A side profile shows a friend flipping a cap backward. Violet sneakers spin in a playful dance step over a graffiti-covered skate-park ramp at golden hour. Dynamic Dutch angles and punchy zoom transitions sync to each beat.\n\nShot 5 (3.4–4.3s): Overhead rooftop shot at sunset against a pink-orange sky. The friends laugh and bump boba cups together in a cheers, and a splash of illustrated milk-tea droplets freezes mid-air.\n\nShot 6 (4.3–5s): Smash cut back to the original glowing pink gradient studio. The trio lands in their signature stacked pose from the reference illustration, then gives a final confident sip and a knowing look to camera. Radial light rays pulse behind them, and the camera settles into a crisp freeze-frame finish.\n\nStyle notes: Fluid, bouncy character animation with squash-and-stretch energy. Use snappy editorial pacing with whip pans, match cuts, and speed ramps. Apply a subtle paper-grain texture, soft bloom glow, and a trendy Gen-Z street-culture aesthetic. Keep the look polished and premium, like a fashion brand commercial. Maintain consistent character design and color harmony across every scene.",
+        "480p",
+        5,
+        true,
+        "mp4",
+        2046543723,
+        "randomize",
+        false,
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "model": "Seedance 2.5 Draft",
+        "model.prompt": "A high-energy 2D flat vector animation, 5 seconds, in a bold contemporary editorial-illustration style: clean black ink outlines, smooth gradient shading, oversized proportions, and a saturated palette of hot pink, tangerine orange, electric violet, and soft blush white. Three stylish young friends wear oversized cropped sweatshirts, baggy track pants, baseball caps, and chunky platform sneakers with pastel laces while sipping boba milk tea. The mood is joyful, confident, and fashion-forward, like a trendy streetwear campaign cut rhythmically to an upbeat hip-hop beat.\n\nShot 1 (0–0.8s): Extreme close-up of a chunky orange sneaker stomping down on the beat against a glowing pink gradient backdrop, sending a burst of graphic sparkle shapes outward. Snap zoom out.\n\nShot 2 (0.8–1.6s): Whip pan to a low-angle hero shot. The three friends strike a layered group pose and sip boba in perfect sync. Tapioca pearls bounce inside the cups, and the center girl's long black hair flows in a stylized wave. A subtle camera push-in adds swagger.\n\nShot 3 (1.6–2.5s): Match cut on a cup raise into a new scene: a sunlit neon city crosswalk with pastel storefronts and graphic halftone shadows. The trio struts toward camera in a tracking shot, with oversized pants swishing and a cap tilted with attitude. Slight speed-ramp slow motion on a mid-stride pose.\n\nShot 4 (2.5–3.4s): Quick-cut montage in rapid succession. A close-up of a straw pierces a boba lid with a pop. A side profile shows a friend flipping a cap backward. Violet sneakers spin in a playful dance step over a graffiti-covered skate-park ramp at golden hour. Dynamic Dutch angles and punchy zoom transitions sync to each beat.\n\nShot 5 (3.4–4.3s): Overhead rooftop shot at sunset against a pink-orange sky. The friends laugh and bump boba cups together in a cheers, and a splash of illustrated milk-tea droplets freezes mid-air.\n\nShot 6 (4.3–5s): Smash cut back to the original glowing pink gradient studio. The trio lands in their signature stacked pose from the reference illustration, then gives a final confident sip and a knowing look to camera. Radial light rays pulse behind them, and the camera settles into a crisp freeze-frame finish.\n\nStyle notes: Fluid, bouncy character animation with squash-and-stretch energy. Use snappy editorial pacing with whip pans, match cuts, and speed ramps. Apply a subtle paper-grain texture, soft bloom glow, and a trendy Gen-Z street-culture aesthetic. Keep the look polished and premium, like a fashion brand commercial. Maintain consistent character design and color harmony across every scene.",
+        "model.resolution": "480p",
+        "model.duration": 5,
+        "model.generate_audio": true,
+        "model.output_format": "mp4",
+        "seed": 2046543723,
+        "control_after_generate": "randomize",
+        "watermark": false,
+        "first_frame_asset_id": "",
+        "last_frame_asset_id": ""
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 784,
+      "type": "LoadImage",
+      "pos": [
+        2510,
+        -600
+      ],
+      "size": [
+        390,
+        380
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1957
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "friends_enjoying_boba.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "friends_enjoying_boba.png",
+        "upload": "image"
+      }
+    }
+  ],
+  "links": [
+    [
+      1956,
+      782,
+      1,
+      771,
+      0,
+      "STRING"
+    ],
+    [
+      1947,
+      774,
+      0,
+      775,
+      0,
+      "VIDEO"
+    ],
+    [
+      1955,
+      782,
+      0,
+      776,
+      0,
+      "VIDEO"
+    ],
+    [
+      1957,
+      784,
+      0,
+      782,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Stage 2: Render the final video from the draft task ID",
+      "bounding": [
+        2460,
+        160,
+        2200,
+        720
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Stage 1: Create and preview the draft video",
+      "bounding": [
+        2460,
+        -700,
+        2210,
+        820
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.2618030821473151,
+      "offset": [
+        1476.1927087279728,
+        1945.1868750658264
+      ]
+    },
+    "frontendVersion": "1.53.6",
+    "workflowRendererVersion": "LG",
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_KeepIntermediate": true,
+    "VHS_latentpreviewrate": 0,
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "comfyui_mcp": {
+      "workflow_uuid": "dc01bbbf-bc57-4a56-af8e-b17c8098a0cc"
+    }
+  },
+  "version": 0.4
+}
