@@ -64,6 +64,19 @@ describe('featuredPreloadImage', () => {
     expect(featuredPreloadImage(featured)).toBe('https://cdn.example.com/a.webp');
   });
 
+  it('right-sizes a raw PNG upload instead of preloading the original', () => {
+    const png =
+      'https://comfy-hub-assets.comfy.org/uploads/286238ef-a35c-4f7a-924a-a1ec7e8103e9.png';
+    expect(featuredPreloadImage([template({ thumbnails: [png] })])).toBe(
+      'https://comfy-hub-assets.comfy.org/cdn-cgi/image/width=1280,anim=false,format=auto,quality=82/uploads/286238ef-a35c-4f7a-924a-a1ec7e8103e9.png'
+    );
+  });
+
+  it('leaves a hub WebP untouched so an animated thumbnail keeps playing', () => {
+    const webp = 'https://comfy-hub-assets.comfy.org/uploads/not-generated.webp';
+    expect(featuredPreloadImage([template({ thumbnails: [webp] })])).toBe(webp);
+  });
+
   it('returns null when there is no featured item', () => {
     expect(featuredPreloadImage([])).toBeNull();
   });
