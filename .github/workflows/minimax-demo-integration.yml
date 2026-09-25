@@ -1,0 +1,427 @@
+# Health gate for the MiniMax H3 in-browser demo (FE-1932).
+#
+# Runs the integration test against production and, when it fails, opens a PR
+# switching the `minimaxH3Demo` experiment flag off, and says so in Slack.
+#
+# Scope: it drives the path a visitor takes as far as a job being accepted and
+# started, then cancels. Generation is NOT covered — a full render costs GPU
+# minutes and this runs four times a day on a demo with one deployment. Read a
+# green run as "the page, the routing and the submit path work", not as "the
+# video comes out".
+#
+# A PR rather than a push, because ruleset 9388637 ("Main branch protection")
+# governs refs/heads/main with a `pull_request` rule, one required approval and
+# no bypass actors. A direct push is rejected by the rule, not by a race, so
+# retrying cannot get around it. Every other automation here does the same:
+# i18n-update-hub.yml opens a PR from a stable branch, sync-template-index.yml
+# and generate-upload-json.yml push to a PR head.
+#
+# So be clear about what this does and does not buy: it does NOT take the demo
+# down unattended, and it never could — the flag is read at build time, so even
+# a merged flip only reaches users on the next site build. What it removes is
+# the judgement: the diagnosis is written and the flag edit is made, leaving a
+# human to merge the PR and run the deploy.
+#
+# It deliberately does NOT fail. The demo is served by the Comfy dev platform
+# (private beta) through comfy-router (pre-alpha); both are expected to have
+# downtime, and a red check on a pre-alpha dependency must never hold up an
+# unrelated template release. "Blocking the deploy" is achieved by shipping the
+# feature switched off rather than by blocking the pipeline: the next site build
+# picks up the merged flag and serves the static fallback instead of a runner
+# nobody can run.
+#
+# Recovery is deliberately NOT automatic. A green run only reports that the demo
+# could be switched back on — turning an experiment back on in front of users is
+# a judgement call about whether it is worth showing, not something a passing
+# health check should decide on its own.
+#
+# Uses, from this repo's settings, all optional:
+#   secrets.SLACK_BOT_TOKEN               — same bot used by ComfyUI_frontend
+#   vars.SLACK_HUB_ALERTS_CHANNEL_ID      — channel for these alerts
+#   secrets.PERSONAL_ACCESS_TOKEN         — same PAT as i18n-update-hub.yml, so
+#                                           the site's checks run on the PR
+# Without the first two the notify step says so and skips, and the PR is still
+# opened; without the PAT the PR is opened by GITHUB_TOKEN instead.
+name: MiniMax Demo Integration
+
+on:
+  schedule:
+    # Every 6 hours. Frequent enough to catch an outage within one working
+    # session, rare enough that the demo's single deployment is not tied up.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: 'Origin to test (defaults to https://comfy.org)'
+        type: string
+        default: 'https://comfy.org'
+  workflow_run:
+    # Verify right after the site actually ships, which is the moment a routing
+    # or config regression becomes visible to users.
+    workflows: ['Deploy Template Site', 'Cron Rebuild Site']
+    types: [completed]
+    branches: [main]
+
+# One run at a time: two concurrent runs would race on the kill-switch branch
+# and could put two GPU jobs on a single-deployment demo.
+concurrency:
+  group: minimax-demo-integration
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    # The suite's own ceiling is around six minutes (a 240s poll window, a 90s
+    # submit, retried GETs). This caps the job well under the 6-hourly schedule
+    # because the concurrency group above does not cancel in progress: a run
+    # wedged on a hung socket or a stuck runner would otherwise sit on GitHub's
+    # 360-minute default and block every scheduled and post-deploy run behind it.
+    timeout-minutes: 20
+    env:
+      # Whether this run is judging the origin users are actually served, which
+      # is what licenses it to touch the flag. Computed once, with the trailing
+      # slash allowed, because a dispatch typed as "https://comfy.org/" would
+      # otherwise test production and then silently decline to act on it.
+      IS_PRODUCTION: >-
+        ${{ (inputs.base_url || 'https://comfy.org') == 'https://comfy.org'
+        || (inputs.base_url || 'https://comfy.org') == 'https://comfy.org/' }}
+    # Skip when the triggering deploy itself failed — the demo being unreachable
+    # is then a symptom of that failure, not a reason to switch the demo off.
+    if: >-
+      github.event_name != 'workflow_run'
+      || github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      - name: Read current flag state
+        id: flag
+        working-directory: site
+        run: |
+          enabled=$(jq -r '.minimaxH3Demo.enabled' src/data/experiment-flags.json)
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+          echo "Demo flag is currently: $enabled"
+
+      - name: Run integration test
+        id: test
+        continue-on-error: true
+        working-directory: site
+        env:
+          DEMO_BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          # Deliberately NOT passed the committed flag. The flag is consumed at
+          # build time, so it and production disagree between a merge and the
+          # deploy that ships it; a check that read the repo would treat that
+          # window as a fault and revert a flag someone had just turned on. It
+          # reads the deployed page instead.
+          # Plain output so the reason can be parsed out below without ANSI codes.
+          NO_COLOR: '1'
+        run: |
+          # pipefail: without it `tee` supplies the exit status and every run
+          # would look green, which is the one bug that would make this whole
+          # workflow silently useless.
+          set -o pipefail
+          pnpm run test:integration 2>&1 | tee "$RUNNER_TEMP/integration.log"
+
+      - name: Summarize
+        id: summary
+        env:
+          OUTCOME: ${{ steps.test.outcome }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          WAS_ENABLED: ${{ steps.flag.outputs.enabled }}
+        run: |
+          # What production is actually serving, which is what decides whether
+          # a flag flip would change anything for a visitor. Emitted by the page
+          # spec as a fixed token.
+          #
+          # Three states, not two. The token is printed after the page spec's
+          # status assertion, so a page that does not answer at all produces
+          # neither `true` nor `false`. That case must not arm the kill switch —
+          # a flag flip cannot fix a missing page — but it must still be spoken
+          # about, so it is named `unknown` rather than left empty: an empty
+          # string matched no notify clause either, and the worst outage the
+          # demo can have was the one thing this workflow said nothing about.
+          demo_live=$(grep -m1 -oE 'DEMO_RUNNER_LIVE=(true|false)' \
+            "$RUNNER_TEMP/integration.log" | cut -d= -f2 || true)
+          echo "demo_live=${demo_live:-unknown}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "## MiniMax H3 demo integration"
+            echo
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Target** | $BASE_URL |"
+            echo "| **Result** | $([ "$OUTCOME" = success ] && echo '✅ passing' || echo '❌ failing') |"
+            echo "| **Flag on \`main\`** | $WAS_ENABLED |"
+            echo "| **Runner on the deployed page** | ${demo_live:-unknown} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          # First error line names the actual cause (router 404 vs CSRF 403 vs
+          # backend 502) rather than just "a test failed". This string is posted
+          # to Slack AND committed into experiment-flags.json as the flag's
+          # permanent reason, so it has to be right.
+          #
+          # Any *Error, not just AssertionError. The two most likely outages both
+          # throw before an assertion runs: a refused origin as `TypeError: fetch
+          # failed`, and a hung one as `TimeoutError` from the AbortSignal the
+          # test wraps every call in. Matching only assertions would skip past
+          # those to a downstream guard and record "nothing to poll", which reads
+          # like a diagnosis and is not one.
+          reason=$(grep -m1 -oP '^\s*(?:[A-Za-z]*Error|DOMException)(?: \[[^\]]+\])?:.*' \
+            "$RUNNER_TEMP/integration.log" | tr -d '\r\n' || true)
+          # Bash substring, not `cut -c`: several of these diagnoses contain em
+          # dashes, and GNU cut counts bytes, so it can slice a UTF-8 character
+          # in half and leave the committed reason ending in a replacement char.
+          reason=${reason:0:300}
+          [ -n "$reason" ] || reason="See the workflow run for details."
+          echo "reason=$reason" >> "$GITHUB_OUTPUT"
+
+      - name: Switch the demo off
+        id: disable
+        # Three conditions, all required:
+        #   - the test failed
+        #   - the deployed page is serving the runner. NOT the flag on `main`:
+        #     those two disagree either way around a deploy, and keying on the
+        #     repo made this wrong in both directions — it would revert a flag
+        #     someone had just turned on but not yet shipped, and stay silent
+        #     when `main` said off while production still served a broken
+        #     runner. What a visitor is being shown is the only thing a flag
+        #     flip can change, and it is also self-limiting: once the fallback
+        #     ships, this stops firing instead of re-alerting every 6 hours.
+        #   - production was what we tested. A dispatch against a preview origin
+        #     is for debugging; it must never flip the flag users are served.
+        if: >-
+          steps.test.outcome == 'failure'
+          && steps.summary.outputs.demo_live == 'true'
+          && env.IS_PRODUCTION == 'true'
+        # The kill switch must not take the job down with it: if this step
+        # fails, the steps below still run and Slack still says the demo is
+        # stuck on. Without this, the alert is silent exactly when it matters.
+        continue-on-error: true
+        working-directory: site
+        env:
+          # Via the environment, never string-interpolated into the command:
+          # this text embeds an origin server's response body.
+          REASON: ${{ steps.summary.outputs.reason }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+        run: |
+          pnpm run experiment-flag minimaxH3Demo off \
+            --by "ci:minimax-demo-integration" \
+            --reason "Integration test failed against ${BASE_URL}: ${REASON}"
+
+      - name: Open the kill-switch PR
+        id: pr
+        if: steps.disable.outputs.changed == 'true'
+        # The kill switch must not take the job down with it: if this step
+        # fails, Slack below still runs and still says the demo is stuck on.
+        continue-on-error: true
+        env:
+          # The PAT is what the other automations here use, and it lets the
+          # site's own checks run on the PR. The GITHUB_TOKEN fallback opens one
+          # only if the org permits Actions to create PRs; when it does not,
+          # this step fails and the Slack branch below reports the demo as stuck
+          # on, which is the honest outcome. Note the branch itself is pushed
+          # with the credentials actions/checkout persisted, not with GH_TOKEN.
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN || secrets.GITHUB_TOKEN }}
+          REASON: ${{ steps.summary.outputs.reason }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          BRANCH="ci/minimax-demo-kill-switch"
+
+          # An unmerged PR from an earlier run already says everything this run
+          # would. Stopping here keeps a demo that stays broken for days from
+          # force-pushing a fresh timestamp and re-pinging Slack every 6 hours;
+          # `opened` stays empty, which is what silences the notify step.
+          existing=$(gh pr list --head "$BRANCH" --state open --json url --jq '.[0].url // ""')
+          if [ -n "$existing" ]; then
+            echo "pr_url=$existing" >> "$GITHUB_OUTPUT"
+            echo "A kill-switch PR is already open and unmerged: $existing"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add site/src/data/experiment-flags.json
+          printf '%s\n\n%s\n\nRun: %s\n' \
+            'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
+            "$REASON" "$RUN_URL" > "$RUNNER_TEMP/commit-msg.txt"
+
+          # Branched off the main this run checked out, so the PR carries the
+          # flag flip and nothing else.
+          git checkout -B "$BRANCH"
+          git commit --file="$RUNNER_TEMP/commit-msg.txt"
+
+          # The lease has to name the sha explicitly. The bare --force-with-lease
+          # checks refs/remotes/origin/$BRANCH, which any fetch of that branch
+          # silently refreshes to whatever the remote now holds — the lease then
+          # matches by construction and degrades to a plain --force. An empty
+          # $head means the branch does not exist yet, which git reads as
+          # "must not already exist", exactly the right expectation for a create.
+          head=$(git ls-remote origin "refs/heads/$BRANCH" | cut -f1)
+          git push --force-with-lease="refs/heads/$BRANCH:$head" origin "HEAD:refs/heads/$BRANCH"
+
+          # Body via --body-file: $REASON is an origin server's response body
+          # and must never be word-split or re-expanded by the shell. The
+          # formats stay single-quoted for that reason, so their backticks are
+          # literal markdown rather than substitutions (SC2016 reads them as a
+          # mistake; here they are the point).
+          # shellcheck disable=SC2016
+          {
+            printf 'The [integration check](%s) failed against `%s`, so this switches the `minimaxH3Demo` experiment flag off.\n\n' \
+              "$RUN_URL" "$BASE_URL"
+            printf '> %s\n\n' "$REASON"
+            printf 'Opened by `%s`. Merging is not enough on its own — the flag is read at build time, so run **Deploy Template Site** (or wait for the nightly rebuild) to put the static fallback in front of users.\n' \
+              "$GITHUB_WORKFLOW"
+          } > "$RUNNER_TEMP/pr-body.md"
+
+          url=$(gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title 'chore(site): switch the MiniMax H3 demo off after a failed integration check' \
+            --body-file "$RUNNER_TEMP/pr-body.md")
+
+          echo "pr_url=$url" >> "$GITHUB_OUTPUT"
+          echo "opened=true" >> "$GITHUB_OUTPUT"
+          echo "Opened $url"
+
+      - name: Notify Slack
+        # Five reasons to speak, and nothing else:
+        #   - a kill-switch PR was just opened
+        #   - we tried to open one and could not, so it is stuck on and broken
+        #   - visitors are being served a broken runner that no flag flip can
+        #     fix, because `main` already has the flag off and only a deploy
+        #     will ship the fallback. Silence here was the gap that keying on
+        #     the repo flag created; it ends at the next deploy, so it cannot
+        #     repeat indefinitely.
+        #   - the page did not answer at all, so we cannot tell what is being
+        #     served and the kill switch is deliberately not armed. That is the
+        #     demo's worst outage and the one a flag cannot address, so saying
+        #     nothing is the wrong answer even though acting would be too.
+        #   - somebody ran this by hand and is waiting for the answer
+        #
+        # Keyed on `opened`, not on `changed`: while a kill-switch PR sits
+        # unmerged the flag on main is still `true`, so `changed` is true on
+        # every run and would re-post the same alert 4x a day until someone
+        # merges. `opened` is set only by the run that actually created the PR.
+        #
+        # Recovery is NOT announced on schedule/deploy runs. This workflow keeps
+        # no state between runs, and "healthy while switched off" is the shipped
+        # steady state — alerting on it would post the same message 4x a day
+        # forever. Scheduled recovery shows up in the step summary instead.
+        if: >-
+          steps.pr.outputs.opened == 'true'
+          || steps.disable.outcome == 'failure'
+          || steps.pr.outcome == 'failure'
+          || (steps.test.outcome == 'failure'
+              && steps.summary.outputs.demo_live == 'true'
+              && steps.flag.outputs.enabled != 'true'
+              && env.IS_PRODUCTION == 'true')
+          || (steps.test.outcome == 'failure'
+              && steps.summary.outputs.demo_live == 'unknown'
+              && env.IS_PRODUCTION == 'true')
+          || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_CHANNEL_ID: ${{ vars.SLACK_HUB_ALERTS_CHANNEL_ID }}
+          DISABLE_OUTCOME: ${{ steps.disable.outcome }}
+          PR_OPENED: ${{ steps.pr.outputs.opened }}
+          PR_URL: ${{ steps.pr.outputs.pr_url }}
+          PR_OUTCOME: ${{ steps.pr.outcome }}
+          DEMO_LIVE: ${{ steps.summary.outputs.demo_live }}
+          # DEMO_LIVE describes whichever origin was tested, but FLAG_ENABLED
+          # always describes `main`. Comparing them is only meaningful for
+          # production, so the branches that do do it check this first.
+          IS_PRODUCTION: ${{ env.IS_PRODUCTION }}
+          OUTCOME: ${{ steps.test.outcome }}
+          # Through the environment like everything else in this file — never
+          # interpolated into the script below, where a value containing $( )
+          # or a backtick would execute.
+          FLAG_ENABLED: ${{ steps.flag.outputs.enabled }}
+          REASON: ${{ steps.summary.outputs.reason }}
+          BASE_URL: ${{ inputs.base_url || 'https://comfy.org' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DEPLOY_URL: ${{ github.server_url }}/${{ github.repository }}/actions/workflows/deploy-site.yml
+        run: |
+          set -euo pipefail
+          if [ -z "${SLACK_BOT_TOKEN:-}" ] || [ -z "${SLACK_CHANNEL_ID:-}" ]; then
+            # Loud when there was an outage to report, quiet otherwise. A
+            # missing credential on the healthy path costs nothing; on the
+            # failing path it is the difference between "a human was told" and
+            # "nobody was", which must not be a line buried in a green log.
+            if [ "$OUTCOME" != "success" ]; then
+              echo "::error::Demo integration failed and Slack is not configured (SLACK_BOT_TOKEN / SLACK_HUB_ALERTS_CHANNEL_ID) — nobody was notified."
+              echo "> :warning: **Slack is not configured, so this outage was not announced.**" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::warning::SLACK_BOT_TOKEN or SLACK_HUB_ALERTS_CHANNEL_ID is unset — skipping Slack notification."
+            fi
+            exit 0
+          fi
+
+          if [ "$DISABLE_OUTCOME" = "failure" ] || [ "$PR_OUTCOME" = "failure" ]; then
+            TEXT=":rotating_light: *MiniMax H3 demo is broken and the kill switch failed.* The integration test failed against ${BASE_URL} and the flag flip could not be prepared, so *the demo is still live*. Switch it off by hand: \`pnpm experiment-flag minimaxH3Demo off\` in \`site/\`, open a PR, merge, deploy."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$PR_OPENED" = "true" ]; then
+            TEXT=":warning: *MiniMax H3 demo failed its integration check.* A PR switching the \`minimaxH3Demo\` flag off is open and *waiting on a human* — the demo stays live until it is merged and deployed."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"<${PR_URL}|Review and merge the kill-switch PR>, then <${DEPLOY_URL}|run Deploy Template Site> to serve the static fallback."
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$OUTCOME" != "success" ] && [ "$DEMO_LIVE" = "unknown" ] && [ "$IS_PRODUCTION" = "true" ]; then
+            TEXT=":rotating_light: *The MiniMax H3 demo page did not answer.* The integration test failed against ${BASE_URL} before it could tell what the page is serving, so the flag was left alone — switching it off cannot bring back a page that is not there."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"Check that the site deployed and that the router still forwards \`/workflows/*\`."
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$OUTCOME" != "success" ] && [ "$DEMO_LIVE" = "true" ] && [ "$FLAG_ENABLED" != "true" ] && [ "$IS_PRODUCTION" = "true" ]; then
+            TEXT=":rotating_light: *MiniMax H3 demo is broken in front of users and the flag cannot fix it.* The integration test failed against ${BASE_URL} and the deployed page is still serving the runner, but \`main\` already has \`minimaxH3Demo\` off — so there is nothing to switch and *only a deploy will replace it with the fallback*."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            TEXT="${TEXT}"$'\n'"<${DEPLOY_URL}|Run Deploy Template Site> to ship the flag that is already committed."
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          elif [ "$OUTCOME" = "success" ]; then
+            TEXT=":white_check_mark: *MiniMax H3 demo integration passes* against ${BASE_URL} (flag is currently \`${FLAG_ENABLED}\`). Turning it on is a deliberate call: set the flag and deploy when you want it in front of users. <${RUN_URL}|View run>"
+          else
+            # Reached on a hand-run dispatch that failed without opening anything
+            # — the flag was already off, a preview origin was tested, or a
+            # kill-switch PR from an earlier run is still open. The run is green
+            # because the test is continue-on-error, so without this the operator
+            # who dispatched it would be told nothing at all.
+            TEXT=":x: *MiniMax H3 demo integration failed* against ${BASE_URL}. The flag on \`main\` is \`${FLAG_ENABLED}\` and this run changed nothing."
+            TEXT="${TEXT}"$'\n'">${REASON}"
+            if [ -n "${PR_URL:-}" ]; then
+              TEXT="${TEXT}"$'\n'"A kill-switch PR is already open and unmerged: <${PR_URL}|review and merge it>."
+            fi
+            TEXT="${TEXT}"$'\n'"<${RUN_URL}|View run>"
+          fi
+
+          BODY=$(jq -n --arg ch "$SLACK_CHANNEL_ID" --arg text "$TEXT" '{channel: $ch, text: $text}')
+          # Slack answers HTTP 200 with {"ok":false,...} on auth and channel
+          # errors, so -f alone would report a silent drop as success.
+          RESPONSE=$(curl -sS -X POST \
+            --connect-timeout 10 --max-time 30 \
+            -H "Authorization: Bearer $SLACK_BOT_TOKEN" \
+            -H 'Content-Type: application/json' \
+            -d "$BODY" \
+            https://slack.com/api/chat.postMessage)
+          if ! jq -e '.ok == true' <<<"$RESPONSE" >/dev/null; then
+            SLACK_ERR=$(jq -r '.error // "unparseable response"' <<<"$RESPONSE")
+            # As loud as a missing credential, and for the same reason: this
+            # step is continue-on-error inside a job that is green by design, so
+            # a rejected outage alert would otherwise be a line in a green log.
+            if [ "$OUTCOME" != "success" ]; then
+              echo "::error::Demo integration failed and Slack rejected the alert ($SLACK_ERR) — nobody was notified."
+              echo "> :warning: **Slack rejected this outage alert (\`$SLACK_ERR\`), so nobody was notified.**" >> "$GITHUB_STEP_SUMMARY"
+            fi
+            echo "Slack rejected the notification: $SLACK_ERR"
+            exit 1
+          fi
