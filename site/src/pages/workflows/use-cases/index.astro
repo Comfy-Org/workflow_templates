@@ -12,6 +12,9 @@ const catalog = await loadSerializedTemplates(() => getCollection('templates'));
 
 const cards = resolveUseCasePageCards(catalog, locale);
 const heading = t('template.useCases', locale);
+// `heading` alone is too short for SEO (~27 chars w/ site name); this longer,
+// keyword-rich title is used only for <title>/JSON-LD — the on-page H1 stays `heading`.
+const title = 'Use Cases | AI Workflow Templates for Every Project';
 const description =
   'Browse ComfyUI workflows by use case — ready-to-run templates for AI Headshot Generator, AI Interior Design, AI Caricature Generator, AI Tattoo Generator, and more.';
 ---
@@ -20,6 +23,7 @@ const description =
   locale={locale}
   basePath={useCasesIndexPath()}
   heading={heading}
+  title={title}
   description={description}
   cards={cards}
 />
