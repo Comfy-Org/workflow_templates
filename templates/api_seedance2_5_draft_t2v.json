@@ -97,11 +97,11 @@
         "Node name for S&R": "SaveText"
       },
       "widgets_values": [
-        "Seedance2.5-draft-video-id-%year%-%month%-%day%",
+        "Seedance2.5_draft_task_id_%year%_%month%_%day%",
         "txt"
       ],
       "widgets_values_named": {
-        "filename_prefix": "Seedance2.5-draft-video-id-%year%-%month%-%day%",
+        "filename_prefix": "Seedance2.5_draft_task_id_%year%_%month%_%day%",
         "format": "txt"
       }
     },
@@ -246,10 +246,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "Draft mode is used to create preview draft videos for rapid iteration and reduce creation costs. This workflow consists of two phases.\n\n1. Use Stage One to generate and preview the draft video, which will produce a preview video and its corresponding task ID.\n\n2. Perform testing until satisfactory results are obtained. You may then proceed to the Refine Draft video step.\n\n3. Select the Stage one nodes and use Ctrl-B to bypass them.\n\n4. Select the Stage two nodes and use Ctrl-B to unbypass them.\n\n5. Fill the corresponding draft_task_id into the **ByteDance Seedance 2** node to obtain high-quality outputs."
+        "**Seedance 2.5 Draft mode** renders a fast, low-cost 480p preview so you can iterate on a prompt before committing to a full render. This workflow runs that in two stages.\n\n**Stage 1: Create and preview the draft video**\n\n1. On the **ByteDance Seedance 2.5 Text to Video** node, keep **Seedance 2.5 Draft** as the model, write your prompt, and run the workflow. You get the 480p preview plus its `draft_task_id`, which the **Save Text** node writes to a .txt file in the output folder.\n\n2. Adjust the prompt and rerun until you like the draft. Once you do, leave this stage bypassed: if the draft node runs again it creates a new draft instead of reusing the one you reviewed.\n\n**Stage 2: Render the final video from the draft**\n\n3. Select the nodes in the **Stage 1** group and press `Ctrl+B` to bypass them.\n\n4. Select the nodes in the **Stage 2** group and press `Ctrl+B` to un-bypass them.\n\n5. Paste the `draft_task_id` from the saved .txt file into the `draft_task_id` field on the **ByteDance Seedance 2.5 Draft to Final Video** node, then run the workflow. The final 1080p render keeps the draft's prompt, duration, aspect ratio, and audio setting, so there is nothing to re-enter.\n\nDrafts are kept for 7 days, so render the final within that window."
       ],
       "widgets_values_named": {
-        "text": "Draft mode is used to create preview draft videos for rapid iteration and reduce creation costs. This workflow consists of two phases.\n\n1. Use Stage One to generate and preview the draft video, which will produce a preview video and its corresponding task ID.\n\n2. Perform testing until satisfactory results are obtained. You may then proceed to the Refine Draft video step.\n\n3. Select the Stage one nodes and use Ctrl-B to bypass them.\n\n4. Select the Stage two nodes and use Ctrl-B to unbypass them.\n\n5. Fill the corresponding draft_task_id into the **ByteDance Seedance 2** node to obtain high-quality outputs."
+        "text": "**Seedance 2.5 Draft mode** renders a fast, low-cost 480p preview so you can iterate on a prompt before committing to a full render. This workflow runs that in two stages.\n\n**Stage 1: Create and preview the draft video**\n\n1. On the **ByteDance Seedance 2.5 Text to Video** node, keep **Seedance 2.5 Draft** as the model, write your prompt, and run the workflow. You get the 480p preview plus its `draft_task_id`, which the **Save Text** node writes to a .txt file in the output folder.\n\n2. Adjust the prompt and rerun until you like the draft. Once you do, leave this stage bypassed: if the draft node runs again it creates a new draft instead of reusing the one you reviewed.\n\n**Stage 2: Render the final video from the draft**\n\n3. Select the nodes in the **Stage 1** group and press `Ctrl+B` to bypass them.\n\n4. Select the nodes in the **Stage 2** group and press `Ctrl+B` to un-bypass them.\n\n5. Paste the `draft_task_id` from the saved .txt file into the `draft_task_id` field on the **ByteDance Seedance 2.5 Draft to Final Video** node, then run the workflow. The final 1080p render keeps the draft's prompt, duration, aspect ratio, and audio setting, so there is nothing to re-enter.\n\nDrafts are kept for 7 days, so render the final within that window."
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -284,7 +284,7 @@
   "groups": [
     {
       "id": 1,
-      "title": "Stage 2 - Refine draft video with task_id (Box-Select nodes and Ctrl-B to unbypass)",
+      "title": "Stage 2: Render the final video from the draft task ID",
       "bounding": [
         2460,
         -150,
@@ -296,7 +296,7 @@
     },
     {
       "id": 2,
-      "title": "Stag One - Create and preview draft video",
+      "title": "Stage 1: Create and preview the draft video",
       "bounding": [
         2460,
         -700,
