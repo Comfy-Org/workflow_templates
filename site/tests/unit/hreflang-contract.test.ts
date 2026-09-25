@@ -67,6 +67,27 @@ describe('parsing built HTML', () => {
     expect(parseNoindex('<meta name="robots" content="index, follow">')).toBe(false);
     expect(parseNoindex('<title>x</title>')).toBe(false);
   });
+
+  it('detects noindex with inverted attribute order, "none", and single quotes', () => {
+    expect(parseNoindex('<meta content="noindex, follow" name="robots">')).toBe(true);
+    expect(parseNoindex('<meta name="robots" content="none">')).toBe(true);
+    expect(parseNoindex("<meta name='googlebot' content='noindex'>")).toBe(true);
+  });
+
+  it('does not falsely trigger on prefixed attributes or max-image-preview:none', () => {
+    expect(parseNoindex('<meta name="robots" data-content="noindex" content="index">')).toBe(false);
+    expect(
+      parseNoindex('<meta name="robots" content="index, follow, max-image-preview:none">')
+    ).toBe(false);
+    expect(
+      parseCanonical(
+        `<link rel="canonical" data-href="${ORIGIN}/wrong/" href="${ORIGIN}/correct/">`
+      )
+    ).toBe(`${ORIGIN}/correct/`);
+    expect(
+      parseCanonical(`<link data-rel="canonical" rel="alternate" href="${ORIGIN}/alt/">`)
+    ).toBeNull();
+  });
 });
 
 describe('pathForHref', () => {
