@@ -1,0 +1,54 @@
+---
+/**
+ * Localized use-cases index (on-demand rendered).
+ * Serves pages like /zh/workflows/use-cases/, /ja/workflows/use-cases/, etc.
+ *
+ * Mirrors the English `workflows/use-cases/index.astro`. Before this route the
+ * path fell through to the SSR `[locale]/workflows/[username].astro` catch-all
+ * and 404'd.
+ */
+export const prerender = false;
+
+import { getCollection } from 'astro:content';
+import SeoIndexPage from '../../../../components/workflow-pages/SeoIndexPage.astro';
+import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../../i18n/config';
+import { t } from '../../../../i18n/ui';
+import { useCasesIndexPath } from '../../../../lib/routes';
+import { loadSerializedTemplates } from '../../../../lib/hub-api';
+import { localizeCards } from '../../../../lib/i18n/localize-cards';
+import { resolveUseCasePageCards } from '../../../../lib/workflow-pages/index-cards';
+
+const { locale } = Astro.params;
+
+if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, { status: 404, statusText: 'Not Found' });
+}
+
+// Validate locale
+if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE) {
+  return Astro.redirect('/workflows/use-cases/');
+}
+
+const typedLocale = locale as Locale;
+
+// Cards come from the hub index, which is English only. Resolve the same text
+// the detail page will show, so a localized listing is not a translated page
+// sitting above a grid of English cards.
+const catalog = localizeCards(
+  await loadSerializedTemplates(() => getCollection('templates')),
+  typedLocale
+);
+
+const cards = resolveUseCasePageCards(catalog, typedLocale);
+const heading = t('template.useCases', typedLocale);
+const description =
+  'Browse ComfyUI workflows by use case — ready-to-run templates for AI Headshot Generator, AI Interior Design, AI Caricature Generator, AI Tattoo Generator, and more.';
+---
+
+<SeoIndexPage
+  locale={typedLocale}
+  basePath={useCasesIndexPath()}
+  heading={heading}
+  description={description}
+  cards={cards}
+/>
