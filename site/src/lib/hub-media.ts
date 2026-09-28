@@ -45,6 +45,20 @@ export function hubAssetUrl(url: string): string {
   return hubMediaFor(url)?.video ?? hubImageFor(url) ?? url;
 }
 
+/**
+ * Image the featured carousel paints for a still slide. Raw hub uploads can be
+ * multi-megabyte PNGs, so PNG/JPEG go through Cloudflare resizing; WebP/GIF are
+ * left as-is because `anim=false` would freeze an animated thumbnail.
+ */
+export function featuredSlideImage(url: string): string {
+  const generated = hubImageFor(url);
+  if (generated) return generated;
+  if (/\.(png|jpe?g)$/i.test(url.split('?')[0] ?? '')) {
+    return getStillImageUrl(url, LANDING_HERO_WIDTH) ?? url;
+  }
+  return url;
+}
+
 export function landingHeroImage(thumbnails: string[] | undefined): string | null {
   const still = firstStillThumbnail(thumbnails);
   if (!still) return null;

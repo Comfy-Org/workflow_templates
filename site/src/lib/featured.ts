@@ -5,7 +5,7 @@
 import type { SerializedTemplate } from './hub-api';
 import { isMediaFile, isVideoFile } from './media-utils';
 import { thumbnailPath } from './routes';
-import { hubMediaFor } from './hub-media';
+import { featuredSlideImage, hubMediaFor } from './hub-media';
 import { getVideoFrameUrl } from './video-thumbnail';
 
 /** How many templates the hero carousel rotates through. */
@@ -32,5 +32,5 @@ export function featuredPreloadImage(featured: SerializedTemplate[]): string | n
   }
 
   if (isMediaFile(primary)) return null;
-  return thumbnailPath(primary);
+  return featuredSlideImage(thumbnailPath(primary));
 }

@@ -78,6 +78,7 @@ INDEX_GROUP_TO_MCP_CATEGORY: dict[str, str] = {
     "3D Model": "3D Model",
     "Image Tools": "Image Tools",
     "Video Tools": "Video Tools",
+    "Vector": "Vector",
 }
 
 EXCLUDED_MCP_CATEGORIES = frozenset({
@@ -132,6 +133,10 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
     "Video Tools": (
         "Tooling workflows for video processing helpers such as upscaling, frame interpolation, "
         "background removal, video extend, pose and depth extraction, and clip editing."
+    ),
+    "Vector": (
+        "Workflow templates for generating and tracing scalable vector graphics (SVG), "
+        "including text-to-vector and image-to-vector conversion."
     ),
 }
 

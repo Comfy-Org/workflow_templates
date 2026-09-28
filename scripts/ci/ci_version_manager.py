@@ -211,46 +211,45 @@ def _auto_bump_only_files(since_commit: str) -> set[str]:
         return _auto_bump_only_files_cache[since_commit]
 
     skipped: set[str] = set()
-    try:
-        output = run_git(["log", f"{since_commit}..HEAD", "--format=COMMIT:%s", "--name-only"])
-        current_msg = ""
-        for line in output.splitlines():
-            if line.startswith("COMMIT:"):
-                current_msg = line[7:]
-            elif line.strip() and line not in skipped:
-                if any(current_msg.startswith(prefix) for prefix in AUTO_BUMP_COMMIT_PREFIXES):
-                    skipped.add(line)
-    except Exception:
-        pass
+    output = run_git(["log", f"{since_commit}..HEAD", "--format=COMMIT:%s", "--name-only"])
+    current_msg = ""
+    for line in output.splitlines():
+        if line.startswith("COMMIT:"):
+            current_msg = line[7:]
+        elif line.strip() and line not in skipped:
+            if any(current_msg.startswith(prefix) for prefix in AUTO_BUMP_COMMIT_PREFIXES):
+                skipped.add(line)
 
     _auto_bump_only_files_cache[since_commit] = skipped
     return skipped
 
 
 def _committed_files_since(since_commit: str) -> set[str]:
-    """Cached ``git diff since..HEAD --name-only`` (shared across packages)."""
+    """Cached ``git diff since..HEAD --name-only`` (shared across packages).
+
+    Only successful queries are cached: caching a failure as an empty set would read
+    as "nothing changed" and silently skip the version bump for every later package.
+    """
     if since_commit not in _committed_files_cache:
-        try:
-            output = run_git(["diff", f"{since_commit}..HEAD", "--name-only"])
-            _committed_files_cache[since_commit] = {
-                line.strip() for line in output.splitlines() if line.strip()
-            }
-        except Exception:
-            _committed_files_cache[since_commit] = set()
+        output = run_git(["diff", f"{since_commit}..HEAD", "--name-only"])
+        _committed_files_cache[since_commit] = {
+            line.strip() for line in output.splitlines() if line.strip()
+        }
     return _committed_files_cache[since_commit]
 
 
 def _unstaged_files() -> set[str]:
-    """Cached working-tree changes vs HEAD (sync_bundles often leaves many)."""
+    """Cached working-tree changes vs HEAD (sync_bundles often leaves many).
+
+    Same rule as ``_committed_files_since``: a failed query is never cached as an
+    empty set, it propagates.
+    """
     global _unstaged_files_cache
     if _unstaged_files_cache is None:
-        try:
-            output = run_git(["diff", "--name-only", "HEAD"])
-            _unstaged_files_cache = {
-                line.strip() for line in output.splitlines() if line.strip()
-            }
-        except Exception:
-            _unstaged_files_cache = set()
+        output = run_git(["diff", "--name-only", "HEAD"])
+        _unstaged_files_cache = {
+            line.strip() for line in output.splitlines() if line.strip()
+        }
     return _unstaged_files_cache
 
 
@@ -270,113 +269,115 @@ def get_current_version(pkg: str) -> str:
 
 
 def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
-    """Get files that affect a specific package since the given commit, excluding CI auto-commits"""
-    try:
-        # Cached across packages: after sync_bundles the unstaged set can be huge
-        # (entire media wheels), so never re-run these git commands per package.
-        committed_files = _committed_files_since(since_commit)
-        unstaged_set = _unstaged_files()
-        all_changed_files = committed_files | unstaged_set
+    """Get files that affect a specific package since the given commit, excluding CI auto-commits.
 
-        auto_bump_files = _auto_bump_only_files(since_commit)
+    An empty result means "this package needs no bump", so a failed query must not be
+    reported as one: errors propagate (``get_changed_packages`` has the safe
+    bump-everything fallback) instead of silently dropping a release.
+    """
+    # Cached across packages: after sync_bundles the unstaged set can be huge
+    # (entire media wheels), so never re-run these git commands per package.
+    committed_files = _committed_files_since(since_commit)
+    unstaged_set = _unstaged_files()
+    all_changed_files = committed_files | unstaged_set
 
-        # Filter out files from CI auto-commits by checking commit messages
-        affecting_files = []
-        for file in all_changed_files:
-            file = file.strip()
-            if not file:
-                continue
+    auto_bump_files = _auto_bump_only_files(since_commit)
 
-            # For unstaged files, skip the commit check and include them directly
-            # (they are new changes from sync_bundles.py that haven't been committed yet)
-            if file in unstaged_set:
-                affecting_files.append(file)
-                continue
+    # Filter out files from CI auto-commits by checking commit messages
+    affecting_files = []
+    for file in all_changed_files:
+        file = file.strip()
+        if not file:
+            continue
 
-            if file in auto_bump_files:
-                continue
-
+        # For unstaged files, skip the commit check and include them directly
+        # (they are new changes from sync_bundles.py that haven't been committed yet)
+        if file in unstaged_set:
             affecting_files.append(file)
-        
-        # Filter to only files that affect this package
-        filtered_files = []
-        
-        bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
+            continue
 
-        # Find which bundle this package corresponds to (media bundles only)
-        pkg_bundle = None
-        for bundle_name, bundle_pkg in BUNDLE_PACKAGE_MAP.items():
-            if bundle_pkg == pkg:
-                pkg_bundle = bundle_name
-                break
-        
-        for file in affecting_files:
-            file = file.strip()
-            if not file:
+        if file in auto_bump_files:
+            continue
+
+        affecting_files.append(file)
+    
+    # Filter to only files that affect this package
+    filtered_files = []
+    
+    bundles = json.loads(Path("bundles.json").read_text()) if Path("bundles.json").exists() else {}
+
+    # Find which bundle this package corresponds to (media bundles only)
+    pkg_bundle = None
+    for bundle_name, bundle_pkg in BUNDLE_PACKAGE_MAP.items():
+        if bundle_pkg == pkg:
+            pkg_bundle = bundle_name
+            break
+    
+    for file in affecting_files:
+        file = file.strip()
+        if not file:
+            continue
+            
+        # Direct package directory changes
+        if file.startswith(f"packages/{pkg}/"):
+            filtered_files.append(file)
+        # Core package affects meta
+        elif pkg == "meta" and (file.startswith("packages/") or file == "pyproject.toml"):
+            filtered_files.append(file)
+        # Blueprints package: affected by blueprints/ directory and blueprints_bundles.json
+        elif pkg == "blueprints":
+            if file.startswith("blueprints/") or file == "blueprints_bundles.json":
+                filtered_files.append(file)
+            elif file == "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json":
+                filtered_files.append(file)
+        # JSON package: any workflow/index JSON change
+        elif pkg == "json" and _is_json_template_path(file):
+            filtered_files.append(file)
+        # Media asset packages: non-JSON template assets for this bundle
+        elif pkg_bundle and file.startswith("templates/"):
+            if _is_json_template_path(file):
                 continue
-                
-            # Direct package directory changes
-            if file.startswith(f"packages/{pkg}/"):
+            if not _is_media_template_path(file):
+                continue
+            policy = load_version_policy(VERSION_POLICY_FILE)
+            owning_bundle = media_bundle_for_template_asset(file, bundles, policy)
+            if owning_bundle == pkg_bundle:
                 filtered_files.append(file)
-            # Core package affects meta
-            elif pkg == "meta" and (file.startswith("packages/") or file == "pyproject.toml"):
+        # manifest.json changes: JSON sha -> json; media sha -> bundle package
+        elif pkg == "json" and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
+            try:
+                old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
+                cur_manifest = json.loads(Path(file).read_text())
+                if _manifest_json_assets_changed(old_manifest, cur_manifest):
+                    filtered_files.append(file)
+            except Exception:
                 filtered_files.append(file)
-            # Blueprints package: affected by blueprints/ directory and blueprints_bundles.json
-            elif pkg == "blueprints":
-                if file.startswith("blueprints/") or file == "blueprints_bundles.json":
+        elif pkg_bundle and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
+            try:
+                old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
+                cur_manifest = json.loads(Path(file).read_text())
+                if _manifest_media_assets_changed(old_manifest, cur_manifest, pkg_bundle):
                     filtered_files.append(file)
-                elif file == "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json":
-                    filtered_files.append(file)
-            # JSON package: any workflow/index JSON change
-            elif pkg == "json" and _is_json_template_path(file):
+            except Exception:
                 filtered_files.append(file)
-            # Media asset packages: non-JSON template assets for this bundle
-            elif pkg_bundle and file.startswith("templates/"):
-                if _is_json_template_path(file):
-                    continue
-                if not _is_media_template_path(file):
-                    continue
-                policy = load_version_policy(VERSION_POLICY_FILE)
-                owning_bundle = media_bundle_for_template_asset(file, bundles, policy)
-                if owning_bundle == pkg_bundle:
+        # bundles.json changes affecting this package's bundle
+        elif pkg == "json" and file == "bundles.json":
+            filtered_files.append(file)
+        elif pkg_bundle and file == "bundles.json":
+            try:
+                # First check if bundles.json existed in the old commit
+                run_git(["cat-file", "-e", f"{since_commit}:bundles.json"])
+                old_bundles = json.loads(run_git(["show", f"{since_commit}:bundles.json"]))
+                if bundles.get(pkg_bundle) != old_bundles.get(pkg_bundle):
                     filtered_files.append(file)
-            # manifest.json changes: JSON sha -> json; media sha -> bundle package
-            elif pkg == "json" and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
-                try:
-                    old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
-                    cur_manifest = json.loads(Path(file).read_text())
-                    if _manifest_json_assets_changed(old_manifest, cur_manifest):
-                        filtered_files.append(file)
-                except Exception:
-                    filtered_files.append(file)
-            elif pkg_bundle and file == "packages/core/src/comfyui_workflow_templates_core/manifest.json":
-                try:
-                    old_manifest = json.loads(run_git(["show", f"{since_commit}:{file}"]))
-                    cur_manifest = json.loads(Path(file).read_text())
-                    if _manifest_media_assets_changed(old_manifest, cur_manifest, pkg_bundle):
-                        filtered_files.append(file)
-                except Exception:
-                    filtered_files.append(file)
-            # bundles.json changes affecting this package's bundle
-            elif pkg == "json" and file == "bundles.json":
+            except subprocess.CalledProcessError:
+                # bundles.json didn't exist in old commit, so this is a new file affecting all bundles
                 filtered_files.append(file)
-            elif pkg_bundle and file == "bundles.json":
-                try:
-                    # First check if bundles.json existed in the old commit
-                    run_git(["cat-file", "-e", f"{since_commit}:bundles.json"])
-                    old_bundles = json.loads(run_git(["show", f"{since_commit}:bundles.json"]))
-                    if bundles.get(pkg_bundle) != old_bundles.get(pkg_bundle):
-                        filtered_files.append(file)
-                except subprocess.CalledProcessError:
-                    # bundles.json didn't exist in old commit, so this is a new file affecting all bundles
-                    filtered_files.append(file)
-                except:
-                    # Other error, assume it affects this package
-                    filtered_files.append(file)
-        
-        return filtered_files
-    except:
-        return []
+            except:
+                # Other error, assume it affects this package
+                filtered_files.append(file)
+    
+    return filtered_files
 
 def get_publish_package_ids(base_ref: str) -> Set[str]:
     """Packages whose version differs from base_ref (candidates for PyPI publish)."""

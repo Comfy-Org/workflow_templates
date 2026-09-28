@@ -1,6 +1,7 @@
 """Regression tests for release-time package version detection."""
 
 import importlib.util
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -175,6 +176,28 @@ class VersionDetectionTests(unittest.TestCase):
 
         self.assertEqual(blocked, {"media_api"})
         self.assertEqual(calls, [("media_api", "merge-base")])
+
+    def test_failed_git_query_is_not_cached_as_no_changed_files(self):
+        """A failed git diff must propagate instead of reading as "nothing changed".
+
+        An empty file list means the package needs no bump, so caching a query
+        failure as ``set()`` silently drops the release it was supposed to detect.
+        """
+        calls = []
+
+        def fake_run_git(args):
+            calls.append(args)
+            raise subprocess.CalledProcessError(128, ["git", *args])
+
+        with patch.object(ci_version_manager, "run_git", side_effect=fake_run_git):
+            with self.assertRaises(subprocess.CalledProcessError):
+                ci_version_manager._committed_files_since("merge-base")
+            with self.assertRaises(subprocess.CalledProcessError):
+                ci_version_manager.get_files_affecting_package("core", "merge-base")
+
+        self.assertEqual(ci_version_manager._committed_files_cache, {})
+        self.assertIsNone(ci_version_manager._unstaged_files_cache)
+        self.assertEqual(len(calls), 2)
 
 
 if __name__ == "__main__":
