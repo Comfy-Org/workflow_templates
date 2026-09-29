@@ -54,11 +54,11 @@ const family =
   groups.find((group) => group.slug === name) ??
   groups.find((group) => group.redirectFrom.includes(name!));
 
+// An unknown or removed model slug 301s to the localized hub rather than 404ing
+// (there is no localized models index to land on). Known variant → family
+// redirects are handled by `redirectFrom` above.
 if (!family) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect(localizeUrl('/workflows/', typedLocale), 301);
 }
 
 // A variant slug 301s to its family's canonical URL, matching the English route.

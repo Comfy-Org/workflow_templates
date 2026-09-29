@@ -26,6 +26,7 @@ import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../lib/structured-data';
 import { getSocialDisplay } from '../../lib/social-links';
 import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
+import { isLegacyWorkflowSegment } from '../../lib/legacy-workflow-redirects';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -36,15 +37,20 @@ Astro.response.headers.set(
 const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
 
+// Legacy `/workflows/{id}.json` download scheme — retired, no per-id mapping
+// survives. Send it to the hub rather than 404.
 if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect('/workflows/', 301);
 }
 
 if (!slugParam) {
   return Astro.redirect('/workflows/');
+}
+
+// The hub's "ComfyUI" brand filter is served at the lowercase slug; the
+// capitalised form was linked externally and 404s. Normalise it.
+if (slugParam === 'ComfyUI') {
+  return Astro.redirect('/workflows/comfyui/', 301);
 }
 
 // If URL contains a share_id suffix, this is a workflow detail page — not a creator profile.
@@ -69,10 +75,9 @@ if (detailShareId) {
         },
       });
     }
-    return new Response(null, {
-      status: 404,
-      statusText: 'Not Found',
-    });
+    // A `{name}-{shareId}` slug that the hub no longer knows is a retired
+    // detail page — 301 to the hub instead of a dead end.
+    return Astro.redirect('/workflows/', 301);
   }
 }
 
@@ -132,8 +137,12 @@ if (!isDetailPage) {
       },
     });
   }
-  // 404 only for a successfully queried, genuinely empty result.
+  // 404 only for a successfully queried, genuinely empty result — unless the
+  // slug has the shape of a retired workflow URL, which 301s to the hub.
   if (!profileFound && serialized.length === 0) {
+    if (isLegacyWorkflowSegment(slugParam)) {
+      return Astro.redirect('/workflows/', 301);
+    }
     return new Response(null, {
       status: 404,
       statusText: 'Not Found',
