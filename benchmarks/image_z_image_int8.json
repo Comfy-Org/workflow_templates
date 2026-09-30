@@ -1,0 +1,162 @@
+{
+  "94": {
+    "inputs": {
+      "aspect_ratio": "1:1 (Square)",
+      "megapixels": 1,
+      "multiple": 8
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "95": {
+    "inputs": {
+      "filename_prefix": "Z_image_base_int8",
+      "format": "png",
+      "format.bit_depth": "8-bit",
+      "format.input_color_space": "sRGB",
+      "images": [
+        "76:65",
+        0
+      ]
+    },
+    "class_type": "SaveImageAdvanced",
+    "_meta": {
+      "title": "Save Image (Advanced)"
+    }
+  },
+  "76:67": {
+    "inputs": {
+      "text": "Surreal double exposure portrait, semi-transparent glass human silhouette filled with fresh flowers and green foliage, faceless, glossy royal blue nylon baseball cap & shiny royal blue puffer jacket, bird of paradise, white jasmine, light purple forget-me-nots, lush leaves through glass gaps, subtle glass light refraction, plain off-white minimalist background, soft studio lighting, high fashion editorial, hyperrealistic texture, reflective synthetic fabric, delicate translucent flower layers, vertical composition, sharp focus, 8K ultra detailed, neutral tones with bright blue & orange floral pops, botanical glass fashion art",
+      "clip": [
+        "76:62",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "76:68": {
+    "inputs": {
+      "width": [
+        "94",
+        0
+      ],
+      "height": [
+        "94",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptySD3LatentImage",
+    "_meta": {
+      "title": "EmptySD3LatentImage"
+    }
+  },
+  "76:63": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "76:62": {
+    "inputs": {
+      "clip_name": "qwen_3_4b.safetensors",
+      "type": "lumina2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "76:65": {
+    "inputs": {
+      "samples": [
+        "76:69",
+        0
+      ],
+      "vae": [
+        "76:63",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "76:70": {
+    "inputs": {
+      "shift": 3,
+      "sampling": "flow",
+      "model": [
+        "76:66",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingAuraFlow",
+    "_meta": {
+      "title": "ModelSamplingAuraFlow"
+    }
+  },
+  "76:66": {
+    "inputs": {
+      "unet_name": "z_image_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "76:71": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "76:62",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "76:69": {
+    "inputs": {
+      "seed": 677498465340151,
+      "steps": 25,
+      "cfg": 4,
+      "sampler_name": "res_multistep",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "76:70",
+        0
+      ],
+      "positive": [
+        "76:67",
+        0
+      ],
+      "negative": [
+        "76:71",
+        0
+      ],
+      "latent_image": [
+        "76:68",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  }
+}
