@@ -1,8 +1,8 @@
 {
   "id": "54bb395d-3e60-4c94-b525-85523901575b",
   "revision": 0,
-  "last_node_id": 500,
-  "last_link_id": 806,
+  "last_node_id": 501,
+  "last_link_id": 903,
   "nodes": [
     {
       "id": 459,
@@ -16,7 +16,7 @@
         760
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -185,7 +185,9 @@
       "widgets_values": [
         0,
         "Replace costumes for the character",
-        true,
+        false,
+        false,
+        4096,
         "",
         1,
         25,
@@ -194,7 +196,7 @@
         1024,
         "euler",
         "simple",
-        1095460012924539,
+        891836227295375,
         "qwen_image_2.1_int8_convrot.safetensors",
         "qwen3vl_8b_int8_convrot.safetensors",
         "qwen_image_2.1_vae_bf16.safetensors",
@@ -205,7 +207,9 @@
       "widgets_values_named": {
         "resolution": 0,
         "prompt": "Replace costumes for the character",
-        "switch_1": true,
+        "switch_1": false,
+        "thinking": false,
+        "max_length": 4096,
         "negative_prompt": "",
         "cfg": 1,
         "steps": 25,
@@ -214,7 +218,7 @@
         "height": 1024,
         "scheduler": "euler",
         "scheduler_1": "simple",
-        "seed": 1095460012924539,
+        "seed": 891836227295375,
         "unet_name": "qwen_image_2.1_int8_convrot.safetensors",
         "clip_name": "qwen3vl_8b_int8_convrot.safetensors",
         "vae_name": "qwen_image_2.1_vae_bf16.safetensors",
@@ -227,7 +231,7 @@
       "id": 461,
       "type": "SaveImageAdvanced",
       "pos": [
-        950,
+        1410,
         2420
       ],
       "size": [
@@ -235,7 +239,7 @@
         760
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "showAdvanced": true,
       "inputs": [
@@ -272,7 +276,7 @@
       "id": 463,
       "type": "MarkdownNote",
       "pos": [
-        -400,
+        -360,
         2410
       ],
       "size": [
@@ -341,7 +345,7 @@
       "id": 472,
       "type": "ImageCompare",
       "pos": [
-        1700,
+        2160,
         2420
       ],
       "size": [
@@ -349,7 +353,7 @@
         760
       ],
       "flags": {},
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -439,6 +443,33 @@
       },
       "color": "#222",
       "bgcolor": "#000"
+    },
+    {
+      "id": 501,
+      "type": "MarkdownNote",
+      "pos": [
+        920,
+        2730
+      ],
+      "size": [
+        420,
+        480
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: PE",
+      "properties": {},
+      "widgets_values": [
+        "## Prompt Enhancer\n\nThe prompt enhancer rewrites your instruction with the Qwen 3.5 prompt enhancer model before the edit model sees it. These settings follow the official prompt enhancer release, and the ones you are most likely to change are exposed on the node.\n\n- `refine_prompt`: on runs the rewrite and feeds it to the edit model, off passes your instruction through as written. On gives the edit model a fuller prompt and usually better results; off skips the rewrite pass and the run finishes faster. This template starts with it off.\n- `thinking`: turn this on together with the enhancer. The checkpoint was trained with a reasoning block and loses quality without it.\n- `max_length`: the token budget for the reasoning block plus the rewritten prompt, 4096 here. The official setting is 24000; this template caps it lower so a single rewrite cannot run for many minutes.\n- `sampling_mode`: the sampling values live inside the subgraph. They follow the official ones: `temperature` 1.0, `top_p` 0.95, `top_k` 20, `min_p` 0, `presence_penalty` 0, `repetition_penalty` 1.0.\n\nThe enhancer checkpoint and its system prompt live inside the subgraph."
+      ],
+      "widgets_values_named": {
+        "text": "## Prompt Enhancer\n\nThe prompt enhancer rewrites your instruction with the Qwen 3.5 prompt enhancer model before the edit model sees it. These settings follow the official prompt enhancer release, and the ones you are most likely to change are exposed on the node.\n\n- `refine_prompt`: on runs the rewrite and feeds it to the edit model, off passes your instruction through as written. On gives the edit model a fuller prompt and usually better results; off skips the rewrite pass and the run finishes faster. This template starts with it off.\n- `thinking`: turn this on together with the enhancer. The checkpoint was trained with a reasoning block and loses quality without it.\n- `max_length`: the token budget for the reasoning block plus the rewritten prompt, 4096 here. The official setting is 24000; this template caps it lower so a single rewrite cannot run for many minutes.\n- `sampling_mode`: the sampling values live inside the subgraph. They follow the official ones: `temperature` 1.0, `top_p` 0.95, `top_k` 20, `min_p` 0, `presence_penalty` 0, `repetition_penalty` 1.0.\n\nThe enhancer checkpoint and its system prompt live inside the subgraph."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -459,14 +490,6 @@
       "IMAGE"
     ],
     [
-      672,
-      459,
-      0,
-      461,
-      0,
-      "IMAGE"
-    ],
-    [
       704,
       470,
       0,
@@ -481,6 +504,14 @@
       459,
       10,
       "IMAGE"
+    ],
+    [
+      672,
+      459,
+      0,
+      461,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [],
@@ -491,8 +522,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 38,
-          "lastNodeId": 500,
-          "lastLinkId": 806,
+          "lastNodeId": 501,
+          "lastLinkId": 903,
           "lastRerouteId": 9
         },
         "revision": 0,
@@ -504,7 +535,7 @@
             -720,
             630,
             143.044921875,
-            608
+            648
           ]
         },
         "outputNode": {
@@ -558,6 +589,30 @@
             ]
           },
           {
+            "id": "cd079967-6ff0-46d9-8b58-d52c2cdc5de5",
+            "name": "thinking",
+            "type": "BOOLEAN",
+            "linkIds": [
+              902
+            ],
+            "pos": [
+              -600.955078125,
+              714
+            ]
+          },
+          {
+            "id": "d98ec6b1-9955-48e0-874d-b99d10218329",
+            "name": "max_length",
+            "type": "INT",
+            "linkIds": [
+              903
+            ],
+            "pos": [
+              -600.955078125,
+              734
+            ]
+          },
+          {
             "id": "d4c1377f-7fbc-4519-b83c-9a3b9c2de104",
             "name": "negative_prompt",
             "type": "STRING",
@@ -566,7 +621,7 @@
             ],
             "pos": [
               -600.955078125,
-              714
+              754
             ]
           },
           {
@@ -578,7 +633,7 @@
             ],
             "pos": [
               -600.955078125,
-              734
+              774
             ]
           },
           {
@@ -591,7 +646,7 @@
             "label": "steps",
             "pos": [
               -600.955078125,
-              754
+              794
             ]
           },
           {
@@ -604,7 +659,7 @@
             "label": "custom_size",
             "pos": [
               -600.955078125,
-              774
+              814
             ]
           },
           {
@@ -617,7 +672,7 @@
             "localized_name": "width",
             "pos": [
               -600.955078125,
-              794
+              834
             ]
           },
           {
@@ -630,7 +685,7 @@
             "localized_name": "height",
             "pos": [
               -600.955078125,
-              814
+              854
             ]
           },
           {
@@ -643,7 +698,7 @@
             "label": "sampler",
             "pos": [
               -600.955078125,
-              834
+              874
             ]
           },
           {
@@ -656,7 +711,7 @@
             "label": "scheduler",
             "pos": [
               -600.955078125,
-              854
+              894
             ]
           },
           {
@@ -669,7 +724,7 @@
             ],
             "pos": [
               -600.955078125,
-              874
+              914
             ]
           },
           {
@@ -681,7 +736,7 @@
             ],
             "pos": [
               -600.955078125,
-              894
+              934
             ]
           },
           {
@@ -693,7 +748,7 @@
             ],
             "pos": [
               -600.955078125,
-              914
+              954
             ]
           },
           {
@@ -705,7 +760,7 @@
             ],
             "pos": [
               -600.955078125,
-              934
+              974
             ]
           },
           {
@@ -718,7 +773,7 @@
             "label": "cache_device",
             "pos": [
               -600.955078125,
-              954
+              994
             ]
           },
           {
@@ -731,7 +786,7 @@
             "label": "dtype",
             "pos": [
               -600.955078125,
-              974
+              1014
             ]
           },
           {
@@ -744,7 +799,7 @@
             "label": "PE_model",
             "pos": [
               -600.955078125,
-              994
+              1034
             ]
           },
           {
@@ -758,7 +813,7 @@
             "label": "image_1",
             "pos": [
               -600.955078125,
-              1014
+              1054
             ]
           },
           {
@@ -772,7 +827,7 @@
             "label": "image_2",
             "pos": [
               -600.955078125,
-              1034
+              1074
             ]
           },
           {
@@ -786,7 +841,7 @@
             "label": "image_3",
             "pos": [
               -600.955078125,
-              1054
+              1094
             ]
           },
           {
@@ -800,7 +855,7 @@
             "label": "image_4",
             "pos": [
               -600.955078125,
-              1074
+              1114
             ]
           },
           {
@@ -814,7 +869,7 @@
             "label": "image_5",
             "pos": [
               -600.955078125,
-              1094
+              1134
             ]
           },
           {
@@ -828,7 +883,7 @@
             "label": "image_6",
             "pos": [
               -600.955078125,
-              1114
+              1154
             ]
           },
           {
@@ -842,7 +897,7 @@
             "label": "image_7",
             "pos": [
               -600.955078125,
-              1134
+              1174
             ]
           },
           {
@@ -856,7 +911,7 @@
             "label": "image_8",
             "pos": [
               -600.955078125,
-              1154
+              1194
             ]
           },
           {
@@ -870,7 +925,7 @@
             "label": "image_9",
             "pos": [
               -600.955078125,
-              1174
+              1214
             ]
           },
           {
@@ -884,7 +939,7 @@
             "label": "image_10",
             "pos": [
               -600.955078125,
-              1194
+              1234
             ]
           }
         ],
@@ -917,7 +972,7 @@
               90
             ],
             "flags": {},
-            "order": 2,
+            "order": 1,
             "mode": 0,
             "inputs": [
               {
@@ -971,7 +1026,7 @@
               120
             ],
             "flags": {},
-            "order": 3,
+            "order": 2,
             "mode": 0,
             "inputs": [
               {
@@ -1027,7 +1082,7 @@
               70
             ],
             "flags": {},
-            "order": 4,
+            "order": 3,
             "mode": 0,
             "inputs": [
               {
@@ -1080,7 +1135,7 @@
               120
             ],
             "flags": {},
-            "order": 5,
+            "order": 4,
             "mode": 0,
             "inputs": [
               {
@@ -1138,7 +1193,7 @@
               60
             ],
             "flags": {},
-            "order": 6,
+            "order": 5,
             "mode": 0,
             "inputs": [
               {
@@ -1180,7 +1235,7 @@
               270
             ],
             "flags": {},
-            "order": 7,
+            "order": 6,
             "mode": 0,
             "inputs": [
               {
@@ -1297,7 +1352,7 @@
               80
             ],
             "flags": {},
-            "order": 8,
+            "order": 7,
             "mode": 0,
             "inputs": [
               {
@@ -1356,7 +1411,7 @@
               90
             ],
             "flags": {},
-            "order": 9,
+            "order": 8,
             "mode": 0,
             "inputs": [
               {
@@ -1418,7 +1473,7 @@
               520
             ],
             "flags": {},
-            "order": 10,
+            "order": 9,
             "mode": 0,
             "inputs": [
               {
@@ -1476,6 +1531,27 @@
                 "link": null
               },
               {
+                "localized_name": "image_7",
+                "name": "images.image_7",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 716
+              },
+              {
+                "localized_name": "image_8",
+                "name": "images.image_8",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 717
+              },
+              {
+                "localized_name": "image_9",
+                "name": "images.image_9",
+                "shape": 7,
+                "type": "IMAGE",
+                "link": 718
+              },
+              {
                 "localized_name": "image_10",
                 "name": "images.image_10",
                 "shape": 7,
@@ -1523,27 +1599,6 @@
                 "shape": 7,
                 "type": "IMAGE",
                 "link": 715
-              },
-              {
-                "localized_name": "image_7",
-                "name": "images.image_7",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": 716
-              },
-              {
-                "localized_name": "image_8",
-                "name": "images.image_8",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": 717
-              },
-              {
-                "localized_name": "image_9",
-                "name": "images.image_9",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": 718
               }
             ],
             "outputs": [
@@ -1598,7 +1653,7 @@
               120
             ],
             "flags": {},
-            "order": 11,
+            "order": 10,
             "mode": 0,
             "inputs": [
               {
@@ -1662,7 +1717,9 @@
                 "localized_name": "STRING",
                 "name": "STRING",
                 "type": "STRING",
-                "links": []
+                "links": [
+                  901
+                ]
               }
             ],
             "title": "Text (System Prompt)",
@@ -1688,7 +1745,7 @@
               680
             ],
             "flags": {},
-            "order": 12,
+            "order": 11,
             "mode": 0,
             "inputs": [
               {
@@ -1726,7 +1783,7 @@
               80
             ],
             "flags": {},
-            "order": 13,
+            "order": 12,
             "mode": 0,
             "inputs": [
               {
@@ -1785,7 +1842,7 @@
               270
             ],
             "flags": {},
-            "order": 14,
+            "order": 13,
             "mode": 0,
             "inputs": [
               {
@@ -1887,76 +1944,6 @@
             }
           },
           {
-            "id": 495,
-            "type": "TextEncodeQwenImage21",
-            "pos": [
-              -360,
-              1330
-            ],
-            "size": [
-              400,
-              210
-            ],
-            "flags": {},
-            "order": 1,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "clip",
-                "name": "clip",
-                "type": "CLIP",
-                "link": null
-              },
-              {
-                "localized_name": "image_1",
-                "name": "images.image_1",
-                "shape": 7,
-                "type": "IMAGE",
-                "link": null
-              },
-              {
-                "localized_name": "vae",
-                "name": "vae",
-                "shape": 7,
-                "type": "VAE",
-                "link": null
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "positive",
-                "name": "positive",
-                "type": "CONDITIONING",
-                "links": null
-              },
-              {
-                "localized_name": "negative",
-                "name": "negative",
-                "type": "CONDITIONING",
-                "links": null
-              },
-              {
-                "localized_name": "latent",
-                "name": "latent",
-                "type": "LATENT",
-                "links": null
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "TextEncodeQwenImage21"
-            },
-            "widgets_values": [
-              "",
-              "",
-              1024
-            ],
-            "widgets_values_named": {
-              "prompt": "",
-              "negative_prompt": "",
-              "resolution": 1024
-            }
-          },
-          {
             "id": 500,
             "type": "TextGenerate",
             "pos": [
@@ -1968,7 +1955,7 @@
               460
             ],
             "flags": {},
-            "order": 15,
+            "order": 14,
             "mode": 0,
             "showAdvanced": true,
             "inputs": [
@@ -2004,7 +1991,7 @@
                 "name": "system_prompt",
                 "shape": 7,
                 "type": "STRING",
-                "link": null
+                "link": 901
               },
               {
                 "localized_name": "prompt",
@@ -2016,6 +2003,15 @@
                 "link": 802
               },
               {
+                "localized_name": "max_length",
+                "name": "max_length",
+                "type": "INT",
+                "widget": {
+                  "name": "max_length"
+                },
+                "link": 903
+              },
+              {
                 "localized_name": "seed",
                 "name": "sampling_mode.seed",
                 "type": "INT",
@@ -2023,6 +2019,16 @@
                   "name": "sampling_mode.seed"
                 },
                 "link": 804
+              },
+              {
+                "localized_name": "thinking",
+                "name": "thinking",
+                "shape": 7,
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "thinking"
+                },
+                "link": 902
               }
             ],
             "outputs": [
@@ -2046,32 +2052,32 @@
             },
             "widgets_values": [
               "",
-              16256,
+              4096,
               "on",
               1,
               20,
               0.95,
-              0.05,
-              1.05,
+              0,
+              1,
               0,
               0,
               true,
-              false,
+              true,
               "auto"
             ],
             "widgets_values_named": {
               "prompt": "",
-              "max_length": 16256,
+              "max_length": 4096,
               "sampling_mode": "on",
               "sampling_mode.temperature": 1,
               "sampling_mode.top_k": 20,
               "sampling_mode.top_p": 0.95,
-              "sampling_mode.min_p": 0.05,
-              "sampling_mode.repetition_penalty": 1.05,
+              "sampling_mode.min_p": 0,
+              "sampling_mode.repetition_penalty": 1,
               "sampling_mode.seed": 0,
               "sampling_mode.presence_penalty": 0,
               "thinking": true,
-              "use_default_template": false,
+              "use_default_template": true,
               "mtp": "auto"
             }
           }
@@ -2220,22 +2226,6 @@
             "type": "LATENT"
           },
           {
-            "id": 739,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 484,
-            "target_slot": 0,
-            "type": "STRING"
-          },
-          {
-            "id": 741,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 484,
-            "target_slot": 2,
-            "type": "BOOLEAN"
-          },
-          {
             "id": 791,
             "origin_id": 484,
             "origin_slot": 0,
@@ -2252,9 +2242,25 @@
             "type": "STRING"
           },
           {
+            "id": 739,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 484,
+            "target_slot": 0,
+            "type": "STRING"
+          },
+          {
+            "id": 741,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 484,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          },
+          {
             "id": 658,
             "origin_id": -10,
-            "origin_slot": 4,
+            "origin_slot": 6,
             "target_id": 458,
             "target_slot": 6,
             "type": "FLOAT"
@@ -2262,7 +2268,7 @@
           {
             "id": 659,
             "origin_id": -10,
-            "origin_slot": 5,
+            "origin_slot": 7,
             "target_id": 458,
             "target_slot": 5,
             "type": "INT"
@@ -2270,7 +2276,7 @@
           {
             "id": 703,
             "origin_id": -10,
-            "origin_slot": 6,
+            "origin_slot": 8,
             "target_id": 468,
             "target_slot": 2,
             "type": "BOOLEAN"
@@ -2278,7 +2284,7 @@
           {
             "id": 660,
             "origin_id": -10,
-            "origin_slot": 7,
+            "origin_slot": 9,
             "target_id": 456,
             "target_slot": 0,
             "type": "INT"
@@ -2286,7 +2292,7 @@
           {
             "id": 661,
             "origin_id": -10,
-            "origin_slot": 8,
+            "origin_slot": 10,
             "target_id": 456,
             "target_slot": 1,
             "type": "INT"
@@ -2294,7 +2300,7 @@
           {
             "id": 662,
             "origin_id": -10,
-            "origin_slot": 9,
+            "origin_slot": 11,
             "target_id": 458,
             "target_slot": 7,
             "type": "COMBO"
@@ -2302,7 +2308,7 @@
           {
             "id": 668,
             "origin_id": -10,
-            "origin_slot": 10,
+            "origin_slot": 12,
             "target_id": 458,
             "target_slot": 8,
             "type": "COMBO"
@@ -2310,7 +2316,7 @@
           {
             "id": 667,
             "origin_id": -10,
-            "origin_slot": 11,
+            "origin_slot": 13,
             "target_id": 458,
             "target_slot": 4,
             "type": "INT"
@@ -2318,7 +2324,7 @@
           {
             "id": 663,
             "origin_id": -10,
-            "origin_slot": 12,
+            "origin_slot": 14,
             "target_id": 451,
             "target_slot": 0,
             "type": "COMBO"
@@ -2326,7 +2332,7 @@
           {
             "id": 664,
             "origin_id": -10,
-            "origin_slot": 13,
+            "origin_slot": 15,
             "target_id": 453,
             "target_slot": 0,
             "type": "COMBO"
@@ -2334,7 +2340,7 @@
           {
             "id": 665,
             "origin_id": -10,
-            "origin_slot": 14,
+            "origin_slot": 16,
             "target_id": 454,
             "target_slot": 0,
             "type": "COMBO"
@@ -2342,7 +2348,7 @@
           {
             "id": 729,
             "origin_id": -10,
-            "origin_slot": 15,
+            "origin_slot": 17,
             "target_id": 469,
             "target_slot": 1,
             "type": "COMBO"
@@ -2350,7 +2356,7 @@
           {
             "id": 730,
             "origin_id": -10,
-            "origin_slot": 16,
+            "origin_slot": 18,
             "target_id": 469,
             "target_slot": 2,
             "type": "COMBO"
@@ -2358,7 +2364,7 @@
           {
             "id": 746,
             "origin_id": -10,
-            "origin_slot": 17,
+            "origin_slot": 19,
             "target_id": 477,
             "target_slot": 0,
             "type": "COMBO"
@@ -2374,7 +2380,7 @@
           {
             "id": 710,
             "origin_id": -10,
-            "origin_slot": 18,
+            "origin_slot": 20,
             "target_id": 474,
             "target_slot": 1,
             "type": "IMAGE"
@@ -2398,7 +2404,7 @@
           {
             "id": 727,
             "origin_id": -10,
-            "origin_slot": 3,
+            "origin_slot": 5,
             "target_id": 474,
             "target_slot": 4,
             "type": "STRING"
@@ -2412,73 +2418,73 @@
             "type": "INT"
           },
           {
-            "id": 719,
+            "id": 716,
             "origin_id": -10,
-            "origin_slot": 27,
+            "origin_slot": 26,
             "target_id": 474,
             "target_slot": 7,
             "type": "IMAGE"
           },
           {
-            "id": 711,
-            "origin_id": -10,
-            "origin_slot": 19,
-            "target_id": 474,
-            "target_slot": 9,
-            "type": "IMAGE"
-          },
-          {
-            "id": 712,
-            "origin_id": -10,
-            "origin_slot": 20,
-            "target_id": 474,
-            "target_slot": 10,
-            "type": "IMAGE"
-          },
-          {
-            "id": 713,
-            "origin_id": -10,
-            "origin_slot": 21,
-            "target_id": 474,
-            "target_slot": 11,
-            "type": "IMAGE"
-          },
-          {
-            "id": 714,
-            "origin_id": -10,
-            "origin_slot": 22,
-            "target_id": 474,
-            "target_slot": 12,
-            "type": "IMAGE"
-          },
-          {
-            "id": 715,
-            "origin_id": -10,
-            "origin_slot": 23,
-            "target_id": 474,
-            "target_slot": 13,
-            "type": "IMAGE"
-          },
-          {
-            "id": 716,
-            "origin_id": -10,
-            "origin_slot": 24,
-            "target_id": 474,
-            "target_slot": 14,
-            "type": "IMAGE"
-          },
-          {
             "id": 717,
             "origin_id": -10,
-            "origin_slot": 25,
+            "origin_slot": 27,
             "target_id": 474,
-            "target_slot": 15,
+            "target_slot": 8,
             "type": "IMAGE"
           },
           {
             "id": 718,
             "origin_id": -10,
-            "origin_slot": 26,
+            "origin_slot": 28,
+            "target_id": 474,
+            "target_slot": 9,
+            "type": "IMAGE"
+          },
+          {
+            "id": 719,
+            "origin_id": -10,
+            "origin_slot": 29,
+            "target_id": 474,
+            "target_slot": 10,
+            "type": "IMAGE"
+          },
+          {
+            "id": 711,
+            "origin_id": -10,
+            "origin_slot": 21,
+            "target_id": 474,
+            "target_slot": 12,
+            "type": "IMAGE"
+          },
+          {
+            "id": 712,
+            "origin_id": -10,
+            "origin_slot": 22,
+            "target_id": 474,
+            "target_slot": 13,
+            "type": "IMAGE"
+          },
+          {
+            "id": 713,
+            "origin_id": -10,
+            "origin_slot": 23,
+            "target_id": 474,
+            "target_slot": 14,
+            "type": "IMAGE"
+          },
+          {
+            "id": 714,
+            "origin_id": -10,
+            "origin_slot": 24,
+            "target_id": 474,
+            "target_slot": 15,
+            "type": "IMAGE"
+          },
+          {
+            "id": 715,
+            "origin_id": -10,
+            "origin_slot": 25,
             "target_id": 474,
             "target_slot": 16,
             "type": "IMAGE"
@@ -2486,7 +2492,7 @@
           {
             "id": 750,
             "origin_id": -10,
-            "origin_slot": 18,
+            "origin_slot": 20,
             "target_id": 485,
             "target_slot": 0,
             "type": "IMAGE"
@@ -2494,7 +2500,7 @@
           {
             "id": 779,
             "origin_id": -10,
-            "origin_slot": 19,
+            "origin_slot": 21,
             "target_id": 485,
             "target_slot": 1,
             "type": "IMAGE"
@@ -2502,7 +2508,7 @@
           {
             "id": 780,
             "origin_id": -10,
-            "origin_slot": 20,
+            "origin_slot": 22,
             "target_id": 485,
             "target_slot": 2,
             "type": "IMAGE"
@@ -2510,7 +2516,7 @@
           {
             "id": 781,
             "origin_id": -10,
-            "origin_slot": 21,
+            "origin_slot": 23,
             "target_id": 485,
             "target_slot": 3,
             "type": "IMAGE"
@@ -2518,7 +2524,7 @@
           {
             "id": 782,
             "origin_id": -10,
-            "origin_slot": 22,
+            "origin_slot": 24,
             "target_id": 485,
             "target_slot": 4,
             "type": "IMAGE"
@@ -2526,7 +2532,7 @@
           {
             "id": 783,
             "origin_id": -10,
-            "origin_slot": 23,
+            "origin_slot": 25,
             "target_id": 485,
             "target_slot": 5,
             "type": "IMAGE"
@@ -2534,7 +2540,7 @@
           {
             "id": 784,
             "origin_id": -10,
-            "origin_slot": 24,
+            "origin_slot": 26,
             "target_id": 485,
             "target_slot": 6,
             "type": "IMAGE"
@@ -2542,7 +2548,7 @@
           {
             "id": 785,
             "origin_id": -10,
-            "origin_slot": 25,
+            "origin_slot": 27,
             "target_id": 485,
             "target_slot": 7,
             "type": "IMAGE"
@@ -2550,7 +2556,7 @@
           {
             "id": 786,
             "origin_id": -10,
-            "origin_slot": 26,
+            "origin_slot": 28,
             "target_id": 485,
             "target_slot": 8,
             "type": "IMAGE"
@@ -2558,7 +2564,7 @@
           {
             "id": 787,
             "origin_id": -10,
-            "origin_slot": 27,
+            "origin_slot": 29,
             "target_id": 485,
             "target_slot": 9,
             "type": "IMAGE"
@@ -2580,6 +2586,14 @@
             "type": "IMAGE"
           },
           {
+            "id": 901,
+            "origin_id": 479,
+            "origin_slot": 0,
+            "target_id": 500,
+            "target_slot": 4,
+            "type": "STRING"
+          },
+          {
             "id": 802,
             "origin_id": -10,
             "origin_slot": 1,
@@ -2588,11 +2602,27 @@
             "type": "STRING"
           },
           {
-            "id": 804,
+            "id": 903,
             "origin_id": -10,
-            "origin_slot": 11,
+            "origin_slot": 4,
             "target_id": 500,
             "target_slot": 6,
+            "type": "INT"
+          },
+          {
+            "id": 902,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 500,
+            "target_slot": 8,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 804,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 500,
+            "target_slot": 7,
             "type": "INT"
           }
         ],
@@ -2608,10 +2638,10 @@
     "VHS_MetadataImage": true,
     "VHS_KeepIntermediate": true,
     "ds": {
-      "scale": 0.6276052054271595,
+      "scale": 0.6940244165782402,
       "offset": [
-        846.0225539591257,
-        -2120.090702249382
+        973.3086639020673,
+        -1999.8825382096318
       ]
     }
   },
