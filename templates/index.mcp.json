@@ -115,6 +115,42 @@
         }
       },
       {
+        "name": "api_bfl_flux3_image_edit",
+        "title": "FLUX.3 Image: Image Edit",
+        "task": "Image Edit",
+        "model": "Flux.3 Image",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Edit or combine up to ten reference images from a text instruction with FLUX 3 Image, referring to them in the prompt as image 1, image 2, and so on. One image is output at any of sixteen aspect ratios and up to 4K, with web and image search grounding on by default. Ideal for character-consistent edits, product and object placement, and multi-reference scene compositing.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
+        },
+        "minComfyUIVersion": "0.38.2",
+        "capabilities": {
+          "workflow": ["image-edit", "api"]
+        }
+      },
+      {
+        "name": "api_bfl_flux3_t2i",
+        "title": "Flux 3 Image: Text to Image",
+        "task": "Text to Image",
+        "model": "Flux.3 Image",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate an image from a text prompt with FLUX 3 Image, which interprets and expands the prompt before generating it, at any of sixteen aspect ratios and up to 4K. Web and image search grounding is on by default and no input files are required. One image is output. Ideal for typography-led posters, layout-driven design work, and fast exploration of visual concepts.\n",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated image"]
+        },
+        "minComfyUIVersion": "0.38.2",
+        "capabilities": {
+          "workflow": ["text-to-image", "api"]
+        }
+      },
+      {
         "name": "api_nano_banana_pro",
         "title": "Nano Banana Pro",
         "task": "Image Edit",
@@ -133,6 +169,24 @@
           "model_options": {
             "GeminiImage2Node": ["gemini-3-pro-image-preview", "Nano Banana 2 (Gemini 3.1 Flash Image)"]
           }
+        }
+      },
+      {
+        "name": "api_bfl_flux3_image_bboxes",
+        "title": "Flux.3 Image: Bounding Box Edit",
+        "task": "Image Edit",
+        "model": "Flux.3 Image",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Place objects and text where you want them with FLUX 3 Image by feeding boxes from the Create Bounding Boxes node into the prompt, so each box carries its own description and copy into the render. Boxes are relative to the canvas, so set the output to the same aspect ratio. One image is output, up to 4K. Ideal for poster and layout composition, placing headlines and captions, and controlling where subjects sit in the frame.\n",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.38.2",
+        "capabilities": {
+          "workflow": ["image-edit", "api"]
         }
       },
       {
@@ -4795,6 +4849,48 @@
         }
       },
       {
+        "name": "api_grok_imagine_video_1_5_lite_i2v",
+        "title": "Grok Imagine Video 1.5 Lite: Image to Video",
+        "task": "Image to Video",
+        "model": "Grok Imagine Video",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate short videos from a single still image using Grok Imagine Video 1.5 Lite, a faster, lower-cost model that turns one image into a video clip up to 15 seconds at resolutions up to 1080p. Ideal for rapid social content, storyboard previews, and high-volume creative iteration where speed and cost matter more than maximum fidelity.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.38.2",
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "GrokVideoNode": ["grok-imagine-video", "grok-imagine-video-1.5"]
+          }
+        }
+      },
+      {
+        "name": "api_grok_imagine_video_1_5_lite_t2v",
+        "title": "Grok Imagine Video 1.5 Lite: Text to Video",
+        "task": "Text to Video",
+        "model": "Grok Imagine Video",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a video of up to 15 seconds from a text prompt with Grok Imagine Video 1.5 Lite, the distilled and faster version of Imagine Video 1.5, with native audio and 480p, 720p or 1080p output in any of seven aspect ratios. No input files are required and one video is output. Ideal for social clips, ad mockups, and fast iteration where a full-quality render is not worth the wait.\n",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "minComfyUIVersion": "0.38.2",
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "GrokVideoNode": ["grok-imagine-video", "grok-imagine-video-1.5"]
+          }
+        }
+      },
+      {
         "name": "api_heygen_video_1_r2v",
         "title": "HeyGen Video 1.0: Reference to Video",
         "task": "Reference to Video",
@@ -5030,7 +5126,7 @@
         "title": "MiniMax H3 Max: Image to Video",
         "task": "Image to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 314,
         "recommend": "medium",
         "description": "Generate video from a source image using MiniMax H3 Max, animating your still frame while preserving its composition, visual identity, and aspect ratio. The model delivers faster-than-real-time generation with strong prompt adherence and polished cinematic aesthetics. Ideal for bringing character art to life, animating product shots, and creating motion from concept images.",
@@ -5087,9 +5183,9 @@
         "title": "MiniMax H3 Max: FLF2V",
         "task": "FLF2V",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 157,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate polished, prompt-faithful videos faster than real time with MiniMax H3 Max, a post-trained model tuned for stronger prompt adherence and vivid cinematic aesthetics. This workflow supports text-to-video, image-to-video animation, and directed first-to-last-frame transitions, delivering clean compositions and cohesive lighting directly from the model. Ideal for rapid concept exploration, cinematic motion graphics, and high-throughput video comparison.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -5105,9 +5201,9 @@
         "title": "MiniMax H3 Max: Text to Video",
         "task": "Text to Video",
         "model": "MiniMax H3",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 151,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate polished, prompt-faithful video from text using MiniMax H3 Max, producing a single finished video clip with no input files required. Ideal for rapid concept exploration, cinematic text-to-video scenes, and high-throughput creative iteration where speed and visual quality matter.",
         "io": {
           "inputs": ["text: Video prompt"],
@@ -9258,7 +9354,7 @@
         "title": "Fish Audio: Text to Speech",
         "task": "Text to Speech",
         "model": "Fish Audio",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 227,
         "recommend": "medium",
         "description": "Generate natural, expressive speech from text with Fish Audio S2 Pro, a text-to-speech model supporting 80+ languages and fine-grained control over emotion, tone, and pacing using inline tags like [whisper] or [excited]. Input your text and receive one high-quality audio output, with optional style tags woven directly into the script. Ideal for voiceover production, multilingual content creation, and character dialogue in games or animations.",
@@ -9278,9 +9374,9 @@
         "title": "Fish Audio: Voice Clone to Speech",
         "task": "Text to Speech",
         "model": "Fish Audio",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 156,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Clone any voice from a short recording, then use it to speak any script with Fish Audio. Record 2-3 clips of 15-20 seconds, connect them to the Instant Voice Clone node, and the cloned voice feeds straight into text to speech with no training wait. Add emotion tags to control how your cloned voice delivers each line. Great for personalized narration, character voices, and content in your own voice.",
         "io": {
           "inputs": ["audio: Reference voice recording", "text: Prompt"],
@@ -9299,9 +9395,9 @@
         "title": "Fish Audio: Speech to Text",
         "task": "Speech to Text",
         "model": "Fish Audio",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 9,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Transcribe audio to text with Fish Audio ASR. Language is detected automatically across 80+ languages, with optional word-level timestamps returned as JSON segments. Use it to create subtitles, transcribe recordings, or generate text prompts from audio clips. A sample audio is pre-loaded so you can test it right away.",
         "io": {
           "inputs": ["audio: Audio to transcribe"],
