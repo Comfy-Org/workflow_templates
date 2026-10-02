@@ -2,7 +2,7 @@
   "id": "91f6bbe2-ed41-4fd6-bac7-71d5b5864ecb",
   "revision": 0,
   "last_node_id": 221,
-  "last_link_id": 302,
+  "last_link_id": 306,
   "nodes": [
     {
       "id": 210,
@@ -35,7 +35,6 @@
       },
       "widgets_values": [
         "long_demo.mp3",
-        null,
         null
       ],
       "widgets_values_named": {
@@ -139,7 +138,8 @@
           "name": "voice",
           "type": "ELEVENLABS_VOICE",
           "links": [
-            299
+            299,
+            305
           ]
         }
       ],
@@ -175,7 +175,8 @@
           "name": "voice",
           "type": "ELEVENLABS_VOICE",
           "links": [
-            300
+            304,
+            306
           ]
         }
       ],
@@ -200,7 +201,7 @@
       ],
       "size": [
         340,
-        423
+        354
       ],
       "flags": {},
       "order": 7,
@@ -214,7 +215,17 @@
         {
           "name": "inputs.voice2",
           "type": "ELEVENLABS_VOICE",
-          "link": 300
+          "link": 304
+        },
+        {
+          "name": "inputs.voice3",
+          "type": "ELEVENLABS_VOICE",
+          "link": 305
+        },
+        {
+          "name": "inputs.voice4",
+          "type": "ELEVENLABS_VOICE",
+          "link": 306
         }
       ],
       "outputs": [
@@ -234,10 +245,12 @@
       "widgets_values": [
         0.5,
         "auto",
-        "eleven_v3",
-        "2",
-        "Now, you can use ElevenLabs node to generate multi-dialogue audio.",
-        "Yes, you can use voice cloning too",
+        "eleven_v4",
+        "4",
+        "[quietly, close to the mic] I ran the numbers twice... the engine is holding steady. Wait, why is the alarm light-",
+        "[jumping in] -because I already started it. [laughs] You were taking too long. [deadpan] We have forty seconds.",
+        "[sighs, then firmly] Then stop smiling and seal the hatch. [urgent] I need the console live before the countdown hits twenty.",
+        "[amused] Already sealed. [quickly] The console is yours... and there goes the countdown.",
         "",
         2061518140,
         "randomize",
@@ -246,10 +259,12 @@
       "widgets_values_named": {
         "stability": 0.5,
         "apply_text_normalization": "auto",
-        "model": "eleven_v3",
-        "inputs": "2",
-        "inputs.text1": "Now, you can use ElevenLabs node to generate multi-dialogue audio.",
-        "inputs.text2": "Yes, you can use voice cloning too",
+        "model": "eleven_v4",
+        "inputs": "4",
+        "inputs.text1": "[quietly, close to the mic] I ran the numbers twice... the engine is holding steady. Wait, why is the alarm light-",
+        "inputs.text2": "[jumping in] -because I already started it. [laughs] You were taking too long. [deadpan] We have forty seconds.",
+        "inputs.text3": "[sighs, then firmly] Then stop smiling and seal the hatch. [urgent] I need the console live before the countdown hits twenty.",
+        "inputs.text4": "[amused] Already sealed. [quickly] The console is yours... and there goes the countdown.",
         "language_code": "",
         "seed": 2061518140,
         "control_after_generate": "randomize",
@@ -290,7 +305,8 @@
         ""
       ],
       "widgets_values_named": {
-        "audio": ""
+        "audio": "",
+        "audio#1": ""
       }
     },
     {
@@ -302,7 +318,7 @@
       ],
       "size": [
         680,
-        178
+        180
       ],
       "flags": {},
       "order": 8,
@@ -342,7 +358,7 @@
       ],
       "size": [
         480,
-        226.6875
+        230
       ],
       "flags": {},
       "order": 5,
@@ -351,10 +367,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Input Asset\n\n- [long_demo.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/long_demo.mp3)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "## How to use this template\n\n- `inputs` sets how many turns the dialogue has, 1 to 10: every entry is one turn with its own line and its own voice, and the turns are generated in order as a single audio file. This template ships 4 turns that alternate between the two voices.\n- Connect a voice to every entry. One Voice Selector can feed several entries, so two selectors (Roger and Laura) already drive a conversation of any length: raise `inputs` and alternate A, B, A, B.\n- Option 1, preset voice, is the active path. Option 2, voice clone, is bypassed: select the **Load Audio** (or **Record Audio**) and **ElevenLabs Instant Voice Clone** nodes, press Ctrl+B, then replace that entry's Voice Selector link with the clone's voice output. Use 1 to 2 minutes of clean single-speaker audio for a usable clone: it copies the voice, not the words.\n\n## How to write the lines\n\n- Audio tags inside an entry affect only that turn: `[quietly]`, `[laughs]`, `[deadpan]`. Describe the voice quality rather than a sound cue.\n- Punctuation does the timing: `...` trails off, a dash cuts a line short. An interruption is a dash at the end of one entry and at the start of the next. SSML break tags are not supported.\n- Keep each entry to one breath, and keep all entries together under 2,000 characters per request.\n\nPrompting guide: [ElevenLabs best practices](https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v4)\n\n\n## Input Asset\n\n- [long_demo.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/long_demo.mp3)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
-        "text": "## Input Asset\n\n- [long_demo.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/long_demo.mp3)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "## How to use this template\n\n- `inputs` sets how many turns the dialogue has, 1 to 10: every entry is one turn with its own line and its own voice, and the turns are generated in order as a single audio file. This template ships 4 turns that alternate between the two voices.\n- Connect a voice to every entry. One Voice Selector can feed several entries, so two selectors (Roger and Laura) already drive a conversation of any length: raise `inputs` and alternate A, B, A, B.\n- Option 1, preset voice, is the active path. Option 2, voice clone, is bypassed: select the **Load Audio** (or **Record Audio**) and **ElevenLabs Instant Voice Clone** nodes, press Ctrl+B, then replace that entry's Voice Selector link with the clone's voice output. Use 1 to 2 minutes of clean single-speaker audio for a usable clone: it copies the voice, not the words.\n\n## How to write the lines\n\n- Audio tags inside an entry affect only that turn: `[quietly]`, `[laughs]`, `[deadpan]`. Describe the voice quality rather than a sound cue.\n- Punctuation does the timing: `...` trails off, a dash cuts a line short. An interruption is a dash at the end of one entry and at the start of the next. SSML break tags are not supported.\n- Keep each entry to one breath, and keep all entries together under 2,000 characters per request.\n\nPrompting guide: [ElevenLabs best practices](https://elevenlabs.io/docs/overview/capabilities/text-to-speech/best-practices#prompting-eleven-v4)\n\n\n## Input Asset\n\n- [long_demo.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/long_demo.mp3)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -370,6 +386,14 @@
       "AUDIO"
     ],
     [
+      302,
+      218,
+      0,
+      220,
+      0,
+      "AUDIO"
+    ],
+    [
       299,
       211,
       0,
@@ -378,7 +402,7 @@
       "ELEVENLABS_VOICE"
     ],
     [
-      300,
+      304,
       219,
       0,
       218,
@@ -386,12 +410,20 @@
       "ELEVENLABS_VOICE"
     ],
     [
-      302,
+      305,
+      211,
+      0,
       218,
+      2,
+      "ELEVENLABS_VOICE"
+    ],
+    [
+      306,
+      219,
       0,
-      220,
-      0,
-      "AUDIO"
+      218,
+      3,
+      "ELEVENLABS_VOICE"
     ]
   ],
   "groups": [
@@ -423,13 +455,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8916666666666667,
+      "scale": 0.5280674722668658,
       "offset": [
-        -1341.2368574766385,
-        -368.09725467289707
+        -452.1043391112039,
+        -282.13320167339305
       ]
     },
-    "frontendVersion": "1.52.5",
+    "frontendVersion": "1.56.0",
     "workflowRendererVersion": "LG",
     "ue_links": [],
     "links_added_by_ue": [],
