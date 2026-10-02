@@ -17,7 +17,7 @@ How this repository turns template changes into **version bumps → PyPI package
 ## Version bump model (how versions move)
 
 - **Root `pyproject.toml`** (the `meta` package) is **manually controlled by the PR author**. CI never auto-bumps it.
-- **Sub-packages** (`core`, `json`, `media_api`, `media_video`, `media_image`, `media_other`, `media_assets_01`, `blueprints`) are **auto-bumped by `ci_version_manager.py`** — but only when the PR author has changed the root version.
+- **Sub-packages** (`core`, `json`, `media_api`, `media_video`, `media_image`, `media_other`, `media_assets_01`, `media_assets_02`, `blueprints`) are **auto-bumped by `ci_version_manager.py`** — but only when the PR author has changed the root version. Frozen packages in `scripts/data/version_policy.json` are skipped.
 - Template-only PRs (root version unchanged): **no version bumps at all** — manifests still get re-synced and committed.
 
 | PR type | Auto-bump? | PyPI after merge? |
@@ -69,10 +69,10 @@ Then check **"Force publish to PyPI"** in the UI (or the equivalent input). Reco
 
 ## Frozen legacy media bundles (why some packages never bump)
 
-`media_api`, `media_image`, `media_video`, `media_other` are **frozen**:
+`media_api`, `media_image`, `media_video`, `media_other`, and `media_assets_01` are **frozen**:
 - Version-pinned in root `pyproject.toml`, excluded from CI auto-bump (`scripts/data/version_policy.json` → `frozen_packages`).
 - Reason: PyPI has a **~100 MB per-file** upload limit; these legacy wheels are 85–99 MB and would consume quota + risk rejection on every rebuild.
-- **New template assets go to `media-assets-01`** — never add new templates/media to the frozen bundles.
+- **New template assets go to `media-assets-02`** — never add new templates/media to the frozen bundles (`media-*` or `media-assets-01`).
 - Full policy: [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md). `check_frozen_policy.py` posts a non-blocking PR comment if a PR violates it.
 
 To deliberately ship a legacy wheel (rare): manually bump `packages/media_<bundle>/pyproject.toml`, update the root pin, optionally un-freeze for one release, merge with `release` label.
@@ -97,7 +97,7 @@ On version-bump PRs, `release_distribution_report.py` posts a comment summarizin
 | Version-check says "no bump" on a template PR | Root version wasn't changed | That's expected; bump root version only if you want a release |
 | "Invalid version format" | Non-semantic version in pyproject.toml | Use `x.y.z[-prerelease][+build]` (e.g. `0.11.49`) |
 | Publish blocked / quota comment critical | PyPI quota ≥ 90% | Delete orphan versions (see delete-candidates in PR comment) or hold the release |
-| `media-*` package never auto-bumps | Frozen by policy | Expected; move new assets to `media-assets-01` |
+| `media-*` / frozen `media-assets-01` never auto-bumps | Frozen by policy | Expected; move new assets to `media-assets-02` |
 | "No associated PR found" in publish.yml | GitHub API race right after merge | Workflow retries 5×; if still missing, it creates the release without PyPI — force-publish after |
 
 ## Local status checks
@@ -106,7 +106,7 @@ On version-bump PRs, `release_distribution_report.py` posts a comment summarizin
 # current version
 grep -E '^\s*version\s*=' pyproject.toml | head -1
 # sub-package versions vs PyPI (all releaseable sub-packages)
-for pkg in core json media-api media-video media-image media-other media-assets-01 blueprints; do
+for pkg in core json media-api media-video media-image media-other media-assets-01 media-assets-02 blueprints; do
   local=$(./scripts/ci/get_version.sh "packages/${pkg//-/_}/pyproject.toml")
   if [ "$pkg" = "blueprints" ]; then
     pypi_name="comfyui-subgraph-blueprints"

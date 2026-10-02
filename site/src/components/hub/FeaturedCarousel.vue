@@ -14,7 +14,7 @@ import { workflowDetailPath, tagPath, creatorPath, thumbnailPath } from '@/lib/r
 import { tagDisplayName } from '@/lib/tag-aliases';
 import { isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
-import { hubMediaFor } from '@/lib/hub-media';
+import { featuredSlideImage, hubMediaFor } from '@/lib/hub-media';
 import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/avatar';
 
@@ -90,7 +90,7 @@ const slides = computed<FeaturedSlide[]>(() =>
       href: workflowDetailPath(t.name, t.shareId, props.locale),
       providerName: badge?.name ?? null,
       logoPath: badge?.src ?? null,
-      imageUrl: isVideo ? null : mediaUrl,
+      imageUrl: isVideo || !mediaUrl ? null : featuredSlideImage(mediaUrl),
       videoUrl: isVideo && mediaUrl ? (hubMediaFor(mediaUrl)?.video ?? mediaUrl) : null,
       posterUrl:
         isVideo && mediaUrl ? (hubMediaFor(mediaUrl)?.poster ?? getVideoFrameUrl(mediaUrl)) : null,
