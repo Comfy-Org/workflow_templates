@@ -49,7 +49,7 @@ awk '/^version/{print; exit}' pyproject.toml                          # branch
 curl -fsS https://pypi.org/pypi/comfyui-workflow-templates/json | python3 -c "import json,sys; print(json.load(sys.stdin)['info']['version'])"
 ```
 
-- If the branch version is not above `origin/main`, bump the patch version in root `pyproject.toml` only (e.g. `0.11.75` to `0.11.76`). The new version must also be above the latest PyPI version.
+- If the branch version is not above **both** `origin/main` and the latest PyPI version, bump the patch version in root `pyproject.toml` only (e.g. `0.11.75` to `0.11.76`). The result must be above both baselines.
 - Do not edit `packages/*/pyproject.toml` or the `==` pins by hand. Step 3 does that.
 - Commit it: `git commit -am "Bump version to <NEW_VERSION>"`.
 
@@ -115,9 +115,10 @@ Bundle only the commits on top of `origin/main` (the colleague already has main)
 
 ```bash
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
-STAGE=~/Downloads/$BRANCH-handoff
+SLUG=${BRANCH//\//-}               # file-safe name, e.g. feature/x -> feature-x
+STAGE=~/Downloads/$SLUG-handoff
 mkdir -p "$STAGE"
-OUT=$STAGE/$BRANCH.bundle
+OUT=$STAGE/$SLUG.bundle
 git bundle create "$OUT" origin/main..HEAD
 git bundle verify "$OUT"
 ls -lh "$OUT"
@@ -129,11 +130,12 @@ If the branch gains commits later, recreate the bundle and update the handoff. N
 
 ### 6. Write the handoff
 
-Copy [HANDOFF_TEMPLATE.md](HANDOFF_TEMPLATE.md) to `$STAGE/HANDOFF.md` and fill every `<...>` placeholder, including the version bump table from step 4. Write it entirely in English. Keep these points explicit, since receiving agents get them wrong:
+Copy [HANDOFF_TEMPLATE.md](HANDOFF_TEMPLATE.md) to `$STAGE/HANDOFF.md` and fill every `<...>` placeholder, including the version bump table from step 4. `<BRANCH>` is the git branch name, `<SLUG>` is the file-safe name used for the zip and bundle. Fill `<PUBLISH_AFTER>` with when the release may go public (a date, or "now"), as stated by the user. Write it entirely in English. Keep these points explicit, since receiving agents get them wrong:
 
 - `release` is a **GitHub PR label**, not a git tag. Without it the merge creates a GitHub Release only, with no PyPI upload.
 - Do not bump the root version or the sub-packages again. The table lists the exact versions already committed, and the receiver checks them after applying the bundle.
-- PR title stays short and generic (e.g. "Update templates"). No model or template names, since the release may be private until merge.
+- `Comfy-Org/workflow_templates` is a **public** repo. Pushing the branch or opening the PR publishes the template contents to anyone, whatever the title says. The receiver must not push until publication is authorized (`<PUBLISH_AFTER>` has passed, or the owner confirms). Until then the bundle stays in private storage only.
+- PR title stays short and generic (e.g. "Update templates"). No model or template names.
 - Do not touch ComfyUI until the new version is actually on PyPI.
 
 ### 7. Zip it
@@ -141,13 +143,13 @@ Copy [HANDOFF_TEMPLATE.md](HANDOFF_TEMPLATE.md) to `$STAGE/HANDOFF.md` and fill 
 Pack both files into one zip so the colleague receives a single attachment. The `.bundle` is already compressed, so `-0` (store only) is fine.
 
 ```bash
-ZIP=~/Downloads/$BRANCH-handoff.zip
+ZIP=~/Downloads/$SLUG-handoff.zip
 rm -f "$ZIP"
-(cd ~/Downloads && zip -r -0 "$ZIP" "$BRANCH-handoff")
+(cd ~/Downloads && zip -r -0 "$ZIP" "$SLUG-handoff")
 unzip -l "$ZIP"
 ```
 
-`unzip -l` must list exactly two files: `<branch>-handoff/<branch>.bundle` and `<branch>-handoff/HANDOFF.md`. If the branch changes later, regenerate the bundle and the handoff, then rebuild the zip. Never ship a zip whose bundle and handoff come from different runs.
+`unzip -l` must list exactly two files: `<slug>-handoff/<slug>.bundle` and `<slug>-handoff/HANDOFF.md`. If the branch changes later, regenerate the bundle and the handoff, then rebuild the zip. Never ship a zip whose bundle and handoff come from different runs.
 
 ### 8. Report to the user
 
@@ -155,14 +157,15 @@ Give the absolute zip path and say: send this one zip to the colleague; their ag
 
 ## Receiver workflow
 
-When the user gives you a handoff zip, unzip it (`unzip <branch>-handoff.zip`) and follow `HANDOFF.md` step by step. The core sequence:
+When the user gives you a handoff zip, unzip it (`unzip <slug>-handoff.zip`) and follow `HANDOFF.md` step by step. The core sequence:
 
 1. `git fetch origin && git checkout main && git pull`, then `git bundle verify <bundle>`. If the prerequisite is missing, fetch again. Never recreate commits by hand.
-2. `git fetch <bundle> HEAD:<branch> && git checkout <branch>`. Confirm the commit list matches the handoff, and that every row of the handoff's "Version bump" table matches the files (`rg '^version' pyproject.toml packages/*/pyproject.toml`). Also confirm the new root version is not already on PyPI. If anything differs, stop and ask the sender instead of bumping yourself.
-3. Push, open the PR against `main`, then `gh pr edit --add-label release`. Confirm the label with `gh pr view --json labels`.
-4. If bot pushes leave runs in `action_required`, approve them: `gh api -X POST repos/Comfy-Org/workflow_templates/actions/runs/<id>/approve`. Wait for green checks, then merge.
-5. Watch the `Publish to PyPI` run on `main`. Confirm with `curl -fsS https://pypi.org/pypi/comfyui-workflow-templates/<version>/json` and check that the GitHub Release `v<version>` does **not** say "Not published to PyPI".
-6. In `Comfy-Org/ComfyUI` (base `master`), change only `comfyui-workflow-templates==<old>` to `==<new>` in `requirements.txt`. Title: `Update workflow templates to v<new>`, with PyPI and release links in the body.
+2. `git fetch "<bundle>" "HEAD:<branch>" && git checkout "<branch>"`. Confirm the commit list matches the handoff, and that every row of the handoff's "Version bump" table matches the files (`rg '^version' pyproject.toml packages/*/pyproject.toml`). Also confirm the new root version is not already on PyPI. If anything differs, stop and ask the sender instead of bumping yourself.
+3. **Publication gate.** The repo is public, so pushing ends the embargo. Do not push or open the PR until `<PUBLISH_AFTER>` in the handoff has passed or the release owner confirms in writing. Until then keep the bundle and local branch private.
+4. Push, open the PR against `main`, then `gh pr edit --add-label release`. Confirm the label with `gh pr view --json labels`.
+5. If bot pushes leave runs in `action_required`, approve them: `gh api -X POST repos/Comfy-Org/workflow_templates/actions/runs/<id>/approve`. Wait for green checks, then merge.
+6. Watch the `Publish to PyPI` run on `main`. Confirm with `curl -fsS https://pypi.org/pypi/comfyui-workflow-templates/<version>/json` and check that the GitHub Release `v<version>` does **not** say "Not published to PyPI".
+7. In `Comfy-Org/ComfyUI` (base `master`), change only `comfyui-workflow-templates==<old>` to `==<new>` in `requirements.txt`. Title: `Update workflow templates to v<new>`, with PyPI and release links in the body.
 
 ## Recovery
 
@@ -170,6 +173,6 @@ When the user gives you a handoff zip, unzip it (`unzip <branch>-handoff.zip`) a
 |-----------|-----|
 | `git bundle verify` says a prerequisite is missing | Receiver's `main` is stale: `git fetch origin`. If the sender's base is gone (force-pushed main), the sender rebases and re-bundles |
 | `origin/main` moved before the receiver opened the PR | Fetch the bundle as normal, rebase onto latest `origin/main`, keep the root version, rerun step 3 of the sender workflow if manifests or sub-package versions conflict |
-| Someone else published the same root version first (already on PyPI) | Bump the root patch version once more, rerun step 3 of the sender workflow, and note the new versions in the PR body |
+| Someone else published the same root version first (already on PyPI) | Receiver stops and asks the sender. The sender bumps the root patch version again, reruns sender steps 3 to 7, and sends a new zip. The receiver never bumps versions |
 | Merged without the `release` label (release notes say "Not published to PyPI") | Ask the user, then `gh workflow run "Publish to PyPI" -f force_publish=true` and watch it. It only uploads versions not already on PyPI |
 | Checks fail with "branch could not be found" or "issue is locked" after merge | The PR was merged and the branch deleted. Those runs are noise, not code failures |

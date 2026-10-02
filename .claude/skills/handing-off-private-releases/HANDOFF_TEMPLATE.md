@@ -4,15 +4,21 @@ You are taking over a local branch that is not on GitHub. Apply the git bundle b
 
 Do not bump any versions. Do not create a git tag named `release`: the publish switch is a GitHub pull request **label** named `release`.
 
+## Embargo: do not push before <PUBLISH_AFTER>
+
+`Comfy-Org/workflow_templates` is a public repository. Pushing the branch or opening the PR makes every template file readable by anyone, no matter how generic the title is. You may apply and check the bundle locally right away, but do not run step 2 until <PUBLISH_AFTER>, or until the release owner confirms in writing that it can go public. Until then, keep the zip and the local branch in private storage only.
+
 ## Files you were given
 
-One zip, `<BRANCH>-handoff.zip`, which unzips to:
+One zip, `<SLUG>-handoff.zip`, which unzips to:
 
 ```
-<BRANCH>-handoff/
-├── <BRANCH>.bundle   # git bundle (<SIZE>)
+<SLUG>-handoff/
+├── <SLUG>.bundle     # git bundle (<SIZE>)
 └── HANDOFF.md        # this file
 ```
+
+The branch inside the bundle is named `<BRANCH>`.
 
 The bundle contains <N> commits on top of workflow_templates `main` at `<BASE_SHA>`. Binary assets are inside the bundle.
 
@@ -41,16 +47,16 @@ Because the sub-package auto-bump and manifest sync are already committed, `vers
 ## 1. Apply the bundle
 
 ```bash
-unzip /path/to/<BRANCH>-handoff.zip -d /tmp
-BUNDLE=/tmp/<BRANCH>-handoff/<BRANCH>.bundle
+unzip /path/to/<SLUG>-handoff.zip -d /tmp
+BUNDLE=/tmp/<SLUG>-handoff/<SLUG>.bundle
 
 cd workflow_templates
 git fetch origin
 git checkout main
 git pull origin main
 git bundle verify "$BUNDLE"
-git fetch "$BUNDLE" HEAD:<BRANCH>
-git checkout <BRANCH>
+git fetch "$BUNDLE" "HEAD:<BRANCH>"
+git checkout "<BRANCH>"
 git log --oneline origin/main..HEAD
 ```
 
@@ -64,7 +70,7 @@ Check that the versions match the "Version bump" table and that `<VERSION>` is n
 
 ```bash
 rg '^version' pyproject.toml packages/*/pyproject.toml
-curl -fsS -o /dev/null -w "%{http_code}\n" https://pypi.org/pypi/comfyui-workflow-templates/<VERSION>/json   # expect 404
+curl -sS -o /dev/null -w "%{http_code}\n" https://pypi.org/pypi/comfyui-workflow-templates/<VERSION>/json   # expect 404
 ```
 
 If a version differs, or `<VERSION>` already returns 200, stop and ask the sender. Do not bump on your own.
@@ -73,11 +79,11 @@ If `origin/main` has moved past `<BASE_SHA>`, rebase onto the latest `origin/mai
 
 ## 2. Open the pull request and add the release label
 
-Keep the title short. Do not put model or template names in the title.
+Only start this step once the embargo above has ended. Keep the title short. Do not put model or template names in the title.
 
 ```bash
 git push -u origin HEAD
-gh pr create --repo Comfy-Org/workflow_templates --base main --head <BRANCH> --title "Update templates" --body "$(cat <<'EOF'
+gh pr create --repo Comfy-Org/workflow_templates --base main --head "<BRANCH>" --title "Update templates" --body "$(cat <<'EOF'
 ## Summary
 - Template updates
 - Bump version to <VERSION> (sub-packages already auto-bumped: <SUB_PACKAGE_SUMMARY>)
@@ -96,7 +102,7 @@ The `release` label is required. Without it the merge creates a GitHub Release o
 If a bot push leaves workflows in `action_required`, approve them:
 
 ```bash
-gh run list --repo Comfy-Org/workflow_templates --branch <BRANCH> --limit 20 --json databaseId,conclusion,headSha,name
+gh run list --repo Comfy-Org/workflow_templates --branch "<BRANCH>" --limit 20 --json databaseId,conclusion,headSha,name
 gh api -X POST repos/Comfy-Org/workflow_templates/actions/runs/<RUN_ID>/approve
 ```
 
