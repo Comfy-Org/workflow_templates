@@ -35,6 +35,18 @@ describe('verifyVercelRuntime', () => {
     );
   });
 
+  it('identifies malformed function metadata by file', async () => {
+    const outputDirectory = await mkdtemp(path.join(tmpdir(), 'vercel-runtime-'));
+    temporaryDirectories.push(outputDirectory);
+    const configFile = path.join(outputDirectory, 'functions', 'render.func', '.vc-config.json');
+    await mkdir(path.dirname(configFile), { recursive: true });
+    await writeFile(configFile, '{invalid json');
+
+    await expect(verifyVercelRuntime(outputDirectory)).rejects.toThrow(
+      `Invalid Vercel function metadata in ${configFile}`
+    );
+  });
+
   it('fails when a build produces no Node function metadata', async () => {
     const outputDirectory = await mkdtemp(path.join(tmpdir(), 'vercel-runtime-'));
     temporaryDirectories.push(outputDirectory);

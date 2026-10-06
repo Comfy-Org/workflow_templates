@@ -34,7 +34,15 @@ export async function verifyVercelRuntime(outputDirectory: string): Promise<numb
 
   const nodeFunctions: Array<{ configFile: string; runtime: string }> = [];
   for (const configFile of configFiles) {
-    const config = JSON.parse(await readFile(configFile, 'utf8')) as { runtime?: unknown };
+    let config: { runtime?: unknown };
+    try {
+      config = JSON.parse(await readFile(configFile, 'utf8')) as { runtime?: unknown };
+    } catch (error) {
+      const details = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid Vercel function metadata in ${configFile}: ${details}`, {
+        cause: error,
+      });
+    }
     if (typeof config.runtime === 'string' && config.runtime.startsWith('nodejs')) {
       nodeFunctions.push({ configFile, runtime: config.runtime });
     }
