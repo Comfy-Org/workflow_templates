@@ -197,7 +197,7 @@ directories for a page addition.
 
 ### Step 8: Checks and preview
 
-If the environment can run them (Node 20, pnpm 9):
+If the environment can run them (Node 24, pnpm 9):
 
 ```bash
 cd site
