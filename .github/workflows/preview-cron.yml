@@ -75,6 +75,9 @@ jobs:
       - name: Sync templates
         run: pnpm run sync:en-only
         working-directory: site
+        env:
+          # Hub-backed build: sync skips copying local template media (see site/scripts/lib/filesystem.ts).
+          PUBLIC_HUB_API_URL: ${{ matrix.api_env == 'test' && secrets.HUB_API_URL_PREVIEW || secrets.HUB_API_URL_PRODUCTION }}
 
       - name: Build Astro site
         run: pnpm run build

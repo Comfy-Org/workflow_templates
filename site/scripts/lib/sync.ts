@@ -18,6 +18,8 @@ import {
   copyDetailImages,
   copyWorkflowJson,
   ensureDirectories,
+  isLocalMediaCopySkipped,
+  getSkippedMediaStats,
   syncLogos,
   syncAvatars,
   getOutputPath,
@@ -85,6 +87,14 @@ export function runSync(): void {
   logger.info(`Locales: ${locales.join(', ')}`);
 
   ensureDirectories(locales);
+
+  if (isLocalMediaCopySkipped()) {
+    logger.info(
+      'Skipping local template media copy (thumbnails, detail images): PUBLIC_HUB_API_URL is set, ' +
+        'so pages use hub CDN URLs and the copies would only bloat the Vercel deploy. ' +
+        'Set SYNC_LOCAL_MEDIA=true to copy anyway.\n'
+    );
+  }
 
   const enCategories = loadTemplateIndex(DEFAULT_LOCALE);
   if (!enCategories) {
@@ -188,6 +198,12 @@ export function runSync(): void {
   logger.info(`Total: ${syncedCount} template files synced`);
   for (const [locale, count] of Object.entries(stats)) {
     logger.info(`  ${locale}: ${count}`);
+  }
+  if (isLocalMediaCopySkipped()) {
+    const skipped = getSkippedMediaStats();
+    logger.info(
+      `Skipped local media copy: ${skipped.files} files, ${(skipped.bytes / 1024 / 1024).toFixed(1)} MB not written to public/`
+    );
   }
   if (logosSynced > 0) {
     logger.info(`Synced ${logosSynced} logos`);

@@ -86,6 +86,7 @@ site/
 | `SKIP_AI_GENERATION`      | No       | Set to `true` to skip AI generation                           |
 | `PUBLIC_HUB_API_URL`      | No       | Hub API base URL for local builds and any manual build setup  |
 | `PUBLIC_COMFY_CLOUD_URL`  | No       | Comfy Cloud app URL used for CTA links in local/manual builds |
+| `SYNC_LOCAL_MEDIA`        | No       | Set to `true` to copy template media despite a hub URL        |
 
 \*Required for production builds; can skip for local development.
 
@@ -94,6 +95,10 @@ workflows map different GitHub secrets to that variable:
 
 - Preview: `HUB_API_URL_PREVIEW` -> `PUBLIC_HUB_API_URL`
 - Production: `HUB_API_URL_PRODUCTION` -> `PUBLIC_HUB_API_URL`
+
+When `PUBLIC_HUB_API_URL` is set, `pnpm run sync` skips copying template thumbnails and detail
+images into `public/workflows/thumbnails/` (hub pages use CDN URLs, and the copies add ~1.9 GB to
+the Vercel deploy). Builds without it, including CI and e2e, still copy them.
 
 CTA links continue to read `PUBLIC_COMFY_CLOUD_URL`. In CI, preview and production workflows map
 different GitHub secrets to that variable:

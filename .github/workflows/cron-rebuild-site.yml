@@ -43,6 +43,9 @@ jobs:
       - name: Sync templates
         run: pnpm run sync
         working-directory: site
+        env:
+          # Hub-backed build: sync skips copying local template media (see site/scripts/lib/filesystem.ts).
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
 
       - name: Build Astro site
         run: pnpm run build

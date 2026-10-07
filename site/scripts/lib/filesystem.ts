@@ -16,6 +16,37 @@ import {
 export const DETAIL_IMAGES_DIR = path.join(THUMBNAILS_DIR, 'detail');
 import { logger } from './logger';
 
+/**
+ * Whether to skip copying template media (thumbnails and detail images) into
+ * `public/workflows/thumbnails/`.
+ *
+ * Hub-backed builds (production, preview, cron) set `PUBLIC_HUB_API_URL`. Every
+ * page in those builds takes its thumbnails from the hub index as absolute CDN
+ * URLs, so the local copies are never referenced and only inflate the Vercel
+ * deploy archive (~1.9 GB). Local, CI and e2e builds leave it unset and keep
+ * the copies, because the content-collection fallback and `tests/e2e.spec.ts`
+ * serve `/workflows/thumbnails/...` from them.
+ *
+ * Set `SYNC_LOCAL_MEDIA=true` to force the copy even when the hub is configured.
+ */
+export function isLocalMediaCopySkipped(env: NodeJS.ProcessEnv = process.env): boolean {
+  if (env.SYNC_LOCAL_MEDIA === 'true') return false;
+  return Boolean(env.PUBLIC_HUB_API_URL?.trim());
+}
+
+const skippedMediaSources = new Map<string, number>();
+
+/** Files and bytes that `copyThumbnails` / `copyDetailImages` skipped in this run. */
+export function getSkippedMediaStats(): { files: number; bytes: number } {
+  let bytes = 0;
+  for (const size of skippedMediaSources.values()) bytes += size;
+  return { files: skippedMediaSources.size, bytes };
+}
+
+function recordSkippedMedia(src: string): void {
+  skippedMediaSources.set(src, fs.statSync(src).size);
+}
+
 export function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -37,10 +68,15 @@ export function copyThumbnails(templateName: string): void {
   const extPattern = ASSET_EXTENSIONS.map((e) => escapeRegExp(e)).join('|');
   const pattern = new RegExp(`^${escapeRegExp(templateName)}-\\d+(${extPattern})$`);
 
+  const skip = isLocalMediaCopySkipped();
   const files = fs.readdirSync(TEMPLATES_DIR);
   for (const file of files) {
     if (pattern.test(file)) {
       const src = path.join(TEMPLATES_DIR, file);
+      if (skip) {
+        recordSkippedMedia(src);
+        continue;
+      }
       const dest = path.join(THUMBNAILS_DIR, file);
       if (!fs.existsSync(dest) || fs.statSync(src).mtime > fs.statSync(dest).mtime) {
         fs.copyFileSync(src, dest);
@@ -52,9 +88,17 @@ export function copyThumbnails(templateName: string): void {
 /**
  * Copy detail images specified in the `thumbnail` field of index.json into
  * DETAIL_IMAGES_DIR. Paths are relative to the repo root (e.g. "input/foo.png",
- * "output/bar.mp4"). Returns the flat filenames for use as `detailImages`.
+ * "output/bar.mp4"). Returns the flat filenames for use as `detailImages`, or
+ * an empty list when the local media copy is skipped (see `isLocalMediaCopySkipped`).
  */
 export function copyDetailImages(thumbnailPaths: string[]): string[] {
+  if (isLocalMediaCopySkipped()) {
+    for (const relPath of thumbnailPaths) {
+      const src = path.join(REPO_ROOT, relPath);
+      if (fs.existsSync(src)) recordSkippedMedia(src);
+    }
+    return [];
+  }
   if (!fs.existsSync(DETAIL_IMAGES_DIR)) {
     fs.mkdirSync(DETAIL_IMAGES_DIR, { recursive: true });
   }
