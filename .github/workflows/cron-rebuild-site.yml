@@ -52,6 +52,10 @@ jobs:
           PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PRODUCTION }}
           PUBLIC_APPROVED_ONLY: 'true'
 
+      - name: Verify Vercel function runtime
+        run: pnpm run verify:vercel-runtime
+        working-directory: site
+
       - name: Deploy to Vercel
         working-directory: site
         env:
