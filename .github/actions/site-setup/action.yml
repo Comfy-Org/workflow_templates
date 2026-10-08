@@ -6,8 +6,8 @@ inputs:
     description: Working directory for the site package
     default: site
   node-version:
-    description: Node.js version
-    default: '20'
+    description: Node.js version override; defaults to the site's .nvmrc
+    default: ''
   pnpm-version:
     description: pnpm version
     default: '9'
@@ -24,6 +24,9 @@ runs:
       uses: actions/setup-node@v7
       with:
         node-version: ${{ inputs.node-version }}
+        # The Vercel adapter stamps this Node major into the deployed function
+        # runtime, so CI and local builds share one pin.
+        node-version-file: ${{ inputs.working-directory }}/.nvmrc
         cache: pnpm
         cache-dependency-path: ${{ inputs.working-directory }}/pnpm-lock.yaml
 
