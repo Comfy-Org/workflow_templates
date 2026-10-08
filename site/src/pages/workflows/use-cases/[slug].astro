@@ -16,6 +16,7 @@ import { resolveTemplateLogos } from '../../../lib/model-logos';
 import { firstStillThumbnail, heroTemplateFor } from '../../../lib/media-utils';
 import { absoluteUrl } from '../../../config/site';
 import { useCasePath, useCasesIndexPath, modelPath } from '../../../lib/routes';
+import { landingHeroPreload } from '../../../lib/hub-media';
 import { getCloudCtaUrl, getCloudLandingUrl, getPricingUrl } from '../../../lib/urls';
 import { buildToolbarLabels } from '../../../lib/toolbar';
 import {
@@ -29,6 +30,8 @@ import { buildTemplateItemListEntries } from '../../../lib/workflow-pages/item-l
 import {
   resolveUseCasePageTemplates,
   relatedModelsForUseCase,
+  relatedUseCasesForPage,
+  RELATED_RAIL_LIMIT,
   assertCuratedSharesResolve,
   type RelatedModel,
 } from '../../../lib/workflow-pages/use-case-resolver';
@@ -103,9 +106,14 @@ const qualityContent = hasQualityContent ? content : null;
 
 const noindex = !isUseCasePageIndexable(templates.length, content);
 
+// Dropped here as well as in the resolver: this list is serialized into island
+// props, so passing them through publishes withheld share ids in the page source.
+const pinnedShareIds = (def.pins ?? []).filter((pin) => !pin.gate).map((pin) => pin.shareId);
+
 // The template LandingHero renders as the hero, reserved so no section reuses it
 // (lead-aware, so a video-led hero is the one excluded, not a later still).
 const heroTemplate = heroTemplateFor(templates);
+const heroPreload = landingHeroPreload(heroTemplate?.thumbnails);
 const heroTemplateName = heroTemplate?.name;
 const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
 
@@ -174,21 +182,17 @@ const relatedModelCards = related.map((model) => ({
   ownThumbnail: model.thumbnail,
 }));
 
-const relatedUseCaseCards = SEO_PAGES.filter(
-  (other) => other.slug !== def.slug && routedSlugs.includes(other.slug)
-)
-  .slice(0, 5)
-  .map((other) => ({
-    title: other.h1,
-    eyebrow: t('template.useCases', locale),
-    meta: undefined as string | undefined,
-    href: localizeUrl(useCasePath(other.slug), locale),
-    logos: [] as ReturnType<typeof resolveTemplateLogos>,
-    ownThumbnail: undefined as string | undefined,
-  }));
+const relatedUseCaseCards = relatedUseCasesForPage(def, SEO_PAGES, routedSlugs).map((other) => ({
+  title: other.h1,
+  eyebrow: t('template.useCases', locale),
+  meta: undefined as string | undefined,
+  href: localizeUrl(useCasePath(other.slug), locale),
+  logos: [] as ReturnType<typeof resolveTemplateLogos>,
+  ownThumbnail: undefined as string | undefined,
+}));
 
 const relatedCards = resolveRailImages(
-  [...relatedModelCards, ...relatedUseCaseCards].slice(0, 5),
+  [...relatedModelCards, ...relatedUseCaseCards].slice(0, RELATED_RAIL_LIMIT),
   [...templates, ...fallbackPool],
   { excludeName: heroTemplateName, excludeStills: heroImage ? [heroImage] : [] }
 );
@@ -207,6 +211,12 @@ const relatedCards = resolveRailImages(
   noindex={noindex}
   hideDefaultFooter
 >
+  {
+    heroPreload && (
+      <link slot="head" rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+    )
+  }
+
   <HubNavbar />
 
   <article class="bg-page min-h-screen text-content scroll-smooth hyphens-none wrap-normal">
@@ -236,7 +246,7 @@ const relatedCards = resolveRailImages(
           locale={locale}
           toolbarLabels={buildToolbarLabels(locale)}
           gridClass="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          pinnedShareIds={(def.pins ?? []).map((pin) => pin.shareId)}
+          pinnedShareIds={pinnedShareIds}
         />
       </div>
     </section>
@@ -287,6 +297,6 @@ const relatedCards = resolveRailImages(
   }
 
   <Fragment slot="footer">
-    <SiteFooter />
+    <SiteFooter localized={false} />
   </Fragment>
 </BaseLayout>

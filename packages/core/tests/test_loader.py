@@ -13,6 +13,7 @@ PACKAGE_ROOTS = [
     "packages/media_image/src",
     "packages/media_other/src",
     "packages/media_assets_01/src",
+    "packages/media_assets_02/src",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]

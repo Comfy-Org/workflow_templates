@@ -13,12 +13,23 @@ import { absoluteUrl } from '../../config/site';
 import { loadSerializedTemplates } from '../../lib/hub-api';
 import { getFeatured, featuredPreloadImage } from '../../lib/featured';
 import { buildToolbarLabels, buildFacetsConfig } from '../../lib/toolbar';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
+
+// This English index is always indexable itself; it only needs to advertise
+// the locales that are actually flipped on (INDEXABLE_LOCALES), not every
+// locale the app happens to have UI strings for. Omitting this and falling
+// back to BaseLayout's default advertised every SUPPORTED_HUB_LOCALES entry,
+// including "it", which has no built /it/workflows/ route and 404s.
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 
 const serialized = await loadSerializedTemplates(() => getCollection('templates'));
 
 const featured = getFeatured(serialized);
+const forIsland = serialized.map(({ description: _description, ...rest }) => rest);
+const featuredForIsland = featured.map(({ description: _description, ...rest }) => rest);
 const featuredLcpImage = featuredPreloadImage(featured);
 
 const canonicalUrl = absoluteUrl(localizeUrl('/workflows/', locale));
@@ -50,6 +61,8 @@ const facetsConfig = buildFacetsConfig(locale);
   ogImage="/brand/og-default-v3.png"
   ogDescription={t('meta.ogDescription', locale)}
   structuredData={structuredData}
+  hreflangBasePath="/workflows/"
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
@@ -66,7 +79,7 @@ const facetsConfig = buildFacetsConfig(locale);
     <!-- Featured hero carousel (Vue island) -->
     <FeaturedCarousel
       client:load
-      templates={featured}
+      templates={featuredForIsland}
       locale={locale}
       isRtl={isRTL(locale)}
       featuredLabel={t('hub.featured.label', locale)}
@@ -77,12 +90,12 @@ const facetsConfig = buildFacetsConfig(locale);
     <HubHero count={serialized.length} />
 
     <!-- Inline search — shows among the filters, docks flush below the navbar once scrolled past. -->
-    <HubSearchBar templates={serialized} locale={locale} />
+    <HubSearchBar templates={forIsland} locale={locale} />
 
     <!-- Interactive browse (Vue island) -->
     <HubBrowse
       client:load
-      templates={serialized}
+      templates={forIsland}
       locale={locale}
       mediaTypes={mediaTypes}
       facetsConfig={facetsConfig}

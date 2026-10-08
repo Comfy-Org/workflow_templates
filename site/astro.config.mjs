@@ -9,13 +9,24 @@ import os from 'node:os';
 
 import vue from '@astrojs/vue';
 import { INDEXABLE_LOCALES } from './src/lib/i18n/locales.ts';
-import { deriveModelGroups } from './src/lib/workflow-pages/model-groups.ts';
+import {
+  deriveModelGroups,
+  assertUniqueModelSlugs,
+} from './src/lib/workflow-pages/model-groups.ts';
 import { SEO_PAGES } from './src/lib/workflow-pages/use-cases.ts';
 import { useCasePageHasGrid } from './src/lib/workflow-pages/use-case-resolver.ts';
+import { buildCustomPages } from './src/lib/sitemap-custom-pages.ts';
+import {
+  loadHubCategories,
+  loadHubModelCatalog,
+  loadHubTagSlugs,
+} from './src/lib/hub-manifests.ts';
 import {
   modelContentPasses,
   useCaseContentPasses,
+  assertNoOrphanedContent,
 } from './src/lib/workflow-pages/landing-content.ts';
+import { assertBrandSafe } from './src/lib/workflow-pages/governance.ts';
 
 const templatesDir = path.join(process.cwd(), 'src/content/templates');
 const templateDates = new Map();
@@ -23,7 +34,7 @@ const templateDates = new Map();
  * @typedef {{ name: string; date?: string; username?: string; models?: string[];
  *   tags?: string[]; usage?: number }} SitemapTemplate
  */
-/** Raw content templates, reused below to derive indexable slugs. @type {SitemapTemplate[]} */
+/** Raw content templates, reused below for the use-case grid gate. @type {SitemapTemplate[]} */
 const contentTemplates = [];
 const creatorUsernames = new Set();
 
@@ -46,8 +57,59 @@ if (fs.existsSync(templatesDir)) {
   }
 }
 
-const modelGroups = deriveModelGroups(contentTemplates);
+/**
+ * Model families, derived from the catalog the model routes actually serve.
+ *
+ * Not `contentTemplates`. Those are the repo's own templates, synced from
+ * `templates/index.json`; both model routes resolve a request from
+ * `loadSerializedTemplates()`, which is the live hub index. Deriving families
+ * here from the synced files validated — and advertised — a catalog the routes
+ * never serve, so a hub-only family or alias change bypassed the guards below
+ * while the route happily served it.
+ *
+ * The config cannot fetch the hub itself (it is loaded by `astro check`, `astro
+ * dev`, eslint and every unit-test run), so prebuild writes the catalog to a
+ * manifest and this reads it. Same function, same data, one process later.
+ */
+const modelGroups = deriveModelGroups(loadHubModelCatalog());
 const canonicalModelSlugs = new Set(modelGroups.map((group) => group.slug));
+
+/**
+ * Build-time guards for model pages.
+ *
+ * These ran inside the English route's `getStaticPaths` until that route became
+ * on-demand rendered (it has to be, to issue a real 301 for a variant slug —
+ * see the route for why the redirects config cannot). A guard that only runs
+ * while prerendering would have quietly stopped running.
+ *
+ * Here they still fail the build, and they run against the same `modelGroups`
+ * the sitemap is already derived from, so there is one derivation and one
+ * verdict rather than two that can drift.
+ *
+ * Skipped when the catalog is absent, matching how everything else in this file
+ * treats it. The manifest is written by `pnpm build:hub-manifests` during
+ * prebuild, so a real build always has it, but plain config loads (astro check,
+ * a fresh clone) do not — and asserting against an empty catalog would report
+ * every landing-content file as orphaned, which is the opposite of a useful guard.
+ */
+if (modelGroups.length > 0) {
+  assertNoOrphanedContent('model', canonicalModelSlugs);
+  // Canonical AND variant slugs: both are route identifiers now that the routes
+  // resolve variants themselves, so both have to be unambiguous.
+  assertUniqueModelSlugs(modelGroups);
+
+  for (const group of modelGroups) {
+    // Fail the build if a qualifying (indexable) model page carries a denied term.
+    if (group.qualifies) {
+      assertBrandSafe({
+        slug: group.slug,
+        primaryKeyword: group.keywords.primary,
+        title: group.label,
+        secondaryKeywords: group.keywords.secondary,
+      });
+    }
+  }
+}
 
 // Same content gate the routes' noindex uses (landing-content.ts), so the
 // sitemap can't advertise a page the route renders noindex.
@@ -63,30 +125,22 @@ const indexableUseCaseSlugs = new Set(
   ).map((def) => def.slug)
 );
 
-// Variant → canonical 301s (real, via the Vercel adapter). Skip a variant that is
-// itself a canonical slug, so a redirect can never shadow a real page.
-// Key BOTH slash forms: canonical model URLs carry a trailing slash
-// (`modelPath` → `/workflows/model/<slug>/`), so a no-slash-only redirect key let
-// the canonicalized `/workflows/model/<variant>/` fall through to a 404. The
-// locale route redirects variants in code regardless of trailing slash, so both
-// forms here restore parity.
-const modelSlugRedirects = Object.fromEntries(
-  modelGroups.flatMap((group) =>
-    group.redirectFrom
-      .filter((variant) => !canonicalModelSlugs.has(variant))
-      .flatMap((variant) => [
-        [`/workflows/model/${variant}`, `/workflows/model/${group.slug}/`],
-        [`/workflows/model/${variant}/`, `/workflows/model/${group.slug}/`],
-      ])
-  )
-);
+// Variant slugs (wan2-5 -> wan) are resolved in the route, not here.
+//
+// This used to be a `redirects` map keyed on both slash forms. It never worked in
+// production and could not: the Vercel adapter builds each rule's `source` from
+// parsed route segments, and a trailing slash is not a segment, so both keys
+// collapsed to one slashless rule while the platform canonicalises every incoming
+// request to the slashed form first. The two never met and every variant 404'd.
+// Astro also warned that the two keys collide as duplicate static routes, which it
+// says will become a hard error. The model routes resolve variants from
+// `group.redirectFrom` instead, which is what the locale route always did.
 
 // lastmod fallback for pages without a specific date.
 const buildDate = new Date().toISOString();
 
 // Supported locales (matches src/i18n/config.ts)
 const locales = ['en', 'zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
-const nonDefaultLocales = locales.filter((l) => l !== 'en');
 
 // Locales flipped to indexable — the single source of truth is INDEXABLE_LOCALES
 // in src/lib/i18n/locales.ts (imported above), so a go-live flip is one edit there
@@ -99,9 +153,22 @@ const indexableLocales = new Set(INDEXABLE_LOCALES);
 
 const siteOrigin = (process.env.PUBLIC_SITE_ORIGIN || 'https://comfy.org').replace(/\/$/, '');
 
-const creatorPages = [...creatorUsernames].map((u) => `${siteOrigin}/workflows/${u}/`);
-const localeCustomPages = nonDefaultLocales.map((locale) => `${siteOrigin}/${locale}/workflows/`);
-const customPages = [...creatorPages, ...localeCustomPages];
+// Creator pages, English model pages and every localized directory page: all
+// on-demand rendered, so `@astrojs/sitemap` cannot discover them among the built
+// files. The rule lives in src/lib/sitemap-custom-pages.ts so it can be unit
+// tested against real inputs; the tag slugs and categories come from the hub
+// index via the prebuild-generated manifests, because those routes list the
+// hub's catalog and not the repo's synced one.
+const hubCategories = loadHubCategories();
+
+const customPages = buildCustomPages({
+  siteOrigin,
+  creatorUsernames,
+  indexableLocales,
+  indexableModelSlugs,
+  tagSlugs: loadHubTagSlugs(),
+  categoryTypes: hubCategories,
+});
 
 // https://astro.build/config
 export default defineConfig({
@@ -117,7 +184,6 @@ export default defineConfig({
       prefixDefaultLocale: false, // English at root, others prefixed (/zh/, /ja/, etc.)
     },
   },
-  redirects: modelSlugRedirects,
   integrations: [
     sitemap({
       // Use custom filename to avoid collision with Framer's /sitemap.xml
@@ -208,6 +274,18 @@ export default defineConfig({
         const modelMatch = page.match(/\/workflows\/model\/([^/]+)\/$/);
         if (modelMatch) {
           return indexableModelSlugs.has(modelMatch[1]);
+        }
+
+        // English category pages are prerendered, so unlike the localized ones
+        // they render an empty grid rather than 404ing when the index has
+        // nothing of that type — and were advertised regardless. Same gate as
+        // the localized URLs, off the same manifest. Only applied when the
+        // manifest is non-empty: absent means prebuild did not run, not that
+        // every category is empty, and gating on that would drop the populated
+        // ones too.
+        const categoryMatch = page.match(/\/workflows\/category\/([^/]+)\/$/);
+        if (categoryMatch && hubCategories.length > 0) {
+          return hubCategories.includes(categoryMatch[1]);
         }
 
         // Same rule for use-case pages: only list slugs that actually get an

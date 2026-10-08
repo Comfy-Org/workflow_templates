@@ -76,7 +76,7 @@ MCP templates. The normal `npm run sync` and release CI run MCP sync before bund
 
 | Field | Set by | Notes |
 |-------|--------|-------|
-| `name`, `title`, `task`, `model`, `usage` | Sync from `index.json` | |
+| `name`, `title`, `task`, `model`, `usage`, `minComfyUIVersion` | Sync from `index.json` | `minComfyUIVersion` omitted when the hub index has no value |
 | `capabilities`, `io` (default) | Sync | `workflow` from tags; `model_options` when single API model node |
 | `freshness` | Sync from `date` | Override via `template_overrides.json` |
 | `recommend` | Sync from `usage` tiers | Override via `template_overrides.json` |
@@ -94,7 +94,7 @@ MCP templates. The normal `npm run sync` and release CI run MCP sync before bund
 | ≥ 50 | `low` |
 | < 50 | `not_recommended` |
 
-**Use Cases category floor:** never below `low` (no `not_recommended`).
+**Applied / Use Cases category floor:** never below `low` (no `not_recommended`). Applies to Product & Ads, Character & Fashion, Brand & Design, and legacy Use Cases.
 
 **New-template floor (≤30 days since `date`):** never below `medium` when usage is still low (same window as freshness `new`).
 

@@ -10,6 +10,7 @@ import HubWorkflowCard from './HubWorkflowCard.vue';
 import BrowseToolbar from './BrowseToolbar.vue';
 import { useHubStore } from '@/composables/useHubStore';
 import { loadCatalog } from '@/lib/catalog';
+import { badgesAvailableIn, templatesInTab } from '@/lib/hub-tabs';
 import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 
 export type HubThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
@@ -86,7 +87,9 @@ const workingSet = ref<WorkflowTemplate[]>([...props.templates]);
 
 onMounted(() => {
   if (!props.lazyFull) return;
-  loadCatalog()
+  // Locale-scoped: the embedded slice is already translated, so swapping in the
+  // English catalog would revert the cards in front of the reader.
+  loadCatalog(props.locale)
     .then((catalog) => {
       workingSet.value = props.excludeName
         ? catalog.filter((t) => t.name !== props.excludeName)
@@ -106,21 +109,39 @@ watch(
   }
 );
 
-const facetSource = computed(() => props.facetTemplates ?? workingSet.value);
-
 const store = useHubStore();
 const displayCount = ref(30);
+
+// Counts deliberately ignore the badge selection so they stay stable while a
+// filter is applied, but they must still honour the tab. Counting the whole
+// catalogue here advertised totals the tab could never return: on Comfy Apps,
+// "Wan 37" produced an empty grid because none of those 37 are apps.
+const facetSource = computed(() =>
+  templatesInTab(props.facetTemplates ?? workingSet.value, store.activeTab.value)
+);
 
 // Reset pagination when the inputs that change the result set change.
 watch([workingSet, store.activeTab, store.sortBy], () => {
   displayCount.value = 30;
 });
 
-const tabbedTemplates = computed(() => {
-  if (store.activeTab.value === 'comfyApps') return workingSet.value.filter((t) => t.isApp);
-  if (store.activeTab.value === 'nodeGraphs') return workingSet.value.filter((t) => !t.isApp);
-  return workingSet.value;
+/**
+ * Drop badges the new tab cannot satisfy.
+ *
+ * Scoping the facet list to the tab is not enough on its own: a badge selected
+ * on one tab stays active after switching, while its option disappears from the
+ * scoped list. "All, filter Wan, then Comfy Apps" left `Wan` applied with no
+ * visible way to clear it and an empty grid. Badges that still exist in the new
+ * tab are kept, so switching tabs does not silently throw away a filter that
+ * still means something.
+ */
+watch(store.activeTab, () => {
+  const badges = store.filterBadges.value;
+  const kept = badgesAvailableIn(badges, facetSource.value);
+  if (kept.length !== badges.length) store.filterBadges.value = kept;
 });
+
+const tabbedTemplates = computed(() => templatesInTab(workingSet.value, store.activeTab.value));
 
 const sortedTemplates = computed(() => {
   const result = [...tabbedTemplates.value];

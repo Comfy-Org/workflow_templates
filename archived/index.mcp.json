@@ -414,6 +414,159 @@
         "capabilities": {
           "workflow": ["image-edit", "api"]
         }
+      },
+      {
+        "name": "api_ltxv_image_to_video",
+        "title": "LTX-2: Image to Video",
+        "task": "Image to Video",
+        "model": "LTX-2",
+        "freshness": "established",
+        "usage": 184,
+        "recommend": "low",
+        "description": "Transform a static image into a dynamic cinematic video using the LTX‑2 model (Pro or Fast variant). The workflow accepts a reference image and generates a video with natural motion and optional synchronized audio. This workflow calls a third‑party API, so execution time depends on server‑side response.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a cinematic video sequence"],
+          "outputs": ["video: Generated cinematic video with natural motion and optional audio"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "LtxvApiImageToVideo": ["LTX-2 (Pro)", "LTX-2 (Fast)"]
+          }
+        }
+      },
+      {
+        "name": "api_ltxv_text_to_video",
+        "title": "LTX-2: Text to Video",
+        "task": "Text to Video",
+        "model": "LTX-2",
+        "freshness": "established",
+        "usage": 28,
+        "recommend": "not_recommended",
+        "description": "Use Lightricks LTX-2, an affordable medium-quality model that natively generates audio with video. This workflow accepts a text prompt and returns a generated video, with Fast and Pro mode options. It calls a third-party API, so execution time depends on server response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video content"],
+          "outputs": ["video: Generated high-quality video from the text prompt with LTX-2"]
+        },
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "LtxvApiTextToVideo": ["LTX-2 (Pro)", "LTX-2 (Fast)"]
+          }
+        }
+      },
+      {
+        "name": "api_kling_avatar2",
+        "title": "Kling: Avatar 2.0",
+        "task": "Lip Sync",
+        "model": "Kling",
+        "freshness": "current",
+        "usage": 17,
+        "recommend": "not_recommended",
+        "description": "This workflow uses the Kling Avatar 2.0 API to generate a talking avatar video from a portrait image and audio file. It produces synchronized lip movements and natural facial expressions by leveraging Kling's top-tier video generation capabilities. Execution goes through a third-party API, so response time depends on server-side processing.",
+        "io": {
+          "inputs": ["image: Portrait image of the avatar", "audio: Audio file for the avatar to lip-sync to"],
+          "outputs": ["video: Talking avatar video with synchronized lips"]
+        },
+        "capabilities": {
+          "workflow": ["lip-sync", "api"]
+        }
+      },
+      {
+        "name": "api_veo2_i2v",
+        "title": "Veo2: Image to Video",
+        "task": "Image to Video",
+        "model": "Veo",
+        "freshness": "established",
+        "usage": 13,
+        "recommend": "not_recommended",
+        "description": "Generate a video from an input image using the Google Veo2 API. This workflow controls aspect ratio, duration, and other parameters, and its execution time depends on server-side response. It uses the veo-2.0-generate-001 model to animate a reference image into a video output.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a video"],
+          "outputs": ["video: Generated video from the input image"]
+        },
+        "minComfyUIVersion": "0.3.32",
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "VeoVideoGenerationNode": ["veo-2.0-generate-001"]
+          }
+        }
+      },
+      {
+        "name": "api_veo3",
+        "title": "Veo3: Image to Video",
+        "task": "Image to Video",
+        "model": "Google",
+        "freshness": "established",
+        "usage": 67,
+        "recommend": "low",
+        "description": "This workflow uses Google’s Veo 3 API to generate an 8‑second video from a text prompt or an image, with optional audio and prompt enhancement. It supports multiple model versions for speed or quality. The primary input is a prompt; the output is a video file.",
+        "io": {
+          "inputs": ["image: Optional input image to animate", "text: Text prompt describing the video content"],
+          "outputs": ["video: Generated video with optional audio"]
+        },
+        "minComfyUIVersion": "0.3.49",
+        "capabilities": {
+          "workflow": ["api", "image-to-video", "text-to-video"],
+          "model_options": {
+            "Veo3VideoGenerationNode": ["veo-3.1-generate", "veo-3.1-fast-generate", "veo-3.1-lite", "veo-3.0-generate-001", "veo-3.0-fast-generate-001"]
+          }
+        }
+      },
+      {
+        "name": "api_openai_dall_e_2_inpaint",
+        "title": "OpenAI: Dall-E 2 Inpaint",
+        "task": "Image Inpainting",
+        "model": "OpenAI",
+        "freshness": "established",
+        "usage": 7,
+        "recommend": "not_recommended",
+        "description": "Edit images using inpainting with OpenAI DALL-E 2 via a third-party API. You supply an original image, a mask to define the area to regenerate, and a text prompt describing the desired content. The workflow returns the inpainted result. Execution depends on the server-side API response.",
+        "io": {
+          "inputs": ["image×2: Input image and mask for inpainting area selection", "text: Text prompt describing the desired fill content"],
+          "outputs": ["image: Inpainted result image"]
+        },
+        "minComfyUIVersion": "0.3.30",
+        "capabilities": {
+          "workflow": ["inpainting", "api"]
+        }
+      },
+      {
+        "name": "api_openai_dall_e_2_t2i",
+        "title": "OpenAI: Dall-E 2 Text to Image",
+        "task": "Text to Image",
+        "model": "OpenAI",
+        "freshness": "established",
+        "usage": 6,
+        "recommend": "not_recommended",
+        "description": "Generate images from text prompts using the OpenAI DALL-E 2 API in ComfyUI. This workflow accepts a descriptive text prompt as input and returns a generated image, with support for configurable image size and number of outputs. Execution time depends on the third-party API response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired image"],
+          "outputs": ["image: Generated image"]
+        },
+        "minComfyUIVersion": "0.3.30",
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
+        "name": "api_openai_dall_e_3_t2i",
+        "title": "OpenAI: Dall-E 3 Text to Image",
+        "task": "Text to Image",
+        "model": "OpenAI",
+        "freshness": "established",
+        "usage": 10,
+        "recommend": "not_recommended",
+        "description": "Generate high-quality images from text prompts using OpenAI's DALL-E 3 API. This workflow takes a user-provided text description and returns a generated image, supporting configurable size and HD quality. API access is required, with response time dependent on the server.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired image"],
+          "outputs": ["image: Generated high-quality image"]
+        },
+        "minComfyUIVersion": "0.3.30",
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
       }
     ]
   }

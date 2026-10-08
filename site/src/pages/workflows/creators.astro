@@ -14,8 +14,15 @@ import BackButton from '../../components/BackButton.astro';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { creatorPath } from '../../lib/routes';
 import { absoluteUrl } from '../../config/site';
-import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
+import {
+  listWorkflowIndex,
+  getProfileCache,
+  serializeIndexEntry,
+  type SerializedTemplate,
+} from '../../lib/hub-api';
 import { fetchRankingMap } from '../../lib/ranking';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
+import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
 
 const locale = getLocaleFromPath(Astro.url.pathname);
 const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
@@ -57,12 +64,18 @@ const sortedCreators = Array.from(creatorMap.values()).sort(
 );
 
 const canonicalUrl = absoluteUrl('/workflows/creators/');
+// This English page is always indexable itself; advertise only the locales
+// actually flipped on, not BaseLayout's full-LANGUAGES default (which
+// includes "it", unbuilt and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 ---
 
 <BaseLayout
   title="Top Creators - ComfyUI Workflow Templates"
   description="Discover the world's top ComfyUI workflow creators and their best templates."
   canonicalUrl={canonicalUrl}
+  hreflangBasePath="/workflows/creators/"
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >

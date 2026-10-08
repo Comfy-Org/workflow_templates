@@ -4,19 +4,13 @@ import { navRoutes } from '@/config/nav-routes';
 import { getCloudLandingUrl } from '@/lib/urls';
 import type { Locale } from '@/i18n/config';
 import { t } from '@/i18n/ui';
-import type { CreatorLink } from './types';
 import GitHubStarBadge from './GitHubStarBadge.vue';
 import HeaderMainDesktop from './HeaderMainDesktop.vue';
 import HeaderMainMobile from './HeaderMainMobile.vue';
 
-const {
-  locale = 'en',
-  githubStars = '',
-  creators = [],
-} = defineProps<{
+const { locale = 'en', githubStars = '' } = defineProps<{
   locale?: Locale;
   githubStars?: string;
-  creators?: CreatorLink[];
 }>();
 
 const ctaButtons = [
@@ -56,7 +50,7 @@ const ctaButtons = [
     </a>
 
     <HeaderMainDesktop :locale="locale" class="hidden lg:block" />
-    <HeaderMainMobile :locale="locale" :creators="creators" class="lg:hidden" />
+    <HeaderMainMobile :locale="locale" class="lg:hidden" />
 
     <div data-testid="desktop-nav-cta" class="hidden shrink-0 items-center gap-2 lg:flex">
       <GitHubStarBadge v-if="githubStars" :stars="githubStars" />

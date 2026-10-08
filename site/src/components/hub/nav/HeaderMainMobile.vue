@@ -14,20 +14,16 @@ import { BreadthumbIcon } from '@/components/ui/icons';
 import { getMainNavigation } from '@/config/main-navigation';
 import { navRoutes } from '@/config/nav-routes';
 import { lockScroll, unlockScroll } from '@/composables/scrollLock';
-import { localizeUrl } from '@/i18n/utils';
 import type { Locale } from '@/i18n/config';
 import { t } from '@/i18n/ui';
-import type { CreatorLink } from './types';
 import { Badge } from '@/components/ui/badge';
 import NavLinkContent from './NavLinkContent.vue';
 
-const { locale = 'en', creators = [] } = defineProps<{
+const { locale = 'en' } = defineProps<{
   locale?: Locale;
-  creators?: CreatorLink[];
 }>();
 
 const mainNavigation = getMainNavigation(locale);
-const creatorsHref = localizeUrl('/workflows/creators/', locale);
 
 const isOpen = ref(false);
 const activeSection = ref<string | null>(null);
@@ -54,6 +50,7 @@ onUnmounted(() => {
   <div>
     <Sheet v-model:open="isOpen">
       <SheetTrigger
+        data-testid="mobile-nav-toggle"
         :aria-label="t('nav.toggleMenu', locale)"
         class="bg-primary-comfy-yellow grid size-10 shrink-0 cursor-pointer place-items-center rounded-xl text-primary-comfy-ink hover:opacity-90"
       >
@@ -103,24 +100,6 @@ onUnmounted(() => {
                 </Button>
               </li>
             </ul>
-
-            <div v-if="creators.length" class="mt-12 flex flex-col gap-y-4">
-              <a
-                :href="creatorsHref"
-                class="text-primary-warm-gray flex items-center gap-2 text-sm font-bold uppercase tracking-wider"
-              >
-                {{ t('hub.topCreators', locale) }}
-                <ChevronRight class="size-3.5" />
-              </a>
-              <a
-                v-for="creator in creators"
-                :key="creator.username"
-                :href="creator.href"
-                class="text-primary-comfy-canvas text-xl font-medium"
-              >
-                {{ creator.displayName }}
-              </a>
-            </div>
           </nav>
 
           <div

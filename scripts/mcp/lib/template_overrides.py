@@ -33,6 +33,9 @@ RECOMMEND_RANK: dict[str, int] = {
 # MCP categories that must not fall below this recommend tier after sync.
 CATEGORY_RECOMMEND_FLOOR: dict[str, str] = {
     "Use Cases": "low",
+    "Product & Ads": "low",
+    "Character & Fashion": "low",
+    "Brand & Design": "low",
 }
 
 # Young templates lack reliable usage signal; avoid penalizing them as not_recommended.

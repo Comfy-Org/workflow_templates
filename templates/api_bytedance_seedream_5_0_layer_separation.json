@@ -1,0 +1,498 @@
+{
+  "id": "7d136772-0647-4a55-bd62-7e9c36c41a0b",
+  "revision": 0,
+  "last_node_id": 33,
+  "last_link_id": 46,
+  "nodes": [
+    {
+      "id": 15,
+      "type": "LoadImage",
+      "pos": [
+        -2420,
+        -290
+      ],
+      "size": [
+        330,
+        410
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            41
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "victory_cover.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "victory_cover.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 20,
+      "type": "BatchImagesNode",
+      "pos": [
+        -1110,
+        -290
+      ],
+      "size": [
+        230,
+        100
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "image0",
+          "name": "images.image0",
+          "type": "IMAGE",
+          "link": 42
+        },
+        {
+          "name": "images.image1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 44
+        },
+        {
+          "name": "images.image2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            38
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BatchImagesNode"
+      }
+    },
+    {
+      "id": 22,
+      "type": "BatchMasksNode",
+      "pos": [
+        -1110,
+        -130
+      ],
+      "size": [
+        230,
+        100
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "label": "mask0",
+          "name": "masks.mask0",
+          "type": "MASK",
+          "link": 43
+        },
+        {
+          "name": "masks.mask1",
+          "shape": 7,
+          "type": "MASK",
+          "link": 45
+        },
+        {
+          "name": "masks.mask2",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": [
+            39
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BatchMasksNode"
+      }
+    },
+    {
+      "id": 23,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        -820,
+        -270
+      ],
+      "size": [
+        460,
+        600
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 40
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "layers/image_layer",
+        "png",
+        "8-bit",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "layers/image_layer",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
+    },
+    {
+      "id": 26,
+      "type": "Note",
+      "pos": [
+        -1540,
+        390
+      ],
+      "size": [
+        350,
+        110
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Edit layers",
+      "properties": {},
+      "widgets_values": [
+        "Switch to Nodes2.0 then click the `Open Compositor`"
+      ],
+      "widgets_values_named": {
+        "text": "Switch to Nodes2.0 then click the `Open Compositor`"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 25,
+      "type": "ImageCompositor",
+      "pos": [
+        -1600,
+        -290
+      ],
+      "size": [
+        460,
+        620
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "layers",
+          "type": "LAYERS",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ImageCompositor"
+      },
+      "widgets_values": [
+        {}
+      ],
+      "widgets_values_named": {
+        "compositor": {}
+      }
+    },
+    {
+      "id": 31,
+      "type": "JoinImageWithAlpha",
+      "pos": [
+        -1100,
+        30
+      ],
+      "size": [
+        230,
+        50
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 38
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 39
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            40
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha"
+      }
+    },
+    {
+      "id": 32,
+      "type": "ByteDanceSeedreamLayerSeparationNodeV2",
+      "pos": [
+        -2050,
+        -290
+      ],
+      "size": [
+        400,
+        380
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.image",
+          "type": "IMAGE",
+          "link": 41
+        }
+      ],
+      "outputs": [
+        {
+          "name": "base_image",
+          "type": "IMAGE",
+          "links": [
+            42
+          ]
+        },
+        {
+          "name": "base_mask",
+          "type": "MASK",
+          "links": [
+            43
+          ]
+        },
+        {
+          "name": "layers",
+          "type": "IMAGE",
+          "links": [
+            44
+          ]
+        },
+        {
+          "name": "masks",
+          "type": "MASK",
+          "links": [
+            45
+          ]
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "layer_stack",
+          "type": "LAYERS",
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDanceSeedreamLayerSeparationNodeV2"
+      },
+      "widgets_values": [
+        "seedream 5.0 flash",
+        "Separate the image into three layers: the main character and the ship; the background; text, icons, and graphic elements.",
+        "auto",
+        498392743,
+        "randomize",
+        false,
+        false,
+        "randomize",
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "seedream 5.0 flash",
+        "model.prompt": "Separate the image into three layers: the main character and the ship; the background; text, icons, and graphic elements.",
+        "model.size": "auto",
+        "model.seed": 498392743,
+        "control_after_generate#2": "randomize",
+        "model.watermark": false,
+        "model.crop_layers": false,
+        "control_after_generate#1": "randomize",
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 33,
+      "type": "MarkdownNote",
+      "pos": [
+        -2860,
+        -290
+      ],
+      "size": [
+        380,
+        400
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [victory_cover.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/victory_cover.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [victory_cover.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/victory_cover.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      38,
+      20,
+      0,
+      31,
+      0,
+      "IMAGE"
+    ],
+    [
+      39,
+      22,
+      0,
+      31,
+      1,
+      "MASK"
+    ],
+    [
+      46,
+      32,
+      5,
+      25,
+      0,
+      "LAYERS"
+    ],
+    [
+      42,
+      32,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
+      44,
+      32,
+      2,
+      20,
+      1,
+      "IMAGE"
+    ],
+    [
+      43,
+      32,
+      1,
+      22,
+      0,
+      "MASK"
+    ],
+    [
+      45,
+      32,
+      3,
+      22,
+      1,
+      "MASK"
+    ],
+    [
+      40,
+      31,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      41,
+      15,
+      0,
+      32,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6708640735188275,
+      "offset": [
+        3185.4918687607233,
+        647.5357385910693
+      ]
+    },
+    "frontendVersion": "1.53.6"
+  },
+  "version": 0.4
+}

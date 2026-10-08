@@ -37,9 +37,11 @@ export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
     .filter((template) => !template.shareId || !excluded.has(template.shareId))
     .sort(byUsageDesc);
 
-  // Pins bypass excludes; first id wins.
+  // Pins bypass excludes; first id wins. Gated pins are dropped: pins are the one
+  // route that skips `assertBrandSafe`.
   const seen = new Set<string>();
   const pinned = (def.pins ?? []).flatMap((pin) => {
+    if (pin.gate) return [];
     if (seen.has(pin.shareId)) return [];
     const found = catalog.find((template) => template.shareId === pin.shareId);
     if (!found) return [];
@@ -69,7 +71,9 @@ export function useCasePageHasGrid(def: SeoPageDef, snapshot: FilterableTemplate
   // filters is still judged on whether those filters match, so this cannot mask
   // a tag filter that has gone stale.
   const hasFilters = (def.filters.tags?.length ?? 0) > 0 || (def.filters.models?.length ?? 0) > 0;
-  return !hasFilters && (def.pins?.length ?? 0) > 0;
+  // Ungated only: counting a gated pin advertises a grid the resolver will not render.
+  const ungatedPins = (def.pins ?? []).filter((pin) => !pin.gate).length;
+  return !hasFilters && ungatedPins > 0;
 }
 
 const SHARE_ID_RE = /^[0-9a-f]+$/;
@@ -129,10 +133,23 @@ export function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
  * that drives many of the page's templates is more related than an incidental
  * one). Replaces hand-typed `relatedModels`, so it can never drift from the grid.
  */
+/**
+ * Caps on the "Keep exploring" rail, named because the two interact and the
+ * interaction is invisible at the call site: the page concatenates model cards
+ * ahead of use-case cards and truncates to RELATED_RAIL_LIMIT, so a page can
+ * only ever surface RELATED_RAIL_LIMIT - RELATED_MODEL_LIMIT of its own
+ * `relatedSlugs`. Declaring more is not an error at runtime, the extras simply
+ * never render, so `use-case-resolver.test.ts` asserts the budget instead.
+ */
+export const RELATED_RAIL_LIMIT = 5;
+export const RELATED_MODEL_LIMIT = 3;
+/** How many `relatedSlugs` a page can actually show. */
+export const RELATED_SLUG_BUDGET = RELATED_RAIL_LIMIT - RELATED_MODEL_LIMIT;
+
 export function relatedModelsForUseCase(
   def: SeoPageDef,
   catalog: SerializedTemplate[],
-  limit = 3
+  limit = RELATED_MODEL_LIMIT
 ): RelatedModel[] {
   const grid = resolveUseCasePageTemplates(def, catalog);
   const gridNames = new Set(grid.map((template) => template.name));
@@ -151,6 +168,33 @@ export function relatedModelsForUseCase(
       thumbnail: firstStillAcross(group.templates) ?? undefined,
       count: group.templates.length,
     }));
+}
+
+/**
+ * Use-case pages for a page's "Keep exploring" rail: `def.relatedSlugs` first, in
+ * the order given, then any remaining slots fill automatically from the routed
+ * catalog (declaration order) exactly as every page behaved before this field
+ * existed. A page that never sets `relatedSlugs` gets the identical output it
+ * always did.
+ */
+export function relatedUseCasesForPage(
+  def: SeoPageDef,
+  allPages: SeoPageDef[],
+  routedSlugs: string[],
+  limit = RELATED_RAIL_LIMIT
+): SeoPageDef[] {
+  const routed = new Set(routedSlugs);
+  const bySlug = new Map(allPages.map((page) => [page.slug, page]));
+  // Both gates matter: a routed slug can outlive the definition it came from, and a
+  // definition can exist without a route (the caller drops pages that render no grid).
+  const isCandidate = (slug: string) => slug !== def.slug && routed.has(slug) && bySlug.has(slug);
+  const manual = (def.relatedSlugs ?? []).filter(isCandidate);
+  const auto = allPages.map((page) => page.slug).filter(isCandidate);
+  // One Set across both lists: a slug repeated in `relatedSlugs`, or one that also
+  // arrives automatically, keeps its first position instead of rendering the same
+  // card twice and burning a slot a genuine relation could have used.
+  const ordered = [...new Set([...manual, ...auto])];
+  return ordered.slice(0, limit).flatMap((slug) => bySlug.get(slug) ?? []);
 }
 
 /**

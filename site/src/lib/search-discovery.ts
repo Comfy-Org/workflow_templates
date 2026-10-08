@@ -8,7 +8,7 @@
  * few KB reach the client. The full catalog is lazy-loaded from grid.json only
  * when the user applies a filter badge (see src/lib/catalog.ts).
  */
-import type { SerializedTemplate, CreatorEntry } from './hub-api';
+import type { IslandTemplate, CreatorEntry } from './hub-api';
 import { byUsageDesc } from './hub-api';
 
 export interface DiscoveryFacet {
@@ -46,8 +46,8 @@ export interface DiscoveryData {
 const POPULAR_COUNT = 8;
 
 function countBy(
-  templates: SerializedTemplate[],
-  pick: (t: SerializedTemplate) => string[]
+  templates: IslandTemplate[],
+  pick: (t: IslandTemplate) => string[]
 ): DiscoveryFacet[] {
   const counts = new Map<string, number>();
   for (const tmpl of templates) {
@@ -65,7 +65,7 @@ function countBy(
  * is unit-tested; called once per page in HubNavbar/HubSearchBar frontmatter.
  */
 export function buildDiscoveryData(
-  templates: SerializedTemplate[],
+  templates: IslandTemplate[],
   creators: CreatorEntry[]
 ): DiscoveryData {
   // Per-creator workflow count + summed usage, for creator ranking + search.

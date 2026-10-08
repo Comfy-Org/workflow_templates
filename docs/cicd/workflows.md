@@ -10,7 +10,7 @@ templates/** → sync_bundles.py → ci_version_manager.py → bump versions →
             ↘ (when root version bumps) → check_pypi_quota.py → PR comment
 ```
 **Validates:** bundles.json completeness, template→package mapping  
-**Commits:** Version bumps + updated manifests to PR branch  
+**Commits:** Regenerated manifests to the PR branch (even without a version bump). Version bumps are included only when the root version changed. 
 **PR comment:** Posts a quota + safe-to-delete report only when the root version is bumped (see [pypi-quota-check.md](pypi-quota-check.md))
 
 ### `publish.yml` (Package Publishing)  

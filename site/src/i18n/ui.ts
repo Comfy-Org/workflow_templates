@@ -10,6 +10,7 @@ import ru from './locales/ru.json';
 import tr from './locales/tr.json';
 import ar from './locales/ar.json';
 import ptBR from './locales/pt-BR.json';
+import it from './locales/it.json';
 
 // UI string translations (static chrome text). One JSON file per locale under
 // ./locales/ so the translation pipeline (lobe) can fill missing keys — English
@@ -28,6 +29,9 @@ export const UI_STRINGS: Record<Locale, Record<string, string>> = {
   tr,
   ar,
   'pt-BR': ptBR,
+  // Seeded empty: the pipeline's chrome step fills it, and t() falls back to
+  // English per key until it does, so a partial file is never a broken page.
+  it,
 };
 
 // Get a translated string

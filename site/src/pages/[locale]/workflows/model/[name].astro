@@ -5,7 +5,6 @@
  */
 export const prerender = false;
 
-import { getCollection } from 'astro:content';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../../components/hub/SiteFooter.astro';
@@ -16,11 +15,9 @@ import { localizeUrl } from '../../../../i18n/utils';
 import { t } from '../../../../i18n/ui';
 import { absoluteUrl } from '../../../../config/site';
 import { modelPath, modelsIndexPath } from '../../../../lib/routes';
-import { deriveModelGroups } from '../../../../lib/workflow-pages/model-groups';
 import { loadModelContent } from '../../../../lib/workflow-pages/content-loaders';
 import { buildModelPageMeta, isModelPageIndexable } from '../../../../lib/workflow-pages/seo-page';
 import { badgeVariants } from '../../../../components/ui/badge';
-import { loadSerializedTemplates } from '../../../../lib/hub-api';
 import { buildToolbarLabels } from '../../../../lib/toolbar';
 import { buildTemplateItemListEntries } from '../../../../lib/workflow-pages/item-list';
 import {
@@ -28,11 +25,10 @@ import {
   buildWorkflowBreadcrumb,
   serializeJsonLdForScript,
 } from '../../../../lib/structured-data';
-
-const buildGroups = async () =>
-  deriveModelGroups(await loadSerializedTemplates(() => getCollection('templates')));
-let groupsCache: ReturnType<typeof buildGroups> | null = null;
-const loadModelGroups = () => (groupsCache ??= buildGroups());
+import { buildLocalizedModelJsonLd } from '../../../../lib/workflow-pages/model-page-jsonld';
+import { listingIndexing, alternatesFor } from '../../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../../lib/i18n/localize-cards';
+import { loadModelGroups } from '../../../../lib/workflow-pages/model-route-cache';
 
 const { locale, name } = Astro.params;
 
@@ -70,21 +66,35 @@ if (family.slug !== name) {
   return Astro.redirect(localizeUrl(modelPath(family.slug), typedLocale), 301);
 }
 
-const matchingTemplates = family.templates;
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
+// Localize here rather than inside `buildGroups`: the groups are memoized in a
+// module-level cache shared by every locale, so translating before it would let
+// whichever locale rendered first decide the text for all of them. Grouping keys
+// off the template name, never the title, so it is unaffected either way.
+const matchingTemplates = localizeCards(family.templates, typedLocale);
 const basePath = modelPath(family.slug);
-const canonicalUrl = absoluteUrl(localizeUrl(basePath, typedLocale));
+// Gated until this locale completes native review — see listing-indexing.
+const indexing = listingIndexing(basePath, typedLocale);
+const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 
 // Localized pages carry no editorial copy of their own, but title/meta/noindex
 // resolve through the same helper as the English route so the hreflang cluster
 // stays consistent.
 const content = await loadModelContent(family.slug);
-const { h1, title, description } = buildModelPageMeta({
+const { h1, title, description, hasQualityContent } = buildModelPageMeta({
   group: family,
   content,
   locale: typedLocale,
   templateCount: matchingTemplates.length,
 });
-const noindex = !isModelPageIndexable(family, matchingTemplates.length, content);
+// Two independent reasons to withhold this page: the model page is too thin to
+// index, or its locale has not been reviewed yet. Either alone is sufficient.
+const noindex =
+  indexing.noindex || !isModelPageIndexable(family, matchingTemplates.length, content);
+// Alternates follow the final decision, not just the locale gate: a page withheld
+// for thin content must not advertise a cluster the same render is noindexing.
+const hreflangLocales = alternatesFor(indexing, noindex);
 
 const countLabel =
   matchingTemplates.length === 1
@@ -107,6 +117,14 @@ const breadcrumbStructuredData = buildWorkflowBreadcrumb(typedLocale, { name: h1
   { name: t('labels.models', typedLocale), item: absoluteUrl(modelsIndexPath(typedLocale)) },
 ]);
 
+// The English route emits a SoftwareApplication entity node for the family and
+// this one did not, so the localized pages were absent from that part of the
+// entity graph. See the builder for why the FAQ and how-to nodes stay English-only.
+const jsonLdBlocks = [
+  breadcrumbStructuredData,
+  ...buildLocalizedModelJsonLd({ h1, description, hasQualityContent }),
+];
+
 // matchingTemplates are already SerializedTemplate[] with profile data
 const serialized = matchingTemplates;
 ---
@@ -119,6 +137,7 @@ const serialized = matchingTemplates;
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath={basePath}
+  hreflangLocales={hreflangLocales}
   noindex={noindex}
   theme="dark"
   hideDefaultFooter
@@ -152,11 +171,11 @@ const serialized = matchingTemplates;
     />
   </div>
 
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
+  {
+    jsonLdBlocks.map((data) => (
+      <script is:inline type="application/ld+json" set:html={serializeJsonLdForScript(data)} />
+    ))
+  }
 
   <Fragment slot="footer">
     <SiteFooter />

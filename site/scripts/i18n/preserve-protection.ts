@@ -47,6 +47,23 @@ function escapeRegExp(literal: string): string {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+/**
+ * A term guarded so it cannot match inside a longer run of LETTERS, while still
+ * matching a family name that runs straight into a version number.
+ *
+ * The two cases pull in opposite directions: "Wan" must still match in "Wan2.1"
+ * (family plus version), but a short word term must not match inside a camelCase
+ * identifier — bare "Fun" otherwise fires inside "WanFunInpaintToVideo" and
+ * "Functionality", splitting a node name into two sentinels and handing the model
+ * "{{PT12}}{{PT40}}InpaintToVideo" to translate. Guarding on letters only draws
+ * exactly that line: a digit after the term still counts as a match, a letter does not.
+ */
+function boundedAlternative(term: string): string {
+  const prefix = /^[A-Za-z]/.test(term) ? '(?<![A-Za-z])' : '';
+  const suffix = /[A-Za-z]$/.test(term) ? '(?![A-Za-z])' : '';
+  return `${prefix}${escapeRegExp(term)}${suffix}`;
+}
+
 export interface TermMap {
   /** Preserve-terms longest-first, so "ComfyUI" is replaced before "Comfy". */
   ordered: string[];
@@ -67,7 +84,9 @@ export function buildTermMap(terms: string[]): TermMap {
   });
   // Terms are escaped literals, so the alternation is safe (no ReDoS). Longest-first
   // ordering makes "ComfyUI" win over "Comfy" at the same position.
-  const matcher = ordered.length ? new RegExp(ordered.map(escapeRegExp).join('|'), 'g') : null;
+  const matcher = ordered.length
+    ? new RegExp(ordered.map(boundedAlternative).join('|'), 'g')
+    : null;
   return { ordered, sentinelByTerm, termByIndex, matcher };
 }
 
@@ -123,6 +142,31 @@ export function findSentinelCollisions(content: unknown): string[] {
   return hits;
 }
 
+export interface SentinelCollision {
+  /** Content file the offending string lives in, e.g. `zh.json`. */
+  file: string;
+  text: string;
+}
+
+/**
+ * Sentinel-shaped strings across EVERY content file, labelled by file.
+ *
+ * Checking only English is not enough: `restore` rewrites every file in the
+ * content directory, so genuine sentinel-shaped text sitting in a locale file
+ * would be silently rewritten into a preserve-term too. Locale files are only
+ * ever committed post-restore (real terms, no sentinels), so scanning them at
+ * protect time flags a genuine collision rather than our own in-flight markers.
+ */
+export function findCollisionsAcrossFiles(
+  contentByFile: Record<string, unknown>
+): SentinelCollision[] {
+  const collisions: SentinelCollision[] = [];
+  for (const [file, content] of Object.entries(contentByFile)) {
+    for (const text of findSentinelCollisions(content)) collisions.push({ file, text });
+  }
+  return collisions;
+}
+
 // ---------------------------------------------------------------------------
 // IO (main)
 // ---------------------------------------------------------------------------
@@ -158,15 +202,35 @@ function main(): void {
       return;
     }
     const source = JSON.parse(fs.readFileSync(enFile, 'utf-8'));
-    // Fail closed if the Hub source already contains sentinel-shaped text — restore
-    // would otherwise rewrite that genuine content into a preserve-term.
-    const collisions = findSentinelCollisions(source);
+    // Fail closed if ANY content file already contains sentinel-shaped text —
+    // restore rewrites every file in this directory, not just English, so a
+    // collision anywhere would have genuine content rewritten into a preserve-term.
+    // Checked before writing anything, so a refusal leaves the tree untouched.
+    const contentByFile: Record<string, unknown> = {};
+    for (const name of fs.readdirSync(CONTENT_DIR).filter((f) => f.endsWith('.json'))) {
+      if (name === 'en.json') {
+        contentByFile[name] = source;
+        continue;
+      }
+      // Name the file: a bare parse error here reports only "Unexpected token",
+      // which is little help when eleven locale files could be the culprit.
+      try {
+        contentByFile[name] = JSON.parse(fs.readFileSync(path.join(CONTENT_DIR, name), 'utf-8'));
+      } catch (error) {
+        console.error(
+          `[i18n] protect: could not parse content/${name}: ${(error as Error).message}`
+        );
+        process.exit(1);
+      }
+    }
+    const collisions = findCollisionsAcrossFiles(contentByFile);
     if (collisions.length > 0) {
+      const files = [...new Set(collisions.map((c) => c.file))].join(', ');
       console.error(
-        `[i18n] protect: ${collisions.length} source string(s) contain sentinel-shaped text; ` +
-          `refusing to protect (restore would corrupt them). Examples:`
+        `[i18n] protect: ${collisions.length} string(s) in ${files} contain sentinel-shaped ` +
+          `text; refusing to protect (restore would corrupt them). Examples:`
       );
-      for (const c of collisions.slice(0, 5)) console.error(`  ${c}`);
+      for (const c of collisions.slice(0, 5)) console.error(`  [${c.file}] ${c.text}`);
       process.exit(1);
     }
     fs.writeFileSync(enFile, JSON.stringify(protectContent(source, map), null, 2) + '\n');

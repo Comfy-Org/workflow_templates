@@ -31,7 +31,7 @@ flowchart LR
 
 | Step | Script | Nature | Output |
 |------|--------|--------|--------|
-| Step 1 | `scripts/mcp/sync_index.py` | Deterministic | Template list, `capabilities` (from tags), `model`, `io`, `usage`, etc. |
+| Step 1 | `scripts/mcp/sync_index.py` | Deterministic | Template list, `capabilities` (from tags), `model`, `io`, `usage`, `minComfyUIVersion`, etc. |
 | Step 2a | `scripts/mcp/enhance_models_registry.py` | AI-assisted | Model `summary`, `strengths`, `capabilities` in `models_registry.json` |
 | Step 2b | `scripts/mcp/enhance_descriptions.py` | AI-assisted | Polished template `description` (references registry + category context) |
 
@@ -220,7 +220,7 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 | ≥ 50 | `low` |
 | &lt; 50 | `not_recommended` |
 
-**Category floor:** templates in **Use Cases** never sync below `low` (no `not_recommended`).
+**Category floor:** templates in **Use Cases** and the Applied groups (**Product & Ads**, **Character & Fashion**, **Brand & Design**) never sync below `low` (no `not_recommended`).
 
 **New-template floor:** templates published within the last 30 days (same window as freshness `new`) never sync below `medium` when usage is still low. This avoids penalizing brand-new templates that have not accumulated usage data yet.
 
@@ -236,7 +236,9 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 }
 ```
 
-Overrides win over usage tiers but still respect the Use Cases floor (cannot set `not_recommended` there).
+Overrides win over usage tiers but still respect the Applied / Use Cases floor
+(**Use Cases**, **Product & Ads**, **Character & Fashion**, **Brand & Design**):
+cannot set `not_recommended` there.
 
 ## API contract
 

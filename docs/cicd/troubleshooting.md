@@ -57,7 +57,7 @@ gh workflow run "Publish to PyPI"
 ### Check PyPI Status
 ```bash
 # Check all package versions vs PyPI
-for pkg in core media-api media-video media-image media-other; do
+for pkg in core json media-api media-video media-image media-other media-assets-01 media-assets-02; do
   local=$(./scripts/ci/get_version.sh "packages/${pkg//-/_}/pyproject.toml")
   pypi=$(./scripts/ci/get_pypi_version.sh "comfyui-workflow-templates-$pkg")
   echo "$pkg: local=$local pypi=$pypi"

@@ -7,9 +7,11 @@
  * This URL is only used server-side (build + ISR), not in client-side Vue components.
  */
 
-import { applyRanking, fetchRankingMap, type RankingMap } from './ranking';
+import { applyRanking, fetchRankingMap, readEnv, type RankingMap } from './ranking';
 
-const HUB_API_BASE = (import.meta.env.PUBLIC_HUB_API_URL || 'https://cloud.comfy.org').replace(
+// readEnv, not import.meta.env directly: `scripts/` runs this module under plain
+// Node, where import.meta.env is undefined and a direct read throws.
+const HUB_API_BASE = (readEnv('PUBLIC_HUB_API_URL') || 'https://cloud.comfy.org').replace(
   /\/$/,
   ''
 );
@@ -57,7 +59,6 @@ export interface HubWorkflowMetadata {
   media_subtype?: string;
   open_source?: boolean;
   size?: number;
-  vram?: number;
   // AI-generated content (written by backend task worker)
   extended_description?: string;
   meta_description?: string;
@@ -104,7 +105,6 @@ export interface HubWorkflowTemplateEntry {
   mediaType?: MediaType;
   mediaSubtype?: string;
   size?: number;
-  vram?: number;
   usage?: number;
   openSource?: boolean | null;
   username?: string;
@@ -156,6 +156,8 @@ export interface SerializedTemplate {
   thumbnailVariant?: ThumbnailVariant;
   mediaSubtype?: string;
 }
+
+export type IslandTemplate = Omit<SerializedTemplate, 'description'>;
 
 /**
  * The subset of template fields the SEO image-matcher / fallback pool reads.
@@ -261,7 +263,7 @@ export async function getProfile(username: string): Promise<HubProfile> {
 
 let indexCache: Promise<HubWorkflowTemplateEntry[]> | null = null;
 
-const APPROVED_ONLY = import.meta.env.PUBLIC_APPROVED_ONLY === 'true';
+const APPROVED_ONLY = readEnv('PUBLIC_APPROVED_ONLY') === 'true';
 
 /** All status values — used when preview builds need unfiltered results. */
 const ALL_STATUSES: WorkflowStatus[] = ['pending', 'approved', 'rejected', 'deprecated'];
@@ -352,6 +354,10 @@ export function serializeIndexEntry(
     shareId: entry.shareId || '',
     title: entry.title || entry.name,
     description: entry.description || '',
+    // Whatever the index declares, with the pre-existing 'image' default when it
+    // declares nothing. That default is itself a frontend-owned guess and is on
+    // the list for the backend contract fix; it is left as-is here so this PR
+    // changes no classification behaviour.
     mediaType: entry.mediaType || 'image',
     tags: entry.tags || [],
     models: entry.models || [],
@@ -362,7 +368,7 @@ export function serializeIndexEntry(
     username,
     creatorDisplayName: profile?.display_name || username || 'ComfyUI',
     creatorAvatarUrl: profile?.avatar_url || '',
-    isApp: entry.isApp ?? entry.name.endsWith('.app'),
+    isApp: entry.isApp === true,
     thumbnailVariant: entry.thumbnailVariant,
     mediaSubtype: entry.mediaSubtype,
   };
@@ -461,7 +467,9 @@ export function toSerializedTemplate(workflow: HubWorkflowSummary): SerializedTe
     username: workflow.profile.username,
     creatorDisplayName: workflow.profile.display_name || workflow.profile.username,
     creatorAvatarUrl: workflow.profile.avatar_url || '',
-    isApp: workflow.isApp ?? workflow.name.endsWith('.app'),
+    // `workflow.name` is the display title here, not a filename, so only the
+    // share id can identify an app.
+    isApp: workflow.isApp === true,
   };
 }
 
@@ -497,12 +505,26 @@ export function toTemplateData(workflow: HubWorkflowDetail) {
   };
 }
 
-function inferMediaType(workflow: HubWorkflowSummary): MediaType {
-  const tags = (workflow.tags || []).map((t) => t.name.toLowerCase());
+/**
+ * Media type from tag names, by EXACT tag match.
+ *
+ * Deliberately not substring: widening it to phrase-shaped tags ("Image to
+ * Video") changes which category a workflow claims on the detail page, and the
+ * breadcrumb there links straight to that category. With classification now
+ * coming from the index, video and 3d hold no entries, so a widened match sends
+ * the reader to a category page that is empty in English and 404s in every
+ * locale. Same rule as before this PR; one definition instead of two.
+ */
+function mediaTypeFromTagNames(names: readonly string[]): MediaType {
+  const tags = names.map((name) => name.toLowerCase());
   if (tags.includes('video') || tags.includes('animation')) return 'video';
   if (tags.includes('audio')) return 'audio';
   if (tags.includes('3d')) return '3d';
   return 'image';
+}
+
+function inferMediaType(workflow: HubWorkflowSummary): MediaType {
+  return mediaTypeFromTagNames((workflow.tags || []).map((t) => t.name));
 }
 
 function buildThumbnailList(workflow: HubWorkflowSummary): string[] {
@@ -559,7 +581,7 @@ export async function loadSerializedTemplates(
     const entries = await listWorkflowIndex();
     return entries.map((e) => serializeIndexEntry(e, profiles, rankingMap));
   } catch (err) {
-    if (import.meta.env.PUBLIC_HUB_API_URL) {
+    if (readEnv('PUBLIC_HUB_API_URL')) {
       throw new Error(`Hub API failed during build: ${err}`);
     }
     console.warn('Hub API error, falling back to content collection:', err);

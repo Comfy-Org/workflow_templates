@@ -19,12 +19,13 @@ import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { buildToolbarLabels } from '../../lib/toolbar';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { DEFAULT_LOCALE } from '../../i18n/config';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
 import { fetchRankingMap } from '../../lib/ranking';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../lib/structured-data';
 import { getSocialDisplay } from '../../lib/social-links';
+import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -141,6 +142,11 @@ if (!isDetailPage) {
 }
 
 const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
+// This page (both the creator-profile and workflow-detail branches below) is
+// always locale-indexable itself; advertise only the locales actually flipped
+// on, not BaseLayout's full-LANGUAGES default (which includes "it", unbuilt
+// and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
@@ -180,6 +186,7 @@ const detailBreadcrumb = detailData
   ogType="article"
   structuredData={detailStructuredData ?? undefined}
   hreflangBasePath={`/workflows/${slugParam}/`}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
@@ -200,6 +207,8 @@ const detailBreadcrumb = detailData
   description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
   ogImage={creatorOgUrl(displayName, slugParam!, avatarUrl || undefined)}
+  hreflangBasePath={`/workflows/${slugParam}/`}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >

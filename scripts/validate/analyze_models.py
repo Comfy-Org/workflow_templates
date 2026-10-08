@@ -60,6 +60,149 @@ def is_subgraph_node(node_type: str) -> bool:
     return bool(re.match(uuid_pattern, node_type, re.IGNORECASE))
 
 
+# Socket types that are graph connections, not widget values on a subgraph instance.
+_NON_WIDGET_SLOT_TYPES = frozenset({
+    'IMAGE', 'IMAGE_PATH', 'MASK', 'LATENT', 'MODEL', 'CLIP', 'VAE',
+    'CONDITIONING', 'AUDIO', 'VIDEO', 'NOISE', 'GUIDER', 'SAMPLER', 'SIGMAS',
+    'CONTROL_NET', 'UPSCALE_MODEL', 'STYLE_MODEL', 'CLIP_VISION',
+    'CLIP_VISION_OUTPUT', 'GLIGEN', 'PHOTOMAKER', 'MESH', 'VOXEL', 'HOOKS',
+    'TIMESTEPS_RANGE',
+})
+
+
+def collect_subgraph_defs(obj, out=None) -> Dict:
+    """Index subgraph definitions by id, including nested definitions."""
+    if out is None:
+        out = {}
+    if not isinstance(obj, dict):
+        return out
+
+    definitions = obj.get('definitions') or {}
+    subgraphs = definitions.get('subgraphs') or []
+    if isinstance(subgraphs, list):
+        for sg in subgraphs:
+            if isinstance(sg, dict) and sg.get('id'):
+                out[str(sg['id'])] = sg
+                collect_subgraph_defs(sg, out)
+
+    for node in obj.get('nodes') or []:
+        if isinstance(node, dict):
+            collect_subgraph_defs(node, out)
+    return out
+
+
+def iter_scoped_nodes(data: Dict):
+    """Yield (scope, node) for top-level nodes and nodes inside subgraph defs."""
+    for node in data.get('nodes') or []:
+        if isinstance(node, dict):
+            yield 'top-level', node
+    for sg_id, sg in collect_subgraph_defs(data).items():
+        for node in sg.get('nodes') or []:
+            if isinstance(node, dict):
+                yield f'subgraph {sg_id}', node
+
+
+def safetensors_from_widgets(widgets_values) -> List[str]:
+    files = []
+    if isinstance(widgets_values, dict):
+        values = widgets_values.values()
+    elif isinstance(widgets_values, list):
+        values = widgets_values
+    else:
+        return files
+    for value in values:
+        if isinstance(value, str) and '.safetensors' in value and value.strip():
+            files.append(value)
+    return files
+
+
+def model_entries(properties) -> List[Dict]:
+    if not isinstance(properties, dict):
+        return []
+    models = properties.get('models') or []
+    if not isinstance(models, list):
+        return []
+    return [m for m in models if isinstance(m, dict) and m.get('name')]
+
+
+def model_names_with_url(models: List[Dict]) -> Set[str]:
+    return {
+        m['name'] for m in models
+        if m.get('name') and isinstance(m.get('url'), str) and m.get('url').strip()
+    }
+
+
+def widget_slot_inputs(subgraph: Dict) -> List[Dict]:
+    slots = []
+    for inp in subgraph.get('inputs') or []:
+        if not isinstance(inp, dict):
+            continue
+        slot_type = str(inp.get('type') or '')
+        if slot_type in _NON_WIDGET_SLOT_TYPES:
+            continue
+        slots.append(inp)
+    return slots
+
+
+def instance_widget_pairs(instance: Dict, subgraph: Dict) -> List[Tuple[Dict, object]]:
+    """Pair subgraph widget inputs with the instance widgets_values."""
+    widgets = instance.get('widgets_values', [])
+    slots = widget_slot_inputs(subgraph)
+    if isinstance(widgets, dict):
+        pairs = []
+        used = set()
+        for slot in slots:
+            name = slot.get('name')
+            if name in widgets:
+                pairs.append((slot, widgets[name]))
+                used.add(name)
+        for name, value in widgets.items():
+            if name not in used:
+                pairs.append((None, value))
+        return pairs
+    if isinstance(widgets, list) and len(widgets) == len(slots):
+        return list(zip(slots, widgets))
+    if isinstance(widgets, list):
+        return [(None, value) for value in widgets]
+    return []
+
+
+def find_inner_node_for_input(subgraph: Dict, input_def: Dict):
+    if not input_def:
+        return None
+    link_ids = input_def.get('linkIds') or []
+    link_set = set(link_ids)
+    if not link_set:
+        return None
+    for node in subgraph.get('nodes') or []:
+        if not isinstance(node, dict):
+            continue
+        for inp in node.get('inputs') or []:
+            if isinstance(inp, dict) and inp.get('link') in link_set:
+                return node
+    return None
+
+
+def collect_definition_model_entries(sg_id: str, defs: Dict, seen=None) -> List[Dict]:
+    if seen is None:
+        seen = set()
+    if sg_id in seen:
+        return []
+    seen.add(sg_id)
+    sg = defs.get(sg_id)
+    if not sg:
+        return []
+    entries = []
+    for node in sg.get('nodes') or []:
+        if not isinstance(node, dict):
+            continue
+        entries.extend(model_entries(node.get('properties') or {}))
+        node_type = node.get('type') or ''
+        if is_subgraph_node(node_type):
+            entries.extend(collect_definition_model_entries(str(node_type), defs, seen))
+    return entries
+
+
 def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
     """Analyze a single JSON file, extract model-related information and markdown safetensors links."""
     try:
@@ -79,7 +222,9 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
             'widgets_models_match': [],
             'missing_properties': [],
             'inconsistent_entries': [],
-            'markdown_link_errors': []
+            'markdown_link_errors': [],
+            'subgraph_missing_urls': [],
+            'subgraph_stale_definition': [],
         }
     }
 
@@ -121,43 +266,43 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
                 })
     find_markdown_links(data)
 
-    # Analyze nodes
-    nodes = data.get('nodes', [])
-    for node in nodes:
+    if not isinstance(data, dict):
+        return result
+
+    # Analyze nodes (top-level and inside subgraph definitions)
+    for scope, node in iter_scoped_nodes(data):
         node_type = node.get('type', '')
         node_id = node.get('id', '')
         widgets_values = node.get('widgets_values', [])
         properties = node.get('properties', {})
 
-        # Model loader node (but not subgraph nodes)
+        # Model loader node (but not subgraph instances)
         if any(keyword in node_type.lower() for keyword in ['loader', 'checkpoint']) and not is_subgraph_node(node_type):
             result['model_loaders'].append({
                 'id': node_id,
                 'type': node_type,
+                'scope': scope,
                 'widgets_values': widgets_values,
                 'properties': properties
             })
 
-        # widgets_values with .safetensors
-        safetensors_files = []
-        for widget_value in widgets_values:
-            if isinstance(widget_value, str) and '.safetensors' in widget_value:
-                safetensors_files.append(widget_value)
+        safetensors_files = safetensors_from_widgets(widgets_values)
 
         if safetensors_files:
             result['safetensors_widgets'].append({
                 'id': node_id,
                 'type': node_type,
+                'scope': scope,
                 'safetensors_files': safetensors_files,
                 'widgets_values': widgets_values,
                 'properties': properties
             })
 
-        # properties.models array
-        if 'models' in properties:
+        if isinstance(properties, dict) and 'models' in properties:
             result['properties_models'].append({
                 'id': node_id,
                 'type': node_type,
+                'scope': scope,
                 'models': properties['models'],
                 'widgets_values': widgets_values
             })
@@ -167,9 +312,8 @@ def analyze_json_file(file_path: str, whitelist_config: Dict = None) -> Dict:
     if 'models' in data:
         result['root_models'] = data['models']
 
-    # Analyze matching
     analyze_matching(result, whitelist_config)
-    # Analyze markdown links
+    analyze_subgraph_instances(data, result, whitelist_config)
     analyze_markdown_links(result)
 
     return result
@@ -259,25 +403,26 @@ def analyze_markdown_links(result: Dict):
                 })
 
 def analyze_matching(result: Dict, whitelist_config: Dict = None):
-    """Check widgets_values and properties.models matching, skip MarkdownNote/Note nodes and subgraph nodes for properties.models check."""
+    """Check widgets_values vs properties.models on the same node.
+
+    Subgraph instances (UUID type) are handled by analyze_subgraph_instances.
+    """
     for safetensors_node in result['safetensors_widgets']:
         node_id = safetensors_node['id']
         node_type = safetensors_node['type']
         safetensors_files = safetensors_node['safetensors_files']
         properties = safetensors_node['properties']
+        scope = safetensors_node.get('scope', '')
 
-        # Skip properties.models check for MarkdownNote/Note nodes
         if node_type.lower() in ['markdownnote', 'note']:
             continue
-        # Skip properties.models check based on whitelist of node types
         if is_node_ignored_for_model_check(node_type, whitelist_config or {}):
             continue
-            
-        # Skip properties.models check for subgraph nodes (type is UUID/GUID format)
         if is_subgraph_node(node_type):
             continue
 
-        properties_models = properties.get('models', [])
+        properties_models = properties.get('models', []) if isinstance(properties, dict) else []
+        in_subgraph_def = isinstance(scope, str) and scope.startswith('subgraph ')
 
         if properties_models:
             widget_model_names = set(safetensors_files)
@@ -290,15 +435,86 @@ def analyze_matching(result: Dict, whitelist_config: Dict = None):
             result['analysis']['widgets_models_match'].append({
                 'node_id': node_id,
                 'node_type': node_type,
+                'scope': scope,
                 'matched': list(matched),
                 'missing_in_properties': list(missing_in_properties),
                 'extra_in_properties': list(extra_in_properties)
             })
-        else:
+        elif not in_subgraph_def:
+            # Inner loaders without metadata are covered by subgraph instance checks.
             result['analysis']['missing_properties'].append({
                 'node_id': node_id,
                 'node_type': node_type,
+                'scope': scope,
                 'safetensors_files': safetensors_files
+            })
+
+
+def analyze_subgraph_instances(data: Dict, result: Dict, whitelist_config: Dict = None):
+    """Require subgraph instance models to have download URLs that match the definition.
+
+    1. Every .safetensors on a subgraph instance must appear in properties.models
+       (on the instance or inside that subgraph definition) with a URL.
+    2. The inner loader that the exposed widget feeds must document that same
+       model, unless the instance itself carries the download entry (multi-instance).
+    """
+    defs = collect_subgraph_defs(data)
+    if not defs:
+        return
+
+    for scope, instance in iter_scoped_nodes(data):
+        node_type = instance.get('type') or ''
+        if not is_subgraph_node(node_type):
+            continue
+        if is_node_ignored_for_model_check(node_type, whitelist_config or {}):
+            continue
+
+        instance_id = instance.get('id', 'unknown')
+        instance_models = safetensors_from_widgets(instance.get('widgets_values'))
+        if not instance_models:
+            continue
+
+        instance_entries = model_entries(instance.get('properties') or {})
+        instance_named = model_names_with_url(instance_entries)
+        definition_entries = collect_definition_model_entries(str(node_type), defs)
+        catalog = instance_named | model_names_with_url(definition_entries)
+        subgraph = defs.get(str(node_type))
+
+        ignored_instance_models = set()
+        if subgraph:
+            for slot, value in instance_widget_pairs(instance, subgraph):
+                if not isinstance(value, str) or '.safetensors' not in value or not value.strip():
+                    continue
+                inner = find_inner_node_for_input(subgraph, slot)
+                if inner is None:
+                    continue
+                inner_type = inner.get('type') or ''
+                if is_node_ignored_for_model_check(inner_type, whitelist_config or {}):
+                    ignored_instance_models.add(value)
+                    continue
+                inner_names = {m.get('name') for m in model_entries(inner.get('properties') or {})}
+                if value in inner_names or value in instance_named:
+                    continue
+                result['analysis']['subgraph_stale_definition'].append({
+                    'node_id': instance_id,
+                    'node_type': node_type,
+                    'scope': scope,
+                    'inner_node_id': inner.get('id', 'unknown'),
+                    'inner_node_type': inner_type,
+                    'instance_model': value,
+                    'definition_models': sorted(n for n in inner_names if n),
+                })
+
+        missing = [
+            name for name in instance_models
+            if name not in catalog and name not in ignored_instance_models
+        ]
+        if missing:
+            result['analysis']['subgraph_missing_urls'].append({
+                'node_id': instance_id,
+                'node_type': node_type,
+                'scope': scope,
+                'models': missing,
             })
 
 def analyze_all_templates(templates_dir: str, whitelist_config: Dict = None) -> Tuple[Dict, Dict]:
@@ -353,6 +569,8 @@ def analyze_all_templates(templates_dir: str, whitelist_config: Dict = None) -> 
                 if match['missing_in_properties'] or match['extra_in_properties']:
                     statistics['model_link_errors'] += 1
             statistics['model_link_errors'] += len(result['analysis']['missing_properties'])
+            statistics['model_link_errors'] += len(result['analysis']['subgraph_missing_urls'])
+            statistics['model_link_errors'] += len(result['analysis']['subgraph_stale_definition'])
 
     statistics['total_safetensors_files'] = list(statistics['total_safetensors_files'])
 
@@ -381,7 +599,7 @@ def generate_report(results: Dict, statistics: Dict) -> str:
         report.append(f"- {node_type}: {count}")
     
     if statistics['subgraph_node_types']:
-        report.append("\n## Subgraph Node Types with .safetensors (skipped from model validation)")
+        report.append("\n## Subgraph instances with .safetensors")
         for node_type, count in sorted(statistics['subgraph_node_types'].items(), key=lambda x: x[1], reverse=True):
             report.append(f"- {node_type}: {count}")
 
@@ -398,13 +616,33 @@ def generate_report(results: Dict, statistics: Dict) -> str:
         # Model link errors
         for match in result['analysis']['widgets_models_match']:
             if match['missing_in_properties'] or match['extra_in_properties']:
-                report.append(f"\n### {filename} - Node {match['node_id']} ({match['node_type']}) model link mismatch:")
+                scope = f" [{match['scope']}]" if match.get('scope') else ''
+                report.append(
+                    f"\n### {filename} - Node {match['node_id']} ({match['node_type']}){scope} model link mismatch:"
+                )
                 if match['missing_in_properties']:
                     report.append(f"  - In widgets_values but missing in properties.models: {match['missing_in_properties']}")
                 if match['extra_in_properties']:
                     report.append(f"  - In properties.models but missing in widgets_values: {match['extra_in_properties']}")
         for miss in result['analysis']['missing_properties']:
-            report.append(f"\n### {filename} - Node {miss['node_id']} ({miss['node_type']}) missing properties.models for: {miss['safetensors_files']}")
+            scope = f" [{miss['scope']}]" if miss.get('scope') else ''
+            report.append(
+                f"\n### {filename} - Node {miss['node_id']} ({miss['node_type']}){scope} "
+                f"missing properties.models for: {miss['safetensors_files']}"
+            )
+        for miss in result['analysis']['subgraph_missing_urls']:
+            scope = f" [{miss['scope']}]" if miss.get('scope') else ''
+            report.append(
+                f"\n### {filename} - Subgraph instance {miss['node_id']} ({miss['node_type']}){scope} "
+                f"has no download URL for: {miss['models']}"
+            )
+        for stale in result['analysis']['subgraph_stale_definition']:
+            scope = f" [{stale['scope']}]" if stale.get('scope') else ''
+            report.append(
+                f"\n### {filename} - Subgraph instance {stale['node_id']} ({stale['node_type']}){scope} "
+                f"uses '{stale['instance_model']}' but inner node {stale['inner_node_id']} "
+                f"({stale['inner_node_type']}) documents: {stale['definition_models'] or '[]'}"
+            )
     return '\n'.join(report)
 
 def main():

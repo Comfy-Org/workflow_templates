@@ -8,6 +8,7 @@
  */
 import { byUsageDesc, type SerializedTemplate, type MatcherTemplate } from '../hub-api';
 import { hasStillThumbnail } from '../media-utils';
+import { GATED_SHARE_IDS } from './use-cases';
 
 // Exhaustive map: a new MatcherTemplate field won't compile until listed here,
 // so the projection below can't silently drop a matching signal.
@@ -25,8 +26,12 @@ const MATCHER_FIELDS: Record<keyof MatcherTemplate, true> = {
 const MATCHER_KEYS = Object.keys(MATCHER_FIELDS) as (keyof MatcherTemplate)[];
 
 export function buildFallbackPool(catalog: SerializedTemplate[]): MatcherTemplate[] {
-  return catalog
-    .filter((t) => hasStillThumbnail(t.thumbnails))
-    .sort(byUsageDesc)
-    .map((t) => Object.fromEntries(MATCHER_KEYS.map((k) => [k, t[k]])) as MatcherTemplate);
+  return (
+    catalog
+      .filter((t) => hasStillThumbnail(t.thumbnails))
+      // Dropped from the pool itself, so no section can draw one as a card or link.
+      .filter((t) => !t.shareId || !GATED_SHARE_IDS.has(t.shareId))
+      .sort(byUsageDesc)
+      .map((t) => Object.fromEntries(MATCHER_KEYS.map((k) => [k, t[k]])) as MatcherTemplate)
+  );
 }

@@ -255,6 +255,13 @@ def update_archived_i18n(template_name: str, i18n_data: Dict) -> None:
         del templates_data[template_name]
 
 
+def strip_retired_vram(template: Optional[Dict]) -> Optional[Dict]:
+    """Drop the retired vram field so archive/restore cannot reintroduce it."""
+    if isinstance(template, dict):
+        template.pop("vram", None)
+    return template
+
+
 def find_template_in_category(template_name: str, category: Dict) -> Optional[Dict]:
     """Find template by name in a category."""
     if "templates" not in category:
@@ -282,6 +289,8 @@ def update_archived_index_locale(template_name: str, locale_file: Path, archived
     if not archived_template:
         print(f"  Template {template_name} not found in {locale_file.name}")
         return locale_data
+
+    strip_retired_vram(archived_template)
 
     # Load or create archived locale file
     if archived_locale_file.exists():
@@ -350,6 +359,7 @@ def restore_from_archived_index_locale(template_name: str, locale_file: Path, ar
     # Remove status: "active" if present
     if "status" in restored_template and restored_template["status"] == "active":
         del restored_template["status"]
+    strip_retired_vram(restored_template)
 
     # Add to original locale file
     found_category = False
@@ -407,6 +417,7 @@ def restore_from_archived_index(template_name: str, index_data: List[Dict], arch
     # Remove status: "active" if present
     if "status" in restored_template and restored_template["status"] == "active":
         del restored_template["status"]
+    strip_retired_vram(restored_template)
 
     # Add to original index
     found_category = False
@@ -461,6 +472,8 @@ def update_archived_index(template_name: str, index_data: List[Dict]) -> List[Di
     if not archived_template:
         print(f"  Template {template_name} not found in index.json")
         return index_data
+
+    strip_retired_vram(archived_template)
 
     if ARCHIVED_INDEX_FILE.exists():
         archived_data = load_json(ARCHIVED_INDEX_FILE)

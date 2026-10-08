@@ -24,6 +24,7 @@ import { tagDisplayName } from '@/lib/tag-aliases';
 import { trackSearchPerformed, trackFilterApplied } from '@/lib/posthog';
 import { isAudioFile, isVideoFile } from '@/lib/media-utils';
 import { getVideoFrameUrl } from '@/lib/video-thumbnail';
+import { hubImageFor, hubMediaFor } from '@/lib/hub-media';
 import { workflowDetailPath, workflowDetailSlug, thumbnailPath, creatorPath } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
@@ -38,6 +39,9 @@ const props = defineProps<{
   facets: { tags: DiscoveryFacet[]; models: DiscoveryFacet[] };
   totalCount: number;
   locale: string;
+  /** Translated chrome, resolved server-side: importing the locale JSONs here
+   *  would ship all eleven of them to every visitor. */
+  labels: { placeholder: string; placeholderShort: string; ariaLabel: string };
 }>();
 
 const store = useHubStore();
@@ -511,8 +515,9 @@ function formatUsage(usage: number): string {
 function getImageThumb(file: string | undefined | null): string | null {
   if (!file) return null;
   if (isAudioFile(file)) return null;
-  if (isVideoFile(file)) return getVideoFrameUrl(thumbnailPath(file));
-  return thumbnailPath(file);
+  const url = thumbnailPath(file);
+  if (isVideoFile(file)) return hubMediaFor(url)?.poster ?? getVideoFrameUrl(url);
+  return hubImageFor(url) ?? url;
 }
 
 /**
@@ -522,7 +527,8 @@ function getImageThumb(file: string | undefined | null): string | null {
  */
 function videoThumbUrl(file: string | undefined | null): string | null {
   if (!file || !isVideoFile(file)) return null;
-  return thumbnailPath(file);
+  const url = thumbnailPath(file);
+  return hubMediaFor(url)?.video ?? url;
 }
 
 function handleFocus() {
@@ -643,8 +649,8 @@ onUnmounted(() => {
           ref="inputRef"
           v-model="searchQuery"
           type="search"
-          aria-label="Search workflows, models, and creators"
-          :placeholder="hasBadges ? 'Search...' : 'Search workflows, models, creators...'"
+          :aria-label="labels.ariaLabel"
+          :placeholder="hasBadges ? labels.placeholderShort : labels.placeholder"
           class="flex-1 min-w-0 h-full bg-transparent text-content text-sm font-normal leading-none placeholder:text-hub-muted outline-none relative top-[0.09em] [&::-webkit-search-cancel-button]:hidden"
           @focus="handleFocus"
           @keydown="handleKeydown"

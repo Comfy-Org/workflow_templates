@@ -17,6 +17,9 @@ on:
     types: [opened, synchronize]
     paths:
       - 'templates/**.json'
+      - 'scripts/sync/sync_custom_nodes.py'
+      - 'scripts/lib/index_format.py'
+      - '.github/workflows/sync-custom-nodes.yml'
 
 permissions:
   contents: write
@@ -33,7 +36,7 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
@@ -41,6 +44,7 @@ jobs:
           sparse-checkout: |
             templates/*.json
             scripts/sync/sync_custom_nodes.py
+            scripts/lib/index_format.py
             scripts/lib/paths.py
           sparse-checkout-cone-mode: false
 

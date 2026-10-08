@@ -13,14 +13,13 @@ This skill covers managing template bundles, display categories, and ordering in
 
 Controls which Python distribution package ships each template. Located at the repo root.
 
-**Structure:** A JSON object with four keys:
+**Structure:** A JSON object whose keys are distribution bundles:
 
-- `media-api`
-- `media-image`
-- `media-video`
-- `media-other`
+- `media-api`, `media-image`, `media-video`, `media-other` (legacy, frozen)
+- `media-assets-01` (frozen asset shard)
+- `media-assets-02` (active: assign **new** templates here)
 
-Each key maps to an array of template name strings. Every template must appear in exactly one bundle. This determines which `comfyui_workflow_templates_media_*` Python package includes the template — it does **not** affect display order or categorization in the UI.
+Each key maps to an array of template name strings. Every template must appear in exactly one bundle. This determines which Python media package includes the template — it does **not** affect display order or categorization in the UI. See [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
 
 ### 2. `templates/index.json` — Display Categories & Order
 
