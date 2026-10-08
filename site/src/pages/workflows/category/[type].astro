@@ -4,7 +4,6 @@ import BaseLayout from '../../../layouts/BaseLayout.astro';
 import HubNavbar from '../../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../../components/hub/SiteFooter.astro';
 import WorkflowGrid from '../../../components/hub/WorkflowGrid.vue';
-import HreflangTags from '../../../components/HreflangTags.astro';
 import BackButton from '../../../components/BackButton.astro';
 import { getLocaleFromPath, localizeUrl } from '../../../i18n/utils';
 import { t } from '../../../i18n/ui';
@@ -14,6 +13,8 @@ import { buildToolbarLabels } from '../../../lib/toolbar';
 import { badgeVariants } from '../../../components/ui/badge';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../../lib/structured-data';
 import { loadSerializedTemplates, type MediaType } from '../../../lib/hub-api';
+import { DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
+import { INDEXABLE_LOCALES } from '../../../lib/i18n/locales';
 
 const categoryTranslationKeys: Record<MediaType, string> = {
   image: 'category.image',
@@ -42,6 +43,10 @@ const templates = allSerialized.filter((tmpl) => tmpl.mediaType === type);
 
 const basePath = categoryPath(type);
 const canonicalUrl = absoluteUrl(localizeUrl(basePath, locale));
+// This English page is always indexable itself; advertise only the locales
+// actually flipped on, not BaseLayout's full-LANGUAGES default (which
+// includes "it", unbuilt and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -169,12 +174,13 @@ const serialized = templates;
   title={title}
   description={description}
   canonicalUrl={canonicalUrl}
-  ogImage="/brand/og-default-v2.png"
+  ogImage="/brand/og-default-v3.png"
   structuredData={structuredData}
+  hreflangBasePath={basePath}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
-  <HreflangTags slot="head" basePath={basePath} />
   <HubNavbar />
   <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-12">
     <!-- Back -->

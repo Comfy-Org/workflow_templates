@@ -9,12 +9,13 @@ import { deriveModelGroups, type ModelGroup } from './model-groups';
 import { modelContentPasses } from './landing-content';
 import { firstStillAcross } from '../media-utils';
 
-/** The template fields the filter/sort reads — kept minimal so build-time
- *  sitemap templates (a narrower shape than SerializedTemplate) also satisfy it. */
+/** Minimal template shape the filter/sort reads, so narrower build-time shapes satisfy it. */
 export interface FilterableTemplate {
   models?: string[];
   tags?: string[];
   usage?: number;
+  shareId?: string;
+  isApp?: boolean;
 }
 
 /** Matches if any filter matches (OR semantics). */
@@ -24,12 +25,80 @@ function matchesFilters(template: FilterableTemplate, filters: SeoPageFilters): 
   return byModel || byTag;
 }
 
-/** Templates matching a page's filters, usage-sorted. Empty when none match. */
+/** Filter matches (usage-sorted, minus excludes) with pinned shares prepended in
+ *  registry order. A pin absent from the catalog is silently dropped. */
 export function resolveUseCasePageTemplates<T extends FilterableTemplate>(
   def: SeoPageDef,
   catalog: T[]
 ): T[] {
-  return catalog.filter((template) => matchesFilters(template, def.filters)).sort(byUsageDesc);
+  const excluded = new Set(def.excludeShareIds ?? []);
+  const matched = catalog
+    .filter((template) => matchesFilters(template, def.filters))
+    .filter((template) => !template.shareId || !excluded.has(template.shareId))
+    .sort(byUsageDesc);
+
+  // Pins bypass excludes; first id wins. Gated pins are dropped: pins are the one
+  // route that skips `assertBrandSafe`.
+  const seen = new Set<string>();
+  const pinned = (def.pins ?? []).flatMap((pin) => {
+    if (pin.gate) return [];
+    if (seen.has(pin.shareId)) return [];
+    const found = catalog.find((template) => template.shareId === pin.shareId);
+    if (!found) return [];
+    seen.add(pin.shareId);
+    return [pin.isApp ? ({ ...found, isApp: true } as T) : found];
+  });
+  if (pinned.length === 0) return matched;
+
+  return [...pinned, ...matched.filter((t) => !t.shareId || !seen.has(t.shareId))];
+}
+
+/**
+ * Whether a use-case page will render a grid, judged from the on-disk template
+ * snapshot that `astro.config.mjs` reads for sitemap membership.
+ *
+ * That snapshot cannot answer the question with `resolveUseCasePageTemplates`
+ * alone: its entries carry no `shareId` (the content schema has no such field,
+ * and `serializeCollectionEntry` sets it to `''`), so pins never resolve against
+ * it. The routes resolve pins fine, because they read the live hub index. A page
+ * whose grid is entirely curated therefore looks empty to the sitemap while
+ * rendering as indexable, which trips `verify-sitemap-indexability`. Counting
+ * pins directly closes that gap without teaching the snapshot about share ids.
+ */
+export function useCasePageHasGrid(def: SeoPageDef, snapshot: FilterableTemplate[]): boolean {
+  if (resolveUseCasePageTemplates(def, snapshot).length > 0) return true;
+  // Only a fully curated page falls back to its pin count. A page that declares
+  // filters is still judged on whether those filters match, so this cannot mask
+  // a tag filter that has gone stale.
+  const hasFilters = (def.filters.tags?.length ?? 0) > 0 || (def.filters.models?.length ?? 0) > 0;
+  // Ungated only: counting a gated pin advertises a grid the resolver will not render.
+  const ungatedPins = (def.pins ?? []).filter((pin) => !pin.gate).length;
+  return !hasFilters && ungatedPins > 0;
+}
+
+const SHARE_ID_RE = /^[0-9a-f]+$/;
+
+/** Throws on a malformed curated share id; only warns on an unresolved pin, which
+ *  is often just an app unpublished in this environment's catalog. */
+export function assertCuratedSharesResolve(def: SeoPageDef, catalog: FilterableTemplate[]): void {
+  const malformed = [
+    def.appShareId,
+    ...(def.pins ?? []).map((p) => p.shareId),
+    ...(def.excludeShareIds ?? []),
+  ].filter((id): id is string => !!id && !SHARE_ID_RE.test(id));
+  if (malformed.length > 0) {
+    throw new Error(
+      `Use-case page "${def.slug}" has malformed share ids: ${malformed.join(', ')}.`
+    );
+  }
+
+  const known = new Set(catalog.map((t) => t.shareId).filter(Boolean));
+  if (known.size === 0) return;
+  for (const pin of def.pins ?? []) {
+    if (!known.has(pin.shareId)) {
+      console.warn(`Use-case page "${def.slug}": pinned share "${pin.shareId}" not in catalog.`);
+    }
+  }
 }
 
 /** A model family related to a use-case (or vice versa), ready to link. */
@@ -64,10 +133,23 @@ export function qualifyingGroups(catalog: SerializedTemplate[]): ModelGroup[] {
  * that drives many of the page's templates is more related than an incidental
  * one). Replaces hand-typed `relatedModels`, so it can never drift from the grid.
  */
+/**
+ * Caps on the "Keep exploring" rail, named because the two interact and the
+ * interaction is invisible at the call site: the page concatenates model cards
+ * ahead of use-case cards and truncates to RELATED_RAIL_LIMIT, so a page can
+ * only ever surface RELATED_RAIL_LIMIT - RELATED_MODEL_LIMIT of its own
+ * `relatedSlugs`. Declaring more is not an error at runtime, the extras simply
+ * never render, so `use-case-resolver.test.ts` asserts the budget instead.
+ */
+export const RELATED_RAIL_LIMIT = 5;
+export const RELATED_MODEL_LIMIT = 3;
+/** How many `relatedSlugs` a page can actually show. */
+export const RELATED_SLUG_BUDGET = RELATED_RAIL_LIMIT - RELATED_MODEL_LIMIT;
+
 export function relatedModelsForUseCase(
   def: SeoPageDef,
   catalog: SerializedTemplate[],
-  limit = 3
+  limit = RELATED_MODEL_LIMIT
 ): RelatedModel[] {
   const grid = resolveUseCasePageTemplates(def, catalog);
   const gridNames = new Set(grid.map((template) => template.name));
@@ -86,6 +168,33 @@ export function relatedModelsForUseCase(
       thumbnail: firstStillAcross(group.templates) ?? undefined,
       count: group.templates.length,
     }));
+}
+
+/**
+ * Use-case pages for a page's "Keep exploring" rail: `def.relatedSlugs` first, in
+ * the order given, then any remaining slots fill automatically from the routed
+ * catalog (declaration order) exactly as every page behaved before this field
+ * existed. A page that never sets `relatedSlugs` gets the identical output it
+ * always did.
+ */
+export function relatedUseCasesForPage(
+  def: SeoPageDef,
+  allPages: SeoPageDef[],
+  routedSlugs: string[],
+  limit = RELATED_RAIL_LIMIT
+): SeoPageDef[] {
+  const routed = new Set(routedSlugs);
+  const bySlug = new Map(allPages.map((page) => [page.slug, page]));
+  // Both gates matter: a routed slug can outlive the definition it came from, and a
+  // definition can exist without a route (the caller drops pages that render no grid).
+  const isCandidate = (slug: string) => slug !== def.slug && routed.has(slug) && bySlug.has(slug);
+  const manual = (def.relatedSlugs ?? []).filter(isCandidate);
+  const auto = allPages.map((page) => page.slug).filter(isCandidate);
+  // One Set across both lists: a slug repeated in `relatedSlugs`, or one that also
+  // arrives automatically, keeps its first position instead of rendering the same
+  // card twice and burning a slot a genuine relation could have used.
+  const ordered = [...new Set([...manual, ...auto])];
+  return ordered.slice(0, limit).flatMap((slug) => bySlug.get(slug) ?? []);
 }
 
 /**

@@ -21,7 +21,7 @@ jobs:
       SKIP_AI_GENERATION: 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup
         uses: ./.github/actions/site-setup
@@ -42,8 +42,15 @@ jobs:
         run: pnpm run build
         working-directory: site
         env:
-          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PREVIEW }}
-          PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PREVIEW }}
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
+          PUBLIC_COMFY_CLOUD_URL: ${{ secrets.COMFY_CLOUD_URL_PRODUCTION }}
+          PUBLIC_APPROVED_ONLY: 'true'
+          PUBLIC_ALGOLIA_APP_ID: 4E0RO38HS8
+          PUBLIC_ALGOLIA_SEARCH_KEY: 684d998c36b67a9a9fce8fc2d8860579
+
+      - name: Verify Vercel function runtime
+        run: pnpm run verify:vercel-runtime
+        working-directory: site
 
       - name: Deploy preview to Vercel
         id: deploy
@@ -67,7 +74,8 @@ jobs:
           rm -rf "$root_output_dir"
           cp -R "$site_output_dir" "$root_output_dir"
 
-          if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --yes \
+          if npx vercel@62.4.0 deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --yes \
+            --archive=tgz \
             --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
             cat "$stderr_file" >&2
             cat "$stdout_file"

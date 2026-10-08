@@ -7,7 +7,6 @@
   "scripts": {
     "prepare": "husky || true",
     "dev": "astro dev",
-    "locale": "lobe-i18n",
     "sync": "tsx scripts/sync-templates.ts",
     "sync:en-only": "tsx scripts/sync-templates.ts --en-only",
     "sync:locale": "tsx scripts/sync-templates.ts --locale",
@@ -21,6 +20,7 @@
     "cache:status": "tsx scripts/cache-status.ts",
     "cache:clear": "tsx scripts/cache-clear.ts",
     "build:search-index": "tsx scripts/build-search-index.ts",
+    "build:hub-manifests": "tsx scripts/build-hub-manifests.ts",
     "prebuild": "tsx scripts/prebuild-parallel.ts",
     "prebuild:sequential": "pnpm run sync && pnpm run sync:tutorials && pnpm run generate:ai && pnpm run generate:previews",
     "build": "astro build",
@@ -39,14 +39,28 @@
     "audit:seo": "tsx scripts/seo-audit.ts",
     "validate:sitemap": "tsx scripts/validate-sitemap.ts",
     "verify:sitemap-indexability": "tsx scripts/verify-sitemap-indexability.ts",
+    "verify:vercel-runtime": "tsx scripts/verify-vercel-runtime.ts",
     "research:paa": "tsx scripts/paa-research.ts",
     "test:visual": "playwright test visual.spec.ts",
     "test:visual:update": "playwright test visual.spec.ts --update-snapshots",
     "test:e2e": "playwright test e2e.spec.ts",
     "test:e2e:headed": "playwright test e2e.spec.ts --headed",
+    "test:links": "playwright test --config=playwright.links.config.ts",
     "knip": "knip",
     "knip:fix": "knip --fix",
-    "feature-flags:refresh-snapshot": "tsx ./scripts/refresh-feature-flags-snapshot.ts"
+    "feature-flags:refresh-snapshot": "tsx ./scripts/refresh-feature-flags-snapshot.ts",
+    "partner-nodes:refresh-snapshot": "tsx ./scripts/refresh-partner-nodes-snapshot.ts",
+    "locale": "lobe-i18n",
+    "locale:ui": "lobe-i18n -c .i18nrc.ui.cjs",
+    "i18n:build-source": "tsx scripts/i18n/build-content-source.ts",
+    "i18n:glossary": "tsx scripts/i18n/sync-glossary.ts",
+    "i18n:protect": "tsx scripts/i18n/preserve-protection.ts protect",
+    "i18n:restore": "tsx scripts/i18n/preserve-protection.ts restore",
+    "i18n:review": "tsx scripts/i18n/review-translations.ts",
+    "i18n:enforce": "tsx scripts/i18n/enforce-translations.ts",
+    "i18n:validate": "tsx scripts/i18n/validate-translations.ts",
+    "i18n:check": "tsx scripts/i18n/check-config.ts",
+    "i18n:signoff-refresh": "tsx scripts/i18n/refresh-signoff.ts"
   },
   "lint-staged": {
     "*.{js,ts,mjs,astro}": [
@@ -58,14 +72,18 @@
     ]
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@astrojs/sitemap": "^3.3.1",
     "@astrojs/vercel": "^9.0.4",
     "@astrojs/vue": "^5.1.4",
+    "@comfyorg/sdk": "^0.1.7",
     "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/vite": "^4.1.18",
     "@vercel/analytics": "^1.6.1",
     "@vercel/og": "^0.8.6",
+    "@vercel/speed-insights": "^2.0.0",
     "@vueuse/core": "^14.2.1",
+    "algoliasearch": "^5.21.0",
     "astro": "^5.16.11",
     "cheerio": "1.0.0-rc.12",
     "class-variance-authority": "^0.7.1",
@@ -79,6 +97,7 @@
     "reka-ui": "^2.8.0",
     "satori": "^0.19.1",
     "sharp": "^0.34.5",
+    "shiki": "^3.22.0",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.1.18",
     "vue": "^3.5.28",
@@ -89,7 +108,7 @@
     "@eslint/js": "^9.0.0",
     "@lobehub/i18n-cli": "^1.26.0",
     "@playwright/test": "^1.58.1",
-    "@types/node": "^20.0.0",
+    "@types/node": "^24.0.0",
     "ajv-cli": "^5.0.0",
     "eslint": "^9.0.0",
     "eslint-plugin-astro": "^1.2.0",
@@ -107,6 +126,6 @@
     "vitest": "^4.0.18"
   },
   "optionalDependencies": {
-    "canvas": "^2.11.0"
+    "canvas": "^3.2.3"
   }
 }

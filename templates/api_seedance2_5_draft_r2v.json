@@ -1,0 +1,473 @@
+{
+  "id": "183969e6-818c-4684-96b4-eb50d8d2d450",
+  "revision": 0,
+  "last_node_id": 795,
+  "last_link_id": 1984,
+  "nodes": [
+    {
+      "id": 771,
+      "type": "SaveText",
+      "pos": [
+        3440,
+        -210
+      ],
+      "size": [
+        480,
+        230
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 1962
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "Seedance2.5_draft_task_id_%year%_%month%_%day%",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Seedance2.5_draft_task_id_%year%_%month%_%day%",
+        "format": "txt"
+      }
+    },
+    {
+      "id": 774,
+      "type": "ByteDance2DraftToFinalVideoNode",
+      "pos": [
+        2960,
+        450
+      ],
+      "size": [
+        400,
+        90
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 4,
+      "showAdvanced": false,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1947
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDance2DraftToFinalVideoNode"
+      },
+      "widgets_values": [
+        "",
+        false
+      ],
+      "widgets_values_named": {
+        "draft_task_id": "",
+        "watermark": false
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 775,
+      "type": "SaveVideo",
+      "pos": [
+        3390,
+        450
+      ],
+      "size": [
+        690,
+        460
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1947
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/Seedance2.5_draft_to_final_video",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/Seedance2.5_draft_to_final_video",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 776,
+      "type": "SaveVideo",
+      "pos": [
+        4020,
+        -430
+      ],
+      "size": [
+        580,
+        390
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1963
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/Seedance2.5_draft",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/Seedance2.5_draft",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 778,
+      "type": "MarkdownNote",
+      "pos": [
+        1820,
+        -670
+      ],
+      "size": [
+        590,
+        440
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input assets\n\n- [yellow_mech_character_sheet.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/yellow_mech_character_sheet.png)\n- [mech_comic_storyboard.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/mech_comic_storyboard.png)\n\n## Guide\n\n**Seedance 2.5 Draft mode** renders a fast, low-cost 480p preview so you can iterate on a prompt before committing to a full render. This workflow runs that in two stages.\n\n**Stage 1: Create and preview the draft video**\n\n1. Load your reference images in the two **Load Image** nodes and keep **Seedance 2.5 Draft** as the model on the **ByteDance Seedance 2.5 Reference to Video** node. `task_type` stays on **auto**, which generates a new video guided by those references; set it to `edit` or `extend` instead when a reference video is connected. Write your prompt, then run the workflow: you get the 480p preview plus its `draft_task_id`, which the **Save Text** node writes to a .txt file in the output folder.\n\n2. Adjust the prompt or the reference images and rerun until you like the draft. Once you do, leave this stage bypassed: if the draft node runs again it creates a new draft instead of reusing the one you reviewed.\n\n**Stage 2: Render the final video from the draft**\n\n3. Select the nodes in the **Stage 1** group and press `Ctrl+B` to bypass them.\n\n4. Select the nodes in the **Stage 2** group and press `Ctrl+B` to enable them again.\n\n5. Paste the `draft_task_id` from the saved .txt file into the `draft_task_id` field on the **ByteDance Seedance 2.5 Draft to Final Video** node, then run the workflow. The final 1080p render keeps the draft's prompt, references, duration, aspect ratio, and audio setting, so there is nothing to re-enter.\n\nDrafts are kept for 7 days, so render the final within that window."
+      ],
+      "widgets_values_named": {
+        "text": "## Input assets\n\n- [yellow_mech_character_sheet.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/yellow_mech_character_sheet.png)\n- [mech_comic_storyboard.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/mech_comic_storyboard.png)\n\n## Guide\n\n**Seedance 2.5 Draft mode** renders a fast, low-cost 480p preview so you can iterate on a prompt before committing to a full render. This workflow runs that in two stages.\n\n**Stage 1: Create and preview the draft video**\n\n1. Load your reference images in the two **Load Image** nodes and keep **Seedance 2.5 Draft** as the model on the **ByteDance Seedance 2.5 Reference to Video** node. `task_type` stays on **auto**, which generates a new video guided by those references; set it to `edit` or `extend` instead when a reference video is connected. Write your prompt, then run the workflow: you get the 480p preview plus its `draft_task_id`, which the **Save Text** node writes to a .txt file in the output folder.\n\n2. Adjust the prompt or the reference images and rerun until you like the draft. Once you do, leave this stage bypassed: if the draft node runs again it creates a new draft instead of reusing the one you reviewed.\n\n**Stage 2: Render the final video from the draft**\n\n3. Select the nodes in the **Stage 1** group and press `Ctrl+B` to bypass them.\n\n4. Select the nodes in the **Stage 2** group and press `Ctrl+B` to enable them again.\n\n5. Paste the `draft_task_id` from the saved .txt file into the `draft_task_id` field on the **ByteDance Seedance 2.5 Draft to Final Video** node, then run the workflow. The final 1080p render keeps the draft's prompt, references, duration, aspect ratio, and audio setting, so there is nothing to re-enter.\n\nDrafts are kept for 7 days, so render the final within that window."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 788,
+      "type": "LoadImage",
+      "pos": [
+        2500,
+        -160
+      ],
+      "size": [
+        390,
+        380
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1984
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "mech_comic_storyboard.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "mech_comic_storyboard.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 789,
+      "type": "ByteDance2ReferenceNodeV2",
+      "pos": [
+        3000,
+        -430
+      ],
+      "size": [
+        400,
+        538
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.reference_images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 1983
+        },
+        {
+          "name": "model.reference_images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 1984
+        },
+        {
+          "name": "model.reference_images.image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.reference_videos.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "model.reference_audios.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "model.reference_assets.asset_1",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1963
+          ]
+        },
+        {
+          "name": "draft_task_id",
+          "type": "STRING",
+          "links": [
+            1962
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDance2ReferenceNodeV2"
+      },
+      "widgets_values": [
+        "Seedance 2.5 Draft",
+        "Photoreal cinematic sci-fi action fashion film, 5 seconds, a high-end techwear campaign crossed with a blockbuster fight sequence. Shot on ARRI Alexa 65 with anamorphic lenses. Deep night in a rain-slicked megacity, full moon, cold blue ambient light cut with sodium-orange streetlights and stray magenta neon. Wet reflective surfaces, light haze, drifting rain particles, shallow depth of field, rich filmic grain, crisp specular highlights, and a restrained teal-and-cobalt grade that makes the yellow pop.\n\n**Character (strict consistency):** A tall, slender, faceless android.\n- **Head:** A glossy porcelain-white egg-shaped helmet with black cybernetic seam lines. Black cable loops and antenna nodes arc behind the head.\n- **Jacket:** An oversized high-gloss lemon-yellow puffer parka worn open, with cobalt-blue shoulder panels, a blue fleece-lined collar, black ribbed cuffs and hem, and utility sleeve pockets. The vinyl-like surface catches every reflection.\n- **Body:** An exposed matte-black segmented armored torso and slim black mechanical legs, accented with small yellow panels and circular joint actuators.\n- **Weapons:** In each hand, a boxy yellow-and-black industrial power module, with thick black cables swinging in long loops beneath.\n- **Opponents:** Heavily armored tactical soldiers in gunmetal-grey plate armor and full helmets, carrying rifles.\n\n**Sequence (fast, rhythmic editing with speed ramps and motivated whip transitions):**\n\n**0.0–0.8s:** Extreme low-angle hero shot. The android stands motionless on the edge of a weathered rooftop parapet, the moon glowing behind its white helmet and skyscrapers towering into the mist. Wind ripples the glossy yellow parka, and the cables sway slowly. The camera creeps upward in a slow push-in with a regal, editorial stillness.\n\n**0.8–1.6s:** Hard cut to a top-down drone shot. The android launches off the roof and soars across a deep street canyon, the parka billowing and the cables whipping in wide arcs. Tiny car headlights stream far below. A speed ramp slows to 30% at the apex, then snaps back to full speed.\n\n**1.6–2.4s:** Whip-pan into a street-level wide shot. The android crashes down in a low sliding landing, knee skidding across wet concrete and concrete chunks bursting outward. Two soldiers open fire from both sides. Bullet impacts spark around it as it twists and dodges in a blur of yellow, with muzzle flashes briefly lighting the rain.\n\n**2.4–3.2s:** A handheld, ground-hugging tracking shot races through a narrow neon alley. The android drops into a razor-low knee slide beneath a horizontal steel barrier, cables trailing across the puddles. Two armored soldiers charge toward the lens in the background, spraying water with each step.\n\n**3.2–4.2s:** Tight over-the-shoulder close-up with a punch-in camera shake. The android drives a devastating straight punch with the boxy power module into a soldier's helmet visor. The visor shatters into slow-motion fragments and sparks. In the background, a second soldier is blasted backward off his feet.\n\n**4.2–5.0s:** A low-angle orbit sweeps around a mid-air spinning flying kick. The android's mechanical leg fully extends and smashes into the last soldier's helmet. The cables and yellow parka flare dramatically in a near-freeze-frame, with rain droplets suspended in the air and fallen soldiers lying across the wet ground. The skyline glows behind them. The shot holds on a graceful, fashion-editorial final pose.\n\n**Style:** Choreography that is impactful and precise, reminiscent of John Wick meets Ghost in the Shell meets a luxury techwear commercial. Realistic weight and inertia, detailed cloth and cable physics, cinematic motion blur, volumetric light, and ultra-detailed materials: glossy vinyl, ceramic, matte carbon, worn steel. No text, no watermark, no cartoon or sketch style.",
+        "480p",
+        "adaptive",
+        5,
+        true,
+        "auto",
+        "mp4",
+        true,
+        false,
+        1859544960,
+        "randomize",
+        false
+      ],
+      "widgets_values_named": {
+        "model": "Seedance 2.5 Draft",
+        "model.prompt": "Photoreal cinematic sci-fi action fashion film, 5 seconds, a high-end techwear campaign crossed with a blockbuster fight sequence. Shot on ARRI Alexa 65 with anamorphic lenses. Deep night in a rain-slicked megacity, full moon, cold blue ambient light cut with sodium-orange streetlights and stray magenta neon. Wet reflective surfaces, light haze, drifting rain particles, shallow depth of field, rich filmic grain, crisp specular highlights, and a restrained teal-and-cobalt grade that makes the yellow pop.\n\n**Character (strict consistency):** A tall, slender, faceless android.\n- **Head:** A glossy porcelain-white egg-shaped helmet with black cybernetic seam lines. Black cable loops and antenna nodes arc behind the head.\n- **Jacket:** An oversized high-gloss lemon-yellow puffer parka worn open, with cobalt-blue shoulder panels, a blue fleece-lined collar, black ribbed cuffs and hem, and utility sleeve pockets. The vinyl-like surface catches every reflection.\n- **Body:** An exposed matte-black segmented armored torso and slim black mechanical legs, accented with small yellow panels and circular joint actuators.\n- **Weapons:** In each hand, a boxy yellow-and-black industrial power module, with thick black cables swinging in long loops beneath.\n- **Opponents:** Heavily armored tactical soldiers in gunmetal-grey plate armor and full helmets, carrying rifles.\n\n**Sequence (fast, rhythmic editing with speed ramps and motivated whip transitions):**\n\n**0.0–0.8s:** Extreme low-angle hero shot. The android stands motionless on the edge of a weathered rooftop parapet, the moon glowing behind its white helmet and skyscrapers towering into the mist. Wind ripples the glossy yellow parka, and the cables sway slowly. The camera creeps upward in a slow push-in with a regal, editorial stillness.\n\n**0.8–1.6s:** Hard cut to a top-down drone shot. The android launches off the roof and soars across a deep street canyon, the parka billowing and the cables whipping in wide arcs. Tiny car headlights stream far below. A speed ramp slows to 30% at the apex, then snaps back to full speed.\n\n**1.6–2.4s:** Whip-pan into a street-level wide shot. The android crashes down in a low sliding landing, knee skidding across wet concrete and concrete chunks bursting outward. Two soldiers open fire from both sides. Bullet impacts spark around it as it twists and dodges in a blur of yellow, with muzzle flashes briefly lighting the rain.\n\n**2.4–3.2s:** A handheld, ground-hugging tracking shot races through a narrow neon alley. The android drops into a razor-low knee slide beneath a horizontal steel barrier, cables trailing across the puddles. Two armored soldiers charge toward the lens in the background, spraying water with each step.\n\n**3.2–4.2s:** Tight over-the-shoulder close-up with a punch-in camera shake. The android drives a devastating straight punch with the boxy power module into a soldier's helmet visor. The visor shatters into slow-motion fragments and sparks. In the background, a second soldier is blasted backward off his feet.\n\n**4.2–5.0s:** A low-angle orbit sweeps around a mid-air spinning flying kick. The android's mechanical leg fully extends and smashes into the last soldier's helmet. The cables and yellow parka flare dramatically in a near-freeze-frame, with rain droplets suspended in the air and fallen soldiers lying across the wet ground. The skyline glows behind them. The shot holds on a graceful, fashion-editorial final pose.\n\n**Style:** Choreography that is impactful and precise, reminiscent of John Wick meets Ghost in the Shell meets a luxury techwear commercial. Realistic weight and inertia, detailed cloth and cable physics, cinematic motion blur, volumetric light, and ultra-detailed materials: glossy vinyl, ceramic, matte carbon, worn steel. No text, no watermark, no cartoon or sketch style.",
+        "model.resolution": "480p",
+        "model.ratio": "adaptive",
+        "model.duration": 5,
+        "model.generate_audio": true,
+        "model.task_type": "auto",
+        "model.output_format": "mp4",
+        "model.auto_downscale": true,
+        "model.auto_upscale": false,
+        "seed": 1859544960,
+        "control_after_generate": "randomize",
+        "watermark": false
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 795,
+      "type": "LoadImage",
+      "pos": [
+        2490,
+        -600
+      ],
+      "size": [
+        390,
+        380
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1983
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "yellow_mech_character_sheet.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "yellow_mech_character_sheet.png",
+        "upload": "image"
+      }
+    }
+  ],
+  "links": [
+    [
+      1962,
+      789,
+      1,
+      771,
+      0,
+      "STRING"
+    ],
+    [
+      1947,
+      774,
+      0,
+      775,
+      0,
+      "VIDEO"
+    ],
+    [
+      1963,
+      789,
+      0,
+      776,
+      0,
+      "VIDEO"
+    ],
+    [
+      1983,
+      795,
+      0,
+      789,
+      0,
+      "IMAGE"
+    ],
+    [
+      1984,
+      788,
+      0,
+      789,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Stage 2: Render the final video from the draft task ID",
+      "bounding": [
+        2460,
+        290,
+        2200,
+        720
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Stage 1: Create and preview the draft video",
+      "bounding": [
+        2460,
+        -700,
+        2210,
+        950
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.231932920671191,
+      "offset": [
+        1893.9185936284584,
+        1694.602659542651
+      ]
+    },
+    "frontendVersion": "1.53.6",
+    "workflowRendererVersion": "LG",
+    "VHS_MetadataImage": true,
+    "VHS_latentpreview": false,
+    "VHS_KeepIntermediate": true,
+    "VHS_latentpreviewrate": 0,
+    "ue_links": [],
+    "links_added_by_ue": [],
+    "comfyui_mcp": {
+      "workflow_uuid": "dc01bbbf-bc57-4a56-af8e-b17c8098a0cc"
+    }
+  },
+  "version": 0.4
+}

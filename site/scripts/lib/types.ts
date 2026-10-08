@@ -15,7 +15,6 @@ export interface TemplateInfo {
   usage?: number;
   username?: string;
   size?: number;
-  vram?: number;
   isApp?: boolean;
 }
 

@@ -10,6 +10,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | Sync bundles only | `python scripts/sync/sync_bundles.py` |
 | Regenerate frozen bundle inventory | `python scripts/sync/sync_frozen_inventory.py` |
 | Sync blueprints | `python scripts/sync/sync_blueprints.py` |
+| Sync App Mode flag | `python scripts/sync/sync_is_app.py` (`--dry-run`, `--check`) |
 | Validate templates | `python scripts/validate/validate_templates.py` |
 | Validate manifests | `python scripts/validate/validate_manifests.py` |
 | ComfyUI node compatibility | `npm run validate:comfyui-nodes` |
@@ -65,6 +66,8 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py` (static scan; PR comment only) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
+| `sync-template-index.yml` | `sync/sync_data.py --index-only` (locale field sync; does not rewrite `usage`) |
+| `validate-is-app.yml` | `sync/sync_is_app.py --check` |
 | `version-check.yml`, `publish.yml` | `ci/ci_version_manager.py`, `ci/check_frozen_policy.py`, `sync/sync_bundles.py`, `sync/sync_frozen_inventory.py`, `ci/*` |
 | `build-test.yml` | `sync/sync_bundles.py` |
 

@@ -1,0 +1,97 @@
+/**
+ * Reads the model -> context-window table out of the installed @lobehub/i18n-cli.
+ *
+ * The CLI sizes every translation request from this table, deriving the chunk
+ * limit as `(contextWindow[modelName] - promptTokens) / 3` and applying the
+ * configured `splitToken` only when that value is larger. A model the table does
+ * not carry makes the lookup `undefined` and the limit `NaN`, and because every
+ * comparison against `NaN` is false, the JSON splitter stops batching: it emits a
+ * leading empty chunk and then one key per request. Nothing throws and no call
+ * fails, so the only symptom is call volume and rate limiting.
+ *
+ * The table is read from the CLI's own bundle rather than copied here, so that
+ * bumping the dependency re-checks the configured model against whatever the new
+ * version actually supports instead of against a snapshot that has drifted.
+ */
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+
+const require = createRequire(import.meta.url);
+
+/**
+ * The CLI's context windows, or `null` when the table cannot be located.
+ *
+ * `null` means the bundle's shape changed, not that the model is bad, so callers
+ * should say so rather than treat it as a failed lookup.
+ */
+function readCliSource(): string | null {
+  try {
+    const entry = require.resolve('@lobehub/i18n-cli');
+    return fs.readFileSync(path.join(path.dirname(entry), 'cli.js'), 'utf-8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Whether a CLI bundle both reads the `experimental.jsonMode` config option and
+ * forwards OpenAI's `json_object` response format from a completions call. A
+ * version that renames or drops the option would silently fall back to
+ * plain-text mode, where gpt-5.2's stray-brace output froze every locale from
+ * 2026-08-14 — an ignored config key gives no signal, unlike a rejected
+ * response_format.
+ *
+ * Checked as the wiring expressions (property access + wire literal near a
+ * `chat.completions.create` call), not bare literals anywhere in the bundle,
+ * so unrelated occurrences cannot satisfy the check. Property names and wire
+ * literals survive minification. A true behavioural assertion is not on the
+ * table: the package's lib entry exports only `defineConfig`; the translation
+ * class lives solely in the CLI bundle, whose import has side effects.
+ */
+export function cliSourceSupportsJsonMode(source: string): boolean {
+  if (!/\.experimental\??\.\s*jsonMode/.test(source)) return false;
+  for (const m of source.matchAll(/response_format\s*:\s*\{\s*type\s*:\s*"json_object"\s*\}/g)) {
+    // The flag must sit inside a completions call's argument span; the bundle
+    // builds the request object inline, so the call name appears just before.
+    if (source.slice(Math.max(0, m.index - 2000), m.index).includes('chat.completions.create')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** jsonMode support of the installed CLI, or `null` when the bundle is unreadable. */
+export function readCliJsonModeSupport(): boolean | null {
+  const source = readCliSource();
+  return source === null ? null : cliSourceSupportsJsonMode(source);
+}
+
+export function readCliContextWindows(): Record<string, number> | null {
+  const source = readCliSource();
+  if (source === null) return null;
+
+  // The bundle is minified, so anchor on a stable key rather than a variable
+  // name. The table holds only numbers, so the first brace after it closes it.
+  const anchor = source.indexOf('"gpt-3.5-turbo"');
+  if (anchor === -1) return null;
+
+  const table: Record<string, number> = {};
+  for (const [, key, value] of source
+    .slice(source.lastIndexOf('{', anchor), source.indexOf('}', anchor))
+    .matchAll(/"?([\w.-]+)"?\s*:\s*(\d+(?:\.\d+)?(?:e\+?\d+)?)/gi)) {
+    table[key] = Number(value);
+  }
+  return Object.keys(table).length > 0 ? table : null;
+}
+
+/** The chunk limit the CLI derives, in the same order it derives it. */
+export function effectiveSplitToken(
+  contextWindow: number | undefined,
+  promptTokens: number,
+  splitToken: number
+): number {
+  let limit = ((contextWindow as number) - promptTokens) / 3;
+  if (splitToken && splitToken < limit) limit = splitToken;
+  return Math.floor(limit);
+}

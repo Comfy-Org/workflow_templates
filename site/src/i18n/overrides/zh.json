@@ -1,0 +1,716 @@
+{
+  "0136284ecc19": {
+    "extendedDescription": "cinematic_annotate_video 可将单张图片转为简短、流畅的电影感镜头：自动生成导演风格的摄像机路径，并转为Seedance 2.0运动提示。流程以LoadImage开始，将你的画面输入GeminiImage2Node，分析场景并用“Nano Banana 2”标注风格生成摄像机路径标注。该标注随后由GeminiNode优化/格式化为Seedance 2.0运动规范。\n\nSeedance 2.0提示和你的原始图片一同输入ByteDance2ReferenceNode，实现运动合成并保持源画面风格。PreviewImage和PreviewAny可帮助你在渲染前检查输入帧和自动生成的文本提示。最后，SaveVideo将结果写入磁盘。分组结构清晰：Annotate Image（图像分析与摄像机注释）、Prompt（LLM格式化为Seedance 2.0）、Seedance 2.0（参考驱动视频生成）。"
+  },
+  "16f123e593db": {
+    "extendedDescription": "本 ComfyUI 工作流“一键多角度角色生成”可将单张角色图片转化为多个不同角度的视图。这个工作流基于 Qwen-Image-Edit 模型，高效处理输入图片，生成多样化视角，特别适合需要在 3D 空间中可视化角色的艺术家和设计师，无需手动画出每个角度。流程包含 LoadImage 节点导入角色图片，SaveImage 节点导出生成视图。0f47377a-2933-4dba-9791-a9c54b078226 和 b7908082-f5ff-497d-8e80-e4b0ffde0419 等节点负责图片处理和转换，确保输出高质量。该流程不仅节省时间，还能激发创意，轻松获得多样视觉角度。",
+    "faqItems": [
+      {
+        "answer": "主体清晰、背景干扰少的角色图片效果最佳。",
+        "question": "这个工作流最适合什么类型的图片生成？"
+      },
+      {
+        "answer": "目前流程自动生成预设角度，后续版本可能支持自定义。",
+        "question": "可以自定义生成的角度吗？"
+      },
+      {
+        "answer": "虽然设计用于角色，但也可处理其他物体，复杂图片效果可能有差异。",
+        "question": "非角色图片可以用本流程吗？"
+      },
+      {
+        "answer": "可通过工作流作者备注中的链接反馈问题。",
+        "question": "如何反馈流程问题？"
+      }
+    ]
+  },
+  "181a9571c9a0": {
+    "howToUse": [
+      "打开 ComfyUI 并加载“Graphic Color Remixer”工作流。确认自定义重混节点（5772692b-9d2a-4a1f-b676-71b8fd315078）存在；若缺失，请安装提供该节点的扩展并重启 ComfyUI。",
+      "在 LoadImage 节点中选择源图（PNG/JPG）。形状清晰的扁平图形（logo、图标、海报、UI 元素）通常能获得更一致的换色结果。",
+      "选中重混节点（5772692b-9d2a-4a1f-b676-71b8fd315078）并设置：a）氛围/风格意图（如“retro neon”“earthy minimal”）；b）目标色板（根据节点 UI 输入色板名称或 hex 值）；c）变体数量：4、9 或 16。",
+      "如果节点需要 Nano Banana API 访问权限，请在节点设置或你的 ComfyUI 环境中提供/验证 API key 或凭证。一次 API 生成会用于产出所有请求的变体。",
+      "在 SaveImage 中设置文件命名前缀与输出目录，便于清晰地批量管理结果（例如“remix_neon_”）。",
+      "加入将工作流加入队列并运行。查看已保存的输出，然后继续迭代：调整氛围、微调色板值，或切换变体数量（2x2、3x3、4x4）以快速对比方案。"
+    ]
+  },
+  "18da3456241d": {
+    "howToUse": [
+      "在ComfyUI中打开工作流并加载模型（Step1-加载模型）：用UNETLoader选择Wan 2.1 UNet，用VAELoader加载Wan VAE，用CLIPLoader加载UMT5 XXL文本编码器（如umt5_xxl_fp8_e4m3fn_scaled.safetensors），用CLIPVisionLoader加载视觉主干。",
+      "用LoadImage上传起始图片（Step2-上传start_image）。为最佳效果，建议图片宽高比与目标视频一致。",
+      "设置视频参数（Step3-视频尺寸）：选择宽度、高度、帧数和帧率。如显存有限，建议先用较低分辨率，确认效果后再提升。",
+      "在CLIPTextEncode中输入提示词（Step4-提示）。可添加负面提示过滤不需要的特征（如“jpeg artifacts, low quality”）。用明确动作词鼓励画面运动（如turning、waving、rotating）。",
+      "确认采样与扩散设置：确保ModelSamplingSD3已连接，KSampler 的步数、引导强度（CFG）设置合理，并使用固定种子，这样结果可以复现。采样器配置保持默认以适配Wan 2.1。",
+      "队列并运行。用VAEDecode预览帧，按需调整提示、尺寸、步数或帧数。满意后，CreateVideo组装帧，SaveVideo输出最终文件。"
+    ]
+  },
+  "1c8383fd62e5": {
+    "howToUse": [
+      "在ComfyUI中加载工作流JSON。识别两个LoadImage节点：上方为人物，下方为服装（可参考MarkdownNote中的快速提示）。",
+      "选择清晰、正面、上半身无遮挡的人物照片。服装图片建议为光线充足、正面、纯色背景（无模特）。",
+      "将图片分别拖入对应LoadImage节点。确认两者已连接到FluxVTONode，且输出已连接到SaveImage、ImageCompare和（可选）ImageStitch。",
+      "点击运行按钮执行工作流。FluxVTONode会对齐并将服装转移到人物身上，保留面部和姿态。",
+      "检查输出：用ImageCompare快速前后对比，用ImageStitch生成三合一对比图（服装、人物、结果）。如对齐不理想，可尝试更正面的人物照片或更清晰的服装图片后重试。",
+      "满意后，可设置SaveImage输出路径/文件名并重新运行（或右键保存预览）导出最终试穿图。"
+    ]
+  },
+  "1d69cf9d1761": {
+    "suggestedUseCases": [
+      "为营销内容动画化产品图片。",
+      "将静态插画转为动态视觉艺术作品。",
+      "将图表或示意图制作成动画教学视频。",
+      "通过动画化角色草图或场景增强故事叙述。",
+      "制作吸引眼球的社交媒体动态视觉内容。"
+    ]
+  },
+  "1eab7aa23f6a": {
+    "suggestedUseCases": [
+      "制作带角色解说的动画讲解视频。",
+      "为社交媒体内容添加与观众对话的动画角色。",
+      "开发角色讲解知识点的趣味教育视频。",
+      "为品牌制作带动画代言人的宣传视频。",
+      "在数字营销领域为数字人或虚拟形象生成口型同步视频。"
+    ]
+  },
+  "1fb07c3b4b99": {
+    "howToUse": [
+      "在 ComfyUI 中加载工作流 JSON。确保已安装 VideoHelperSuite 扩展，以便使用 VHS_LoadVideo 和 VHS_VideoCombine。",
+      "打开 VHS_LoadVideo，选择输入视频。可选设置裁剪范围、调整分辨率和帧率。",
+      "找到 IC-LoRA 编辑节点（UUID 2e37ecc9-770a-4ac2-972c-e953901f49d3）。输入清晰的编辑提示（如“在左侧人行道添加一只棕色小狗”或“转换为水彩风格”）。如有负面提示，可用于保护不希望变动的元素（如“保留背景，避免多余人物”）。",
+      "在编辑节点调整编辑强度和一致性控制（如强度/去噪和引导）。低强度适合细微风格变化，高强度适合添加或移除对象。对比变体时建议固定种子。",
+      "在 VHS_VideoCombine 设置输出帧率、格式/编码（如 MP4/H.264）、质量和输出路径。预览时可降低帧率或分辨率。",
+      "点击运行按钮执行工作流。查看输出视频并迭代：优化提示、调整强度/引导，或缩短片段以提升时序稳定性。"
+    ]
+  },
+  "2da831d21d09": {
+    "description": "使用提示词列表中的提示词，依次加载并运行工作流。遍历每一条目，实现单次批量操作生成多张输出。"
+  },
+  "2f10814fd823": {
+    "howToUse": [
+      "在 ComfyUI 中加载工作流，定位三个分组：Prompt、首帧到末帧转换器、Seedance 2.0。",
+      "在 Prompt 组：用 LoadImage 加载首帧。如已有终帧，用另一个 LoadImage 加载；如无，直接在 GeminiNode 输入简要描述，传递给 GeminiImage2Node 生成终帧。确保终帧分辨率与首帧一致。",
+      "打开 Seedance 2.0 组，将 ByteDance2FirstLastFrameNode 设置为你的首帧和末帧。调整关键参数，如总帧数（或时长）、FPS 控制片段长度和节奏。根据需要微调运动/一致性参数，保持主体稳定。",
+      "用 PreviewAny 检查生成的终帧和转换测试。如效果不理想，可优化 Gemini 提示、调整种子（便于复现和变化），或重新生成终帧。",
+      "满意后，运行完整工作流。SaveImage 可导出生成的终帧（如有），SaveVideo 写出最终桥接片段。",
+      "检查输出。如有抖动或构图不匹配，可让首末帧在构图/光线上更接近，降低运动强度，或适当延长时长以获得更平滑过渡，然后重跑。"
+    ]
+  },
+  "3858678780f1": {
+    "extendedDescription": "本ComfyUI工作流旨在利用精修模型提升由Stable Diffusion XL（SDXL）模型生成的图片质量。工作流通过一系列节点，生成高质量、视觉效果出色的精修图片。流程从CheckpointLoaderSimple节点加载 SDXL 基础模型开始，该节点会自动应用适合所选SD模型版本的最佳设置。随后，EmptyLatentImage节点生成初始潜变量图片，作为后续精修的画布。\n\n核心部分是CLIPTextEncode节点，根据文本提示引导图片生成。KSamplerAdvanced节点引入可控噪声，使模型能迭代精修和增强视觉效果。精修后，VAEDecode节点将潜变量图片解码为可见格式，便于最终调整。SaveImage节点用于保存PNG格式的精修图片。该工作流适合需要高质量精修图片的艺术家和设计师，将SDXL模型与高级精修技术结合，提升项目品质。"
+  },
+  "3b9e9f29c1dc": {
+    "howToUse": [
+      "在ComfyUI中加载LTX-2：图转视频工作流。",
+      "用LoadImage节点导入静态图片。",
+      "用ResizeImageMaskNode调整图片尺寸，确保与视频设置兼容。",
+      "配置LTX-2模型参数，确保宽高为64的倍数，帧数为 8 的倍数加 1。",
+      "运行工作流生成视频，用SaveVideo节点导出最终结果。"
+    ]
+  },
+  "3cf3c6a082ed": {
+    "extendedDescription": "LTX-2 姿态转视频工作流旨在将姿态引导转化为高质量视频内容，并实现音视频同步。这个工作流基于 Lightricks 的 LTX-2 模型，支持精确的姿态控制和丰富的动作表现，非常适合创作动态视频内容。流程集成了 GetVideoComponents、PreviewImage 和 SaveVideo 等节点，分别用于分解视频组件、预览帧和保存最终输出。核心亮点是集成 comfyui_controlnet_aux 自定义节点，进一步提升姿态控制和动作表现的精度。\n\n技术流程包括：通过 LoadVideo 和 ResizeImageMaskNode 进行视频和图像预处理，随后用 DWPreprocessor 优化视频设置，确保帧数和分辨率最佳。支持最高 1920x1088 分辨率，默认 720p 以提升效率。帧数需满足被 8 整除再加 1，保证过渡和同步流畅。该流程特别适合需要精细动作和音视频同步的创作者，充分发挥 LTX-2 模型的专业级表现力。",
+    "faqItems": [
+      {
+        "answer": "分辨率需能被 64 整除。默认 720p，若设备支持可用到 1920x1088。",
+        "question": "这个工作流对分辨率有何要求？"
+      },
+      {
+        "answer": "这样可保证视频过渡和同步流畅，避免伪影或卡顿。",
+        "question": "为什么帧数要被 8 整除再加 1？"
+      },
+      {
+        "answer": "流程效率较高，但是否能实时生成取决于你的设备性能和视频复杂度。",
+        "question": "可以用于实时视频生成吗？"
+      },
+      {
+        "answer": "请确保姿态引导细致，视频分辨率和帧数符合流程要求。",
+        "question": "如何获得 LTX-2 模型的最佳效果？"
+      }
+    ]
+  },
+  "3eb92c1b2380": {
+    "description": "AI on the Lot 2026 发布的第六个也是最后一个工作流，供 ComfyUI 101 工作坊学员选择打开并跟随。这个文生视频工作流整合了前面所有工作流的内容，形成完整方案。"
+  },
+  "404250f61d0a": {
+    "extendedDescription": "本 ComfyUI 工作流带你进入艺术图像生成领域，基于 Stable Diffusion 1.5。通过 KSampler 和 CLIPTextEncode 等高级节点，可将简单文本提示转化为精美图像。这个工作流充分发挥 Stable Diffusion 的特性，模型训练于 512x512 数据集，确保合适尺寸下高质量输出。无论是用“beautiful scenery nature glass bottle”创作风景，还是用“purple galaxy bottle”探索抽象概念，节点组合都能实现丰富细节和创意表达。\n\n流程结构包括模型加载、图像尺寸设置和提示编写，适合新手和有经验用户。MarkdownNote 节点便于文档记录和创作迭代。正向与负向提示进一步提升创作控制力，帮助有效指定和优化视觉结果。整体流程展现了先进 AI 模型与直观 UI 设计带来的创意可能性。",
+    "faqItems": [
+      {
+        "answer": "用正向提示强调特定元素，用负向提示减少不需要的细节。",
+        "question": "如何细化生成图像的细节？"
+      },
+      {
+        "answer": "流程针对 512x512 优化，Stable Diffusion 1.5 模型训练于该尺寸数据集。",
+        "question": "这个工作流适合什么图像尺寸"
+      },
+      {
+        "answer": "可以。可用 CLIPTextEncode 节点自定义文本提示，引导图像生成。",
+        "question": "可以用自定义提示吗？"
+      },
+      {
+        "answer": "图像会自动保存到 ComfyUI/output 文件夹，也可右键 SaveImage 节点手动保存。",
+        "question": "如何保存生成的图像？"
+      }
+    ]
+  },
+  "40770c9eb41b": {
+    "extendedDescription": "ComfyUI 中的 LTX-2 文本转视频工作流，可将文本提示转为高质量视频，支持音视频同步。这个工作流基于 Lightricks 开发的 LTX-2 模型，具备出色的口型同步和动态动作生成能力。流程高效处理文本输入，生成与描述动作相符且视觉质量高的视频。技术上，流程用到 SaveVideo 节点和子工作流节点（ID b7c2d337-c38d-4c04-922b-2d638449d13e），分别负责输出保存和复杂视频生成。MarkdownNote 节点用于流程内文档和操作说明，帮助用户理解每一步和参数设置。"
+  },
+  "40dea2f852c3": {
+    "description": "用 Meshy 6 根据文本提示生成高质量 3D 模型。可创建细致角色、机械物体或游戏用低多边形资产。"
+  },
+  "44d156cf2723": {
+    "extendedDescription": "Beeble SwitchX：视频编辑是针对视频编辑的工作流，仅更改你描述的部分，其余内容保持不变。你可加载源视频和（可选）参考图片，输入描述新环境和光照的提示词。BeebleSwitchXVideoEdit节点应用Beeble SwitchX视频编辑模型，生成遮罩区域按提示词和参考调整、未遮罩区域保留原像素和运动的编辑片段。流程还输出alpha遮罩，便于在任意NLE中将编辑区域合成回原片段。\n\n技术上，流程用LoadVideo解码视频，GetVideoComponents提取尺寸和帧数，“Get frame counts (need < 240)”组帮助你控制在模型推荐帧数以内。片段过长可用Video Slice裁剪。LoadImage引入可选参考图，GetImageSize确保尺寸匹配。BeebleSwitchXVideoEdit节点按时序一致性处理帧，输出编辑后视频和每帧alpha遮罩。用PreviewAny检查中间结果，SaveVideo渲染最终编辑。适合无损重光、替换环境或定向风格化特定对象，且不破坏原始运动。"
+  },
+  "45c0ce6bcf2e": {
+    "extendedDescription": "Wan2.1 VACE首末帧视频生成引入了端点锚定的视频合成方式：你提供起始帧和结束帧，模型在两者之间规划时序连贯的过渡路径。不同于传统的光流插帧，工作流在潜空间中用Wan2.1的VACE先验合成中间内容，并可用提示词和可选LoRA引导。这样可实现身份稳定、风格连贯和可信的运动规划。\n\n在ComfyUI中，流程将WanVaceToVideo与ModelSamplingSD3配置文件、KSampler及严格的帧/布局规范配合：空间尺寸需为16的倍数，总帧数需满足4n+1规则（Length−1能被4整除）。这种结构，加上用来精确控制片段长度的 TrimVideoLatent，能产生又平滑又可控的过渡效果。14B模型支持清晰的480p和720p输出，1.3B轻量版适合480p。可选LoRA（如CausVid）可大幅减少采样步数，同时保持时序一致性。"
+  },
+  "4638e59ae7d2": {
+    "faqItems": [
+      {
+        "answer": "Qwen-VL是一款视觉-语言大模型。在本工作流中通过AILab_QwenVL_PromptEnhancer节点以纯文本模式，将简短创意扩展为具体的视觉描述（主体、风格、光效、构图），便于直接用于图像/视频生成。",
+        "question": "Qwen-VL是什么，为什么用于提示词增强？"
+      },
+      {
+        "answer": "取决于Qwen-VL后端配置。有些可本地运行（无需联网），有些需远程服务（需API密钥）。请打开AILab_QwenVL_PromptEnhancer节点，按节点说明配置环境。",
+        "question": "需要联网或API密钥吗？"
+      },
+      {
+        "answer": "在输入中明确约束（如“无文字，无水印，自然色，纪录片风格”）。如节点支持创造力/温度参数，低值更贴合原意，高值更具创意。也可通过更明确的表达反复迭代，指定必须和禁止项。",
+        "question": "如何控制风格或避免添加不需要的元素？"
+      },
+      {
+        "answer": "可以。输出为纯文本，可直接粘贴到Stable Diffusion或其他文生图/文生视频节点的正面提示词。如流程有负面提示字段，可将排除项单独填写或在增强输入中注明。",
+        "question": "增强后的提示词能用于任意ComfyUI图像流程吗？"
+      }
+    ]
+  },
+  "4a6697085e75": {
+    "howToUse": [
+      "在 ComfyUI 加载工作流，打开 LoadImage 节点，选择源设计图（PNG/JPG）。",
+      "打开重构节点（UUID 172f1008-9337-4d2f-9212-ee081cb4faf5），设置目标宽高比（如 1:1、4:5、16:9、9:16）或直接输入宽高。",
+      "选择重构模式：Fit（信箱填充，无裁剪）、Fill（智能裁剪，填满画面）、Extend（外延扩展画布）。",
+      "如用 Extend/外延，可调整边界大小、羽化和合成强度，控制新内容生成量及与原图的融合度。",
+      "确认重构节点输出已连接到 SaveImage。在 SaveImage 设置文件名前缀、输出文件夹和格式（如 PNG）。",
+      "点击“运行”按钮开始运行。检查输出，微调比例、模式或羽化后反复运行，直到满意为止。"
+    ]
+  },
+  "4e8809f5dfd3": {
+    "extendedDescription": "“Flux.1 Krea Dev”工作流利用微调的FLUX模型，实现极高水平的写实图像生成。该流程适合希望通过文本描述快速生成高度逼真图片的用户。这个工作流结合 SaveImage 和 MarkdownNote 等节点，便于生成和保存高质量图片。核心为Flux.1 Krea Dev模型，以极致写实著称，输出细节丰富、真实感强的图片。\n\n技术上，流程将文本输入送入Flux.1 Krea Dev模型，模型解析文本并生成写实图片。SaveImage节点高效保存输出，MarkdownNote节点可用于过程或结果注释。该流程特别适合艺术家、设计师和内容创作者快速高效地生成写实图片，是创意工具箱中的重要利器。"
+  },
+  "4f8b62bfd681": {
+    "faqItems": [
+      {
+        "answer": "支持MP3、WAV等常见音频格式。请确保文件格式兼容后再加载。",
+        "question": "这个工作流支持哪些音频文件格式？"
+      },
+      {
+        "answer": "可以。建议保留原始文件，编辑后另存新文件，便于随时还原。",
+        "question": "可以撤销对歌曲的更改吗？"
+      },
+      {
+        "answer": "在流程中的“Adjust the vocal volume”分组可精细调整人声音量。",
+        "question": "如何调整歌曲中的人声音量？"
+      },
+      {
+        "answer": "可以，在ComfyUI内可用播放功能试听编辑后的音频，满意后再保存。",
+        "question": "可以在保存前预览编辑效果吗？"
+      }
+    ]
+  },
+  "4fe8d97559cd": {
+    "extendedDescription": "该ComfyUI工作流可将单张图片转化为完整带纹理的3D模型，通过生成三视图实现。流程利用GeminiNanoBanana2模型，从输入图片生成准确的侧面和背面视图。随后用TripoImageToModelNode将这些视图合成为3D模型。这个工作流分为两大组：视图生成和 3D 模型生成。视图生成组用LoadImage和BatchImagesNode准备和处理输入图片，3D模型生成组用Meshy模型将多视图整合为完整3D结构。该流程适合艺术家和设计师用最少输入快速原型3D模型。",
+    "faqItems": [
+      {
+        "answer": "轮廓清晰、特征明显的图片最佳，有助于模型准确生成侧面和背面视图。",
+        "question": "这个工作流适合用于什么类型的图片？"
+      },
+      {
+        "answer": "流程可生成基础纹理，复杂细节建议在3D建模软件中进一步完善。",
+        "question": "该流程能处理复杂纹理吗？"
+      },
+      {
+        "answer": "可以，生成的3D模型可导出为GLB文件，在兼容3D建模软件中编辑。",
+        "question": "生成的3D模型可以编辑吗？"
+      },
+      {
+        "answer": "准确性取决于输入图片质量和主体复杂度。简单清晰的图片效果更好。",
+        "question": "生成的正交视图有多准确？"
+      }
+    ]
+  },
+  "50199f76fe74": {
+    "extendedDescription": "这个工作流可将插画角色打光匹配新背景，并融合为统一关键帧。核心功能封装在Subgraph节点（类型ID: 9e3c3756-d15f-4361-8e99-c35673036e68）中，用户只需操作少量输入和参数。通过LoadImage节点分别输入角色图和环境图，用提示词驱动风格（见流程内Note/MarkdownNote），用SaveImage导出结果。\n\n技术上，Subgraph叠加插画LoRA实现风格统一，再用打光LoRA根据环境调整明暗和色彩。子工作流自动处理条件、打光引导和前后景合成，暴露简单的强度滑块和融合选项，便于平衡“风格”与“光效”。流程内Note节点含中文提示词——请保持原文不变，后面可追加英文或其他编辑指令，细化光向、氛围、色温或边缘光。若本地运行，请确保相关文本编码器文件（如qwen_2.5_vl_7b_fp8_scaled.safetensors）已就位，便于子工作流正常编码提示词。"
+  },
+  "5652fbe7f479": {
+    "faqItems": [
+      {
+        "answer": "两个阶段都使用同一角色和服装平铺图作为 OpenAIGPTImageNodeV2 的参考。放大流程会复用这些参考，确保身份和服装细节被强化，而不是重新生成。",
+        "question": "如何保证拼贴和放大图的人脸与服装一致？"
+      },
+      {
+        "answer": "角色图需清晰、光线充足、脸部无遮挡、背景简洁。服装图需平铺在纯色背景上，正面完整可见，不要折叠或有遮挡，避免背景杂乱或图案干扰。",
+        "question": "什么样的输入图片最适合获得可靠的试穿效果？"
+      },
+      {
+        "answer": "用 ImageFromBatch 节点设置 batch_index，选择想要的拼贴（0=左上，1=右上，2=左下，3=右下）。作者备注：索引从0开始。",
+        "question": "如何选择要放大的四张图片中的哪一张？"
+      },
+      {
+        "answer": "可以。编辑 PrimitiveStringMultiline 提示词，指定姿势（如四分之三侧面、行走）、镜头（全身、中景）、灯光（柔光箱、轮廓光）、背景（无缝纸、彩色纸）。重新运行2×2拼贴分组即可预览新变体。",
+        "question": "不更换图片可以更改姿势、镜头或背景吗？"
+      }
+    ]
+  },
+  "5a3df986f9f8": {
+    "description": "用参考图片和文本提示生成4K电影级视频。在保持角色一致性和构图不变的同时，为图片添加富有表现力的动态并保持音频同步，也可以用详细提示词控制镜头运动和灯光。"
+  },
+  "5ae006b13a36": {
+    "extendedDescription": "本 ComfyUI 教程型工作流演示如何通过结构化JSON提示驱动 Ideogram v4，实现清晰文本渲染、品牌色彩一致和可靠布局控制。你无需只写一句自由提示，而是构建一个简洁JSON对象，描述场景、图片内文本、色彩方案和每个对象的边界框。该JSON输入 IdeogramV4 合作API节点，返回尽量贴合你布局要求的高质量图片，输出直接流向 SaveImage。\n\n为便于创作，JSON Prompt Builder 分组（选中后按 Ctrl+B 启用）内含 MarkdownNote，提供模板和schema，也可用 GeminiNode 将普通描述转为合格JSON。你可用 PreviewAny 预览结构化提示，反复调整边界框或色彩，再渲染最终图片。此方法适合需要可靠图片内文本、品牌色彩和对象精准定位的场景，在自然语言提示词难以实现时比较有效。"
+  },
+  "5f1e9e754358": {
+    "suggestedUseCases": [
+      "将静态图片转为动画，创作富有吸引力的社交媒体内容。",
+      "为数字艺术项目增添动态元素。",
+      "开发带动画视觉的互动演示文稿。",
+      "制作需要动画图解的教育视频。",
+      "为营销素材添加运动，提升观众参与度。"
+    ]
+  },
+  "67981edb9ad4": {
+    "faqItems": [
+      {
+        "answer": "用简明语言描述“核心动作”随时间展开（如“镜头缓慢推进，前景落叶飘过”），并列出需保留的“视觉细节”（构图、灯光、色彩、主体特征）。指令要简洁明确。",
+        "question": "如何为 LTX‑2.3 编写最佳运动提示？"
+      },
+      {
+        "answer": "干净、光线充足、主体分离清晰的图片更易生成连贯动画。分辨率与显存和默认设置匹配，输入输出宽高比一致可避免拉伸。",
+        "question": "什么样的图片输入效果最好？"
+      },
+      {
+        "answer": "视频长度由生成帧数和 SaveVideo 的 FPS 共同决定；增加帧数可增加视频长度，调整 FPS 可让视频更加流畅。增加帧数延长片段，调整 FPS 改变播放感觉。如 LTX‑2.3 节点支持帧数/时长，直接修改；再在 SaveVideo 设定目标 FPS。",
+        "question": "如何控制片段长度和流畅度？"
+      },
+      {
+        "answer": "在 LTX‑2.3 节点（如有）设置并复用固定种子，保持提示词和其他参数不变。更换种子可探索不同变化。",
+        "question": "每次运行结果不同，如何保证可复现？"
+      }
+    ]
+  },
+  "6a2b37d44146": {
+    "title": "步骤1：样片表工作流"
+  },
+  "6bc8dcf6317d": {
+    "faqItems": [
+      {
+        "answer": "如节点指向托管的Wan 2.7端点，通常需在节点设置中提供API密钥或凭证。请查阅节点文档或服务商说明。",
+        "question": "使用Wan2TextToVideoApi需要API密钥吗？"
+      },
+      {
+        "answer": "片段长度受Wan2TextToVideoApi节点和后端服务的限制。该工作流适合短片，时长越长生成时间和计算成本越高。",
+        "question": "生成视频最长能有多长？"
+      },
+      {
+        "answer": "请使用干净、以语音为主的音频（避免音乐/噪音），去除前置静音，保持人声居中且音量一致，并确保文本提示语言与音频一致。确保音频采样率和格式被节点支持。",
+        "question": "如何提升口型同步质量？"
+      },
+      {
+        "answer": "可以。在Wan2TextToVideoApi中设置固定种子（如节点支持）。固定种子和参数可提升多次运行间的一致性，否则输出可能有差异。",
+        "question": "如何保证结果可复现？"
+      }
+    ]
+  },
+  "6c3fa01b5d73": {
+    "title": "3x3 小样图"
+  },
+  "73a6511dc29e": {
+    "extendedDescription": "本ComfyUI工作流通过先进AI技术，将单张正面图片转化为高细节3D模型。这个工作流结合 Hunyuan3D 和 Qwen-Image-Edit 模型，重建主体背面，实现一致且真实的3D表现。流程以TencentImageToModelNode解析输入图片，为3D建模做准备。QwenMultiangleCameraNode生成多角度视图，为完整3D模型提供必要信息。Preview3D节点支持预览，便于在输出前调整。适用于虚拟现实、游戏、数字内容创作等对高质量3D模型有需求的场景。",
+    "faqItems": [
+      {
+        "answer": "高分辨率、细节清晰、光线良好的正面图片效果最佳。",
+        "question": "什么类型的图片最适合该流程？"
+      },
+      {
+        "answer": "主要针对正面图片设计，侧面或斜面图片也可尝试，但准确性可能有所下降。",
+        "question": "这个工作流能用侧面或斜面图片生成3D模型吗？"
+      },
+      {
+        "answer": "处理时间取决于图片分辨率和系统性能，通常几分钟即可完成。",
+        "question": "生成3D模型需要多长时间？"
+      },
+      {
+        "answer": "不需要。流程设计友好，初学者也可轻松上手。",
+        "question": "使用该流程需要相关经验吗？"
+      }
+    ]
+  },
+  "787cfd599758": {
+    "howToUse": [
+      "将MiniMax：文本转视频工作流JSON导入ComfyUI，确认MinimaxTextToVideoNode、SaveVideo和MarkdownNote节点已加载。",
+      "打开MarkdownNote，查看安全环境要求：本地（127.0.0.1）运行、Web服务用HTTPS、确保可访问MiniMax API。",
+      "选中MinimaxTextToVideoNode，输入文本提示。如节点支持，可设置时长、分辨率等参数，并填写API凭证/端点。",
+      "配置SaveVideo节点：选择清晰的文件名前缀和（如有）格式设置，确保片段写入目标输出文件夹。",
+      "在ComfyUI中点击运行按钮执行工作流。等待节点完成API任务并由SaveVideo写入视频。",
+      "从ComfyUI输出目录打开保存文件进行查看。根据需要调整提示和节点参数，优化运动、风格和构图。"
+    ]
+  },
+  "7905fe6d550c": {
+    "extendedDescription": "FLUX.2 [max]：物体替换工作流可在保持整体场景一致性和质量的前提下，无缝替换图像中的物体。核心为Flux2MaxImageNode，利用先进图像处理技术实现精确替换。这个工作流比较适合产品摄影、家具替换等对原图美观性有高要求的场景。\n\n流程以LoadImage节点导入待编辑图片，Flux2MaxImageNode识别并精确替换目标物体。GetImageSize节点确保全流程图像尺寸一致，BatchImagesNode支持批量处理多张图片，提升效率。最后，SaveImage节点输出编辑后图片，适用于多种应用场景。",
+    "faqItems": [
+      {
+        "answer": "只要替换物体与原场景在尺寸和视角上兼容，理论上可替换任意物体。",
+        "question": "这个工作流可以用于哪些类型的物体替换？"
+      },
+      {
+        "answer": "可以，使用BatchImagesNode可同时处理多张图片，适合批量编辑。",
+        "question": "可以批量处理多张图片吗？"
+      },
+      {
+        "answer": "不会，Flux2MaxImageNode设计时注重高质量输出，确保编辑后图片依然清晰锐利。",
+        "question": "编辑后原图质量会受影响吗？"
+      },
+      {
+        "answer": "有ComfyUI工作流基础更好，但流程步骤清晰，初学者也可快速上手。",
+        "question": "使用该流程需要什么技能？"
+      }
+    ]
+  },
+  "79227f845a2c": {
+    "faqItems": [
+      {
+        "answer": "带有清晰意象和具体细节的描述性提示效果最佳，Reve模型擅长将详细文本转化为视觉元素。",
+        "question": "什么样的提示词最适合这个工作流？"
+      },
+      {
+        "answer": "可以，ReveImageCreateNode支持风格参数调整，可微调输出图像的美学风格。",
+        "question": "可以调整生成图像的风格吗？"
+      },
+      {
+        "answer": "SaveImage节点支持多种格式，包括PNG和JPEG，便于灵活存储和分享。",
+        "question": "生成的图像可以保存为哪些格式？"
+      },
+      {
+        "answer": "没有严格限制，但简明详细的提示通常能生成更清晰、聚焦的图像。建议保持描述详细但简洁。",
+        "question": "文本提示长度有限制吗？"
+      }
+    ],
+    "howToUse": [
+      "打开ComfyUI界面，加载“Reve：文本转图像”工作流。",
+      "在ReveImageCreateNode输入框中输入你的文本提示。",
+      "在ReveImageCreateNode中配置其他参数，微调输出效果。",
+      "运行工作流，根据文本提示词生成图像。",
+      "用SaveImage节点将生成的图像保存为所需格式。",
+      "检查保存的图像，如有需要可调整参数后重新生成。"
+    ]
+  },
+  "795f78f5c9cb": {
+    "extendedDescription": "“Chatter Box：多说话人对话与声音克隆”工作流可用声音克隆技术生成真实的多说话人对话音频。基于Chatter Box模型，用户可为每位说话人上传简短语音样本并输入对话脚本，流程将为每位说话人克隆声音并生成完整对话音频。这个工作流使用 FL_ChatterboxDialogTTS 节点实现文本转语音与声音克隆，LoadAudio节点上传语音样本，AudioCrop节点可裁剪音频片段，SaveAudioMP3节点导出最终音频。MarkdownNote节点可用于流程注释。适合播客、有声书、虚拟助手等需要多角色音色的个性化音频内容创作。"
+  },
+  "7cecbe192fc2": {
+    "howToUse": [
+      "在 ComfyUI 中加载工作流，确保已安装所需组件：Video Helper Suite（VHS_LoadVideo 和 VHS_VideoCombine）及 LTX‑Video 2.3 流水线节点。确认 LTX‑Video 2.3 基础模型和 TheBurgstall “Googlyeyes” LoRA 已安装，并可在 LTX 节点/分组（id: 2e37ecc9-770a-4ac2-972c-e953901f49d3）中选择。",
+      "打开 VHS_LoadVideo 节点，选择源视频。设置 skip_first_frames 裁剪起始帧，frame_count 设置需处理的帧数（如 skip_first_frames: 60，frame_count: 480 表示处理第 60–540 帧）。",
+      "在 LTX 2.3 节点/分组中，选择 LTX‑Video 2.3 基础模型和 TheBurgstall 的 Googlyeyes LoRA。如有 LoRA 强度控制，建议初始为 1.0，效果不明显可适当提高，过强可降低。",
+      "首次运行建议保持其他 LTX 参数默认。长视频或高分辨率建议先处理短片段，降低 frame_count 验证质量和显存占用。",
+      "确认 LTX 节点输出已连至 VHS_VideoCombine，帧率由 VHS_LoadVideo 提供。如 VHS_VideoCombine 支持，可设置输出文件名/预设。",
+      "点击“运行”按钮开始运行完成后在 ComfyUI 输出目录查看视频。如需调整 LoRA 强度或裁剪参数，修改后重新队列。"
+    ]
+  },
+  "825e6fb23c2c": {
+    "howToUse": [
+      "在ComfyUI中加载Krea 2风格板测试工作流，确保已安装Krea2ImageNode自定义节点。按节点文档在设置或环境变量中添加Krea API密钥。",
+      "决定先测试哪些分支，跳过其他分支。通过MarkdownNote标签快速定位每组（01–06）。",
+      "对每个激活分支，设置PrimitiveNode值：粘贴风格板ID（可用作者备注中的示例UUID或自有ID）、填写提示词、选择风格板强度。如Krea2ImageNode版本支持，可选设置种子和尺寸。",
+      "打开每个激活分支的SaveImage节点，设置清晰的filename_prefix（如mb01_ethereal_），避免不同风格输出文件覆盖。",
+      "点击运行按钮执行工作流。Krea2ImageNode会为每个激活分支调用Krea 2 API，SaveImage将结果写入输出文件夹。",
+      "迭代：调整风格板强度平衡风格与提示词，优化提示词，替换风格板ID，或复制分支添加更多风格变体。"
+    ]
+  },
+  "88f014a33e2a": {
+    "extendedDescription": "“Grok：参考图转视频”工作流在 ComfyUI 中将静态参考图片转为动态视频内容。流程利用 Grok API 生成跨帧风格高度一致的视频，最多可用六张参考图片。流程以 LoadImage 节点上传参考图，GrokVideoReferenceNode 利用 Grok 模型解析并转化为连贯的视频序列，最后 SaveVideo 节点导出生成视频。\n\n这个工作流最大特点是可处理多张参考图，确保输出视频风格和角色表现高度一致。特别适合需要角色动画或艺术风格统一的视频项目。Grok 模型的高级能力可细致解析输入图片，是将静态美术转为动态视频的强大工具。"
+  },
+  "8c90417df6d3": {
+    "faqItems": [
+      {
+        "answer": "支持 PNG、JPEG 等常见图片格式，LoadImage 节点可兼容大多数 Logo 文件。",
+        "question": "这个工作流支持哪些 Logo 格式？"
+      },
+      {
+        "answer": "可在 GeminiImage2Node 中调整纹理参数，使其与品牌色彩方案匹配，确保品牌一致性。",
+        "question": "如何确保纹理与品牌色彩一致？"
+      },
+      {
+        "answer": "可以，SaveVideo 节点用于导出视频，SaveImage 节点用于导出图片，满足多场景需求。",
+        "question": "最终资产可以导出为视频和图片吗？"
+      },
+      {
+        "answer": "可使用 ResizeAndPadImage 节点调整 Logo 尺寸，确保其在工作流中完美适配。",
+        "question": "如果 Logo 尺寸不适配工作流怎么办？"
+      }
+    ]
+  },
+  "8e090ccf5a29": {
+    "extendedDescription": "本模板为基于 Z-Image Turbo 生成器的紧凑型文本生成图像工作流，只需最少的设置，即可从提示词直接生成输出。核心为单一自定义 Z-Image Turbo T2I 节点（节点 id f2fdebf6-dfaf-43b6-9eb2-7f70613cfdc1），集成文本编码与图像生成，配合 SaveImage 节点将结果写入磁盘，并通过 MarkdownNote 提供流程内指导。模板默认使用 Qwen 3 4B 文本编码器权重（qwen_3_4b.safetensors）进行提示条件化。\n\n在技术实现上，Z-Image Turbo 节点负责端到端生成：接收你的提示（及可选负面提示），用指定文本编码器编码，并运行模型内部采样器生成图像张量。张量直接传递给 SaveImage，导出 PNG 至 ComfyUI 输出文件夹，文件名前缀可自定义。由于所有流程封装在单一节点内，整个 T2I 流程简洁可靠，便于反复迭代：在同一处调整提示、分辨率、种子和采样参数，轻松保存一致、可复现的输出。"
+  },
+  "9173ef378024": {
+    "extendedDescription": "“Vidu Q2：图片转视频”工作流可将静态图片转为动态1080p视频，支持电影级镜头控制并保持多主体一致性。这个工作流基于Vidu Q2模型，专为将静态图生成高质量视频而优化。通过LoadImage、Vidu2ImageToVideoNode和SaveVideo等节点，用户可轻松将图片转为带专业特效的视频。LoadImage节点导入图片，Vidu2ImageToVideoNode用算法动画化图片，确保帧间平滑过渡和主体一致性。最后，SaveVideo节点将生成帧合成为完整视频文件。",
+    "faqItems": [
+      {
+        "answer": "高分辨率、主体和背景清晰的图片效果最佳，便于Vidu2ImageToVideoNode处理。",
+        "question": "哪些图片最适合这个工作流？"
+      },
+      {
+        "answer": "可以，在Vidu2ImageToVideoNode设置中可指定视频时长。",
+        "question": "可以调整生成视频的时长吗？"
+      },
+      {
+        "answer": "Vidu2ImageToVideoNode已针对主体一致性优化，也可通过调整节点参数进一步提升主体跟踪效果。",
+        "question": "如何保证视频多主体一致性？"
+      },
+      {
+        "answer": "这个工作流专注于视频生成。可在导出后用外部视频编辑软件添加音频。",
+        "question": "能为生成视频添加音频吗？"
+      }
+    ]
+  },
+  "94ed41b87579": {
+    "howToUse": [
+      "将工作流 JSON 加载到 ComfyUI（拖拽文件到画布或用 ComfyUI Manager 导入）。",
+      "打开 Z-Image Turbo 节点（UUID f2fdebf6-dfaf-43b6-9eb2-7f70613cfdc1），输入提示和（如有）负面提示。设置种子、步数、引导等参数。如节点支持模型/vae输入，指向你喜欢的模型。",
+      "在同一节点（或其连接的超分控件）设置输出尺寸或超分倍数。建议从2x开始，获得清晰细节且不过度锐化。",
+      "点击运行按钮执行工作流，依次执行 T2I 生成和超分阶段。ImageCompare 节点会生成基础图与超分图的对比图。",
+      "查看对比图，检查细节保留和伪影。如需调整，优化提示、种子、步数、引导或超分倍数后重试。",
+      "满意后，让 SaveImage 节点将基础图和超分图保存到磁盘。可在 SaveImage 节点编辑文件名前缀，便于版本管理。"
+    ]
+  },
+  "99aec65eea89": {
+    "howToUse": [
+      "安装自定义节点：将ComfyUI-MelBandRoFormer添加到ComfyUI/custom_nodes并重启ComfyUI。",
+      "放置模型文件：将MelBandRoformer_fp16.safetensors复制到ComfyUI/models/diffusion_models/。",
+      "加载工作流：在ComfyUI中打开MelBandRoFormer音频分离工作流JSON。",
+      "选择输入：在LoadAudio节点中选择你的歌曲、播客或音频片段。",
+      "加载模型：在MelBandRoFormerModelLoader中确认MelBandRoformer_fp16.safetensors路径。",
+      "运行分离：运行工作流，MelBandRoFormerSampler输出人声和伴奏到两个SaveAudioMP3节点，分别写入输出文件夹。"
+    ]
+  },
+  "9c0e04762e99": {
+    "metaDescription": "通过ComfyUI的SDXL Turbo工作流，快速生成高质量图片。一键文生图工作流。"
+  },
+  "9c3c4722a8e1": {
+    "howToUse": [
+      "在ComfyUI中加载工作流JSON，打开图表查看Prompt输入、Stable Audio 3节点和SaveAudioMP3输出。",
+      "从Hugging Face（Comfy-Org/stable-audio-3）下载Stable Audio 3模型，按仓库说明放置文件。下载qwen3.5_2b_bf16.safetensors，放入ComfyUI/models/text_encoders。重启ComfyUI以便节点识别模型。",
+      "在Prompt字段输入简短创意（2–10 个单词最佳）。可在Stable Audio 3节点设置时长（秒）和种子，控制片段长度和可复现性。首次运行建议其他参数保持默认。",
+      "点击运行按钮执行工作流/运行。子工作流用Qwen扩展提示并传递给Stable Audio 3生成节点，等待音频渲染完成。",
+      "在SaveAudioMP3节点设置输出路径（如有比特率选项可调整），运行或重新运行以保存MP3。可在控制台或节点预览查看保存位置。",
+      "多次迭代：更换种子获得不同变体，调整时长适配需求。如结果过于复杂，可简化提示（Qwen扩展仍会丰富短输入）。"
+    ]
+  },
+  "9e033fb4e06a": {
+    "extendedDescription": "在 ComfyUI 中的“人像重光”工作流可通过参考图片调整目标图片的光照。这个工作流利用 Qwen-Image-Edit 模型智能调整目标图片的光照，使其看起来像在参考图片的光照条件下拍摄。主要节点包括 LoadImage（导入图片）和 SaveImage（导出结果）。本流程特别适合摄影师和数字艺术家实现多图统一光照风格，或无需实体灯光设备进行创意光效实验。"
+  },
+  "9f1bb8c2f14f": {
+    "faqItems": [
+      {
+        "answer": "分级不需要检查点——GLSLShader 直接应用 CurveEditor 设置。生成视频需 ByteDance2ReferenceNode（Seedance 2.0）及其依赖。只做分级静帧无需视频节点。",
+        "question": "这个工作流需要扩散模型或 checkpoint 模型吗？"
+      },
+      {
+        "answer": "不是必需。GeminiNode 仅用于提示生成或润色。可手动输入提示并传给 ByteDance2ReferenceNode。如用 Gemini，需按节点说明配置 API。",
+        "question": "GeminiNode 必须用吗？"
+      },
+      {
+        "answer": "曲线尽量平滑，锚点越少越好，避免极端 S 曲线。用 PrimitiveFloat 控制 GLSLShader 混合度。用 ImageHistogram 保证黑白不过界，SaveVideo 导出时用高码率减少压缩瑕疵。",
+        "question": "用曲线时如何避免断层或色彩溢出？"
+      },
+      {
+        "answer": "确保 ByteDance2ReferenceNode 的参考输入为分级图片。适当降低运动强度或风格化参数，固定种子保证可复现，SaveVideo 前不要再做额外色彩变换。",
+        "question": "为什么视频颜色和分级静帧有偏差？如何保持一致？"
+      }
+    ]
+  },
+  "a335e0968d76": {
+    "howToUse": [
+      "在 ComfyUI 中加载 Music Generator 工作流 JSON，确认所有节点均为绿色（已加载）。",
+      "打开流程图中的 MarkdownNote，快速了解流程和作者提示。",
+      "在 Stable Audio 3 节点（UUID: 8b66c757-fe2f-4184-91f3-479a19deb565）输入简明提示词，包含风格、乐器、情绪/能量及关键描述（如“振奋的合成器流行，模拟贝斯，强劲鼓点，100 BPM 感觉”）。",
+      "用 PrimitiveFloat 节点设置所需时长（如 0.8 代表单击采样，3–5 代表音效，15–60 代表音乐底床）。如有需要，调整 Stable Audio 3 节点的其他参数。",
+      "配置 SaveAudioAdvanced，选择输出文件夹和文件名规则。如需自动保存，可启用自动保存功能。",
+      "点击运行按钮执行工作流。运行完成后试听保存文件。可通过优化提示词或时长反复迭代，调整风格、紧凑度或冲击力。"
+    ]
+  },
+  "b27220a578ee": {
+    "metaDescription": "用 Chatter Box 将音频转换为不同声音，保留时序和表现。适合配音和个性化旁白。"
+  },
+  "b4577f326660": {
+    "extendedDescription": "本 ComfyUI 工作流可将视频素材转换为时序稳定的深度图，采用先进 AI 模型。核心为 Depth Anything v2 模型，擅长从视频输入生成准确的深度图。流程以 VHS_LoadVideo 节点导入视频，DepthAnything_V2 节点处理每帧，生成在帧间保持时序一致性的深度图。这对于增强现实或 3D 重建等需平滑过渡和稳定性的应用尤为重要。\n\n流程还包含 VHS_VideoCombine 和 VHS_VideoInfo 节点，便于在 ComfyUI 环境中管理和整合视频数据。comfyui-videohelpersuite 和 comfyui_controlnet_aux 自定义节点增强了视频处理和参数控制能力。通过这些节点，用户可获得高质量、可直接用于后续处理或集成的深度图。这个工作流特别适合虚拟现实、游戏、影视制作等领域的专业人士，深度信息可极大提升数字内容的真实感和交互性。"
+  },
+  "b4d8756a63c1": {
+    "metaDescription": "用 ACE-Step v1 将文本转为音乐。这个工作流通过文本提示生成歌曲，助力创意与音乐表达。"
+  },
+  "b8c030205d86": {
+    "extendedDescription": "Fast GAN 视频超分工作流基于生成对抗网络（GAN）模型（如 Real-ESRGAN），高效提升视频分辨率。适用于需要提升视频质量但无需生成新细节的场景（与扩散模型不同）。这个工作流的核心节点包括 UpscaleModelLoader 和 ImageUpscaleWithModel，对每一帧应用超分模型。流程以 LoadVideo 节点加载视频，通过 GetVideoComponents 拆分帧，随后进行超分处理。\n\n技术上，流程利用 Real-ESRGAN 模型按所选倍率（如 2x、4x）对每帧超分。ImageUpscaleWithModel 节点逐帧处理，最后用 CreateVideo 节点重组为视频，SaveVideo 节点输出超分后的视频。该方法比基于扩散的超分更快，适合快速增强。建议先超分到最高分辨率，再根据需要调整到目标分辨率，以获得最佳效果。"
+  },
+  "b993c1885a29": {
+    "extendedDescription": "本ComfyUI工作流“Flux.1 Dev：文生图”专为通过文本提示生成高质量图像而设计，采用Flux Dev完整版。这个工作流需加载多个模型文件，并需要较大显存以保证高效运行。其突出特点是优异的提示词理解能力和卓越的图像质量。关键节点包括VAEDecode和SaveImage，分别负责将潜空间解码为图像并保存最终输出。KSampler节点在采样潜空间以生成多样化图像时起核心作用。流程还用到UNETLoader和VAELoader加载UNET和VAE模型，是扩散过程的基础。此外，CLIPTextEncodeFlux节点将文本提示编码为模型可理解格式，确保生成图像与输入文本高度一致。",
+    "faqItems": [
+      {
+        "answer": "由于需加载多个模型文件并生成高质量图像，建议使用至少8GB显存的GPU。",
+        "question": "这个工作流对硬件有何要求？"
+      },
+      {
+        "answer": "可以，流程设计为高度遵循提示词，但生成效果与提示词的清晰度和具体性密切相关。",
+        "question": "可以用任意文本提示吗？"
+      },
+      {
+        "answer": "请确保使用正确的模型文件，并尽量详细、具体地编写提示词。根据显存调整图像尺寸也有助于提升质量。",
+        "question": "如何提升生成图像的质量？"
+      },
+      {
+        "answer": "请优化文本提示的清晰度和具体性，并确保所有模型文件已正确加载且与流程兼容。",
+        "question": "生成图像与提示不符怎么办？"
+      }
+    ]
+  },
+  "baa06a413558": {
+    "description": "这个工作流适合用Seedance 2.0从单张图片快速生成4-15秒视频"
+  },
+  "be07722555ff": {
+    "extendedDescription": "ComfyUI 中的 Flux.1 图像外扩绘图工作流用于将图片扩展到原有边界之外，即外扩（outpainting）。该技术适合为图片添加内容或将小图扩展为大场景。流程用到多个关键节点和模型，包括用于外扩的Flux.1模型（由FluxGuidance节点引导）。流程先加载所需模型和待外扩图片，再用ImagePadForOutpaint节点为图片扩边。随后，KSampler节点迭代生成新区域，VAEDecode和UNETLoader协作，确保新内容与原图无缝融合。\n\n本流程优势在于利用先进AI模型，在扩展图片时保持原有美学和主题一致性。CLIPTextEncode节点可输入文本提示，引导外扩内容风格和主题。适用范围广，从艺术创作到设计、媒体生产均可用。",
+    "howToUse": [
+      "在 ComfyUI 中加载 Flux.1 图像外扩绘图工作流。",
+      "用LoadImage节点导入需扩展的图片。",
+      "确保已加载Flux.1及相关文本编码器等必要模型。",
+      "用ImagePadForOutpaint节点为图片扩边，准备外扩。",
+      "运行流程，用KSampler和VAEDecode节点生成扩展内容。",
+      "用SaveImage节点保存最终外扩图片。"
+    ]
+  },
+  "c1959fdc5642": {
+    "extendedDescription": "此 ComfyUI 工作流利用开源 SeedVR2 放大模型，实现高质量的单图像超分辨率。流程极简且适合生产：LoadImage 节点导入原始图像，SeedVR2 Upscale 节点（c35dd4ba-0fe3-47d6-afce-1c56d9fe5beb）提升分辨率并重建细节，SaveImage 节点将结果写入磁盘。由于流程专注于放大，无需提示词、采样器或扩散步骤——速度快、可重复、易于调整。\n\n底层原理是 SeedVR2 通过学习映射，在更高分辨率下预测高频细节，同时保留原始构图和色彩，并提升锐度和纹理。实际操作中，加载图像，选择 SeedVR2 节点提供的放大倍数（常见为2倍或4倍，具体取决于节点配置），提交任务并获取输出。非常适合用于印刷资产准备、渲染放大或给 AI 生成的图像润色放大，同时保持内容不变。"
+  },
+  "c2aae816fe63": {
+    "description": "照片级的 AI 人脸替换"
+  },
+  "c3e308dab99b": {
+    "extendedDescription": "本 ComfyUI 工作流通过开源方案自动实现真实的产品植入。你只需提供最多三张产品图和一张参考合成图，工作流会将产品放入场景，并保留文本感知的细节，同时使光照跟随参考图。Qwen3-VL 阶段分析输入并生成富上下文的编辑提示，Flux.2 Klein 9B 进行多图合成，LTX-2.3 将最终静帧转为精致的产品短视频。核心实用节点如 LoadImage、PreviewImage、PreviewAny、BatchImagesNode、StringConcatenate 和 SaveVideo，方便你反复调整和导出。\n\n技术细节上，产品和参考图片会被加载、批量处理并自动缩放，无论原始分辨率如何，Flux.2 Klein 都能获得清晰一致的输入。Qwen3-VL 通过 StringConcatenate 组装提示词，并传递给 Flux.2 的采样器，控制产品位置、标签还原和场景光照。合成效果可在 PreviewImage/PreviewAny 节点确认，满意后由 LTX-2.3 生成短动画片段，SaveVideo 节点将结果保存到本地。自定义推理节点（461b058e-342d-497e-aac1-a5fb6551e33a、fdd45ff8-8dff-43e8-b2c0-2d26053388b8、6dbca6ef-ca4b-4af8-a99b-b834745f3a9b、5c2c98c8-2e8f-47ca-9403-686e35a5ef94、04e3b3b1-a711-485c-be05-f59f9507bd4e、ffacbfba-7659-45df-a3b8-7560f4800088）封装了模型推理和缩放/条件逻辑，支持完全本地或 Comfy Cloud 云端运行，无需闭源API。"
+  },
+  "c5cbee07611f": {
+    "extendedDescription": "此 ComfyUI 工作流帮助品牌和创意团队快速将现有海报放入真实的户外广告（OOH）场景。流程分为两个清晰阶段。第一步——海报重新构图：读取源海报，并以非破坏性方式将其重新适配为多种长宽比（竖版、横版、方形或自定义），同时保留原始设计。该阶段由 LoadImage、PrimitiveNode（宽/高数值）等节点驱动。，通过 PrimitiveBoolean 控制格式启用/禁用，ComfySwitchNode 路由所需格式，BatchImagesNode 批量输出，SaveImage 保存干净的重排版本，便于后续投放。\n\n第二步——户外广告可视化，将选定的重排海报合成到真实或描述的环境中。你可以通过 IMAGE ENVIRONMENT 分组的 LoadImage 上传实景照片，或在 PROMPT ENVIRONMENT 分组用自然语言描述场景（如“旧金山市中心两层楼顶的户外广告牌，行人视角”）。GeminiImage2Node 作为提示助手，将描述转为结构化场景说明和文件名上下文。两个自定义处理节点（ae42e662-5e2b-4f52-b31d-267bd68f1c6f 和 88b611c3-ce43-4e7a-a59f-dd16f57a8853）负责将海报透视映射并融合到目标表面，可微调比例、倾斜和叠加强度，实现真实投放效果。SaveImage 输出最终提案，可批量导出，便于对比不同格式和场景。"
+  },
+  "ccf567b604be": {
+    "faqItems": [
+      {
+        "answer": "需在允许 `127.0.0.1` 或 `localhost` 访问的安全网络环境下，并且必须使用以 `https` 开头的 Web 服务。",
+        "question": "使用该工作流需要什么网络环境？"
+      },
+      {
+        "answer": "可以，工作流支持自定义运动幅度和时长，满足不同视频需求。",
+        "question": "可以调整视频长度和运动幅度吗？"
+      },
+      {
+        "answer": "视频以主流标准格式保存，兼容大多数播放器，便于播放和分享。",
+        "question": "视频保存为哪种格式？"
+      },
+      {
+        "answer": "有相关经验会更好上手，不过这个工作流设计得很友好，节点配置和运行都很简单。",
+        "question": "需要有 ComfyUI 使用经验吗？"
+      }
+    ]
+  },
+  "d70243b6fc64": {
+    "title": "证件照生成器"
+  },
+  "d7677ac50371": {
+    "extendedDescription": "本 ComfyUI 工作流“虚拟试衣与角色 - 4 合 1”专为 AI 图像生成虚拟试衣设计。用户可上传角色图片和服装平铺图，随后用 Nano Banana Pro 模型在单次提示下生成角色穿着该服装的 4 种变体。这个工作流用到 LoadImage 导入图片，ResizeAndPadImage 调整尺寸，BatchImagesNode 支持多图并行处理。comfyui-kjnodes 和 comfyui_essentials 的自定义节点增强了功能，实现无缝集成和处理。适合时装设计师、数字艺术家、电商平台无需实物样品即可可视化服装上身效果。"
+  },
+  "dc4b3f6dab6e": {
+    "extendedDescription": "此ComfyUI工作流可快速、可复用地生成时尚产品九宫格。你只需提供两项输入——时尚大片参考和干净的产品图，流程即可生成8个角度变化且产品一致的图像。流程核心依赖Nano Banana Pro进行图像生成，并用一组简明一致的提示词驱动多样性，确保产品外观不漂移。输出以9:16竖版4K（2160x3840）九宫格拼图，便于快速评审或社交/电商交付。\n\n技术上，流程用LoadImage节点导入大片参考和产品图。PrimitiveStringMultiline节点存储8个角度指令（可编辑以更换视角），PrimitiveNode节点存储数值参数（如角度数或种子）。GeminiImage2Node（配置为gemini-3-pro-image-preview）可辅助分析大片参考或生成提示文本。两个essentials节点（UUID为68c58c16-e698-45a4-97f9-54ae8eb9dee9和487baed2-dc27-49c3-a6b2-0bf45a53e64d，来自comfyui_essentials）负责图像拼接和布局，BatchImagesNode收集8张结果，RegexReplace清理文件名，SaveImage输出单张8 格拼版及可选单帧。最终仅用两次Nano Banana生成即可扩展为8个一致角度。",
+    "faqItems": [
+      {
+        "answer": "编辑 PrimitiveStringMultiline 节点。替换或调整角度指令顺序以匹配所需视角。流程会按每行生成一张图片，最后将八张拼成拼版。",
+        "question": "如何更改生成的八个角度？"
+      },
+      {
+        "answer": "不必。GeminiImage2Node（gemini-3-pro-image-preview）是可选辅助节点，用于从参考图自动生成角度提示。若需完全手动控制，可只用 PrimitiveStringMultiline 节点。",
+        "question": "必须用 GeminiImage2Node 吗？"
+      },
+      {
+        "answer": "一致性来自使用同一产品图片输入和严格限定的 Nano Banana Pro 提示。保持产品图片干净、光线充足，避免过度创意修饰，若需更高复现性可复用固定种子。",
+        "question": "如何保证产品一致性？"
+      },
+      {
+        "answer": "可以。BatchImagesNode 会将每帧传递给 SaveImage。你可以同时保留 8 格拼图和单帧图片，或关闭拼图输出路径，仅保留单独图片。",
+        "question": "能否导出单张图片而不是拼图？"
+      }
+    ]
+  },
+  "def270551fbe": {
+    "faqItems": [
+      {
+        "answer": "FlashVSR在提升视频细节和减少伪影的同时，保持运动一致性，能在多种分辨率下输出自然效果。",
+        "question": "使用FlashVSR进行视频超分的主要优势是什么？"
+      },
+      {
+        "answer": "分辨率越高（如2K、4K），处理时间通常越长，因为需要处理的数据和细节更多。",
+        "question": "分辨率选择如何影响处理时间？"
+      },
+      {
+        "answer": "工作流支持常见视频格式，具体兼容性需参考LoadVideo节点的支持范围。",
+        "question": "这个工作流可用于任何视频格式吗？"
+      },
+      {
+        "answer": "请根据质量需求、目标显示尺寸和处理能力综合考虑。高分辨率细节更好，但资源消耗也更大。",
+        "question": "如何选择合适的超分辨率？"
+      }
+    ]
+  },
+  "e2df0992de37": {
+    "extendedDescription": "Nano Banana Pro：产品细节增强工作流旨在将你的产品图片提升到更高水准，增强细节和锐度。该工作流利用专为产品图片优化的Nano Banana Pro模型。流程从LoadImage节点上传产品图片开始，随后通过GeminiImage2Node应用高级算法，提升图片细节、优化排版，并保证真实感。最后，使用SaveImage节点保存增强后的图片，获得高分辨率、高质量的输出。\n\n这个工作流特别适合需要以最佳效果展示产品的电商企业和产品摄影师。通过提升产品图片的细节和锐度，有助于吸引客户，提升视觉吸引力。Nano Banana Pro模型确保增强效果既真实又美观，既提升展示效果又保持产品本身的真实性。"
+  },
+  "e5c914d15241": {
+    "extendedDescription": "Qwen-Image-Layered 图层控制拆分，帮助用户利用 Qwen-Image-Layered 模型将图片分解为各个组成部分。该流程特别适合需要隔离图像特定部分以便进一步处理或分析的艺术家和设计师。流程从 LoadImage 节点加载图片开始，通过 ImageScaleToMaxDimension 节点调整尺寸。核心节点 f754a936-daaf-4b6e-9658-41fdc54d301d 利用 Qwen-Image-Layered 模型进行分解。\n\n该工作流技术上非常健壮，允许对图像图层进行精确控制，并可通过 SaveImage 节点保存。MarkdownNote 节点用于记录流程和提供操作指引。分层分解适用于需要细致编辑的场景，如平面设计、数字艺术，甚至科学成像中对特定特征的隔离和分析。"
+  },
+  "ed1c4eade3a3": {
+    "howToUse": [
+      "在 ComfyUI 中加载工作流，将源图片拖入 LoadImage 节点（批量处理可用 BatchImagesNode）。",
+      "在 PrimitiveStringMultiline 节点描述所需运动（如“头发轻轻飘动，眼睛眨动”）。RegexReplace 和 GeminiNode/GeminiNanoBanana2 会自动简化为模型友好提示。",
+      "定义运动区域：用 MaskPreview 检查动画区域并调整，MaskToImage 转换遮罩用于运动阶段，保证背景静止。",
+      "打开 ByteDance2ReferenceNode，检查运动强度、循环长度等关键参数（如有）。在 GetVideoComponents/CreateVideo 设置 fps/时长以适配平台。",
+      "点击运行按钮执行工作流/生成。用 PreviewAny 监控中间帧，如有边缘伪影或抖动可调整遮罩柔和度或运动强度。",
+      "用 SaveVideo（MP4）导出结果，如需保留遮罩或关键帧可用 SaveImage。"
+    ]
+  },
+  "ef36ec96537f": {
+    "extendedDescription": "本 ComfyUI 工作流聚焦对比 ACE-Step 1.5 音乐生成模型与其小模型版本。主要目标是评估 4B 版本模型在音频理解和作曲能力上的提升。通过文本提示生成音乐，用户可探索不同模型在音质、复杂度和还原度上的差异。这个工作流用到 KSampler、VAEDecodeAudio 和 TextEncodeAceStepAudio1.5 等节点，便于对比。4B 模型可处理更复杂的作曲，生成更丰富的音频纹理，尤其在生成较长或复杂音乐片段时优势明显。",
+    "faqItems": [
+      {
+        "answer": "ACE-Step 1.5 模型具备更强音频理解和作曲能力，生成的音乐比小模型更丰富、更复杂。",
+        "question": "ACE-Step 1.5 与小模型主要区别是什么？"
+      },
+      {
+        "answer": "流程用 TextEncodeAceStepAudio1.5 和 VAEDecodeAudio 等节点，将文本提示转为音频，充分利用 ACE-Step 模型能力。",
+        "question": "这个工作流如何实现音乐生成？"
+      },
+      {
+        "answer": "可以，在文本提示中加入风格关键词即可引导模型生成目标风格音乐。",
+        "question": "可以用该流程生成特定风格音乐吗？"
+      },
+      {
+        "answer": "需根据所需音频复杂度和质量，以及计算资源情况选择。大模型生成更复杂音频但需更多算力。",
+        "question": "选择 4B 模型还是小模型应考虑哪些因素？"
+      }
+    ]
+  },
+  "f889bba5102a": {
+    "howToUse": [
+      "在 ComfyUI 中加载工作流 JSON。如本地运行，先下载所需 Qwen-Image 资源：将 qwen_image_vae.safetensors 放入 models/vae 目录，并按文档安装 Qwen-Image 扩展。确保 Gummy Animals LoRA 已放入 LoRA/models 文件夹。",
+      "打开 Qwen-Image 生成节点（id: e5cfe5ba-2ae0-4bc4-869f-ab2228cb44d3）。在提示词中输入动物主体（如“红熊猫，半透明酸味软糖，糖晶体，柔光背打，白底棚拍”）。可选输入负向提示词（如“毛发，真实皮肤，水印，logo”）。",
+      "设置 LoRA 强度控制风格。建议 0.7–1.0 呈现强烈软糖感；低值保留更多基础模型写实感，高值则极度风格化。",
+      "调整生成参数：分辨率（如 768×768 适合单主体），步数（如 20–30），引导（中等值保持色彩鲜明），种子（固定便于复现，-1/随机便于探索）。",
+      "点击运行按钮执行工作流。可在 ComfyUI 预览器和 ComfyUI/output 目录查看输出（由 SaveImage 节点写入）。迭代优化：调整提示词（如加入“半透明”“糖衣”“颗粒表面”），调节 LoRA 强度和引导，直至质感和通透感理想。",
+      "可选：将 Qwen-Image + LoRA 封装为子工作流（见 Markdown 注释的子工作流指南），便于在其他流程或批量管道中复用软糖风格模块。"
+    ]
+  },
+  "f9cffe716495": {
+    "extendedDescription": "这个工作流可将简短文本提示转为连贯视频，基于 Wan 2.1 VACE。流程用 CLIPLoader + CLIPTextEncode 编码提示词，驱动 Wan VACE UNet（UNETLoader）通过扩散循环（KSampler），采样行为由 ModelSamplingSD3 配置。WanVaceToVideo 节点负责时序潜变量生成，TrimVideoLatent 可精确裁剪帧数。采样后，VAELoader + VAEDecode 将潜变量转为 RGB 帧。最后 CreateVideo 组装帧，SaveVideo 输出 MP4，SaveAnimatedWEBP 可生成轻量预览。\n\n支持两种模型体积：VACE-14B（高质量，慢，支持 480p/720p）和 VACE-1.3B（快，仅 480p）。流程分组清晰：加载模型、提示词、采样与解码、保存视频（Mp4）、保存视频（WebP），14B 和 1.3B 独立分区便于切换。内置 CausVid LoRA（通过 LoraLoader）可提速，建议强度 0.3–0.7、步数 2–4、cfg ~1.0 用于草稿。最终高质量建议关闭或降低 LoRA，用 14B 默认参数（约 20 步，cfg ~6.0）。"
+  }
+}

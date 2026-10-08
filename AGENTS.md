@@ -1,7 +1,7 @@
 # AGENTS.md
 
 Monorepo for **ComfyUI workflow templates**: the same template data ships as
-Python/PyPI packages AND powers the public Astro hub site at templates.comfy.org.
+Python/PyPI packages AND powers the public Astro hub site at comfy.org/workflows.
 `templates/` is the source of truth for both.
 
 ## Build & Run Commands
@@ -16,6 +16,7 @@ Python/PyPI packages AND powers the public Astro hub site at templates.comfy.org
 - `npm run validate:manifests` — Validate package manifests
 - `npm run validate:comfyui-nodes` — Compare templates to ComfyUI node baseline (local: live `/object_info`)
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
+- `python scripts/sync/sync_is_app.py` — Write `isApp` into `index.json` from each workflow's `extra.linearMode` (`--dry-run` to report, `--check` for the CI gate)
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
 - `python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail` — CI-style static compat scan
 - `python scripts/sync/sync_frozen_inventory.py` — Regenerate frozen bundle template inventory from `bundles.json`
@@ -46,7 +47,7 @@ The script moves the workflow JSON and thumbnails to `archived/`, removes the en
 ## Architecture
 - **Monorepo** with Nx, Python packages, and Astro site
 - `templates/` — Source workflow JSON files and thumbnails (index.json is the manifest)
-- `packages/` — Python packages: core (loader + manifest), json (all workflow JSON), media_* (legacy frozen assets), media_assets_* (new assets)
+- `packages/` — Python packages: core (loader + manifest), json (all workflow JSON), media_* (legacy frozen assets), media_assets_* (asset shards: 01 frozen, 02 active for new templates)
 - `site/` — Astro static site (independently managed; see below)
 - `scripts/` — Python validation/sync scripts for CI and local dev (see `scripts/README.md`)
 - `blueprints/` + `blueprints_bundles.json` — reusable subgraph blueprint definitions (spec: `docs/BLUEPRINTS.md`)
@@ -137,10 +138,10 @@ For full site-specific instructions, see `site/AGENTS.md`.
 
 Formal schema: [`docs/SPEC.md`](docs/SPEC.md). Quick reference:
 
-- `templates/index.json` — English manifest. Per entry: `name` (must match the workflow JSON filename, snake_case), `title`, `description`, `mediaType` (`image`|`video`|`audio`|`3d`), `mediaSubtype`, `thumbnailVariant`, `tags`, `models`, `logos`, `date`, `usage`, `size`, `vram`, `searchRank`, `tutorialUrl`, `openSource`, `requiresCustomNodes`, `io`.
+- `templates/index.json` — English manifest. Per entry: `name` (must match the workflow JSON filename, snake_case), `title`, `description`, `mediaType` (`image`|`video`|`audio`|`3d`), `mediaSubtype`, `thumbnailVariant`, `tags`, `models`, `logos`, `date`, `usage`, `size`, `searchRank`, `tutorialUrl`, `openSource`, `minComfyUIVersion`, `requiresCustomNodes`, `io`.
 - Workflow JSON — standard ComfyUI format; embeds model metadata in `properties.models[]` (download URL, SHA256, target dir) and pins nodes via `properties.cnr_id` + `properties.ver`.
 - Thumbnails — `{name}-1.webp` (primary), `{name}-2.webp` (comparison); WebP, target <1MB, 512×512 or 768×768.
-- Bundle assignment lives in `bundles.json`; the legacy `media-*` bundles are frozen and new assets go to `media-assets-*` — see [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md).
+- Bundle assignment lives in `bundles.json`; the legacy `media-*` bundles and the `media-assets-01` shard are frozen, and new template assets go to `media-assets-02` — see [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md).
 
 ## Internationalization
 
@@ -151,13 +152,16 @@ Formal schema: [`docs/SPEC.md`](docs/SPEC.md). Quick reference:
 
 ## Claude Skills
 
-- `/adding-templates` — add new workflow templates (full workflow)
+- `/managing-templates` — add or rename workflow templates (files, index, bundles, i18n, sync)
 - `/managing-bundles` — move templates between bundles, reorder
 - `/managing-thumbnails` — add/replace/audit thumbnails
 - `/managing-mcp-index` — sync + AI-enhance `index.mcp.json` for MCP tools
 - `/managing-translations` — sync/check translations across the 11 languages
 - `/editing-site-content` — edit site page content via overrides
 - `/regenerating-ai-content` — regenerate AI descriptions, manage cache
+- `/managing-use-case-pages` — create/edit SEO use-case landing pages (supply checks, content, quality gates, PR)
+- `/importing-subgraphs` — import and register subgraph blueprints
+- `/managing-releases` — version bumps, PyPI publishing, frozen bundles, release label
 
 ## CI/CD
 
@@ -168,7 +172,7 @@ Formal schema: [`docs/SPEC.md`](docs/SPEC.md). Quick reference:
 
 - `docs/SPEC.md` — template JSON schema · `docs/BLUEPRINTS.md` — subgraph blueprint spec · `docs/I18N_GUIDE.md` — translation workflow · `docs/PUBLISHING.md` — publishing
 - `scripts/README.md` — scripts index + CI mapping · `scripts/docs/frozen_bundles.md` — frozen bundles · `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md` — MCP pipeline
-- `site/AGENTS.md` — site instructions; `site/docs/` — site PRD/TDD/design-integration guide
+- `site/AGENTS.md` — site instructions; `site/docs/` — site PRD/TDD/design-integration guide · `site/docs/use-case-page-guide.md` — SEO use-case landing pages
 
 ## Code Style
 - **Python**: Ruff linter, line-length 100, target py312. Select rules: E, F

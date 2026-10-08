@@ -12,6 +12,6 @@
 
 **Template cache:** when `templates/{name}.json` changes, its SHA-256 hash no longer matches `source_hash` → `enhance_descriptions.py` re-runs for that template. Sync only merges cache entries with a matching hash.
 
-**Template overrides:** edit `template_overrides.json` to pin `recommend` or `freshness` for specific templates. Use Cases category never syncs below `low` (no `not_recommended`).
+**Template overrides:** edit `template_overrides.json` to pin `recommend` or `freshness` for specific templates. Applied / Use Cases categories never sync below `low` (no `not_recommended`).
 
 See [`../mcp/docs/MCP_AI_ENHANCEMENT.md`](../mcp/docs/MCP_AI_ENHANCEMENT.md).

@@ -31,7 +31,7 @@ flowchart LR
 
 | Step | Script | Nature | Output |
 |------|--------|--------|--------|
-| Step 1 | `scripts/mcp/sync_index.py` | Deterministic | Template list, `capabilities` (from tags), `model`, `io`, `usage`, etc. |
+| Step 1 | `scripts/mcp/sync_index.py` | Deterministic | Template list, `capabilities` (from tags), `model`, `io`, `usage`, `minComfyUIVersion`, etc. |
 | Step 2a | `scripts/mcp/enhance_models_registry.py` | AI-assisted | Model `summary`, `strengths`, `capabilities` in `models_registry.json` |
 | Step 2b | `scripts/mcp/enhance_descriptions.py` | AI-assisted | Polished template `description` (references registry + category context) |
 
@@ -119,6 +119,16 @@ python3 scripts/mcp/enhance_descriptions.py
 ```
 
 Run **2a before 2b**. After adding new templates to `index.json`, run sync then enhance — only uncached entries are sent to the AI.
+
+Step 1 also discovers model names used by MCP templates. Missing names are added to
+`models_registry.json` with a complete pending profile (`summary`, `strengths`, and
+`capabilities`), so Step 2a can enrich them without manual JSON setup. `--check` only reports
+the missing names and never writes them.
+
+The normal `npm run sync` release preparation now runs MCP sync before bundle sync. Release CI
+does the same, which prevents newly published templates from being omitted from the packaged MCP
+index. AI enhancement remains an explicit `npm run mcp:enhance` step because CI releases must not
+depend on an AI credential.
 
 ## Step 2 input context
 
@@ -210,7 +220,9 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 | ≥ 50 | `low` |
 | &lt; 50 | `not_recommended` |
 
-**Category floor:** templates in **Use Cases** never sync below `low` (no `not_recommended`).
+**Category floor:** templates in **Use Cases** and the Applied groups (**Product & Ads**, **Character & Fashion**, **Brand & Design**) never sync below `low` (no `not_recommended`).
+
+**New-template floor:** templates published within the last 30 days (same window as freshness `new`) never sync below `medium` when usage is still low. This avoids penalizing brand-new templates that have not accumulated usage data yet.
 
 **Manual override:** `scripts/data/mcp/template_overrides.json`
 
@@ -224,7 +236,9 @@ Semantic string derived from `index.json` `usage` on each sync (`scripts/mcp/lib
 }
 ```
 
-Overrides win over usage tiers but still respect the Use Cases floor (cannot set `not_recommended` there).
+Overrides win over usage tiers but still respect the Applied / Use Cases floor
+(**Use Cases**, **Product & Ads**, **Character & Fashion**, **Brand & Design**):
+cannot set `not_recommended` there.
 
 ## API contract
 

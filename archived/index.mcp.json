@@ -187,6 +187,386 @@
         "capabilities": {
           "workflow": ["api", "image-upscale"]
         }
+      },
+      {
+        "name": "api_runway_first_last_frame",
+        "title": "Runway: First Last Frame to Video",
+        "task": "FLF2V",
+        "model": "Runway",
+        "freshness": "established",
+        "usage": 33,
+        "recommend": "not_recommended",
+        "description": "This workflow uses Runway’s first-last-frame-to-video (FLF2V) API to generate a transition video between two provided keyframes. It accepts a first and last frame image, then outputs a video interpolating the motion. Execution relies on a third-party API call, leveraging Runway’s latest frontier video generation model.",
+        "io": {
+          "inputs": ["image×2: First frame and last frame defining the start and end of the video transition"],
+          "outputs": ["video: Generated transition video between the two frames"]
+        },
+        "capabilities": {
+          "workflow": ["api", "flf2v"]
+        }
+      },
+      {
+        "name": "api_runway_gen3a_turbo_image_to_video",
+        "title": "Runway: Gen3a Turbo Image to Video",
+        "task": "Image to Video",
+        "model": "Runway",
+        "freshness": "established",
+        "usage": 57,
+        "recommend": "low",
+        "description": "Generate cinematic videos from static images using Runway Gen3a Turbo. This workflow takes a reference image as input and produces a video output, leveraging the model for high-quality motion synthesis. Execution is handled via a third-party API, with response time depending on server-side processing.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a cinematic video"],
+          "outputs": ["video: Generated cinematic video from the input image"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"]
+        }
+      },
+      {
+        "name": "api_kling_flf",
+        "title": "Kling1.6: FLF2V",
+        "task": "FLF2V",
+        "model": "Kling",
+        "freshness": "established",
+        "usage": 33,
+        "recommend": "not_recommended",
+        "description": "Upload a first and last frame to define the start and end of a video; Kling 1.6 generates a smooth transition between them, handling complex scenes with high quality. This FLF2V workflow calls a third-party API, so execution time depends on server-side response.",
+        "io": {
+          "inputs": ["image×2: First frame and last frame defining the start and end of the video transition"],
+          "outputs": ["video: Generated video bridging the first and last frame"]
+        },
+        "capabilities": {
+          "workflow": ["api", "flf2v"]
+        }
+      },
+      {
+        "name": "api_kling_i2v",
+        "title": "Kling2.0: Image to Video",
+        "task": "Image to Video",
+        "model": "Kling",
+        "freshness": "established",
+        "usage": 121,
+        "recommend": "low",
+        "description": "Generate a video from a reference image using Kling 2.0, which delivers high quality and great aesthetics. This workflow accepts a single image as input and outputs a video with controlled motion and camera movement. It operates via a third‑party API, so execution time depends on server‑side response.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a video"],
+          "outputs": ["video: Generated video with controlled motion and camera movement"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"]
+        }
+      },
+      {
+        "name": "api_kling_dual_characters_effects",
+        "title": "Kling: Dual Character Effect",
+        "task": "Video Generation",
+        "model": "Kling 1.6",
+        "freshness": "current",
+        "usage": 11,
+        "recommend": "not_recommended",
+        "description": "Upload two character images side by side to generate a video where they interact through actions like hugging, kissing, or forming a heart gesture, powered by Kling 1.6. This workflow calls a third-party API; execution time depends on server-side response.",
+        "io": {
+          "inputs": ["image×2: Two character images for the dual character interaction effect"],
+          "outputs": ["video: Generated video showing the two characters performing the requested interaction"]
+        },
+        "capabilities": {
+          "workflow": ["api"]
+        }
+      },
+      {
+        "name": "api_kling_effects",
+        "title": "Kling 1.6: Video Effects",
+        "task": "Video Generation",
+        "model": "Kling",
+        "freshness": "established",
+        "usage": 1,
+        "recommend": "not_recommended",
+        "description": "This workflow applies visual effects to a reference image using Kling 1.6, a high-quality model for complex scenes, producing a dynamic video. It requires an image as input and returns a video with effects. Execution depends on the third-party API.",
+        "io": {
+          "inputs": ["image: Reference image to apply video effects to"],
+          "outputs": ["video: Generated video with visual effects applied to the input image"]
+        },
+        "capabilities": {
+          "workflow": ["api"]
+        }
+      },
+      {
+        "name": "api_recraft_v4_1_image_to_vector",
+        "title": "Recraft 4.1: Image to Vector",
+        "task": "Image Generation",
+        "model": "Recraft",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Convert a text prompt into a bold, expressive vector image using Recraft 4.1's illustration engine. This workflow produces clean vector output ideal for logos, flat character art, or consistent branding assets, leveraging Recraft's high quality and style consistency.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "capabilities": {
+          "workflow": ["api", "vector"]
+        }
+      },
+      {
+        "name": "api_hailuo_minimax_i2v",
+        "title": "MiniMax: Image to Video",
+        "task": "Image to Video",
+        "model": "MiniMax",
+        "freshness": "established",
+        "usage": 6,
+        "recommend": "not_recommended",
+        "description": "Turn a reference image into an animated video using MiniMax’s image-to-video models (I2V-01-Director, I2V-01, or I2V-01-live). The workflow accepts a starting image and outputs a generated video with dynamic motion. Execution relies on a third‑party API, so completion time depends on server response.",
+        "io": {
+          "inputs": ["image: Reference image to use as the starting frame for video generation"],
+          "outputs": ["video: Generated video animation starting from the input image"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "MinimaxImageToVideoNode": ["I2V-01-Director", "I2V-01", "I2V-01-live"]
+          }
+        }
+      },
+      {
+        "name": "api_hailuo_minimax_t2v",
+        "title": "MiniMax: Text to Video",
+        "task": "Text to Video",
+        "model": "MiniMax",
+        "freshness": "established",
+        "usage": 8,
+        "recommend": "not_recommended",
+        "description": "Generate high-quality videos from text prompts using MiniMax's frontier video models. Provide a text description, and the workflow returns a generated video with dynamic motion. This template calls the MiniMax API and supports T2V-01 and T2V-01-Director model variants for diverse visual narratives.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video"],
+          "outputs": ["video: Generated video from the text prompt using MiniMax"]
+        },
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "MinimaxTextToVideoNode": ["T2V-01", "T2V-01-Director"]
+          }
+        }
+      },
+      {
+        "name": "api_hailuo_minimax_video",
+        "title": "MiniMax: Video",
+        "task": "Text to Video",
+        "model": "MiniMax",
+        "freshness": "established",
+        "usage": 6,
+        "recommend": "not_recommended",
+        "description": "Generate high-quality videos from text prompts using MiniMax Hailuo-02, with optional first-frame image control for guidance. This API-driven workflow supports multiple resolutions and durations. Execution relies on a third-party server response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video", "image: Optional first-frame reference image to guide the video"],
+          "outputs": ["video: Generated video from the text prompt using MiniMax Hailuo-02"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-video"]
+        }
+      },
+      {
+        "name": "api_reve_image_create",
+        "title": "Reve: Text to Image",
+        "task": "Text to Image",
+        "model": "Reve",
+        "freshness": "current",
+        "usage": 15,
+        "recommend": "not_recommended",
+        "description": "This workflow creates high-quality images from text prompts using Reve’s image generation model, which delivers detailed aesthetics and accurate text rendering. It takes a text description as input and outputs a generated image. Execution uses a third-party API, so response time depends on server-side processing.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired image"],
+          "outputs": ["image: Generated image"]
+        },
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
+        "name": "api_reve_image_edit",
+        "title": "Reve: Image Edit",
+        "task": "Image Edit",
+        "model": "Reve",
+        "freshness": "current",
+        "usage": 15,
+        "recommend": "not_recommended",
+        "description": "Upload an image with text instructions to edit it using Reve's editing model. It supports object removal, restoration, and recomposition with optional upscaling. This workflow calls a third-party API, so execution time depends on server-side response.",
+        "io": {
+          "inputs": ["image: Input image to be edited", "text: Text instructions describing the desired edits"],
+          "outputs": ["image: Edited output image"]
+        },
+        "capabilities": {
+          "workflow": ["api", "image-edit"]
+        }
+      },
+      {
+        "name": "api_reve_image_remix",
+        "title": "Reve: Image Remix And Edit",
+        "task": "Image Edit",
+        "model": "Reve",
+        "freshness": "current",
+        "usage": 10,
+        "recommend": "not_recommended",
+        "description": "Remix and edit images by combining up to three reference images into a single output using the Reve model. This workflow calls a third-party API, so execution time depends on server‑side response. Input: three reference images. Output: one blended, remixed image.",
+        "io": {
+          "inputs": ["image×3: Reference images to combine and remix into a single output"],
+          "outputs": ["image: Remixed image combining elements from all inputs"]
+        },
+        "capabilities": {
+          "workflow": ["image-edit", "api"]
+        }
+      },
+      {
+        "name": "api_ltxv_image_to_video",
+        "title": "LTX-2: Image to Video",
+        "task": "Image to Video",
+        "model": "LTX-2",
+        "freshness": "established",
+        "usage": 184,
+        "recommend": "low",
+        "description": "Transform a static image into a dynamic cinematic video using the LTX‑2 model (Pro or Fast variant). The workflow accepts a reference image and generates a video with natural motion and optional synchronized audio. This workflow calls a third‑party API, so execution time depends on server‑side response.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a cinematic video sequence"],
+          "outputs": ["video: Generated cinematic video with natural motion and optional audio"]
+        },
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "LtxvApiImageToVideo": ["LTX-2 (Pro)", "LTX-2 (Fast)"]
+          }
+        }
+      },
+      {
+        "name": "api_ltxv_text_to_video",
+        "title": "LTX-2: Text to Video",
+        "task": "Text to Video",
+        "model": "LTX-2",
+        "freshness": "established",
+        "usage": 28,
+        "recommend": "not_recommended",
+        "description": "Use Lightricks LTX-2, an affordable medium-quality model that natively generates audio with video. This workflow accepts a text prompt and returns a generated video, with Fast and Pro mode options. It calls a third-party API, so execution time depends on server response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired video content"],
+          "outputs": ["video: Generated high-quality video from the text prompt with LTX-2"]
+        },
+        "capabilities": {
+          "workflow": ["text-to-video", "api"],
+          "model_options": {
+            "LtxvApiTextToVideo": ["LTX-2 (Pro)", "LTX-2 (Fast)"]
+          }
+        }
+      },
+      {
+        "name": "api_kling_avatar2",
+        "title": "Kling: Avatar 2.0",
+        "task": "Lip Sync",
+        "model": "Kling",
+        "freshness": "current",
+        "usage": 17,
+        "recommend": "not_recommended",
+        "description": "This workflow uses the Kling Avatar 2.0 API to generate a talking avatar video from a portrait image and audio file. It produces synchronized lip movements and natural facial expressions by leveraging Kling's top-tier video generation capabilities. Execution goes through a third-party API, so response time depends on server-side processing.",
+        "io": {
+          "inputs": ["image: Portrait image of the avatar", "audio: Audio file for the avatar to lip-sync to"],
+          "outputs": ["video: Talking avatar video with synchronized lips"]
+        },
+        "capabilities": {
+          "workflow": ["lip-sync", "api"]
+        }
+      },
+      {
+        "name": "api_veo2_i2v",
+        "title": "Veo2: Image to Video",
+        "task": "Image to Video",
+        "model": "Veo",
+        "freshness": "established",
+        "usage": 13,
+        "recommend": "not_recommended",
+        "description": "Generate a video from an input image using the Google Veo2 API. This workflow controls aspect ratio, duration, and other parameters, and its execution time depends on server-side response. It uses the veo-2.0-generate-001 model to animate a reference image into a video output.",
+        "io": {
+          "inputs": ["image: Reference image to animate into a video"],
+          "outputs": ["video: Generated video from the input image"]
+        },
+        "minComfyUIVersion": "0.3.32",
+        "capabilities": {
+          "workflow": ["image-to-video", "api"],
+          "model_options": {
+            "VeoVideoGenerationNode": ["veo-2.0-generate-001"]
+          }
+        }
+      },
+      {
+        "name": "api_veo3",
+        "title": "Veo3: Image to Video",
+        "task": "Image to Video",
+        "model": "Google",
+        "freshness": "established",
+        "usage": 67,
+        "recommend": "low",
+        "description": "This workflow uses Google’s Veo 3 API to generate an 8‑second video from a text prompt or an image, with optional audio and prompt enhancement. It supports multiple model versions for speed or quality. The primary input is a prompt; the output is a video file.",
+        "io": {
+          "inputs": ["image: Optional input image to animate", "text: Text prompt describing the video content"],
+          "outputs": ["video: Generated video with optional audio"]
+        },
+        "minComfyUIVersion": "0.3.49",
+        "capabilities": {
+          "workflow": ["api", "image-to-video", "text-to-video"],
+          "model_options": {
+            "Veo3VideoGenerationNode": ["veo-3.1-generate", "veo-3.1-fast-generate", "veo-3.1-lite", "veo-3.0-generate-001", "veo-3.0-fast-generate-001"]
+          }
+        }
+      },
+      {
+        "name": "api_openai_dall_e_2_inpaint",
+        "title": "OpenAI: Dall-E 2 Inpaint",
+        "task": "Image Inpainting",
+        "model": "OpenAI",
+        "freshness": "established",
+        "usage": 7,
+        "recommend": "not_recommended",
+        "description": "Edit images using inpainting with OpenAI DALL-E 2 via a third-party API. You supply an original image, a mask to define the area to regenerate, and a text prompt describing the desired content. The workflow returns the inpainted result. Execution depends on the server-side API response.",
+        "io": {
+          "inputs": ["image×2: Input image and mask for inpainting area selection", "text: Text prompt describing the desired fill content"],
+          "outputs": ["image: Inpainted result image"]
+        },
+        "minComfyUIVersion": "0.3.30",
+        "capabilities": {
+          "workflow": ["inpainting", "api"]
+        }
+      },
+      {
+        "name": "api_openai_dall_e_2_t2i",
+        "title": "OpenAI: Dall-E 2 Text to Image",
+        "task": "Text to Image",
+        "model": "OpenAI",
+        "freshness": "established",
+        "usage": 6,
+        "recommend": "not_recommended",
+        "description": "Generate images from text prompts using the OpenAI DALL-E 2 API in ComfyUI. This workflow accepts a descriptive text prompt as input and returns a generated image, with support for configurable image size and number of outputs. Execution time depends on the third-party API response.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired image"],
+          "outputs": ["image: Generated image"]
+        },
+        "minComfyUIVersion": "0.3.30",
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
+        "name": "api_openai_dall_e_3_t2i",
+        "title": "OpenAI: Dall-E 3 Text to Image",
+        "task": "Text to Image",
+        "model": "OpenAI",
+        "freshness": "established",
+        "usage": 10,
+        "recommend": "not_recommended",
+        "description": "Generate high-quality images from text prompts using OpenAI's DALL-E 3 API. This workflow takes a user-provided text description and returns a generated image, supporting configurable size and HD quality. API access is required, with response time dependent on the server.",
+        "io": {
+          "inputs": ["text: Text prompt describing the desired image"],
+          "outputs": ["image: Generated high-quality image"]
+        },
+        "minComfyUIVersion": "0.3.30",
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
       }
     ]
   }

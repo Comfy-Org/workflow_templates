@@ -14,6 +14,7 @@ import {
   tokenize,
   searchOptions,
 } from '../../../src/lib/search-config';
+import { applyRanking, fetchRankingMap } from '../../../src/lib/ranking';
 
 interface SearchDocument {
   id: string;
@@ -99,8 +100,9 @@ export async function buildSearchIndex(): Promise<void> {
 
   const documents: SearchDocument[] = [];
 
-  // Hub API is the primary source; content collection is only for local/offline builds
-  const hubEntries = await fetchIndexEntries();
+  // Override usage with Algolia run_clicks so the popover's "X runs" matches ranking.
+  // Both fetches are independent — run them concurrently.
+  const [rankingMap, hubEntries] = await Promise.all([fetchRankingMap(), fetchIndexEntries()]);
   if (hubEntries) {
     logger.info(`Building search index from hub API (${hubEntries.length} entries)`);
 
@@ -141,12 +143,14 @@ export async function buildSearchIndex(): Promise<void> {
         name,
         slug,
         thumbnail: data.thumbnailUrl || '',
-        usage: data.usage || 0,
+        usage: applyRanking(shareId, data.usage, rankingMap),
         tagsArray: tags.map(tagDisplayName),
       });
     }
   } else {
-    // No PUBLIC_HUB_API_URL — local/offline build, use content collection
+    // No PUBLIC_HUB_API_URL — local/offline build from the content collection.
+    // These entries lack shareId, so the ranking map can't join; usage falls back
+    // to the local value (offline builds have neither the hub API nor Algolia).
     const files = fs
       .readdirSync(CONTENT_DIR)
       .filter((f) => f.endsWith('.json') && !f.includes('/'));
@@ -181,7 +185,7 @@ export async function buildSearchIndex(): Promise<void> {
         name,
         slug,
         thumbnail: thumbnails[0] || '',
-        usage: data.usage || 0,
+        usage: applyRanking(shareId, data.usage, rankingMap),
         tagsArray: tags.map(tagDisplayName),
       });
     }

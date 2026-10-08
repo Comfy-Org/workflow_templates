@@ -6,17 +6,24 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
+import type { GeneratedSeoContent } from './schema';
+
 const MODELS_DIR = path.join(process.cwd(), 'src/content/landing/models');
 const USE_CASES_DIR = path.join(process.cwd(), 'src/content/landing/use-cases');
 
-function contentPasses(dir: string, slug: string): boolean {
+function readContent(dir: string, slug: string): GeneratedSeoContent | null {
   const contentPath = path.join(dir, `${slug}.json`);
-  if (!fs.existsSync(contentPath)) return false;
+  if (!fs.existsSync(contentPath)) return null;
   try {
-    return JSON.parse(fs.readFileSync(contentPath, 'utf-8')).qualityFailed !== true;
+    return JSON.parse(fs.readFileSync(contentPath, 'utf-8')) as GeneratedSeoContent;
   } catch {
-    return false;
+    return null;
   }
+}
+
+function contentPasses(dir: string, slug: string): boolean {
+  const content = readContent(dir, slug);
+  return content !== null && content.qualityFailed !== true;
 }
 
 function listSlugs(dir: string): string[] {
@@ -26,6 +33,14 @@ function listSlugs(dir: string): string[] {
     .filter((f) => f.endsWith('.json'))
     .map((f) => f.slice(0, -'.json'.length));
 }
+
+/**
+ * The authored landing content itself, for callers that need to feed it to the
+ * same indexability helper a route calls rather than just ask pass/fail.
+ * `content-loaders.ts` is the `astro:content` twin of this, for page renders.
+ */
+export const readModelContent = (slug: string): GeneratedSeoContent | null =>
+  readContent(MODELS_DIR, slug);
 
 export const modelContentPasses = (slug: string): boolean => contentPasses(MODELS_DIR, slug);
 export const useCaseContentPasses = (slug: string): boolean => contentPasses(USE_CASES_DIR, slug);

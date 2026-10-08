@@ -27,6 +27,7 @@ _lib_dir = Path(__file__).resolve().parent.parent / "lib"
 if str(_lib_dir) not in sys.path:
     sys.path.insert(0, str(_lib_dir))
 
+from index_format import dumps_index  # noqa: E402
 from paths import WHITELIST_FILE  # noqa: E402
 
 
@@ -187,26 +188,11 @@ class CustomNodesSyncer:
         index_file = self.templates_dir / self.language_files[lang]
         
         try:
-            # Use the same formatting as sync_i18n.py
-            json_str = json.dumps(data, ensure_ascii=False, indent=2)
-            
-            # Compact arrays (like tags, models, requiresCustomNodes) to single line
-            def compact_array(match):
-                content = match.group(1)
-                # Only compact if array contains only strings and is not too long
-                try:
-                    array_content = json.loads(f"[{content}]")
-                    if all(isinstance(item, str) for item in array_content) and len(content) < 200:
-                        return f"[{', '.join(json.dumps(item, ensure_ascii=False) for item in array_content)}]"
-                except:
-                    pass
-                return match.group(0)
-            
-            # Compact arrays that span multiple lines
-            json_str = re.sub(r'\[\s*\n\s*([^[\]]*?)\s*\n\s*\]', compact_array, json_str, flags=re.DOTALL)
-            
+            # Shared with sync_is_app.py: this joined arrays with ", " while the
+            # committed index files use ",", so whichever script wrote last
+            # reformatted every array the other had written.
             with open(index_file, 'w', encoding='utf-8') as f:
-                f.write(json_str)
+                f.write(dumps_index(data))
             
             self.logger.info(f"Saved {self.language_files[lang]}")
         except Exception as e:

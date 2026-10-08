@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { isAudioFile, isMediaFile, isVideoFile } from '../../src/lib/media-utils';
+import {
+  heroTemplateFor,
+  isAudioFile,
+  isMediaFile,
+  isVideoFile,
+} from '../../src/lib/media-utils';
 
 describe('isVideoFile', () => {
   it.for([
@@ -37,5 +42,29 @@ describe('isMediaFile', () => {
     ['thumb.png', false],
   ] as [string, boolean][])('isMediaFile(%s) → %s', ([filename, expected]) => {
     expect(isMediaFile(filename)).toBe(expected);
+  });
+});
+
+describe('heroTemplateFor', () => {
+  it('returns a video-only lead so it fronts its own page', () => {
+    const lead = { name: 'app', thumbnails: ['demo.mp4'] };
+    const still = { name: 'still', thumbnails: ['thumb.webp'] };
+    expect(heroTemplateFor([lead, still])).toBe(lead);
+  });
+
+  it('returns the lead when it already has a still', () => {
+    const lead = { name: 'lead', thumbnails: ['thumb.webp'] };
+    const other = { name: 'other', thumbnails: ['thumb2.webp'] };
+    expect(heroTemplateFor([lead, other])).toBe(lead);
+  });
+
+  it('falls back to the first template with a still when the lead has neither', () => {
+    const lead = { name: 'nomedia', thumbnails: [] };
+    const still = { name: 'still', thumbnails: ['thumb.webp'] };
+    expect(heroTemplateFor([lead, still])).toBe(still);
+  });
+
+  it('returns undefined for an empty list', () => {
+    expect(heroTemplateFor([])).toBeUndefined();
   });
 });

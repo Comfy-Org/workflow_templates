@@ -11,7 +11,7 @@ Step 1 of the MCP pipeline (deterministic sync):
   - Templates with 2+ API model nodes → skip model_options (logged to scripts/.output/sync_index.log)
   - freshness → semantic label derived from index.json `date`; see freshness_score.py
   - recommend → semantic label derived from usage; see recommend_score.py
-    Manual overrides in template_overrides.json; Use Cases never below `low`
+    Manual overrides in template_overrides.json; Applied/Use Cases never below `low`
   - Skips instructional categories: Node Basics, LLM, Getting Started
 
 Step 2 (separate): AI reads models_registry.json to polish descriptions.
@@ -69,11 +69,16 @@ SYNC_LOG_FILE = SCRIPTS_ROOT / ".output" / "sync_index.log"
 
 INDEX_GROUP_TO_MCP_CATEGORY: dict[str, str] = {
     "Use Cases": "Use Cases",
+    "Product & Ads": "Product & Ads",
+    "Character & Fashion": "Character & Fashion",
+    "Brand & Design": "Brand & Design",
     "Image": "Image",
     "Video": "Video",
     "Audio": "Audio",
     "3D Model": "3D Model",
-    "Utility": "Utility",
+    "Image Tools": "Image Tools",
+    "Video Tools": "Video Tools",
+    "Vector": "Vector",
 }
 
 EXCLUDED_MCP_CATEGORIES = frozenset({
@@ -87,6 +92,23 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
         "Concrete workflow examples that showcase specific applications, effects, and content. "
         "These are purpose-built workflows for fixed use cases rather than general-purpose generation, "
         "though they can be adapted with basic modifications."
+    ),
+    "Product & Ads": (
+        "Applied workflows for product shots, placements, UGC-style ads, and commercial sequences. "
+        "These are purpose-built examples for marketing and merchandising "
+        "rather than general-purpose generation."
+    ),
+    "Character & Fashion": (
+        "Applied workflows for character sheets, multi-angle portraits, "
+        "fashion, and identity-consistent looks. "
+        "These are purpose-built examples for character and apparel work "
+        "rather than general-purpose generation."
+    ),
+    "Brand & Design": (
+        "Applied workflows for brand systems, graphic redesign, posters, logos, "
+        "and layout remixes. "
+        "These are purpose-built examples for design production "
+        "rather than general-purpose generation."
     ),
     "Image": (
         "General-purpose workflow templates for native image generation, including text-to-image, "
@@ -104,9 +126,17 @@ CATEGORY_DESCRIPTIONS: dict[str, str] = {
         "General-purpose workflow templates for native 3D model generation, including image-to-3D "
         "and other core 3D workflows supported out of the box."
     ),
-    "Utility": (
-        "Tooling and utility workflows for supporting tasks such as upscaling, background removal, "
-        "image preprocessing, and other image or video processing helpers."
+    "Image Tools": (
+        "Tooling workflows for image processing helpers such as upscaling, background removal, "
+        "inpainting, outpainting, relighting, pose and depth extraction, and layer decomposition."
+    ),
+    "Video Tools": (
+        "Tooling workflows for video processing helpers such as upscaling, frame interpolation, "
+        "background removal, video extend, pose and depth extraction, and clip editing."
+    ),
+    "Vector": (
+        "Workflow templates for generating and tracing scalable vector graphics (SVG), "
+        "including text-to-vector and image-to-vector conversion."
     ),
 }
 
@@ -125,6 +155,7 @@ TAG_TO_CAPABILITY: dict[str, str] = {
     "ControlNet": "controlnet",
     "Upscaling": "image-upscale",
     "Image Upscale": "image-upscale",
+    "Video Upscale": "video-upscale",
     "FLF2V": "flf2v",
     "Lip Sync": "lip-sync",
     "Text to 3D": "text-to-3d",
@@ -139,11 +170,8 @@ TAG_TO_CAPABILITY: dict[str, str] = {
     "Style Reference": "style-reference",
     "Character Reference": "character-reference",
     "Brand Design": "brand-design",
-    "Product": "product-mockup",
-    "Mockup": "product-mockup",
-    "Fashion": "virtual-try-on",
     "Relight": "relight",
-    "Background Removal": "background-removal",
+    "Remove Background": "background-removal",
     "Depth Estimation": "depth-estimation",
     "Frame Interpolation": "frame-interpolation",
     "Video Extension": "video-extension",
@@ -196,12 +224,33 @@ def capabilities_from_tags(tags: list[str]) -> list[str]:
     return caps
 
 
+def _apply_name_capability_overrides(name: str, workflow: list[str]) -> list[str]:
+    """Correct misleading tag-derived capabilities using template name hints."""
+    name_l = name.lower()
+    caps = list(workflow)
+    if "image_edit" in name_l or "img_edit" in name_l:
+        if "text-to-image" in caps:
+            caps = [c for c in caps if c != "text-to-image"]
+        if "image-edit" not in caps:
+            caps.append("image-edit")
+    if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
+        if "image-upscale" in caps:
+            caps = [c for c in caps if c != "image-upscale"]
+        if "video-upscale" not in caps:
+            caps.append("video-upscale")
+    return caps
+
+
 def build_capabilities(
     tags: list[str],
     model_options: dict[str, list[str]] | None,
+    *,
+    template_name: str = "",
 ) -> dict[str, Any] | None:
     """Unified capabilities object: workflow features + optional API model dropdowns."""
     workflow = capabilities_from_tags(tags)
+    if template_name:
+        workflow = _apply_name_capability_overrides(template_name, workflow)
     if model_options and "api" not in workflow:
         workflow = ["api", *workflow]
     if not workflow and not model_options:
@@ -264,11 +313,15 @@ _HAS_VIDEO = [
 
 
 def infer_task(name: str, group_type: str, tags: list[str]) -> str:
+    name_l = name.lower()
+    if "image_edit" in name_l or "img_edit" in name_l:
+        return "Image Edit"
+    if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
+        return "Video Upscale"
     for tag in tags:
         if tag in TAG_TO_CAPABILITY and tag not in META_TAGS:
             if tag not in ("ControlNet", "Upscaling", "Inpainting", "Outpainting"):
                 return tag
-    name_l = name.lower()
     pairs: list[tuple[list[str], str]] = [
         (["text_to_3d", "text-to-3d"], "Text to 3D"),
         (["img2_3d", "img2-3d", "image_to_3d", "image-to-3d"], "Image to 3D"),
@@ -281,12 +334,13 @@ def infer_task(name: str, group_type: str, tags: list[str]) -> str:
         (["upscale"], "Image Upscaling"),
         (["inpaint"], "Image Inpainting"),
         (["segment"], "Image Segmentation"),
-        (["remove"], "Background Removal"),
+        (["remove"], "Remove Background"),
         (["depth"], "Depth Estimation"),
         (["matting"], "Image Matting"),
         (["vid2vid", "video_to_video", "video-to-video"], "Video to Video"),
         (["frame_interpolation", "slowmo"], "Frame Interpolation"),
         (["text_to_music", "text-to-music", "t2m"], "Text to Music"),
+        (["speech_to_text", "speech-to-text"], "Speech to Text"),
         (["text_to_speech", "text-to-speech", "tts"], "Text to Speech"),
         (["audio_to_audio", "audio-to-audio", "a2a"], "Audio to Audio"),
         (["voice_conversion", "voice_convert"], "Voice Conversion"),
@@ -319,10 +373,14 @@ def infer_task_type(name: str) -> str:
         return "t2v"
     if any(x in name_l for x in ["i2v", "img2vid", "img_to_vid", "image_to_video", "image-to-video", "r2v", "reference_to_video"]):
         return "i2v"
+    if "image_edit" in name_l or "img_edit" in name_l:
+        return "i2i"
     if any(x in name_l for x in ["t2i", "text_to_image", "text-to-image"]):
         return "t2i"
-    if any(x in name_l for x in ["i2i", "img_edit", "img2img"]):
+    if any(x in name_l for x in ["i2i", "img2img"]):
         return "i2i"
+    if "video_upscale" in name_l or "upscale_video" in name_l or "gan_upscaler" in name_l:
+        return "video-upscale"
     if any(x in name_l for x in ["segment", "matting"]):
         return "seg"
     if "upscale" in name_l:
@@ -337,6 +395,12 @@ def infer_task_type(name: str) -> str:
         return "t2-3d"
     if any(x in name_l for x in ["img2_3d", "img2-3d", "image_to_3d", "image-to-3d"]):
         return "i2-3d"
+    if any(x in name_l for x in ["speech_to_text", "speech-to-text"]):
+        return "stt"
+    if any(x in name_l for x in ["voice_clone", "voice-clone"]):
+        return "voice-clone"
+    if any(x in name_l for x in ["text_to_speech", "text-to-speech", "tts"]):
+        return "tts"
     if any(x in name_l for x in ["text_to_audio", "text-to-audio", "text_to_music", "text-to-music"]):
         return "t2a"
     if any(x in name_l for x in ["text_gen", "llm", "chat"]):
@@ -448,6 +512,11 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
             inputs=[_encode_slot("image", "Input image")],
             outputs=[_encode_slot("image", "Segmentation mask")],
         )
+    if task_type == "video-upscale":
+        return _io(
+            inputs=[_encode_slot("video", "Input video")],
+            outputs=[_encode_slot("video", "Upscaled video")],
+        )
     if task_type == "upscale":
         return _io(
             inputs=[_encode_slot("image", "Input image")],
@@ -497,6 +566,24 @@ def infer_io(task_type: str, node_types: list[str]) -> dict:
         return _io(
             inputs=[_encode_slot("text", "Audio prompt")],
             outputs=[_encode_slot("audio", "Generated audio")],
+        )
+    if task_type == "tts":
+        return _io(
+            inputs=[_encode_slot("text", "Prompt")],
+            outputs=[_encode_slot("audio", "Generated speech")],
+        )
+    if task_type == "voice-clone":
+        return _io(
+            inputs=[
+                _encode_slot("audio", "Reference voice recording"),
+                _encode_slot("text", "Prompt"),
+            ],
+            outputs=[_encode_slot("audio", "Generated speech")],
+        )
+    if task_type == "stt":
+        return _io(
+            inputs=[_encode_slot("audio", "Audio to transcribe")],
+            outputs=[_encode_slot("text", "Transcription")],
         )
     out_type = "video" if has_vid else "image"
     return _io(
@@ -610,7 +697,7 @@ def build_template_entry(
     if len(api_model_nodes) > 1:
         multi_api_skips.append((name, api_model_nodes))
         model_options = None
-    capabilities = build_capabilities(tags, model_options)
+    capabilities = build_capabilities(tags, model_options, template_name=name)
 
     usage = tpl.get("usage", 0)
     node_types = scan_workflow_nodes(name)
@@ -628,7 +715,7 @@ def build_template_entry(
 
     entry = {
         "name": name,
-        "title": tpl.get("title", name),
+        "title": str(tpl.get("title", name)).strip(),
         "task": task,
         "model": model,
         "freshness": freshness,
@@ -636,11 +723,15 @@ def build_template_entry(
         "recommend": resolve_recommend(
             usage,
             mcp_category=mcp_category,
+            template_date=tpl.get("date"),
             override=override_row.get("recommend"),
         ),
         "description": desc,
         "io": io_info,
     }
+    min_version = str(tpl.get("minComfyUIVersion") or "").strip()
+    if min_version:
+        entry["minComfyUIVersion"] = min_version
     if capabilities:
         entry["capabilities"] = capabilities
     if cached.get("io") and cache_matches_workflow(name, cached):
@@ -740,6 +831,31 @@ def sync(
     return new_data, added, removed, warnings, skipped_local, multi_api_skips
 
 
+def missing_registry_models(mcp_data: list[dict]) -> list[str]:
+    """Return model names used by MCP templates but absent from the registry."""
+    used = {
+        str(template.get("model", "")).strip()
+        for group in mcp_data
+        for template in group.get("templates", [])
+        if str(template.get("model", "")).strip()
+    }
+    return sorted(used - set(MODELS_REGISTRY), key=str.casefold)
+
+
+def add_registry_placeholders(model_names: list[str]) -> None:
+    """Seed complete profiles so mcp:models can enrich newly discovered models."""
+    if not model_names:
+        return
+    registry = dict(MODELS_REGISTRY)
+    for model_name in model_names:
+        registry[model_name] = {
+            "summary": "Pending model-specific profile.",
+            "strengths": [],
+            "capabilities": [],
+        }
+    MODELS_REGISTRY_FILE.write_text(dumps_compact_arrays(registry), encoding="utf-8")
+
+
 def _print_multi_api_skips(multi_api_skips: list[tuple[str, list[str]]]) -> None:
     if not multi_api_skips:
         return
@@ -776,6 +892,7 @@ def main() -> None:
         log_lines.append(scan_msg)
 
     new_data, added, removed, warnings, skipped_local, multi_api_skips = sync(node_index)
+    new_models = missing_registry_models(new_data)
     total = sum(len(g.get("templates", [])) for g in new_data)
 
     if multi_api_skips:
@@ -794,6 +911,7 @@ def main() -> None:
         print(f"  Added:   {len(added)}")
         print(f"  Removed: {len(removed)}")
         print(f"  Skipped (local-only): {len(skipped_local)}")
+        print(f"  New registry models: {len(new_models)}")
         if added:
             for n in added:
                 print(f"    + {n}")
@@ -805,6 +923,9 @@ def main() -> None:
                 print(f"    ~ {n}")
             if len(skipped_local) > 10:
                 print(f"    ... and {len(skipped_local) - 10} more")
+        if new_models:
+            for model_name in new_models:
+                print(f"    + model: {model_name}")
         if warnings:
             for w in warnings:
                 print(f"    ! {w}")
@@ -813,6 +934,7 @@ def main() -> None:
         return
 
     OUTPUT_FILE.write_text(dumps_compact_arrays(new_data), encoding="utf-8")
+    add_registry_placeholders(new_models)
 
     print(f"Written: {OUTPUT_FILE}")
     print(f"   Total: {total} templates in {len(new_data)} groups")
@@ -826,6 +948,10 @@ def main() -> None:
             print(f"     - {n}")
     if skipped_local:
         print(f"   Skipped local-only: {len(skipped_local)}")
+    if new_models:
+        print(f"   Added registry placeholders: {len(new_models)}")
+        for model_name in new_models:
+            print(f"     + {model_name}")
     if warnings:
         print(f"   Warnings: {len(warnings)}")
         for w in warnings:

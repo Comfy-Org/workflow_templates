@@ -1,24 +1,124 @@
-// Configuration for @lobehub/i18n-cli
-// Used to auto-generate translations using OpenAI
-// Run: pnpm locale
+// Configuration for @lobehub/i18n-cli — translates the hub workflow CONTENT
+// (titles, descriptions, meta, how-to, FAQs) from the English content-of-record
+// into each supported locale's machine layer. Run: `pnpm locale`.
+//
+// Kept in CommonJS to match the tooling. The reference prompt is composed from
+// the committed glossary so glossary + prompt never drift.
+//
+// Single-locale mode (HUB_I18N_LOCALE=<locale>): translate ONE locale and inject
+// that locale's product-UI terminology (the synced mirror + curated overrides)
+// into the prompt. This is the only way to feed per-locale terms — the all-locales
+// run shares one reference prompt across every output locale, so a locale's mirror
+// cannot be injected there. It also paces one locale at a time to stay under the
+// OpenAI rate limit. With no env set the config keeps its original all-locales
+// behavior (no per-locale terms) for local runs.
 const { defineConfig } = require('@lobehub/i18n-cli');
+const fs = require('node:fs');
+const path = require('node:path');
+// The one implementation of the override layer, shared with the TypeScript
+// scripts under scripts/i18n. It lives in CommonJS because node requires this
+// config directly and cannot load a TypeScript module.
+const { applyOverrides } = require('./scripts/i18n/glossary-overrides.cjs');
+
+const GLOSSARY_DIR = path.join(__dirname, 'i18n', 'glossary');
+
+function readJson(file, fallback) {
+  try {
+    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+  } catch {
+    return fallback;
+  }
+}
+
+let preserveTerms = [];
+try {
+  preserveTerms = require('./i18n/glossary/preserve-terms.json');
+} catch {
+  // Glossary not synced yet — the deterministic validator still enforces terms.
+}
+
+const ALL_LOCALES = ['zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'];
+const singleLocale = process.env.HUB_I18N_LOCALE || null;
+const outputLocales = singleLocale ? [singleLocale] : ALL_LOCALES;
+
+// The glossary is selected once by `pnpm i18n:glossary` and written to
+// effective/<locale>.json, which the AI reviewer reads too. Selecting it here as
+// well is what broke the Russian run: this side capped the mirror and the
+// reviewer did not, so the reviewer enforced terms the translator never saw.
+// Falls back to the raw mirror for a local run that has not synced the glossary,
+// merged through the shared `applyOverrides` so this side honours a retraction
+// (a `null` in the overrides file) exactly as the reviewer and the validator do.
+function terminologyBlock(locale) {
+  const effective = readJson(path.join(GLOSSARY_DIR, 'effective', `${locale}.json`), null);
+  const merged = new Map(
+    Object.entries(
+      effective ??
+        applyOverrides(
+          readJson(path.join(GLOSSARY_DIR, 'mirror', `${locale}.json`), {}),
+          readJson(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
+        )
+    )
+  );
+  if (merged.size === 0) return '';
+  const lines = [...merged.entries()].map(([en, loc]) => `- ${en} → ${loc}`).join('\n');
+  return `\n\nProduct-UI terminology for this locale — when the English text contains one of these terms, translate it to exactly the paired term so hub content matches the ComfyUI app UI:\n${lines}`;
+}
+
+const reference = `This is SEO page content for Comfy Workflows (comfy.org/workflows), a catalog of ComfyUI workflow templates. Each value is a workflow's title, description, meta description, extended description, how-to steps, suggested use cases, or FAQ. Preserve JSON structure exactly: translate only string values, never keys, and keep every array the same length.
+
+The text may contain placeholder tokens of the form {{PT0}}, {{PT1}}, {{PT2}}, and so on — they stand in for brand, product, model, and node names. Reproduce EVERY token exactly as written and in place: never translate, remove, reorder, merge, or add tokens, even when rephrasing or shortening a sentence.
+
+Never translate these proper nouns (brand, product, model, and node names) — keep them byte-for-byte:
+${preserveTerms.join(', ')}
+Also keep any URL, file name, and share id unchanged.
+
+Translate for search intent, not word-for-word: use the words each market actually searches for. Common technique terms (inpainting, upscaling, image to video, text to image, etc.) SHOULD be translated to the natural local term, and should match the wording used in the ComfyUI product UI for that language.
+
+Tone: direct, factual, creator-first. The human directs the model; never phrase it as the AI creating for the user. Do not introduce hype words (no local equivalents of "stunning", "powerful", "seamless", "effortless", "unlock", "revolutionary").
+
+Chinese: for 'zh' use ONLY Simplified Chinese characters; for 'zh-TW' use ONLY Traditional Chinese with Taiwan terminology. Never mix Simplified and Traditional within one locale.`;
 
 module.exports = defineConfig({
-  modelName: 'gpt-4.1',
-  splitToken: 1024,
+  // Translation model, still overridable by env so a bad id can be reverted from a
+  // repo variable without a code change. A wrong id fails every translation call,
+  // so the ability to switch back instantly is the reason the override stays.
+  //
+  // gpt-4.1 was the previous default because it was the one all ten locales had
+  // actually been run through. It is now safe to raise it on evidence rather than
+  // hope: the AI reviewer scores the output, so a regression shows up as findings
+  // instead of going unnoticed. Revert to 'gpt-4.1' if this model regresses.
+  //
+  // The choice is bounded by the CLI, not just by model quality. lobe-i18n sizes
+  // each request from a context-window table it ships internally, computing the
+  // chunk limit as (contextWindow[modelName] - promptTokens) / 3 and applying
+  // `splitToken` below only when it is smaller than that. A model missing from
+  // that table makes the limit NaN, every `<=` comparison false, and the splitter
+  // emit one key per request plus a leading empty chunk, which multiplies calls
+  // and prompt overhead and would push us straight into the rate limit. So the id
+  // set here MUST be one the installed CLI knows about; `i18n-translator-model`
+  // asserts exactly that, and is the check to run before raising this again.
+  modelName: process.env.HUB_I18N_MODEL || 'gpt-5.2',
+  // GPT-5.x reasoning models accept only the default temperature and reject any
+  // explicit value with a 400. lobe-i18n defaults this to 0 and always sends it,
+  // so without pinning it to 1 here every translation call fails on the newer
+  // model. Determinism now comes from the reference prompt and the deterministic
+  // enforcement pass rather than from a zero temperature.
+  temperature: 1,
+  // Larger chunks send the system prompt fewer times (less token overhead).
+  splitToken: 6000,
+  // Serial: paced for the org's OpenAI tier (30k TPM). Raise once the tier is bumped.
+  concurrency: 1,
   saveImmediately: true,
-  entry: 'src/i18n/locales/en.json',
+  // Force OpenAI's JSON mode (response_format: json_object). gpt-5.2 in
+  // plain-text mode appends a stray closing brace after otherwise valid JSON
+  // (miscounting the {{PTnn}} placeholder braces); lobe rejects the chunk, which
+  // froze every locale's translation run from 2026-08-14 on. JSON mode makes the
+  // API guarantee parseable output. A model rejecting the flag fails with a 400.
+  experimental: { jsonMode: true },
+  // content/ holds ONLY locale files, so it is a clean lobe entry/output dir.
+  entry: 'src/i18n/content/en.json',
   entryLocale: 'en',
-  output: 'src/i18n/locales',
-  outputLocales: ['zh', 'zh-TW', 'ja', 'ko', 'es', 'fr', 'ru', 'tr', 'ar', 'pt-BR'],
-  reference: `
-    ComfyUI-specific terms to keep untranslated: ComfyUI, Comfy Cloud, workflow, node, VRAM, FLUX, SDXL, VAE, LoRA, checkpoint.
-    
-    IMPORTANT Chinese Translation Guidelines:
-    - For 'zh' locale: Use ONLY Simplified Chinese characters (简体中文).
-    - For 'zh-TW' locale: Use ONLY Traditional Chinese characters (繁體中文).
-    - NEVER mix Simplified and Traditional Chinese characters within the same locale.
-    
-    Keep technical terms consistent with ComfyUI documentation.
-  `,
+  output: 'src/i18n/content',
+  outputLocales,
+  reference: singleLocale ? reference + terminologyBlock(singleLocale) : reference,
 });

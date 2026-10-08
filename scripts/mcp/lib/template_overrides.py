@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+from datetime import date
 from typing import Any
 
 from json_format import dumps_compact_arrays
 from paths import TEMPLATE_OVERRIDES_FILE
-from recommend_score import recommend_from_usage
+from recommend_score import is_new_template, recommend_from_usage
 
 SCHEMA_VERSION = 1
 
@@ -32,7 +33,13 @@ RECOMMEND_RANK: dict[str, int] = {
 # MCP categories that must not fall below this recommend tier after sync.
 CATEGORY_RECOMMEND_FLOOR: dict[str, str] = {
     "Use Cases": "low",
+    "Product & Ads": "low",
+    "Character & Fashion": "low",
+    "Brand & Design": "low",
 }
+
+# Young templates lack reliable usage signal; avoid penalizing them as not_recommended.
+NEW_TEMPLATE_RECOMMEND_FLOOR = "medium"
 
 
 def empty_overrides() -> dict[str, Any]:
@@ -71,12 +78,16 @@ def resolve_recommend(
     usage: int | float | None,
     *,
     mcp_category: str | None,
+    template_date: str | None = None,
+    as_of: date | None = None,
     override: str | None = None,
 ) -> str:
-    """Usage-based recommend, category floor, then optional manual override."""
+    """Usage-based recommend, category floor, new-template floor, then manual override."""
     label = recommend_from_usage(usage)
     floor = CATEGORY_RECOMMEND_FLOOR.get(mcp_category or "")
     label = _clamp_recommend(label, floor)
+    if is_new_template(template_date, as_of=as_of):
+        label = _clamp_recommend(label, NEW_TEMPLATE_RECOMMEND_FLOOR)
     if override:
         if override not in VALID_RECOMMEND_LABELS:
             raise ValueError(

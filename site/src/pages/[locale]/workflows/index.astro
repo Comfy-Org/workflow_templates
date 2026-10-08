@@ -21,6 +21,8 @@ import { absoluteUrl } from '../../../config/site';
 import { loadSerializedTemplates } from '../../../lib/hub-api';
 import { getFeatured, featuredPreloadImage } from '../../../lib/featured';
 import { buildToolbarLabels, buildFacetsConfig } from '../../../lib/toolbar';
+import { listingIndexing } from '../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../lib/i18n/localize-cards';
 
 const { locale } = Astro.params;
 
@@ -31,12 +33,26 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 
 const typedLocale = locale as Locale;
 
-const serialized = await loadSerializedTemplates(() => getCollection('templates'));
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
+// Cards come from the hub index, which is English only. Resolve the same text
+// the detail page will show, so a localized listing is not a translated page
+// sitting above a grid of English cards.
+const serialized = localizeCards(
+  await loadSerializedTemplates(() => getCollection('templates')),
+  typedLocale
+);
 
 const featured = getFeatured(serialized);
+const forIsland = serialized.map(({ description: _description, ...rest }) => rest);
+const featuredForIsland = featured.map(({ description: _description, ...rest }) => rest);
 const featuredLcpImage = featuredPreloadImage(featured);
 
-const canonicalUrl = absoluteUrl('/' + locale + '/workflows/');
+// Gated until this locale completes native review: canonical to the English hub,
+// noindex, and no alternates. Without this the listing self-canonicals and
+// advertises all ten locales while every workflow page under it is noindexed.
+const indexing = listingIndexing('/workflows/', typedLocale);
+const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 
 const structuredData = {
   '@context': 'https://schema.org',
@@ -63,11 +79,13 @@ const facetsConfig = buildFacetsConfig(typedLocale);
   title={`${t('meta.title', typedLocale)} - ComfyUI`}
   description={t('meta.description', typedLocale)}
   canonicalUrl={canonicalUrl}
-  ogImage="/brand/og-default-v2.png"
+  ogImage="/brand/og-default-v3.png"
   ogDescription={t('meta.ogDescription', typedLocale)}
   structuredData={structuredData}
   locale={typedLocale}
   hreflangBasePath="/workflows/"
+  hreflangLocales={indexing.hreflangLocales}
+  noindex={indexing.noindex}
   theme="dark"
   hideDefaultFooter
 >
@@ -84,7 +102,7 @@ const facetsConfig = buildFacetsConfig(typedLocale);
     <!-- Featured hero carousel (Vue island) -->
     <FeaturedCarousel
       client:load
-      templates={featured}
+      templates={featuredForIsland}
       locale={typedLocale}
       isRtl={isRTL(typedLocale)}
       featuredLabel={t('hub.featured.label', typedLocale)}
@@ -95,12 +113,12 @@ const facetsConfig = buildFacetsConfig(typedLocale);
     <HubHero count={serialized.length} />
 
     <!-- Inline search — shows among the filters, docks flush below the navbar once scrolled past. -->
-    <HubSearchBar templates={serialized} locale={typedLocale} />
+    <HubSearchBar templates={forIsland} locale={typedLocale} />
 
     <!-- Interactive browse (Vue island) -->
     <HubBrowse
       client:load
-      templates={serialized}
+      templates={forIsland}
       locale={typedLocale}
       mediaTypes={mediaTypes}
       facetsConfig={facetsConfig}

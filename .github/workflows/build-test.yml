@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
           sparse-checkout: |
@@ -28,7 +28,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: "npm"
@@ -47,6 +47,19 @@ jobs:
           source .venv/bin/activate
           pip install --upgrade pip build pytest ruff aiohttp twine
 
+      # Must run BEFORE the sync below. sync_bundles.py rewrites manifest.json
+      # from whatever is on disk, so anything that validates after it can only
+      # ever see a freshly generated manifest — never the committed one. That
+      # ordering is how the stale hashes in
+      # https://github.com/Comfy-Org/workflow_templates/issues/1091 reached main.
+      - name: Verify committed manifest is not stale
+        run: |
+          echo "🔍 Validating packages/core/.../manifest.json as committed (pre-sync)."
+          if ! python scripts/validate/validate_manifests.py; then
+            echo "::error file=packages/core/src/comfyui_workflow_templates_core/manifest.json::Manifest is out of sync with templates/. Run 'python scripts/sync/sync_bundles.py' and commit the regenerated manifest."
+            exit 1
+          fi
+
       - name: Sync manifest and bundle assets
         run: |
           source .venv/bin/activate
@@ -55,14 +68,14 @@ jobs:
       - name: Lint Python modules
         run: |
           source .venv/bin/activate
-          ruff check scripts/sync/sync_bundles.py packages/core packages/meta
+          ruff check scripts/sync/sync_bundles.py scripts/sync/sync_is_app.py scripts/lib/index_format.py packages/core packages/meta
 
       - name: Build packages
         run: |
           source .venv/bin/activate
           rm -rf dist
           mkdir dist
-          for pkg in core json media_api media_video media_image media_other media_assets_01 meta; do
+          for pkg in core json media_api media_video media_image media_other media_assets_01 media_assets_02 meta; do
             python -m build --outdir dist packages/$pkg
           done
 
@@ -76,7 +89,7 @@ jobs:
 
       - name: Run tests
         env:
-          PYTHONPATH: packages/meta/src:packages/core/src:packages/json/src:packages/media_api/src:packages/media_video/src:packages/media_image/src:packages/media_other/src:packages/media_assets_01/src
+          PYTHONPATH: packages/meta/src:packages/core/src:packages/json/src:packages/media_api/src:packages/media_video/src:packages/media_image/src:packages/media_other/src:packages/media_assets_01/src:packages/media_assets_02/src
         run: |
           source .venv/bin/activate
           pytest packages/core/tests

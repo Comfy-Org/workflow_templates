@@ -18,7 +18,18 @@ _lib_dir = Path(__file__).resolve().parent.parent / "lib"
 if str(_lib_dir) not in sys.path:
     sys.path.insert(0, str(_lib_dir))
 
-from paths import WHITELIST_FILE  # noqa: E402
+from paths import REPO_ROOT, WHITELIST_FILE  # noqa: E402
+
+# Notes point at main raw URLs. On a PR those files exist on the branch but
+# not on main yet, so HTTP-checking them 404s. Resolve to a local path instead.
+_REPO_RAW_URL = re.compile(
+    r"^https://raw\.githubusercontent\.com/Comfy-Org/workflow_templates/"
+    r"(?:refs/heads/[^/]+|[^/]+)/(.+)$"
+)
+_REPO_GITHUB_URL = re.compile(
+    r"^https://github\.com/Comfy-Org/workflow_templates/"
+    r"(?:blob|raw)/[^/]+/(.+)$"
+)
 
 
 def extract_url_with_balanced_parens(text: str, start_pos: int) -> Tuple[str, int]:
@@ -166,6 +177,23 @@ def load_whitelist_skip_urls() -> Set[str]:
     return skip_urls
 
 
+def local_path_for_repo_url(url: str) -> Optional[Path]:
+    """Return the local path for a workflow_templates GitHub/raw URL, else None."""
+    match = _REPO_RAW_URL.match(url) or _REPO_GITHUB_URL.match(url)
+    if not match:
+        return None
+    relative = match.group(1).split("?", 1)[0].split("#", 1)[0]
+    if not relative or relative.startswith("/") or ".." in relative.split("/"):
+        return None
+    return REPO_ROOT / relative
+
+
+def is_present_repo_asset(url: str) -> bool:
+    """True when this URL maps to a file that exists on the current checkout."""
+    path = local_path_for_repo_url(url)
+    return path is not None and path.is_file()
+
+
 def should_skip_url(url: str, skip_urls: Set[str]) -> bool:
     """Check if URL should be skipped based on whitelist."""
     # Exact match
@@ -288,16 +316,26 @@ def command_extract():
             url_sources[url] = []
         url_sources[url].append(f"templates/index.json: {context}")
 
+    local_asset_urls = {url for url in all_urls if is_present_repo_asset(url)}
+    urls_for_lychee = all_urls - local_asset_urls
+
     if skip_urls:
         print(f"\nSkipped URLs from whitelist skip_urls: {len(skip_urls)} patterns", file=sys.stderr)
+    if local_asset_urls:
+        print(
+            f"\nSkipped {len(local_asset_urls)} repo asset URL(s) present in this checkout:",
+            file=sys.stderr,
+        )
+        for url in sorted(local_asset_urls):
+            print(f"  - {url} -> {local_path_for_repo_url(url)}", file=sys.stderr)
     print(f"\nFound {len(all_urls)} unique URLs across {len(all_links)} files")
 
     # Save URLs to file for lychee
     with open('links_to_check.txt', 'w', encoding='utf-8') as f:
-        for url in sorted(all_urls):
+        for url in sorted(urls_for_lychee):
             f.write(f"{url}\n")
 
-    print(f"Saved {len(all_urls)} URLs to links_to_check.txt")
+    print(f"Saved {len(urls_for_lychee)} URLs to links_to_check.txt")
 
     # Save detailed mapping
     with open('link_sources.json', 'w', encoding='utf-8') as f:
@@ -314,6 +352,8 @@ def command_extract():
     print(f"  Markdown URLs: {total_markdown_urls}")
     print(f"  Tutorial URLs (index.json): {tutorial_count}")
     print(f"  Unique URLs: {len(all_urls)}")
+    print(f"  Repo assets skipped (local file exists): {len(local_asset_urls)}")
+    print(f"  Sent to lychee: {len(urls_for_lychee)}")
 
 
 def command_report():

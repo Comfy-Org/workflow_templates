@@ -44,6 +44,7 @@ MODELS_REGISTRY_FILE = MCP_DATA_DIR / "models_registry.json"
 # Back-compat alias (deprecated)
 MODELS_CAPABILITIES_FILE = MODELS_REGISTRY_FILE
 API_NODE_OPTIONS_FILE = MCP_DATA_DIR / "api_node_model_options.json"
+API_NODE_IDS_FILE = MCP_DATA_DIR / "api_node_ids.json"
 TEMPLATE_CACHE_FILE = MCP_DATA_DIR / "template_cache.json"
 TEMPLATE_CACHE_EXAMPLE = MCP_DATA_DIR / "template_cache.example.json"
 TEMPLATE_OVERRIDES_FILE = MCP_DATA_DIR / "template_overrides.json"

@@ -1,0 +1,475 @@
+# Generates and updates hub workflow-content translations.
+#
+# Pushes English; CI translates. Regenerates the English content-of-record from
+# the Hub index, seeds existing human translations, fills the gaps with
+# @lobehub/i18n-cli (OpenAI), validates deterministically, and opens a PR with
+# the result for a human to review + merge. Nothing here flips any locale to
+# indexable — that stays a separate, reviewed one-line change.
+name: "i18n: Update Hub Translations"
+
+on:
+  workflow_dispatch:
+    inputs:
+      locale:
+        description: 'Single locale to translate (blank = all supported). e.g. zh'
+        required: false
+        default: ''
+  # Pick up newly published / changed workflows on a cadence.
+  schedule:
+    - cron: "0 2 * * *"
+
+concurrency:
+  group: i18n-update-hub
+  # Queue overlapping runs; do not cancel, so the 2am cron can't kill a manually
+  # dispatched backfill mid-flight.
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update-translations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout workflow_templates
+        uses: actions/checkout@v7
+        with:
+          # PAT_TOKEN lost repo write (403); PERSONAL_ACCESS_TOKEN has it.
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      # ComfyUI_frontend's UI locales seed the glossary mirror (term consistency).
+      - name: Checkout ComfyUI_frontend locales
+        uses: actions/checkout@v7
+        with:
+          repository: Comfy-Org/ComfyUI_frontend
+          sparse-checkout: src/locales
+          path: comfyui-frontend
+
+      - name: Setup
+        uses: ./.github/actions/site-setup
+
+      # Resolve which locales to translate. The manual-dispatch input arrives via
+      # env (never spliced into the script) and must match the supported allowlist,
+      # so it can neither inject shell nor request an unsupported locale. A blank
+      # input and the scheduled run translate all supported locales.
+      - name: Resolve target locales
+        env:
+          INPUT_LOCALE: ${{ github.event.inputs.locale }}
+        run: |
+          set -euo pipefail
+          SUPPORTED="zh zh-TW ja ko es fr ru tr ar pt-BR it"
+          if [ -n "${INPUT_LOCALE:-}" ]; then
+            # ONE list. There used to be a second copy in a case pattern here, and
+            # adding a locale to only one of them either lets a dispatch through
+            # that the nightly never translates, or the reverse.
+            #
+            # Compared with = rather than a case pattern, so the input is never in
+            # pattern position: a value like "*" is matched literally and cannot
+            # glob its way in.
+            TARGET=""
+            for locale in $SUPPORTED; do
+              if [ "$locale" = "$INPUT_LOCALE" ]; then TARGET="$INPUT_LOCALE"; fi
+            done
+            if [ -z "$TARGET" ]; then
+              echo "::error::Unsupported locale '${INPUT_LOCALE}'. Allowed: $SUPPORTED"
+              exit 1
+            fi
+          else
+            TARGET="$SUPPORTED"
+          fi
+          echo "TRANSLATE_LOCALES=$TARGET" >> "$GITHUB_ENV"
+
+      # Resume a prior rate-limited run. If the single stable automation branch
+      # exists and is still unmerged, start from its committed partial output so
+      # lobe skips already-translated keys instead of re-spending tokens. English
+      # is recomputed below, so any changed source still re-translates its fields.
+      - name: Restore partial progress from automation branch
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          # Fetch into the remote-tracking ref explicitly (the checkout action uses
+          # a narrow refspec), so both the restore and the later force-with-lease
+          # have a real base. Absent branch (first run) -> fetch fails, start fresh.
+          if git fetch origin "$STABLE_BRANCH:refs/remotes/origin/$STABLE_BRANCH" 2>/dev/null; then
+            # Take back ONLY what this pipeline generates, rather than taking the
+            # whole tree and undoing the parts a person owns. An allowlist of
+            # things to protect has to be extended by hand every time someone adds
+            # a file, and three times nobody did, so the run proposed deleting
+            # their work: the navbar keys on 2026-08-12, the template.api.* strings
+            # on 2026-08-19, and clusterLocales, unlocalizePath, OG_LOCALES and
+            # Italian on 2026-08-27. An allowlist of things to copy cannot do that,
+            # because anything not named here is never touched.
+            #
+            # The failure direction inverts with it: forgetting to name a generated
+            # path costs one re-translation of that path, where forgetting to name
+            # a hand-written path deleted it, silently whenever it was data.
+            #
+            # It also retires the restore-not-checkout dance the old code needed to
+            # stop the blanket checkout resurrecting a human-authored file deleted
+            # on main: nothing shadows those layers now. A checkout still merges
+            # into the worktree rather than mirroring the branch, so a generated
+            # file for a locale dropped from SUPPORTED_HUB_LOCALES comes back if
+            # the branch still has it, exactly as before. enforce and validate walk
+            # that list rather than the directory, so it rides the PR diff instead
+            # of re-entering the build.
+            #
+            # locales/ is deliberately absent, for reasons that outlive any
+            # snapshot. It is not purely generated: locales/en.json is lobe's entry
+            # and is hand-edited, which is what made taking the branch's older copy
+            # delete the navbar keys on 2026-08-12; and `it` is in this workflow's
+            # SUPPORTED list but NOT in .i18nrc.ui.cjs outputLocales, so nothing
+            # regenerates locales/it.json at all. Nothing prunes this layer either:
+            # locale:ui fills only MISSING keys, so a bad string that once lands
+            # here is never corrected by a later run.
+            #
+            # Unlike the generated paths, the branch CAN legitimately be ahead here:
+            # a prior run's locale:ui output sits on it until that PR merges. Not
+            # resuming it costs one UI pass over the missing keys, which is the
+            # price of never carrying a hand-edited file backwards.
+            #
+            # Per path, not one command. A multi-pathspec checkout is refused as a
+            # whole when any one path is absent from the branch, so naming content/
+            # and review/ together would, on any night review/ is missing, also
+            # decline to restore content/. That discards banked translations to
+            # avoid re-reviewing them, spending the expensive half to save the
+            # cheap one.
+            #
+            # Splitting that pair is not free. Review verdicts are keyed by a hash
+            # of the text they judge, so content restored without its verdicts
+            # re-reviews every entry whose translation differs from main's. The
+            # cost is bounded by the branch's unmerged delta rather than the whole
+            # corpus, and those entries have no reusable verdict on either side
+            # anyway: the branch's verdicts describe the branch's text, main's
+            # describe main's.
+            #
+            # Absence is probed with cat-file rather than inferred from a failed
+            # checkout, because a checkout can fail for reasons that are not
+            # absence. Reporting those as "not there yet" would let a half-restored
+            # tree carry on behind a reassuring log line; anything that is not
+            # plain absence stays fatal under set -e.
+            for generated in \
+              site/src/i18n/content \
+              site/src/i18n/review \
+              site/src/i18n/manifest.json; do
+              if git cat-file -e "origin/$STABLE_BRANCH:$generated" 2>/dev/null; then
+                git checkout "origin/$STABLE_BRANCH" -- "$generated"
+              else
+                echo "No $generated on $STABLE_BRANCH yet; it will be regenerated."
+              fi
+            done
+            echo "Restored generated translation state from $STABLE_BRANCH (everything else kept from main)."
+          else
+            echo "No automation branch yet; starting fresh from main."
+          fi
+
+      - name: Build English content source + human seeds
+        working-directory: site
+        env:
+          PUBLIC_HUB_API_URL: ${{ secrets.HUB_API_URL_PRODUCTION }}
+          PUBLIC_APPROVED_ONLY: "true"
+        run: pnpm i18n:build-source
+
+      - name: Sync glossary
+        working-directory: site
+        env:
+          FRONTEND_LOCALES_DIR: ${{ github.workspace }}/comfyui-frontend/src/locales
+        run: pnpm i18n:glossary
+
+      - name: Check pipeline config
+        working-directory: site
+        env:
+          # The same override the translate step below runs on. Without it the
+          # check resolves the committed default in .i18nrc.cjs and passes, while
+          # the translator uses the override, so the guard could never fail on the
+          # mismatch it exists to catch.
+          HUB_I18N_MODEL: ${{ vars.HUB_I18N_MODEL }}
+        run: pnpm i18n:check
+
+      # Deterministically shield preserve-terms: swap brand/model names in the
+      # English source for inert sentinels the model can't translate away. Restored
+      # after translation, so the committed en.json keeps its real terms + manifest.
+      - name: Protect preserve-terms
+        working-directory: site
+        run: pnpm i18n:protect
+
+      # Per-locale so each run injects that locale's product-UI terminology
+      # (mirror + overrides) into the prompt, which a single all-locales run can't
+      # do (shared reference). Also paces one locale at a time under the OpenAI
+      # Tier-1 TPM cap. Tolerate a mid-run rate-limit: saveImmediately has already
+      # persisted each completed chunk, one locale's failure doesn't skip the rest
+      # (inner `|| echo`), and the steps below still commit that partial progress,
+      # so the next run resumes (lobe skips done keys) instead of re-spending tokens.
+      - name: Translate content (lobe-i18n, per-locale)
+        working-directory: site
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          # Repo variable, so the translation model can be changed (and reverted)
+          # without a code change. Unset falls back to the model we have actually
+          # run all ten locales through — see site/.i18nrc.cjs.
+          HUB_I18N_MODEL: ${{ vars.HUB_I18N_MODEL }}
+        run: |
+          set -uo pipefail
+          for loc in $TRANSLATE_LOCALES; do
+            echo "::group::translate content → $loc"
+            HUB_I18N_LOCALE="$loc" pnpm locale \
+              || echo "locale $loc translation failed (tolerated; partial output saved)"
+            echo "::endgroup::"
+          done
+
+      - name: Translate UI chrome (fill missing keys)
+        working-directory: site
+        continue-on-error: true
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: pnpm locale:ui
+
+      # Swap the sentinels back to the exact English terms in every content file
+      # before validation reads them. always(): a tolerated translate failure still
+      # leaves partial output that must be de-sentinelized (and en.json restored).
+      - name: Restore preserve-terms
+        if: always()
+        working-directory: site
+        run: pnpm i18n:restore
+
+      # Judgement layer. The deterministic checks below answer "did the model break
+      # a rule we wrote down"; they cannot answer "is this good Korean", which is
+      # what native reviewers actually flagged (untracked brand names, statements the
+      # English never made, poor fluency, wording wrong for its place on the page).
+      # Findings are stored per locale and the critical/major ones are picked up by
+      # the enforce step, so a bad field falls back to English on a non-indexable
+      # page. Runs after restore so it reads the real terms, not sentinels.
+      #
+      # continue-on-error + an in-script skip when ANTHROPIC_API_KEY is absent: the
+      # reviewer must never be able to break the translation pipeline. Without the
+      # secret, or on an API outage, this degrades to exactly the previous behaviour.
+      - name: AI translation review
+        if: always()
+        continue-on-error: true
+        working-directory: site
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Repo variable, mirroring HUB_I18N_MODEL above, so the reviewer model can
+          # be changed (and reverted) without a code change. The reviewer and the
+          # translator are deliberately separate knobs: swapping the model that
+          # writes the translations should not silently swap the one that judges
+          # them. Unset falls back to the model in review-translations.ts.
+          I18N_REVIEW_MODEL: ${{ vars.HUB_I18N_REVIEW_MODEL }}
+        run: pnpm i18n:review
+
+      # always(): prune before validate even after a tolerated translate failure.
+      # The model preserves brand names only probabilistically, so a small tail of
+      # fields still drops a preserve-term at scale. This removes exactly those
+      # fields (reusing the validator's own checks), so they fall back to English at
+      # render (page non-indexable — the gated behaviour) instead of failing the run
+      # or publishing a bad field. Fails only if pruning is systemic.
+      - name: Enforce glossary floor (prune fields the model failed)
+        if: always()
+        working-directory: site
+        run: pnpm i18n:enforce
+
+      # always(): run even after a tolerated translate failure so partial progress
+      # is still validated. This step has no continue-on-error, so a validation
+      # failure fails the job and the success()-gated publish steps below skip —
+      # invalid artifacts are never committed or opened as a green-looking PR.
+      - name: Validate translations
+        if: always()
+        working-directory: site
+        run: pnpm i18n:validate
+
+      # Re-stamp sign-off records whose seal broke for a good reason: a held
+      # page's missing translation arrived, the English source moved and was
+      # retranslated clean, or a pruned field came back clean. Same bar as the
+      # launch itself: AI-review-clean text is sealed, flagged text stays held
+      # for a human. Runs after review/enforce/validate so it judges tonight's
+      # final state, and its output rides this run's PR like every other
+      # generated file, so a person still approves the records before main.
+      # Locales without an existing human sign-off wave are never touched.
+      - name: Refresh sign-off records
+        if: always()
+        working-directory: site
+        # Every hub locale may be granted its first wave by policy: the native
+        # review gate was dropped deliberately (nav, 2026-08-24) so indexation is
+        # not held behind reviewer capacity. The other half of the predicate is
+        # untouched, so a page whose fields are not genuinely translated, or that
+        # carries an unresolved critical/major finding, is still held back.
+        env:
+          I18N_BOOTSTRAP_LOCALES: zh,zh-TW,ja,ko,es,fr,ru,tr,ar,pt-BR
+        run: pnpm i18n:signoff-refresh
+
+      # Format only the generated files; whole-tree prettier hits pre-existing
+      # .astro errors. success() so we only format output we intend to publish.
+      - name: Format
+        if: success()
+        working-directory: site
+        run: pnpm exec prettier --write src/i18n
+
+      # Publish only on success() — i.e. validation (and formatting) passed. A
+      # tolerated translate rate-limit keeps the job successful (continue-on-error),
+      # so valid partial progress still publishes; a validation failure does not.
+      # One stable branch + its open PR is reused so partial runs accumulate
+      # instead of orphaning progress on per-run timestamped branches.
+      - name: Open or update translation PR
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          # Stage first, because the generated content/ files are new and untracked
+          # on the initial run, which `git diff` alone would miss.
+          #
+          # This path holds two different kinds of file, and the PR diff will show
+          # both. `content/` and `locales/` are the translation output a reviewer is
+          # being asked to judge. `review/` is machine state: one verdict per entry,
+          # keyed by a hash of the exact English and translated text it describes.
+          #
+          # They are staged and restored together on purpose. A verdict is only
+          # meaningful next to the text it was written about, so carrying the
+          # translations forward without the verdicts would invalidate every hash
+          # and re-review (and re-pay for) the whole corpus on the next run, while
+          # carrying verdicts forward without their translations would leave
+          # findings pointing at text that no longer exists. Keeping them in one
+          # subtree makes that restore atomic rather than something the next editor
+          # of this file has to remember.
+          git add site/src/i18n
+          if git diff --cached --quiet; then
+            echo "No translation changes vs main."
+            exit 0
+          fi
+          # No-op guard: when the automation branch already exists, skip if this run
+          # reproduced its EXACT committed content. Because we restore that branch
+          # before translating, the diff vs main is non-empty even on a byte-identical
+          # rerun; comparing against the branch (not main) is what tells a real update
+          # from a no-op. Without this, every daily cron force-pushes a new head,
+          # reruns CI, and dismisses review state for zero progress.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
+            if git diff --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+              echo "No change vs the open automation PR; leaving its head untouched."
+              exit 0
+            fi
+          fi
+          # Point the stable branch at this run's main checkout and carry the
+          # accumulated translations onto it, so the branch is always rebased on
+          # main and the open PR updates in place (force-with-lease; runs are
+          # serialized by the concurrency group).
+          git checkout -B "$STABLE_BRANCH"
+          git commit -m "chore(i18n): update hub workflow translations"
+          git push --force-with-lease origin "$STABLE_BRANCH"
+          if gh pr view "$STABLE_BRANCH" --json state --jq '.state' 2>/dev/null | grep -qx OPEN; then
+            echo "Existing translation PR updated via push."
+          else
+            gh pr create \
+              --base main \
+              --head "$STABLE_BRANCH" \
+              --title "chore(i18n): update hub workflow translations" \
+              --body "Automated hub translation refresh. English content regenerated from the Hub index, human seeds applied, gaps machine-translated, deterministic validators run. A partial (rate-limited) run still commits its progress to this same branch so the next run resumes. Does not flip any locale to indexable."
+          fi
+
+      # A failed night still saves its translation progress: without this, a
+      # from-scratch backfill can never converge — a rate-limited run fails
+      # enforce/validate, the success()-gated publish skips, and the spend is
+      # discarded. Saves to the same branch the restore step reads, so nights
+      # accumulate. Merging stays gated: never creates a PR, and the automation
+      # PR's own Validate Translations check is red on a partial head.
+      - name: Save partial progress on failure
+        if: failure()
+        run: |
+          set -euo pipefail
+          STABLE_BRANCH="i18n/hub-translations"
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add site/src/i18n
+          # Excluding must not UNDO banked progress (a plain staged restore
+          # resets to main's version and the commit drops the file from the
+          # branch): take the branch's last good version, else main's, else
+          # drop the new file.
+          exclude_from_save() {
+            if git cat-file -e "refs/remotes/origin/$STABLE_BRANCH:$1" 2>/dev/null; then
+              git restore --source="refs/remotes/origin/$STABLE_BRANCH" --staged --worktree -- "$1"
+            elif git cat-file -e "HEAD:$1" 2>/dev/null; then
+              git restore --source=HEAD --staged --worktree -- "$1"
+            else
+              git rm -qf --ignore-unmatch -- "$1"
+            fi
+          }
+          # A truncated mid-file write must not poison the branch the next run
+          # restores from. Deletions stay staged (nothing to parse).
+          while IFS= read -r f; do
+            case "$f" in
+              *.json)
+                if ! node -e 'JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"))' "$f" 2>/dev/null; then
+                  echo "::warning::Excluding unparseable $f from the partial save"
+                  exclude_from_save "$f"
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --name-only --diff-filter=d)
+          # A FULLY misaligned content file (model-mangled keys, none in the
+          # English source) fails validation and enforce cannot prune it, so
+          # banking it would carry the mangled keys forward. Partially stale
+          # files still bank, matching the validator's tolerance. MUST run
+          # after the parse pass above: it reads en.json from the worktree,
+          # which that pass has already restored to a good version if truncated.
+          while IFS= read -r f; do
+            case "$f" in
+              site/src/i18n/content/en.json) ;;
+              site/src/i18n/content/*.json)
+                if ! node -e '
+                  const fs = require("fs");
+                  const en = JSON.parse(fs.readFileSync("site/src/i18n/content/en.json", "utf8"));
+                  const loc = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+                  const keys = Object.keys(loc);
+                  process.exit(keys.length > 0 && keys.every((k) => !(k in en)) ? 1 : 0);
+                ' "$f" 2>/dev/null; then
+                  echo "::warning::Excluding fully misaligned $f from the partial save"
+                  exclude_from_save "$f"
+                fi
+                ;;
+            esac
+          done < <(git diff --cached --name-only --diff-filter=d)
+          # Never bank UI chrome from a failed run: nothing prunes locales/ and
+          # locale:ui fills only MISSING keys, so an invalid UI string banked
+          # here would restore and fail validate forever. (Content is safe:
+          # enforce prunes it to disk and re-prunes restored content nightly.)
+          # This deliberately drops the run's own locale:ui output too, at the
+          # cost of one UI pass next time; permanence is the worse trade.
+          #
+          # Pinned to the commit this job checked out, not HEAD. The publish step
+          # above commits before it pushes, so a failed push or `gh pr create`
+          # lands here with HEAD already on the automation branch, where
+          # --source=HEAD would mean "the branch" and re-bank the very UI output
+          # this line exists to drop. Pinning also makes the revert real instead of
+          # a no-op against HEAD, so the save below still runs and carries the
+          # content progress forward with locales/ back at main's copy.
+          git restore --source="$GITHUB_SHA" --staged --worktree -- site/src/i18n/locales
+          if git diff --cached --quiet; then
+            echo "Run failed before producing any translation changes; nothing to save."
+            exit 0
+          fi
+          # Same no-op guard as the publish step; --cached because the commit
+          # is built from the index and an excluded file may leave the worktree
+          # differing from the branch.
+          if git rev-parse --verify --quiet "refs/remotes/origin/$STABLE_BRANCH" >/dev/null; then
+            if git diff --cached --quiet "refs/remotes/origin/$STABLE_BRANCH" -- site/src/i18n; then
+              echo "No change vs the saved partial progress; leaving the branch untouched."
+              exit 0
+            fi
+          fi
+          git checkout -B "$STABLE_BRANCH"
+          git commit -m "chore(i18n): save partial translation progress (run failed, do not merge)"
+          # Retry transient push failures (a GitHub-side 500 here costs a full
+          # night's progress).
+          for attempt in 1 2 3; do
+            if git push --force-with-lease origin "$STABLE_BRANCH"; then
+              echo "Partial progress saved to $STABLE_BRANCH; the next run resumes from it."
+              exit 0
+            fi
+            echo "Push attempt $attempt failed; retrying in $((attempt * 20))s."
+            sleep $((attempt * 20))
+          done
+          echo "::error::Could not push partial progress after 3 attempts."
+          exit 1

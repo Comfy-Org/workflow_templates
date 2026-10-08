@@ -6,7 +6,7 @@ This script synchronizes template information from the English master file (inde
 to all other language versions, with automatic tag translation support.
 
 Key Features:
-- Auto-sync technical fields (models, date, size, vram, username, etc.)
+- Auto-sync technical fields (models, date, size, username, etc.)
 - Automatic tag translation using i18n.json
 - Preserve language-specific translations (title, description)
 - Detect and track new tags for manual translation
@@ -35,7 +35,6 @@ import os
 import logging
 import argparse
 import sys
-import csv
 import subprocess
 import tempfile
 from typing import Dict, List, Any, Optional, Tuple
@@ -101,7 +100,6 @@ class TemplateSyncer:
             "models",
             "date",
             "size",
-            "vram",
             "username",
             "mediaType",
             "mediaSubtype", 
@@ -112,8 +110,12 @@ class TemplateSyncer:
             "searchRank",
             "includeOnDistributions",
             "logos",
-            "io"
+            "io",
+            "isApp",
+            "minComfyUIVersion",
         }
+        # Legacy alias written on a few new templates; normalize to minComfyUIVersion.
+        self.version_field_alias = "comfyuiVersion"
         self.language_specific_fields = {"title", "description"}
         self.special_handling_fields = {"tags"}
         
@@ -125,14 +127,11 @@ class TemplateSyncer:
         
         # Load i18n data
         self.i18n_data = self.load_i18n()
-        # Load usage data from CSV file (if exists)
-        self.usage_data = self.load_usage_data()
         self.new_tags = set()  # Track new tags discovered during sync
         self.used_tags = set()  # Track tags that are actually used in templates
         self.used_categories = set()  # Track categories that are actually used
         self.new_category_titles = set()  # Track new category titles discovered during sync
         self.new_category_fields = set()  # Track new category field values (like "MODELS", "GENERATION TYPE") discovered during sync
-        self.vram_size_update_templates = set()  # Track templates that need vram/size data updates in i18n
         self.translation_stats = {
             'templates_scanned': 0,
             'untranslated_found': 0,
@@ -155,16 +154,13 @@ class TemplateSyncer:
         
     def load_i18n(self) -> Dict[str, Any]:
         """Load i18n data from JSON file"""
+        self.i18n_legacy_vram_status_removed = False
         if not self.i18n_file.exists():
             self.logger.warning(f"i18n file not found: {self.i18n_file}")
             return {
                 "_status": {
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
                     "pending_templates": {},
-                    "vram_size_update_templates": {
-                        "comment": "Templates that need vram and size data management in i18n.json",
-                        "templates": []
-                    }
                 },
                 "templates": {},
                 "tags": {},
@@ -180,16 +176,10 @@ class TemplateSyncer:
                 data["_status"] = {
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
                     "pending_templates": {},
-                    "vram_size_update_templates": {
-                        "comment": "Templates that need vram and size data management in i18n.json",
-                        "templates": []
-                    }
                 }
-            if "vram_size_update_templates" not in data["_status"]:
-                data["_status"]["vram_size_update_templates"] = {
-                    "comment": "Templates that need vram and size data management in i18n.json",
-                    "templates": []
-                }
+            if "vram_size_update_templates" in data["_status"]:
+                data["_status"].pop("vram_size_update_templates", None)
+                self.i18n_legacy_vram_status_removed = True
             if "templates" not in data:
                 data["templates"] = {}
             if "tags" not in data:
@@ -206,51 +196,12 @@ class TemplateSyncer:
                 "_status": {
                     "comment": "Pending translation tasks. Only templates with missing translations appear here.",
                     "pending_templates": {},
-                    "vram_size_update_templates": {
-                        "comment": "Templates that need vram and size data management in i18n.json",
-                        "templates": []
-                    }
                 },
                 "templates": {},
                 "tags": {},
                 "categories": {}
             }
     
-    def load_usage_data(self) -> Dict[str, int]:
-        """Load usage data from CSV file if it exists"""
-        # CSV file is in temp directory (sibling to templates directory)
-        temp_dir = self.templates_dir.parent / "temp"
-        usage_csv_file = temp_dir / "usage.csv"
-        
-        usage_data = {}
-        
-        if not usage_csv_file.exists():
-            self.logger.info(f"Usage CSV file not found: {usage_csv_file} (skipping usage data sync)")
-            return usage_data
-        
-        try:
-            with open(usage_csv_file, 'r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                # Skip header row
-                next(reader, None)
-                
-                for row in reader:
-                    if len(row) >= 3:
-                        # Format: Metric,workflow_name,usage_count
-                        workflow_name = row[1].strip()
-                        try:
-                            usage_count = int(row[2].strip())
-                            usage_data[workflow_name] = usage_count
-                        except (ValueError, IndexError):
-                            # Skip invalid rows
-                            continue
-            
-            self.logger.info(f"Loaded usage data for {len(usage_data)} templates from {usage_csv_file}")
-        except Exception as e:
-            self.logger.warning(f"Failed to load usage data from {usage_csv_file}: {e} (continuing without usage data)")
-        
-        return usage_data
-            
     def save_i18n(self):
         """Save i18n data to JSON file"""
         if self.dry_run:
@@ -265,6 +216,15 @@ class TemplateSyncer:
             self.logger.info(f"Saved i18n data: {len(self.i18n_data['templates'])} templates, {len(self.i18n_data['tags'])} tags")
         except Exception as e:
             self.logger.error(f"Failed to save i18n data: {e}")
+
+    def normalize_version_field(self, template: Dict[str, Any]) -> bool:
+        """Rename legacy comfyuiVersion onto minComfyUIVersion. Returns True if changed."""
+        alias = template.pop(self.version_field_alias, None)
+        if alias is None:
+            return False
+        if not template.get("minComfyUIVersion"):
+            template["minComfyUIVersion"] = alias
+        return True
             
     def translate_tag(self, tag: str, target_lang: str) -> str:
         """Translate a tag to target language using i18n data"""
@@ -382,14 +342,6 @@ class TemplateSyncer:
                 return translation
         
         return None
-    
-    def mark_template_for_vram_size_update(self, template_name: str):
-        """
-        Mark a template for vram/size data updates in i18n.json
-        This indicates that vram and size values should be managed in i18n.json
-        """
-        self.vram_size_update_templates.add(template_name)
-        self.logger.info(f"  🏷️  Marked template '{template_name}' for vram/size data management in i18n")
     
     def update_pending_status(self, template_name: str, field: str, en_value: str, target_lang: str, current_value: str):
         """
@@ -617,28 +569,13 @@ class TemplateSyncManager:
         
         # Since we start from master_template, all fields are already in correct order
         # We only need to update translated fields and handle special cases
-        
-        # Handle vram data filling - use size data when vram is missing or 0
-        if "size" in updated_template:
-            if updated_template["size"] > 0:
-                # If vram is missing or 0, use size data
-                if "vram" not in updated_template or updated_template.get("vram", 0) == 0:
-                    updated_template["vram"] = updated_template["size"]
-                    changes_made = True
-                    self.syncer.logger.info(f"  💾 Auto-filled vram using size: {updated_template['size']}")
-                    
-                    # Mark this template for vram/size data updates in i18n
-                    self.syncer.mark_template_for_vram_size_update(template_name)
-            else:  # size == 0
-                # If size is 0, ensure vram field exists and is 0
-                if "vram" not in updated_template:
-                    updated_template["vram"] = 0
-                    changes_made = True
-                    self.syncer.logger.info(f"  💾 Added vram=0 because size is 0")
-                elif updated_template["vram"] != 0:
-                    updated_template["vram"] = 0
-                    changes_made = True
-                    self.syncer.logger.info(f"  💾 Set vram to 0 because size is 0")
+
+        # Drop the retired vram field (values were never measured; often copied from size)
+        if updated_template.pop("vram", None) is not None:
+            changes_made = True
+
+        if self.syncer.normalize_version_field(updated_template):
+            changes_made = True
         
         # Handle tags - always translate using i18n data
         if "tags" in master_template:
@@ -794,6 +731,7 @@ class TemplateSyncManager:
                 else:
                     # Add new template - also apply translations from i18n
                     new_template = template.copy()
+                    new_template.pop("vram", None)
                     
                     # Apply translations from i18n for new templates
                     for field in self.syncer.language_specific_fields:
@@ -1254,7 +1192,7 @@ class TemplateSyncManager:
     def generate_workflow_io(self) -> None:
         """
         Update master index.json with workflow input/output nodes using generate_workflow_io module.
-        Runs after fix_master_vram_data so that io fields are present before syncing to language files.
+        Runs after strip_master_vram_field so that io fields are present before syncing to language files.
         """
         if generate_workflow_io is None:
             raise ImportError("generate_workflow_io module is not available")
@@ -1307,66 +1245,50 @@ class TemplateSyncManager:
         else:
             self.syncer.logger.info("  ✅ No io entries without filenames to remove")
 
-    def fix_master_vram_data(self):
+    def strip_master_vram_field(self):
+        """Remove the retired vram field from master index.json before locale sync.
+
+        Historical values were not measured VRAM usage (often copied from ``size``).
+        ``usage`` is hand-maintained (Datadog sync) and is never rewritten here.
+        Locale indexes still copy remaining technical fields from master via auto_sync_fields.
         """
-        Fix vram data in the master index.json file before synchronization
-        Also syncs usage data from CSV if available
-        """
-        self.syncer.logger.info("\n🔧 Step 0: Fixing vram data and syncing usage data in master file...")
-        
-        # Load master data
+        self.syncer.logger.info("\n🔧 Step 0: Removing retired vram field from master file...")
+
         master_data = self.syncer.load_json_file(self.syncer.master_file)
         changes_made = False
-        fixed_templates = []
-        
+        stripped_templates = []
+        renamed_version_templates = []
+
         for category in master_data:
             for template in category.get("templates", []):
-                template_name = template.get("name", "")
-                
-                # Apply vram fixing logic
-                if "size" in template:
-                    if template["size"] > 0:
-                        # If vram is missing or 0, use size data
-                        if "vram" not in template or template.get("vram", 0) == 0:
-                            template["vram"] = template["size"]
-                            changes_made = True
-                            fixed_templates.append(template_name)
-                            self.syncer.logger.info(f"  ✓ Fixed vram for '{template_name}': {template['size']}")
-                    else:  # size == 0
-                        # If size is 0, ensure vram field exists and is 0
-                        if "vram" not in template:
-                            template["vram"] = 0
-                            changes_made = True
-                            fixed_templates.append(template_name)
-                            self.syncer.logger.info(f"  ✓ Added vram=0 for '{template_name}' (size is 0)")
-                        elif template["vram"] != 0:
-                            template["vram"] = 0
-                            changes_made = True
-                            fixed_templates.append(template_name)
-                            self.syncer.logger.info(f"  ✓ Set vram to 0 for '{template_name}' (size is 0)")
-                
-                # Handle usage data - sync from CSV if available
-                if self.syncer.usage_data and template_name in self.syncer.usage_data:
-                    usage_value = self.syncer.usage_data[template_name]
-                    if "usage" not in template or template["usage"] != usage_value:
-                        template["usage"] = usage_value
-                        changes_made = True
-                        self.syncer.logger.info(f"  📊 Updated usage for '{template_name}': {usage_value}")
-                else:
-                    # If usage has no data (missing or not in CSV), fill with 0
-                    if "usage" not in template:
-                        template["usage"] = 0
-                        changes_made = True
-                        self.syncer.logger.info(f"  📊 Filled missing usage with 0 for '{template_name}'")
-        
-        # Save the fixed master file
-        if changes_made:
-            self.syncer.save_json_file(self.syncer.master_file, master_data)
-            self.syncer.logger.info(f"  💾 Fixed {len(fixed_templates)} templates in master file")
-            for template in fixed_templates:
+                if "vram" in template:
+                    template.pop("vram", None)
+                    changes_made = True
+                    stripped_templates.append(template.get("name", ""))
+                if self.syncer.normalize_version_field(template):
+                    changes_made = True
+                    renamed_version_templates.append(template.get("name", ""))
+
+        if stripped_templates:
+            self.syncer.logger.info(
+                f"  💾 Removed vram from {len(stripped_templates)} templates "
+                f"in master file"
+            )
+            for template in stripped_templates:
                 self.syncer.logger.info(f"    - {template}")
         else:
-            self.syncer.logger.info(f"  ✅ Master file vram data is already correct")
+            self.syncer.logger.info("  ✅ Master file has no vram field")
+
+        if renamed_version_templates:
+            self.syncer.logger.info(
+                f"  💾 Renamed comfyuiVersion to minComfyUIVersion on "
+                f"{len(renamed_version_templates)} template(s)"
+            )
+            for template in renamed_version_templates:
+                self.syncer.logger.info(f"    - {template}")
+
+        if changes_made:
+            self.syncer.save_json_file(self.syncer.master_file, master_data)
 
     def run_spellcheck(self) -> None:
         """Run all three spellchecks (index.json, workflow notes, i18n.json)."""
@@ -1496,7 +1418,7 @@ class TemplateSyncManager:
     def run_sync(self) -> bool:
         """
         Run complete synchronization process:
-        0. Fix vram data in master index.json file
+        0. Strip retired vram field from master index.json file
         0b. Generate workflow I/O (inputs/outputs) in master index.json
         0c. Remove io entries with empty filenames from master (synced to locales in step 2)
         1. Collect translations for NEW templates only from language files
@@ -1516,34 +1438,40 @@ class TemplateSyncManager:
             return False
 
         success = True
+        index_only = self.sync_options.get('index_only')
 
-        # Step 0: Fix vram data in master file first
-        self.fix_master_vram_data()
+        # Step 0: Strip retired vram field from master file first
+        self.strip_master_vram_field()
 
-        # Step 0b: Generate workflow I/O in master index.json
-        if generate_workflow_io is not None:
-            self.syncer.logger.info("\n📎 Step 0b: Generating workflow I/O in master index.json...")
-            try:
-                self.generate_workflow_io()
-            except Exception as e:
-                self.record_error(f"Workflow I/O generation failed: {e}")
-                success = False
+        if not index_only:
+            # Step 0b: Generate workflow I/O in master index.json
+            if generate_workflow_io is not None:
+                self.syncer.logger.info("\n📎 Step 0b: Generating workflow I/O in master index.json...")
+                try:
+                    self.generate_workflow_io()
+                except Exception as e:
+                    self.record_error(f"Workflow I/O generation failed: {e}")
+                    success = False
+            else:
+                self.syncer.logger.warning(
+                    "\n⚠️  generate_workflow_io module not available, skipping workflow I/O generation"
+                )
+
+            # Step 0c: Drop io rows with no filename (outputs like SaveVideo/SaveImage placeholders)
+            self.cleanup_master_empty_io_file_entries()
+
+            # Step 1: Sync English fields to i18n.json from master file
+            self.syncer.logger.info("\n📥 Step 1: Syncing English fields to i18n.json...")
+            en_fields_updated = self.sync_i18n_from_master()
+
+            # Step 1b: Collect translations for NEW templates only
+            self.syncer.logger.info("\n📥 Step 1b: Collecting translations for new templates...")
+            self.collect_new_templates_from_language_files()
         else:
-            self.syncer.logger.warning("\n⚠️  generate_workflow_io module not available, skipping workflow I/O generation")
+            en_fields_updated = 0
 
-        # Step 0c: Drop io rows with no filename (outputs like SaveVideo/SaveImage placeholders)
-        self.cleanup_master_empty_io_file_entries()
-
-        # Step 1: Sync English fields to i18n.json from master file
-        self.syncer.logger.info("\n📥 Step 1: Syncing English fields to i18n.json...")
-        en_fields_updated = self.sync_i18n_from_master()
-        
-        # Step 1b: Collect translations for NEW templates only
-        self.syncer.logger.info("\n📥 Step 1b: Collecting translations for new templates...")
-        self.collect_new_templates_from_language_files()
-        
-        # Step 2: Sync i18n.json translations to all language files
-        self.syncer.logger.info("\n🔄 Step 2: Syncing i18n.json to language files...")
+        # Step 2: Sync master technical fields to all language files
+        self.syncer.logger.info("\n🔄 Step 2: Syncing master index to language files...")
         for lang, lang_file in self.syncer.language_files.items():
             try:
                 if not self.sync_language_file(lang, lang_file):
@@ -1551,66 +1479,68 @@ class TemplateSyncManager:
             except Exception as e:
                 self.record_error(f"Sync language file failed ({lang}): {e}")
                 success = False
-        
-        # Step 3: Collect ALL translations from language files back to i18n.json
-        self.syncer.logger.info("\n📥 Step 3: Collecting all translations to i18n.json...")
-        collected_count, category_title_collected_count = self.collect_all_translations_from_language_files()
-                
-        # Check for unused tags in i18n data
-        unused_tags = set(self.syncer.i18n_data.get("tags", {}).keys()) - self.syncer.used_tags
-        if unused_tags:
-            self.syncer.logger.info(f"\n🗑️  Unused tags in i18n data: {len(unused_tags)}")
-            self.syncer.logger.info(f"   These tags exist in i18n.json but are not used in any template:")
-            for tag in sorted(unused_tags):
-                self.syncer.logger.info(f"   - {tag}")
-            self.syncer.logger.info(f"   💡 You can manually remove these from {self.syncer.i18n_file} if they are no longer needed")
-        
-        # Save i18n data
-        needs_save = False
-        
-        if en_fields_updated > 0:
-            needs_save = True
-        
-        if collected_count > 0 or category_title_collected_count > 0:
-            needs_save = True
-        
-        if self.syncer.new_tags:
-            self.syncer.logger.info(f"\n🆕 New tags discovered: {len(self.syncer.new_tags)}")
-            for tag in sorted(self.syncer.new_tags):
-                self.syncer.logger.info(f"   - {tag}")
-            needs_save = True
-        
-        if self.syncer.new_category_titles:
-            self.syncer.logger.info(f"\n🆕 New category titles discovered: {len(self.syncer.new_category_titles)}")
-            for title in sorted(self.syncer.new_category_titles):
-                self.syncer.logger.info(f"   - {title}")
-            needs_save = True
-        
-        if self.syncer.new_category_fields:
-            self.syncer.logger.info(f"\n🆕 New category fields discovered: {len(self.syncer.new_category_fields)}")
-            for field in sorted(self.syncer.new_category_fields):
-                self.syncer.logger.info(f"   - {field}")
-            needs_save = True
-        
-        # Update vram_size_update_templates in i18n data
-        if self.syncer.vram_size_update_templates:
-            vram_size_update_list = list(self.syncer.vram_size_update_templates)
-            self.syncer.i18n_data["_status"]["vram_size_update_templates"]["templates"] = vram_size_update_list
-            self.syncer.logger.info(f"\n🔧 Templates marked for vram/size data management: {len(vram_size_update_list)}")
-            for template in sorted(vram_size_update_list):
-                self.syncer.logger.info(f"   - {template}")
-            needs_save = True
-        
-        if self.syncer.i18n_data["_status"]["pending_templates"]:
-            self.syncer.logger.info(f"\n💾 Saving translation tracking data...")
-            needs_save = True
-        
-        if needs_save:
+
+        if not index_only:
+            # Step 3: Collect ALL translations from language files back to i18n.json
+            self.syncer.logger.info("\n📥 Step 3: Collecting all translations to i18n.json...")
+            collected_count, category_title_collected_count = (
+                self.collect_all_translations_from_language_files()
+            )
+
+            # Check for unused tags in i18n data
+            unused_tags = set(self.syncer.i18n_data.get("tags", {}).keys()) - self.syncer.used_tags
+            if unused_tags:
+                self.syncer.logger.info(f"\n🗑️  Unused tags in i18n data: {len(unused_tags)}")
+                self.syncer.logger.info(f"   These tags exist in i18n.json but are not used in any template:")
+                for tag in sorted(unused_tags):
+                    self.syncer.logger.info(f"   - {tag}")
+                self.syncer.logger.info(
+                    f"   💡 You can manually remove these from {self.syncer.i18n_file} if they are no longer needed"
+                )
+
+            # Save i18n data
+            needs_save = False
+
+            if en_fields_updated > 0:
+                needs_save = True
+
+            if collected_count > 0 or category_title_collected_count > 0:
+                needs_save = True
+
+            if self.syncer.new_tags:
+                self.syncer.logger.info(f"\n🆕 New tags discovered: {len(self.syncer.new_tags)}")
+                for tag in sorted(self.syncer.new_tags):
+                    self.syncer.logger.info(f"   - {tag}")
+                needs_save = True
+
+            if self.syncer.new_category_titles:
+                self.syncer.logger.info(f"\n🆕 New category titles discovered: {len(self.syncer.new_category_titles)}")
+                for title in sorted(self.syncer.new_category_titles):
+                    self.syncer.logger.info(f"   - {title}")
+                needs_save = True
+
+            if self.syncer.new_category_fields:
+                self.syncer.logger.info(f"\n🆕 New category fields discovered: {len(self.syncer.new_category_fields)}")
+                for field in sorted(self.syncer.new_category_fields):
+                    self.syncer.logger.info(f"   - {field}")
+                needs_save = True
+
+            if self.syncer.i18n_data["_status"]["pending_templates"]:
+                self.syncer.logger.info(f"\n💾 Saving translation tracking data...")
+                needs_save = True
+
+            if self.syncer.i18n_legacy_vram_status_removed:
+                needs_save = True
+
+            if needs_save:
+                self.syncer.save_i18n()
+                self.syncer.logger.info(f"✅ Saved to: {self.syncer.i18n_file}")
+
+            # Generate translation report
+            self.generate_translation_report()
+        elif self.syncer.i18n_legacy_vram_status_removed:
             self.syncer.save_i18n()
             self.syncer.logger.info(f"✅ Saved to: {self.syncer.i18n_file}")
-        
-        # Generate translation report
-        self.generate_translation_report()
         
         # Print summary
         self.syncer.logger.info(f"\n📊 Synchronization Summary:")
@@ -1625,8 +1555,19 @@ class TemplateSyncManager:
             self.syncer.logger.info(f"   New category titles found: {len(self.syncer.new_category_titles)}")
         if self.syncer.new_category_fields:
             self.syncer.logger.info(f"   New category fields found: {len(self.syncer.new_category_fields)}")
-        if self.syncer.vram_size_update_templates:
-            self.syncer.logger.info(f"   Templates marked for vram/size management: {len(self.syncer.vram_size_update_templates)}")
+
+        if self.sync_options.get('index_only'):
+            self.syncer.logger.info(
+                "\n⏭️  Index-only mode: skipped workflow I/O and i18n bookkeeping; "
+                "also skipping bundles, asset checks, model analysis, spellcheck, and validation"
+            )
+            if self.errors:
+                self.syncer.logger.error("\n❌ Errors summary:")
+                for err in self.errors:
+                    self.syncer.logger.error(f"  - {err}")
+            else:
+                self.syncer.logger.info("\n✅ No errors detected.")
+            return success
         
         # Step 4: Sync bundles (manifest and bundle package assets)
         if sync_bundles is not None:
@@ -1745,11 +1686,21 @@ Translation System:
     parser.add_argument('--dry-run', action='store_true', help='Show what would be done without making changes')
     parser.add_argument('--force-sync-language-fields', action='store_true', 
                        help='Force sync language-specific fields (title, description) - overwrite existing translations')
+    parser.add_argument(
+        '--index-only',
+        action='store_true',
+        help=(
+            'Sync index.json to locale index files only: copy technical '
+            'fields without workflow I/O generation, i18n bookkeeping, bundles, or validation. '
+            'Does not rewrite usage on the master index.'
+        ),
+    )
     
     args = parser.parse_args()
     
     sync_options = {
-        'force_sync_language_fields': args.force_sync_language_fields
+        'force_sync_language_fields': args.force_sync_language_fields,
+        'index_only': args.index_only,
     }
     
     try:

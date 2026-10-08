@@ -24,6 +24,7 @@ npm run mcp          # Step 1: sync index.json → index.mcp.json
 npm run mcp:check    # Dry-run sync (no write)
 npm run mcp:ai       # Step 2b: AI English descriptions (stale templates only)
 npm run mcp:models   # Step 2a: AI model profiles in models_registry.json
+npm run mcp:enhance  # Step 2a + Step 2b in the required order
 npm run i18n         # Hub translations (NOT MCP — separate system)
 ```
 
@@ -50,6 +51,8 @@ templates/index.mcp.json  ◄── merge description/io from template_cache (ha
 | 2b Templates | `scripts/mcp/enhance_descriptions.py` | `template_cache.json` + merge → `index.mcp.json` |
 
 Run **2a before 2b** when both are needed. Run **sync before AI** after adding templates to `index.json`.
+Sync automatically creates complete pending registry profiles for model names introduced by new
+MCP templates. The normal `npm run sync` and release CI run MCP sync before bundle sync.
 
 ## Data Files (`scripts/data/mcp/`)
 
@@ -73,7 +76,7 @@ Run **2a before 2b** when both are needed. Run **sync before AI** after adding t
 
 | Field | Set by | Notes |
 |-------|--------|-------|
-| `name`, `title`, `task`, `model`, `usage` | Sync from `index.json` | |
+| `name`, `title`, `task`, `model`, `usage`, `minComfyUIVersion` | Sync from `index.json` | `minComfyUIVersion` omitted when the hub index has no value |
 | `capabilities`, `io` (default) | Sync | `workflow` from tags; `model_options` when single API model node |
 | `freshness` | Sync from `date` | Override via `template_overrides.json` |
 | `recommend` | Sync from `usage` tiers | Override via `template_overrides.json` |
@@ -91,7 +94,9 @@ Run **2a before 2b** when both are needed. Run **sync before AI** after adding t
 | ≥ 50 | `low` |
 | < 50 | `not_recommended` |
 
-**Use Cases category floor:** never below `low` (no `not_recommended`).
+**Applied / Use Cases category floor:** never below `low` (no `not_recommended`). Applies to Product & Ads, Character & Fashion, Brand & Design, and legacy Use Cases.
+
+**New-template floor (≤30 days since `date`):** never below `medium` when usage is still low (same window as freshness `new`).
 
 Manual override example (`template_overrides.json`):
 

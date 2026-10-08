@@ -56,3 +56,11 @@ export function getWorkflowDownloadUrl(shareId: string, filename?: string): stri
 
   return `/workflows/download/${encodeURIComponent(shareId)}.json${query ? `?${query}` : ''}`;
 }
+
+/** `target`/`rel` for a link: new tab when the href is external, empty otherwise. */
+export function externalLinkAttrs(href: string | null | undefined): {
+  target?: string;
+  rel?: string;
+} {
+  return href && /^https?:/i.test(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+}

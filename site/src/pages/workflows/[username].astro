@@ -19,11 +19,13 @@ import WorkflowGrid from '../../components/hub/WorkflowGrid.vue';
 import { buildToolbarLabels } from '../../lib/toolbar';
 import { getLocaleFromPath } from '../../i18n/utils';
 import { absoluteUrl } from '../../config/site';
-import { DEFAULT_LOCALE } from '../../i18n/config';
+import { DEFAULT_LOCALE, type Locale } from '../../i18n/config';
 import { listWorkflowIndex, getProfile, getWorkflow, toTemplateData, extractShareId, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../lib/hub-api';
+import { fetchRankingMap } from '../../lib/ranking';
 import { creatorOgUrl, workflowOgUrl } from '../../lib/og-url';
 import { serializeJsonLdForScript, buildWorkflowBreadcrumb } from '../../lib/structured-data';
 import { getSocialDisplay } from '../../lib/social-links';
+import { INDEXABLE_LOCALES } from '../../lib/i18n/locales';
 
 // ISR: cache for 60s, serve stale for up to 10 min while revalidating
 Astro.response.headers.set(
@@ -33,6 +35,13 @@ Astro.response.headers.set(
 
 const { username: slugParam } = Astro.params;
 const locale = getLocaleFromPath(Astro.url.pathname);
+
+if (Astro.url.pathname.endsWith('.json') || Astro.url.pathname.endsWith('.json/')) {
+  return new Response(null, {
+    status: 404,
+    statusText: 'Not Found',
+  });
+}
 
 if (!slugParam) {
   return Astro.redirect('/workflows/');
@@ -52,8 +61,18 @@ if (detailShareId) {
     const is404 = err instanceof Error && err.message.includes('404');
     if (!is404) {
       console.error('Hub API error on ISR detail:', err);
+      return new Response(null, {
+        status: 502,
+        statusText: 'Bad Gateway',
+        headers: {
+          'CDN-Cache-Control': 'no-store',
+        },
+      });
     }
-    return Astro.redirect('/workflows/');
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not Found',
+    });
   }
 }
 
@@ -84,26 +103,50 @@ try {
 }
 
 // Fetch workflows for this creator from index
-const profiles = await getProfileCache();
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 let serialized: SerializedTemplate[] = [];
+let indexFetchFailed = false;
 
 try {
   const entries = await listWorkflowIndex();
   const filtered = entries.filter((e) => (e.profile?.username || e.username) === slugParam);
-  serialized = filtered.map((e) => serializeIndexEntry(e, profiles));
-} catch {
-  // Index API failed — show empty grid
+  serialized = filtered.map((e) => serializeIndexEntry(e, profiles, rankingMap));
+} catch (err) {
+  indexFetchFailed = true;
+  console.error('Hub API failed for creator grid:', err);
 }
 
 // Slug is bogus (e.g. "undefined" or a malformed "<name>-" suffix from a broken
 // link): not a workflow detail, no profile, and no workflows — redirect instead
 // of rendering a page that would title itself "<slug> (@<slug>)" and get
 // indexed by Google.
-if (!isDetailPage && !profileFound && serialized.length === 0) {
-  return Astro.redirect('/workflows/');
+if (!isDetailPage) {
+  // A failed grid-index fetch is a transient error, not a missing page: 502 (no-store)
+  // regardless of profileFound, so an empty grid from an API glitch is never cached.
+  if (indexFetchFailed) {
+    return new Response(null, {
+      status: 502,
+      statusText: 'Bad Gateway',
+      headers: {
+        'CDN-Cache-Control': 'no-store',
+      },
+    });
+  }
+  // 404 only for a successfully queried, genuinely empty result.
+  if (!profileFound && serialized.length === 0) {
+    return new Response(null, {
+      status: 404,
+      statusText: 'Not Found',
+    });
+  }
 }
 
 const canonicalUrl = absoluteUrl(`/workflows/${slugParam}/`);
+// This page (both the creator-profile and workflow-detail branches below) is
+// always locale-indexable itself; advertise only the locales actually flipped
+// on, not BaseLayout's full-LANGUAGES default (which includes "it", unbuilt
+// and 404ing).
+const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
@@ -143,6 +186,7 @@ const detailBreadcrumb = detailData
   ogType="article"
   structuredData={detailStructuredData ?? undefined}
   hreflangBasePath={`/workflows/${slugParam}/`}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
@@ -163,6 +207,8 @@ const detailBreadcrumb = detailData
   description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
   ogImage={creatorOgUrl(displayName, slugParam!, avatarUrl || undefined)}
+  hreflangBasePath={`/workflows/${slugParam}/`}
+  hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >

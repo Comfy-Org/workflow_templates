@@ -1,7 +1,10 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vitest/config';
+import { getViteConfig } from 'astro/config';
 
-export default defineConfig({
+// getViteConfig rather than plain defineConfig so tests can import and render
+// .astro components; without it Vite cannot parse their template syntax.
+export default getViteConfig({
   resolve: {
     // Mirror the tsconfig `@/* → ./src/*` alias so unit tests can import
     // source modules that use it (e.g. composables).

@@ -13,7 +13,10 @@ export const navRoutes = {
   cloud: `${ORIGIN}/cloud`,
   cloudPricing: `${ORIGIN}/cloud/pricing`,
   cloudEnterprise: `${ORIGIN}/cloud/enterprise`,
-  api: `${ORIGIN}/api`,
+  platform: `${ORIGIN}/platform`,
+  managedBuilds: `${ORIGIN}/enterprise/managed-builds`,
+  agent: `${ORIGIN}/agent`,
+  cli: `${ORIGIN}/cli`,
   gallery: `${ORIGIN}/gallery`,
   about: `${ORIGIN}/about`,
   careers: `${ORIGIN}/careers`,
@@ -21,6 +24,12 @@ export const navRoutes = {
   customers: `${ORIGIN}/customers`,
   learning: `${ORIGIN}/learning`,
   affiliates: `${ORIGIN}/affiliates`,
+  mcp: `${ORIGIN}/mcp`,
+  launches: `${ORIGIN}/launches`,
+  models: `${ORIGIN}/p/supported-models`,
+  fdct: `${ORIGIN}/forward-deployed-creatives`,
+  events: `${ORIGIN}/events`,
+  ltx: `${ORIGIN}/ltx-2.5`,
 } as const;
 
 export const navExternalLinks = {
@@ -41,8 +50,8 @@ const MEDIA = 'https://media.comfy.org/website/nav';
 /** Featured-card image + CTA target for each dropdown section. */
 export const navFeatured = {
   products: {
-    image: `${MEDIA}/featured-model-card.jpg`,
-    cta: `${ORIGIN}/workflows/api_seedance2_0_r2v-64f4db9e3e33/`,
+    image: `${MEDIA}/ltx-card.webp`,
+    cta: navRoutes.ltx,
   },
   community: {
     image: `${MEDIA}/featured-demo-card.jpg`,

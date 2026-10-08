@@ -5,8 +5,8 @@
  * Tells search engines about language/region variations of the same content.
  * Should be included in <head> for all pages that have localized versions.
  */
-import { LANGUAGES, type Locale } from '../i18n/config';
-import { localizeUrl } from '../i18n/utils';
+import { type Locale } from '../i18n/config';
+import { clusterLocales, localizeUrl } from '../i18n/utils';
 import { absoluteUrl } from '../config/site';
 
 interface Props {
@@ -18,21 +18,26 @@ interface Props {
    * never advertise per-locale URLs that would 404. Defaults to true.
    */
   localized?: boolean;
+  /**
+   * Explicit alternate locales for per-page gating. When provided it
+   * overrides `localized`: ONLY these locales get `<link alternate>` tags, so a
+   * detail page advertises exactly the locales for which it is indexable (Google
+   * discards a cluster that references noindexed alternates). An empty array emits
+   * just x-default — used while a locale detail page is gated non-indexable.
+   */
+  locales?: readonly Locale[];
 }
 
-const { basePath, localized = true } = Astro.props;
+const { basePath, localized = true, locales } = Astro.props;
+
+// Shared with SEOHead's og:locale tags so the two declarations cannot diverge.
+const alternateLocales: readonly Locale[] = clusterLocales(localized, locales);
 
 // hreflang values must be lowercase (e.g. 'zh-tw' not 'zh-TW').
-const hreflangEntries = localized
-  ? Object.keys(LANGUAGES).map((locale) => {
-      const href = absoluteUrl(localizeUrl(basePath, locale as Locale));
-
-      return {
-        hreflang: locale.toLowerCase(),
-        href,
-      };
-    })
-  : [];
+const hreflangEntries = alternateLocales.map((locale) => ({
+  hreflang: locale.toLowerCase(),
+  href: absoluteUrl(localizeUrl(basePath, locale)),
+}));
 
 // Add x-default pointing to the English version
 const xDefaultHref = absoluteUrl(basePath);

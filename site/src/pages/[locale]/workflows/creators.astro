@@ -14,12 +14,10 @@ import BackButton from '../../../components/BackButton.astro';
 import { LOCALES, DEFAULT_LOCALE, type Locale } from '../../../i18n/config';
 import { creatorPath } from '../../../lib/routes';
 import { absoluteUrl } from '../../../config/site';
-import {
-  listWorkflowIndex,
-  getProfileCache,
-  serializeIndexEntry,
-  type SerializedTemplate,
-} from '../../../lib/hub-api';
+import { listingIndexing } from '../../../lib/i18n/listing-indexing';
+import { localizeCards } from '../../../lib/i18n/localize-cards';
+import { listWorkflowIndex, getProfileCache, serializeIndexEntry, type SerializedTemplate } from '../../../lib/hub-api';
+import { fetchRankingMap } from '../../../lib/ranking';
 
 const { locale } = Astro.params;
 
@@ -29,16 +27,25 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 }
 
 const typedLocale = locale as Locale;
-const profiles = await getProfileCache();
+
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
+const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 
 // Fetch all workflows from hub API
 let allTemplates: SerializedTemplate[] = [];
 try {
   const entries = await listWorkflowIndex();
-  allTemplates = entries.map((e) => serializeIndexEntry(e, profiles));
+  // Index entries are English only. Resolve the same text the detail page will
+  // show, so a localized creators page is not a translated page sitting above a
+  // grid of English cards. Done before grouping so every creator's cards agree.
+  allTemplates = localizeCards(
+    entries.map((e) => serializeIndexEntry(e, profiles, rankingMap)),
+    typedLocale
+  );
 } catch (err) {
   console.error('Hub API failed for creators page:', err);
-  // API failed — show empty page
+  Astro.response.headers.set('CDN-Cache-Control', 'no-store');
 }
 
 // Group templates by username
@@ -68,7 +75,9 @@ const sortedCreators = Array.from(creatorMap.values()).sort(
   (a, b) => b.templates.length - a.templates.length
 );
 
-const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
+// Gated until this locale completes native review — see listing-indexing.
+const indexing = listingIndexing('/workflows/creators/', typedLocale);
+const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 ---
 
 <BaseLayout
@@ -76,6 +85,9 @@ const canonicalUrl = absoluteUrl(`/${locale}/workflows/creators/`);
   description="Discover the world's top ComfyUI workflow creators and their best templates."
   canonicalUrl={canonicalUrl}
   locale={typedLocale}
+  hreflangBasePath="/workflows/creators/"
+  hreflangLocales={indexing.hreflangLocales}
+  noindex={indexing.noindex}
   theme="dark"
   hideDefaultFooter
 >

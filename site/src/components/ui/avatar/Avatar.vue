@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import type { HTMLAttributes } from 'vue';
+import { getStillImageUrl } from '@/lib/video-thumbnail';
 import { cn } from '@/lib/utils';
 
 const {
@@ -23,12 +24,15 @@ watch(
 
 const showImage = computed(() => Boolean(src) && !errored.value);
 const initial = computed(() => name.charAt(0).toUpperCase());
+
+const AVATAR_WIDTH = 128;
+const resolvedSrc = computed(() => (src ? (getStillImageUrl(src, AVATAR_WIDTH) ?? src) : src));
 </script>
 
 <template>
   <img
     v-if="showImage"
-    :src="src!"
+    :src="resolvedSrc!"
     :alt="name"
     loading="lazy"
     :class="cn('rounded-full shrink-0 object-cover', className)"

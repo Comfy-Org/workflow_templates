@@ -1,7 +1,9 @@
 ---
 import type { Locale } from '../../i18n/config';
-import { firstStillThumbnail, firstTemplateWithStill } from '../../lib/media-utils';
+import { hasStillThumbnail, heroTemplateFor, isVideoFile } from '../../lib/media-utils';
 import { thumbnailPath, workflowDetailPath } from '../../lib/routes';
+import { hubMediaFor, landingHeroImage, landingHeroPreload } from '../../lib/hub-media';
+import { externalLinkAttrs } from '../../lib/urls';
 import type { SerializedTemplate } from '../../lib/hub-api';
 import { resolveTemplateLogos } from '../../lib/model-logos';
 import { Button } from '../ui/button';
@@ -19,41 +21,70 @@ interface Props {
   analytics?: { location: string; template?: string };
   /** Templates the page resolves to; the first still image becomes the hero visual. */
   templates: SerializedTemplate[];
+  /** Links the hero visual here instead of the hero template's detail page. */
+  heroHrefOverride?: string;
   locale: Locale;
 }
 
-const { eyebrow, title, description, meta, primaryCta, secondaryCta, analytics, templates, locale } =
-  Astro.props;
+const {
+  eyebrow,
+  title,
+  description,
+  meta,
+  primaryCta,
+  secondaryCta,
+  analytics,
+  templates,
+  locale,
+  heroHrefOverride,
+} = Astro.props;
 
-// Shared brand-solid / brand-outline buttons. Only external links open a new
-// tab; same-page anchors (e.g. "#workflows") must scroll in place.
 const ctaButtons = [
   { ...primaryCta, primary: true },
   { ...secondaryCta, primary: false },
-].map((cta) => {
-  const external = /^https?:/i.test(cta.href);
-  return {
-    ...cta,
-    target: external ? '_blank' : undefined,
-    rel: external ? 'noopener noreferrer' : undefined,
-    trackClass: cta.primary && analytics ? 'run-cloud-btn' : undefined,
-    dataLocation: cta.primary ? analytics?.location : undefined,
-    dataTemplate: cta.primary ? analytics?.template : undefined,
-  };
-});
+].map((cta) => ({
+  ...cta,
+  ...externalLinkAttrs(cta.href),
+  trackClass: cta.primary && analytics ? 'run-cloud-btn' : undefined,
+  dataLocation: cta.primary ? analytics?.location : undefined,
+  dataTemplate: cta.primary ? analytics?.template : undefined,
+}));
 
-const heroTemplate = firstTemplateWithStill(templates);
-const heroImage = firstStillThumbnail(heroTemplate?.thumbnails);
-const heroSrc = heroImage ? thumbnailPath(heroImage) : null;
+// A video-only lead template (curated pages pin the featured app first, and Hub
+// app thumbnails are often video-only) fronts its own page as a muted loop
+// instead of yielding the hero to a later template's still. heroTemplateFor is
+// shared with the pages' rail reservation so the reserved hero can't diverge
+// from what renders here.
+const heroTemplate = heroTemplateFor(templates);
+const heroVideoThumb =
+  heroTemplate && !hasStillThumbnail(heroTemplate.thumbnails)
+    ? heroTemplate.thumbnails?.find((thumb) => isVideoFile(thumb))
+    : undefined;
+const heroVideoOriginal = heroVideoThumb ? thumbnailPath(heroVideoThumb) : null;
+const heroVideoSrc = heroVideoOriginal
+  ? (hubMediaFor(heroVideoOriginal)?.video ?? heroVideoOriginal)
+  : null;
+const heroVideoPoster = heroVideoOriginal
+  ? (landingHeroPreload(heroTemplate?.thumbnails) ?? undefined)
+  : undefined;
+const heroSrc = landingHeroImage(heroTemplate?.thumbnails);
 const heroLogos = heroTemplate ? resolveTemplateLogos(heroTemplate) : [];
-// The hero visual links to its own template's detail page (plain div if unknown).
-const heroHref = workflowDetailPath(heroTemplate?.name, heroTemplate?.shareId, locale);
+// The hero visual links to the override (page CTA) or the hero template's detail page.
+const heroHref =
+  heroHrefOverride ?? workflowDetailPath(heroTemplate?.name, heroTemplate?.shareId, locale);
 const HeroVisual = heroHref ? 'a' : 'div';
-const heroVisualProps = heroHref ? { href: heroHref, 'aria-label': title } : {};
+const heroVisualProps = heroHref
+  ? { href: heroHref, 'aria-label': title, ...externalLinkAttrs(heroHref) }
+  : {};
 ---
 
 <header class:list={[inner, 'py-12 lg:py-20']}>
-  <div class:list={['flex flex-col gap-12', heroSrc && 'lg:flex-row lg:items-center lg:gap-16']}>
+  <div
+    class:list={[
+      'flex flex-col gap-12',
+      (heroSrc || heroVideoSrc) && 'lg:flex-row lg:items-center lg:gap-16',
+    ]}
+  >
     <!-- Text block (≈40% on desktop; image panel takes the larger share) -->
     <div class="flex flex-col lg:flex-2">
       <p class="font-display text-sm font-extrabold uppercase tracking-[0.05em] text-brand">
@@ -94,22 +125,34 @@ const heroVisualProps = heroHref ? { href: heroHref, 'aria-label': title } : {};
       </div>
     </div>
 
-    <!-- Visual — links to the lead template's detail page. -->
     {
-      heroSrc && (
+      (heroSrc || heroVideoSrc) && (
         <div class="flex flex-[2.5] items-center justify-center rounded-[2.25rem] border border-border-strong bg-page p-4">
           <HeroVisual
             {...heroVisualProps}
             class="group relative block aspect-940/516 w-full overflow-hidden rounded-3xl"
           >
-            <img
-              src={heroSrc}
-              alt={title}
-              class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              loading="eager"
-              fetchpriority="high"
-              decoding="async"
-            />
+            {heroVideoSrc ? (
+              <video
+                src={heroVideoSrc}
+                poster={heroVideoPoster}
+                class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                autoplay
+                muted
+                loop
+                playsinline
+                aria-label={title}
+              />
+            ) : (
+              <img
+                src={heroSrc}
+                alt={title}
+                class="size-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+              />
+            )}
             <ModelBadges logos={heroLogos} class="absolute top-4 right-4 z-10" />
           </HeroVisual>
         </div>

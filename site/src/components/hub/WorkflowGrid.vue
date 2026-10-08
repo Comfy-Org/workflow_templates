@@ -4,11 +4,13 @@
  * Accepts pre-filtered templates and handles tabs, sorting, and display internally.
  * Used by both HubBrowse (hub page) and [username].astro (profile page).
  */
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import HubWorkflowCard from './HubWorkflowCard.vue';
 import BrowseToolbar from './BrowseToolbar.vue';
 import { useHubStore } from '@/composables/useHubStore';
+import { loadCatalog } from '@/lib/catalog';
+import { badgesAvailableIn, templatesInTab } from '@/lib/hub-tabs';
 import type { FacetGroupConfig, ToolbarLabels } from '@/lib/toolbar';
 
 export type HubThumbnailVariant = 'compareSlider' | 'hoverDissolve' | 'zoomHover' | 'hoverZoom';
@@ -52,30 +54,94 @@ const props = withDefaults(
      * `templates` by the active badges (so counts stay stable while filtering).
      */
     facetTemplates?: WorkflowTemplate[];
+    /**
+     * When true, `templates` is only the embedded first-page slice (for instant
+     * paint); the full catalog is lazy-loaded from grid.json on mount and swapped
+     * in. Used by the detail "View all workflows" grid so pages don't embed the
+     * whole catalog. Omit for pages that already pass a bounded subset.
+     */
+    lazyFull?: boolean;
+    /** With `lazyFull`, exclude this workflow `name` from the fetched catalog. */
+    excludeName?: string;
+    /**
+     * Share ids to keep at the top of the grid in this order, ahead of the
+     * usage/date sort — curated picks (use-case page pins) often have no click
+     * history, so sorting alone buries them.
+     */
+    pinnedShareIds?: string[];
   }>(),
   {
     gridClass: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
     toolbarLabels: undefined,
     facetsConfig: undefined,
     facetTemplates: undefined,
+    lazyFull: false,
+    excludeName: undefined,
+    pinnedShareIds: () => [],
   }
 );
 
-const facetSource = computed(() => props.facetTemplates ?? props.templates);
+// Working set: starts as the passed `templates` (embedded slice or full subset),
+// then, when `lazyFull`, is replaced by the full catalog once it loads.
+const workingSet = ref<WorkflowTemplate[]>([...props.templates]);
+
+onMounted(() => {
+  if (!props.lazyFull) return;
+  // Locale-scoped: the embedded slice is already translated, so swapping in the
+  // English catalog would revert the cards in front of the reader.
+  loadCatalog(props.locale)
+    .then((catalog) => {
+      workingSet.value = props.excludeName
+        ? catalog.filter((t) => t.name !== props.excludeName)
+        : catalog;
+    })
+    .catch((err) => {
+      // Keep the embedded slice on failure — the grid stays usable.
+      console.error('Failed to load full catalog for grid:', err);
+    });
+});
+
+// Keep the working set in sync if the parent swaps `templates` (non-lazy pages).
+watch(
+  () => props.templates,
+  (next) => {
+    if (!props.lazyFull) workingSet.value = [...next];
+  }
+);
 
 const store = useHubStore();
 const displayCount = ref(30);
 
+// Counts deliberately ignore the badge selection so they stay stable while a
+// filter is applied, but they must still honour the tab. Counting the whole
+// catalogue here advertised totals the tab could never return: on Comfy Apps,
+// "Wan 37" produced an empty grid because none of those 37 are apps.
+const facetSource = computed(() =>
+  templatesInTab(props.facetTemplates ?? workingSet.value, store.activeTab.value)
+);
+
 // Reset pagination when the inputs that change the result set change.
-watch([() => props.templates, store.activeTab, store.sortBy], () => {
+watch([workingSet, store.activeTab, store.sortBy], () => {
   displayCount.value = 30;
 });
 
-const tabbedTemplates = computed(() => {
-  if (store.activeTab.value === 'comfyApps') return props.templates.filter((t) => t.isApp);
-  if (store.activeTab.value === 'nodeGraphs') return props.templates.filter((t) => !t.isApp);
-  return props.templates;
+/**
+ * Drop badges the new tab cannot satisfy.
+ *
+ * Scoping the facet list to the tab is not enough on its own: a badge selected
+ * on one tab stays active after switching, while its option disappears from the
+ * scoped list. "All, filter Wan, then Comfy Apps" left `Wan` applied with no
+ * visible way to clear it and an empty grid. Badges that still exist in the new
+ * tab are kept, so switching tabs does not silently throw away a filter that
+ * still means something.
+ */
+watch(store.activeTab, () => {
+  const badges = store.filterBadges.value;
+  const kept = badgesAvailableIn(badges, facetSource.value);
+  if (kept.length !== badges.length) store.filterBadges.value = kept;
 });
+
+const tabbedTemplates = computed(() => templatesInTab(workingSet.value, store.activeTab.value));
 
 const sortedTemplates = computed(() => {
   const result = [...tabbedTemplates.value];
@@ -91,7 +157,13 @@ const sortedTemplates = computed(() => {
     });
   }
 
-  return result;
+  if (props.pinnedShareIds.length === 0) return result;
+  const pinRank = new Map(props.pinnedShareIds.map((id, index) => [id, index]));
+  const pinned = result
+    .filter((t) => t.shareId && pinRank.has(t.shareId))
+    .sort((a, b) => pinRank.get(a.shareId!)! - pinRank.get(b.shareId!)!);
+  const rest = result.filter((t) => !t.shareId || !pinRank.has(t.shareId));
+  return [...pinned, ...rest];
 });
 
 const displayedTemplates = computed(() => sortedTemplates.value.slice(0, displayCount.value));
