@@ -25,6 +25,28 @@ export function isMediaFile(filename: string): boolean {
   return isVideoFile(filename) || isAudioFile(filename);
 }
 
+/**
+ * Asset IDs of the shared "no preview uploaded yet" placeholder clip the hub
+ * serves as a workflow's video thumbnail until a real preview exists.
+ *
+ * The same file is embedded as a `<video>` on hundreds of workflow pages, so
+ * Google cannot pick a canonical watch page for it and flags every one of those
+ * pages with "Video isn't on a watch page". While the real preview is still
+ * missing we render its poster frame instead of a `<video>` and opt the page out
+ * of video indexing; a real preview classifies as a normal video and is
+ * unaffected.
+ */
+const PLACEHOLDER_VIDEO_IDS = new Set(['850ff161-2547-4fce-a9c3-7835eeeedcce']);
+
+/** Whether a thumbnail URL/filename is the hub's shared placeholder video. */
+export function isPlaceholderVideo(url: string | null | undefined): boolean {
+  if (!url) return false;
+  const file = normalizeForExtCheck(url).split('/').pop() ?? '';
+  const dot = file.lastIndexOf('.');
+  const id = dot > 0 ? file.slice(0, dot) : file;
+  return PLACEHOLDER_VIDEO_IDS.has(id);
+}
+
 /** First still (non-video/-audio) thumbnail, so a card never renders a video src. */
 export function firstStillThumbnail(thumbnails?: string[]): string | null {
   return thumbnails?.find((thumb) => !isMediaFile(thumb)) ?? null;
