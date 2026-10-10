@@ -71,8 +71,11 @@ const group =
   groups.find((candidate) => candidate.slug === name) ??
   groups.find((candidate) => candidate.redirectFrom.includes(name));
 
+// An unknown or removed model slug (`none`, a retired model version with no
+// family, a made-up filter) 301s to the models index rather than 404ing.
+// Known variant → family redirects are handled by `redirectFrom` above.
 if (!group) {
-  return new Response(null, { status: 404, statusText: 'Not Found' });
+  return Astro.redirect(modelsIndexPath(), 301);
 }
 
 // A variant slug 301s to its family's canonical URL, matching the locale route.
