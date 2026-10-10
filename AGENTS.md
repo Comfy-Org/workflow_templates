@@ -162,6 +162,7 @@ Formal schema: [`docs/SPEC.md`](docs/SPEC.md). Quick reference:
 - `/managing-use-case-pages` — create/edit SEO use-case landing pages (supply checks, content, quality gates, PR)
 - `/importing-subgraphs` — import and register subgraph blueprints
 - `/managing-releases` — version bumps, PyPI publishing, frozen bundles, release label
+- `/handing-off-private-releases` — hand an unpushed (private model) release branch to a colleague via one zip (git bundle + English handoff file)
 
 ## CI/CD
 
