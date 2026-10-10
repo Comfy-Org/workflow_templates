@@ -150,6 +150,36 @@ const hreflangLocales: Locale[] = [DEFAULT_LOCALE, ...INDEXABLE_LOCALES];
 
 const socialLinks = websiteUrls.map(getSocialDisplay);
 
+const mainEntity: Record<string, unknown> = {
+  '@type': slugParam === 'comfyui' ? 'Organization' : 'Person',
+  '@id': canonicalUrl,
+  name: displayName,
+  alternateName: `@${slugParam}`,
+  identifier: slugParam,
+  description: description || `Workflows by ${displayName}`,
+  url: canonicalUrl,
+};
+
+if (avatarUrl) {
+  mainEntity.image = {
+    '@type': 'ImageObject',
+    url: avatarUrl,
+  };
+}
+
+if (websiteUrls && websiteUrls.length > 0) {
+  mainEntity.sameAs = websiteUrls;
+}
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'ProfilePage',
+  name: displayName,
+  description: description || `Workflows by ${displayName}`,
+  url: canonicalUrl,
+  mainEntity,
+};
+
 // Detail page variables (only used when isDetailPage is true)
 const detailTitle = detailData ? `${detailData.title || detailData.name} - ComfyUI Workflow` : '';
 const detailCanonicalUrl = detailData ? absoluteUrl(`/workflows/${slugParam}/`) : '';
@@ -207,6 +237,7 @@ const detailBreadcrumb = detailData
   description={description || `Workflows by ${displayName}`}
   canonicalUrl={canonicalUrl}
   ogImage={creatorOgUrl(displayName, slugParam!, avatarUrl || undefined)}
+  structuredData={structuredData}
   hreflangBasePath={`/workflows/${slugParam}/`}
   hreflangLocales={hreflangLocales}
   theme="dark"
