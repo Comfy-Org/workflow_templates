@@ -373,6 +373,7 @@ All Vue components MUST use standard Vue 3 Composition API and idiomatic Astro p
 - `/regenerating-ai-content` — Regenerate AI descriptions, manage cache
 - `/managing-use-case-pages` — Create/edit SEO use-case landing pages (supply checks, content, quality gates, PR)
 - `/importing-subgraphs` — Import and register subgraph blueprints
+- `/handing-off-private-releases` — Hand an unpushed (private model) release branch to a colleague via one zip (git bundle + English handoff file)
 
 ## Important Docs
 
