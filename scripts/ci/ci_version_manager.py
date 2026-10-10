@@ -365,9 +365,12 @@ def get_changed_packages() -> Set[str]:
         )
 
     tags = run_git(["tag", "--merged", "HEAD", "--list", "v[0-9]*", "--sort=-version:refname"])
-    if not tags:
+    baseline = next(
+        (tag for tag in tags.splitlines() if re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag)),
+        None,
+    )
+    if baseline is None:
         raise SystemExit("No reachable release tag found; fetch tags before auto-bumping")
-    baseline = tags.splitlines()[0]
     print(f"Comparing release content with {baseline}")
 
     manifest_path = "packages/core/src/comfyui_workflow_templates_core/manifest.json"

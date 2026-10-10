@@ -115,6 +115,38 @@ class VersionDetectionTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "No reachable release tag"):
                 ci_version_manager.get_changed_packages()
 
+    def test_prerelease_tag_is_not_used_as_release_baseline(self):
+        def fake_run_git(args):
+            if args[0] == "tag":
+                return "v1.1.0-rc.1\nv1.0.0"
+            if args[0] == "show":
+                self.assertTrue(args[1].startswith("v1.0.0:"))
+                return '{"templates": []}'
+            if args[0] == "diff":
+                return ""
+            raise AssertionError(args)
+
+        with (
+            patch.object(ci_version_manager, "run_git", side_effect=fake_run_git),
+            patch.object(ci_version_manager, "get_merge_base", return_value="merge-base"),
+            patch.object(ci_version_manager, "get_frozen_packages", return_value=set()),
+            patch.object(ci_version_manager, "_blocked_frozen_media_updates", return_value=set()),
+            patch.object(ci_version_manager, "get_current_version", return_value="1.0.0"),
+            patch.object(ci_version_manager, "get_version_at_ref", return_value="1.0.0"),
+            patch.object(Path, "read_text", return_value='{"templates": []}'),
+        ):
+            self.assertEqual(ci_version_manager.get_changed_packages(), {"core", "json", "meta"})
+
+    def test_only_prerelease_tags_fail_without_bumping(self):
+        with (
+            patch.object(ci_version_manager, "run_git", return_value="v1.0.0-rc.1"),
+            patch.object(ci_version_manager, "get_merge_base", return_value="merge-base"),
+            patch.object(ci_version_manager, "get_frozen_packages", return_value=set()),
+            patch.object(ci_version_manager, "_blocked_frozen_media_updates", return_value=set()),
+        ):
+            with self.assertRaisesRegex(SystemExit, "No reachable release tag"):
+                ci_version_manager.get_changed_packages()
+
     def test_update_dependencies_uses_provided_package_set(self):
         """Pin updates must not re-run the full change scan."""
         with (
