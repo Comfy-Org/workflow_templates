@@ -131,6 +131,27 @@ const seoContentSchema = z.object({
     .optional(),
   metaDescription: z.string(),
   faqItems: z.array(z.object({ question: z.string(), answer: z.string() })),
+  about: z
+    .array(
+      z.object({
+        '@type': z.string(),
+        name: z.string(),
+        sameAs: z.string().optional(),
+      })
+    )
+    .optional(),
+  mentions: z
+    .array(
+      z.union([
+        z.object({ '@id': z.string() }),
+        z.object({
+          '@type': z.string(),
+          name: z.string(),
+          sameAs: z.string().optional(),
+        }),
+      ])
+    )
+    .optional(),
   qualityFailed: z.boolean().optional(),
   lastAIGeneration: z.string().optional(),
 });
