@@ -113,7 +113,9 @@ def _manifest_media_assets_changed(old_manifest: dict, cur_manifest: dict, bundl
 
 
 def run_git(args: List[str]) -> str:
-    return subprocess.check_output(["git", *args], cwd=ROOT).decode().strip()
+    return subprocess.check_output(
+        ["git", *args], cwd=ROOT, stderr=subprocess.PIPE
+    ).decode().strip()
 
 
 def get_frozen_packages() -> Set[str]:
@@ -158,10 +160,17 @@ def _pyproject_path(pkg: str) -> str:
     return f"packages/{pkg}/pyproject.toml"
 
 
-def get_version_at_ref(pkg: str, ref: str, *, required: bool = False) -> str:
+def get_version_at_ref(
+    pkg: str, ref: str, *, required: bool = False, allow_missing: bool = False
+) -> str:
     """Read a package version from pyproject.toml at a git ref."""
     try:
-        content = run_git(["show", f"{ref}:{_pyproject_path(pkg)}"])
+        path = _pyproject_path(pkg)
+        # ls-tree succeeds with an empty result only when the ref is valid but
+        # the package path is absent. Other Git errors must still fail closed.
+        if allow_missing and not run_git(["ls-tree", ref, "--", path]):
+            return "0.0.0"
+        content = run_git(["show", f"{ref}:{path}"])
         match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
         if match:
             return match.group(1)
@@ -170,7 +179,10 @@ def get_version_at_ref(pkg: str, ref: str, *, required: bool = False) -> str:
         return "0.0.0"
     except Exception as exc:
         if required:
-            raise RuntimeError(f"Cannot read package version for {pkg} at {ref}") from exc
+            detail = str(exc)
+            if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
+                detail = exc.stderr.decode(errors="replace").strip()
+            raise RuntimeError(f"Cannot read package version for {pkg} at {ref}: {detail}") from exc
         return "0.0.0"
 
 
@@ -386,12 +398,17 @@ def get_changed_packages() -> Set[str]:
     for pkg in ALL_PACKAGE_IDS:
         if pkg == "meta" or pkg in frozen:
             continue
-        # A version already different from the release tag was bumped by this
-        # PR (or manually). Do not bump it again on the CI-generated rerun.
+        # Only a version changed on this PR proves that it was already bumped.
+        # Main can be ahead of the latest tag if release tag creation failed.
+        # New packages on this PR retain the author's initial version.
         current_version = get_current_version(pkg)
-        published_version = get_version_at_ref(pkg, baseline, required=True)
-        if current_version != published_version:
-            print(f"Package {pkg} already changed: {published_version} -> {current_version}")
+        pr_base_version = get_version_at_ref(
+            pkg, merge_base, required=True, allow_missing=True
+        )
+        if current_version != pr_base_version:
+            print(
+                f"Package {pkg} already changed on this PR: {pr_base_version} -> {current_version}"
+            )
             continue
 
         if pkg in {"core", "json"}:
@@ -400,6 +417,7 @@ def get_changed_packages() -> Set[str]:
             changed = bool(run_git([
                 "diff", "--name-only", baseline, "--", "blueprints/",
                 "blueprints_bundles.json", "packages/blueprints/",
+                "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json",
             ]))
         else:
             bundle = next(name for name, package in BUNDLE_PACKAGE_MAP.items() if package == pkg)
@@ -555,7 +573,13 @@ def main() -> int:
         print("")
         return 0
 
-    packages = get_changed_packages()
+    try:
+        packages = get_changed_packages()
+    except (subprocess.CalledProcessError, RuntimeError, ValueError, OSError) as exc:
+        detail = str(exc)
+        if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
+            detail = exc.stderr.decode(errors="replace").strip()
+        raise SystemExit(f"Release change detection failed: {detail}") from exc
     print(f"Detected changed packages: {sorted(packages)}")
 
     non_meta_packages = packages - {"meta"}

@@ -188,6 +188,46 @@ class VersionDetectionTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "Cannot read package version for core"):
                 ci_version_manager.get_version_at_ref("core", "v1.0.0", required=True)
 
+    def test_missing_package_at_valid_ref_is_distinct_from_git_failure(self):
+        with patch.object(ci_version_manager, "run_git", return_value="") as run_git:
+            self.assertEqual(ci_version_manager.get_version_at_ref(
+                "core", "base", required=True, allow_missing=True
+            ), "0.0.0")
+        run_git.assert_called_once_with(["ls-tree", "base", "--", "packages/core/pyproject.toml"])
+        with patch.object(ci_version_manager, "run_git", side_effect=subprocess.CalledProcessError(
+            128, ["git", "ls-tree"], stderr=b"fatal: invalid object name"
+        )):
+            with self.assertRaisesRegex(RuntimeError, "invalid object name"):
+                ci_version_manager.get_version_at_ref(
+                    "core", "base", required=True, allow_missing=True
+                )
+
+    def test_frozen_updates_stop_detection_before_tag_queries(self):
+        with (
+            patch.object(ci_version_manager, "get_merge_base", return_value="base"),
+            patch.object(ci_version_manager, "get_frozen_packages", return_value={"media_api"}),
+            patch.object(
+                ci_version_manager, "_blocked_frozen_media_updates", return_value={"media_api"}
+            ),
+            patch.object(ci_version_manager, "run_git") as run_git,
+        ):
+            with self.assertRaisesRegex(SystemExit, "Frozen media packages need an update"):
+                ci_version_manager.get_changed_packages()
+        run_git.assert_not_called()
+
+    def test_detection_git_error_is_reported_without_a_traceback(self):
+        with (
+            patch.object(ci_version_manager, "_parse_args", return_value=type(
+                "Args", (), {"list_publish_packages": False}
+            )()),
+            patch.object(ci_version_manager, "root_version_changed", return_value=True),
+            patch.object(ci_version_manager, "get_changed_packages", side_effect=(
+                subprocess.CalledProcessError(128, ["git", "tag"], stderr=b"fatal: bad ref")
+            )),
+        ):
+            with self.assertRaisesRegex(SystemExit, "Release change detection failed: fatal: bad ref"):
+                ci_version_manager.main()
+
     def test_update_dependencies_uses_provided_package_set(self):
         """Pin updates must not re-run the full change scan."""
         with (
@@ -288,6 +328,23 @@ class VersionDetectionTests(unittest.TestCase):
 
 class ReleaseIntegrationTests(unittest.TestCase):
     def test_release_includes_main_changes_and_rerun_does_not_bump_again(self):
+        self._exercise_release()
+
+    def test_stale_tag_does_not_skip_versions_already_advanced_on_main(self):
+        self._exercise_release(stale_tag=True)
+
+    def test_package_added_on_main_after_tag_can_be_released(self):
+        self._exercise_release(new_package=True)
+
+    def test_package_added_on_pr_keeps_initial_version_and_is_publishable(self):
+        self._exercise_release(new_on_pr=True)
+
+    def test_blueprint_core_manifest_change_is_detected(self):
+        self._exercise_release(manifest_only=True)
+
+    def _exercise_release(
+        self, *, stale_tag=False, new_package=False, new_on_pr=False, manifest_only=False
+    ):
         """Exercise real tags, package versions and content across a release PR."""
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -310,6 +367,8 @@ class ReleaseIntegrationTests(unittest.TestCase):
             git("config", "user.name", "Release test")
             git("config", "user.email", "release-test@example.com")
             for pkg in ("core", "json", "media_assets_02", "blueprints"):
+                if (new_package or new_on_pr) and pkg == "media_assets_02":
+                    continue
                 write(f"packages/{pkg}/pyproject.toml", '[project]\nversion = "1.0.0"\n')
             write("pyproject.toml", '[project]\nversion = "1.0.0"\n')
             manifest_path = "packages/core/src/comfyui_workflow_templates_core/manifest.json"
@@ -318,18 +377,35 @@ class ReleaseIntegrationTests(unittest.TestCase):
             ]}]}
             write(manifest_path, json.dumps(manifest))
             write("blueprints/example.json", "{}")
+            blueprint_manifest = (
+                "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json"
+            )
+            write(blueprint_manifest, '{"blueprints": []}')
             commit("Published release")
             git("tag", "v1.0.0")
 
-            manifest["templates"][0]["assets"][0]["sha256"] = "new"
-            write(manifest_path, json.dumps(manifest))
-            write("blueprints/example.json", '{"changed": true}')
+            if stale_tag:
+                for pkg in ("core", "json", "media_assets_02", "blueprints"):
+                    write(f"packages/{pkg}/pyproject.toml", '[project]\nversion = "1.0.1"\n')
+                write("pyproject.toml", '[project]\nversion = "1.0.1"\n')
+                commit("Previous release succeeded but its tag was not created")
+            if new_package:
+                write("packages/media_assets_02/pyproject.toml", '[project]\nversion = "1.0.1"\n')
+            if manifest_only:
+                write(blueprint_manifest, '{"blueprints": [{"id": "example"}]}')
+            else:
+                manifest["templates"][0]["assets"][0]["sha256"] = "new"
+                write(manifest_path, json.dumps(manifest))
+                write("blueprints/example.json", '{"changed": true}')
             commit("Merge template and blueprint changes into main")
             git("update-ref", "refs/remotes/origin/main", "HEAD")
             git("checkout", "-b", "release")
+            if new_on_pr:
+                write("packages/media_assets_02/pyproject.toml", '[project]\nversion = "1.0.1"\n')
             # A reachable prerelease tag must not become the published baseline.
             git("tag", "v1.1.0-rc.1")
-            write("pyproject.toml", '[project]\nversion = "1.0.1"\n')
+            release_version = "1.0.2" if stale_tag else "1.0.1"
+            write("pyproject.toml", f'[project]\nversion = "{release_version}"\n')
             commit("Start next release")
 
             previous_cwd = Path.cwd()
@@ -347,10 +423,24 @@ class ReleaseIntegrationTests(unittest.TestCase):
                 ):
                     self.assertTrue(ci_version_manager.root_version_changed())
                     changed = ci_version_manager.get_changed_packages()
-                    self.assertEqual(changed, {
-                        "core", "json", "media_assets_02", "blueprints", "meta"
-                    })
+                    expected = {"core", "json", "blueprints", "meta"}
+                    if not manifest_only and not new_on_pr:
+                        expected.add("media_assets_02")
+                    self.assertEqual(changed, expected)
                     ci_version_manager.bump_versions(changed)
+                    if "media_assets_02" in expected:
+                        expected_version = "1.0.2" if stale_tag or new_package else "1.0.1"
+                        self.assertEqual(
+                            ci_version_manager.get_current_version("media_assets_02"),
+                            expected_version,
+                        )
+                    if new_on_pr:
+                        self.assertEqual(
+                            ci_version_manager.get_current_version("media_assets_02"), "1.0.1"
+                        )
+                        self.assertIn("media_assets_02", ci_version_manager.get_publish_package_ids(
+                            "origin/main"
+                        ))
                     commit("Auto-bump package versions")
                     self.assertTrue(ci_version_manager.root_version_changed())
                     self.assertEqual(ci_version_manager.get_changed_packages(), set())
