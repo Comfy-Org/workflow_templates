@@ -31,7 +31,7 @@ To ship a page you need:
 
 1. **Repo access**: push rights to a branch on `Comfy-Org/workflow_templates`.
 2. **A way to run Claude Code**: locally (any editor or terminal) or in the browser.
-   Local runs also want Node 20 (`site/.nvmrc`) and pnpm 9 (`corepack enable`), but a
+   Local runs also want Node 24 (`site/.nvmrc`) and pnpm 9 (`corepack enable`), but a
    browser-only flow works too: open a draft PR and let CI and the Vercel preview do the
    checking. Both paths are documented below.
 3. **The keyword facts** for your page (see [Where the Facts Come From](#where-the-facts-come-from)).
@@ -271,7 +271,7 @@ Use-case pages own no image files, and there is no upload step:
 
 ## QA and PR
 
-**If you can run things locally** (Node 20, pnpm 9):
+**If you can run things locally** (Node 24, pnpm 9):
 
 ```bash
 cd site

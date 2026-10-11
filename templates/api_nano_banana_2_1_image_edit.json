@@ -1,0 +1,287 @@
+{
+  "id": "932d44b6-d230-42e1-8797-6614e9376796",
+  "revision": 0,
+  "last_node_id": 12,
+  "last_link_id": 22,
+  "nodes": [
+    {
+      "id": 4,
+      "type": "GeminiNanoBanana2V2",
+      "pos": [
+        1168,
+        670
+      ],
+      "size": [
+        380,
+        670
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 17
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.files",
+          "shape": 7,
+          "type": "GEMINI_INPUT_FILES",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            18
+          ]
+        },
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        },
+        {
+          "name": "thought_image",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GeminiNanoBanana2V2"
+      },
+      "widgets_values": [
+        "Change the background to dark, and relight this portrait with dramatic blue light from the front and a warm amber rim light from behind. Keep the person, objects, pose, background, and framing unchanged.",
+        "Gemini Nano Banana 2.1",
+        "auto",
+        "1K",
+        "MEDIUM",
+        721648284798375,
+        "randomize",
+        "IMAGE",
+        "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests.",
+        1,
+        0.95
+      ],
+      "widgets_values_named": {
+        "prompt": "Change the background to dark, and relight this portrait with dramatic blue light from the front and a warm amber rim light from behind. Keep the person, objects, pose, background, and framing unchanged.",
+        "model": "Gemini Nano Banana 2.1",
+        "model.aspect_ratio": "auto",
+        "model.resolution": "1K",
+        "model.thinking_level": "MEDIUM",
+        "seed": 721648284798375,
+        "control_after_generate": "randomize",
+        "response_modalities": "IMAGE",
+        "system_prompt": "You are an expert image-generation engine. You must ALWAYS produce an image.\nInterpret all user input—regardless of format, intent, or abstraction—as literal visual directives for image composition.\nIf a prompt is conversational or lacks specific visual details, you must creatively invent a concrete visual scenario that depicts the concept.\nPrioritize generating the visual representation above any text, formatting, or conversational requests.",
+        "temperature": 1,
+        "top_p": 0.95
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 6,
+      "type": "LoadImage",
+      "pos": [
+        820,
+        670
+      ],
+      "size": [
+        300,
+        410
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            17,
+            21
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "silver_frame_profile.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "silver_frame_profile.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 9,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        1620,
+        670
+      ],
+      "size": [
+        360,
+        410
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "Nano_Banana_2.1",
+        "png",
+        "8-bit",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Nano_Banana_2.1",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
+    },
+    {
+      "id": 11,
+      "type": "ImageCompare",
+      "pos": [
+        2024,
+        670
+      ],
+      "size": [
+        420,
+        410
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 12,
+      "type": "MarkdownNote",
+      "pos": [
+        420,
+        670
+      ],
+      "size": [
+        330,
+        370
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [silver_frame_profile.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/silver_frame_profile.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [silver_frame_profile.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/silver_frame_profile.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      17,
+      6,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      4,
+      0,
+      9,
+      0,
+      "IMAGE"
+    ],
+    [
+      21,
+      6,
+      0,
+      11,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      9,
+      0,
+      11,
+      1,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.4266251971064227,
+      "offset": [
+        1502.0147185802607,
+        -54.26348096738936
+      ]
+    },
+    "frontendVersion": "1.53.6"
+  },
+  "version": 0.4
+}
