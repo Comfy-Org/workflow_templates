@@ -1,8 +1,11 @@
 """Regression tests for release-time package version detection."""
 
 import importlib.util
+import json
+import os
 import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -115,6 +118,31 @@ class VersionDetectionTests(unittest.TestCase):
             with self.assertRaisesRegex(SystemExit, "No reachable release tag"):
                 ci_version_manager.get_changed_packages()
 
+    def test_media_package_source_change_bumps_without_asset_changes(self):
+        def fake_run_git(args):
+            if args[0] == "tag":
+                return "v1.0.0"
+            if args[0] == "show":
+                return '{"templates": []}'
+            if args[0] == "diff":
+                if "packages/media_assets_02/" in args:
+                    return "packages/media_assets_02/src/example/__init__.py"
+                return ""
+            raise AssertionError(args)
+
+        with (
+            patch.object(ci_version_manager, "run_git", side_effect=fake_run_git),
+            patch.object(ci_version_manager, "get_merge_base", return_value="merge-base"),
+            patch.object(ci_version_manager, "get_frozen_packages", return_value=set()),
+            patch.object(ci_version_manager, "_blocked_frozen_media_updates", return_value=set()),
+            patch.object(ci_version_manager, "get_current_version", return_value="1.0.0"),
+            patch.object(ci_version_manager, "get_version_at_ref", return_value="1.0.0"),
+            patch.object(Path, "read_text", return_value='{"templates": []}'),
+        ):
+            self.assertEqual(ci_version_manager.get_changed_packages(), {
+                "core", "json", "media_assets_02", "meta"
+            })
+
     def test_prerelease_tag_is_not_used_as_release_baseline(self):
         def fake_run_git(args):
             if args[0] == "tag":
@@ -146,6 +174,19 @@ class VersionDetectionTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(SystemExit, "No reachable release tag"):
                 ci_version_manager.get_changed_packages()
+
+    def test_required_baseline_version_read_failure_is_not_zero(self):
+        with patch.object(
+            ci_version_manager, "run_git",
+            side_effect=subprocess.CalledProcessError(128, ["git", "show"]),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "Cannot read package version for core"):
+                ci_version_manager.get_version_at_ref("core", "v1.0.0", required=True)
+
+    def test_required_baseline_version_must_have_project_version(self):
+        with patch.object(ci_version_manager, "run_git", return_value="[project]\n"):
+            with self.assertRaisesRegex(RuntimeError, "Cannot read package version for core"):
+                ci_version_manager.get_version_at_ref("core", "v1.0.0", required=True)
 
     def test_update_dependencies_uses_provided_package_set(self):
         """Pin updates must not re-run the full change scan."""
@@ -243,6 +284,78 @@ class VersionDetectionTests(unittest.TestCase):
         self.assertEqual(ci_version_manager._committed_files_cache, {})
         self.assertIsNone(ci_version_manager._unstaged_files_cache)
         self.assertEqual(len(calls), 2)
+
+
+class ReleaseIntegrationTests(unittest.TestCase):
+    def test_release_includes_main_changes_and_rerun_does_not_bump_again(self):
+        """Exercise real tags, package versions and content across a release PR."""
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+
+            def git(*args):
+                return subprocess.check_output(
+                    ["git", *args], cwd=root, stderr=subprocess.PIPE
+                ).decode().strip()
+
+            def write(path, content):
+                target = root / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(content)
+
+            def commit(message):
+                git("add", ".")
+                git("commit", "-m", message)
+
+            git("init", "-b", "main")
+            git("config", "user.name", "Release test")
+            git("config", "user.email", "release-test@example.com")
+            for pkg in ("core", "json", "media_assets_02", "blueprints"):
+                write(f"packages/{pkg}/pyproject.toml", '[project]\nversion = "1.0.0"\n')
+            write("pyproject.toml", '[project]\nversion = "1.0.0"\n')
+            manifest_path = "packages/core/src/comfyui_workflow_templates_core/manifest.json"
+            manifest = {"templates": [{"bundle": "media-assets-02", "assets": [
+                {"filename": "a.webp", "sha256": "old"}
+            ]}]}
+            write(manifest_path, json.dumps(manifest))
+            write("blueprints/example.json", "{}")
+            commit("Published release")
+            git("tag", "v1.0.0")
+
+            manifest["templates"][0]["assets"][0]["sha256"] = "new"
+            write(manifest_path, json.dumps(manifest))
+            write("blueprints/example.json", '{"changed": true}')
+            commit("Merge template and blueprint changes into main")
+            git("update-ref", "refs/remotes/origin/main", "HEAD")
+            git("checkout", "-b", "release")
+            # A reachable prerelease tag must not become the published baseline.
+            git("tag", "v1.1.0-rc.1")
+            write("pyproject.toml", '[project]\nversion = "1.0.1"\n')
+            commit("Start next release")
+
+            previous_cwd = Path.cwd()
+            try:
+                os.chdir(root)
+                with (
+                    patch.object(ci_version_manager, "ROOT", root),
+                    patch.object(ci_version_manager, "get_frozen_packages", return_value=set()),
+                    patch.object(
+                        ci_version_manager, "_blocked_frozen_media_updates", return_value=set()
+                    ),
+                    patch.object(ci_version_manager, "ALL_PACKAGE_IDS", (
+                        "core", "json", "media_assets_02", "blueprints", "meta"
+                    )),
+                ):
+                    self.assertTrue(ci_version_manager.root_version_changed())
+                    changed = ci_version_manager.get_changed_packages()
+                    self.assertEqual(changed, {
+                        "core", "json", "media_assets_02", "blueprints", "meta"
+                    })
+                    ci_version_manager.bump_versions(changed)
+                    commit("Auto-bump package versions")
+                    self.assertTrue(ci_version_manager.root_version_changed())
+                    self.assertEqual(ci_version_manager.get_changed_packages(), set())
+            finally:
+                os.chdir(previous_cwd)
 
 
 if __name__ == "__main__":

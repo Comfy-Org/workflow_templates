@@ -158,13 +158,19 @@ def _pyproject_path(pkg: str) -> str:
     return f"packages/{pkg}/pyproject.toml"
 
 
-def get_version_at_ref(pkg: str, ref: str) -> str:
+def get_version_at_ref(pkg: str, ref: str, *, required: bool = False) -> str:
     """Read a package version from pyproject.toml at a git ref."""
     try:
         content = run_git(["show", f"{ref}:{_pyproject_path(pkg)}"])
         match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
-        return match.group(1) if match else "0.0.0"
-    except Exception:
+        if match:
+            return match.group(1)
+        if required:
+            raise ValueError(f"No project version found for {pkg} at {ref}")
+        return "0.0.0"
+    except Exception as exc:
+        if required:
+            raise RuntimeError(f"Cannot read package version for {pkg} at {ref}") from exc
         return "0.0.0"
 
 
@@ -235,8 +241,7 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     """Get files that affect a specific package since the given commit, excluding CI auto-commits.
 
     An empty result means "this package needs no bump", so a failed query must not be
-    reported as one: errors propagate (``get_changed_packages`` has the safe
-    bump-everything fallback) instead of silently dropping a release.
+    reported as one: errors propagate instead of silently dropping a release.
     """
     # Cached across packages: after sync_bundles the unstaged set can be huge
     # (entire media wheels), so never re-run these git commands per package.
@@ -384,7 +389,7 @@ def get_changed_packages() -> Set[str]:
         # A version already different from the release tag was bumped by this
         # PR (or manually). Do not bump it again on the CI-generated rerun.
         current_version = get_current_version(pkg)
-        published_version = get_version_at_ref(pkg, baseline)
+        published_version = get_version_at_ref(pkg, baseline, required=True)
         if current_version != published_version:
             print(f"Package {pkg} already changed: {published_version} -> {current_version}")
             continue
@@ -394,11 +399,15 @@ def get_changed_packages() -> Set[str]:
         elif pkg == "blueprints":
             changed = bool(run_git([
                 "diff", "--name-only", baseline, "--", "blueprints/",
-                "blueprints_bundles.json", "packages/blueprints/src/",
+                "blueprints_bundles.json", "packages/blueprints/",
             ]))
         else:
             bundle = next(name for name, package in BUNDLE_PACKAGE_MAP.items() if package == pkg)
             changed = _manifest_media_assets_changed(baseline_manifest, current_manifest, bundle)
+            if not changed:
+                changed = bool(run_git([
+                    "diff", "--name-only", baseline, "--", f"packages/{pkg}/",
+                ]))
 
         if changed:
             affected.add(pkg)
