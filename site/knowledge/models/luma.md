@@ -10,11 +10,6 @@ Luma AI develops video and image generation models through its Dream Machine pla
 - World's first native 16-bit HDR video generation
 - Character reference, Modify Video, and Draft Mode (5x faster)
 
-### Ray2
-
-- Production-ready text-to-video and image-to-video
-- 5-9 second output at 24fps with coherent motion
-
 ### Photon
 
 - Image generation with strong prompt following
