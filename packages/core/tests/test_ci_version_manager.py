@@ -225,7 +225,9 @@ class VersionDetectionTests(unittest.TestCase):
                 subprocess.CalledProcessError(128, ["git", "tag"], stderr=b"fatal: bad ref")
             )),
         ):
-            with self.assertRaisesRegex(SystemExit, "Release change detection failed: fatal: bad ref"):
+            with self.assertRaisesRegex(
+                SystemExit, "Release change detection failed: fatal: bad ref"
+            ):
                 ci_version_manager.main()
 
     def test_update_dependencies_uses_provided_package_set(self):
