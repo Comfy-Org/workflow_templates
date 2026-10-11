@@ -5,8 +5,8 @@ name: Version Check and Auto-bump
 # Process:
 #   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
 #   2. Validates bundles.json completeness
-#   3. Detects which packages have template changes (via git history)
-#   4. Bumps version numbers for affected packages (including core if manifest changed)
+#   3. Compares release content with the latest reachable release tag
+#   4. Bumps core/json once per release and changed active asset/blueprint packages
 #   5. Updates meta package dependencies (exact pinning)
 #   6. When the root meta version differs from the PR base branch (e.g. manual
 #      version bump on the PR, or in-job bump), runs the PyPI quota check,
@@ -56,6 +56,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+          fetch-tags: true
           sparse-checkout: |
             templates/
             blueprints/
@@ -107,8 +108,7 @@ jobs:
 
       - name: Auto-bump package versions if needed
         env:
-          # Flush prints promptly so Actions logs are not stuck on the step echo
-          # while git scans run for several minutes with block-buffered stdout.
+          # Flush progress prints promptly in Actions logs.
           PYTHONUNBUFFERED: "1"
         run: |
           echo "=== Analyzing template changes and bumping versions ==="

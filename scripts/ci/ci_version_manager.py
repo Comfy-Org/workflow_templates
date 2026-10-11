@@ -113,7 +113,9 @@ def _manifest_media_assets_changed(old_manifest: dict, cur_manifest: dict, bundl
 
 
 def run_git(args: List[str]) -> str:
-    return subprocess.check_output(["git", *args], cwd=ROOT).decode().strip()
+    return subprocess.check_output(
+        ["git", *args], cwd=ROOT, stderr=subprocess.PIPE
+    ).decode().strip()
 
 
 def get_frozen_packages() -> Set[str]:
@@ -158,51 +160,30 @@ def _pyproject_path(pkg: str) -> str:
     return f"packages/{pkg}/pyproject.toml"
 
 
-def get_version_at_ref(pkg: str, ref: str) -> str:
+def get_version_at_ref(
+    pkg: str, ref: str, *, required: bool = False, allow_missing: bool = False
+) -> str:
     """Read a package version from pyproject.toml at a git ref."""
     try:
-        content = run_git(["show", f"{ref}:{_pyproject_path(pkg)}"])
+        path = _pyproject_path(pkg)
+        # ls-tree succeeds with an empty result only when the ref is valid but
+        # the package path is absent. Other Git errors must still fail closed.
+        if allow_missing and not run_git(["ls-tree", ref, "--", path]):
+            return "0.0.0"
+        content = run_git(["show", f"{ref}:{path}"])
         match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
-        return match.group(1) if match else "0.0.0"
-    except Exception:
+        if match:
+            return match.group(1)
+        if required:
+            raise ValueError(f"No project version found for {pkg} at {ref}")
         return "0.0.0"
-
-
-def find_version_intro_commit(pkg: str, current_version: str, fallback_ref: str) -> str:
-    """Find the commit that introduced the package's current version.
-
-    Release PRs normally change only the root meta version.  Package changes to
-    release may already be on the default branch, so limiting this lookup to
-    ``merge_base..HEAD`` incorrectly makes every subpackage look up to date.
-
-    ``-G`` keeps the lookup cheap by visiting only commits that changed the
-    project version line.  The first matching commit is also the right boundary
-    after an auto-bump commit, preventing a second workflow run from bumping the
-    same package again.
-    """
-    file_path = _pyproject_path(pkg)
-    try:
-        log_output = run_git(
-            ["log", "--format=%H", "-G", r"^version[[:space:]]*=", "--", file_path]
-        )
-        for commit_hash in log_output.splitlines():
-            commit_hash = commit_hash.strip()
-            if not commit_hash:
-                continue
-            try:
-                if get_version_at_ref(pkg, commit_hash) == current_version:
-                    return commit_hash
-            except Exception:
-                continue
-    except Exception:
-        pass
-    return fallback_ref
-
-
-def get_since_commit_for_package(pkg: str, merge_base: str) -> str:
-    """Reference commit for changes not yet covered by the current package version."""
-    current = get_current_version(pkg)
-    return find_version_intro_commit(pkg, current, merge_base)
+    except Exception as exc:
+        if required:
+            detail = str(exc)
+            if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
+                detail = exc.stderr.decode(errors="replace").strip()
+            raise RuntimeError(f"Cannot read package version for {pkg} at {ref}: {detail}") from exc
+        return "0.0.0"
 
 
 def _auto_bump_only_files(since_commit: str) -> set[str]:
@@ -272,8 +253,7 @@ def get_files_affecting_package(pkg: str, since_commit: str) -> List[str]:
     """Get files that affect a specific package since the given commit, excluding CI auto-commits.
 
     An empty result means "this package needs no bump", so a failed query must not be
-    reported as one: errors propagate (``get_changed_packages`` has the safe
-    bump-everything fallback) instead of silently dropping a release.
+    reported as one: errors propagate instead of silently dropping a release.
     """
     # Cached across packages: after sync_bundles the unstaged set can be huge
     # (entire media wheels), so never re-run these git commands per package.
@@ -389,67 +369,73 @@ def get_publish_package_ids(base_ref: str) -> Set[str]:
 
 
 def get_changed_packages() -> Set[str]:
-    """Determine which packages need version bumps based on changes vs main merge-base."""
-    try:
-        affected = set()
-        merge_base = get_merge_base()
-        frozen = get_frozen_packages()
-        print(f"Comparing changes since merge-base with main: {merge_base[:12]}")
+    """Compare this release with the latest reachable release tag, without walking history."""
+    merge_base = get_merge_base()
+    frozen = get_frozen_packages()
+    blocked = _blocked_frozen_media_updates(merge_base)
+    if blocked:
+        details = ", ".join(sorted(blocked))
+        raise SystemExit(
+            "Frozen media packages need an update but are not auto-bumped: "
+            f"{details}. Move new assets to the recommended asset bundle "
+            "(see scripts/data/version_policy.json) or manually bump the frozen package version."
+        )
 
-        # Frozen packages are never auto-bumped. Skip their (often months-long)
-        # version-intro + history scans; PR-scoped media edits are checked below.
-        for pkg in ALL_PACKAGE_IDS:
-            if pkg in frozen:
-                print(f"Package {pkg} frozen; skipping bump analysis")
-                continue
+    tags = run_git(["tag", "--merged", "HEAD", "--list", "v[0-9]*", "--sort=-version:refname"])
+    baseline = next(
+        (tag for tag in tags.splitlines() if re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+", tag)),
+        None,
+    )
+    if baseline is None:
+        raise SystemExit("No reachable release tag found; fetch tags before auto-bumping")
+    print(f"Comparing release content with {baseline}")
 
-            current_version = get_current_version(pkg)
-            since_commit = get_since_commit_for_package(pkg, merge_base)
-            affecting_files = get_files_affecting_package(pkg, since_commit)
+    manifest_path = "packages/core/src/comfyui_workflow_templates_core/manifest.json"
+    baseline_manifest = json.loads(run_git(["show", f"{baseline}:{manifest_path}"]))
+    current_manifest = json.loads(Path(manifest_path).read_text())
+    affected: Set[str] = set()
 
-            if affecting_files:
-                affected.add(pkg)
-                print(
-                    f"Package {pkg} needs bump: {len(affecting_files)} files changed "
-                    f"since version {current_version}"
-                )
-                for f in affecting_files[:5]:
-                    print(f"  - {f}")
-                if len(affecting_files) > 5:
-                    print(f"  ... and {len(affecting_files) - 5} more files")
-            else:
-                print(f"Package {pkg} up to date since version {current_version}")
-
-        blocked = _blocked_frozen_media_updates(merge_base)
-        if blocked:
-            details = ", ".join(sorted(blocked))
-            raise SystemExit(
-                "Frozen media packages need an update but are not auto-bumped: "
-                f"{details}. Move new assets to the recommended asset bundle "
-                "(see scripts/data/version_policy.json) "
-                "or manually bump the frozen package version."
+    for pkg in ALL_PACKAGE_IDS:
+        if pkg == "meta" or pkg in frozen:
+            continue
+        # Only a version changed on this PR proves that it was already bumped.
+        # Main can be ahead of the latest tag if release tag creation failed.
+        # New packages on this PR retain the author's initial version.
+        current_version = get_current_version(pkg)
+        pr_base_version = get_version_at_ref(
+            pkg, merge_base, required=True, allow_missing=True
+        )
+        if current_version != pr_base_version:
+            print(
+                f"Package {pkg} already changed on this PR: {pr_base_version} -> {current_version}"
             )
+            continue
 
-        # If any non-meta packages changed, also bump meta
-        if affected - {"meta"}:
-            affected.add("meta")
+        if pkg in {"core", "json"}:
+            changed = True
+        elif pkg == "blueprints":
+            changed = bool(run_git([
+                "diff", "--name-only", baseline, "--", "blueprints/",
+                "blueprints_bundles.json", "packages/blueprints/",
+                "packages/core/src/comfyui_workflow_templates_core/blueprints_manifest.json",
+            ]))
+        else:
+            bundle = next(name for name, package in BUNDLE_PACKAGE_MAP.items() if package == pkg)
+            changed = _manifest_media_assets_changed(baseline_manifest, current_manifest, bundle)
+            if not changed:
+                changed = bool(run_git([
+                    "diff", "--name-only", baseline, "--", f"packages/{pkg}/",
+                ]))
 
-        return affected
-    except SystemExit:
-        raise
-    except Exception as e:
-        print(f"Error in change detection: {e}")
-        return {
-            "core",
-            "json",
-            "media_api",
-            "media_video",
-            "media_image",
-            "media_other",
-            "media_assets_01",
-            "media_assets_02",
-            "meta",
-        }
+        if changed:
+            affected.add(pkg)
+            print(f"Package {pkg} needs bump since {baseline}")
+        else:
+            print(f"Package {pkg} unchanged since {baseline}")
+
+    if affected:
+        affected.add("meta")
+    return affected
 
 
 def _blocked_frozen_media_updates(merge_base: str) -> Set[str]:
@@ -587,7 +573,13 @@ def main() -> int:
         print("")
         return 0
 
-    packages = get_changed_packages()
+    try:
+        packages = get_changed_packages()
+    except (subprocess.CalledProcessError, RuntimeError, ValueError, OSError) as exc:
+        detail = str(exc)
+        if isinstance(exc, subprocess.CalledProcessError) and exc.stderr:
+            detail = exc.stderr.decode(errors="replace").strip()
+        raise SystemExit(f"Release change detection failed: {detail}") from exc
     print(f"Detected changed packages: {sorted(packages)}")
 
     non_meta_packages = packages - {"meta"}
