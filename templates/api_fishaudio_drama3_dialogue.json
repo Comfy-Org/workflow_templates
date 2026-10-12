@@ -1,0 +1,545 @@
+{
+  "id": "5b1c7d20-9f43-4a1e-8c62-2e0d47a913bb",
+  "revision": 0,
+  "last_node_id": 15,
+  "last_link_id": 13,
+  "nodes": [
+    {
+      "id": 9,
+      "type": "MarkdownNote",
+      "pos": [
+        -1190,
+        140
+      ],
+      "size": [
+        500,
+        900
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Guide",
+      "properties": {},
+      "widgets_values": [
+        "## Fish Audio Drama 3 — Two-Speaker Dialogue\n\nGenerate a whole multi-speaker scene in one pass: every speaker keeps its own voice.\n\n### How to use\n\n1. Sign in with your ComfyUI account. API nodes are pay per use.\n2. Write the scene in the `text` field of the Fish Audio Text to Speech node.\n3. Mark every speaker change with `@Voice1`, `@Voice2`, and so on: the tags are replaced in order by the voices you connect (up to 5).\n4. Connect one Fish Audio Voice Selector per speaker. This template ships with two of the new voices, Delia and Sheila — pick any preset, or set the selector to `custom` and paste a voice ID from fish.audio.\n5. Direct the performance with plain-language tags in square brackets, in any language, and change them mid-line.\n6. Wrap words that need a different delivery: `<whisper>do not open that door.</whisper>`. Inline sounds such as `[laugh]`, `[sigh]` and `[pause]` work too.\n7. Keep the other parameters at their defaults, then queue the prompt and preview the audio.\n\n### Model\n\n- `drama-3` (this template): multi-speaker scenes, `[plain-language directions]` and word tags, 80+ languages.\n- `s2.1-pro`: the previous generation, same voice list, emotion cues such as `[happy]` or `[whispering]` at the start of a sentence.\n- `s1`: a single voice; emotion cues in parentheses, such as `(happy)`.\n\nText length and model both change the price: the badge on the node shows the estimate for the current text.\n\n### Cloning your own voice\n\nTo use your own voice instead of a preset, select the two nodes in the `Option 2` group and press **Ctrl‑B** to enable them, then point `Load Audio` at a 10–30 second, clean recording of one speaker. The clone becomes the next voice in the list, so add `@Voice3` where it should speak (a two-voice clone setup uses `@Voice1`/`@Voice2`).\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Fish Audio Drama 3 — Two-Speaker Dialogue\n\nGenerate a whole multi-speaker scene in one pass: every speaker keeps its own voice.\n\n### How to use\n\n1. Sign in with your ComfyUI account. API nodes are pay per use.\n2. Write the scene in the `text` field of the Fish Audio Text to Speech node.\n3. Mark every speaker change with `@Voice1`, `@Voice2`, and so on: the tags are replaced in order by the voices you connect (up to 5).\n4. Connect one Fish Audio Voice Selector per speaker. This template ships with two of the new voices, Delia and Sheila — pick any preset, or set the selector to `custom` and paste a voice ID from fish.audio.\n5. Direct the performance with plain-language tags in square brackets, in any language, and change them mid-line.\n6. Wrap words that need a different delivery: `<whisper>do not open that door.</whisper>`. Inline sounds such as `[laugh]`, `[sigh]` and `[pause]` work too.\n7. Keep the other parameters at their defaults, then queue the prompt and preview the audio.\n\n### Model\n\n- `drama-3` (this template): multi-speaker scenes, `[plain-language directions]` and word tags, 80+ languages.\n- `s2.1-pro`: the previous generation, same voice list, emotion cues such as `[happy]` or `[whispering]` at the start of a sentence.\n- `s1`: a single voice; emotion cues in parentheses, such as `(happy)`.\n\nText length and model both change the price: the badge on the node shows the estimate for the current text.\n\n### Cloning your own voice\n\nTo use your own voice instead of a preset, select the two nodes in the `Option 2` group and press **Ctrl‑B** to enable them, then point `Load Audio` at a 10–30 second, clean recording of one speaker. The clone becomes the next voice in the list, so add `@Voice3` where it should speak (a two-voice clone setup uses `@Voice1`/`@Voice2`).\n"
+      },
+      "color": "#000",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 1,
+      "type": "FishAudioTextToSpeech",
+      "pos": [
+        160,
+        220
+      ],
+      "size": [
+        440,
+        340
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "text",
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "voice0",
+          "name": "model.voices.voice0",
+          "shape": 7,
+          "type": "FISHAUDIO_VOICE",
+          "link": 12
+        },
+        {
+          "localized_name": "voice1",
+          "name": "model.voices.voice1",
+          "shape": 7,
+          "type": "FISHAUDIO_VOICE",
+          "link": 13
+        },
+        {
+          "localized_name": "voice2",
+          "name": "model.voices.voice2",
+          "shape": 7,
+          "type": "FISHAUDIO_VOICE",
+          "link": null
+        },
+        {
+          "localized_name": "temperature",
+          "name": "model.temperature",
+          "type": "FLOAT",
+          "widget": {
+            "name": "model.temperature"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "top_p",
+          "name": "model.top_p",
+          "type": "FLOAT",
+          "widget": {
+            "name": "model.top_p"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "speed",
+          "name": "model.speed",
+          "type": "FLOAT",
+          "widget": {
+            "name": "model.speed"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "volume",
+          "name": "model.volume",
+          "type": "FLOAT",
+          "widget": {
+            "name": "model.volume"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "normalize",
+          "name": "model.normalize",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "model.normalize"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "seed",
+          "name": "seed",
+          "type": "INT",
+          "widget": {
+            "name": "seed"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "AUDIO",
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            9
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioTextToSpeech"
+      },
+      "widgets_values": [
+        "[deep, cinematic narrator] @Voice1 Every night, the city tells a story.\n[soft, close, like a secret] @Voice2 But only one voice ever finishes it.\n[drops to a <whisper>whisper</whisper>, then brightens] @Voice1 Fish Audio Drama 3, now in ComfyUI.",
+        "drama-3",
+        0.7,
+        0.7,
+        1,
+        0,
+        true,
+        1481145631,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "text": "[deep, cinematic narrator] @Voice1 Every night, the city tells a story.\n[soft, close, like a secret] @Voice2 But only one voice ever finishes it.\n[drops to a <whisper>whisper</whisper>, then brightens] @Voice1 Fish Audio Drama 3, now in ComfyUI.",
+        "model": "drama-3",
+        "model.temperature": 0.7,
+        "model.top_p": 0.7,
+        "model.speed": 1,
+        "model.volume": 0,
+        "model.normalize": true,
+        "seed": 1481145631,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        650,
+        220
+      ],
+      "size": [
+        730,
+        220
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 9
+        },
+        {
+          "localized_name": "filename_prefix",
+          "name": "filename_prefix",
+          "type": "STRING",
+          "widget": {
+            "name": "filename_prefix"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "format",
+          "name": "format",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "format"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "quality",
+          "name": "format.quality",
+          "type": "COMBO",
+          "widget": {
+            "name": "format.quality"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audioUI",
+          "name": "audioUI",
+          "type": "AUDIO_UI",
+          "widget": {
+            "name": "audioUI"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Fish_audio_drama3_dialogue",
+        "mp3",
+        "V0"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/Fish_audio_drama3_dialogue",
+        "format": "mp3",
+        "format.quality": "V0"
+      }
+    },
+    {
+      "id": 11,
+      "type": "LoadAudio",
+      "pos": [
+        -620,
+        640
+      ],
+      "size": [
+        330,
+        170
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 4,
+      "inputs": [
+        {
+          "localized_name": "audio",
+          "name": "audio",
+          "type": "COMBO",
+          "widget": {
+            "name": "audio"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audioUI",
+          "name": "audioUI",
+          "type": "AUDIO_UI",
+          "widget": {
+            "name": "audioUI"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "choose file to upload",
+          "name": "upload",
+          "type": "AUDIOUPLOAD",
+          "widget": {
+            "name": "upload"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "AUDIO",
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "fish_audio_example.mp3",
+        null
+      ],
+      "widgets_values_named": {
+        "audio": "fish_audio_example.mp3",
+        "upload": null
+      }
+    },
+    {
+      "id": 13,
+      "type": "FishAudioInstantVoiceClone",
+      "pos": [
+        -260,
+        640
+      ],
+      "size": [
+        310,
+        100
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 4,
+      "inputs": [
+        {
+          "localized_name": "audio0",
+          "name": "files.audio0",
+          "type": "AUDIO",
+          "link": 11
+        },
+        {
+          "localized_name": "audio1",
+          "name": "files.audio1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "localized_name": "enhance_audio_quality",
+          "name": "enhance_audio_quality",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "enhance_audio_quality"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "voice",
+          "name": "voice",
+          "type": "FISHAUDIO_VOICE",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioInstantVoiceClone"
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "enhance_audio_quality": true
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 14,
+      "type": "FishAudioVoiceSelector",
+      "pos": [
+        -420,
+        280
+      ],
+      "size": [
+        270,
+        60
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "voice",
+          "name": "voice",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "voice"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "voice",
+          "name": "voice",
+          "type": "FISHAUDIO_VOICE",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioVoiceSelector"
+      },
+      "widgets_values": [
+        "Delia (en)"
+      ],
+      "widgets_values_named": {
+        "voice": "Delia (en)"
+      }
+    },
+    {
+      "id": 15,
+      "type": "FishAudioVoiceSelector",
+      "pos": [
+        -420,
+        420
+      ],
+      "size": [
+        270,
+        60
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "voice",
+          "name": "voice",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "voice"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "voice",
+          "name": "voice",
+          "type": "FISHAUDIO_VOICE",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "FishAudioVoiceSelector"
+      },
+      "widgets_values": [
+        "Sheila (en)"
+      ],
+      "widgets_values_named": {
+        "voice": "Sheila (en)"
+      }
+    }
+  ],
+  "links": [
+    [
+      9,
+      1,
+      0,
+      5,
+      0,
+      "AUDIO"
+    ],
+    [
+      11,
+      11,
+      0,
+      13,
+      0,
+      "AUDIO"
+    ],
+    [
+      12,
+      14,
+      0,
+      1,
+      2,
+      "FISHAUDIO_VOICE"
+    ],
+    [
+      13,
+      15,
+      0,
+      1,
+      3,
+      "FISHAUDIO_VOICE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Option 1: Two preset voices",
+      "bounding": [
+        -640,
+        180,
+        740,
+        360
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Option 2: Voice Clone (select both nodes, then press Ctrl+B to enable)",
+      "bounding": [
+        -640,
+        560,
+        740,
+        380
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5234475436134131,
+      "offset": [
+        1748.3749656430628,
+        402.6760146504402
+      ]
+    },
+    "frontendVersion": "1.57.0"
+  },
+  "version": 0.4
+}
