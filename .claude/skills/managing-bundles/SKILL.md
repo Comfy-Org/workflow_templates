@@ -60,6 +60,14 @@ Separate file at the repo root for subgraph blueprints. Same concept as `bundles
 4. Run `python scripts/sync/sync_bundles.py` to regenerate package manifests.
 5. Run validation (see below).
 
+### Where a new template goes (order is a ranking)
+
+Display order inside a category is a ranking, and it is earned, not requested:
+
+- A template from a brand-new or lesser-known provider starts **next to its closest peers** — never at the top of the category.
+- Leave `usage` and `searchRank` at `0` for new entries; do not hand-pick a prominent slot.
+- Only a template that performs very well earns a prominent default position, and that call is made later from real usage data (the maintainer reorders the array, e.g. through the ComfyUI Template Manager).
+
 ### Reorder templates within a category
 
 1. Open `templates/index.json`.

@@ -67,7 +67,11 @@ Add the object to the right category's `templates` array.
 
 **Required:** `name`, `description`, `mediaType` (`image` \| `video` \| `audio` \| `3d`), `mediaSubtype` (usually `webp`).
 
-**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `minComfyUIVersion`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `searchRank`, `io`, `thumbnail`.
+**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `searchRank`, `io`, `thumbnail`.
+
+**`minComfyUIVersion` is required for every new template** — see [`minComfyUIVersion`](#mincomfyuiversion-required) below.
+
+**Position in the category:** a template from a brand-new or lesser-known provider does **not** get a prominent slot. Place it next to its closest peers and leave `usage` / `searchRank` at `0` — a good default position is earned by real performance, never granted at add time. See `/managing-bundles`.
 
 ```json
 {
@@ -78,6 +82,21 @@ Add the object to the right category's `templates` array.
   "tutorialUrl": "https://comfyanonymous.github.io/ComfyUI_examples/wan/"
 }
 ```
+
+### `minComfyUIVersion` (required)
+
+Set `minComfyUIVersion` on every new template: the ComfyUI release that first supports the node / model the workflow uses. It is copied into the locale indexes by `sync_data.py` and into `index.mcp.json` by the MCP sync, so it must be right in English `index.json`.
+
+Look up the newest tag first (tags can be newer than published releases, so read the tag list, not only `/releases`):
+
+```bash
+gh api "repos/Comfy-Org/ComfyUI/tags?per_page=15" --jq '.[].name'
+```
+
+- **Support merged and released** → the earliest tag containing the merge: `git merge-base --is-ancestor <merge-sha> <tag>` (non-zero exit = not included).
+- **Support not merged yet** (open PR / unreleased node) → the **next patch version after the newest tag**: newest tag `v0.39.1` → `"minComfyUIVersion": "0.39.2"`. Use the future version rather than leaving the field out, so the catalog carries the version the template will actually require.
+
+Existing catalog values follow this rule — the `0.39.1` / `0.39.2` entries were written while their support was not released yet.
 
 ### Step 4 — Bundle
 
