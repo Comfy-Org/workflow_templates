@@ -1,6 +1,6 @@
 name: Version Check and Auto-bump
 
-# This workflow automatically bumps package versions when templates change.
+# This workflow verifies generated package versions and manifests when templates change.
 #
 # Process:
 #   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
@@ -35,9 +35,10 @@ on:
       - 'scripts/lib/version_policy.py'
       - 'scripts/ci/check_frozen_policy.py'
       - 'scripts/ci/ci_version_manager.py'
+      - '.github/workflows/version-check.yml'
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
@@ -301,56 +302,18 @@ jobs:
               });
             }
 
-      - name: Commit version bumps, manifest updates, and refreshed cache/report to PR
-        env:
-          PR_HEAD_REF: ${{ github.head_ref }}
+      - name: Check generated versions and manifests
         run: |
-          echo "=== Committing automated changes to PR ==="
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-          # Stage all potential changes from version bumps and manifest sync.
-          # The PyPI quota check writes its working cache under .github/cache/,
-          # which is git-ignored and never staged.
-          git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
-            packages/*/src/*/blueprints_manifest.json \
-            templates/index.mcp.json scripts/data/mcp/models_registry.json
-
-          # Commit regenerated manifests even when the root version is unchanged.
-          # Skipping that used to leave SHA256 hashes stale on template-only PRs,
-          # which then failed validate-manifests.yml / build-test.yml.
-          if git diff --cached --quiet; then
-            echo "✅ No package version or manifest changes needed"
-            exit 0
+          # The PR author commits generated files once, before requesting checks.
+          # CI must never push a new head that invalidates concurrent checks.
+          changed=$(git status --porcelain -- pyproject.toml \
+            ":(glob)packages/*/pyproject.toml" \
+            ":(glob)packages/*/src/*/manifest.json" \
+            ":(glob)packages/*/src/*/blueprints_manifest.json" \
+            templates/index.mcp.json scripts/data/mcp/models_registry.json)
+          if [ -n "$changed" ]; then
+            echo "$changed"
+            echo "::error::Generated versions or manifests are out of sync. Run: npm run mcp && npm run sync:bundles && python scripts/sync/sync_blueprints.py && python scripts/ci/ci_version_manager.py"
+            exit 1
           fi
-          if git diff --cached --name-only | grep -q 'pyproject\.toml'; then
-            COMMIT_MSG="Auto-bump package versions and sync manifests for template changes"
-            echo "📝 Version bump and/or manifest changes - committing to PR branch"
-          else
-            COMMIT_MSG="Auto-sync manifests for template changes"
-            echo "📝 Manifest changes only (no version bump) - committing to PR branch"
-          fi
-
-          # Commit with retry logic in case of conflicts
-          if ! git commit -m "$COMMIT_MSG"; then
-            echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-            if ! git pull origin "$PR_HEAD_REF" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
-            fi
-            git commit -m "$COMMIT_MSG"
-          fi
-
-          # Push with retry logic
-          if ! git push origin HEAD; then
-            echo "⚠️ Push failed, retrying after pull..."
-            if ! git pull origin "$PR_HEAD_REF" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
-            fi
-            git push origin HEAD
-          fi
-
-          echo "✅ Automated changes committed to PR"
+          echo "✅ Generated versions and manifests are in sync"
