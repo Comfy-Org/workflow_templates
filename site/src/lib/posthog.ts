@@ -47,10 +47,14 @@ export function capture(eventName: string, properties?: EventProperties): void {
 export function trackRunButtonClicked(
   templateName: string,
   location: string,
-  author?: string
+  author?: string,
+  shareId?: string
 ): void {
   capture('hub:run_button_clicked', {
     template_name: templateName,
+    // A name can be absent or mutable in the Hub catalogue. Emit the catalogue
+    // identifier separately so downstream usage ranking has a stable join key.
+    share_id: shareId,
     location,
     author,
   });
