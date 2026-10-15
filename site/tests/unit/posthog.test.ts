@@ -79,3 +79,19 @@ describe('trackSearchPerformed', () => {
     expect(posthogMock.capture).not.toHaveBeenCalled();
   });
 });
+
+describe('trackRunButtonClicked', () => {
+  it('emits the stable share ID alongside the legacy template name', async () => {
+    const { initPostHog, trackRunButtonClicked } = await loadPostHog();
+
+    initPostHog();
+    trackRunButtonClicked('Image Relight', 'hero', 'comfy', 'f6e9d07c02fd');
+
+    expect(posthogMock.capture).toHaveBeenCalledWith('hub:run_button_clicked', {
+      template_name: 'Image Relight',
+      share_id: 'f6e9d07c02fd',
+      location: 'hero',
+      author: 'comfy',
+    });
+  });
+});
