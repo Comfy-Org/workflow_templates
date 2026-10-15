@@ -1,6 +1,6 @@
 name: Version Check and Auto-bump
 
-# This workflow verifies generated package versions and manifests when templates change.
+# This workflow generates and commits all PR-derived template files in one commit.
 #
 # Process:
 #   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
@@ -25,6 +25,14 @@ on:
     types: [opened, synchronize]
     paths:
       - 'templates/**'
+      - 'input/**'
+      - 'workflow_template_input_files.json'
+      - 'scripts/sync/sync_custom_nodes.py'
+      - 'scripts/sync/sync_data.py'
+      - 'scripts/validate/check_input_assets.py'
+      - 'scripts/lib/index_format.py'
+      - 'scripts/lib/locale_index_files.py'
+      - 'scripts/data/i18n.json'
       - 'bundles.json'
       - 'blueprints/**'
       - 'blueprints_bundles.json'
@@ -36,9 +44,12 @@ on:
       - 'scripts/ci/check_frozen_policy.py'
       - 'scripts/ci/ci_version_manager.py'
       - '.github/workflows/version-check.yml'
+      - '.github/workflows/sync-custom-nodes.yml'
+      - '.github/workflows/sync-template-index.yml'
+      - '.github/workflows/generate-upload-json.yml'
 
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
 
 jobs:
@@ -60,6 +71,8 @@ jobs:
           fetch-tags: true
           sparse-checkout: |
             templates/
+            input/
+            workflow_template_input_files.json
             blueprints/
             bundles.json
             blueprints_bundles.json
@@ -77,6 +90,12 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
+
+      - name: Sync template-derived index fields and upload JSON
+        run: |
+          python scripts/sync/sync_custom_nodes.py --templates-dir ./templates
+          python scripts/sync/sync_data.py --templates-dir ./templates --index-only
+          python scripts/validate/check_input_assets.py --generate-upload-json
 
       - name: Sync manifests and bundles (first)
         run: |
@@ -302,18 +321,20 @@ jobs:
               });
             }
 
-      - name: Check generated versions and manifests
+      - name: Commit generated files once
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
         run: |
-          # The PR author commits generated files once, before requesting checks.
-          # CI must never push a new head that invalidates concurrent checks.
-          changed=$(git status --porcelain -- pyproject.toml \
-            ":(glob)packages/*/pyproject.toml" \
-            ":(glob)packages/*/src/*/manifest.json" \
-            ":(glob)packages/*/src/*/blueprints_manifest.json" \
-            templates/index.mcp.json scripts/data/mcp/models_registry.json)
-          if [ -n "$changed" ]; then
-            echo "$changed"
-            echo "::error::Generated versions or manifests are out of sync. Run: npm run mcp && npm run sync:bundles && python scripts/sync/sync_blueprints.py && python scripts/ci/ci_version_manager.py"
-            exit 1
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add templates/index*.json workflow_template_input_files.json \
+            pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
+            packages/*/src/*/blueprints_manifest.json scripts/data/mcp/models_registry.json
+          if git diff --cached --quiet; then
+            echo "✅ Generated files are already in sync"
+            exit 0
           fi
-          echo "✅ Generated versions and manifests are in sync"
+          git commit -m "Auto-sync generated template files"
+          # Never rebase an old generator result onto a newer PR head. A newer
+          # run will regenerate from that head and commit its own result.
+          git push origin "HEAD:$PR_HEAD_REF"
