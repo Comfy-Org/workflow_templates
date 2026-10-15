@@ -1,0 +1,266 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": "image_flux3_klein_distilled_t2i",
+      "images": [
+        "18:8",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "aspect_ratio": "1:1 (Square)",
+      "megapixels": 1,
+      "multiple": 8
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "23": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "editor_state": {
+        "__value__": []
+      },
+      "last_incoming": {
+        "__value__": []
+      }
+    },
+    "class_type": "CreateBoundingBoxes",
+    "_meta": {
+      "title": "Create Bounding Boxes"
+    }
+  },
+  "24": {
+    "inputs": {
+      "source": [
+        "23",
+        2
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview as Text"
+    }
+  },
+  "18:17": {
+    "inputs": {
+      "value": "A cinematic, Dutch angle night shot of a retro hotel entrance illuminated by neon cyan and warm orange lights. A bellhop in uniform pulls a gold luggage cart with suitcases across a wet sidewalk. Inside the brightly lit, teal-toned glass lobby, two women in vintage uniforms stand near a wooden desk alongside tropical plants and a seated figure. The scene features a moody, stylized teal-and-orange color palette with strong neon reflections. Absolutely no text, no typography, no letters, no words, no numbers, no logos, no watermark, no captions, pure imagery only."
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text (Multiline)"
+    }
+  },
+  "18:12": {
+    "inputs": {
+      "clip_name": "qwen3.5_9b_flux3_prompt_upsampler_int8_convrot.safetensors",
+      "type": "flux3",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "18:14": {
+    "inputs": {
+      "value": "You are the prompt upsampler of a text-to-image model. Expand the user's short request into ONE detailed, self-contained caption: the exact text the image model receives. Output only the caption, with no greetings, explanations, refusals, questions, Markdown, headings, JSON, coordinates, ids or angle-bracket tokens, and no quotes around it. If the input is not clearly an image request, caption a visualization of its concept. The request may begin with a \"TARGET CANVAS: W:H\" line: compose for that canvas (wide spreads content sideways, tall stacks it) and never mention the ratio or the canvas.\n\nFidelity and planning: keep every explicit subject, attribute, count, spatial constraint, style cue and piece of wording; never contradict, substitute, drop or narrow the request, and keep an abstract concept abstract. Decide everything left open as ONE concrete, consistent plan; never offer alternatives or hedge. Never re-express a stated constraint through another mechanism; add camera optics (depth of field, bokeh, blur) only when asked for or implied. Without a stated style, plan an actual photograph and open with the medium convention (\"Full-color outdoor photograph, ...\", \"Full-color indoor photograph, ...\", \"Studio photograph, ...\", \"Close-up photograph, ...\"); keep \"Photorealistic\" for renders, and turn \"photorealistic\" or \"realistic\" requests for photos into the photograph convention. Give a photograph a few ordinary, non-ideal specifics drawn from the scene's own objects instead of the stock-photo ideal. Do not invent names, brands, logos or celebrities; keep user-named ones. A long request keeps its content but not its wording: drop appraisal and sales vocabulary, turn moods into observable physical facts, and add only new concrete content with positions. Time of day is lighting, not rendered text.\n\nCaption format: one continuous prose block in the generative voice, never \"this image shows\", \"we can see\" or \"is visible\". Lead with medium and style, then scene, lighting and camera, then the subjects with concrete colors, materials and state. Every person in focus gets an observable profile: ethnicity, gender, age range, skin tone (\"fair skin\", \"brown skin\"), hair and clothing. Make the layout reconstructable from words: frame-relative positions (frame-left, frame-right, upper, lower, foreground, midground, background), sentence-initial anchors (\"On the left, ...\", \"In the background, ...\"), relations (holds, faces, behind) and a consistent order; describe up to about ten instances one by one, beyond that give the exact count and arrangement. Out-of-focus or distant planes are shapes, colors and silhouettes, never identities or readable text, and the background takes about a sixth of the caption. Be definite: no hedging adverbs, no quality or emotion judgments, no closing sentence about mood; state negations as what is present. Rendered text: transcribe every wording verbatim inside double quotes in its original language and script, keep the line breaks of multi-line text, and give its typography, color and placement; author concrete, domain-correct wording when the request needs text it does not supply, and name canonical structures (calendar, keyboard, periodic table) exactly with their full layout. All prose is English; only quoted text keeps its language. Typical length is 100 to 350 words, more for complex scenes.\n\nOutput only the caption.\n"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Text (System prompt)"
+    }
+  },
+  "18:11": {
+    "inputs": {
+      "prompt": [
+        "18:17",
+        0
+      ],
+      "max_length": 3584,
+      "sampling_mode": "on",
+      "sampling_mode.temperature": 1,
+      "sampling_mode.top_k": 1,
+      "sampling_mode.top_p": 0.95,
+      "sampling_mode.min_p": 0,
+      "sampling_mode.repetition_penalty": 1.05,
+      "sampling_mode.seed": 605452029419059,
+      "sampling_mode.presence_penalty": 1.5,
+      "thinking": false,
+      "use_default_template": true,
+      "mtp": "auto",
+      "clip": [
+        "18:12",
+        0
+      ],
+      "system_prompt": [
+        "18:14",
+        0
+      ]
+    },
+    "class_type": "TextGenerate",
+    "_meta": {
+      "title": "Generate Text"
+    }
+  },
+  "18:1": {
+    "inputs": {
+      "unet_name": "flux3_image_klein_sd_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "18:4": {
+    "inputs": {
+      "text": [
+        "18:13",
+        0
+      ],
+      "clip": [
+        "18:2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Positive Prompt"
+    }
+  },
+  "18:2": {
+    "inputs": {
+      "clip_name": "qwen3vl_4b_int8_convrot.safetensors",
+      "type": "flux3",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "18:7": {
+    "inputs": {
+      "seed": 605452029419059,
+      "steps": 15,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "18:1",
+        0
+      ],
+      "positive": [
+        "18:4",
+        0
+      ],
+      "negative": [
+        "18:5",
+        0
+      ],
+      "latent_image": [
+        "18:6",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "18:3": {
+    "inputs": {
+      "vae_name": "flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "18:13": {
+    "inputs": {
+      "source": [
+        "18:16",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "Preview as Text"
+    }
+  },
+  "18:16": {
+    "inputs": {
+      "switch": true,
+      "on_false": [
+        "18:17",
+        0
+      ],
+      "on_true": [
+        "18:11",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "If/Else Switch"
+    }
+  },
+  "18:6": {
+    "inputs": {
+      "width": [
+        "19",
+        0
+      ],
+      "height": [
+        "19",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux 2 Latent"
+    }
+  },
+  "18:5": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "18:2",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt (empty = reference default)"
+    }
+  },
+  "18:8": {
+    "inputs": {
+      "samples": [
+        "18:7",
+        0
+      ],
+      "vae": [
+        "18:3",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  }
+}
