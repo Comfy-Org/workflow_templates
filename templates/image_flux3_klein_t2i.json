@@ -1,8 +1,8 @@
 {
   "id": "e8f30439-267f-45de-b260-db0d114b2c85",
   "revision": 0,
-  "last_node_id": 23,
-  "last_link_id": 45,
+  "last_node_id": 27,
+  "last_link_id": 47,
   "nodes": [
     {
       "id": 9,
@@ -155,9 +155,9 @@
         "",
         1024,
         1024,
-        768657714052381,
+        758781618552631,
         3.5,
-        25,
+        50,
         "euler",
         "simple",
         "flux3_image_klein_base_int8_convrot.safetensors",
@@ -171,9 +171,9 @@
         "text": "",
         "width": 1024,
         "height": 1024,
-        "seed": 768657714052381,
+        "seed": 758781618552631,
         "cfg": 3.5,
-        "steps": 25,
+        "steps": 50,
         "sampler_name": "euler",
         "scheduler": "simple",
         "unet_name": "flux3_image_klein_base_int8_convrot.safetensors",
@@ -255,11 +255,11 @@
       "bgcolor": "#000"
     },
     {
-      "id": 21,
-      "type": "Note",
+      "id": 24,
+      "type": "MarkdownNote",
       "pos": [
-        -40,
-        420
+        -10,
+        1130
       ],
       "size": [
         210,
@@ -270,57 +270,22 @@
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Note: steps",
       "properties": {},
       "widgets_values": [
-        "try 50 steps for better quality"
+        "Plug the `STRING` output into the `prompt` input of the `Text to Image (FLUX 3 Image Klein SD)` node when you want to use bounding box\n"
       ],
       "widgets_values_named": {
-        "text": "try 50 steps for better quality"
+        "text": "Plug the `STRING` output into the `prompt` input of the `Text to Image (FLUX 3 Image Klein SD)` node when you want to use bounding box\n"
       },
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 22,
-      "type": "PreviewAny",
-      "pos": [
-        -90,
-        610
-      ],
-      "size": [
-        210,
-        130
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "source",
-          "type": "*",
-          "link": 45
-        }
-      ],
-      "outputs": [
-        {
-          "name": "STRING",
-          "type": "STRING",
-          "links": []
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PreviewAny"
-      },
-      "widgets_values": [],
-      "widgets_values_named": {}
-    },
-    {
-      "id": 23,
+      "id": 25,
       "type": "CreateBoundingBoxes",
       "pos": [
-        -540,
-        590
+        -550,
+        630
       ],
       "size": [
         420,
@@ -358,7 +323,7 @@
           "name": "elements",
           "type": "ARRAY",
           "links": [
-            45
+            47
           ]
         }
       ],
@@ -376,6 +341,80 @@
         "height": 1024,
         "editor_state": [],
         "last_incoming": []
+      }
+    },
+    {
+      "id": 26,
+      "type": "PreviewAny",
+      "pos": [
+        -90,
+        900
+      ],
+      "size": [
+        390,
+        180
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 46
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 27,
+      "type": "Flux3LayoutPrompt",
+      "pos": [
+        -100,
+        640
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "element",
+          "type": "ARRAY",
+          "link": 47
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            46
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Flux3LayoutPrompt"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "prompt": ""
       }
     }
   ],
@@ -405,24 +444,45 @@
       "INT"
     ],
     [
-      45,
-      23,
+      46,
+      27,
+      0,
+      26,
+      0,
+      "STRING"
+    ],
+    [
+      47,
+      25,
       2,
-      22,
+      27,
       0,
       "ARRAY"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 5,
+      "title": "Create bounding boxes for precise control",
+      "bounding": [
+        -560,
+        560,
+        868.5829359476047,
+        670
+      ],
+      "color": "#444",
+      "flags": {}
+    }
+  ],
   "definitions": {
     "subgraphs": [
       {
         "id": "3301b744-2960-415a-83b0-fe8a89d99fdb",
         "version": 1,
         "state": {
-          "lastGroupId": 4,
-          "lastNodeId": 23,
-          "lastLinkId": 45,
+          "lastGroupId": 5,
+          "lastNodeId": 27,
+          "lastLinkId": 47,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -874,12 +934,12 @@
               1,
               0.95,
               0,
-              1.05,
+              1,
               0,
               1.5,
               false,
               true,
-              "auto"
+              "off"
             ],
             "widgets_values_named": {
               "prompt": "",
@@ -889,12 +949,12 @@
               "sampling_mode.top_k": 1,
               "sampling_mode.top_p": 0.95,
               "sampling_mode.min_p": 0,
-              "sampling_mode.repetition_penalty": 1.05,
+              "sampling_mode.repetition_penalty": 1,
               "sampling_mode.seed": 0,
               "sampling_mode.presence_penalty": 1.5,
               "thinking": false,
               "use_default_template": true,
-              "mtp": "auto"
+              "mtp": "off"
             }
           },
           {
@@ -1806,13 +1866,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8918350488721818,
+      "scale": 0.5624065968240171,
       "offset": [
-        1047.7916383739948,
-        659.2175669756449
+        1143.256985152046,
+        514.1439330090332
       ]
     },
-    "frontendVersion": "1.58.0"
+    "frontendVersion": "1.55.17"
   },
   "version": 0.4
 }
