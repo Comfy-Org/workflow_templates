@@ -1,8 +1,8 @@
 {
   "id": "e8f30439-267f-45de-b260-db0d114b2c85",
   "revision": 0,
-  "last_node_id": 24,
-  "last_link_id": 43,
+  "last_node_id": 27,
+  "last_link_id": 45,
   "nodes": [
     {
       "id": 9,
@@ -16,7 +16,7 @@
         620
       ],
       "flags": {},
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -54,7 +54,7 @@
         620
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -146,7 +146,7 @@
         1024,
         1024,
         605452029419059,
-        15,
+        16,
         "euler",
         "simple",
         "flux3_image_klein_sd_int8_convrot.safetensors",
@@ -160,7 +160,7 @@
         "width": 1024,
         "height": 1024,
         "seed": 605452029419059,
-        "steps": 15,
+        "steps": 16,
         "sampler_name": "euler",
         "scheduler": "simple",
         "unet_name": "flux3_image_klein_sd_int8_convrot.safetensors",
@@ -271,8 +271,8 @@
       "id": 23,
       "type": "CreateBoundingBoxes",
       "pos": [
-        -547.8863990370999,
-        600
+        -546.0044421245302,
+        628.9463810298524
       ],
       "size": [
         420,
@@ -310,7 +310,7 @@
           "name": "elements",
           "type": "ARRAY",
           "links": [
-            43
+            44
           ]
         }
       ],
@@ -334,21 +334,21 @@
       "id": 24,
       "type": "PreviewAny",
       "pos": [
-        -90,
-        620
+        -91.05921764888163,
+        891.5530509168193
       ],
       "size": [
-        210,
-        122
+        386.39369041108097,
+        178.28575281421567
       ],
       "flags": {},
-      "order": 5,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
           "name": "source",
           "type": "*",
-          "link": 43
+          "link": 45
         }
       ],
       "outputs": [
@@ -363,6 +363,72 @@
       },
       "widgets_values": [],
       "widgets_values_named": {}
+    },
+    {
+      "id": 25,
+      "type": "Flux3LayoutPrompt",
+      "pos": [
+        -97.4215061769258,
+        635.0407273909312
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "element",
+          "type": "ARRAY",
+          "link": 44
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            45
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Flux3LayoutPrompt"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "prompt": ""
+      }
+    },
+    {
+      "id": 27,
+      "type": "MarkdownNote",
+      "pos": [
+        -4.768567285477388,
+        1121.178517214808
+      ],
+      "size": [
+        140,
+        60
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Plug the `STRING` output into the `prompt` input of the `Text to Image (FLUX 3 Image Klein SD)` node when you want to use bounding box\n"
+      ],
+      "widgets_values_named": {
+        "text": "Plug the `STRING` output into the `prompt` input of the `Text to Image (FLUX 3 Image Klein SD)` node when you want to use bounding box\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -391,24 +457,45 @@
       "INT"
     ],
     [
-      43,
+      44,
       23,
       2,
-      24,
+      25,
       0,
       "ARRAY"
+    ],
+    [
+      45,
+      25,
+      0,
+      24,
+      0,
+      "STRING"
     ]
   ],
-  "groups": [],
+  "groups": [
+    {
+      "id": 5,
+      "title": "Create bounding box for precise control",
+      "bounding": [
+        -556.0044421245302,
+        558.9463810298524,
+        868.5829359476047,
+        670
+      ],
+      "color": "#444",
+      "flags": {}
+    }
+  ],
   "definitions": {
     "subgraphs": [
       {
         "id": "3301b744-2960-415a-83b0-fe8a89d99fdb",
         "version": 1,
         "state": {
-          "lastGroupId": 4,
-          "lastNodeId": 24,
-          "lastLinkId": 43,
+          "lastGroupId": 5,
+          "lastNodeId": 27,
+          "lastLinkId": 45,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -754,7 +841,6 @@
             "flags": {},
             "order": 9,
             "mode": 0,
-            "showAdvanced": false,
             "inputs": [
               {
                 "localized_name": "clip",
@@ -836,7 +922,7 @@
               1,
               0.95,
               0,
-              1,
+              1.05,
               0,
               1.5,
               false,
@@ -851,7 +937,7 @@
               "sampling_mode.top_k": 1,
               "sampling_mode.top_p": 0.95,
               "sampling_mode.min_p": 0,
-              "sampling_mode.repetition_penalty": 1,
+              "sampling_mode.repetition_penalty": 1.05,
               "sampling_mode.seed": 0,
               "sampling_mode.presence_penalty": 1.5,
               "thinking": false,
@@ -1679,22 +1765,6 @@
             "type": "COMBO"
           },
           {
-            "id": 33,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 7,
-            "target_slot": 6,
-            "type": "COMBO"
-          },
-          {
-            "id": 34,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 7,
-            "target_slot": 7,
-            "type": "COMBO"
-          },
-          {
             "id": 10,
             "origin_id": 12,
             "origin_slot": 0,
@@ -1725,6 +1795,22 @@
             "target_id": 11,
             "target_slot": 6,
             "type": "INT"
+          },
+          {
+            "id": 33,
+            "origin_id": -10,
+            "origin_slot": 6,
+            "target_id": 7,
+            "target_slot": 6,
+            "type": "COMBO"
+          },
+          {
+            "id": 34,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 7,
+            "target_slot": 7,
+            "type": "COMBO"
           }
         ],
         "extra": {}
@@ -1735,10 +1821,10 @@
   "extra": {
     "frontendVersion": "1.55.17",
     "ds": {
-      "scale": 0.4199127906976744,
+      "scale": 0.3217992315946914,
       "offset": [
-        1732.570093457944,
-        1276.666666666667
+        2374.8049573829257,
+        1114.5696278401344
       ]
     }
   },
