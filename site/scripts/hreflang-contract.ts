@@ -182,8 +182,9 @@ export interface ContractResult {
   /**
    * Alternates whose target is not in the build and whose route is served on
    * demand, so its URL never becomes a file here and absence proves nothing. That
-   * is the localized listing, category, tag, model and creators families, all
-   * `prerender = false`; treating them as broken links reported 920 false
+   * is the localized listing, category, tag, model, creators and use-cases
+   * families, all `prerender = false`; treating them as broken links reported 920
+   * false
    * failures. Counted and printed rather than dropped, so the limit of what this
    * check can prove stays visible. A localized detail page is NOT one of these:
    * its route is prerendered, so its absence is a problem.
@@ -210,6 +211,7 @@ export const NON_DETAIL_SEGMENTS: ReadonlySet<string> = new Set([
   'tag',
   'model',
   'creators',
+  'use-cases',
 ]);
 
 /** The locale of `/<locale>/workflows/<slug>/`, or null when the path is not one. */
