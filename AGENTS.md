@@ -22,6 +22,8 @@
 
 **Frozen legacy media bundles:** see [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (policy, inventory, CI reminders, publishing).
 
+**BFL product names:** FLUX 3 uses a space (`FLUX 3 Image`, `FLUX 3 Image Klein`, `FLUX 3 Video`); FLUX.2 uses a dot (`FLUX.2`, `FLUX.2 Max`, `FLUX.2 Klein`). See `.claude/skills/managing-templates/SKILL.md` (Black Forest Labs product names).
+
 ## Archiving templates
 
 Sole entry point: `scripts/maintenance/archive_templates.py` (full docstring in that file; also listed in `scripts/README.md`).
