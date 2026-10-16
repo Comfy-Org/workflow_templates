@@ -1,8 +1,8 @@
 {
   "id": "0ae2b50b-b07a-4465-bb7c-d8fe58e8e0ac",
   "revision": 0,
-  "last_node_id": 44,
-  "last_link_id": 52,
+  "last_node_id": 53,
+  "last_link_id": 70,
   "nodes": [
     {
       "id": 1,
@@ -44,7 +44,7 @@
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "flux3_image_klein_int8_convrot.safetensors",
+        "unet_name": "flux3_image_klein_base_int8_convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -69,7 +69,8 @@
           "type": "CLIP",
           "slot_index": 0,
           "links": [
-            43
+            43,
+            53
           ]
         }
       ],
@@ -146,10 +147,10 @@
       ],
       "size": [
         440,
-        410
+        190
       ],
       "flags": {},
-      "order": 10,
+      "order": 17,
       "mode": 0,
       "inputs": [
         {
@@ -163,7 +164,7 @@
           "widget": {
             "name": "text"
           },
-          "link": 51
+          "link": 69
         }
       ],
       "outputs": [
@@ -172,8 +173,7 @@
           "type": "CONDITIONING",
           "slot_index": 0,
           "links": [
-            20,
-            44
+            20
           ]
         }
       ],
@@ -185,7 +185,7 @@
         "replace the earring with a large openwork metal statement earring"
       ],
       "widgets_values_named": {
-        "text": "Replace the earring with a single large openwork metal statement earring, one bold curved pendant, intricate hollow metal cutouts, layered metal wires, polished warm bronze finish, structured artistic shape, keep it attached to the correct ear position, match the character's existing lighting, shadows and skin tone, no pearls, no pearl beads, no scattered small beads."
+        "text": "replace the earring with a large openwork metal statement earring"
       },
       "color": "#232",
       "bgcolor": "#353"
@@ -194,15 +194,15 @@
       "id": 7,
       "type": "KSampler",
       "pos": [
-        960,
-        -170
+        953.1178243269486,
+        -170.76463951315372
       ],
       "size": [
         340,
         520
       ],
       "flags": {},
-      "order": 14,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -249,10 +249,10 @@
         1
       ],
       "widgets_values_named": {
-        "seed": 264888498296736,
+        "seed": 576337913413946,
         "control_after_generate": "randomize",
-        "steps": 16,
-        "cfg": 1,
+        "steps": 25,
+        "cfg": 3.5,
         "sampler_name": "euler",
         "scheduler": "simple",
         "denoise": 1
@@ -262,15 +262,15 @@
       "id": 8,
       "type": "VAEDecode",
       "pos": [
-        1430,
-        -160
+        1380,
+        -170
       ],
       "size": [
         210,
         50
       ],
       "flags": {},
-      "order": 15,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -290,7 +290,7 @@
           "type": "IMAGE",
           "slot_index": 0,
           "links": [
-            6
+            65
           ]
         }
       ],
@@ -299,51 +299,11 @@
       }
     },
     {
-      "id": 9,
-      "type": "SaveImage",
-      "pos": [
-        1720,
-        -160
-      ],
-      "size": [
-        530,
-        620
-      ],
-      "flags": {},
-      "order": 16,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 6
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": [
-            30
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveImage"
-      },
-      "widgets_values": [
-        "image_flux3_klein_distilled_image_edit"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "image_flux3_klein_distilled_image_edit"
-      }
-    },
-    {
       "id": 10,
       "type": "MarkdownNote",
       "pos": [
-        -520,
-        -210
+        -2720,
+        -220
       ],
       "size": [
         360,
@@ -359,10 +319,10 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "## FLUX 3 Image Klein: editing\n\nSame files and sampler settings as text-to-image (50 steps, cfg 3.5, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
+        "## FLUX 3 Image Klein: editing\n\nSame files and sampler settings as text-to-image (4-16 steps, cfg 1, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
       ],
       "widgets_values_named": {
-        "text": "## FLUX 3 Image Klein: editing\n\nSame files and sampler settings as text-to-image (50 steps, cfg 3.5, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
+        "text": "## FLUX 3 Image Klein: editing\n\nSame files and sampler settings as text-to-image (4-16 steps, cfg 1, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -371,8 +331,8 @@
       "id": 11,
       "type": "LoadImage",
       "pos": [
-        -110,
-        470
+        -2320,
+        -170
       ],
       "size": [
         440,
@@ -389,7 +349,8 @@
           "slot_index": 0,
           "links": [
             27,
-            29
+            29,
+            55
           ]
         },
         {
@@ -407,7 +368,7 @@
         "image"
       ],
       "widgets_values_named": {
-        "image": "woman_gold_earring_teal_top_portrait.png",
+        "image": "fashion_portrait_blue_silk_gown_vis.png",
         "upload": "image"
       }
     },
@@ -423,7 +384,7 @@
         170
       ],
       "flags": {},
-      "order": 13,
+      "order": 18,
       "mode": 0,
       "inputs": [
         {
@@ -435,7 +396,7 @@
           "name": "negative",
           "shape": 7,
           "type": "CONDITIONING",
-          "link": 45
+          "link": 54
         },
         {
           "name": "vae",
@@ -497,15 +458,15 @@
       "id": 18,
       "type": "ImageCompare",
       "pos": [
-        2290,
-        -160
+        2070,
+        -170
       ],
       "size": [
-        510,
-        620
+        450,
+        630
       ],
       "flags": {},
-      "order": 17,
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -518,7 +479,7 @@
           "name": "image_b",
           "shape": 7,
           "type": "IMAGE",
-          "link": 30
+          "link": 66
         }
       ],
       "outputs": [],
@@ -532,8 +493,8 @@
       "id": 19,
       "type": "MarkdownNote",
       "pos": [
-        1430,
-        -30
+        1380,
+        -40
       ],
       "size": [
         210,
@@ -559,8 +520,8 @@
       "id": 26,
       "type": "MarkdownNote",
       "pos": [
-        -1000,
-        -210
+        -3200,
+        -220
       ],
       "size": [
         450,
@@ -582,59 +543,25 @@
       "bgcolor": "#000"
     },
     {
-      "id": 32,
-      "type": "ConditioningZeroOut",
-      "pos": [
-        570,
-        310
-      ],
-      "size": [
-        210,
-        30
-      ],
-      "flags": {},
-      "order": 12,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "conditioning",
-          "type": "CONDITIONING",
-          "link": 44
-        }
-      ],
-      "outputs": [
-        {
-          "name": "CONDITIONING",
-          "type": "CONDITIONING",
-          "links": [
-            45
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "ConditioningZeroOut"
-      }
-    },
-    {
       "id": 33,
       "type": "CreateBoundingBoxes",
       "pos": [
-        910,
-        980
+        -1850,
+        -170
       ],
       "size": [
         410,
         580
       ],
       "flags": {},
-      "order": 7,
+      "order": 12,
       "mode": 0,
       "inputs": [
         {
           "name": "background",
           "shape": 7,
           "type": "IMAGE",
-          "link": null
+          "link": 55
         },
         {
           "name": "bboxes",
@@ -658,8 +585,7 @@
           "name": "elements",
           "type": "ARRAY",
           "links": [
-            46,
-            52
+            61
           ]
         }
       ],
@@ -686,9 +612,22 @@
         []
       ],
       "widgets_values_named": {
-        "width": 1024,
-        "height": 1024,
-        "editor_state": [],
+        "width": 896,
+        "height": 1152,
+        "editor_state": [
+          {
+            "x": 128,
+            "y": 192,
+            "width": 736,
+            "height": 896,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "dress",
+              "palette": []
+            }
+          }
+        ],
         "last_incoming": []
       }
     },
@@ -696,28 +635,28 @@
       "id": 34,
       "type": "PreviewAny",
       "pos": [
-        1370,
-        1020
+        -1410,
+        20
       ],
       "size": [
-        210,
-        130
+        267.8520050494538,
+        273.92421187644425
       ],
       "flags": {},
-      "order": 11,
+      "order": 15,
       "mode": 0,
       "inputs": [
         {
           "name": "source",
           "type": "*",
-          "link": 46
+          "link": 67
         }
       ],
       "outputs": [
         {
           "name": "STRING",
           "type": "STRING",
-          "links": null
+          "links": []
         }
       ],
       "properties": {
@@ -738,7 +677,7 @@
         100
       ],
       "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -764,7 +703,7 @@
         110
       ],
       "flags": {},
-      "order": 9,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -789,6 +728,50 @@
       }
     },
     {
+      "id": 45,
+      "type": "CLIPTextEncode",
+      "pos": [
+        410,
+        140
+      ],
+      "size": [
+        440,
+        200
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 53
+        }
+      ],
+      "outputs": [
+        {
+          "name": "CONDITIONING",
+          "type": "CONDITIONING",
+          "slot_index": 0,
+          "links": [
+            54
+          ]
+        }
+      ],
+      "title": "Positive Prompt",
+      "properties": {
+        "Node name for S&R": "CLIPTextEncode"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "text": ""
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
       "id": 46,
       "type": "TextGenerate",
       "pos": [
@@ -806,7 +789,7 @@
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 47
+          "link": 57
         },
         {
           "name": "image",
@@ -830,7 +813,7 @@
           "name": "system_prompt",
           "shape": 7,
           "type": "STRING",
-          "link": 48
+          "link": 59
         },
         {
           "name": "prompt",
@@ -838,7 +821,7 @@
           "widget": {
             "name": "prompt"
           },
-          "link": 49
+          "link": 62
         }
       ],
       "outputs": [
@@ -846,14 +829,14 @@
           "name": "generated_text",
           "type": "STRING",
           "links": [
-            50,
-            51
+            63,
+            70
           ]
         },
         {
           "name": "thinking",
           "type": "STRING",
-          "links": []
+          "links": null
         }
       ],
       "properties": {
@@ -911,7 +894,7 @@
           "type": "CLIP",
           "slot_index": 0,
           "links": [
-            47
+            57
           ]
         }
       ],
@@ -956,7 +939,7 @@
           "name": "STRING",
           "type": "STRING",
           "links": [
-            48
+            59
           ]
         }
       ],
@@ -988,7 +971,7 @@
         {
           "name": "element",
           "type": "ARRAY",
-          "link": 52
+          "link": 61
         }
       ],
       "outputs": [
@@ -996,7 +979,8 @@
           "name": "prompt",
           "type": "STRING",
           "links": [
-            49
+            62,
+            67
           ]
         }
       ],
@@ -1033,7 +1017,7 @@
         {
           "name": "source",
           "type": "*",
-          "link": 50
+          "link": 63
         }
       ],
       "outputs": [
@@ -1048,6 +1032,144 @@
       },
       "widgets_values": [],
       "widgets_values_named": {}
+    },
+    {
+      "id": 51,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        1650,
+        -170
+      ],
+      "size": [
+        370,
+        630
+      ],
+      "flags": {},
+      "order": 21,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 65
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            66
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "image_flux3_klein_image_distilled_edit",
+        "png",
+        "8-bit",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "image_flux3_klein_image_base_edit",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
+    },
+    {
+      "id": 52,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -1030,
+        260
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "localized_name": "STRING",
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            68
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "replace the earring with a large openwork metal statement earring"
+      ],
+      "widgets_values_named": {
+        "value": "replace the earring with a large openwork metal statement earring"
+      }
+    },
+    {
+      "id": 53,
+      "type": "ComfySwitchNode",
+      "pos": [
+        -570,
+        300
+      ],
+      "size": [
+        270,
+        80
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "localized_name": "on_false",
+          "name": "on_false",
+          "shape": 7,
+          "type": "STRING",
+          "link": 68
+        },
+        {
+          "localized_name": "on_true",
+          "name": "on_true",
+          "shape": 7,
+          "type": "STRING",
+          "link": 70
+        },
+        {
+          "localized_name": "switch",
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "output",
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            69
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "switch": true
+      }
     }
   ],
   "links": [
@@ -1074,14 +1196,6 @@
       8,
       1,
       "VAE"
-    ],
-    [
-      6,
-      8,
-      0,
-      9,
-      0,
-      "IMAGE"
     ],
     [
       22,
@@ -1116,14 +1230,6 @@
       "IMAGE"
     ],
     [
-      30,
-      9,
-      0,
-      18,
-      1,
-      "IMAGE"
-    ],
-    [
       43,
       2,
       0,
@@ -1132,20 +1238,52 @@
       "CLIP"
     ],
     [
-      44,
-      4,
+      53,
+      2,
       0,
-      32,
+      45,
       0,
-      "CONDITIONING"
+      "CLIP"
     ],
     [
-      46,
+      55,
+      11,
+      0,
+      33,
+      0,
+      "IMAGE"
+    ],
+    [
+      61,
       33,
       2,
-      34,
+      49,
       0,
       "ARRAY"
+    ],
+    [
+      63,
+      46,
+      0,
+      50,
+      0,
+      "STRING"
+    ],
+    [
+      66,
+      51,
+      0,
+      18,
+      1,
+      "IMAGE"
+    ],
+    [
+      67,
+      49,
+      0,
+      34,
+      0,
+      "STRING"
     ],
     [
       20,
@@ -1156,8 +1294,8 @@
       "CONDITIONING"
     ],
     [
+      54,
       45,
-      32,
       0,
       17,
       1,
@@ -1180,7 +1318,7 @@
       "IMAGE"
     ],
     [
-      47,
+      57,
       47,
       0,
       46,
@@ -1188,7 +1326,7 @@
       "CLIP"
     ],
     [
-      48,
+      59,
       48,
       0,
       46,
@@ -1196,7 +1334,7 @@
       "STRING"
     ],
     [
-      49,
+      62,
       49,
       0,
       46,
@@ -1204,28 +1342,36 @@
       "STRING"
     ],
     [
-      50,
-      46,
+      65,
+      8,
       0,
-      50,
+      51,
       0,
-      "STRING"
+      "IMAGE"
     ],
     [
-      51,
+      70,
       46,
       0,
-      4,
+      53,
       1,
       "STRING"
     ],
     [
+      68,
       52,
-      33,
-      2,
-      49,
       0,
-      "ARRAY"
+      53,
+      0,
+      "STRING"
+    ],
+    [
+      69,
+      53,
+      0,
+      4,
+      1,
+      "STRING"
     ]
   ],
   "groups": [
@@ -1279,12 +1425,24 @@
     },
     {
       "id": 5,
-      "title": "Reference Image",
+      "title": "Reference Image & Prompt",
       "bounding": [
-        -120,
-        400,
-        990,
-        810
+        -2330,
+        -240,
+        1209.847265625,
+        882.28125
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Prompt Upsampling",
+      "bounding": [
+        -1080,
+        -240,
+        920,
+        812
       ],
       "color": "#3f789e",
       "flags": {}
