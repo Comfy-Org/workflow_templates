@@ -50,8 +50,8 @@
         0
       ],
       "size": [
-        420,
-        880
+        430,
+        680
       ],
       "flags": {},
       "order": 4,
@@ -186,12 +186,12 @@
       "id": 19,
       "type": "ResolutionSelector",
       "pos": [
-        -20,
-        0
+        10,
+        380
       ],
       "size": [
-        270,
-        260
+        280,
+        190
       ],
       "flags": {},
       "order": 0,
@@ -250,10 +250,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n- [qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3.5_9b_int8_convrot.safetensors\n│   │   └── qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node defaults to **false** so layout boxes stay intact. When enabled, the short user\nprompt is rewritten by `qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors` into one detailed caption before it reaches the model. Set the switch to\n`false` to send the raw prompt instead; either way the caption that is actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n\n## Bounding boxes\n\nDraw boxes on **Create Bounding Boxes**; `MOSS-Image Layout Prompt` turns them into a layout prompt that is\nalready connected to the `positive_prompt` input of the **Text to Image (MOSS-Image)** node. Remove that link\nto use the plain text prompt instead.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_int8_convrot.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
-        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n- [qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3.5_9b_int8_convrot.safetensors\n│   │   └── qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node defaults to **false** so layout boxes stay intact. When enabled, the short user\nprompt is rewritten by `qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors` into one detailed caption before it reaches the model. Set the switch to\n`false` to send the raw prompt instead; either way the caption that is actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n\n## Bounding boxes\n\nDraw boxes on **Create Bounding Boxes**; `MOSS-Image Layout Prompt` turns them into a layout prompt that is\nalready connected to the `positive_prompt` input of the **Text to Image (MOSS-Image)** node. Remove that link\nto use the plain text prompt instead.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_int8_convrot.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -262,12 +262,12 @@
       "id": 24,
       "type": "MarkdownNote",
       "pos": [
-        1460,
-        2690
+        -620,
+        1990
       ],
       "size": [
-        260,
-        180
+        420,
+        200
       ],
       "flags": {},
       "order": 2,
@@ -368,7 +368,7 @@
       "type": "PreviewAny",
       "pos": [
         -120,
-        1590.0
+        1600
       ],
       "size": [
         400,
@@ -465,7 +465,7 @@
       "type": "MarkdownNote",
       "pos": [
         1460,
-        1030
+        1370
       ],
       "size": [
         520,
@@ -491,7 +491,7 @@
       "type": "MarkdownNote",
       "pos": [
         1460,
-        1840
+        2470
       ],
       "size": [
         520,
@@ -710,8 +710,7 @@
             "name": "seed",
             "type": "INT",
             "linkIds": [
-              30,
-              31
+              30
             ],
             "pos": [
               -846.134765625,
@@ -840,12 +839,12 @@
             "id": 17,
             "type": "PrimitiveStringMultiline",
             "pos": [
-              -780,
-              -1160
+              -140,
+              -780
             ],
             "size": [
               490,
-              530
+              280
             ],
             "flags": {},
             "order": 13,
@@ -883,71 +882,15 @@
             }
           },
           {
-            "id": 12,
-            "type": "CLIPLoader",
-            "pos": [
-              -150,
-              -1160
-            ],
-            "size": [
-              500,
-              200
-            ],
-            "flags": {},
-            "order": 10,
-            "mode": 0,
-            "inputs": [
-              {
-                "localized_name": "clip_name",
-                "name": "clip_name",
-                "type": "COMBO",
-                "widget": {
-                  "name": "clip_name"
-                },
-                "link": 38
-              }
-            ],
-            "outputs": [
-              {
-                "localized_name": "CLIP",
-                "name": "CLIP",
-                "type": "CLIP",
-                "links": [
-                  10
-                ]
-              }
-            ],
-            "properties": {
-              "Node name for S&R": "CLIPLoader",
-              "models": [
-                {
-                  "name": "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
-                  "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
-                  "directory": "text_encoders"
-                }
-              ]
-            },
-            "widgets_values": [
-              "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
-              "flux3",
-              "default"
-            ],
-            "widgets_values_named": {
-              "clip_name": "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
-              "type": "flux3",
-              "device": "default"
-            }
-          },
-          {
             "id": 14,
             "type": "PrimitiveStringMultiline",
             "pos": [
-              -150,
-              -900
+              -140,
+              -430
             ],
             "size": [
-              530,
-              780
+              470,
+              270
             ],
             "flags": {},
             "order": 0,
@@ -978,8 +921,8 @@
             "id": 11,
             "type": "TextGenerate",
             "pos": [
-              400,
-              -1160
+              460,
+              -780
             ],
             "size": [
               400,
@@ -1031,15 +974,6 @@
                   "name": "prompt"
                 },
                 "link": 17
-              },
-              {
-                "localized_name": "seed",
-                "name": "sampling_mode.seed",
-                "type": "INT",
-                "widget": {
-                  "name": "sampling_mode.seed"
-                },
-                "link": 31
               }
             ],
             "outputs": [
@@ -1063,33 +997,33 @@
             },
             "widgets_values": [
               "",
-              3584,
+              4096,
               "on",
-              1,
-              1,
+              0.7,
+              64,
               0.95,
-              0,
+              0.05,
               1,
               0,
-              1.5,
+              0,
               false,
               true,
-              "off"
+              "auto"
             ],
             "widgets_values_named": {
               "prompt": "",
-              "max_length": 3584,
+              "max_length": 4096,
               "sampling_mode": "on",
-              "sampling_mode.temperature": 1,
-              "sampling_mode.top_k": 1,
+              "sampling_mode.temperature": 0.7,
+              "sampling_mode.top_k": 64,
               "sampling_mode.top_p": 0.95,
-              "sampling_mode.min_p": 0,
+              "sampling_mode.min_p": 0.05,
               "sampling_mode.repetition_penalty": 1,
               "sampling_mode.seed": 0,
-              "sampling_mode.presence_penalty": 1.5,
+              "sampling_mode.presence_penalty": 0,
               "thinking": false,
               "use_default_template": true,
-              "mtp": "off"
+              "mtp": "auto"
             }
           },
           {
@@ -1097,11 +1031,11 @@
             "type": "UNETLoader",
             "pos": [
               -150,
-              0
+              30
             ],
             "size": [
-              340,
-              170
+              350,
+              90
             ],
             "flags": {},
             "order": 1,
@@ -1153,8 +1087,8 @@
             "id": 4,
             "type": "CLIPTextEncode",
             "pos": [
-              350,
-              0
+              370,
+              30
             ],
             "size": [
               450,
@@ -1209,11 +1143,11 @@
             "type": "CLIPLoader",
             "pos": [
               -150,
-              540
+              480
             ],
             "size": [
-              340,
-              200
+              350,
+              140
             ],
             "flags": {},
             "order": 2,
@@ -1268,12 +1202,12 @@
             "id": 7,
             "type": "KSampler",
             "pos": [
-              880,
+              930,
               0
             ],
             "size": [
-              320,
-              530
+              290,
+              290
             ],
             "flags": {},
             "order": 7,
@@ -1387,11 +1321,11 @@
             "type": "VAELoader",
             "pos": [
               -150,
-              800
+              700
             ],
             "size": [
-              340,
-              140
+              350,
+              60
             ],
             "flags": {},
             "order": 3,
@@ -1441,8 +1375,8 @@
             "id": 13,
             "type": "PreviewAny",
             "pos": [
-              830,
-              -880
+              1260,
+              -780
             ],
             "size": [
               350,
@@ -1479,12 +1413,12 @@
             "id": 16,
             "type": "ComfySwitchNode",
             "pos": [
-              830,
-              -1160
+              920,
+              -780
             ],
             "size": [
-              270,
-              220
+              280,
+              110
             ],
             "flags": {},
             "order": 12,
@@ -1538,12 +1472,12 @@
             "id": 6,
             "type": "EmptyFlux2LatentImage",
             "pos": [
-              -120,
-              1120
+              -130,
+              960
             ],
             "size": [
               300,
-              190
+              120
             ],
             "flags": {},
             "order": 6,
@@ -1599,8 +1533,8 @@
             "id": 5,
             "type": "CLIPTextEncode",
             "pos": [
-              350,
-              580
+              370,
+              610
             ],
             "size": [
               460,
@@ -1654,12 +1588,12 @@
             "id": 8,
             "type": "VAEDecode",
             "pos": [
-              1300,
+              1270,
               0
             ],
             "size": [
-              225,
-              130
+              230,
+              70
             ],
             "flags": {},
             "order": 8,
@@ -1698,11 +1632,11 @@
             "type": "SkipLayerGuidanceDiTSimple",
             "pos": [
               -150,
-              230
+              190
             ],
             "size": [
-              340,
-              250
+              350,
+              220
             ],
             "flags": {},
             "order": 12,
@@ -1750,7 +1684,7 @@
               -210,
               -60,
               460,
-              1060
+              880
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1771,10 +1705,10 @@
             "id": 3,
             "title": "Image Size",
             "bounding": [
-              -180,
-              1060,
-              420,
-              310
+              -210,
+              850,
+              460,
+              300
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1783,10 +1717,10 @@
             "id": 4,
             "title": "Prompt Enhancer",
             "bounding": [
-              -840,
-              -1220,
-              2080,
-              1160
+              -220,
+              -880,
+              1900,
+              840
             ],
             "color": "#444",
             "flags": {}
@@ -2002,16 +1936,8 @@
             "type": "COMBO"
           },
           {
-            "id": 38,
-            "origin_id": -10,
-            "origin_slot": 13,
-            "target_id": 12,
-            "target_slot": 0,
-            "type": "COMBO"
-          },
-          {
             "id": 10,
-            "origin_id": 12,
+            "origin_id": 2,
             "origin_slot": 0,
             "target_id": 11,
             "target_slot": 0,
@@ -2032,14 +1958,6 @@
             "target_id": 11,
             "target_slot": 5,
             "type": "STRING"
-          },
-          {
-            "id": 31,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 11,
-            "target_slot": 6,
-            "type": "INT"
           },
           {
             "id": 45,
