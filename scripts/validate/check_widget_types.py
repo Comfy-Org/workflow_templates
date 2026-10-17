@@ -297,7 +297,10 @@ def coerced_value(value: Any, spec: Any) -> tuple[Any, str] | None:
     for option in options:
         if isinstance(option, bool) or not isinstance(option, (str, int, float)):
             continue
-        if type(option) is not type(value) and str(option) == str(value):
+        if type(option) is type(value):
+            continue
+        integral = isinstance(value, float) and value.is_integer()
+        if str(option) == str(value) or (integral and str(option) == str(int(value))):
             return option, (
                 f"{type(value).__name__} in a COMBO whose options are {type(option).__name__}s"
             )
@@ -397,7 +400,9 @@ def _instance_slots(
         nodes = {str(n.get("id")): n for n in subgraph.get("nodes") or [] if isinstance(n, dict)}
         slots = []
         for entry in proxy_widgets:
-            if not (isinstance(entry, list) and len(entry) == 2):
+            # [source_node_id, widget_name] or, since the promotion migration,
+            # [source_node_id, widget_name, disambiguating_source_node_id].
+            if not (isinstance(entry, list) and len(entry) in (2, 3)):
                 slots.append(("", None))
             elif str(entry[0]) == "-1":
                 name = str(entry[1])
@@ -406,7 +411,17 @@ def _instance_slots(
                 )
             else:
                 inner = nodes.get(str(entry[0]))
-                spec = _inner_widget_spec(inner, entry[1], object_info) if inner else None
+                inner_type = (inner or {}).get("type")
+                if inner_type in subgraphs and inner_type not in seen:
+                    spec = subgraph_input_spec(
+                        subgraphs[inner_type],
+                        str(entry[1]),
+                        subgraphs,
+                        object_info,
+                        seen | {inner_type},
+                    )
+                else:
+                    spec = _inner_widget_spec(inner, entry[1], object_info) if inner else None
                 slots.append((f"{entry[0]}/{entry[1]}", spec))
         return slots
     slots = []
@@ -473,11 +488,18 @@ def primitive_widgets(
 ) -> list[tuple[str, dict[str, tuple[Any, Any]]]]:
     """A frontend ``PrimitiveNode``'s value, keyed by the widget it drives.
 
-    It is not in ``/object_info``: its ``widgets_values[0]`` is copied into every
-    widget input its output links to, so it is checked against the first linked
-    target whose spec resolves (a node widget or a subgraph instance input)."""
+    It is not in ``/object_info``: its value (``widgets_values[0]``, or
+    ``widgets_values_named["value"]``) is copied into every widget input its
+    output links to, so it is checked against the first linked target whose spec
+    resolves (a node widget or a subgraph instance input)."""
     values = node.get("widgets_values")
-    if not isinstance(values, list) or not values:
+    named = node.get("widgets_values_named")
+    candidates = []
+    if isinstance(values, list) and values:
+        candidates.append(("widgets_values", values[0]))
+    if isinstance(named, dict) and "value" in named:
+        candidates.append(("widgets_values_named", named["value"]))
+    if not candidates:
         return []
     links = _subgraph_links(graph)
     nodes = {n.get("id"): n for n in graph.get("nodes") or [] if isinstance(n, dict)}
@@ -500,7 +522,7 @@ def primitive_widgets(
                 spec = _inner_widget_spec(target, widget_name, object_info)
             if spec is not None and _is_widget(spec):
                 key = f"value (drives {target_id}.{widget_name})"
-                return [("widgets_values", {key: (values[0], spec)})]
+                return [(field, {key: (value, spec)}) for field, value in candidates]
     return []
 
 

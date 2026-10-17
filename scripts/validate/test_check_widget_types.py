@@ -166,6 +166,10 @@ class CoercedValueTests(unittest.TestCase):
     def test_number_in_string_combo(self):
         self.assertEqual(coerced_value(4, ["COMBO", {"options": ["2", "4"]}])[0], "4")
 
+    def test_integral_float_in_string_combo(self):
+        self.assertEqual(coerced_value(8.0, ["COMBO", {"options": ["auto", "8"]}])[0], "8")
+        self.assertIsNone(coerced_value(8.5, ["COMBO", {"options": ["8"]}]))
+
     def test_string_in_int_combo_legacy_shape(self):
         self.assertEqual(coerced_value("5", [[5, 10], {}])[0], 5)
 
@@ -424,6 +428,15 @@ class SubgraphInstanceTests(unittest.TestCase):
         )
         self.assertEqual(_pairs(self._findings(workflow)), [("target_resolution", 2048)])
 
+    def test_three_element_proxy_widget_entry(self):
+        workflow = _instance_workflow(
+            {
+                "widgets_values": ["1536"],
+                "properties": {"proxyWidgets": [["5", "target_resolution", "5"]]},
+            }
+        )
+        self.assertEqual(_pairs(self._findings(workflow)), [("5/target_resolution", 1536)])
+
     def test_unknown_inner_node_keeps_slot_alignment(self):
         workflow = _instance_workflow({"widgets_values": ["x", "1536"]})
         sg = workflow["definitions"]["subgraphs"][0]
@@ -515,6 +528,23 @@ class PrimitiveNodeTests(unittest.TestCase):
         workflow["links"] = [[10, 34, 0, 29, 0, "INT"]]
         findings = check_workflow(Path("t.json"), workflow, OBJECT_INFO)
         self.assertEqual([(f.node_id, f.expected) for f in findings], [(34, 2048)])
+
+    def test_named_only_primitive_value(self):
+        nodes = self._primitive("1536")
+        del nodes[0]["widgets_values"]
+        nodes[0]["widgets_values_named"] = {"value": "1536"}
+        workflow = {"nodes": nodes, "links": [[10, 34, 0, 27, 0, "INT"]]}
+        findings = check_workflow(Path("t.json"), workflow, OBJECT_INFO)
+        self.assertEqual([f.fields for f in findings], [("widgets_values_named",)])
+
+    def test_bad_named_primitive_value_next_to_correct_positional(self):
+        nodes = self._primitive(1536)
+        nodes[0]["widgets_values_named"] = {"value": "1536", "control_after_generate": "fixed"}
+        workflow = {"nodes": nodes, "links": [[10, 34, 0, 27, 0, "INT"]]}
+        findings = check_workflow(Path("t.json"), workflow, OBJECT_INFO)
+        self.assertEqual(
+            [(f.fields, f.expected) for f in findings], [(("widgets_values_named",), 1536)]
+        )
 
     def test_primitive_into_reroute_is_skipped(self):
         nodes = self._primitive("1536", target_type="Reroute", widget="")
