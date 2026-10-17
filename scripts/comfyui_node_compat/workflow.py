@@ -137,8 +137,12 @@ WIDGET_INPUT_TYPES = frozenset({"STRING", "INT", "FLOAT", "BOOLEAN", "COMBO"})
 def is_widget_backed_input(type_name: str | None) -> bool:
     if not type_name:
         return False
-    if any(type_name.startswith(prefix) for prefix in DYNAMIC_INPUT_TYPE_PREFIXES):
+    # Of the dynamic V3 types only a dynamic combo renders a widget; autogrow and
+    # matchtype inputs are sockets and own no widgets_values slot.
+    if is_dynamic_combo_type(type_name):
         return True
+    if any(type_name.startswith(prefix) for prefix in DYNAMIC_INPUT_TYPE_PREFIXES):
+        return False
     return bool(WIDGET_INPUT_TYPES.intersection(split_input_type_names(type_name)))
 
 
@@ -189,6 +193,8 @@ def _consume_dynamic_combo_branch(
 ) -> int:
     for nested_name in branch.input_order:
         if nested_name in branch.autogrow_inputs:
+            continue
+        if not is_widget_backed_input(branch.input_types.get(nested_name)):
             continue
         if f"{parent_name}.{nested_name}" in linked:
             continue
@@ -438,7 +444,20 @@ def is_model_input(input_name: str) -> bool:
     return input_name == "model" or input_name.endswith(".model") or input_name.endswith("_model")
 
 
-def value_matches_input_type(value: Any, type_name: str, *, required: bool) -> bool:
+def combo_option_key(value: Any) -> str | None:
+    """``value`` spelled the way ``normalize_options`` stores COMBO options
+    (``str()``), so a numeric selection like ``5`` matches option ``5``/``"5"``.
+    ``None`` for values that are never a COMBO selection."""
+    if isinstance(value, bool) or not isinstance(value, (str, int, float)):
+        return None
+    if isinstance(value, float) and value.is_integer():
+        return str(int(value))
+    return str(value)
+
+
+def value_matches_input_type(
+    value: Any, type_name: str, *, required: bool, options: list[str] | None = None
+) -> bool:
     if is_dynamic_combo_type(type_name):
         return isinstance(value, str)
     if value == "" and not required:
@@ -450,6 +469,10 @@ def value_matches_input_type(value: Any, type_name: str, *, required: bool) -> b
     if "STRING" in type_names and isinstance(value, str):
         return True
     if "COMBO" in type_names and isinstance(value, str):
+        return True
+    # A number is a COMBO selection only when it is one of the options
+    # (e.g. Kling `duration` [5, 10]); otherwise it is a shifted slot.
+    if "COMBO" in type_names and options and combo_option_key(value) in options:
         return True
     if "INT" in type_names and type(value) is int:
         return True
@@ -587,7 +610,9 @@ def check_widget_values(
         if any(str(type_name).startswith(prefix) for prefix in DYNAMIC_INPUT_TYPE_PREFIXES):
             continue
         required = input_name in required_inputs
-        if not value_matches_input_type(value, type_name, required=required):
+        if not value_matches_input_type(
+            value, type_name, required=required, options=combo_options.get(input_name)
+        ):
             if not spec.api_node:
                 continue
             issues.append(
@@ -612,6 +637,9 @@ def check_widget_values(
         value = values[input_name]
         if value is None or value == "":
             continue
+        # Numbers are judged by value_matches_input_type above (API nodes). Here
+        # they would mostly flag slots the one-level dynamic-combo walk shifted
+        # (nested combos such as BuildPoseFile.format.mesh_style), as on main.
         if isinstance(value, (int, float, bool)):
             continue
         if str(value) not in options:
