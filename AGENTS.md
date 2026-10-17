@@ -11,6 +11,7 @@
 - `npm run validate:templates` — Validate template JSON files
 - `npm run validate:manifests` — Validate package manifests
 - `npm run validate:comfyui-nodes` — Compare templates to ComfyUI node baseline (local: live `/object_info`)
+- `npm run validate:widget-types` — Fail on widget values stored with the wrong JSON type, e.g. `"1536"` for an INT (local: live `/object_info`)
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
 - `python scripts/sync/sync_is_app.py` — Write `isApp` into `index.json` from each workflow's `extra.linearMode` (`--dry-run` to report, `--check` for the CI gate)
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
