@@ -1,14 +1,14 @@
 {
   "id": "e8f30439-267f-45de-b260-db0d114b2c85",
   "revision": 0,
-  "last_node_id": 23,
-  "last_link_id": 48,
+  "last_node_id": 24,
+  "last_link_id": 52,
   "nodes": [
     {
       "id": 9,
       "type": "SaveImage",
       "pos": [
-        850,
+        840,
         0
       ],
       "size": [
@@ -46,7 +46,7 @@
       "id": 18,
       "type": "3301b744-2960-415a-83b0-fe8a89d99fdb",
       "pos": [
-        330,
+        360,
         0
       ],
       "size": [
@@ -101,6 +101,15 @@
           "link": 41
         },
         {
+          "label": "SLG",
+          "name": "switch_1",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch_1"
+          },
+          "link": null
+        },
+        {
           "label": "unet_model",
           "name": "unet_name",
           "type": "COMBO",
@@ -146,11 +155,12 @@
         "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
         1024,
         1024,
-        578965509362937,
-        50,
+        333599710072681,
+        25,
         2.5,
         "er_sde",
         "simple",
+        false,
         "moss_image_sft_int8_convrot.safetensors",
         "qwen3.5_9b_int8_convrot.safetensors",
         "flux2-vae.safetensors"
@@ -161,11 +171,12 @@
         "text": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
         "width": 1024,
         "height": 1024,
-        "seed": 578965509362937,
-        "steps": 50,
+        "seed": 333599710072681,
+        "steps": 25,
         "cfg": 2.5,
         "sampler_name": "er_sde",
         "scheduler": "simple",
+        "switch_1": false,
         "unet_name": "moss_image_sft_int8_convrot.safetensors",
         "clip_name": "qwen3.5_9b_int8_convrot.safetensors",
         "vae_name": "flux2-vae.safetensors"
@@ -176,7 +187,7 @@
       "type": "ResolutionSelector",
       "pos": [
         10,
-        380
+        350
       ],
       "size": [
         280,
@@ -221,8 +232,8 @@
       "id": 21,
       "type": "MarkdownNote",
       "pos": [
-        1460,
-        0
+        -1210,
+        10
       ],
       "size": [
         560,
@@ -247,8 +258,8 @@
       "id": 23,
       "type": "MarkdownNote",
       "pos": [
-        1460,
-        1370
+        -600,
+        10
       ],
       "size": [
         520,
@@ -261,10 +272,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes (kijai, Banodoco #moss-image, 2026-10-17)\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22).\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale.\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n- **Prompt upsampler (TextGenerate):** settings such as `top_k` were not discussed; template values are unverified defaults.\n\n### Where official and community differ\n\n- Official default sampler/steps: Euler / 50. kijai and this template: er_sde / 25 / CFG 2.5 (speed). Both keep shift 5.\n"
+        "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n"
       ],
       "widgets_values_named": {
-        "text": "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes (kijai, Banodoco #moss-image, 2026-10-17)\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22).\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale.\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n- **Prompt upsampler (TextGenerate):** settings such as `top_k` were not discussed; template values are unverified defaults.\n\n### Where official and community differ\n\n- Official default sampler/steps: Euler / 50. kijai and this template: er_sde / 25 / CFG 2.5 (speed). Both keep shift 5.\n"
+        "text": "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -304,8 +315,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 5,
-          "lastNodeId": 23,
-          "lastLinkId": 48,
+          "lastNodeId": 24,
+          "lastLinkId": 52,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -317,7 +328,7 @@
             -880,
             -120,
             197.865234375,
-            308
+            328
           ]
         },
         "outputNode": {
@@ -454,6 +465,19 @@
             ]
           },
           {
+            "id": "71ffd624-a04e-403f-ae06-300f5896f34c",
+            "name": "switch_1",
+            "type": "BOOLEAN",
+            "linkIds": [
+              52
+            ],
+            "label": "SLG",
+            "pos": [
+              -706.134765625,
+              164
+            ]
+          },
+          {
             "id": "bc8e2627-1b51-4333-9d88-0cb6307f7545",
             "name": "unet_name",
             "type": "COMBO",
@@ -522,7 +546,7 @@
               280
             ],
             "flags": {},
-            "order": 13,
+            "order": 14,
             "mode": 0,
             "inputs": [
               {
@@ -607,7 +631,7 @@
               550
             ],
             "flags": {},
-            "order": 9,
+            "order": 10,
             "mode": 0,
             "inputs": [
               {
@@ -709,14 +733,14 @@
             "type": "UNETLoader",
             "pos": [
               -150,
-              30
+              10
             ],
             "size": [
               350,
               90
             ],
             "flags": {},
-            "order": 1,
+            "order": 2,
             "mode": 0,
             "inputs": [
               {
@@ -736,7 +760,8 @@
                 "type": "MODEL",
                 "slot_index": 0,
                 "links": [
-                  1
+                  1,
+                  51
                 ]
               }
             ],
@@ -773,7 +798,7 @@
               520
             ],
             "flags": {},
-            "order": 4,
+            "order": 5,
             "mode": 0,
             "inputs": [
               {
@@ -821,14 +846,14 @@
             "type": "CLIPLoader",
             "pos": [
               -150,
-              480
+              550
             ],
             "size": [
               350,
               140
             ],
             "flags": {},
-            "order": 2,
+            "order": 3,
             "mode": 0,
             "showAdvanced": false,
             "inputs": [
@@ -890,14 +915,14 @@
               290
             ],
             "flags": {},
-            "order": 7,
+            "order": 8,
             "mode": 0,
             "inputs": [
               {
                 "localized_name": "model",
                 "name": "model",
                 "type": "MODEL",
-                "link": 45
+                "link": 49
               },
               {
                 "localized_name": "positive",
@@ -1001,14 +1026,14 @@
             "type": "VAELoader",
             "pos": [
               -150,
-              700
+              740
             ],
             "size": [
               350,
               60
             ],
             "flags": {},
-            "order": 3,
+            "order": 4,
             "mode": 0,
             "inputs": [
               {
@@ -1063,7 +1088,7 @@
               600
             ],
             "flags": {},
-            "order": 10,
+            "order": 11,
             "mode": 0,
             "inputs": [
               {
@@ -1102,7 +1127,7 @@
               110
             ],
             "flags": {},
-            "order": 12,
+            "order": 13,
             "mode": 0,
             "inputs": [
               {
@@ -1161,7 +1186,7 @@
               120
             ],
             "flags": {},
-            "order": 6,
+            "order": 7,
             "mode": 0,
             "inputs": [
               {
@@ -1222,7 +1247,7 @@
               180
             ],
             "flags": {},
-            "order": 5,
+            "order": 6,
             "mode": 0,
             "inputs": [
               {
@@ -1277,7 +1302,7 @@
               70
             ],
             "flags": {},
-            "order": 8,
+            "order": 9,
             "mode": 0,
             "inputs": [
               {
@@ -1313,14 +1338,14 @@
             "type": "SkipLayerGuidanceDiTSimple",
             "pos": [
               -150,
-              190
+              280
             ],
             "size": [
               350,
               220
             ],
             "flags": {},
-            "order": 11,
+            "order": 12,
             "mode": 0,
             "showAdvanced": true,
             "inputs": [
@@ -1337,7 +1362,7 @@
                 "name": "MODEL",
                 "type": "MODEL",
                 "links": [
-                  45
+                  50
                 ]
               }
             ],
@@ -1355,6 +1380,65 @@
               "single_layers": "22",
               "start_percent": 0,
               "end_percent": 0.5
+            }
+          },
+          {
+            "id": 24,
+            "type": "ComfySwitchNode",
+            "pos": [
+              -110,
+              140
+            ],
+            "size": [
+              270,
+              105.99999028338053
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "on_false",
+                "name": "on_false",
+                "shape": 7,
+                "type": "MODEL",
+                "link": 51
+              },
+              {
+                "localized_name": "on_true",
+                "name": "on_true",
+                "shape": 7,
+                "type": "MODEL",
+                "link": 50
+              },
+              {
+                "localized_name": "switch",
+                "name": "switch",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "switch"
+                },
+                "link": 52
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "MODEL",
+                "links": [
+                  49
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ComfySwitchNode"
+            },
+            "widgets_values": [
+              false
+            ],
+            "widgets_values_named": {
+              "switch": false
             }
           }
         ],
@@ -1514,10 +1598,50 @@
             "type": "LATENT"
           },
           {
-            "id": 45,
-            "origin_id": 15,
+            "id": 48,
+            "origin_id": 2,
+            "origin_slot": 0,
+            "target_id": 11,
+            "target_slot": 0,
+            "type": "CLIP"
+          },
+          {
+            "id": 13,
+            "origin_id": 14,
+            "origin_slot": 0,
+            "target_id": 11,
+            "target_slot": 4,
+            "type": "STRING"
+          },
+          {
+            "id": 17,
+            "origin_id": 17,
+            "origin_slot": 0,
+            "target_id": 11,
+            "target_slot": 5,
+            "type": "STRING"
+          },
+          {
+            "id": 49,
+            "origin_id": 24,
             "origin_slot": 0,
             "target_id": 7,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 50,
+            "origin_id": 15,
+            "origin_slot": 0,
+            "target_id": 24,
+            "target_slot": 1,
+            "type": "MODEL"
+          },
+          {
+            "id": 51,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 24,
             "target_slot": 0,
             "type": "MODEL"
           },
@@ -1602,9 +1726,17 @@
             "type": "COMBO"
           },
           {
-            "id": 35,
+            "id": 52,
             "origin_id": -10,
             "origin_slot": 10,
+            "target_id": 24,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          },
+          {
+            "id": 35,
+            "origin_id": -10,
+            "origin_slot": 11,
             "target_id": 1,
             "target_slot": 0,
             "type": "COMBO"
@@ -1612,7 +1744,7 @@
           {
             "id": 36,
             "origin_id": -10,
-            "origin_slot": 11,
+            "origin_slot": 12,
             "target_id": 2,
             "target_slot": 0,
             "type": "COMBO"
@@ -1620,34 +1752,10 @@
           {
             "id": 37,
             "origin_id": -10,
-            "origin_slot": 12,
+            "origin_slot": 13,
             "target_id": 3,
             "target_slot": 0,
             "type": "COMBO"
-          },
-          {
-            "id": 48,
-            "origin_id": 2,
-            "origin_slot": 0,
-            "target_id": 11,
-            "target_slot": 0,
-            "type": "CLIP"
-          },
-          {
-            "id": 13,
-            "origin_id": 14,
-            "origin_slot": 0,
-            "target_id": 11,
-            "target_slot": 4,
-            "type": "STRING"
-          },
-          {
-            "id": 17,
-            "origin_id": 17,
-            "origin_slot": 0,
-            "target_id": 11,
-            "target_slot": 5,
-            "type": "STRING"
           }
         ],
         "extra": {}
@@ -1658,10 +1766,10 @@
   "extra": {
     "frontendVersion": "1.55.17",
     "ds": {
-      "scale": 0.6406255906137981,
+      "scale": 0.5123746044423974,
       "offset": [
-        565.6043081779205,
-        562.8288699170212
+        1458.7144197108835,
+        566.1603684330503
       ]
     }
   },
