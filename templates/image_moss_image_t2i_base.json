@@ -1,8 +1,8 @@
 {
   "id": "e8f30439-267f-45de-b260-db0d114b2c85",
   "revision": 0,
-  "last_node_id": 29,
-  "last_link_id": 47,
+  "last_node_id": 32,
+  "last_link_id": 51,
   "nodes": [
     {
       "id": 9,
@@ -16,7 +16,7 @@
         700
       ],
       "flags": {},
-      "order": 6,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -54,7 +54,7 @@
         680
       ],
       "flags": {},
-      "order": 4,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -128,11 +128,11 @@
           "link": null
         },
         {
-          "label": "PE_model",
-          "name": "clip_name_1",
-          "type": "COMBO",
+          "label": "SLG",
+          "name": "switch_1",
+          "type": "BOOLEAN",
           "widget": {
-            "name": "clip_name_1"
+            "name": "switch_1"
           },
           "link": null
         }
@@ -152,7 +152,7 @@
       "widgets_values": [
         "Editorial studio photograph of a model in a structured ivory wool coat standing against a seamless warm grey backdrop, single softbox from the left carving sculpted shadows, 85mm lens, muted cream and charcoal palette, subtle film grain",
         true,
-        "",
+        "nsfw, worst quality, bad anatomy, watermark, jpeg artifact`",
         1024,
         1024,
         0,
@@ -163,12 +163,12 @@
         "moss_image_base_int8_convrot.safetensors",
         "qwen3.5_9b_int8_convrot.safetensors",
         "flux2-vae.safetensors",
-        "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors"
+        false
       ],
       "widgets_values_named": {
         "value": "Editorial studio photograph of a model in a structured ivory wool coat standing against a seamless warm grey backdrop, single softbox from the left carving sculpted shadows, 85mm lens, muted cream and charcoal palette, subtle film grain",
         "switch": true,
-        "text": "",
+        "text": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact`",
         "width": 1024,
         "height": 1024,
         "seed": 0,
@@ -179,7 +179,7 @@
         "unet_name": "moss_image_base_int8_convrot.safetensors",
         "clip_name": "qwen3.5_9b_int8_convrot.safetensors",
         "vae_name": "flux2-vae.safetensors",
-        "clip_name_1": "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors"
+        "switch_1": false
       }
     },
     {
@@ -229,11 +229,11 @@
       }
     },
     {
-      "id": 20,
+      "id": 30,
       "type": "MarkdownNote",
       "pos": [
-        1460,
-        0
+        -1170,
+        -40
       ],
       "size": [
         560,
@@ -246,62 +246,36 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n\n**Checkpoint variants**: This template uses the `moss_image_base_*` checkpoint; `moss_image_sft_*` (the instruction-tuned one) runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_int8_convrot.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_int8_convrot.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
-        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n\n**Checkpoint variants**: This template uses the `moss_image_base_*` checkpoint; `moss_image_sft_*` (the instruction-tuned one) runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_int8_convrot.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Model Links\n\n- [Hugging Face:Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors)\n\n**Checkpoint variants**: `moss_image_sft_*` is the instruction-tuned checkpoint used here; `moss_image_base_*` runs in the same graph.\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   ├── moss_image_sft_int8_convrot.safetensors\n│   │   └── moss_image_sft_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Prompt upsampler\n\nThe `enable_prompt_upsampler` switch on the **Text to Image (MOSS-Image)** node is **true**, so a short prompt is rewritten into one full\nscene caption before it reaches the model. The upsampler runs on MOSS-Image's own text encoder\n(`qwen3.5_9b_int8_convrot.safetensors`, loaded with `type = moss_image`), the same file the model already needs — no second\ntext encoder to download. Set the switch to `false` to send the raw prompt; either way the caption actually used is shown in the\n`PreviewAny` node inside the subgraph.\n\n\n## Prompt skill\n\nThe system prompt driving the upsampler is written from the official [MOSS-Image Prompt Enhancer skill](https://github.com/OpenMOSS/MOSS-Image/blob/main/skills/moss-image-prompt-enhancer/SKILL.md). The same skill turns an idea into a caption or a Layout prompt outside ComfyUI, and it is the reference for the caption style this model was trained on.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
     },
     {
-      "id": 28,
+      "id": 31,
       "type": "MarkdownNote",
       "pos": [
-        1460,
-        1370
+        -560,
+        -40
       ],
       "size": [
         520,
-        780
+        1200
       ],
       "flags": {},
-      "order": 7,
+      "order": 2,
       "mode": 0,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes (kijai, Banodoco #moss-image, 2026-10-17)\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22).\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale.\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n- **Prompt upsampler (TextGenerate):** settings such as `top_k` were not discussed; template values are unverified defaults.\n\n### Where official and community differ\n\n- Official default sampler/steps: Euler / 50. kijai and this template: er_sde / 25 / CFG 2.5 (speed). Both keep shift 5.\n"
+        "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n"
       ],
       "widgets_values_named": {
-        "text": "## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes (kijai, Banodoco #moss-image, 2026-10-17)\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22).\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale.\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n- **Prompt upsampler (TextGenerate):** settings such as `top_k` were not discussed; template values are unverified defaults.\n\n### Where official and community differ\n\n- Official default sampler/steps: Euler / 50. kijai and this template: er_sde / 25 / CFG 2.5 (speed). Both keep shift 5.\n"
-      },
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
-      "id": 29,
-      "type": "MarkdownNote",
-      "pos": [
-        1460,
-        2470
-      ],
-      "size": [
-        520,
-        820
-      ],
-      "flags": {},
-      "order": 7,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n"
-      ],
-      "widgets_values_named": {
-        "text": "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n"
+        "text": "## MOSS-Image capabilities and limits\n\nSources: [USERGUIDE](https://github.com/OpenMOSS/MOSS-Image/blob/main/USERGUIDE.md), README, HF Base/SFT cards; cross-checked with kijai Banodoco notes.\n\n### Resolution\n\n| Item | Official |\n|------|----------|\n| Recommended total pixels | **1M, 1.5M, or 2M** |\n| Extrapolation range | **0.25M (512×512) to 4M (~2K)** |\n| Aspect ratio | Arbitrary; width/height must be positive multiples of **16** |\n| This template default | 1024×1024 (~1M) |\n\n### Strengths\n\n- ~**5B** single-stream DiT (Muon); FLUX.2 small VAE; Qwen-family text encoder.\n- Strong bilingual (EN/ZH) text rendering and auto layout; JSON Layout control for text/objects; long prompts (~**4K** tokens); anime and photorealistic.\n- **SFT** clearer text grouping/layouts; **Base** has no post-training / CFG distillation (better for community LoRAs).\n- Inputs: natural language, tag sequences, JSON layout (layout is experimental). Prefer English (most training data); Chinese supported.\n\n### Limits / notes\n\n- Auto line breaks may not match intent — use `\\n` or real newlines for precise text.\n- Turning off SLG looks more realistic but can collapse details; official negative-branch skip layer **22** (24/26 also help). kijai notes SLG can overblow anime styles.\n- Recommended negative prompt: `nsfw, worst quality, bad anatomy, watermark, jpeg artifact`\n- If VRAM is tight, lower resolution or use Sequential / CPU offload.\n- When training LoRA yourself, **freeze the text encoder**.\n- License: Apache 2.0.\n\n---\n\n## Sampling settings vs. official defaults\n\n| Setting | This template | OpenMOSS official |\n|---------|---------------|-------------------|\n| Steps | 25 | 50 |\n| CFG | 2.5 | 3 |\n| Sampler | er_sde | Euler |\n| Scheduler | simple | default |\n| Denoise | 1 | 1 |\n| Shift | 5 (model default) | 5 (same) |\n\nThis template follows the faster settings from kijai's ComfyUI MOSS-Image PR [#17095](https://github.com/comfyanonymous/ComfyUI/pull/17095). That is a speed trade-off, not a bug. For results closer to the official ones, try 50 steps and CFG 3.\n\n### Community notes\n\n- **Skip layer guidance:** can overblow anime styles; no alternative values were suggested (template keeps official layer 22). You can check the detail settings inside the subgraph\n- **Shift:** adjust with ModelSamplingAuraFlow or ModelSamplingFlux — ModelSamplingSD3 uses a completely different scale. You can enter the subgraph to adjust it\n- **SFT banding:** experimental LoRA at about −0.5 strength: [moss_image_sft_lora_blocks_21_to_49…](https://huggingface.co/Kijai/MOSS-image_experimental/blob/main/loras/moss_image_sft_lora_blocks_21_to_49_rank_512_bf16.safetensors)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -341,8 +315,8 @@
         "version": 1,
         "state": {
           "lastGroupId": 5,
-          "lastNodeId": 27,
-          "lastLinkId": 47,
+          "lastNodeId": 32,
+          "lastLinkId": 51,
           "lastRerouteId": 0
         },
         "revision": 0,
@@ -360,8 +334,8 @@
         "outputNode": {
           "id": -20,
           "bounding": [
-            1390,
-            -163.32889918205035,
+            1790,
+            30,
             128,
             68
           ]
@@ -530,13 +504,13 @@
             ]
           },
           {
-            "id": "b9c679d9-c634-4fa8-92e7-b2921ad34dd0",
-            "name": "clip_name_1",
-            "type": "COMBO",
+            "id": "e3037e0e-7d1a-43ce-9585-b255c7017615",
+            "name": "switch_1",
+            "type": "BOOLEAN",
             "linkIds": [
-              38
+              51
             ],
-            "label": "PE_model",
+            "label": "SLG",
             "pos": [
               -846.134765625,
               164
@@ -553,8 +527,8 @@
             ],
             "localized_name": "IMAGE",
             "pos": [
-              1414,
-              -139.32889918205035
+              1814,
+              54
             ]
           }
         ],
@@ -756,7 +730,7 @@
             "type": "UNETLoader",
             "pos": [
               -150,
-              30
+              80
             ],
             "size": [
               350,
@@ -783,7 +757,8 @@
                 "type": "MODEL",
                 "slot_index": 0,
                 "links": [
-                  1
+                  1,
+                  50
                 ]
               }
             ],
@@ -812,8 +787,8 @@
             "id": 4,
             "type": "CLIPTextEncode",
             "pos": [
-              370,
-              30
+              380,
+              80
             ],
             "size": [
               450,
@@ -868,7 +843,7 @@
             "type": "CLIPLoader",
             "pos": [
               -150,
-              480
+              690
             ],
             "size": [
               350,
@@ -896,7 +871,8 @@
                 "slot_index": 0,
                 "links": [
                   2,
-                  3
+                  3,
+                  10
                 ]
               }
             ],
@@ -928,7 +904,7 @@
             "type": "KSampler",
             "pos": [
               930,
-              0
+              50
             ],
             "size": [
               290,
@@ -942,7 +918,7 @@
                 "localized_name": "model",
                 "name": "model",
                 "type": "MODEL",
-                "link": 45
+                "link": 48
               },
               {
                 "localized_name": "positive",
@@ -1046,7 +1022,7 @@
             "type": "VAELoader",
             "pos": [
               -150,
-              700
+              910
             ],
             "size": [
               350,
@@ -1108,7 +1084,7 @@
               600
             ],
             "flags": {},
-            "order": 11,
+            "order": 10,
             "mode": 0,
             "inputs": [
               {
@@ -1197,8 +1173,8 @@
             "id": 6,
             "type": "EmptyFlux2LatentImage",
             "pos": [
-              -130,
-              960
+              -140,
+              1130
             ],
             "size": [
               300,
@@ -1258,8 +1234,8 @@
             "id": 5,
             "type": "CLIPTextEncode",
             "pos": [
-              370,
-              610
+              380,
+              660
             ],
             "size": [
               460,
@@ -1314,7 +1290,7 @@
             "type": "VAEDecode",
             "pos": [
               1270,
-              0
+              50
             ],
             "size": [
               230,
@@ -1357,15 +1333,16 @@
             "type": "SkipLayerGuidanceDiTSimple",
             "pos": [
               -150,
-              190
+              410
             ],
             "size": [
               350,
-              220
+              210
             ],
             "flags": {},
-            "order": 12,
+            "order": 11,
             "mode": 0,
+            "showAdvanced": true,
             "inputs": [
               {
                 "localized_name": "model",
@@ -1380,7 +1357,7 @@
                 "name": "MODEL",
                 "type": "MODEL",
                 "links": [
-                  45
+                  49
                 ]
               }
             ],
@@ -1399,6 +1376,65 @@
               "start_percent": 0,
               "end_percent": 0.5
             }
+          },
+          {
+            "id": 32,
+            "type": "ComfySwitchNode",
+            "pos": [
+              -150,
+              250
+            ],
+            "size": [
+              340,
+              105.99998678967526
+            ],
+            "flags": {},
+            "order": 14,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "on_false",
+                "name": "on_false",
+                "shape": 7,
+                "type": "MODEL",
+                "link": 50
+              },
+              {
+                "localized_name": "on_true",
+                "name": "on_true",
+                "shape": 7,
+                "type": "MODEL",
+                "link": 49
+              },
+              {
+                "localized_name": "switch",
+                "name": "switch",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "switch"
+                },
+                "link": 51
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "MODEL",
+                "links": [
+                  48
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ComfySwitchNode"
+            },
+            "widgets_values": [
+              false
+            ],
+            "widgets_values_named": {
+              "switch": false
+            }
           }
         ],
         "groups": [
@@ -1406,10 +1442,10 @@
             "id": 1,
             "title": "Models",
             "bounding": [
-              -210,
-              -60,
-              460,
-              880
+              -213.7222078552652,
+              -9.036235981682466,
+              480,
+              1010
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1418,8 +1454,8 @@
             "id": 2,
             "title": "Prompt",
             "bounding": [
-              290,
-              -60,
+              300,
+              -10,
               580,
               880
             ],
@@ -1430,10 +1466,10 @@
             "id": 3,
             "title": "Image Size",
             "bounding": [
-              -210,
-              850,
-              460,
-              300
+              -220,
+              1020,
+              490,
+              290
             ],
             "color": "#3f789e",
             "flags": {}
@@ -1661,6 +1697,30 @@
             "type": "COMBO"
           },
           {
+            "id": 48,
+            "origin_id": 32,
+            "origin_slot": 0,
+            "target_id": 7,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
+            "id": 49,
+            "origin_id": 15,
+            "origin_slot": 0,
+            "target_id": 32,
+            "target_slot": 1,
+            "type": "MODEL"
+          },
+          {
+            "id": 50,
+            "origin_id": 1,
+            "origin_slot": 0,
+            "target_id": 32,
+            "target_slot": 0,
+            "type": "MODEL"
+          },
+          {
             "id": 10,
             "origin_id": 2,
             "origin_slot": 0,
@@ -1685,29 +1745,28 @@
             "type": "STRING"
           },
           {
-            "id": 45,
-            "origin_id": 15,
-            "origin_slot": 0,
-            "target_id": 7,
-            "target_slot": 0,
-            "type": "MODEL"
+            "id": 51,
+            "origin_id": -10,
+            "origin_slot": 13,
+            "target_id": 32,
+            "target_slot": 2,
+            "type": "BOOLEAN"
           }
         ],
-        "extra": {},
-        "last_node_id": 17
+        "extra": {}
       }
     ]
   },
   "config": {},
   "extra": {
+    "frontendVersion": "1.55.17",
     "ds": {
-      "scale": 0.5624065968240171,
+      "scale": 0.6223270870636013,
       "offset": [
-        1143.256985152046,
-        514.1439330090332
+        1059.8887211316403,
+        599.268912786579
       ]
-    },
-    "frontendVersion": "1.55.17"
+    }
   },
   "version": 0.4
 }
