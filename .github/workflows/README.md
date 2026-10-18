@@ -84,3 +84,23 @@ python3 scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-
 ```
 
 See [`scripts/README.md`](../scripts/README.md#comfyui-node-compatibility-check) for issue types, log tiers, and flags.
+
+### 6. Validate Widget Value Types (`validate-widget-types.yml`)
+
+Blocking check. Fails when a template or blueprint stores a widget value with the wrong JSON type but a value that coerces to a valid one — e.g. `"1536"` or `true` for an `INT` widget, `1024` for a `STRING`, `"false"`/`0` for a `BOOLEAN`, or `8` for a COMBO (including dynamic combos) whose options are `"8"`/`"10"` (PM-2173). Covers regular nodes (both `widgets_values` and `widgets_values_named`), subgraph instances (promoted widgets) and frontend `PrimitiveNode`s. Node types missing from ComfyUI core (custom nodes) are skipped.
+
+The workflow is path-filtered, so if it is made a required status check, PRs that touch none of its paths will never report it — require it only together with a path-aware rule.
+
+**When it runs:**
+- On pull requests and pushes to `main` that change `templates/**` or `blueprints/**` (or the check itself)
+- Manual dispatch
+
+**How it works:**
+1. Start ComfyUI `master` on CPU and save its `/object_info`; fail if any node module did not import
+2. Run `scripts/validate/check_widget_types.py` over `templates/` and `blueprints/`
+3. On pull requests only findings in the PR's changed workflows fail; findings elsewhere (e.g. from an upstream schema change) are warnings
+
+**Local testing (needs running ComfyUI):**
+```bash
+npm run validate:widget-types
+```
