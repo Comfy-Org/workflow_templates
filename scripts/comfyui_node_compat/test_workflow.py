@@ -1,5 +1,12 @@
 #!/usr/bin/env python3
-"""Unit tests for widget mapping and type checks in workflow.py."""
+"""Unit tests for widget mapping and type checks in workflow.py.
+
+The imports are bare module names, so run from the repository root with this
+directory as the discovery root:
+
+    PYTHONPATH=scripts/lib python3 -m unittest discover \\
+        -s scripts/comfyui_node_compat -p 'test_*.py'
+"""
 
 import unittest
 
