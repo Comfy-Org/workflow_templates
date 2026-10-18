@@ -566,6 +566,15 @@ class MainTests(unittest.TestCase):
             self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 1)
             self.assertEqual(main(args), 1)
 
+    def test_missing_path_fails_instead_of_checking_nothing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "object_info.json").write_text(json.dumps(OBJECT_INFO))
+            args = ["--object-info", str(root / "object_info.json"), str(root / "templatez")]
+            with self.assertRaises(SystemExit) as raised:
+                main(args)
+            self.assertIn("workflow path not found", str(raised.exception.code))
+
 
 if __name__ == "__main__":
     unittest.main()

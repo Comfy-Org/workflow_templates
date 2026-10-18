@@ -529,6 +529,8 @@ def primitive_widgets(
 def iter_workflow_files(paths: list[Path]) -> list[Path]:
     files: list[Path] = []
     for path in paths:
+        if not path.exists():
+            raise SystemExit(f"::error::workflow path not found: {path}")
         candidates = sorted(path.glob("*.json")) if path.is_dir() else [path]
         files.extend(p for p in candidates if p.name not in TEMPLATES_NON_WORKFLOW_FILES)
     return files
