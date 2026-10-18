@@ -117,6 +117,7 @@ class DynamicComboBranch:
     required_inputs: set[str] = field(default_factory=set)
     control_after_generate: set[str] = field(default_factory=set)
     combo_options: dict[str, list[str]] = field(default_factory=dict)
+    numeric_combo_options: dict[str, list[str]] = field(default_factory=dict)
     autogrow_inputs: set[str] = field(default_factory=set)
     input_defaults: dict[str, Any] = field(default_factory=dict)
 
@@ -132,6 +133,9 @@ class NodeSpec:
     input_types: dict[str, str] = field(default_factory=dict)
     control_after_generate: set[str] = field(default_factory=set)
     combo_options: dict[str, list[str]] = field(default_factory=dict)
+    # Text keys of the options the schema declares as numbers (Kling `duration`
+    # [5, 10]); combo_options stringifies every option and loses that type.
+    numeric_combo_options: dict[str, list[str]] = field(default_factory=dict)
     filesystem_combo_inputs: set[str] = field(default_factory=set)
     upload_ghost_inputs: set[str] = field(default_factory=set)
     input_defaults: dict[str, Any] = field(default_factory=dict)

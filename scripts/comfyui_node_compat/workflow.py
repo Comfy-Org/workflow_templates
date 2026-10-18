@@ -371,30 +371,36 @@ def check_widget_slot_alignment(
 
 
 def expected_widget_slot_count(node: dict[str, Any], spec: NodeSpec) -> int:
+    """Slots the schema expects in ``widgets_values``, counted the way
+    ``_map_widgets_from_list`` / ``_consume_dynamic_combo_branch`` consume them
+    for every slot the saved list holds (past its end, one per widget)."""
     values = node.get("widgets_values")
     if not isinstance(values, list):
         return 0
     linked = linked_input_names(node)
     expected = 0
-    value_index = 0
 
     for name in widget_slot_names(spec, linked):
         type_name = spec.input_types.get(name)
-        if is_dynamic_combo_type(type_name):
-            expected += 1
-            if value_index < len(values):
-                branch = spec.dynamic_combo_options.get(name, {}).get(str(values[value_index]))
-                value_index += 1
-                if branch:
-                    for nested_name in branch.input_order:
-                        if nested_name in branch.autogrow_inputs:
-                            continue
-                        expected += 1
-                        if nested_name in branch.control_after_generate:
-                            expected += 1
-            continue
+        selected_key = values[expected] if expected < len(values) else None
         expected += 1
-        if name in spec.control_after_generate:
+        if is_dynamic_combo_type(type_name):
+            branch = spec.dynamic_combo_options.get(name, {}).get(str(selected_key))
+            for nested_name in branch.input_order if branch else []:
+                if nested_name in branch.autogrow_inputs:
+                    continue
+                if not is_widget_backed_input(branch.input_types.get(nested_name)):
+                    continue
+                if f"{name}.{nested_name}" in linked:
+                    continue
+                expected += 1
+                if should_consume_control_after_generate(
+                    nested_name, values, expected, branch.control_after_generate
+                ):
+                    expected += 1
+            continue
+        controls = spec.control_after_generate
+        if should_consume_control_after_generate(name, values, expected, controls):
             expected += 1
     return expected
 
@@ -446,7 +452,7 @@ def is_model_input(input_name: str) -> bool:
 
 def combo_option_key(value: Any) -> str | None:
     """``value`` spelled the way ``normalize_options`` stores COMBO options
-    (``str()``), so a numeric selection like ``5`` matches option ``5``/``"5"``.
+    (``str()``), so a numeric selection like ``5`` matches numeric option ``5``.
     ``None`` for values that are never a COMBO selection."""
     if isinstance(value, bool) or not isinstance(value, (str, int, float)):
         return None
@@ -456,7 +462,7 @@ def combo_option_key(value: Any) -> str | None:
 
 
 def value_matches_input_type(
-    value: Any, type_name: str, *, required: bool, options: list[str] | None = None
+    value: Any, type_name: str, *, required: bool, numeric_options: list[str] | None = None
 ) -> bool:
     if is_dynamic_combo_type(type_name):
         return isinstance(value, str)
@@ -470,9 +476,15 @@ def value_matches_input_type(
         return True
     if "COMBO" in type_names and isinstance(value, str):
         return True
-    # A number is a COMBO selection only when it is one of the options
-    # (e.g. Kling `duration` [5, 10]); otherwise it is a shifted slot.
-    if "COMBO" in type_names and options and combo_option_key(value) in options:
+    # A number is a COMBO selection only when it matches an option the schema
+    # declares as a number (Kling `duration` [5, 10]). Against string options
+    # (["5", "10"]) it is the wrong type, often a shifted slot.
+    if (
+        "COMBO" in type_names
+        and numeric_options
+        and not isinstance(value, str)
+        and combo_option_key(value) in numeric_options
+    ):
         return True
     if "INT" in type_names and type(value) is int:
         return True
@@ -491,18 +503,31 @@ def validation_maps_for_values(
     required_inputs = set(spec.required_inputs)
     combo_options = dict(spec.combo_options)
 
-    for combo_name, branches in spec.dynamic_combo_options.items():
-        selected_key = values.get(combo_name)
-        if selected_key is None:
-            continue
-        branch = branches.get(str(selected_key))
-        if branch is None:
-            continue
+    for branch in _selected_branches(spec, values):
         type_map.update(branch.input_types)
         required_inputs.update(branch.required_inputs)
         combo_options.update(branch.combo_options)
 
     return type_map, required_inputs, combo_options
+
+
+def _selected_branches(spec: NodeSpec, values: dict[str, Any]) -> list[DynamicComboBranch]:
+    branches = []
+    for combo_name, options in spec.dynamic_combo_options.items():
+        selected_key = values.get(combo_name)
+        branch = options.get(str(selected_key)) if selected_key is not None else None
+        if branch is not None:
+            branches.append(branch)
+    return branches
+
+
+def numeric_combo_options_for_values(
+    spec: NodeSpec, values: dict[str, Any]
+) -> dict[str, list[str]]:
+    numeric = dict(spec.numeric_combo_options)
+    for branch in _selected_branches(spec, values):
+        numeric.update(branch.numeric_combo_options)
+    return numeric
 
 
 def misplaced_combo_message(
@@ -564,6 +589,7 @@ def check_widget_values(
             ]
 
     type_map, required_inputs, combo_options = validation_maps_for_values(spec, values)
+    numeric_options = numeric_combo_options_for_values(spec, values)
     if spec.api_node:
         message = misplaced_combo_message(node, spec, values, combo_options)
         if message:
@@ -611,7 +637,7 @@ def check_widget_values(
             continue
         required = input_name in required_inputs
         if not value_matches_input_type(
-            value, type_name, required=required, options=combo_options.get(input_name)
+            value, type_name, required=required, numeric_options=numeric_options.get(input_name)
         ):
             if not spec.api_node:
                 continue
