@@ -1,7 +1,7 @@
 {
   "id": "2108137e-d1ce-45c3-a3aa-7fd3890edf60",
   "revision": 0,
-  "last_node_id": 9,
+  "last_node_id": 10,
   "last_link_id": 10,
   "nodes": [
     {
@@ -12,11 +12,11 @@
         -670
       ],
       "size": [
-        591.6666666666667,
-        897.5
+        600,
+        900
       ],
       "flags": {},
-      "order": 7,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -34,16 +34,12 @@
       ],
       "outputs": [],
       "properties": {
+        "Node name for S&R": "ImageCompare",
         "cnr_id": "comfy-core",
-        "ver": "0.11.1",
-        "Node name for S&R": "ImageCompare"
+        "ver": "0.11.1"
       },
-      "widgets_values": [
-        {
-          "after": "/api/view?filename=b9ac888240a265b88573225525d8ebe13189bb8c9f88f19949dac7c8474b5e57.png&subfolder=&type=temp",
-          "before": "/api/view?filename=6094878de76c8680863fc3ad70a3acd74ea6db4e755dd9b81764ea1d090eb484.png&subfolder=&type=temp"
-        }
-      ]
+      "widgets_values": [],
+      "widgets_values_named": {}
     },
     {
       "id": 2,
@@ -54,12 +50,12 @@
       ],
       "size": [
         250,
-        82
+        90
       ],
       "flags": {
         "collapsed": false
       },
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -78,14 +74,18 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "ImageScaleBy",
         "cnr_id": "comfy-core",
-        "ver": "0.11.1",
-        "Node name for S&R": "ImageScaleBy"
+        "ver": "0.11.1"
       },
       "widgets_values": [
         "lanczos",
         4
       ],
+      "widgets_values_named": {
+        "upscale_method": "lanczos",
+        "scale_by": 4
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -93,17 +93,17 @@
       "id": 4,
       "type": "SaveImage",
       "pos": [
-        2148.9907705542396,
-        -669.8907535136035
+        2150,
+        -670
       ],
       "size": [
-        583.3333333333334,
-        922.1354166666667
+        590,
+        930
       ],
       "flags": {
         "collapsed": false
       },
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -112,34 +112,52 @@
           "link": 7
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.11.1"
       },
       "widgets_values": [
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": ""
+      }
     },
     {
       "id": 1,
-      "type": "TopazImageEnhance",
+      "type": "TopazImageEnhanceV2",
       "pos": [
-        1751.5190463822778,
-        -668.2442528971957
+        1750,
+        -670
       ],
       "size": [
         300,
         470
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
+      "showAdvanced": false,
       "inputs": [
         {
           "name": "image",
           "type": "IMAGE",
           "link": 1
+        },
+        {
+          "name": "model.creativity",
+          "type": "INT",
+          "widget": {
+            "name": "model.creativity"
+          },
+          "link": 8
         },
         {
           "name": "output_width",
@@ -158,15 +176,6 @@
             "name": "output_height"
           },
           "link": 3
-        },
-        {
-          "name": "creativity",
-          "shape": 7,
-          "type": "INT",
-          "widget": {
-            "name": "creativity"
-          },
-          "link": 8
         }
       ],
       "outputs": [
@@ -180,24 +189,37 @@
         }
       ],
       "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.11.1",
-        "Node name for S&R": "TopazImageEnhance"
+        "Node name for S&R": "TopazImageEnhanceV2",
+        "cnr_id": "comfy-core"
       },
       "widgets_values": [
         "Reimagine",
         "",
+        2,
         "All",
         false,
         0,
         1,
         false,
-        0,
-        0,
-        2,
+        true,
         false,
-        true
+        0,
+        0
       ],
+      "widgets_values_named": {
+        "model": "Reimagine",
+        "model.prompt": "",
+        "model.creativity": 2,
+        "model.subject_detection": "All",
+        "model.face_enhancement": false,
+        "model.face_enhancement_creativity": 0,
+        "model.face_enhancement_strength": 1,
+        "model.face_preservation": false,
+        "model.color_preservation": true,
+        "model.crop_to_fill": false,
+        "output_width": 0,
+        "output_height": 0
+      },
       "color": "#432",
       "bgcolor": "#653"
     },
@@ -205,17 +227,17 @@
       "id": 3,
       "type": "GetImageSize",
       "pos": [
-        1509.7502170017776,
-        -530.3149643842053
+        1410,
+        -310
       ],
       "size": [
-        140,
-        124
+        230,
+        98.00000023835133
       ],
       "flags": {
-        "collapsed": true
+        "collapsed": false
       },
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -246,11 +268,10 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "GetImageSize",
         "cnr_id": "comfy-core",
-        "ver": "0.11.1",
-        "Node name for S&R": "GetImageSize"
-      },
-      "widgets_values": []
+        "ver": "0.11.1"
+      }
     },
     {
       "id": 5,
@@ -284,14 +305,18 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "LoadImage",
         "cnr_id": "comfy-core",
-        "ver": "0.11.1",
-        "Node name for S&R": "LoadImage"
+        "ver": "0.11.1"
       },
       "widgets_values": [
         "silent_sanctuary.jpg",
         "image"
       ],
+      "widgets_values_named": {
+        "image": "silent_sanctuary.jpg",
+        "upload": "image"
+      },
       "color": "#232",
       "bgcolor": "#353"
     },
@@ -303,8 +328,8 @@
         -670
       ],
       "size": [
-        287.984375,
-        94.421875
+        290,
+        100
       ],
       "flags": {},
       "order": 1,
@@ -316,6 +341,9 @@
       "widgets_values": [
         "Image Compare is now only available under Nodes 2.0. Open menu -> Nodes 2.0 to switch"
       ],
+      "widgets_values_named": {
+        "text": "Image Compare is now only available under Nodes 2.0. Open menu -> Nodes 2.0 to switch"
+      },
       "color": "#222",
       "bgcolor": "#000"
     },
@@ -328,7 +356,7 @@
       ],
       "size": [
         250,
-        58
+        60
       ],
       "flags": {},
       "order": 2,
@@ -339,7 +367,7 @@
           "name": "INT",
           "type": "INT",
           "widget": {
-            "name": "creativity"
+            "name": "model.creativity"
           },
           "links": [
             8
@@ -353,35 +381,40 @@
       "widgets_values": [
         2
       ],
+      "widgets_values_named": {
+        "model.creativity": 2
+      },
       "color": "#232",
       "bgcolor": "#353"
+    },
+    {
+      "id": 10,
+      "type": "MarkdownNote",
+      "pos": [
+        510,
+        -660
+      ],
+      "size": [
+        330,
+        250
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [silent_sanctuary.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/silent_sanctuary.jpg)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [silent_sanctuary.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/silent_sanctuary.jpg)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
-    [
-      1,
-      5,
-      0,
-      1,
-      0,
-      "IMAGE"
-    ],
-    [
-      2,
-      3,
-      0,
-      1,
-      1,
-      "INT"
-    ],
-    [
-      3,
-      3,
-      1,
-      1,
-      2,
-      "INT"
-    ],
     [
       4,
       5,
@@ -407,14 +440,6 @@
       "IMAGE"
     ],
     [
-      8,
-      7,
-      0,
-      1,
-      3,
-      "INT"
-    ],
-    [
       9,
       1,
       0,
@@ -429,19 +454,51 @@
       8,
       1,
       "IMAGE"
+    ],
+    [
+      1,
+      5,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      8,
+      7,
+      0,
+      1,
+      1,
+      "INT"
+    ],
+    [
+      2,
+      3,
+      0,
+      1,
+      2,
+      "INT"
+    ],
+    [
+      3,
+      3,
+      1,
+      1,
+      3,
+      "INT"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5054470284992949,
+      "scale": 0.6727499949325617,
       "offset": [
-        333.23148018472784,
-        1247.9513856379417
+        -410.9245195799657,
+        1190.911018301776
       ]
     },
-    "frontendVersion": "1.37.11",
+    "frontendVersion": "1.56.3",
     "workflowRendererVersion": "LG",
     "VHS_KeepIntermediate": true,
     "VHS_MetadataImage": true,
