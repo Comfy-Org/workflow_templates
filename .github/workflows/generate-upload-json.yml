@@ -18,15 +18,13 @@ permissions:
 jobs:
   generate-json:
     runs-on: ubuntu-latest
-    # Run on PRs from the same repo only (fork PRs cannot auto-commit to the head branch)
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           sparse-checkout: |
             templates/index.json

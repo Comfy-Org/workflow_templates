@@ -34,8 +34,6 @@ permissions:
 jobs:
   sync-index:
     runs-on: ubuntu-latest
-    # Only run on same-repo PRs (fork PRs cannot receive auto-commits).
-    if: github.event.pull_request.head.repo.full_name == github.repository
     concurrency:
       group: sync-template-index-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.repo.full_name }}
       cancel-in-progress: true
@@ -44,7 +42,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{ github.head_ref }}
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 1
           sparse-checkout: |
             templates/index.json
