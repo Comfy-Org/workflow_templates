@@ -26,6 +26,19 @@ Related skills (do not replace this one):
 - Model download URLs must produce filenames that **exactly** match `widgets_values` in the workflow JSON.
 - Package copies under `packages/*/src/**/templates/` are gitignored; regenerate via `sync_bundles.py`, do not hand-edit.
 
+### Black Forest Labs product names
+
+Official spelling is the [BFL All Models list](https://bfl.ai/models). Use these tokens in titles and descriptions:
+
+- **FLUX 3** (space): `FLUX 3 Image`, `FLUX 3 Image Klein`, `FLUX 3 Video`, `FLUX 3 Action`
+- **FLUX.2** (dot): `FLUX.2`, `FLUX.2 Max`, `FLUX.2 Klein`
+
+Do not invent `FLUX 2` (space), `FLUX.3` / `Flux.3` (dot), or mixed casing (`Flux 3`, `Flux.2`).
+
+- Brand tokens stay untranslated and byte-identical in every locale. Translate only the rest of the title or description.
+- Template Library search names in external docs must match these English titles exactly.
+- Do not rename template ids, filenames, API paths, download URLs, or model tag enums to chase branding.
+
 ## Decide the operation
 
 | User intent | Go to |
@@ -293,6 +306,7 @@ python3 scripts/validate/validate_thumbnails.py
 | "What bundle?" | New media → `media-assets-02`; `media-*` and `media-assets-01` frozen |
 | "Validate my template" | Validation section |
 | "Sync translations" / "加翻译" | Edit `scripts/data/i18n.json` first, then Adding Step 8 / `/managing-translations` |
+| "FLUX title" / "BFL brand name" | [Black Forest Labs product names](#black-forest-labs-product-names) |
 
 ---
 

@@ -11,6 +11,7 @@
 - `npm run validate:templates` — Validate template JSON files
 - `npm run validate:manifests` — Validate package manifests
 - `npm run validate:comfyui-nodes` — Compare templates to ComfyUI node baseline (local: live `/object_info`)
+- `npm run validate:widget-types` — Fail on widget values stored with the wrong JSON type, e.g. `"1536"` for an INT (local: live `/object_info`)
 - `python scripts/sync/sync_bundles.py` — Same as `npm run sync:bundles`
 - `python scripts/sync/sync_is_app.py` — Write `isApp` into `index.json` from each workflow's `extra.linearMode` (`--dry-run` to report, `--check` for the CI gate)
 - `python scripts/validate/validate_templates.py` — Same as `npm run validate:templates`
@@ -21,6 +22,8 @@
 **MCP index pipeline:** see skill `.claude/skills/managing-mcp-index/SKILL.md` and `scripts/mcp/docs/MCP_AI_ENHANCEMENT.md`. Do not confuse with hub i18n (`i18n`) or site AI (`site/scripts/generate-ai.ts`).
 
 **Frozen legacy media bundles:** see [`scripts/docs/frozen_bundles.md`](scripts/docs/frozen_bundles.md) (policy, inventory, CI reminders, publishing).
+
+**BFL product names:** FLUX 3 uses a space (`FLUX 3 Image`, `FLUX 3 Image Klein`, `FLUX 3 Video`); FLUX.2 uses a dot (`FLUX.2`, `FLUX.2 Max`, `FLUX.2 Klein`). See `.claude/skills/managing-templates/SKILL.md` (Black Forest Labs product names).
 
 ## Archiving templates
 

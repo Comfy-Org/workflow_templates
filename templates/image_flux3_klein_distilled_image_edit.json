@@ -1,8 +1,8 @@
 {
   "id": "0ae2b50b-b07a-4465-bb7c-d8fe58e8e0ac",
   "revision": 0,
-  "last_node_id": 44,
-  "last_link_id": 52,
+  "last_node_id": 53,
+  "last_link_id": 72,
   "nodes": [
     {
       "id": 1,
@@ -33,18 +33,18 @@
         "Node name for S&R": "UNETLoader",
         "models": [
           {
-            "name": "flux3_image_klein_sd_int8_convrot.safetensors",
-            "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3_image_klein_sd_int8_convrot.safetensors",
+            "name": "flux3-image-klein-int8-convrot.safetensors",
+            "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-int8-convrot.safetensors",
             "directory": "diffusion_models"
           }
         ]
       },
       "widgets_values": [
-        "flux3_image_klein_sd_int8_convrot.safetensors",
+        "flux3-image-klein-int8-convrot.safetensors",
         "default"
       ],
       "widgets_values_named": {
-        "unet_name": "flux3_image_klein_sd_int8_convrot.safetensors",
+        "unet_name": "flux3-image-klein-int8-convrot.safetensors",
         "weight_dtype": "default"
       }
     },
@@ -141,21 +141,29 @@
       "id": 4,
       "type": "CLIPTextEncode",
       "pos": [
-        410,
-        -170
+        420,
+        -140
       ],
       "size": [
-        440,
-        410
+        430,
+        370
       ],
       "flags": {},
-      "order": 10,
+      "order": 18,
       "mode": 0,
       "inputs": [
         {
           "name": "clip",
           "type": "CLIP",
           "link": 43
+        },
+        {
+          "name": "text",
+          "type": "STRING",
+          "widget": {
+            "name": "text"
+          },
+          "link": 70
         }
       ],
       "outputs": [
@@ -174,19 +182,17 @@
         "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        "Replace the earring with a single large openwork metal statement earring, one bold curved pendant, intricate hollow metal cutouts, layered metal wires, polished warm bronze finish, structured artistic shape, keep it attached to the correct ear position, match the character's existing lighting, shadows and skin tone, no pearls, no pearl beads, no scattered small beads."
+        ""
       ],
       "widgets_values_named": {
-        "text": "Replace the earring with a single large openwork metal statement earring, one bold curved pendant, intricate hollow metal cutouts, layered metal wires, polished warm bronze finish, structured artistic shape, keep it attached to the correct ear position, match the character's existing lighting, shadows and skin tone, no pearls, no pearl beads, no scattered small beads."
-      },
-      "color": "#232",
-      "bgcolor": "#353"
+        "text": ""
+      }
     },
     {
       "id": 7,
       "type": "KSampler",
       "pos": [
-        960,
+        1440,
         -170
       ],
       "size": [
@@ -194,7 +200,7 @@
         520
       ],
       "flags": {},
-      "order": 14,
+      "order": 21,
       "mode": 0,
       "inputs": [
         {
@@ -232,7 +238,7 @@
         "Node name for S&R": "KSampler"
       },
       "widgets_values": [
-        264888498296736,
+        563228241303057,
         "randomize",
         16,
         1,
@@ -241,7 +247,7 @@
         1
       ],
       "widgets_values_named": {
-        "seed": 264888498296736,
+        "seed": 563228241303057,
         "control_after_generate": "randomize",
         "steps": 16,
         "cfg": 1,
@@ -254,15 +260,17 @@
       "id": 8,
       "type": "VAEDecode",
       "pos": [
-        1430,
-        -160
+        1870,
+        -210
       ],
       "size": [
         210,
         50
       ],
-      "flags": {},
-      "order": 15,
+      "flags": {
+        "collapsed": false
+      },
+      "order": 22,
       "mode": 0,
       "inputs": [
         {
@@ -294,15 +302,15 @@
       "id": 9,
       "type": "SaveImage",
       "pos": [
-        1720,
-        -160
+        2160,
+        -210
       ],
       "size": [
         530,
         620
       ],
       "flags": {},
-      "order": 16,
+      "order": 23,
       "mode": 0,
       "inputs": [
         {
@@ -334,7 +342,7 @@
       "id": 10,
       "type": "MarkdownNote",
       "pos": [
-        -520,
+        -1060,
         -210
       ],
       "size": [
@@ -351,10 +359,10 @@
         "Node name for S&R": "MarkdownNote"
       },
       "widgets_values": [
-        "## FLUX.3 image-small: editing\n\nSame files and sampler settings as text-to-image (50 steps, cfg 3.5, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
+        "## FLUX 3 Image Klein: editing\n\nSame files and sampler settings as text-to-image (50 steps, cfg 3.5, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
       ],
       "widgets_values_named": {
-        "text": "## FLUX.3 image-small: editing\n\nSame files and sampler settings as text-to-image (50 steps, cfg 3.5, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
+        "text": "## FLUX 3 Image Klein: editing\n\nSame files and sampler settings as text-to-image (50 steps, cfg 3.5, euler / simple).\n\n**References**: plug more input image to the `Set Reference Multi Latent` node, the first one is `<ref_image_0>` in the prompt, the next `<ref_image_1>`, and so on. Add every reference to **both** the positive and the negative, as the reference pipeline does.\n\n**Size**: the reference is scaled to ~1 MP here and the output latent takes its size. BFL's pipeline keeps references at native size (up to ~16 MP): raise the megapixels for more reference detail at a higher cost.\n\n**Prompting**: write a full caption of the result, with the edit folded in."
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -363,8 +371,8 @@
       "id": 11,
       "type": "LoadImage",
       "pos": [
-        -110,
-        470
+        -630,
+        -160
       ],
       "size": [
         440,
@@ -381,7 +389,9 @@
           "slot_index": 0,
           "links": [
             27,
-            29
+            29,
+            58,
+            67
           ]
         },
         {
@@ -408,14 +418,14 @@
       "type": "ReferenceMultiLatent",
       "pos": [
         990,
-        490
+        -150
       ],
       "size": [
         280,
         170
       ],
       "flags": {},
-      "order": 13,
+      "order": 20,
       "mode": 0,
       "inputs": [
         {
@@ -489,15 +499,15 @@
       "id": 18,
       "type": "ImageCompare",
       "pos": [
-        2290,
-        -160
+        2730,
+        -210
       ],
       "size": [
         510,
         620
       ],
       "flags": {},
-      "order": 17,
+      "order": 24,
       "mode": 0,
       "inputs": [
         {
@@ -521,37 +531,10 @@
       "widgets_values_named": {}
     },
     {
-      "id": 19,
-      "type": "MarkdownNote",
-      "pos": [
-        1430,
-        -30
-      ],
-      "size": [
-        210,
-        90
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "title": "Note: Steps",
-      "properties": {},
-      "widgets_values": [
-        "you can try 4-16 steps"
-      ],
-      "widgets_values_named": {
-        "text": "you can try 4-16 steps"
-      },
-      "color": "#222",
-      "bgcolor": "#000"
-    },
-    {
       "id": 26,
       "type": "MarkdownNote",
       "pos": [
-        -1000,
+        -1550,
         -210
       ],
       "size": [
@@ -565,10 +548,10 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Input Asset\n\n- [woman_gold_earring_teal_top_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/woman_gold_earring_teal_top_portrait.png)\n\n## Model Links\n\n- [Hugging Face:black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy)\n\n**diffusion_models**\n\n- [flux3_image_klein_sd_int8_convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3_image_klein_sd_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── flux3_image_klein_sd_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "## Input Asset\n\n- [woman_gold_earring_teal_top_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/woman_gold_earring_teal_top_portrait.png)\n\n## Model Links\n\n- [Hugging Face:black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy)\n\n> **VRAM tip** — this template ships the quantised distilled checkpoint to keep the footprint small. With more than 24 GB of VRAM, use the bf16 weights instead: [`flux3-image-klein-bf16.safetensors`](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-bf16.safetensors).\n\n**diffusion_models**\n\n- [flux3-image-klein-int8-convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-int8-convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors)\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── flux3-image-klein-int8-convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
-        "text": "## Input Asset\n\n- [woman_gold_earring_teal_top_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/woman_gold_earring_teal_top_portrait.png)\n\n## Model Links\n\n- [Hugging Face:black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy)\n\n**diffusion_models**\n\n- [flux3_image_klein_sd_int8_convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3_image_klein_sd_int8_convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── flux3_image_klein_sd_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "## Input Asset\n\n- [woman_gold_earring_teal_top_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/woman_gold_earring_teal_top_portrait.png)\n\n## Model Links\n\n- [Hugging Face:black-forest-labs/flux-3-image-klein-comfy](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy)\n\n> **VRAM tip** — this template ships the quantised distilled checkpoint to keep the footprint small. With more than 24 GB of VRAM, use the bf16 weights instead: [`flux3-image-klein-bf16.safetensors`](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-bf16.safetensors).\n\n**diffusion_models**\n\n- [flux3-image-klein-int8-convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/diffusion_models/flux3-image-klein-int8-convrot.safetensors)\n\n**text_encoders**\n\n- [qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/blob/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors)\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/vae/flux2-vae.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── flux3-image-klein-int8-convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   ├── qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -577,15 +560,15 @@
       "id": 32,
       "type": "ConditioningZeroOut",
       "pos": [
-        570,
-        310
+        630,
+        290
       ],
       "size": [
         210,
         30
       ],
       "flags": {},
-      "order": 12,
+      "order": 19,
       "mode": 0,
       "inputs": [
         {
@@ -611,22 +594,22 @@
       "id": 33,
       "type": "CreateBoundingBoxes",
       "pos": [
-        910,
-        980
+        -630,
+        410
       ],
       "size": [
-        410,
-        580
+        440,
+        540
       ],
       "flags": {},
-      "order": 7,
+      "order": 11,
       "mode": 0,
       "inputs": [
         {
           "name": "background",
           "shape": 7,
           "type": "IMAGE",
-          "link": null
+          "link": 58
         },
         {
           "name": "bboxes",
@@ -650,7 +633,7 @@
           "name": "elements",
           "type": "ARRAY",
           "links": [
-            46
+            59
           ]
         }
       ],
@@ -658,44 +641,75 @@
         "Node name for S&R": "CreateBoundingBoxes"
       },
       "widgets_values": [
-        1024,
-        1024,
-        [],
+        1360,
+        752,
+        [
+          {
+            "x": 512,
+            "y": 288,
+            "width": 224,
+            "height": 224,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "earring",
+              "palette": []
+            }
+          }
+        ],
         []
       ],
       "widgets_values_named": {
-        "width": 1024,
-        "height": 1024,
-        "editor_state": [],
+        "width": 1360,
+        "height": 752,
+        "editor_state": [
+          {
+            "x": 512,
+            "y": 288,
+            "width": 224,
+            "height": 224,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "earring",
+              "palette": []
+            }
+          }
+        ],
         "last_incoming": []
-      }
+      },
+      "color": "#322",
+      "bgcolor": "#533"
     },
     {
       "id": 34,
       "type": "PreviewAny",
       "pos": [
-        1370,
-        1020
+        440,
+        490
       ],
       "size": [
-        210,
-        130
+        390,
+        330
       ],
       "flags": {},
-      "order": 11,
+      "order": 14,
       "mode": 0,
       "inputs": [
         {
           "name": "source",
           "type": "*",
-          "link": 46
+          "link": 63
         }
       ],
       "outputs": [
         {
           "name": "STRING",
           "type": "STRING",
-          "links": null
+          "links": [
+            64,
+            71
+          ]
         }
       ],
       "properties": {
@@ -708,15 +722,15 @@
       "id": 35,
       "type": "MarkdownNote",
       "pos": [
-        1230,
-        820
+        1010,
+        250
       ],
       "size": [
         250,
         100
       ],
       "flags": {},
-      "order": 8,
+      "order": 7,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -734,15 +748,15 @@
       "id": 44,
       "type": "EmptyFlux2LatentImage",
       "pos": [
-        910,
-        810
+        1000,
+        80
       ],
       "size": [
         270,
         110
       ],
       "flags": {},
-      "order": 9,
+      "order": 8,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -765,6 +779,354 @@
         "height": 1024,
         "batch_size": 1
       }
+    },
+    {
+      "id": 46,
+      "type": "CLIPLoader",
+      "pos": [
+        -110,
+        -760
+      ],
+      "size": [
+        440,
+        120
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "CLIP",
+          "type": "CLIP",
+          "slot_index": 0,
+          "links": [
+            54
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CLIPLoader",
+        "models": [
+          {
+            "name": "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
+            "url": "https://huggingface.co/black-forest-labs/flux-3-image-klein-comfy/resolve/main/text_encoders/qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
+            "directory": "text_encoders"
+          }
+        ]
+      },
+      "widgets_values": [
+        "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
+        "flux3",
+        "default"
+      ],
+      "widgets_values_named": {
+        "clip_name": "qwen3.5_9b_flux3_prompt_upsampler_w4a8.safetensors",
+        "type": "flux3",
+        "device": "default"
+      }
+    },
+    {
+      "id": 47,
+      "type": "TextGenerate",
+      "pos": [
+        390,
+        -760
+      ],
+      "size": [
+        400,
+        460
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "showAdvanced": false,
+      "inputs": [
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 54
+        },
+        {
+          "name": "image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 66
+        },
+        {
+          "name": "video",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "system_prompt",
+          "shape": 7,
+          "type": "STRING",
+          "link": 60
+        },
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "prompt"
+          },
+          "link": 64
+        }
+      ],
+      "outputs": [
+        {
+          "name": "generated_text",
+          "type": "STRING",
+          "links": [
+            69
+          ]
+        },
+        {
+          "name": "thinking",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "TextGenerate"
+      },
+      "widgets_values": [
+        "",
+        3584,
+        "on",
+        1,
+        1,
+        0.95,
+        0,
+        1.05,
+        0,
+        0,
+        false,
+        true,
+        "off"
+      ],
+      "widgets_values_named": {
+        "prompt": "",
+        "max_length": 3584,
+        "sampling_mode": "on",
+        "sampling_mode.temperature": 1,
+        "sampling_mode.top_k": 1,
+        "sampling_mode.top_p": 0.95,
+        "sampling_mode.min_p": 0,
+        "sampling_mode.repetition_penalty": 1.05,
+        "sampling_mode.seed": 0,
+        "sampling_mode.presence_penalty": 0,
+        "thinking": false,
+        "use_default_template": true,
+        "mtp": "off"
+      }
+    },
+    {
+      "id": 48,
+      "type": "PrimitiveStringMultiline",
+      "pos": [
+        -110,
+        -580
+      ],
+      "size": [
+        440,
+        180
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            60
+          ]
+        }
+      ],
+      "title": "Text (System prompt)",
+      "properties": {
+        "Node name for S&R": "PrimitiveStringMultiline"
+      },
+      "widgets_values": [
+        "You are the prompt upsampler of an image-editing model. You see the reference image(s), attached in order (the first image, the second image, ...), and the user's short request. Expand it into ONE detailed, self-contained instruction: the caption the editing model receives together with the same images. Output only the instruction as one continuous English prose block, with no greetings, explanations, Markdown, JSON, coordinates, ids or angle-bracket tokens. Read a vague or conversational request as the most plausible edit of the supplied images.\\n\\nPick the voice by task shape. When one reference stays and gets bounded changes, write an imperative editing instruction on it (\\\"Remove the ...\\\", \\\"Change the ... to ...\\\", \\\"Zoom in on ...\\\"); a whole-image transformation opens with its scope (\\\"Convert the entire image into ...\\\", \\\"Apply a ... filter over the entire scene\\\", \\\"Horizontally flip the entire image so that ...\\\", \\\"Shift the camera viewpoint to ...\\\", then where the major elements should now be). When the references are drawn into a newly composed frame (combining subjects, a new scene, a garment, object or style donor), write a generation request (\\\"Create a photograph of ...\\\", \\\"Create an anime-style illustration of ...\\\", \\\"Generate a new image featuring ...\\\") that says what to take from each image, by ordinal, and what is newly generated.\\n\\nKeep every explicit edit, constraint, count, position, style cue and piece of wording, and decide what is left open as one concrete plan. Ground everything in what is actually visible: identify each referent unambiguously by its real appearance, never mention content that is not there, and use every image the user attached. State every end state concretely (which color, how large, which pose, which material) and give new content enough appearance to be generated. Cover the knock-on effects of the change (shadows, reflections, occlusion, perspective, scale, lighting) and say what fills a removed region. A zoom-in names what stays in frame and which neighbors are cropped out; an outpainting continues the scene in the same medium. Describe the change, not the whole scene, and close an editing instruction with one compact clause naming what stays unchanged; transferred people keep their identity, face and accessories unless asked otherwise. Transcribe on-image text verbatim in its original language inside double quotes, with line breaks as \\\\n, and match the original font, size and color when replacing it. Name recognizable public figures, brands and landmarks you can see. Directions are frame-relative; use no evaluative or quality words. Typical length is 50 to 150 words.\\n\\nOutput only the instruction."
+      ],
+      "widgets_values_named": {
+        "value": "You are the prompt upsampler of an image-editing model. You see the reference image(s), attached in order (the first image, the second image, ...), and the user's short request. Expand it into ONE detailed, self-contained instruction: the caption the editing model receives together with the same images. Output only the instruction as one continuous English prose block, with no greetings, explanations, Markdown, JSON, coordinates, ids or angle-bracket tokens. Read a vague or conversational request as the most plausible edit of the supplied images.\\n\\nPick the voice by task shape. When one reference stays and gets bounded changes, write an imperative editing instruction on it (\\\"Remove the ...\\\", \\\"Change the ... to ...\\\", \\\"Zoom in on ...\\\"); a whole-image transformation opens with its scope (\\\"Convert the entire image into ...\\\", \\\"Apply a ... filter over the entire scene\\\", \\\"Horizontally flip the entire image so that ...\\\", \\\"Shift the camera viewpoint to ...\\\", then where the major elements should now be). When the references are drawn into a newly composed frame (combining subjects, a new scene, a garment, object or style donor), write a generation request (\\\"Create a photograph of ...\\\", \\\"Create an anime-style illustration of ...\\\", \\\"Generate a new image featuring ...\\\") that says what to take from each image, by ordinal, and what is newly generated.\\n\\nKeep every explicit edit, constraint, count, position, style cue and piece of wording, and decide what is left open as one concrete plan. Ground everything in what is actually visible: identify each referent unambiguously by its real appearance, never mention content that is not there, and use every image the user attached. State every end state concretely (which color, how large, which pose, which material) and give new content enough appearance to be generated. Cover the knock-on effects of the change (shadows, reflections, occlusion, perspective, scale, lighting) and say what fills a removed region. A zoom-in names what stays in frame and which neighbors are cropped out; an outpainting continues the scene in the same medium. Describe the change, not the whole scene, and close an editing instruction with one compact clause naming what stays unchanged; transferred people keep their identity, face and accessories unless asked otherwise. Transcribe on-image text verbatim in its original language inside double quotes, with line breaks as \\\\n, and match the original font, size and color when replacing it. Name recognizable public figures, brands and landmarks you can see. Directions are frame-relative; use no evaluative or quality words. Typical length is 50 to 150 words.\\n\\nOutput only the instruction."
+      }
+    },
+    {
+      "id": 49,
+      "type": "Flux3LayoutPrompt",
+      "pos": [
+        -90,
+        490
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "element",
+          "type": "ARRAY",
+          "link": 59
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "STRING",
+          "links": [
+            63
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "Flux3LayoutPrompt"
+      },
+      "widgets_values": [
+        "In <ref_image_0>, replace the earring <obj_1> with a single large openwork metal statement earring, one bold curved pendant, intricate hollow metal cutouts, layered metal wires, polished warm bronze finish, structured artistic shape, keep it attached to the correct ear position. Match the character's existing lighting, shadows and skin tone. No pearls, no pearl beads, no scattered small beads. Keep all other parts of the image completely unchanged."
+      ],
+      "widgets_values_named": {
+        "prompt": "In <ref_image_0>, replace the earring <obj_1> with a single large openwork metal statement earring, one bold curved pendant, intricate hollow metal cutouts, layered metal wires, polished warm bronze finish, structured artistic shape, keep it attached to the correct ear position. Match the character's existing lighting, shadows and skin tone. No pearls, no pearl beads, no scattered small beads. Keep all other parts of the image completely unchanged."
+      },
+      "color": "#232",
+      "bgcolor": "#353"
+    },
+    {
+      "id": 50,
+      "type": "BatchImagesNode",
+      "pos": [
+        100,
+        -340
+      ],
+      "size": [
+        140,
+        70
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image0",
+          "type": "IMAGE",
+          "link": 67
+        },
+        {
+          "name": "images.image1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            66
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BatchImagesNode"
+      }
+    },
+    {
+      "id": 51,
+      "type": "ComfySwitchNode",
+      "pos": [
+        900,
+        -750
+      ],
+      "size": [
+        270,
+        80
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "shape": 7,
+          "type": "STRING",
+          "link": 69
+        },
+        {
+          "name": "on_true",
+          "shape": 7,
+          "type": "STRING",
+          "link": 71
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "STRING",
+          "links": [
+            68
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "switch": false
+      }
+    },
+    {
+      "id": 52,
+      "type": "PreviewAny",
+      "pos": [
+        900,
+        -560
+      ],
+      "size": [
+        430,
+        260
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 68
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            70
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
     }
   ],
   "links": [
@@ -857,12 +1219,60 @@
       "CONDITIONING"
     ],
     [
-      46,
+      58,
+      11,
+      0,
+      33,
+      0,
+      "IMAGE"
+    ],
+    [
+      59,
       33,
       2,
-      34,
+      49,
       0,
       "ARRAY"
+    ],
+    [
+      63,
+      49,
+      0,
+      34,
+      0,
+      "STRING"
+    ],
+    [
+      68,
+      51,
+      0,
+      52,
+      0,
+      "*"
+    ],
+    [
+      69,
+      47,
+      0,
+      51,
+      0,
+      "STRING"
+    ],
+    [
+      70,
+      52,
+      0,
+      4,
+      1,
+      "STRING"
+    ],
+    [
+      71,
+      34,
+      0,
+      51,
+      1,
+      "STRING"
     ],
     [
       20,
@@ -895,6 +1305,46 @@
       17,
       3,
       "IMAGE"
+    ],
+    [
+      54,
+      46,
+      0,
+      47,
+      0,
+      "CLIP"
+    ],
+    [
+      66,
+      50,
+      0,
+      47,
+      1,
+      "IMAGE"
+    ],
+    [
+      60,
+      48,
+      0,
+      47,
+      4,
+      "STRING"
+    ],
+    [
+      64,
+      34,
+      0,
+      47,
+      5,
+      "STRING"
+    ],
+    [
+      67,
+      11,
+      0,
+      50,
+      0,
+      "IMAGE"
     ]
   ],
   "groups": [
@@ -926,7 +1376,7 @@
       "id": 3,
       "title": "Sampling",
       "bounding": [
-        900,
+        1380,
         -240,
         460,
         610
@@ -939,11 +1389,11 @@
       "title": "Plug more reference images here",
       "bounding": [
         900,
-        400,
+        -240,
         450,
-        320
+        610
       ],
-      "color": "#3f789e",
+      "color": "#A88",
       "flags": {}
     },
     {
@@ -952,8 +1402,32 @@
       "bounding": [
         -120,
         400,
-        990,
-        810
+        1470,
+        440
+      ],
+      "color": "#A88",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Prompt Enhancer",
+      "bounding": [
+        -120,
+        -830,
+        1470,
+        560
+      ],
+      "color": "#444",
+      "flags": {}
+    },
+    {
+      "id": 7,
+      "title": "Upload Input Image here",
+      "bounding": [
+        -670,
+        -240,
+        520,
+        1240
       ],
       "color": "#3f789e",
       "flags": {}
@@ -962,10 +1436,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.6143489975317417,
+      "scale": 0.4459463246315217,
       "offset": [
-        1438.5080267679912,
-        575.5453589553781
+        1812.9438327775536,
+        1355.5669873956635
       ]
     },
     "frontendVersion": "1.55.17"

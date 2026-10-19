@@ -56,6 +56,27 @@ def normalize_options(value: Any) -> list[str]:
     return []
 
 
+def numeric_option_keys(value: Any) -> list[str]:
+    """Keys of the options declared as numbers, spelled as ``combo_option_key``
+    spells a saved value (``5.0`` -> ``"5"``)."""
+    if not isinstance(value, (list, tuple)) or not value:
+        return []
+    first = value[0]
+    if isinstance(first, (list, tuple)):
+        raw = first
+    elif first == "COMBO" and len(value) > 1 and isinstance(value[1], dict):
+        raw = value[1].get("options", [])
+    else:
+        return []
+    if not isinstance(raw, (list, tuple)):
+        return []
+    return [
+        str(int(item)) if isinstance(item, float) and item.is_integer() else str(item)
+        for item in raw
+        if isinstance(item, (int, float)) and not isinstance(item, bool)
+    ]
+
+
 def parse_dynamic_combo_branches(input_spec: Any) -> dict[str, DynamicComboBranch]:
     meta = input_spec_meta(input_spec)
     branches: dict[str, DynamicComboBranch] = {}
@@ -88,6 +109,9 @@ def parse_dynamic_combo_branches(input_spec: Any) -> dict[str, DynamicComboBranc
                 nested_options = normalize_options(nested_spec)
                 if nested_options:
                     branch.combo_options[nested_name] = nested_options
+                nested_numeric = numeric_option_keys(nested_spec)
+                if nested_numeric:
+                    branch.numeric_combo_options[nested_name] = nested_numeric
                 nested_meta = input_spec_meta(nested_spec)
                 if "default" in nested_meta:
                     branch.input_defaults[nested_name] = nested_meta["default"]
@@ -158,6 +182,9 @@ def add_input_spec(spec: NodeSpec, input_name: str, input_spec: Any, *, required
     options = normalize_options(input_spec)
     if options:
         spec.combo_options[input_name] = options
+    numeric_options = numeric_option_keys(input_spec)
+    if numeric_options:
+        spec.numeric_combo_options[input_name] = numeric_options
 
     if isinstance(input_spec, dict):
         for child_name, child_spec in input_spec.items():

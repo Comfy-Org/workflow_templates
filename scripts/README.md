@@ -14,6 +14,7 @@ Python maintenance scripts for ComfyUI workflow templates (packages, CI, i18n).
 | Validate templates | `python scripts/validate/validate_templates.py` |
 | Validate manifests | `python scripts/validate/validate_manifests.py` |
 | ComfyUI node compatibility | `npm run validate:comfyui-nodes` |
+| Widget value types (needs running ComfyUI) | `npm run validate:widget-types` |
 | Maintainer smoke check | `./scripts/maintenance/check_templates.sh` |
 
 ## Directory layout
@@ -63,6 +64,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
 | `model-analysis.yml` | `validate/analyze_models.py`, `data/whitelist.json` |
+| `validate-widget-types.yml` | `validate/check_widget_types.py`, `lib/locale_index_files.py` (baseline: ComfyUI `master` `/object_info`) |
 | `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py` (static scan; PR comment only) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
