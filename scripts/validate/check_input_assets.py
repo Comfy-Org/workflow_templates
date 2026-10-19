@@ -197,12 +197,10 @@ def parse_filename(filename: str, workflow_names: List[str] = None) -> Dict[str,
 def get_mime_type(filename: str) -> str:
     """
     Get MIME type for a file based on its extension.
+
+    Prefer a fixed map so macOS and Linux CI produce the same upload JSON
+    (stdlib mimetypes disagrees on .glb / .flac and similar).
     """
-    mime_type, _ = mimetypes.guess_type(filename)
-    if mime_type:
-        return mime_type
-    
-    # Fallback for common extensions
     ext = Path(filename).suffix.lower()
     mime_map = {
         '.png': 'image/png',
@@ -213,12 +211,20 @@ def get_mime_type(filename: str) -> str:
         '.mp4': 'video/mp4',
         '.mov': 'video/quicktime',
         '.avi': 'video/x-msvideo',
+        '.webm': 'video/webm',
         '.mp3': 'audio/mpeg',
         '.wav': 'audio/wav',
         '.ogg': 'audio/ogg',
-        '.json': 'application/json'
+        '.flac': 'audio/flac',
+        '.json': 'application/json',
+        '.glb': 'model/gltf-binary',
+        '.gltf': 'model/gltf+json',
     }
-    return mime_map.get(ext, 'application/octet-stream')
+    if ext in mime_map:
+        return mime_map[ext]
+
+    mime_type, _ = mimetypes.guess_type(filename)
+    return mime_type or 'application/octet-stream'
 
 
 def get_media_type_tag(mime_type: str) -> str:

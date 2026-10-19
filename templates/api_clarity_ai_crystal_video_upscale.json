@@ -1,0 +1,202 @@
+{
+  "id": "95248f26-b703-4853-adaa-32ac621ae646",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        0,
+        260
+      ],
+      "size": [
+        370,
+        500
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "desert_highway_encounter.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "desert_highway_encounter.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "ClarityCrystalVideoUpscaleNode",
+      "pos": [
+        420,
+        260
+      ],
+      "size": [
+        251,
+        82
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ClarityCrystalVideoUpscaleNode"
+      },
+      "widgets_values": [
+        "crystal-video-upscaler",
+        2
+      ],
+      "widgets_values_named": {
+        "model": "crystal-video-upscaler",
+        "model.scale_factor": 2
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        810,
+        260
+      ],
+      "size": [
+        470,
+        590
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/ComfyUI",
+        "mp4",
+        "auto",
+        "h264",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/ComfyUI",
+        "format": "mp4",
+        "format.codec": "auto",
+        "codec": "h264",
+        "codec.encoding": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -620,
+        210
+      ],
+      "size": [
+        520,
+        680
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Clarity AI Crystal Video Upscaler\n\nUpscale a video with Clarity AI's Crystal model, running through the Fal proxy.\n\n### How to use\n\n1. Sign in with your ComfyUI account before queueing: this node runs on Comfy's servers.\n2. Load a video in **Load Video**. Any resolution and length works.\n3. Set `scale_factor` to multiply width and height. 2.0 doubles both dimensions.\n4. Queue the prompt, then preview or save the result.\n\n### Limits\n\nThe output is capped at **9 megapixels per frame** and **360 megapixel-seconds per clip**, so very large frames or long clips are upscaled by less than the factor you asked for. Resolution, frame count, and the audio track are preserved."
+      ],
+      "widgets_values_named": {
+        "text": "## Clarity AI Crystal Video Upscaler\n\nUpscale a video with Clarity AI's Crystal model, running through the Fal proxy.\n\n### How to use\n\n1. Sign in with your ComfyUI account before queueing: this node runs on Comfy's servers.\n2. Load a video in **Load Video**. Any resolution and length works.\n3. Set `scale_factor` to multiply width and height. 2.0 doubles both dimensions.\n4. Queue the prompt, then preview or save the result.\n\n### Limits\n\nThe output is capped at **9 megapixels per frame** and **360 megapixel-seconds per clip**, so very large frames or long clips are upscaled by less than the factor you asked for. Resolution, frame count, and the audio track are preserved."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 2,
+      "title": "Upscale the video",
+      "bounding": [
+        -40,
+        180,
+        1380,
+        710
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.6569334260899212,
+      "offset": [
+        829.1033928144949,
+        167.37539797687634
+      ]
+    },
+    "frontendVersion": "1.55.18"
+  },
+  "version": 0.4
+}
