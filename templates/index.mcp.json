@@ -746,7 +746,7 @@
         "title": "Krea-2 Int8: Image Style Reference",
         "task": "Style Reference",
         "model": "Krea 2",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 491,
         "recommend": "medium",
         "description": "Generate images with the Krea-2 Turbo model while referencing the style of 1–2 uploaded images, using the high-performance Int8 Convrot format for faster, higher-quality inference. This workflow accepts up to two reference image inputs and produces a single stylized output, with optional LoRA support for further creative control. Ideal for matching a specific artistic style in concept art, producing consistent brand visuals, and exploring rapid style transfer for iterative design.",
@@ -1838,10 +1838,10 @@
         "freshness": "established",
         "usage": 63,
         "recommend": "low",
-        "description": "This workflow uses the Kling O3 model to generate or edit an image from up to 10 reference images, supporting image-guided synthesis. Execution via a third-party API yields a single output based on your visual inputs. Kling O3 also offers video generation, outpainting, and character reference capabilities.",
+        "description": "Upload up to 10 reference images to guide the synthesis. Generate a new image using the Kling O3 model based on your provided visual inputs.",
         "io": {
-          "inputs": ["image×10: Reference images to guide image generation"],
-          "outputs": ["image: Generated image based on reference inputs"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
@@ -3058,7 +3058,7 @@
           "inputs": ["image: Reference image", "text: Edit prompt"],
           "outputs": ["image: Edited image"]
         },
-        "minComfyUIVersion": "0.11.1",
+        "minComfyUIVersion": "0.33.3",
         "capabilities": {
           "workflow": ["api", "image-edit"]
         }
@@ -3598,7 +3598,7 @@
           "inputs": ["image: Reference image", "text: Edit prompt"],
           "outputs": ["image: Edited image"]
         },
-        "minComfyUIVersion": "0.15.1",
+        "minComfyUIVersion": "0.33.3",
         "capabilities": {
           "workflow": ["api", "style-transfer", "image-edit"]
         }
@@ -3737,7 +3737,7 @@
         "title": "Anima Lllite: Any Control to Image",
         "task": "Image Generation",
         "model": "Anima",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 9,
         "recommend": "not_recommended",
         "description": "Apply lightweight, LoRA-like conditional control to Anima-Base v1.0 anime-style images using ControlNet-LLLite, accepting one conditioning input and one optional mask for inpainting to produce a single generated output. Ideal for anime inpainting with dynamic masking, style transfer from lineart or grayscale sketches, and controlled character generation in multi-scene compositions.",
@@ -3791,7 +3791,7 @@
         "title": "JoyAI Image Edit",
         "task": "Image Edit",
         "model": "JoyAI Image Edit",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 0,
         "recommend": "not_recommended",
         "description": "Edit images by following natural language instructions with JoyAI-Image-Edit, which leverages multimodal understanding for precise, spatially aware modifications. This workflow takes one reference image and produces one edited image output plus a side-by-side comparison view. Ideal for instruction-guided retouching, region-specific object replacement, and complex scene adjustments requiring relational grounding.",
@@ -4073,9 +4073,9 @@
         "title": "Geometry Estimation: MoGe 3",
         "task": "Depth Estimation",
         "model": "MoGe",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 93,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Estimate fine-detailed geometry from a single image with MoGe 3, the sparse-volumetric refinement version of MoGe. It lifts a coarse point map onto a sparse voxel shell and refines depth with lightweight sparse 3D convolutions, keeping thin structures and depth discontinuities that image-space decoders blur. Ships with the ViT-L checkpoint; the ViT-G file is selectable in the same Load MoGe Model dropdown for higher fine-detail accuracy. Takes 1 image input and outputs 1 depth map and 1 normal map.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -4280,16 +4280,16 @@
         "freshness": "established",
         "usage": 57,
         "recommend": "low",
-        "description": "Upscale illustrations using Topaz Image Enhance with the Reimagine option, producing a smooth, stylized result with accurate colors while preserving the hand-drawn look. This workflow calls a third-party API; execution time depends on server response. Output is a higher-resolution illustration, though some artifacts may appear.",
+        "description": "Upload an illustration to upscale using Topaz. Generate a smooth, stylized image with accurate colors, though some artifacts may appear.",
         "io": {
-          "inputs": ["image: Input illustration to upscale"],
-          "outputs": ["image: Output upscaled illustration with smooth detail and accurate colors"]
+          "inputs": ["image: Input image"],
+          "outputs": ["image: Upscaled image"]
         },
-        "minComfyUIVersion": "0.9.0",
+        "minComfyUIVersion": "0.30.2",
         "capabilities": {
           "workflow": ["api", "image-upscale"],
           "model_options": {
-            "TopazImageEnhance": ["Reimagine"]
+            "TopazImageEnhanceV2": ["Reimagine", "Bloom 2", "Wonder 3.5"]
           }
         }
       },
@@ -4595,16 +4595,16 @@
         "freshness": "established",
         "usage": 23,
         "recommend": "not_recommended",
-        "description": "Use this workflow to adapt any source image to a target aspect ratio via outpainting. Upload your image and specify dimensions; Nano Banana 2 (Gemini 3.1 Flash Image) intelligently generates new content to fill gaps, producing a seamless result at up to 4K. Note: execution requires a third-party API call, so response time depends on server load.",
+        "description": "Upload any image and input your desired aspect ratio. Generate an outpainted version of your image to perfectly fit the new dimensions.",
         "io": {
-          "inputs": ["image: Source image to adapt to a new aspect ratio"],
-          "outputs": ["image: Outpainted image resized to the target aspect ratio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.15.1",
+        "minComfyUIVersion": "0.20.3",
         "capabilities": {
           "workflow": ["api", "outpainting", "image-edit"],
           "model_options": {
-            "GeminiNanoBanana2": ["Nano Banana 2 (Gemini 3.1 Flash Image)"]
+            "GeminiNanoBanana2V2": ["Gemini Nano Banana 2.1", "Nano Banana 2 (Gemini 3.1 Flash Image)", "Nano Banana 2 Lite"]
           }
         }
       },
@@ -6715,7 +6715,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.60",
+        "minComfyUIVersion": "0.8.0",
         "capabilities": {
           "workflow": ["image-to-video"]
         }
@@ -7755,17 +7755,14 @@
         "freshness": "current",
         "usage": 10,
         "recommend": "not_recommended",
-        "description": "Generate cinematic videos from two reference images and optional text. Gemini 3.1 Pro automatically creates a detailed Seedance 2.0-style prompt, executed via Seedance 2.0 API for reference-to-video output. Third-party API execution means response times depend on server-side processing.",
+        "description": "Upload two reference images and input a short text description. Generate a detailed Seedance 2.0-style prompt automatically with an LLM helper.",
         "io": {
-          "inputs": ["image×2: Reference images for video generation (e.g. subject, style, location)", "text: Optional text description to guide LLM prompt generation"],
-          "outputs": ["video: Generated video from Seedance 2.0"]
+          "inputs": ["text: User prompt"],
+          "outputs": ["text: Model response"]
         },
-        "minComfyUIVersion": "0.26.2",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
-          "workflow": ["api", "reference-to-video"],
-          "model_options": {
-            "GeminiNode": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-3-pro-preview", "gemini-3-1-pro", "gemini-3-1-flash-lite"]
-          }
+          "workflow": ["api", "reference-to-video"]
         }
       },
       {
@@ -7815,12 +7812,12 @@
         "freshness": "established",
         "usage": 18,
         "recommend": "not_recommended",
-        "description": "Use Google Gemini to convert a text prompt into a descriptive script, then send that script to the Kling 3.0 Omni API for video generation. The workflow outputs the resulting video, showcasing Gemini's strong script understanding and third‑party API integration.",
+        "description": "Upload an image to automatically generate a descriptive script. This script is then used to create a video with the Kling 3.0 Omni model.",
         "io": {
-          "inputs": ["image: Reference image to base the video on", "text: Brief prompt with important details and output aspect ratio"],
-          "outputs": ["video: Generated video from the image and script"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.15.1",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "image-to-video"]
         }
@@ -8399,11 +8396,11 @@
           "inputs": ["text: Prompt"],
           "outputs": ["video: Generated output"]
         },
-        "minComfyUIVersion": "0.13.0",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "flf2v"],
           "model_options": {
-            "GeminiNode": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-3-pro-preview", "gemini-3-1-pro", "gemini-3-1-flash-lite"]
+            "GeminiNodeV3": ["Gemini 3.8 Flash", "Gemini 3.7 Flash", "Gemini 3.5 Flash", "Gemini 3.1 Pro", "Gemini 3.1 Flash-Lite"]
           }
         }
       },
@@ -9594,10 +9591,10 @@
         "freshness": "established",
         "usage": 19,
         "recommend": "not_recommended",
-        "description": "Upload a video clip and provide a text prompt to guide the edit. Wan2.1 VACE applies its video editing and loop-generation strengths to produce a seamless, infinitely looping video output that matches your description.",
+        "description": "Upload a video clip to generate a seamless, looping video output.",
         "io": {
-          "inputs": ["video: Source video to convert into a seamless loop"],
-          "outputs": ["video: Seamless looping video output"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
@@ -9803,7 +9800,7 @@
         "capabilities": {
           "workflow": ["api", "tts"],
           "model_options": {
-            "FishAudioTextToSpeech": ["s2.1-pro", "s1"]
+            "FishAudioTextToSpeech": ["drama-3", "s2.1-pro", "s1"]
           }
         }
       },
@@ -9824,7 +9821,7 @@
         "capabilities": {
           "workflow": ["api", "tts", "voice-cloning"],
           "model_options": {
-            "FishAudioTextToSpeech": ["s2.1-pro", "s1"]
+            "FishAudioTextToSpeech": ["drama-3", "s2.1-pro", "s1"]
           }
         }
       },
@@ -9863,7 +9860,7 @@
         "capabilities": {
           "workflow": ["api", "tts"],
           "model_options": {
-            "FishAudioTextToSpeech": ["s2.1-pro", "s1"]
+            "FishAudioTextToSpeech": ["drama-3", "s2.1-pro", "s1"]
           }
         }
       },
@@ -9884,7 +9881,7 @@
         "capabilities": {
           "workflow": ["api", "tts"],
           "model_options": {
-            "FishAudioTextToSpeech": ["s2.1-pro", "s1"]
+            "FishAudioTextToSpeech": ["drama-3", "s2.1-pro", "s1"]
           }
         }
       },
@@ -9904,6 +9901,27 @@
         "minComfyUIVersion": "0.28.1",
         "capabilities": {
           "workflow": ["api", "text-to-speech"]
+        }
+      },
+      {
+        "name": "api_heygen_voice_1",
+        "title": "HeyGen Voice 1.0: Voice Clone to Speech",
+        "task": "Text to Speech",
+        "model": "HeyGen",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Clone a voice from a short recording with HeyGen Voice 1.0, then speak any script in that voice. Connect one audio clip to Instant Clone and the resulting voice_id feeds straight into text to speech, with no training wait. Use the expressiveness control to stay close to the recording or push more emotion into the delivery. Ideal for narration in your own voice, character dialogue, and multilingual voiceover.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.40.0",
+        "capabilities": {
+          "workflow": ["api", "text-to-speech", "voice-cloning"],
+          "model_options": {
+            "HeyGenVoiceTextToSpeechNode": ["heygen-voice-1", "heygen-voice-1-turbo"]
+          }
         }
       },
       {
@@ -10114,7 +10132,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.35",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["audio-edit"]
         }
@@ -10132,11 +10150,11 @@
           "inputs": ["text: User prompt"],
           "outputs": ["text: Model response"]
         },
-        "minComfyUIVersion": "0.12.0",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "text-to-audio"],
           "model_options": {
-            "GeminiNodeV2": ["Gemini 3.8 Flash", "Gemini 3.7 Flash", "Gemini 3.5 Flash", "Gemini 3.1 Pro", "Gemini 3.1 Flash-Lite"]
+            "GeminiNodeV3": ["Gemini 3.8 Flash", "Gemini 3.7 Flash", "Gemini 3.5 Flash", "Gemini 3.1 Pro", "Gemini 3.1 Flash-Lite"]
           }
         }
       },
@@ -10153,7 +10171,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.12.0",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["music", "text-to-audio"]
         }
@@ -10171,7 +10189,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.12.0",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["text-to-audio", "music"]
         }
@@ -10202,12 +10220,12 @@
         "freshness": "established",
         "usage": 123,
         "recommend": "low",
-        "description": "This workflow uses Chatter Box to perform multilingual text-to-speech with voice cloning. Provide a short voice sample and text prompt, then select a target language to generate spoken audio in that language using the cloned reference voice. Chatter Box excels at high-quality voice cloning with minimal reference audio, making it ideal for synthetic speech generation.",
+        "description": "Upload a short voice sample and input your text prompt. Select a target language to generate spoken audio in multiple languages using the cloned reference voice.",
         "io": {
-          "inputs": ["text: Audio description prompt"],
-          "outputs": ["audio: Generated audio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["audio: Generated speech"]
         },
-        "minComfyUIVersion": "0.3.35",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["text-to-audio", "voice-cloning"]
         }
@@ -10238,12 +10256,12 @@
         "freshness": "established",
         "usage": 17,
         "recommend": "not_recommended",
-        "description": "This workflow generates a multi-speaker conversation using Chatter Box. It takes a dialog script as text and uses uploaded voice samples to clone each speaker’s voice. The model excels at high-quality voice cloning with minimal reference audio and supports multilingual TTS. The output is a natural-sounding conversation audio file.",
+        "description": "Upload voice samples and enter a multi-speaker dialog script. Generate a conversation audio file with cloned voices for each speaker.",
         "io": {
-          "inputs": ["text: Text to convert to speech"],
-          "outputs": ["audio: Generated speech audio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["audio: Generated speech"]
         },
-        "minComfyUIVersion": "0.3.35",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["text-to-speech", "voice-cloning"]
         }
@@ -10256,12 +10274,12 @@
         "freshness": "established",
         "usage": 79,
         "recommend": "low",
-        "description": "Chatter Box Voice Cloning Audio Conversion clones a target voice from a short reference audio clip while preserving the original timing and performance. It accepts a text prompt and an audio clip as inputs and outputs a generated image representing the converted audio. This workflow leverages Chatter Box's high-quality voice cloning and audio-to-audio conversion.",
+        "description": "Upload an audio clip and a short voice reference to generate a converted audio output that clones the target voice while preserving the original timing and performance.",
         "io": {
-          "inputs": ["text: Input prompt"],
-          "outputs": ["image: Generated output"]
+          "inputs": ["text: User prompt"],
+          "outputs": ["text: Model response"]
         },
-        "minComfyUIVersion": "0.3.35",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["audio-edit", "voice-cloning"]
         }
@@ -10333,7 +10351,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.35",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["text-to-audio"]
         }
@@ -10346,12 +10364,12 @@
         "freshness": "established",
         "usage": 20,
         "recommend": "not_recommended",
-        "description": "This workflow separates an input music track into its vocal, bass, drums, and other instrumental stems. It is designed for audio editing tasks and runs on Comfy Cloud.",
+        "description": "Input Music → Separate Vocals / Bass / Drums / Other",
         "io": {
-          "inputs": ["image: Input image to edit", "text: Edit instructions"],
-          "outputs": ["image: Edited image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.35",
+        "minComfyUIVersion": "0.25.0",
         "capabilities": {
           "workflow": ["audio-edit"]
         }
@@ -10436,9 +10454,9 @@
         "title": "Tripo P2: Multiview to Model",
         "task": "3D Generation",
         "model": "Tripo P2",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 113,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate production-ready 3D models from up to four reference views using Tripo P2.0 Preview, which reconstructs geometry with native quad topology and triangle meshes up to 50,000 faces. Ideal for game characters and props ready for rigging, hard-surface mechanical assets, and high-volume real-time pipelines.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -10511,12 +10529,12 @@
         "freshness": "current",
         "usage": 38,
         "recommend": "not_recommended",
-        "description": "Generate a 3D mesh with PBR textures from one or more reference images via Hunyuan3D’s API. Input a required front view with optional left, right, and back images. Outputs a complete GLB model. Execution depends on server-side response; supports versions 3.0 and 3.1.",
+        "description": "Upload an image to generate a 3D model with geometry and PBR textures.",
         "io": {
-          "inputs": ["image×4: One or more reference images (front required; left, right, back optional) for 3D model generation"],
-          "outputs": ["model: Generated 3D model with geometry and PBR textures using Hunyuan3D"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.11.0",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
           "workflow": ["api", "image-to-3d"],
           "model_options": {
@@ -10720,7 +10738,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.9.2",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
           "workflow": ["api", "image-to-3d"]
         }
@@ -10751,12 +10769,12 @@
         "freshness": "established",
         "usage": 12,
         "recommend": "not_recommended",
-        "description": "Generate a detailed 3D model from a text prompt using Tencent's Hunyuan3D model. The workflow accepts a textual description and outputs a GLB mesh with support for normal/low-poly modes and optional PBR materials. Execution relies on a third-party API; completion time depends on server-side processing.",
+        "description": "Input a text prompt or upload a reference image to generate a detailed 3D model asset.",
         "io": {
-          "inputs": ["text: Text prompt describing the desired 3D model"],
-          "outputs": ["model: Generated 3D model in GLB format"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.11.0",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
           "workflow": ["api", "text-to-3d"],
           "model_options": {
@@ -10831,7 +10849,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.34.0",
+        "minComfyUIVersion": "0.35.1",
         "capabilities": {
           "workflow": ["image-to-3d", "api"]
         }
@@ -10844,16 +10862,16 @@
         "freshness": "established",
         "usage": 9,
         "recommend": "not_recommended",
-        "description": "This workflow converts a single reference image into a textured 3D model by first generating orthographic views via Gemini and Nano Banana, then calling the Meshy API to produce the final model and a video of the scene. Execution depends on third-party API response time.",
+        "description": "Input a single image to automatically generate three orthographic views. Use these multiviews with Meshy to create a textured 3D model.",
         "io": {
-          "inputs": ["image: Reference image to generate 3D model from"],
-          "outputs": ["video: Generated video from the 3D scene", "model: Generated 3D model with textures"]
+          "inputs": ["image: Reference image"],
+          "outputs": ["model: Generated 3D model"]
         },
-        "minComfyUIVersion": "0.15.1",
+        "minComfyUIVersion": "0.35.1",
         "capabilities": {
           "workflow": ["api", "image-to-3d"],
           "model_options": {
-            "GeminiNanoBanana2": ["Nano Banana 2 (Gemini 3.1 Flash Image)"]
+            "GeminiNanoBanana2V2": ["Gemini Nano Banana 2.1", "Nano Banana 2 (Gemini 3.1 Flash Image)", "Nano Banana 2 Lite"]
           }
         }
       },
@@ -10888,7 +10906,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.34.0",
+        "minComfyUIVersion": "0.35.1",
         "capabilities": {
           "workflow": ["text-to-3d", "api"]
         }
@@ -10906,7 +10924,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.34.0",
+        "minComfyUIVersion": "0.35.1",
         "capabilities": {
           "workflow": ["text-to-3d", "api"]
         }
@@ -10924,7 +10942,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.34.0",
+        "minComfyUIVersion": "0.35.1",
         "capabilities": {
           "workflow": ["image-to-3d", "api"]
         }
@@ -10942,7 +10960,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.34.0",
+        "minComfyUIVersion": "0.35.1",
         "capabilities": {
           "workflow": ["image-to-3d", "api"]
         }
@@ -10955,14 +10973,14 @@
         "freshness": "established",
         "usage": 11,
         "recommend": "not_recommended",
-        "description": "This workflow uses Rodin Gen2 to convert a single reference photo into a 3D model in GLB format with 4× mesh quality. It executes via a third-party API, requiring no local model. The output is a detailed digital 3D asset suitable for further use.",
+        "description": "Generate detailed 4X mesh quality 3D models from photos using Rodin Gen2",
         "io": {
-          "inputs": ["image: Reference photo to convert to 3D model"],
-          "outputs": ["model: Generated 3D model in GLB format at 4X mesh quality"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
-          "workflow": ["image-to-3d", "api"]
+          "workflow": ["api", "image-to-3d"]
         }
       },
       {
@@ -10973,12 +10991,12 @@
         "freshness": "established",
         "usage": 4,
         "recommend": "not_recommended",
-        "description": "Generate a 3D model from a single reference photo using Rodin AI, which outputs a model with multiple refinement levels (regular, sketch, detail, smooth). The workflow relies on a third-party API, so execution time depends on server responsiveness.",
+        "description": "Generate detailed 3D models from single photos using Rodin AI.",
         "io": {
-          "inputs": ["image: Reference photo to convert to 3D model"],
-          "outputs": ["model: Generated 3D model with multiple refinement levels"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
           "workflow": ["image-to-3d", "api"]
         }
@@ -10991,25 +11009,25 @@
         "freshness": "established",
         "usage": 14,
         "recommend": "not_recommended",
-        "description": "Use Rodin's image-to-3D capability to generate a detailed 3D model from multiple photos taken at different angles. This workflow accepts three input images and produces a model with regular, sketch, detail, and smooth refinement levels. It executes via a third‑party API, so response times depend on server availability.",
+        "description": "Sculpt comprehensive 3D models using Rodin's multi-angle reconstruction.",
         "io": {
-          "inputs": ["image×3: Multi-view photos from different angles for 3D reconstruction"],
-          "outputs": ["model: Generated 3D model with multiple refinement levels"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
           "workflow": ["image-to-3d", "api"]
         }
       },
       {
         "name": "3d_hunyuan3d-v2.1",
-        "title": "HY 3D 2.1",
+        "title": "HY 3D 2.1: Single View to Model",
         "task": "Image to 3D",
         "model": "Hunyuan3D",
         "freshness": "established",
         "usage": 134,
         "recommend": "low",
-        "description": "Generate 3D models from single images using Hunyuan3D 2.1.",
+        "description": "Reconstruct a 3D model from a single photo using Hunyuan3D 2.1, converting one input image into a raw white-mesh geometry without textures or materials. Ideal for rapid 3D concepting, blockout prototyping, and asset preparation before texturing or retopology.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
@@ -11027,7 +11045,7 @@
         "freshness": "established",
         "usage": 33,
         "recommend": "not_recommended",
-        "description": "Generate 3D models from single images using Hunyuan3D 2.0.",
+        "description": "Generate a textured-ready 3D mesh from a single image using Hunyuan3D 2.0's shape diffusion pipeline, which aligns geometry to the given image and outputs an untextured white mesh. Ideal for 3D asset prototyping, game and AR content prep, and as a base for later texture painting or handcrafted detailing.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
@@ -11153,12 +11171,12 @@
         "freshness": "established",
         "usage": 10,
         "recommend": "not_recommended",
-        "description": "Use one frontal image to generate a high-quality 3D mesh with PBR textures via Hunyuan3D’s image-to-3D capability. The model produces detailed geometry and realistic materials from the single view. This workflow can be run via API for efficient 3D asset pipeline.",
+        "description": "Use one frontal image to generate a consistent and highly detailed 3D model. Model used: Multiangle QWEN Edit + Hunyuan 3D",
         "io": {
-          "inputs": ["image: Frontal reference image for 3D model generation"],
-          "outputs": ["image: Multi-angle preview render of the generated 3D model", "model: Generated 3D model file"]
+          "inputs": ["image: Reference image"],
+          "outputs": ["model: Generated 3D model"]
         },
-        "minComfyUIVersion": "0.11.0",
+        "minComfyUIVersion": "0.23.0",
         "capabilities": {
           "workflow": ["api", "image-to-3d"],
           "model_options": {
@@ -11323,7 +11341,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.16.4",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "lip-sync"]
         }
@@ -11336,12 +11354,12 @@
         "freshness": "established",
         "usage": 11,
         "recommend": "low",
-        "description": "This workflow seamlessly swaps a product into a reference scene while preserving the original composition and lighting. You provide a reference scene image and a product image; an optional text prompt can guide scene description. The model outputs a product video that naturally integrates the placed item into the scene.",
+        "description": "Swap products into a reference scene while preserving composition and lighting. Generates a final product image and an automatic video prompt for creating polished product videos.",
         "io": {
-          "inputs": ["image: Reference scene image for product placement", "image: Product image to place into the scene", "text: Optional text prompt for scene description"],
-          "outputs": ["video: Product video with the placed item in the scene"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.20.3",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "image-edit"]
         }
@@ -11414,16 +11432,16 @@
         "freshness": "established",
         "usage": 10,
         "recommend": "low",
-        "description": "Upload a phone photo of a shoe to generate three studio-grade product videos using the Seedream model via a third-party API. The workflow produces clips showcasing detailed texture, a cinematic pan, and a 360-degree rotation. Seedream's high-quality generation with flexible resolution support delivers professional-looking product visuals.",
+        "description": "Take a picture with your phone, upload it and generate a studio grade product video.",
         "io": {
-          "inputs": ["image: Phone photo of a shoe product"],
-          "outputs": ["video×3: Product videos: detailed texture, cinematic pan, and 360 rotation"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.59",
+        "minComfyUIVersion": "0.33.3",
         "capabilities": {
           "workflow": ["image-to-video", "api"],
           "model_options": {
-            "ByteDanceSeedreamNode": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
+            "ByteDanceSeedreamNodeV3": ["seedream 5.0 pro", "seedream 5.0 flash", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
           }
         }
       },
@@ -11456,16 +11474,16 @@
         "freshness": "established",
         "usage": 33,
         "recommend": "low",
-        "description": "Upload a product image and a background scene to blend them realistically using ByteDance's Seedream 4.5 model. The workflow composites the two images and adjusts lighting and shadows for a cohesive product mockup. It executes via a third-party API.",
+        "description": "Upload an image of your product and background. Composite them and seamlessly relight and fuse together using Seedream 4.5.",
         "io": {
-          "inputs": ["image×2: Product image and background scene for compositing and relighting"],
-          "outputs": ["image: Composited product-in-scene image with matched lighting"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.33.3",
         "capabilities": {
           "workflow": ["api", "image-edit", "relight"],
           "model_options": {
-            "ByteDanceSeedreamNode": ["seedream 5.0 pro", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
+            "ByteDanceSeedreamNodeV3": ["seedream 5.0 pro", "seedream 5.0 flash", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
           }
         }
       },
@@ -11477,12 +11495,12 @@
         "freshness": "established",
         "usage": 10,
         "recommend": "low",
-        "description": "Upload a product image and enter prompts for each cell in a 3×3 grid. The Nano Banana Pro model, with best-in-class prompt adherence and image editing, generates nine distinct ad variations. Select your favorites and upscale to 4K. Executes via Comfy Cloud API.",
+        "description": "Upload your product and enter a brief prompt for each grid position in a 3x3 grid. Generates 9 distinct images. Select the images you like and upscale to 4k using your product as reference.",
         "io": {
-          "inputs": ["image: Reference product image", "text: Prompts for each grid position"],
-          "outputs": ["image: 3x3 grid of generated product ad images"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -11561,12 +11579,12 @@
         "freshness": "established",
         "usage": 20,
         "recommend": "low",
-        "description": "Upload your product image and a reference ad; this workflow generates a static advertisement matching the reference’s visual language. It uses Gemini 3 Pro Image Preview’s style reference capabilities (with optional Gemini 3.1 Flash). Execution depends on third-party API response, ideal for quick brand-aligned mockups.",
+        "description": "Create static ads for your product in the style of a reference advertisement",
         "io": {
-          "inputs": ["image×2: Product image and reference advertisement for style transfer"],
-          "outputs": ["image: Product advertisement in the style of the reference ad"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.8.0",
         "capabilities": {
           "workflow": ["api", "style-reference"],
           "model_options": {
@@ -11605,7 +11623,7 @@
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "style-transfer"]
         }
@@ -11618,12 +11636,12 @@
         "freshness": "established",
         "usage": 11,
         "recommend": "low",
-        "description": "Upload your product image and a text prompt for the poster or ad layout. ByteDance Seedream’s high-resolution image editing seamlessly integrates your product into two generated assets, letting you iterate on the design. The result is a ready-to-use poster or ad mockup.",
+        "description": "Upload your product and a simple text prompt for the poster or ad design. Iterate on the look before swapping the product into the generated layout.",
         "io": {
-          "inputs": ["image: Product image to integrate into the poster design", "text: Text prompt describing the desired poster or ad layout"],
-          "outputs": ["image×2: Generated poster or ad assets with the product integrated"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "image-edit"]
         }
@@ -11816,12 +11834,12 @@
         "freshness": "established",
         "usage": 9,
         "recommend": "low",
-        "description": "This workflow generates 7 Kling 3.0 FL2V videos from a sequence of 8 keyframe images using Gemini 3.1 Flash Lite. Upload exactly 8 images in order; the model creates smooth transitions between consecutive keyframes. It is Step 3 of a multi-step contact sheet workflow.",
+        "description": "Upload 8 images (in order) to be used as keyframes for 7 Kling 3.0 FLF2V videos.",
         "io": {
-          "inputs": ["image×8: Sequence of 8 keyframe images in order"],
-          "outputs": ["video×7: 7 Kling 3.0 FL2V videos from the keyframes"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.13.0",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "flf2v"]
         }
@@ -11873,12 +11891,12 @@
         "freshness": "established",
         "usage": 89,
         "recommend": "low",
-        "description": "Upload a character photo and a flatlay outfit image. Nano Banana Pro – the smartest model with best prompt adherence and image editing – generates four virtual try-on photos in one run, no manual compositing needed. Executes via third-party API, so response time depends on server load.",
+        "description": "Upload an image of your character and a flatlay of an outfit to be tried on. Generate 4 images in 1 Nano Banana prompt.",
         "io": {
-          "inputs": ["image: Character/model reference image", "image: Flatlay image of the outfit to try on"],
-          "outputs": ["image×4: 4 images of the character wearing the outfit"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit", "virtual-try-on"],
           "model_options": {
@@ -11894,16 +11912,16 @@
         "freshness": "established",
         "usage": 39,
         "recommend": "low",
-        "description": "Generate multiple consistent shots of a subject from a single reference image using Nano Banana Pro’s multi-angle consistency. You provide a text prompt describing the subject and desired angles; the model outputs a set of images with consistent appearance. Works via API execution.",
+        "description": "Upload an input image and automatically generate X prompts for camera angle and shot type.",
         "io": {
-          "inputs": ["image: Input reference image of a subject", "text: Number of shots and camera angle descriptions"],
-          "outputs": ["image: Multiple consistent shots of the same subject from different angles"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "image-edit", "character-reference"],
           "model_options": {
-            "GeminiNode": ["gemini-2.5-pro", "gemini-2.5-flash", "gemini-3-pro-preview", "gemini-3-1-pro", "gemini-3-1-flash-lite"]
+            "GeminiNodeV3": ["Gemini 3.8 Flash", "Gemini 3.7 Flash", "Gemini 3.5 Flash", "Gemini 3.1 Pro", "Gemini 3.1 Flash-Lite"]
           }
         }
       },
@@ -11990,14 +12008,17 @@
         "freshness": "established",
         "usage": 10,
         "recommend": "low",
-        "description": "Upload your character portrait and outfit reference via a text prompt describing the outfit and subject. Seedream 4.5 applies its photorealistic image composition and virtual-try-on strengths to generate a 4K portrait with the specific outfit applied. This workflow is executable through the API for consistent wardrobe control.",
+        "description": "Upload your character portrait and outfit reference. Generate a new portrait with the specific outfit applied for consistent wardrobe control. Affordable alternative to Nano Banana Pro and Nano Banana 2.",
         "io": {
-          "inputs": ["image×3: Character portrait and outfit/clothing reference images"],
-          "outputs": ["image×2: Generated portraits with the target outfit applied"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.21.1",
+        "minComfyUIVersion": "0.33.3",
         "capabilities": {
-          "workflow": ["api", "virtual-try-on"]
+          "workflow": ["api", "virtual-try-on"],
+          "model_options": {
+            "ByteDanceSeedreamNodeV3": ["seedream 5.0 pro", "seedream 5.0 flash", "seedream 5.0 lite", "seedream-4-5-251128", "seedream-4-0-250828"]
+          }
         }
       },
       {
@@ -12008,12 +12029,12 @@
         "freshness": "established",
         "usage": 18,
         "recommend": "low",
-        "description": "Combine a character photo and a flat lay clothing image. Google Gemini Image applies its character and product-focused generation to produce 4 studio-style fashion photographs of the character in that outfit. These are ready for upscaling and refinement after selecting the best take. The workflow calls a third-party API, so execution time varies with server load.",
+        "description": "Upload an image of your character and a flatlay image of your clothing items. Generate 4 fashion editorial photographs of your character in the outfit. Select which image to upscale and add back details.",
         "io": {
-          "inputs": ["image×2: Character photo and flatlay clothing image"],
-          "outputs": ["image×4: Fashion editorial photographs of the character in the outfit"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -12047,12 +12068,12 @@
         "freshness": "established",
         "usage": 2,
         "recommend": "low",
-        "description": "This workflow produces a 2x2 grid of fashion editorial images from a single text prompt. It uses the model's prompt adherence and multi-angle consistency to maintain a coherent character and product across all four frames. The output can be selected and upscaled, and the workflow runs via API.",
+        "description": "Upload your character, background scene and product. Generate a 2x2 grid, select your desired image and upscale",
         "io": {
-          "inputs": ["image×3: Character image, background scene, and product image"],
-          "outputs": ["image×4: 2x2 grid of fashion editorial shots for selection and upscaling"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -12068,12 +12089,12 @@
         "freshness": "established",
         "usage": 9,
         "recommend": "low",
-        "description": "Upload a character image and clothing items, then prompt the model to generate a fashion photograph base. Using multi-keyframe video stitching and image-to-video capabilities, the workflow creates an 8-frame video contact sheet that maintains outfit and character consistency throughout the sequence.",
+        "description": "Upload your character and clothing items or accessories. Generate a fashion photograph base and use as a reference to 8x grid images, together with Multi-Keyframe Video Stitching.",
         "io": {
-          "inputs": ["image×3: Character image and clothing/accessory reference images"],
-          "outputs": ["image×8: 8-frame grid of fashion photographs for video stitching", "video: Stitched multi-keyframe fashion video"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.16.4",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["image-to-video", "flf2v", "api"],
           "model_options": {
@@ -12089,12 +12110,12 @@
         "freshness": "established",
         "usage": 12,
         "recommend": "low",
-        "description": "Upload a character reference image to explore four distinct scene variations using Google Gemini Image, a multi‑modal model specialized in character generation. The workflow outputs a 1×4 grid, from which you can select a scene for upscaling with Nano Banana Pro. This calls a third‑party API, so execution time depends on server‑side response.",
+        "description": "Upload a reference image and generate a 1x4 grid. Select desired image and upscale/refine with Nano Banana Pro.",
         "io": {
-          "inputs": ["image: Character reference image for scene exploration"],
-          "outputs": ["image×4: 1x4 grid of character-in-different-scene variations"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit", "character-reference"],
           "model_options": {
@@ -12110,12 +12131,12 @@
         "freshness": "established",
         "usage": 1,
         "recommend": "low",
-        "description": "Generate 64 stylized variations of your profile picture in an 8×8 grid using Nano Banana Pro. Upload a single image; the model leverages its superior prompt adherence and image editing intelligence through a third-party API to create a cohesive set of themed avatars or brand personas. Ideal for personalizing social media profiles or generating consistent character concepts.",
+        "description": "Upload your profile picture, enter a theme and generate 64 variations.",
         "io": {
-          "inputs": ["image: Profile picture to generate stylized variations of"],
-          "outputs": ["image×64: 64 stylized profile picture variations in 8x8 grid"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -12131,12 +12152,12 @@
         "freshness": "established",
         "usage": 4,
         "recommend": "low",
-        "description": "Upload a character or selfie and a text prompt describing the outfit or scene to generate a 2x2 grid of isometric figurines. The model applies its multi-angle consistency and strong prompt adherence to produce consistent stylized miniatures. This workflow supports API execution for automated generation.",
+        "description": "Upload a character or selfie and prompt the outfit/scene. Generate a 2x2 grid of isometric figurines of your character.",
         "io": {
-          "inputs": ["image: Character or selfie photo to convert into isometric figurines"],
-          "outputs": ["image×4: 2x2 grid of isometric miniature figurines in different scenes"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "portrait"],
           "model_options": {
@@ -12152,12 +12173,12 @@
         "freshness": "established",
         "usage": 2,
         "recommend": "low",
-        "description": "Upload a selfie and text prompt to generate four fashion editorial photographs with doodle illustrations using Google Gemini Image’s multi-modal generation. Choose between gemini-3-pro-image-preview or Nano Banana 2 models within ComfyUI; the workflow runs via third-party API, so response time depends on server load.",
+        "description": "Upload a selfie and describe your outfit in the prompt. Generate 4 fashion editorial photographs with fun doodle illustrations. Select which image to upscale and add back face details.",
         "io": {
-          "inputs": ["image: Selfie photo to use as the fashion subject", "text: Text prompt describing the desired outfit and style"],
-          "outputs": ["image×4: Generated fashion editorial photographs with doodle illustrations"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -12215,16 +12236,16 @@
         "freshness": "established",
         "usage": 9,
         "recommend": "low",
-        "description": "This workflow generates a high-contrast YouTube thumbnail from a subject reference image and text prompt. Nano Banana Pro leverages its superior prompt adherence to create dramatic compositions and bold color strategies for maximum engagement. Execution uses a third-party API, so run time depends on server response.",
+        "description": "Generate high-contrast, clickable YouTube thumbnails using Nano Banana Pro. Creates dramatic compositions with exaggerated subjects and bold color strategies for maximum engagement.",
         "io": {
-          "inputs": ["image: Subject reference image for the thumbnail", "text: Text prompt describing the desired thumbnail concept"],
-          "outputs": ["image: High-contrast YouTube thumbnail image"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.15.1",
+        "minComfyUIVersion": "0.20.3",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
-            "GeminiNanoBanana2": ["Nano Banana 2 (Gemini 3.1 Flash Image)"]
+            "GeminiNanoBanana2V2": ["Gemini Nano Banana 2.1", "Nano Banana 2 (Gemini 3.1 Flash Image)", "Nano Banana 2 Lite"]
           }
         }
       },
@@ -12257,12 +12278,12 @@
         "freshness": "established",
         "usage": 4,
         "recommend": "low",
-        "description": "This workflow recomposes a graphic design to a target aspect ratio and color theme using Nano Banana Pro. Leveraging top-tier prompt adherence and intelligent image editing, it recolor and recompose while preserving original intent. Execution relies on a third-party API, so response time depends on server-side availability.",
+        "description": "Upload a graphic design and select your desired aspect ratio. Generates and recomposes the graphic to fit the new aspect ratio.",
         "io": {
-          "inputs": ["image: Graphic design to recolor and recompose", "text: Desired target aspect ratio and color theme"],
-          "outputs": ["image: Recomposed graphic design with updated colors and aspect ratio"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -12278,12 +12299,12 @@
         "freshness": "established",
         "usage": 13,
         "recommend": "low",
-        "description": "Upload a vector logo and describe your desired texture; the workflow generates a 3D textured first and last frame, then automatically prompts and produces the full logo animation. ByteDance’s brand design model handles the textured 3D rendering, while its first‑last‑frame‑to‑video capability creates the seamless motion.",
+        "description": "Upload a vector image of your logo, and prompt your desired texture. Generate a textured 3D first and last frame with automated prompting for the final animation.",
         "io": {
-          "inputs": ["image: Vector logo image to texture and animate"],
-          "outputs": ["video: Textured 3D logo animation video"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.35.2",
         "capabilities": {
           "workflow": ["api", "brand-design", "flf2v"]
         }
@@ -12314,12 +12335,12 @@
         "freshness": "established",
         "usage": 18,
         "recommend": "low",
-        "description": "Upload your logotype and a texture reference image to generate a short animated brand video. Google's Gemini3 Pro Image Preview transfers the texture for brand design, and the FLF2V model produces the animation. Two images are required: the logo and a texture to apply.",
+        "description": "Upload your logotype and apply a texture + elements for on brand asset",
         "io": {
-          "inputs": ["image×2: Logotype image and texture reference image"],
-          "outputs": ["video: Textured logotype animation video"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.8.0",
         "capabilities": {
           "workflow": ["api", "brand-design", "image-to-video", "flf2v"]
         }
@@ -12353,12 +12374,12 @@
         "freshness": "established",
         "usage": 17,
         "recommend": "low",
-        "description": "Upload a reference icon image and describe your brand; this workflow generates nine brand-styled icons arranged in a 3×3 grid. Google Gemini3 Pro Image Preview applies its brand design and style reference capabilities to produce consistent, ready‑to‑use assets. The workflow runs via third‑party API on Comfy Cloud for fast results.",
+        "description": "Upload a reference image of an icon, enter your brand information in the prompt and generate 9 unique on brand stylized icon assets.",
         "io": {
-          "inputs": ["image: Reference icon image for brand styling", "text: Brand information and style description"],
-          "outputs": ["image: 3x3 grid of generated brand icon assets"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "brand-design", "image-edit"],
           "model_options": {
@@ -12374,12 +12395,12 @@
         "freshness": "established",
         "usage": 7,
         "recommend": "low",
-        "description": "Upload a poster design and a brief brand description to generate four realistic scene mockups in different environments. Powered by Nano Banana Pro—the most intelligent model with best prompt adherence—it creates context-aware placements showcasing your design. This workflow executes via a third‑party API, so output depends on server‑side response.",
+        "description": "Upload a poster/ad design and with a short input about your brand, generate 4 mockups in multiple scenes.",
         "io": {
-          "inputs": ["image: Poster or ad design to mock up in different scenes", "text: Short text description of the brand"],
-          "outputs": ["image×4: Generated scene mockups of the poster design"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.3.71",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
@@ -12452,16 +12473,16 @@
         "freshness": "established",
         "usage": 18,
         "recommend": "low",
-        "description": "User uploads a single image; the fast, intelligent Nano Banana 2 (Gemini 3.1 Flash Image) generates a multi-frame sprite sheet at up to 4K resolution. Outputs include the sprite sheet plus animated GIF and WebM files for game or motion graphics use. Processing runs via third-party API.",
+        "description": "Upload a single image to generate an animated sequence. The workflow creates a sprite sheet with multiple frames for use in games or animations.",
         "io": {
-          "inputs": ["image: Source image to animate into a sprite sheet"],
-          "outputs": ["image: Animated sprite sheet with multiple frames", "video×2: Animated GIF and WebM output files"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["video: Generated output"]
         },
-        "minComfyUIVersion": "0.15.1",
+        "minComfyUIVersion": "0.20.3",
         "capabilities": {
           "workflow": ["api", "game"],
           "model_options": {
-            "GeminiNanoBanana2": ["Nano Banana 2 (Gemini 3.1 Flash Image)"]
+            "GeminiNanoBanana2V2": ["Gemini Nano Banana 2.1", "Nano Banana 2 (Gemini 3.1 Flash Image)", "Nano Banana 2 Lite"]
           }
         }
       },
@@ -12473,12 +12494,12 @@
         "freshness": "established",
         "usage": 15,
         "recommend": "low",
-        "description": "Generate a sprite sheet animation sequence from a text description. Provide a prompt describing your character or object and the model outputs individual frames for idle, attack, walk, and jump poses. This workflow runs via API using Google Gemini image models.",
+        "description": "Upload an image of your sprite and receive individual frames of idle, attack, walk and jump animations.",
         "io": {
-          "inputs": ["image: Source sprite character image to animate"],
-          "outputs": ["image: Individual sprite animation frames for idle, attack, walk, and jump"]
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
         },
-        "minComfyUIVersion": "0.8.0",
+        "minComfyUIVersion": "0.15.0",
         "capabilities": {
           "workflow": ["api", "image-edit"],
           "model_options": {
