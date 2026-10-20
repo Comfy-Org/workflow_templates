@@ -47,7 +47,7 @@
         "title": "Qwen Image 2.1: Image Edit",
         "task": "Image Edit",
         "model": "Qwen Image 2.1",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 18213,
         "recommend": "highly_recommended",
         "description": "Edit images with Qwen-Image-2.1 by feeding two reference images through a single checkpoint that handles both generation and editing, then comparing the result against the original. Ideal for character-consistent edits, product cutout compositing with real transparency, and style-transfer passes at native 2K.",
@@ -65,7 +65,7 @@
         "title": "Qwen Image 2.1: Text to Image",
         "task": "Text to Image",
         "model": "Qwen Image 2.1",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 4998,
         "recommend": "highly_recommended",
         "description": "Generate images from text prompts with Qwen Image 2.1, the latest open-weight Qwen-Image model, producing a single 1024×1024 image over 25 sampling steps. Generation and instruction-based editing share one model with native 2K output, professional typography, and alpha-channel support. Ideal for poster and layout design, transparent asset creation, and rapid concept visualization.",
@@ -4025,9 +4025,9 @@
         "title": "Remove Background: Qwen Image 2.1",
         "task": "Remove Background",
         "model": "Qwen Image 2.1",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 114,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Remove image backgrounds with Qwen Image 2.1, which natively supports 2K output and RGBA transparency for direct transparent results. It takes 1 input image and returns 1 background-free image plus a comparison view showing the before and after. Ideal for e-commerce product photos, profile pictures, and marketing graphics needing clean cutouts.",
         "io": {
           "inputs": ["image: Input image"],
@@ -4879,6 +4879,24 @@
         }
       },
       {
+        "name": "video_fasth3_ominiref_r2v",
+        "title": "FastH3 OmniRef: Reference to Video",
+        "task": "Reference to Video",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate synchronized video with matching audio from a text prompt plus a reference image using the FastH3 OmniRef eight-step distilled model, which renders both streams in just eight sampling steps. Takes 1 input image and produces 1 video output. Ideal for animating reference characters, creating talking avatars, and rapid social media video prototyping.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["reference-to-video"]
+        }
+      },
+      {
         "name": "video_ltx2_3_i2v",
         "title": "LTX-2.3: Image to Video",
         "task": "Image to Video",
@@ -5062,6 +5080,42 @@
         "minComfyUIVersion": "0.16.4",
         "capabilities": {
           "workflow": ["image-to-video", "lip-sync"]
+        }
+      },
+      {
+        "name": "api_flux3_max_i2v",
+        "title": "FLUX 3 Max: Image to Video",
+        "task": "Image to Video",
+        "model": "FLUX 3 Video",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Animate a single still image into a short video clip using FLUX 3 Max, taking one input image and producing one video output. Ideal for bringing product shots, portraits, and concept art to life, generating social media motion content, and rapid prototyping of animated scenes.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.42.2",
+        "capabilities": {
+          "workflow": ["image-to-video", "api"]
+        }
+      },
+      {
+        "name": "api_flux3_max_t2v",
+        "title": "FLUX 3 Max: Text to Video",
+        "task": "Text to Video",
+        "model": "FLUX 3 Video",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a video with synchronized audio from a single text prompt with FLUX 3 Max, which reasons about and expands the prompt before rendering. Outputs one clip of 5 to 20 seconds at 720p or 1080p, at any aspect ratio from 9:16 to 21:9, with ambient sound, speech, and effects created alongside the picture and no input files required. Ideal for cinematic concept clips, ad mockups, and social videos that need matching sound design.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "minComfyUIVersion": "0.42.2",
+        "capabilities": {
+          "workflow": ["api", "text-to-video"]
         }
       },
       {
@@ -7737,7 +7791,7 @@
         "title": "Seedance2.0 Real Human: Reference to Video",
         "task": "Reference to Video",
         "model": "Seedance 2.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 12,
         "recommend": "not_recommended",
         "description": "Upload a reference video of a real person for identity verification. Use your own photo to validate and generate a personalized video output.",
@@ -7779,7 +7833,7 @@
         "title": "Seedance2.0 Real Human: FLF2V",
         "task": "FLF2V",
         "model": "Seedance 2.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 9,
         "recommend": "not_recommended",
         "description": "Generate a cinematic, identity-consistent video by providing two images (first and last frames) of a real person. Seedance 2.0 interpolates between them using first-last-frame-to-video with real-human identity verification. This workflow runs via a third-party API for server-side inference.",
@@ -9059,6 +9113,24 @@
         }
       },
       {
+        "name": "api_clarity_ai_crystal_video_upscale",
+        "title": "Clarity AI: Crystal Video Upscaler",
+        "task": "Video Upscale",
+        "model": "Crystal Upscaler",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Upscale a video with Clarity AI's Crystal model, running through the Fal proxy: one video in, one upscaled video out. Set scale_factor to multiply the frame size, and the output keeps the source resolution, frame count and audio track. The result is capped at 9 megapixels per frame and 360 megapixel-seconds per clip, so long or oversized clips come back upscaled by less than the factor you asked for. Ideal for restoring generated clips, preparing footage for large screens, and sharpening soft AI video.",
+        "io": {
+          "inputs": ["video: Input video"],
+          "outputs": ["video: Upscaled video"]
+        },
+        "minComfyUIVersion": "0.40.0",
+        "capabilities": {
+          "workflow": ["api", "video-upscale"]
+        }
+      },
+      {
         "name": "utility_depth_anything3_video_depth_estimation",
         "title": "Depth Map: Depth Anything 3",
         "task": "Depth Estimation",
@@ -9910,6 +9982,24 @@
         "minComfyUIVersion": "0.28.1",
         "capabilities": {
           "workflow": ["api", "text-to-speech"]
+        }
+      },
+      {
+        "name": "api_heygen_voice_1",
+        "title": "HeyGen Voice 1.0: Voice Clone to Speech",
+        "task": "Text to Speech",
+        "model": "HeyGen",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Clone a voice from a short recording with HeyGen Voice 1.0, then speak any script in that voice. Connect one audio clip to Instant Clone and the resulting voice_id feeds straight into text to speech, with no training wait. Use the expressiveness control to stay close to the recording or push more emotion into the delivery. Ideal for narration in your own voice, character dialogue, and multilingual voiceover.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.40.0",
+        "capabilities": {
+          "workflow": ["api", "text-to-speech", "voice-cloning"]
         }
       },
       {
