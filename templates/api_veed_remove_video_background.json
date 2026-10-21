@@ -1,0 +1,253 @@
+{
+  "id": "91424937-e700-4041-902e-f4dc95d06c7a",
+  "revision": 0,
+  "last_node_id": 13,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "VeedRemoveVideoBackgroundNode",
+      "pos": [
+        2310.798828125,
+        750
+      ],
+      "size": [
+        319.1216796875,
+        126
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        },
+        {
+          "name": "mask",
+          "type": "MASK",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VeedRemoveVideoBackgroundNode"
+      },
+      "widgets_values": [
+        "standard",
+        true,
+        true
+      ],
+      "widgets_values_named": {
+        "model": "standard",
+        "model.refine_foreground_edges": true,
+        "model.subject_is_person": true
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "LoadVideo",
+      "pos": [
+        1770,
+        750
+      ],
+      "size": [
+        460,
+        660
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "swimcap_glass_pop_video.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "swimcap_glass_pop_video.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 7,
+      "type": "JoinImageWithAlpha",
+      "pos": [
+        2677.9205078125,
+        750
+      ],
+      "size": [
+        185.8609375,
+        46
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 4
+        },
+        {
+          "name": "alpha",
+          "type": "MASK",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "JoinImageWithAlpha"
+      }
+    },
+    {
+      "id": 8,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        2950,
+        750
+      ],
+      "size": [
+        440,
+        700
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "showAdvanced": true,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "VEED_RemoveBG",
+        "png",
+        "8-bit",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "VEED_RemoveBG",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
+    },
+    {
+      "id": 13,
+      "type": "MarkdownNote",
+      "pos": [
+        1180,
+        730
+      ],
+      "size": [
+        520,
+        1080
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## VEED Remove Video Background: Matte Export — Workflow Guide\n\n## Input Asset\n\n- [swimcap_glass_pop_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/swimcap_glass_pop_video.mp4)\n\n## What This Workflow Does\nLoad Video → VEED Remove Video Background → Join Image with Alpha → Save Image Advanced.\n\nCuts the subject out of a clip frame by frame: VEED segments the foreground and hands back the frames plus a mask that is 1 wherever the background was removed. Join Image with Alpha turns that mask into the frame's alpha channel, so the PNG sequence you save has a transparent background instead of the original one.\n\nBest for: product and fashion cut-outs, mattes for compositing the subject over a new background, and rotoscoping that would otherwise be keyed by hand.\n\n## How to Use\n1. Load the clip in Load Video. Clips up to 60 seconds per run.\n2. Pick the mode on the node. standard (default) takes any background and keeps the best edges; fast is quicker and tops out at 1080p; green screen keys a green backdrop and swaps the edge widgets for a spill control.\n3. On standard and fast, set refine_foreground_edges (cleaner edges on hair, fur and fine detail) and subject_is_person (turn it off when the subject is an object or animal).\n4. Run the workflow. The node returns the frames plus the mask.\n5. Join Image with Alpha puts the mask into the alpha channel; Save Image Advanced writes the RGBA frames as PNG, 8-bit sRGB.\n6. The mask is also useful on its own: run it through Invert Mask before Image Composite Masked when you would rather composite the subject onto a new background inside the same graph.\n\n## Limits\n- Clips up to 60 seconds per run.\n- No resolution or frame-rate setting: VEED returns the clip at up to 3840x2160 for standard and green screen, 1920x1080 for fast, and downscales anything larger. The frames come back at the returned clip's size and rate.\n- The node's RGB frames carry no alpha of their own — the transparency lives in the separate mask output, which is why Join Image with Alpha is in the graph. A save path that skips it (or any video container) drops the matte.\n- The mask is 1 where the background was removed. Join Image with Alpha inverts it into alpha, which is what keeps the subject and drops the background in the saved PNG.\n- green screen mode only works on footage actually shot against a green backdrop. It ignores refine_foreground_edges and subject_is_person and exposes spill_suppression_strength (0.0-1.0, default 0.8) instead.\n- The mode is a single choice per run: switching to another mode replaces the widgets of the previous one.\n\n## Tips\n1. Keep refine_foreground_edges on for hair, fur, motion blur and thin straps; turn it off for hard-edged subjects such as boxes, furniture or cars when you want a quicker pass.\n2. Turn subject_is_person off for objects and animals — segmentation then runs without the human prior and stops hunting for hands or faces that are not there.\n3. Save the frames as PNG with 8-bit sRGB. It is the format that carries the alpha channel through unchanged; the node's other options are EXR (scene-linear, for compositing pipelines) and AVIF, and there is no JPEG.\n4. If the matte has to travel into an editor, export the PNG sequence with its alpha and import it as an image sequence. Rendering an MP4 or WebM from these frames flattens the subject against a colour.\n5. Check one frame before spending a whole run: a soft halo or eaten fingers usually means the subject is too small in frame or the mode is wrong for the shot.\n6. On green screen footage, raise spill_suppression_strength while green fringes remain on the edges and lower it once skin or product colours start shifting.\n\n"
+      ],
+      "widgets_values_named": {
+        "text": "## VEED Remove Video Background: Matte Export — Workflow Guide\n\n## Input Asset\n\n- [swimcap_glass_pop_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/swimcap_glass_pop_video.mp4)\n\n## What This Workflow Does\nLoad Video → VEED Remove Video Background → Join Image with Alpha → Save Image Advanced.\n\nCuts the subject out of a clip frame by frame: VEED segments the foreground and hands back the frames plus a mask that is 1 wherever the background was removed. Join Image with Alpha turns that mask into the frame's alpha channel, so the PNG sequence you save has a transparent background instead of the original one.\n\nBest for: product and fashion cut-outs, mattes for compositing the subject over a new background, and rotoscoping that would otherwise be keyed by hand.\n\n## How to Use\n1. Load the clip in Load Video. Clips up to 60 seconds per run.\n2. Pick the mode on the node. standard (default) takes any background and keeps the best edges; fast is quicker and tops out at 1080p; green screen keys a green backdrop and swaps the edge widgets for a spill control.\n3. On standard and fast, set refine_foreground_edges (cleaner edges on hair, fur and fine detail) and subject_is_person (turn it off when the subject is an object or animal).\n4. Run the workflow. The node returns the frames plus the mask.\n5. Join Image with Alpha puts the mask into the alpha channel; Save Image Advanced writes the RGBA frames as PNG, 8-bit sRGB.\n6. The mask is also useful on its own: run it through Invert Mask before Image Composite Masked when you would rather composite the subject onto a new background inside the same graph.\n\n## Limits\n- Clips up to 60 seconds per run.\n- No resolution or frame-rate setting: VEED returns the clip at up to 3840x2160 for standard and green screen, 1920x1080 for fast, and downscales anything larger. The frames come back at the returned clip's size and rate.\n- The node's RGB frames carry no alpha of their own — the transparency lives in the separate mask output, which is why Join Image with Alpha is in the graph. A save path that skips it (or any video container) drops the matte.\n- The mask is 1 where the background was removed. Join Image with Alpha inverts it into alpha, which is what keeps the subject and drops the background in the saved PNG.\n- green screen mode only works on footage actually shot against a green backdrop. It ignores refine_foreground_edges and subject_is_person and exposes spill_suppression_strength (0.0-1.0, default 0.8) instead.\n- The mode is a single choice per run: switching to another mode replaces the widgets of the previous one.\n\n## Tips\n1. Keep refine_foreground_edges on for hair, fur, motion blur and thin straps; turn it off for hard-edged subjects such as boxes, furniture or cars when you want a quicker pass.\n2. Turn subject_is_person off for objects and animals — segmentation then runs without the human prior and stops hunting for hands or faces that are not there.\n3. Save the frames as PNG with 8-bit sRGB. It is the format that carries the alpha channel through unchanged; the node's other options are EXR (scene-linear, for compositing pipelines) and AVIF, and there is no JPEG.\n4. If the matte has to travel into an editor, export the PNG sequence with its alpha and import it as an image sequence. Rendering an MP4 or WebM from these frames flattens the subject against a colour.\n5. Check one frame before spending a whole run: a soft halo or eaten fingers usually means the subject is too small in frame or the mode is wrong for the shot.\n6. On green screen footage, raise spill_suppression_strength while green fringes remain on the edges and lower it once skin or product colours start shifting.\n\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000",
+      "title": "Note: Workflow Guide"
+    }
+  ],
+  "links": [
+    [
+      1,
+      3,
+      0,
+      1,
+      0,
+      "VIDEO"
+    ],
+    [
+      4,
+      1,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      1,
+      1,
+      7,
+      1,
+      "MASK"
+    ],
+    [
+      6,
+      7,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.573085533011682,
+      "offset": [
+        -1015.0449123470044,
+        78.25460360715736
+      ]
+    },
+    "frontendVersion": "1.58.0"
+  },
+  "version": 0.4
+}
