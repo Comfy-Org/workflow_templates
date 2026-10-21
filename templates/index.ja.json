@@ -11529,6 +11529,96 @@
         "minComfyUIVersion": "0.28.1"
       },
       {
+        "name": "api_veed_fabric_1_0",
+        "title": "VEED Fabric 1.0：トーキングフォト",
+        "description": "VEED Fabric 1.0 は、1 枚の静止画と 1 本の音声から、口元が音声に同期したトーキング動画を作ります。動画は画像のアスペクト比を保ち、長さは音声と同じ（最大 300 秒）、解像度は 480p または 720p です。アバターやマスコット、自分の録音や TTS で作った声によるローカライズ済みの出演クリップに最適です。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","画像から動画へ","リップシンク"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "black_fashion_portrait.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 5,
+              "nodeType": "LoadAudio",
+              "file": "audio_see_beyond_the_light.mp3",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_fabric_1_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_lipsync_2_0",
+        "title": "VEED Lipsync 2.0：リップシンク",
+        "description": "VEED Lipsync 2.0 は、撮影済みの映像に含まれる話し手の口元を新しい音声に合わせ直します。映像の人物が新しい音声を話す形になり、口元以外の画は撮影時のまま。出力は元映像の解像度・25 fps を保ち、長さは音声と同じ（最大 600 秒）です。映像が音声より短い場合は、音声が終わるまで順再生と逆再生を繰り返します。撮り直しなしで台詞を差し替えるダビングや、既存映像のローカライズ版の作成に最適です。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","リップシンク","動画編集"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadVideo",
+              "file": "rainbow_face_portrait_prism_video.mp4",
+              "mediaType": "video"
+            },
+            {
+              "nodeId": 9,
+              "nodeType": "LoadAudio",
+              "file": "veed_lipsync_rainbow_night_speech.wav",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 10,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_lipsync_2_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_seedance2_0_mini_r2v",
         "title": "Seedance 2.0 Mini: 参照から動画",
         "description": "Seedance 2.0 Miniを使用して、2枚の参照画像から映画のような動画を生成します。AIによるカメラモーションと一貫したキャラクター生成により、単一の動画出力を実現。ショット構成と視覚的な連続性が重要なストーリーテリング、ブランドコンテンツ、短編映画制作に最適です。",
@@ -16535,6 +16625,84 @@
         "minComfyUIVersion": "0.14.0"
       },
       {
+        "name": "api_veed_remove_video_background",
+        "title": "VEED Remove Video Background：マット書き出し",
+        "description": "VEED Remove Video Background は動画から被写体を切り抜きます。ノードが全フレームで前景をセグメンテーションし、フレーム列とアルファマスクを返し、Join Image with Alpha がそのマスクを透過チャンネルに変換するので、そのまま合成に使える PNG 連番として書き出せます。standard / fast / グリーンスクリーンの3モード、動画は最長 60 秒。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","背景を削除","動画"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadVideo",
+              "file": "swimcap_glass_pop_video.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "SaveImageAdvanced",
+              "file": "api_veed_remove_video_background.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio_video",
+        "title": "VEED Clean Audio：動画の音声ノイズ除去",
+        "description": "VEED Clean Audio は動画内の音声をクリーンアップします。ノイズ・音楽・効果音はまとめて音声トラックから除去され、無音区間も完全に整理され、映像はそのままに 48 kHz モノラルの音声を持つ動画が返ります。目標ラウドネスへの正規化も可能で、動画は最長 1799 秒まで扱えます。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","オーディオ","動画編集"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadVideo",
+              "file": "veed_clean_audio_input_h3_omniref_person_dialogue_plus_noise.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_clean_audio_video.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_bria_video_green_screen",
         "title": "グリーンスクリーン: Bria",
         "description": "動画をアップロードして、透明または単色の背景を持つグリーンスクリーンバージョンを生成します。",
@@ -16989,6 +17157,97 @@
     "title": "オーディオ",
     "templates": [
       {
+        "name": "api_mirelo_video_to_sfx",
+        "title": "Mirelo SFX 2.0：動画から効果音",
+        "description": "Mirelo sfx-2.0 で映像に映像同期の効果音を付けます。モデルが動画を見て画面上の動きにフォーリーを合わせ、既定で音声（セリフ）を残し、効果音トラック・セリフトラック・新しいミックスを載せた動画を出力します。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["動画","オーディオ","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "LoadVideo",
+              "file": "mage_crash_discovery_video.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 730,
+              "nodeType": "SaveVideo",
+              "file": "api_mirelo_video_to_sfx.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_mirelo_text_to_sfx",
+        "title": "Mirelo SFX 2.0：テキストから効果音",
+        "description": "Mirelo sfx-2.0 でテキストから効果音を生成します。音そのもの、素材、空間、強さを一行で指定すると、48 kHz モノラルの音声ファイルを最大 10 分まで出力します。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["テキストからオーディオへ","オーディオ","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio",
+        "title": "VEED Clean Audio：音声ノイズ除去",
+        "description": "VEED Clean Audio は音声録音の背景ノイズを取り除きます。音楽や効果音もノイズと一緒に除去され、無音区間は完全にクリーンアップされ、48 kHz モノラルの音声として出力されます。目標ラウドネスへの正規化も可能で、音声は最長 1799 秒まで扱えます。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","オーディオ","オーディオ編集"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 13,
+              "nodeType": "LoadAudio",
+              "file": "veed_clean_audio_noisy_input.wav",
+              "mediaType": "audio"
+            }
+          ]
+        }
+      },
+      {
         "name": "api_elevenlabs_v4_text_to_speech",
         "title": "Eleven v4：テキスト読み上げ",
         "description": "品質重視のElevenLabsモデル、Eleven v4でテキストから表現力豊かな音声を生成します。スクリプトに[whispers]や[excited]などのオーディオタグを書き込んで演技を指示したり、音声サンプルをアップロードして声をクローンし、その声でスクリプトをナレーションできます。出力はオーディオファイル1つです。オーディオブック、ナレーション、キャラクターボイスオーバーに最適です。",
@@ -17421,6 +17680,37 @@
           }
         ],
         "date": "2026-10-19",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadAudio",
+              "file": "long_demo.mp3",
+              "mediaType": "audio"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.40.0"
+      },
+      {
+        "name": "api_heygen_voice_1_turbo",
+        "title": "HeyGen Voice 1.0 Turbo：音声クローンから音声へ",
+        "description": "HeyGen Voice 1.0 Turbo で短い録音から声をクローンし、その声で任意のスクリプトを読み上げます。Voice 1.0 と同じインスタントクローンを turbo モデルで実行するため、素早い下書きや試行錯誤に向いています。オーディオクリップを Instant Clone に接続すると、生成された voice_id がそのままテキスト読み上げに渡り、SaveText がその ID をディスクに保存するので次のセッションで再利用できます。自分の声でのナレーション、キャラクターのセリフ、多言語のボイスオーバーに最適です。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","テキスト読み上げ","音声クローニング"],
+        "models": ["HeyGen"],
+        "logos": [
+          {
+            "provider": "HeyGen"
+          }
+        ],
+        "date": "2026-10-22",
         "openSource": false,
         "size": 0,
         "usage": 0,

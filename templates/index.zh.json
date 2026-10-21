@@ -11529,6 +11529,96 @@
         "minComfyUIVersion": "0.28.1"
       },
       {
+        "name": "api_veed_fabric_1_0",
+        "title": "VEED Fabric 1.0：会说话的照片",
+        "description": "用 VEED Fabric 1.0 把一张静态照片和一段语音变成会说话的对口型视频：画面中的人脸跟着音频说话，成片保持原图比例，长度与音频一致，最长 300 秒，可选 480p 或 720p。适合数字头像、吉祥物，以及用自己录制或 TTS 生成的语音制作本地化出镜短片。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","图生视频","口型同步"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "black_fashion_portrait.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 5,
+              "nodeType": "LoadAudio",
+              "file": "audio_see_beyond_the_light.mp3",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_fabric_1_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_lipsync_2_0",
+        "title": "VEED Lipsync 2.0：视频对口型",
+        "description": "用 VEED Lipsync 2.0 把已有素材里说话人的口型替换成一段新的语音：画面中的人对着新音频说话，其余画面保持原样；成片保持原视频分辨率、25 fps，长度与音频一致，最长 600 秒。若视频比语音短，画面会正放再倒放直到音频结束。适合给现成镜头重新配音、不重拍就换台词，或制作本地化版本。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","口型同步","视频编辑"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadVideo",
+              "file": "rainbow_face_portrait_prism_video.mp4",
+              "mediaType": "video"
+            },
+            {
+              "nodeId": 9,
+              "nodeType": "LoadAudio",
+              "file": "veed_lipsync_rainbow_night_speech.wav",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 10,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_lipsync_2_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_seedance2_0_mini_r2v",
         "title": "Seedance 2.0 Mini: 参考生视频",
         "description": "使用Seedance 2.0 Mini从两张参考图像生成电影级视频，通过AI驱动的摄像机运动和一致的角色生成，输出单个视频。适用于需要镜头构图和视觉连续性的故事讲述、品牌内容和短片创作。",
@@ -16535,6 +16625,84 @@
         "minComfyUIVersion": "0.14.0"
       },
       {
+        "name": "api_veed_remove_video_background",
+        "title": "VEED Remove Video Background：透明遮罩导出",
+        "description": "用 VEED Remove Video Background 把主体从视频里抠出来：节点对每一帧做前景分割，返回帧序列与 alpha 遮罩，再经 Join Image with Alpha 合成为带透明通道的 PNG 序列，可直接用于合成。可选 standard、fast 或绿幕抠像，单段视频最长 60 秒。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","移除背景","视频"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadVideo",
+              "file": "swimcap_glass_pop_video.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "SaveImageAdvanced",
+              "file": "api_veed_remove_video_background.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio_video",
+        "title": "VEED Clean Audio：视频语音降噪",
+        "description": "用 VEED Clean Audio 清理视频里的语音：底噪、音乐与音效会一起从音轨中被移除，句间停顿被彻底清理，视频带着 48 kHz 单声道语音返回，并可按目标响度归一化，画面保持原样。单段视频最长 1799 秒。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","音频","视频编辑"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadVideo",
+              "file": "veed_clean_audio_input_h3_omniref_person_dialogue_plus_noise.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_clean_audio_video.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_bria_video_green_screen",
         "title": "绿幕抠像: Bria",
         "description": "上传视频以生成带有透明或纯色背景的绿幕版本。",
@@ -16989,6 +17157,97 @@
     "title": "音频",
     "templates": [
       {
+        "name": "api_mirelo_video_to_sfx",
+        "title": "Mirelo SFX 2.0：视频生成音效",
+        "description": "用 Mirelo sfx-2.0 给片段配上与画面锁定的音效：模型会看画面，把拟音对准屏幕上的动作，默认保留人声，输出音效轨、人声轨和带新混音的视频。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["视频","音频","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "LoadVideo",
+              "file": "mage_crash_discovery_video.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 730,
+              "nodeType": "SaveVideo",
+              "file": "api_mirelo_video_to_sfx.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_mirelo_text_to_sfx",
+        "title": "Mirelo SFX 2.0：文本生成音效",
+        "description": "用 Mirelo sfx-2.0 从文本生成音效：用一句话写清声音本身、材质、空间与力度，输出 48 kHz 单声道音频，最长 10 分钟。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["文本转音频","音频","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio",
+        "title": "VEED Clean Audio：语音降噪",
+        "description": "用 VEED Clean Audio 去掉语音录音里的底噪：音乐与音效会随噪声一起被移除，句间停顿被彻底清理，输出 48 kHz 单声道音频，并可按目标响度归一化。单段音频最长 1799 秒。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","音频","音频编辑"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 13,
+              "nodeType": "LoadAudio",
+              "file": "veed_clean_audio_noisy_input.wav",
+              "mediaType": "audio"
+            }
+          ]
+        }
+      },
+      {
         "name": "api_elevenlabs_v4_text_to_speech",
         "title": "Eleven v4：文本转语音",
         "description": "使用注重质量的 ElevenLabs 模型 Eleven v4，从文本生成富有表现力的语音。通过在脚本中写入 [whispers] 或 [excited] 等音频标签来指导表演，或上传语音样本以克隆声音并用其朗读脚本。输出一个音频文件。非常适合有声书、旁白和角色配音。",
@@ -17421,6 +17680,37 @@
           }
         ],
         "date": "2026-10-19",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadAudio",
+              "file": "long_demo.mp3",
+              "mediaType": "audio"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.40.0"
+      },
+      {
+        "name": "api_heygen_voice_1_turbo",
+        "title": "HeyGen Voice 1.0 Turbo：语音克隆转语音",
+        "description": "使用 HeyGen Voice 1.0 Turbo 从一段简短录音中克隆声音，然后用该声音朗读任意脚本。它与 Voice 1.0 使用相同的即时克隆流程，只是走 turbo 模型，合成速度更快，适合快速试稿与反复迭代。将一段音频片段连接到 Instant Clone，生成的 voice_id 会直接输入文本转语音，同时 SaveText 会把该 ID 保存到磁盘，方便下次会话复用。非常适合用自己的声音做旁白、角色对话和多语言配音。",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","文本转语音","语音克隆"],
+        "models": ["HeyGen"],
+        "logos": [
+          {
+            "provider": "HeyGen"
+          }
+        ],
+        "date": "2026-10-22",
         "openSource": false,
         "size": 0,
         "usage": 0,

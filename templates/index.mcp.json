@@ -47,7 +47,7 @@
         "title": "Qwen Image 2.1: Image Edit",
         "task": "Image Edit",
         "model": "Qwen Image 2.1",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 17538,
         "recommend": "highly_recommended",
         "description": "Edit images with Qwen-Image-2.1 by feeding two reference images through a single checkpoint that handles both generation and editing, then comparing the result against the original. Ideal for character-consistent edits, product cutout compositing with real transparency, and style-transfer passes at native 2K.",
@@ -65,7 +65,7 @@
         "title": "Qwen Image 2.1: Text to Image",
         "task": "Text to Image",
         "model": "Qwen Image 2.1",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 4938,
         "recommend": "highly_recommended",
         "description": "Generate images from text prompts with Qwen Image 2.1, the latest open-weight Qwen-Image model, producing a single 1024×1024 image over 25 sampling steps. Generation and instruction-based editing share one model with native 2K output, professional typography, and alpha-channel support. Ideal for poster and layout design, transparent asset creation, and rapid concept visualization.",
@@ -4043,9 +4043,9 @@
         "title": "Remove Background: Qwen Image 2.1",
         "task": "Remove Background",
         "model": "Qwen Image 2.1",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 122,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Remove image backgrounds with Qwen Image 2.1, which natively supports 2K output and RGBA transparency for direct transparent results. It takes 1 input image and returns 1 background-free image plus a comparison view showing the before and after. Ideal for e-commerce product photos, profile pictures, and marketing graphics needing clean cutouts.",
         "io": {
           "inputs": ["image: Input image"],
@@ -6460,6 +6460,42 @@
         }
       },
       {
+        "name": "api_veed_fabric_1_0",
+        "title": "VEED Fabric 1.0: Talking Photo",
+        "task": "Image to Video",
+        "model": "VEED",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Turn a still photo and a speech track into a talking, lip-synced video with VEED Fabric 1.0. The face in the image speaks the audio, the clip keeps the image's aspect ratio and runs as long as the audio, up to 300 seconds at 480p or 720p. Ideal for avatars, mascots and localized spokesperson clips driven by your own voice recording or a TTS node.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["api", "image-to-video", "lip-sync"]
+        }
+      },
+      {
+        "name": "api_veed_lipsync_2_0",
+        "title": "VEED Lipsync 2.0: Lip Sync",
+        "task": "Lip Sync",
+        "model": "VEED",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Re-sync a speaker's mouth in footage you already shot to a new speech track with VEED Lipsync 2.0. The person on camera speaks the new audio while the rest of the shot stays as recorded; the output keeps the video's resolution at 25 fps and runs as long as the audio, up to 600 seconds. If the clip is shorter than the speech it plays forward and backward until the audio ends. Ideal for dubbing a line, swapping a script without re-shooting, or making localized versions of existing footage.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["api", "lip-sync", "video-edit"]
+        }
+      },
+      {
         "name": "api_seedance2_0_mini_r2v",
         "title": "Seedance 2.0 Mini: Reference to Video",
         "task": "Image to Video",
@@ -7809,7 +7845,7 @@
         "title": "Seedance2.0 Real Human: Reference to Video",
         "task": "Reference to Video",
         "model": "Seedance 2.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 12,
         "recommend": "not_recommended",
         "description": "Upload a reference video of a real person for identity verification. Use your own photo to validate and generate a personalized video output.",
@@ -7851,7 +7887,7 @@
         "title": "Seedance2.0 Real Human: FLF2V",
         "task": "FLF2V",
         "model": "Seedance 2.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 9,
         "recommend": "not_recommended",
         "description": "Generate a cinematic, identity-consistent video by providing two images (first and last frames) of a real person. Seedance 2.0 interpolates between them using first-last-frame-to-video with real-human identity verification. This workflow runs via a third-party API for server-side inference.",
@@ -9470,6 +9506,42 @@
         }
       },
       {
+        "name": "api_veed_remove_video_background",
+        "title": "VEED Remove Video Background: Matte Export",
+        "task": "Remove Background",
+        "model": "VEED",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Cut the subject out of a video with VEED Remove Video Background: the node segments the foreground in every frame and returns the frames plus an alpha mask, and Join Image with Alpha turns that mask into a transparent PNG sequence ready to composite. Choose standard, fast or green-screen keying; clips up to 60 seconds.",
+        "io": {
+          "inputs": ["image: Input image"],
+          "outputs": ["image: Background removed"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["api", "background-removal"]
+        }
+      },
+      {
+        "name": "api_veed_clean_audio_video",
+        "title": "VEED Clean Audio: Video Speech Cleanup",
+        "task": "Video Edit",
+        "model": "VEED",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Clean the speech inside a video with VEED Clean Audio: background noise, music and effects are stripped from the soundtrack, pauses are cleaned completely, and the clip comes back with 48 kHz mono speech, optionally normalized to a target loudness while the picture stays as shot. Video up to 1799 seconds.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["api", "video-edit"]
+        }
+      },
+      {
         "name": "api_bria_video_green_screen",
         "title": "Green Screen: Bria",
         "task": "Remove Background",
@@ -9727,6 +9799,60 @@
     "category": "Audio",
     "description": "General-purpose workflow templates for native audio generation, including text-to-audio and other core audio workflows supported out of the box.",
     "templates": [
+      {
+        "name": "api_mirelo_video_to_sfx",
+        "title": "Mirelo SFX 2.0: Video to SFX",
+        "task": "Audio Generation",
+        "model": "Mirelo",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Add picture-locked sound effects to a clip with Mirelo sfx-2.0: the model watches the video and times Foley to on-screen action, keeps speech by default, and saves the SFX track, the speech track and the video carrying the new mix.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["api"]
+        }
+      },
+      {
+        "name": "api_mirelo_text_to_sfx",
+        "title": "Mirelo SFX 2.0: Text to SFX",
+        "task": "Audio Generation",
+        "model": "Mirelo",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate sound effects from a text prompt with Mirelo sfx-2.0: name the sound, its material, space and intensity in one line and get a 48 kHz mono audio file, up to 10 minutes.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["text-to-audio", "api"]
+        }
+      },
+      {
+        "name": "api_veed_clean_audio",
+        "title": "VEED Clean Audio: Speech Cleanup",
+        "task": "Audio Editing",
+        "model": "VEED",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Remove background noise from a speech recording with VEED Clean Audio: music and effects go with the noise, pauses are cleaned completely, and the voice comes back as 48 kHz mono audio, optionally normalized to a target loudness. Audio up to 1799 seconds.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["api", "audio-edit"]
+        }
+      },
       {
         "name": "api_elevenlabs_v4_text_to_speech",
         "title": "Eleven v4: Text to Speech",
@@ -10014,6 +10140,27 @@
         "usage": 0,
         "recommend": "medium",
         "description": "Clone a voice from a short recording with HeyGen Voice 1.0, then speak any script in that voice. Connect one audio clip to Instant Clone and the resulting voice_id feeds straight into text to speech, with no training wait. Use the expressiveness control to stay close to the recording or push more emotion into the delivery. Ideal for narration in your own voice, character dialogue, and multilingual voiceover.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.40.0",
+        "capabilities": {
+          "workflow": ["api", "text-to-speech", "voice-cloning"],
+          "model_options": {
+            "HeyGenVoiceTextToSpeechNode": ["heygen-voice-1", "heygen-voice-1-turbo"]
+          }
+        }
+      },
+      {
+        "name": "api_heygen_voice_1_turbo",
+        "title": "HeyGen Voice 1.0 Turbo: Voice Clone to Speech",
+        "task": "Text to Speech",
+        "model": "HeyGen",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Clone a voice from a short recording with HeyGen Voice 1.0 Turbo, then speak any script in that voice. It is the same instant clone as Voice 1.0, run through the turbo model, which renders faster for quick drafts and iteration. Connect one audio clip to Instant Clone and the resulting voice_id feeds straight into text to speech, while SaveText keeps the ID on disk for the next session. Ideal for narration in your own voice, character dialogue, and multilingual voiceover.",
         "io": {
           "inputs": ["text: Prompt"],
           "outputs": ["image: Generated output"]

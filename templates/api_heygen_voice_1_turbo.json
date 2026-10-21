@@ -1,0 +1,329 @@
+{
+  "id": "0e04149e-04b2-40cd-b331-71b8e3f404ff",
+  "revision": 0,
+  "last_node_id": 7,
+  "last_link_id": 12,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        -1250,
+        210
+      ],
+      "size": [
+        520,
+        560
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## HeyGen Voice 1.0 Turbo: Voice Clone to Speech \u2014 Workflow Guide\n\n## Input Asset\n- [long_demo.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/long_demo.mp3)\n\n## How to Use\n1. Load one speaker, 10 seconds+: Instant Clone returns a `voice_id`, which SaveText writes to `output/`.\n2. Text to Speech already uses `heygen-voice-1-turbo`, the faster model: link `voice_id`, write the script in `text`.\n3. Queue the prompt; `expressiveness_boost` 0.5 stays near the recording. SaveAudioAdvanced writes the mp3.\n\n## Limits\n- First 3 minutes of the recording are used.\n- Script: plain prose, 1 to 5000 characters.\n- Instant voices ignore seed, speed and pitch."
+      ],
+      "widgets_values_named": {
+        "text": "## HeyGen Voice 1.0 Turbo: Voice Clone to Speech \u2014 Workflow Guide\n\n## Input Asset\n- [long_demo.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/long_demo.mp3)\n\n## How to Use\n1. Load one speaker, 10 seconds+: Instant Clone returns a `voice_id`, which SaveText writes to `output/`.\n2. Text to Speech already uses `heygen-voice-1-turbo`, the faster model: link `voice_id`, write the script in `text`.\n3. Queue the prompt; `expressiveness_boost` 0.5 stays near the recording. SaveAudioAdvanced writes the mp3.\n\n## Limits\n- First 3 minutes of the recording are used.\n- Script: plain prose, 1 to 5000 characters.\n- Instant voices ignore seed, speed and pitch."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadAudio",
+      "pos": [
+        -620,
+        260
+      ],
+      "size": [
+        290,
+        140
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "long_demo.mp3",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "long_demo.mp3",
+        "upload": ""
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 3,
+      "type": "HeyGenVoiceCloneNode",
+      "pos": [
+        -300,
+        260
+      ],
+      "size": [
+        320,
+        160
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice_id",
+          "type": "STRING",
+          "links": [
+            11
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenVoiceCloneNode"
+      },
+      "widgets_values": [
+        "auto",
+        "max",
+        true,
+        42,
+        "fixed"
+      ],
+      "widgets_values_named": {
+        "language": "auto",
+        "similarity": "max",
+        "remove_background_noise": true,
+        "seed": 42,
+        "control_after_generate": "fixed"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        860,
+        260
+      ],
+      "size": [
+        540,
+        220
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/heygen_voice_1_turbo",
+        "mp3",
+        "V0"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/heygen_voice_1_turbo",
+        "format": "mp3",
+        "format.quality": "V0"
+      }
+    },
+    {
+      "id": 6,
+      "type": "HeyGenVoiceTextToSpeechNode",
+      "pos": [
+        380,
+        260
+      ],
+      "size": [
+        400,
+        200
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.voice_id",
+          "type": "STRING",
+          "widget": {
+            "name": "model.voice_id"
+          },
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenVoiceTextToSpeechNode"
+      },
+      "widgets_values": [
+        "heygen-voice-1-turbo",
+        "",
+        "HeyGen Voice 1.0 turns a ten second recording into a voice you can reuse. Write your script here. Pauses come from punctuation, not tags: full stops, commas and paragraph breaks. Run the prompt once to hear how it lands, then replace this text with your own.",
+        "auto",
+        0.5
+      ],
+      "widgets_values_named": {
+        "model": "heygen-voice-1-turbo",
+        "model.voice_id": "",
+        "model.text": "HeyGen Voice 1.0 turns a ten second recording into a voice you can reuse. Write your script here. Pauses come from punctuation, not tags: full stops, commas and paragraph breaks. Run the prompt once to hear how it lands, then replace this text with your own.",
+        "model.language": "auto",
+        "model.expressiveness_boost": 0.5
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 7,
+      "type": "SaveText",
+      "pos": [
+        -300,
+        480
+      ],
+      "size": [
+        550,
+        230
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            12
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "HeyGen_Voice_id/HeyGen_voice_id_%year%-%month%-%day%",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "HeyGen_Voice_id/HeyGen_voice_id_%year%-%month%-%day%",
+        "format": "txt"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "AUDIO"
+    ],
+    [
+      11,
+      3,
+      0,
+      7,
+      0,
+      "STRING"
+    ],
+    [
+      3,
+      6,
+      0,
+      5,
+      0,
+      "AUDIO"
+    ],
+    [
+      12,
+      7,
+      0,
+      6,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "1. Upload your audio and create a clone",
+      "bounding": [
+        -690,
+        180,
+        1000,
+        580
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "2. Speak the script",
+      "bounding": [
+        340,
+        180,
+        1130,
+        580
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5932584646846474,
+      "offset": [
+        1701.2624603620595,
+        148.6546294177781
+      ]
+    },
+    "frontendVersion": "1.58.0"
+  },
+  "version": 0.4
+}
