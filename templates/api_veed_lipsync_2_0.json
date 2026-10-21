@@ -1,0 +1,239 @@
+{
+  "id": "5b4ffc84-79bf-4ead-840c-689638e237ab",
+  "revision": 0,
+  "last_node_id": 11,
+  "last_link_id": 6,
+  "nodes": [
+    {
+      "id": 7,
+      "type": "VeedLipsyncNode",
+      "pos": [
+        2140,
+        730
+      ],
+      "size": [
+        320,
+        178
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.video",
+          "type": "VIDEO",
+          "link": 4
+        },
+        {
+          "name": "model.audio",
+          "type": "AUDIO",
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            6
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VeedLipsyncNode"
+      },
+      "widgets_values": [
+        "lipsync-2.0",
+        1576348213,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "lipsync-2.0",
+        "model.seed": 1576348213,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 8,
+      "type": "LoadVideo",
+      "pos": [
+        1610,
+        730
+      ],
+      "size": [
+        370,
+        460
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "rainbow_face_portrait_prism_video.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "rainbow_face_portrait_prism_video.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 9,
+      "type": "LoadAudio",
+      "pos": [
+        1620,
+        1260
+      ],
+      "size": [
+        360,
+        162
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "veed_lipsync_rainbow_night_speech.wav",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "veed_lipsync_rainbow_night_speech.wav",
+        "upload": ""
+      }
+    },
+    {
+      "id": 10,
+      "type": "SaveVideo",
+      "pos": [
+        2520,
+        730
+      ],
+      "size": [
+        520,
+        160
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/VEED_Lipsync_2.0",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/VEED_Lipsync_2.0",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 11,
+      "type": "MarkdownNote",
+      "pos": [
+        1040,
+        730
+      ],
+      "size": [
+        520,
+        1080
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# VEED Lipsync 2.0: Video Lip Sync — Workflow Guide\n\n## What This Workflow Does\nVEED Lipsync 2.0 (video + speech) → Save Video.\n\nRe-sync the mouth of a speaker who is already on camera: load existing footage and a new speech track, and the person in the clip speaks the new audio. The output keeps the resolution of the source video at 25 fps and runs exactly as long as the audio.\n\nBest for: dubbing a line in a shot you already have, swapping a script without re-shooting, and localized versions of the same footage.\n\n## How to Use\n1. Load the footage in Load Video. One front-facing speaker per clip: the node re-syncs that speaker's mouth, and the rest of the shot stays as recorded.\n2. Load the new speech in Load Audio. This track sets both the lip movement and the length of the video.\n3. Run the workflow. The re-synced video is saved by Save Video.\n\n## Limits\n- Audio up to 600 seconds; the output is as long as the audio.\n- Output keeps the resolution of the input video and is written at 25 fps.\n- If the video is shorter than the audio, it plays forward and then backward until the audio ends — trim the speech to the length of the shot if you want a single pass.\n- One speaker per video. With several faces in frame, the clearest front-facing one is the speaker that gets re-synced.\n- The seed only decides whether the node re-runs; results are non-deterministic, so the same seed does not return the same pixels.\n\n## Tips\n1. Use footage of one front-facing speaker, well lit with the mouth visible; that is the input this node is built for.\n2. Trim silence at the head and tail of the track: those seconds still become mouth movement on a face that is not speaking.\n3. Clean the speech before the run if it carries music or room noise; the sync follows the loudest voice in the mix.\n4. Keep the speech at a normal pace and cut it to the length of the shot instead of squeezing a longer line in.\n5. Run it again when a take looks off: every run is non-deterministic."
+      ],
+      "widgets_values_named": {
+        "text": "# VEED Lipsync 2.0: Video Lip Sync — Workflow Guide\n\n## What This Workflow Does\nVEED Lipsync 2.0 (video + speech) → Save Video.\n\nRe-sync the mouth of a speaker who is already on camera: load existing footage and a new speech track, and the person in the clip speaks the new audio. The output keeps the resolution of the source video at 25 fps and runs exactly as long as the audio.\n\nBest for: dubbing a line in a shot you already have, swapping a script without re-shooting, and localized versions of the same footage.\n\n## How to Use\n1. Load the footage in Load Video. One front-facing speaker per clip: the node re-syncs that speaker's mouth, and the rest of the shot stays as recorded.\n2. Load the new speech in Load Audio. This track sets both the lip movement and the length of the video.\n3. Run the workflow. The re-synced video is saved by Save Video.\n\n## Limits\n- Audio up to 600 seconds; the output is as long as the audio.\n- Output keeps the resolution of the input video and is written at 25 fps.\n- If the video is shorter than the audio, it plays forward and then backward until the audio ends — trim the speech to the length of the shot if you want a single pass.\n- One speaker per video. With several faces in frame, the clearest front-facing one is the speaker that gets re-synced.\n- The seed only decides whether the node re-runs; results are non-deterministic, so the same seed does not return the same pixels.\n\n## Tips\n1. Use footage of one front-facing speaker, well lit with the mouth visible; that is the input this node is built for.\n2. Trim silence at the head and tail of the track: those seconds still become mouth movement on a face that is not speaking.\n3. Clean the speech before the run if it carries music or room noise; the sync follows the loudest voice in the mix.\n4. Keep the speech at a normal pace and cut it to the length of the shot instead of squeezing a longer line in.\n5. Run it again when a take looks off: every run is non-deterministic."
+      },
+      "color": "#222",
+      "bgcolor": "#000",
+      "title": "Note: Workflow Guide"
+    }
+  ],
+  "links": [
+    [
+      4,
+      8,
+      0,
+      7,
+      0,
+      "VIDEO"
+    ],
+    [
+      5,
+      9,
+      0,
+      7,
+      1,
+      "AUDIO"
+    ],
+    [
+      6,
+      7,
+      0,
+      10,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.9377531531912865,
+      "offset": [
+        -891.9774219531085,
+        -335.56155794770086
+      ]
+    },
+    "frontendVersion": "1.58.0"
+  },
+  "version": 0.4
+}
