@@ -1,0 +1,204 @@
+{
+  "id": "cf2e48fc-0917-4381-a4e6-bcc98deedfce",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        420,
+        520
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# PixVerse V6 Max: Image to Video\n\nAnimate a still image with PixVerse V6 Max. The output keeps the aspect ratio of the input image, runs from 360p to 1080p and up to 15 seconds, and can carry a native audio track.\n\n## Input Asset\n\n- [pixverse_v6max_i2v_input_image.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/pixverse_v6max_i2v_input_image.png)\n\n## Parameters\n\n- `quality` sets the long edge: 360p is 640 px, 540p 1024 px, 720p 1280 px and 1080p 1920 px.\n- There is no aspect ratio widget on the image to video node; the input image decides the frame.\n- `multi_clip` is not available on V6 Max image to video, and the style presets of PixVerse V6 are not either.\n- PixVerse records the seed but does not reproduce a run from it.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "# PixVerse V6 Max: Image to Video\n\nAnimate a still image with PixVerse V6 Max. The output keeps the aspect ratio of the input image, runs from 360p to 1080p and up to 15 seconds, and can carry a native audio track.\n\n## Input Asset\n\n- [pixverse_v6max_i2v_input_image.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/pixverse_v6max_i2v_input_image.png)\n\n## Parameters\n\n- `quality` sets the long edge: 360p is 640 px, 540p 1024 px, 720p 1280 px and 1080p 1920 px.\n- There is no aspect ratio widget on the image to video node; the input image decides the frame.\n- `multi_clip` is not available on V6 Max image to video, and the style presets of PixVerse V6 are not either.\n- PixVerse records the seed but does not reproduce a run from it.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        500,
+        40
+      ],
+      "size": [
+        320,
+        370
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "pixverse_v6max_i2v_input_image.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "pixverse_v6max_i2v_input_image.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "PixverseV6ImageToVideoNode",
+      "pos": [
+        900,
+        40
+      ],
+      "size": [
+        420,
+        420
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PixverseV6ImageToVideoNode"
+      },
+      "widgets_values": [
+        "PixVerse V6 Max",
+        "The tabby cat keeps walking toward camera at a steady pace, paws splashing through the shallow puddles so the neon reflections ripple and break apart, the mist drifts across the alley, the pink and cyan signs flicker softly, light rain keeps falling, camera tracks low alongside the cat and holds the same framing",
+        "720p",
+        5,
+        true,
+        42,
+        "randomize",
+        ""
+      ],
+      "widgets_values_named": {
+        "model": "PixVerse V6 Max",
+        "model.prompt": "The tabby cat keeps walking toward camera at a steady pace, paws splashing through the shallow puddles so the neon reflections ripple and break apart, the mist drifts across the alley, the pink and cyan signs flicker softly, light rain keeps falling, camera tracks low alongside the cat and holds the same framing",
+        "model.quality": "720p",
+        "model.duration_seconds": 5,
+        "model.generate_audio": true,
+        "model.seed": 42,
+        "control_after_generate": "randomize",
+        "model.negative_prompt": ""
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveVideo",
+      "pos": [
+        1400,
+        40
+      ],
+      "size": [
+        400,
+        560
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/PixVerse_v6max_i2v",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/PixVerse_v6max_i2v",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "frontendVersion": "1.54.14",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}
