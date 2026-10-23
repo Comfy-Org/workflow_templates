@@ -57,6 +57,8 @@ export interface SeoContent {
   /** 150-160 chars; excluded from body word counts. */
   metaDescription: string;
   faqItems: FaqItem[];
+  about?: { '@type': string; name: string; sameAs?: string }[];
+  mentions?: ({ '@id': string } | { '@type': string; name: string; sameAs?: string })[];
   lastAIGeneration?: string;
 }
 
@@ -79,6 +81,7 @@ export interface SeoPageCard {
   count: number;
   thumbnail: string | null;
   logos: CardBadge[];
+  itemType?: string;
 }
 
 /** Title-case a keyword for use inside a heading ("ai headshot" -> "AI Headshot"). */
