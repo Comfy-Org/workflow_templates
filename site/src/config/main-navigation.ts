@@ -94,8 +94,8 @@ export function getMainNavigation(locale: Locale): NavItem[] {
             { label: t('nav.fdct', locale), href: navRoutes.fdct, badge: 'new' },
             { label: t('nav.customerStories', locale), href: navRoutes.customers },
             { label: t('nav.events', locale), href: navRoutes.events, badge: 'new' },
-            { label: t('nav.affiliates', locale), href: navRoutes.affiliates, badge: 'new' },
-            { label: t('nav.learning', locale), href: navRoutes.learning, badge: 'new' },
+            { label: t('nav.affiliates', locale), href: navRoutes.affiliates },
+            { label: t('nav.learning', locale), href: navRoutes.learning },
           ],
         },
         {
