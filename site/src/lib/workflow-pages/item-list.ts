@@ -1,6 +1,6 @@
 import type { SerializedTemplate } from '../hub-api';
 import { firstStillThumbnail } from '../media-utils';
-import { workflowDetailPath, resolveAbsoluteThumbnail } from '../routes';
+import { workflowDetailPath, resolveAbsoluteThumbnail, creatorPath } from '../routes';
 import { absoluteUrl } from '../../config/site';
 import type { ItemListEntry } from '../structured-data';
 
@@ -22,6 +22,20 @@ export function buildTemplateItemListEntries(
         name: tpl.title,
         url: absoluteUrl(path),
         image: resolveAbsoluteThumbnail(firstStillThumbnail(tpl.thumbnails)),
+        itemType: 'CreativeWork',
+        ...(tpl.description ? { description: tpl.description } : {}),
+        ...([...(tpl.tags || []), ...(tpl.models || [])].length > 0
+          ? { keywords: [...(tpl.tags || []), ...(tpl.models || [])].join(', ') }
+          : {}),
+        ...(tpl.username
+          ? {
+              creator: {
+                '@type': tpl.username === 'comfyui' ? 'Organization' : 'Person',
+                name: tpl.creatorDisplayName || tpl.username,
+                url: absoluteUrl(creatorPath(tpl.username, locale)),
+              },
+            }
+          : {}),
       },
     ];
   });
