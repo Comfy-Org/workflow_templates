@@ -54,11 +54,12 @@ const family =
   groups.find((group) => group.slug === name) ??
   groups.find((group) => group.redirectFrom.includes(name!));
 
+// An unknown or removed model slug (such as `none`) 301s to the canonical English
+// models index rather than 404ing. The models index page only exists at `/workflows/model/`
+// (there is no localized `/[locale]/workflows/model/` index page), so passing a locale
+// here would redirect users to a 404 response.
 if (!family) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect(modelsIndexPath(), 301);
 }
 
 // A variant slug 301s to its family's canonical URL, matching the English route.
