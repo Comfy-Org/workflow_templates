@@ -1,14 +1,14 @@
 {
   "id": "14af6003-d4ee-4dee-8e3d-cbff2e5519b3",
   "revision": 0,
-  "last_node_id": 8,
-  "last_link_id": 7,
+  "last_node_id": 10,
+  "last_link_id": 9,
   "nodes": [
     {
       "id": 3,
       "type": "SaveImage",
       "pos": [
-        1880,
+        1924,
         4620
       ],
       "size": [
@@ -16,16 +16,22 @@
         430
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 6
+          "link": 8
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.11.0",
@@ -40,18 +46,21 @@
       },
       "widgets_values": [
         "Grok"
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Grok"
+      }
     },
     {
       "id": 6,
       "type": "LoadImage",
       "pos": [
-        1120,
+        1138,
         4620
       ],
       "size": [
         290,
-        396
+        400
       ],
       "flags": {},
       "order": 0,
@@ -62,7 +71,7 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            7
+            9
           ]
         },
         {
@@ -74,40 +83,49 @@
       "properties": {
         "cnr_id": "comfy-core",
         "ver": "0.11.0",
+        "Node name for S&R": "LoadImage",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "LoadImage"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         "cyberpunk_robot.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "cyberpunk_robot.png",
+        "upload": "image"
+      }
     },
     {
-      "id": 8,
-      "type": "GrokImageEditNode",
+      "id": 9,
+      "type": "GrokImageEditNodeV2",
       "pos": [
-        1440,
+        1476,
         4620
       ],
       "size": [
         400,
-        307.984375
+        262
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [
         {
-          "label": "images",
-          "name": "image",
+          "name": "model.images.image_1",
           "type": "IMAGE",
-          "link": 7
+          "link": 9
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
         }
       ],
       "outputs": [
@@ -115,49 +133,78 @@
           "name": "IMAGE",
           "type": "IMAGE",
           "links": [
-            6
+            8
           ]
         }
       ],
       "properties": {
         "cnr_id": "comfy-core",
-        "ver": "0.16.1",
-        "enableTabs": false,
-        "tabWidth": 65,
-        "tabXOffset": 10,
-        "hasSecondTab": false,
-        "secondTabText": "Send Back",
-        "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "Node name for S&R": "GrokImageEditNode"
+        "ver": "0.34.0",
+        "Node name for S&R": "GrokImageEditNodeV2"
       },
       "widgets_values": [
-        "grok-imagine-image",
         "Keep the original robot design and framing.\nTransform the scene into a cyberpunk night environment.\nReplace the lighting with high-contrast neon lighting, including blue and orange accent lights.\nAdd glowing light strips and illuminated panels on the robot’s body and fingers.\nDarken the background significantly, with subtle smoke and light bloom effects.\nEnhance metallic reflections and sharp edges to give a high-tech, futuristic feel.\n",
+        "grok-imagine-image",
         "1K",
         1,
+        "auto",
         0,
-        "randomize",
-        "auto"
+        "randomize"
       ],
+      "widgets_values_named": {
+        "prompt": "Keep the original robot design and framing.\nTransform the scene into a cyberpunk night environment.\nReplace the lighting with high-contrast neon lighting, including blue and orange accent lights.\nAdd glowing light strips and illuminated panels on the robot’s body and fingers.\nDarken the background significantly, with subtle smoke and light bloom effects.\nEnhance metallic reflections and sharp edges to give a high-tech, futuristic feel.\n",
+        "model": "grok-imagine-image",
+        "model.resolution": "1K",
+        "model.number_of_images": 1,
+        "model.aspect_ratio": "auto",
+        "seed": 0,
+        "control_after_generate": "randomize"
+      },
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 10,
+      "type": "MarkdownNote",
+      "pos": [
+        790,
+        4620
+      ],
+      "size": [
+        300,
+        290
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Input Asset",
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [cyberpunk_robot.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/cyberpunk_robot.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [cyberpunk_robot.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/cyberpunk_robot.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
     [
-      6,
       8,
+      9,
       0,
       3,
       0,
       "IMAGE"
     ],
     [
-      7,
+      9,
       6,
       0,
-      8,
+      9,
       0,
       "IMAGE"
     ]
@@ -166,13 +213,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 1.102633091517857,
+      "scale": 0.6422348426084583,
       "offset": [
-        -953.2561534041004,
-        -4355.265530150913
+        -114.18677781996438,
+        -4195.133264467925
       ]
     },
-    "frontendVersion": "1.44.19",
+    "frontendVersion": "1.51.9",
     "workflowRendererVersion": "LG",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,

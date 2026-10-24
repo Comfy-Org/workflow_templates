@@ -1,0 +1,1140 @@
+{
+  "id": "f6b36930-3cd6-4f7e-a7a4-c50e198bbe08",
+  "revision": 0,
+  "last_node_id": 733,
+  "last_link_id": 1827,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        2880,
+        790
+      ],
+      "size": [
+        700,
+        150
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            1820
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Mirelo_SFX_2.0",
+        "mp3",
+        "V0"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/Mirelo_SFX_2.0",
+        "format": "mp3",
+        "quality": "V0"
+      },
+      "title": "Save SFX Track"
+    },
+    {
+      "id": 3,
+      "type": "MarkdownNote",
+      "pos": [
+        1120,
+        770
+      ],
+      "size": [
+        740,
+        2032.2133355287683
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Mirelo Video → Synced SFX — Guide (sfx-2.0)\n\nPicture-locked Foley: the model watches the **video** and generates sound timed to on-screen action. Optional text only steers; it does not replace the picture.\n\n## Input Asset\n\n- [mage_crash_discovery_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/mage_crash_discovery_video.mp4)\n\n---\n\n## Node parameters (what each control does)\n\n| Parameter | What it is | How to use it |\n| --- | --- | --- |\n| **video** (input) | Main input. The clip the model “hears” with its eyes. | Required. Prefer the locked cut. Silent or with audio both OK. |\n| **audio** (input) | Optional separate soundtrack to preserve / align with the clip. | Wire when speech/SFX to keep is not already on the video’s own track. Leave unconnected if the video file already carries the audio you care about. |\n| **model** | Engine release. | Use **`sfx-2.0`** (48 kHz). sfx-1.6 is older / different stem behavior. |\n| **prompt** | Short text hint (optional). Experimental on video→SFX. | Empty first. Add **one line** only for off-screen sound or to push one layer (material, rain, forge, etc.). Soft guidance — always audition. |\n| **negative_prompt** | Sounds to leave out (optional). Experimental. | Short list: `music, wind, crowd`. Good for stripping AI-video score. |\n| **preserve_speech** | Keep dialogue from the source and build SFX around it. | **On (default):** keep lines, duck SFX under speech. **Off:** SFX/ambience only (VO later, or mute source intent). |\n| **seed** | Reproducibility. | Same seed + same inputs ≈ similar take. Change / randomize to explore variants. |\n| **audio** (output) | Generated mix (SFX ± preserved speech depending on settings). | Save / preview this as the main result. |\n| **speech** (output) | Isolated speech stem when separation is available. | Use if you want dialogue on its own track; may be empty if no speech was found. |\n\nAlso typical (may be on the node or defaults): **duration** follows the clip window; **num_variants** 1–4 if exposed — generate a few and pick the best sync.\n\n---\n\n## Recommended workflow\n\n1. Connect **video** (and **audio** only if needed).\n2. Model = **sfx-2.0**.\n3. Leave **prompt** / **negative_prompt** empty → run once.\n4. Listen against picture.\n5. If needed: one-line **prompt**, and/or **negative** `music, wind, crowd`.\n6. Toggle **preserve_speech** for dialogue vs SFX-only.\n7. Tweak **seed** or variants; save **audio** (and **speech** if useful).\n\n---\n\n## Prompt tips (video)\n\nDescribe **sounds**, not the plot. Keep it to one short line.\n\n| Goal | Example prompt |\n| --- | --- |\n| Follow picture only | *(leave empty)* |\n| Off-screen | `distant church bells, a dog barking two streets away` |\n| Push one layer | `heavy rain on a tin roof, footsteps quiet underneath` |\n| Material | `boots on gravel, metal settling, soft cavern wind` |\n| Energy / sci-fi | `pulsing energy hum, soft electrical crackle, quiet rocky wind` |\n\n**Negative (common):** `music, wind, crowd`  \n(Drop `speech` from negative if you want dialogue kept.)\n\n---\n\n## With sound vs silent source\n\n| Source | Suggestion |\n| --- | --- |\n| Has dialogue you want | Keep audio on the clip (or wire **audio**), **preserve_speech on** |\n| Music-heavy AI clip, keep lines | preserve on + negative `music` |\n| Silent / SFX-only / VO later | Silent clip OK, or **preserve_speech off** |\n\n---\n\n## Example (mage crash discovery ~5 s)\n\n**First try:** empty prompt, preserve_speech as needed.\n\n**If you want to steer the energy bed:**\n```\nPulsing magenta energy hum from the crashed ship cockpit, soft electrical crackle, quiet rocky cavern wind, distant metal settling\n```\n\n**Negative:** `music, crowd, birds`\n\n---\n\n## Paste-ready template note\n\n> Video drives timing. Start with an empty prompt; add one short line only for off-screen detail or to push one layer. Use negative to drop unwanted layers (`music, wind, crowd`). Keep Preserve speech on for dialogue; off for SFX-only. Prompt is soft guidance — audition variants."
+      ],
+      "widgets_values_named": {
+        "text": "## Mirelo Video → Synced SFX — Guide (sfx-2.0)\n\nPicture-locked Foley: the model watches the **video** and generates sound timed to on-screen action. Optional text only steers; it does not replace the picture.\n\n## Input Asset\n\n- [mage_crash_discovery_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/mage_crash_discovery_video.mp4)\n\n---\n\n## Node parameters (what each control does)\n\n| Parameter | What it is | How to use it |\n| --- | --- | --- |\n| **video** (input) | Main input. The clip the model “hears” with its eyes. | Required. Prefer the locked cut. Silent or with audio both OK. |\n| **audio** (input) | Optional separate soundtrack to preserve / align with the clip. | Wire when speech/SFX to keep is not already on the video’s own track. Leave unconnected if the video file already carries the audio you care about. |\n| **model** | Engine release. | Use **`sfx-2.0`** (48 kHz). sfx-1.6 is older / different stem behavior. |\n| **prompt** | Short text hint (optional). Experimental on video→SFX. | Empty first. Add **one line** only for off-screen sound or to push one layer (material, rain, forge, etc.). Soft guidance — always audition. |\n| **negative_prompt** | Sounds to leave out (optional). Experimental. | Short list: `music, wind, crowd`. Good for stripping AI-video score. |\n| **preserve_speech** | Keep dialogue from the source and build SFX around it. | **On (default):** keep lines, duck SFX under speech. **Off:** SFX/ambience only (VO later, or mute source intent). |\n| **seed** | Reproducibility. | Same seed + same inputs ≈ similar take. Change / randomize to explore variants. |\n| **audio** (output) | Generated mix (SFX ± preserved speech depending on settings). | Save / preview this as the main result. |\n| **speech** (output) | Isolated speech stem when separation is available. | Use if you want dialogue on its own track; may be empty if no speech was found. |\n\nAlso typical (may be on the node or defaults): **duration** follows the clip window; **num_variants** 1–4 if exposed — generate a few and pick the best sync.\n\n---\n\n## Recommended workflow\n\n1. Connect **video** (and **audio** only if needed).\n2. Model = **sfx-2.0**.\n3. Leave **prompt** / **negative_prompt** empty → run once.\n4. Listen against picture.\n5. If needed: one-line **prompt**, and/or **negative** `music, wind, crowd`.\n6. Toggle **preserve_speech** for dialogue vs SFX-only.\n7. Tweak **seed** or variants; save **audio** (and **speech** if useful).\n\n---\n\n## Prompt tips (video)\n\nDescribe **sounds**, not the plot. Keep it to one short line.\n\n| Goal | Example prompt |\n| --- | --- |\n| Follow picture only | *(leave empty)* |\n| Off-screen | `distant church bells, a dog barking two streets away` |\n| Push one layer | `heavy rain on a tin roof, footsteps quiet underneath` |\n| Material | `boots on gravel, metal settling, soft cavern wind` |\n| Energy / sci-fi | `pulsing energy hum, soft electrical crackle, quiet rocky wind` |\n\n**Negative (common):** `music, wind, crowd`  \n(Drop `speech` from negative if you want dialogue kept.)\n\n---\n\n## With sound vs silent source\n\n| Source | Suggestion |\n| --- | --- |\n| Has dialogue you want | Keep audio on the clip (or wire **audio**), **preserve_speech on** |\n| Music-heavy AI clip, keep lines | preserve on + negative `music` |\n| Silent / SFX-only / VO later | Silent clip OK, or **preserve_speech off** |\n\n---\n\n## Example (mage crash discovery ~5 s)\n\n**First try:** empty prompt, preserve_speech as needed.\n\n**If you want to steer the energy bed:**\n```\nPulsing magenta energy hum from the crashed ship cockpit, soft electrical crackle, quiet rocky cavern wind, distant metal settling\n```\n\n**Negative:** `music, crowd, birds`\n\n---\n\n## Paste-ready template note\n\n> Video drives timing. Start with an empty prompt; add one short line only for off-screen detail or to push one layer. Use negative to drop unwanted layers (`music, wind, crowd`). Keep Preserve speech on for dialogue; off for SFX-only. Prompt is soft guidance — audition variants."
+      },
+      "color": "#222",
+      "bgcolor": "#000",
+      "title": "Note: Video to SFX Guide"
+    },
+    {
+      "id": 4,
+      "type": "MireloVideoToSFX",
+      "pos": [
+        2440,
+        790
+      ],
+      "size": [
+        400,
+        290
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.video",
+          "type": "VIDEO",
+          "link": 4
+        },
+        {
+          "name": "model.audio",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "speech",
+          "type": "AUDIO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MireloVideoToSFX"
+      },
+      "widgets_values": [
+        "sfx-2.0",
+        "Pulsing magenta energy hum from the crashed ship cockpit, soft electrical crackle, quiet rocky cavern wind, distant metal settling",
+        "",
+        true,
+        441944540,
+        "fixed",
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "sfx-2.0",
+        "model.prompt": "Pulsing magenta energy hum from the crashed ship cockpit, soft electrical crackle, quiet rocky cavern wind, distant metal settling",
+        "model.negative_prompt": "",
+        "model.preserve_speech": true,
+        "model.seed": 441944540,
+        "control_after_generate#1": "fixed",
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        2880,
+        1050
+      ],
+      "size": [
+        700,
+        150
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": []
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Mirelo_SFX_2.0_speech",
+        "mp3",
+        "V0"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/Mirelo_SFX_2.0_speech",
+        "format": "mp3",
+        "quality": "V0"
+      },
+      "title": "Save Speech Track"
+    },
+    {
+      "id": 7,
+      "type": "LoadVideo",
+      "pos": [
+        1920,
+        790
+      ],
+      "size": [
+        450,
+        580
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            4,
+            1821
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "mage_crash_discovery_video.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "mage_crash_discovery_video.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 729,
+      "type": "86f62f26-705f-4a1b-8e9f-294dbc780b31",
+      "pos": [
+        3660,
+        790
+      ],
+      "size": [
+        290,
+        170
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1821
+        },
+        {
+          "label": "extra_audio",
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 1820
+        },
+        {
+          "label": "original_audio_volume",
+          "name": "volume",
+          "type": "INT",
+          "widget": {
+            "name": "volume"
+          },
+          "link": null
+        },
+        {
+          "label": "extra_audio_volume",
+          "name": "volume_1",
+          "type": "INT",
+          "widget": {
+            "name": "volume_1"
+          },
+          "link": null
+        },
+        {
+          "label": "drop_video_audio",
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1819
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65,
+        "previewExposures": []
+      },
+      "widgets_values": [
+        1,
+        1,
+        true
+      ],
+      "widgets_values_named": {
+        "volume": 1,
+        "volume_1": 1,
+        "switch": true
+      },
+      "title": "Merge SFX into Video"
+    },
+    {
+      "id": 730,
+      "type": "SaveVideo",
+      "pos": [
+        3980,
+        790
+      ],
+      "size": [
+        500,
+        510
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1819
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo",
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
+        "enableTabs": false,
+        "tabWidth": 65,
+        "tabXOffset": 10,
+        "hasSecondTab": false,
+        "secondTabText": "Send Back",
+        "secondTabOffset": 80,
+        "secondTabWidth": 65
+      },
+      "widgets_values": [
+        "video/Mirelo_SFX_2.0",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/Mirelo_SFX_2.0",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      },
+      "title": "Save Video with SFX"
+    },
+    {
+      "id": 733,
+      "type": "MarkdownNote",
+      "pos": [
+        2460,
+        1150
+      ],
+      "size": [
+        350,
+        120
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "The `seed` is fixed by default. Change it if you want different output with the same prompt."
+      ],
+      "widgets_values_named": {
+        "text": "The `seed` is fixed by default. Change it if you want different output with the same prompt."
+      },
+      "color": "#222",
+      "bgcolor": "#000",
+      "title": "Note: Seed"
+    }
+  ],
+  "links": [
+    [
+      1820,
+      2,
+      0,
+      729,
+      1,
+      "AUDIO"
+    ],
+    [
+      1821,
+      7,
+      0,
+      729,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      4,
+      0,
+      2,
+      0,
+      "AUDIO"
+    ],
+    [
+      4,
+      7,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ],
+    [
+      3,
+      4,
+      1,
+      5,
+      0,
+      "AUDIO"
+    ],
+    [
+      1819,
+      729,
+      0,
+      730,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 17,
+      "title": "Merge Audio to Video",
+      "bounding": [
+        3650,
+        710,
+        839.9999892857909,
+        613.6000000000005
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "definitions": {
+    "subgraphs": [
+      {
+        "id": "86f62f26-705f-4a1b-8e9f-294dbc780b31",
+        "version": 1,
+        "state": {
+          "lastGroupId": 17,
+          "lastNodeId": 733,
+          "lastLinkId": 1827,
+          "lastRerouteId": 0
+        },
+        "revision": 0,
+        "config": {},
+        "name": "Video Audio Merger",
+        "inputNode": {
+          "id": -10,
+          "bounding": [
+            -710,
+            4190,
+            172.23046875,
+            148
+          ]
+        },
+        "outputNode": {
+          "id": -20,
+          "bounding": [
+            930,
+            4150,
+            128,
+            68
+          ]
+        },
+        "inputs": [
+          {
+            "id": "645a091a-8435-47b1-b2a9-67c06d67ec99",
+            "name": "video",
+            "type": "VIDEO",
+            "linkIds": [
+              1804
+            ],
+            "localized_name": "video",
+            "pos": [
+              -561.76953125,
+              4214
+            ]
+          },
+          {
+            "id": "45f8492d-0b87-4797-b25c-6245643250e3",
+            "name": "audio",
+            "type": "AUDIO",
+            "linkIds": [
+              1811
+            ],
+            "localized_name": "audio",
+            "label": "extra_audio",
+            "pos": [
+              -561.76953125,
+              4234
+            ]
+          },
+          {
+            "id": "e46461b3-9f5c-4c2c-a111-eafef15c9ec4",
+            "name": "volume",
+            "type": "INT",
+            "linkIds": [
+              1815
+            ],
+            "label": "original_audio_volume",
+            "pos": [
+              -561.76953125,
+              4254
+            ]
+          },
+          {
+            "id": "9afc3134-0316-4cbf-8c20-e0edbfe8fcda",
+            "name": "volume_1",
+            "type": "INT",
+            "linkIds": [
+              1816
+            ],
+            "label": "extra_audio_volume",
+            "pos": [
+              -561.76953125,
+              4274
+            ]
+          },
+          {
+            "id": "0e8b4e48-782a-4cd1-a755-803c16e26f76",
+            "name": "switch",
+            "type": "BOOLEAN",
+            "linkIds": [
+              1827
+            ],
+            "label": "drop_video_audio",
+            "pos": [
+              -561.76953125,
+              4294
+            ]
+          }
+        ],
+        "outputs": [
+          {
+            "id": "8e570612-ad18-44cb-90e1-12584d6c13fb",
+            "name": "VIDEO",
+            "type": "VIDEO",
+            "linkIds": [
+              1806
+            ],
+            "localized_name": "VIDEO",
+            "pos": [
+              954,
+              4174
+            ]
+          }
+        ],
+        "widgets": [],
+        "nodes": [
+          {
+            "id": 717,
+            "type": "GetVideoComponents",
+            "pos": [
+              -450,
+              3970
+            ],
+            "size": [
+              230,
+              120
+            ],
+            "flags": {},
+            "order": 0,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "video",
+                "name": "video",
+                "type": "VIDEO",
+                "link": 1804
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "images",
+                "name": "images",
+                "type": "IMAGE",
+                "links": [
+                  1798
+                ]
+              },
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "type": "AUDIO",
+                "links": [
+                  1808
+                ]
+              },
+              {
+                "localized_name": "fps",
+                "name": "fps",
+                "type": "FLOAT",
+                "links": [
+                  1800
+                ]
+              },
+              {
+                "localized_name": "bit_depth",
+                "name": "bit_depth",
+                "type": "COMBO",
+                "links": [
+                  1825
+                ]
+              },
+              {
+                "localized_name": "color_space",
+                "name": "color_space",
+                "type": "COMBO",
+                "links": [
+                  1826
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "GetVideoComponents",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            }
+          },
+          {
+            "id": 718,
+            "type": "CreateVideo",
+            "pos": [
+              520,
+              3960
+            ],
+            "size": [
+              270,
+              150
+            ],
+            "flags": {},
+            "order": 1,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "images",
+                "name": "images",
+                "type": "IMAGE",
+                "link": 1798
+              },
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": 1824
+              },
+              {
+                "localized_name": "fps",
+                "name": "fps",
+                "type": "FLOAT",
+                "widget": {
+                  "name": "fps"
+                },
+                "link": 1800
+              },
+              {
+                "localized_name": "bit_depth",
+                "name": "bit_depth",
+                "shape": 7,
+                "type": "COMBO",
+                "widget": {
+                  "name": "bit_depth"
+                },
+                "link": 1825
+              },
+              {
+                "localized_name": "color_space",
+                "name": "color_space",
+                "shape": 7,
+                "type": "COMBO",
+                "widget": {
+                  "name": "color_space"
+                },
+                "link": 1826
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "VIDEO",
+                "name": "VIDEO",
+                "type": "VIDEO",
+                "links": [
+                  1806
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "CreateVideo",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            },
+            "widgets_values": [
+              30,
+              8,
+              "sRGB",
+              "none"
+            ],
+            "widgets_values_named": {
+              "fps": 30,
+              "bit_depth": 8,
+              "color_space": "sRGB",
+              "codec": "none"
+            }
+          },
+          {
+            "id": 719,
+            "type": "AudioAdjustVolume",
+            "pos": [
+              -450,
+              4420
+            ],
+            "size": [
+              270,
+              110
+            ],
+            "flags": {},
+            "order": 2,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "type": "AUDIO",
+                "link": 1811
+              },
+              {
+                "localized_name": "volume",
+                "name": "volume",
+                "type": "INT",
+                "widget": {
+                  "name": "volume"
+                },
+                "link": 1816
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "AUDIO",
+                "name": "AUDIO",
+                "type": "AUDIO",
+                "links": [
+                  1803,
+                  1822
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "AudioAdjustVolume",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            },
+            "widgets_values": [
+              1
+            ],
+            "widgets_values_named": {
+              "volume": 1
+            }
+          },
+          {
+            "id": 721,
+            "type": "AudioMerge",
+            "pos": [
+              -130,
+              4220
+            ],
+            "size": [
+              270,
+              140
+            ],
+            "flags": {},
+            "order": 3,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "audio1",
+                "name": "audio1",
+                "type": "AUDIO",
+                "link": 1809
+              },
+              {
+                "localized_name": "audio2",
+                "name": "audio2",
+                "type": "AUDIO",
+                "link": 1803
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "AUDIO",
+                "name": "AUDIO",
+                "type": "AUDIO",
+                "links": [
+                  1823
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "AudioMerge",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            },
+            "widgets_values": [
+              "add"
+            ],
+            "widgets_values_named": {
+              "merge_method": "add"
+            }
+          },
+          {
+            "id": 722,
+            "type": "AudioAdjustVolume",
+            "pos": [
+              -450,
+              4210
+            ],
+            "size": [
+              270,
+              110
+            ],
+            "flags": {},
+            "order": 4,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "audio",
+                "name": "audio",
+                "type": "AUDIO",
+                "link": 1808
+              },
+              {
+                "localized_name": "volume",
+                "name": "volume",
+                "type": "INT",
+                "widget": {
+                  "name": "volume"
+                },
+                "link": 1815
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "AUDIO",
+                "name": "AUDIO",
+                "type": "AUDIO",
+                "links": [
+                  1809
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "AudioAdjustVolume",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
+            },
+            "widgets_values": [
+              1
+            ],
+            "widgets_values_named": {
+              "volume": 1
+            }
+          },
+          {
+            "id": 732,
+            "type": "ComfySwitchNode",
+            "pos": [
+              170,
+              4400
+            ],
+            "size": [
+              270,
+              80
+            ],
+            "flags": {},
+            "order": 5,
+            "mode": 0,
+            "inputs": [
+              {
+                "localized_name": "on_false",
+                "name": "on_false",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": 1823
+              },
+              {
+                "localized_name": "on_true",
+                "name": "on_true",
+                "shape": 7,
+                "type": "AUDIO",
+                "link": 1822
+              },
+              {
+                "localized_name": "switch",
+                "name": "switch",
+                "type": "BOOLEAN",
+                "widget": {
+                  "name": "switch"
+                },
+                "link": 1827
+              }
+            ],
+            "outputs": [
+              {
+                "localized_name": "output",
+                "name": "output",
+                "type": "AUDIO",
+                "links": [
+                  1824
+                ]
+              }
+            ],
+            "properties": {
+              "Node name for S&R": "ComfySwitchNode"
+            },
+            "widgets_values": [
+              false
+            ],
+            "widgets_values_named": {
+              "switch": false
+            }
+          }
+        ],
+        "groups": [
+          {
+            "id": 15,
+            "title": "Video Audio Merger",
+            "bounding": [
+              -480,
+              3890,
+              1310,
+              670
+            ],
+            "color": "#3f789e",
+            "flags": {}
+          }
+        ],
+        "links": [
+          {
+            "id": 1798,
+            "origin_id": 717,
+            "origin_slot": 0,
+            "target_id": 718,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 1800,
+            "origin_id": 717,
+            "origin_slot": 2,
+            "target_id": 718,
+            "target_slot": 2,
+            "type": "FLOAT"
+          },
+          {
+            "id": 1809,
+            "origin_id": 722,
+            "origin_slot": 0,
+            "target_id": 721,
+            "target_slot": 0,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1803,
+            "origin_id": 719,
+            "origin_slot": 0,
+            "target_id": 721,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1808,
+            "origin_id": 717,
+            "origin_slot": 1,
+            "target_id": 722,
+            "target_slot": 0,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1804,
+            "origin_id": -10,
+            "origin_slot": 0,
+            "target_id": 717,
+            "target_slot": 0,
+            "type": "VIDEO"
+          },
+          {
+            "id": 1811,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 719,
+            "target_slot": 0,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1806,
+            "origin_id": 718,
+            "origin_slot": 0,
+            "target_id": -20,
+            "target_slot": 0,
+            "type": "VIDEO"
+          },
+          {
+            "id": 1815,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 722,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 1816,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 719,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 1822,
+            "origin_id": 719,
+            "origin_slot": 0,
+            "target_id": 732,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1823,
+            "origin_id": 721,
+            "origin_slot": 0,
+            "target_id": 732,
+            "target_slot": 0,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1824,
+            "origin_id": 732,
+            "origin_slot": 0,
+            "target_id": 718,
+            "target_slot": 1,
+            "type": "AUDIO"
+          },
+          {
+            "id": 1825,
+            "origin_id": 717,
+            "origin_slot": 3,
+            "target_id": 718,
+            "target_slot": 3,
+            "type": "COMBO"
+          },
+          {
+            "id": 1826,
+            "origin_id": 717,
+            "origin_slot": 4,
+            "target_id": 718,
+            "target_slot": 4,
+            "type": "COMBO"
+          },
+          {
+            "id": 1827,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 732,
+            "target_slot": 2,
+            "type": "BOOLEAN"
+          }
+        ],
+        "extra": {}
+      }
+    ]
+  },
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.42,
+      "offset": [
+        -1180,
+        -390
+      ]
+    },
+    "frontendVersion": "1.58.0"
+  },
+  "version": 0.4
+}

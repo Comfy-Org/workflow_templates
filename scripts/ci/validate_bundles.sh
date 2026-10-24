@@ -39,9 +39,10 @@ if [[ -n "$MISSING_TEMPLATES" ]]; then
   echo ""
   echo "💡 Add these templates to the appropriate bundle in bundles.json:"
   echo "   - media-api: for API-based templates"
-  echo "   - media-video: for video generation templates" 
+  echo "   - media-video: for video generation templates"
   echo "   - media-image: for image generation templates"
   echo "   - media-other: for other types of templates"
+  echo "   - media-assets-02: for new template media (recommended)"
   exit 1
 fi
 

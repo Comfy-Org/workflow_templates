@@ -33,7 +33,7 @@ python3 scripts/sync/sync_data.py --templates-dir templates
 
 ### What sync does
 
-- **Technical fields** (models, date, size, vram, tags, etc.) are auto-copied from English master to all locales.
+- **Technical fields** (models, date, size, tags, etc.) are auto-copied from English master to all locales.
 - **Translatable fields** (`title`, `description`) are preserved if already translated — they are NOT overwritten.
 - **New templates** get English fallback text until translated.
 - **Tags** are auto-translated using mappings defined in `scripts/data/i18n.json`.

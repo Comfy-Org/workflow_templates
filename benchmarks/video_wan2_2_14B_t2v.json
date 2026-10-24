@@ -1,0 +1,473 @@
+{
+  "80": {
+    "inputs": {
+      "filename_prefix": "video/ComfyUI",
+      "format": "auto",
+      "format.codec": "auto",
+      "codec": "auto",
+      "video": [
+        "128:88",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "128:71": {
+    "inputs": {
+      "clip_name": "umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "128:73": {
+    "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "128:76": {
+    "inputs": {
+      "unet_name": "wan2.2_t2v_low_noise_14B_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "128:75": {
+    "inputs": {
+      "unet_name": "wan2.2_t2v_high_noise_14B_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "128:83": {
+    "inputs": {
+      "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_high_noise.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "128:75",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "128:85": {
+    "inputs": {
+      "lora_name": "wan2.2_t2v_lightx2v_4steps_lora_v1.1_low_noise.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "128:76",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "128:86": {
+    "inputs": {
+      "shift": 5.000000000000001,
+      "model": [
+        "128:121",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "ModelSamplingSD3"
+    }
+  },
+  "128:82": {
+    "inputs": {
+      "shift": 5.000000000000001,
+      "model": [
+        "128:120",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "ModelSamplingSD3"
+    }
+  },
+  "128:89": {
+    "inputs": {
+      "text": "Beautiful young European woman with honey blonde hair gracefully turning her head back over shoulder, gentle smile, bright eyes looking at camera. Hair flowing in slow motion as she turns. Soft natural lighting, clean background, cinematic slow-motion portrait.",
+      "clip": [
+        "128:71",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Positive Prompt)"
+    }
+  },
+  "128:81": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 923510416338945,
+      "steps": [
+        "128:122",
+        0
+      ],
+      "cfg": [
+        "128:124",
+        0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 0,
+      "end_at_step": [
+        "128:123",
+        0
+      ],
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "128:82",
+        0
+      ],
+      "positive": [
+        "128:89",
+        0
+      ],
+      "negative": [
+        "128:72",
+        0
+      ],
+      "latent_image": [
+        "128:74",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "128:88": {
+    "inputs": {
+      "fps": [
+        "128:125",
+        0
+      ],
+      "bit_depth": "auto",
+      "color_space": "sRGB",
+      "codec": "none",
+      "images": [
+        "128:87",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "128:87": {
+    "inputs": {
+      "samples": [
+        "128:78",
+        0
+      ],
+      "vae": [
+        "128:73",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "128:72": {
+    "inputs": {
+      "text": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走，裸露，NSFW",
+      "clip": [
+        "128:71",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "128:74": {
+    "inputs": {
+      "width": 640,
+      "height": 640,
+      "length": [
+        "128:127",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyHunyuanLatentVideo",
+    "_meta": {
+      "title": "Empty Hunyuan Video 1.0 Latent"
+    }
+  },
+  "128:78": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 0,
+      "steps": [
+        "128:122",
+        0
+      ],
+      "cfg": [
+        "128:124",
+        0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": [
+        "128:123",
+        0
+      ],
+      "end_at_step": [
+        "128:122",
+        0
+      ],
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "128:86",
+        0
+      ],
+      "positive": [
+        "128:89",
+        0
+      ],
+      "negative": [
+        "128:72",
+        0
+      ],
+      "latent_image": [
+        "128:81",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "128:114": {
+    "inputs": {
+      "value": 20
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Steps)"
+    }
+  },
+  "128:115": {
+    "inputs": {
+      "value": 10
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Split Steps)"
+    }
+  },
+  "128:117": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Steps)"
+    }
+  },
+  "128:118": {
+    "inputs": {
+      "value": 2
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Split Steps)"
+    }
+  },
+  "128:119": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float(CFG)"
+    }
+  },
+  "128:116": {
+    "inputs": {
+      "value": 3.5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float(CFG)"
+    }
+  },
+  "128:120": {
+    "inputs": {
+      "switch": [
+        "128:129",
+        0
+      ],
+      "on_false": [
+        "128:75",
+        0
+      ],
+      "on_true": [
+        "128:83",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(high noise model)"
+    }
+  },
+  "128:121": {
+    "inputs": {
+      "switch": [
+        "128:129",
+        0
+      ],
+      "on_false": [
+        "128:76",
+        0
+      ],
+      "on_true": [
+        "128:85",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(low noise model)"
+    }
+  },
+  "128:122": {
+    "inputs": {
+      "switch": [
+        "128:129",
+        0
+      ],
+      "on_false": [
+        "128:114",
+        0
+      ],
+      "on_true": [
+        "128:117",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(steps)"
+    }
+  },
+  "128:123": {
+    "inputs": {
+      "switch": [
+        "128:129",
+        0
+      ],
+      "on_false": [
+        "128:115",
+        0
+      ],
+      "on_true": [
+        "128:118",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(split steps)"
+    }
+  },
+  "128:124": {
+    "inputs": {
+      "switch": [
+        "128:129",
+        0
+      ],
+      "on_false": [
+        "128:116",
+        0
+      ],
+      "on_true": [
+        "128:119",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(CFG)"
+    }
+  },
+  "128:125": {
+    "inputs": {
+      "value": 16
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (FPS)"
+    }
+  },
+  "128:126": {
+    "inputs": {
+      "value": 5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (Duration)"
+    }
+  },
+  "128:129": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Enable Lightning LoRA"
+    }
+  },
+  "128:127": {
+    "inputs": {
+      "expression": "floor(a * b) + 1",
+      "values.a": [
+        "128:126",
+        0
+      ],
+      "values.b": [
+        "128:125",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  }
+}

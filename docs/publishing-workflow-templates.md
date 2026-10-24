@@ -41,6 +41,28 @@ git pull
 
 This script regenerates the manifest, rebuilds all wheels into `./dist/`, runs lint/tests, and performs `twine check`.
 
+### Versioned sample inputs
+
+`scripts/sync/sync_bundles.py` adds `io.inputs[].sourceRevision` to the packaged
+English and translated catalogs. It records the full Git commit SHA of the build
+checkout, and only declares a revision for regular files present under `input/`
+in that commit. The source catalogs in `templates/` remain unchanged. Git tree
+inspection also works with the publisher's sparse checkout, without fetching
+the sample media into the working directory.
+
+For an input with `file: "kitten_cop.mp4"`, the frontend downloads
+`https://raw.githubusercontent.com/Comfy-Org/workflow_templates/<sourceRevision>/input/kitten_cop.mp4`.
+Replacing or removing that file on `main` does not change an already published
+catalog's reference. Build releases from committed templates and sample assets;
+uncommitted media is not part of the referenced snapshot.
+
+Older catalogs and inputs absent from the committed `input/` directory have no
+revision. The frontend opens those workflows without downloading their samples;
+it must not fall back to a branch name or resolve the latest commit at runtime.
+This contract takes effect when a new JSON package containing the generated
+metadata is published and installed. Merging the code alone does not update
+previously published packages.
+
 Version bumping is handled automatically by CI via `scripts/ci/ci_version_manager.py`, which runs in the `version-check.yml` workflow on every PR that touches templates or `bundles.json`. If you need to manually inspect or trigger version bumps locally, you can run:
 
 ```bash

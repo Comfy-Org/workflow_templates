@@ -5,6 +5,7 @@ on:
     paths:
       - 'templates/**.json'
       - 'scripts/validate/check_links.py'
+      - 'scripts/data/whitelist.json'
       - '.github/workflows/link-checker.yml'
       - '.github/workflows/link-check-comment.yml'
   workflow_dispatch:
@@ -16,10 +17,11 @@ jobs:
       contents: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: |
             templates/*.json
+            input/
             scripts/validate/check_links.py
             scripts/lib/paths.py
             scripts/data/whitelist.json

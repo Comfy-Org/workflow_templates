@@ -15,7 +15,7 @@ jobs:
     outputs:
       matrix: ${{ steps.targets.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Build rebuild targets
         id: targets
@@ -57,7 +57,7 @@ jobs:
       SKIP_AI_GENERATION: 'true'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: ${{ matrix.ref }}
 
@@ -83,6 +83,10 @@ jobs:
           PUBLIC_HUB_API_URL: ${{ matrix.api_env == 'test' && secrets.HUB_API_URL_PREVIEW || secrets.HUB_API_URL_PRODUCTION }}
           PUBLIC_COMFY_CLOUD_URL: ${{ matrix.api_env == 'test' && secrets.COMFY_CLOUD_URL_PREVIEW || secrets.COMFY_CLOUD_URL_PRODUCTION }}
 
+      - name: Verify Vercel function runtime
+        run: pnpm run verify:vercel-runtime
+        working-directory: site
+
       - name: Deploy to Vercel
         id: deploy
         working-directory: site
@@ -105,7 +109,7 @@ jobs:
           rm -rf "$root_output_dir"
           cp -R "$site_output_dir" "$root_output_dir"
 
-          if npx vercel@latest deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --yes \
+          if npx vercel@62.4.0 deploy --cwd "$GITHUB_WORKSPACE" --prebuilt --yes \
             --archive=tgz \
             --token="$VERCEL_TOKEN" >"$stdout_file" 2>"$stderr_file"; then
             cat "$stderr_file" >&2

@@ -9,6 +9,8 @@ import { t } from '../i18n/ui';
 import type { Locale } from '../i18n/config';
 import { localizeUrl } from '../i18n/utils';
 import { SITE_ORIGIN, absoluteUrl } from '../config/site';
+import { WEBSITE_ID, ORGANIZATION_ID, COMFYUI_ID, buildSiteEntityNodes } from './site-entities';
+import type { WorkflowEntityGraph } from '../data/workflow-entity-graphs';
 
 export interface FaqItem {
   question: string;
@@ -21,17 +23,22 @@ export interface BreadcrumbItem {
   item?: string;
 }
 
+/** Maps an ordered list of crumbs to schema.org `ListItem` entries. */
+function mapBreadcrumbItems(items: BreadcrumbItem[]) {
+  return items.map(({ name, item }, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name,
+    ...(item ? { item } : {}),
+  }));
+}
+
 /** schema.org `BreadcrumbList` JSON-LD from an ordered list of crumbs. */
 export function buildBreadcrumbJsonLd(items: BreadcrumbItem[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: items.map(({ name, item }, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name,
-      ...(item ? { item } : {}),
-    })),
+    itemListElement: mapBreadcrumbItems(items),
   };
 }
 
@@ -183,4 +190,195 @@ export function buildSoftwareApplicationJsonLd(params: {
     description: params.description,
     ...(featureList?.length ? { featureList } : {}),
   };
+}
+
+/**
+ * The full client-provided `@graph` for a workflow detail page, in the exact
+ * node order of the schema recommendation: WebSite → Organization → ComfyUI
+ * SoftwareApplication (sitewide, constant) → WebPage → workflow
+ * `[SoftwareApplication,TechArticle]` → core-topic DefinedTerms → any standalone
+ * (uncategorized) DefinedTerms → each DefinedTermSet immediately followed by its
+ * member DefinedTerms → BreadcrumbList → FAQPage. Replaces the separate
+ * TechArticle/FAQPage/SoftwareApplication/
+ * BreadcrumbList scripts with one linked graph. Entity names/sameAs/category
+ * assignments and ordering come verbatim from `entityGraph` (see
+ * workflow-entity-graphs.ts) — nothing here is inferred.
+ */
+export function buildWorkflowGraphJsonLd(params: {
+  canonicalUrl: string;
+  title: string;
+  /**
+   * The page `<title>` (with the " - ComfyUI Workflow" suffix) used for
+   * `WebPage.headline`. Falls back to `title` when omitted; the workflow node
+   * always uses the bare `title`.
+   */
+  pageHeadline?: string;
+  description: string;
+  image?: string;
+  datePublished?: string;
+  inLanguage: string;
+  breadcrumbItems: BreadcrumbItem[];
+  faqItems?: FaqItem[];
+  entityGraph: WorkflowEntityGraph;
+}) {
+  const {
+    canonicalUrl,
+    title,
+    pageHeadline,
+    description,
+    image,
+    datePublished,
+    inLanguage,
+    breadcrumbItems,
+    faqItems,
+    entityGraph,
+  } = params;
+
+  const localId = (fragment: string) => `${canonicalUrl}#${fragment}`;
+  const webpageId = localId('webpage');
+  const workflowId = localId('workflow');
+  const breadcrumbId = localId('breadcrumb');
+  const faqId = localId('faq');
+
+  // A curated `datePublished` on the entity graph pins the value from the client
+  // schema; otherwise fall back to the page date (from the hub index).
+  const publishedDate = entityGraph.datePublished ?? datePublished;
+  const hasFaq = Boolean(faqItems?.length);
+
+  // --- Precompute the entity nodes and their cross-references ------------------
+  const categoryIds = new Set(entityGraph.categories.map((c) => c.id));
+
+  // about: the workflow, then each core topic, then each category set.
+  const aboutRefs: { '@id': string }[] = [{ '@id': workflowId }];
+  const coreTopicNodes: Record<string, unknown>[] = [];
+  for (const topic of entityGraph.coreTopics) {
+    coreTopicNodes.push({
+      '@type': 'DefinedTerm',
+      '@id': localId(topic.id),
+      name: topic.name,
+      sameAs: topic.sameAs,
+    });
+    aboutRefs.push({ '@id': localId(topic.id) });
+  }
+  for (const category of entityGraph.categories) {
+    aboutRefs.push({ '@id': localId(category.id) });
+  }
+
+  // One DefinedTerm node per entity, split into standalone vs. per-category
+  // buckets. Order within a bucket follows the `entities` array order, which is
+  // also the order used for each `DefinedTermSet.hasDefinedTerm`.
+  const standaloneTermNodes: Record<string, unknown>[] = [];
+  const termNodesByCategory = new Map<string, Record<string, unknown>[]>();
+  const knownEntityIds = new Set<string>();
+  for (const entity of entityGraph.entities) {
+    knownEntityIds.add(entity.id);
+    // Only emit inDefinedTermSet when categoryId names a category actually
+    // declared on this graph — otherwise the reference would dangle (no
+    // DefinedTermSet node behind it).
+    const hasDeclaredCategory = Boolean(entity.categoryId && categoryIds.has(entity.categoryId));
+    const node: Record<string, unknown> = {
+      '@type': 'DefinedTerm',
+      '@id': localId(entity.id),
+      name: entity.name,
+      sameAs: entity.sameAs,
+      ...(hasDeclaredCategory ? { inDefinedTermSet: { '@id': localId(entity.categoryId!) } } : {}),
+    };
+    if (hasDeclaredCategory) {
+      const bucket = termNodesByCategory.get(entity.categoryId!) ?? [];
+      bucket.push(node);
+      termNodesByCategory.set(entity.categoryId!, bucket);
+    } else {
+      standaloneTermNodes.push(node);
+    }
+  }
+
+  // mentions: the explicit `mentionsOrder` when the client schema pins one (with
+  // any entity it omits appended in `entities` order), else plain `entities`
+  // order.
+  const mentionsOrder = entityGraph.mentionsOrder;
+  const orderedMentionIds = mentionsOrder?.length
+    ? [
+        ...mentionsOrder.filter((id) => knownEntityIds.has(id)),
+        ...entityGraph.entities.map((e) => e.id).filter((id) => !mentionsOrder.includes(id)),
+      ]
+    : entityGraph.entities.map((e) => e.id);
+  const mentionRefs = orderedMentionIds.map((id) => ({ '@id': localId(id) }));
+
+  // --- Assemble the graph in the client schema's node order ------------------
+  const graph: Record<string, unknown>[] = [...buildSiteEntityNodes()];
+
+  graph.push({
+    '@type': 'WebPage',
+    '@id': webpageId,
+    url: canonicalUrl,
+    headline: pageHeadline ?? title,
+    isPartOf: { '@id': WEBSITE_ID },
+    publisher: { '@id': ORGANIZATION_ID },
+    ...(publishedDate ? { datePublished: publishedDate } : {}),
+    inLanguage,
+    breadcrumb: { '@id': breadcrumbId },
+    mainEntity: { '@id': workflowId },
+    ...(hasFaq ? { hasPart: [{ '@id': faqId }] } : {}),
+    about: aboutRefs,
+    ...(mentionRefs.length ? { mentions: mentionRefs } : {}),
+  });
+
+  graph.push({
+    '@type': ['SoftwareApplication', 'TechArticle'],
+    '@id': workflowId,
+    name: title,
+    headline: title,
+    applicationCategory: 'MultimediaApplication',
+    operatingSystem: 'Windows, macOS, Linux',
+    ...(entityGraph.identifier ? { identifier: entityGraph.identifier } : {}),
+    ...(publishedDate ? { datePublished: publishedDate } : {}),
+    ...(image ? { image } : {}),
+    description,
+    ...(entityGraph.keywords ? { keywords: entityGraph.keywords } : {}),
+    creator: { '@id': ORGANIZATION_ID },
+    runtimePlatform: { '@id': COMFYUI_ID },
+    ...(entityGraph.isRelatedTo?.length
+      ? {
+          isRelatedTo: entityGraph.isRelatedTo.map((r) => ({
+            '@type': 'WebPage',
+            name: r.name,
+            url: r.url,
+          })),
+        }
+      : {}),
+  });
+
+  graph.push(...coreTopicNodes);
+  graph.push(...standaloneTermNodes);
+
+  for (const category of entityGraph.categories) {
+    const memberNodes = termNodesByCategory.get(category.id) ?? [];
+    graph.push({
+      '@type': 'DefinedTermSet',
+      '@id': localId(category.id),
+      name: category.name,
+      hasDefinedTerm: memberNodes.map((n) => ({ '@id': n['@id'] as string })),
+    });
+    graph.push(...memberNodes);
+  }
+
+  graph.push({
+    '@type': 'BreadcrumbList',
+    '@id': breadcrumbId,
+    itemListElement: mapBreadcrumbItems(breadcrumbItems),
+  });
+
+  if (hasFaq) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': faqId,
+      mainEntity: faqItems!.map((f) => ({
+        '@type': 'Question',
+        name: f.question,
+        acceptedAnswer: { '@type': 'Answer', text: f.answer },
+      })),
+    });
+  }
+
+  return { '@context': 'https://schema.org', '@graph': graph };
 }

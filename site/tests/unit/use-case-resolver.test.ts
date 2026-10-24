@@ -3,9 +3,11 @@ import {
   resolveUseCasePageTemplates,
   assertCuratedSharesResolve,
   useCasePageHasGrid,
+  relatedUseCasesForPage,
+  RELATED_SLUG_BUDGET,
   type FilterableTemplate,
 } from '../../src/lib/workflow-pages/use-case-resolver';
-import type { SeoPageDef } from '../../src/lib/workflow-pages/use-cases';
+import { SEO_PAGES, type SeoPageDef } from '../../src/lib/workflow-pages/use-cases';
 
 function tpl(shareId: string, tags: string[], usage = 100): FilterableTemplate {
   return { shareId, tags, models: [], usage };
@@ -219,5 +221,84 @@ describe('useCasePageHasGrid', () => {
         snapshotWithoutShareIds
       )
     ).toBe(false);
+  });
+});
+
+describe('relatedUseCasesForPage', () => {
+  const allPages = [
+    page({ slug: 'a' }),
+    page({ slug: 'b' }),
+    page({ slug: 'c' }),
+    page({ slug: 'd' }),
+    page({ slug: 'e' }),
+    page({ slug: 'f' }),
+  ];
+  const routedSlugs = allPages.map((p) => p.slug);
+
+  it('falls back to the automatic file-order fill when relatedSlugs is unset (no regression for existing pages)', () => {
+    const out = relatedUseCasesForPage(page({ slug: 'c' }), allPages, routedSlugs);
+    expect(out.map((p) => p.slug)).toEqual(['a', 'b', 'd', 'e', 'f']);
+  });
+
+  it('puts relatedSlugs first, in the order given, ahead of the automatic fill', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['e', 'b'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'b', 'a', 'd', 'f']);
+  });
+
+  it('still fills remaining slots automatically once manual picks are exhausted', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['f'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs, 3);
+    expect(out.map((p) => p.slug)).toEqual(['f', 'a', 'b']);
+  });
+
+  it('drops a manual slug that is not routed, instead of showing a dead page', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['unrouted', 'e'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'a', 'b', 'd', 'f']);
+  });
+
+  it('never includes the page itself, even if self-referenced in relatedSlugs', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['c', 'e'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'a', 'b', 'd', 'f']);
+  });
+
+  it('renders a slug repeated in relatedSlugs once, keeping its first position', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['e', 'b', 'e'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'b', 'a', 'd', 'f']);
+  });
+
+  it('does not let a repeated slug burn a slot the automatic fill could have used', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['e', 'e'] });
+    const out = relatedUseCasesForPage(def, allPages, routedSlugs, 3);
+    expect(out.map((p) => p.slug)).toEqual(['e', 'a', 'b']);
+  });
+
+  it('skips a routed slug that has no page definition, rather than emitting a hole', () => {
+    const def = page({ slug: 'c', relatedSlugs: ['ghost'] });
+    const out = relatedUseCasesForPage(def, allPages, [...routedSlugs, 'ghost']);
+    expect(out.map((p) => p.slug)).toEqual(['a', 'b', 'd', 'e', 'f']);
+    expect(out.every(Boolean)).toBe(true);
+  });
+});
+
+/**
+ * `relatedSlugs` beyond the budget do not error, they silently never render: the
+ * page puts model cards first and truncates the rail, so the extras fall off the
+ * end. Assert the budget here so adding one fails loudly in CI rather than
+ * disappearing from a page nobody re-counts.
+ */
+describe('relatedSlugs budget', () => {
+  it('no page declares more relatedSlugs than the rail can show', () => {
+    const overBudget = SEO_PAGES.filter(
+      (page) => (page.relatedSlugs?.length ?? 0) > RELATED_SLUG_BUDGET
+    ).map((page) => `${page.slug} declares ${page.relatedSlugs?.length}`);
+    expect(overBudget).toEqual([]);
+  });
+
+  it('keeps a budget worth asserting', () => {
+    expect(RELATED_SLUG_BUDGET).toBeGreaterThan(0);
   });
 });

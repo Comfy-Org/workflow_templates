@@ -26,6 +26,7 @@ import { SUPPORTED_HUB_LOCALES } from '../../src/lib/i18n/locales';
 import type { Locale, WorkflowContent } from '../../src/lib/i18n/schema';
 import { collectViolations, type Violation } from './validate-translations';
 import { loadReviewState, reviewViolations } from './review-translations';
+import { enforceableOverrides, type GlossaryOverrides } from './glossary-overrides.cjs';
 
 const CONTENT_DIR = path.join(process.cwd(), 'src', 'i18n', 'content');
 const GLOSSARY_DIR = path.join(process.cwd(), 'i18n', 'glossary');
@@ -182,9 +183,10 @@ function main(): void {
     const file = path.join(CONTENT_DIR, `${locale}.json`);
     const localeContent = readJson<Record<string, Partial<WorkflowContent>>>(file, {});
     if (Object.keys(localeContent).length === 0) continue;
-    const overrides = readJson<Record<string, string>>(
-      path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`),
-      {}
+    // Retractions (`null`) drop a bad harvested pair; they are not requirements,
+    // so they must never reach the deterministic check. See `GlossaryOverrides`.
+    const overrides = enforceableOverrides(
+      readJson<GlossaryOverrides>(path.join(GLOSSARY_DIR, 'overrides', `${locale}.json`), {})
     );
 
     // Quality findings from the AI reviewer prune through the same path. Absent

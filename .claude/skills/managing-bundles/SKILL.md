@@ -13,14 +13,13 @@ This skill covers managing template bundles, display categories, and ordering in
 
 Controls which Python distribution package ships each template. Located at the repo root.
 
-**Structure:** A JSON object with four keys:
+**Structure:** A JSON object whose keys are distribution bundles:
 
-- `media-api`
-- `media-image`
-- `media-video`
-- `media-other`
+- `media-api`, `media-image`, `media-video`, `media-other` (legacy, frozen)
+- `media-assets-01` (frozen asset shard)
+- `media-assets-02` (active: assign **new** templates here)
 
-Each key maps to an array of template name strings. Every template must appear in exactly one bundle. This determines which `comfyui_workflow_templates_media_*` Python package includes the template — it does **not** affect display order or categorization in the UI.
+Each key maps to an array of template name strings. Every template must appear in exactly one bundle. This determines which Python media package includes the template — it does **not** affect display order or categorization in the UI. See [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
 
 ### 2. `templates/index.json` — Display Categories & Order
 
@@ -60,6 +59,14 @@ Separate file at the repo root for subgraph blueprints. Same concept as `bundles
 3. Move it to the target bundle array (e.g., from `media-image` to `media-video`).
 4. Run `python scripts/sync/sync_bundles.py` to regenerate package manifests.
 5. Run validation (see below).
+
+### Where a new template goes (order is a ranking)
+
+Display order inside a category is a ranking, and it is earned, not requested:
+
+- A template from a brand-new or lesser-known provider starts **next to its closest peers** — never at the top of the category.
+- Leave `usage` and `searchRank` at `0` for new entries; do not hand-pick a prominent slot.
+- Only a template that performs very well earns a prominent default position, and that call is made later from real usage data (the maintainer reorders the array, e.g. through the ComfyUI Template Manager).
 
 ### Reorder templates within a category
 

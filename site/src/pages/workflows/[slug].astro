@@ -7,6 +7,7 @@
  * Data source: listWorkflowIndex(), falling back to the content collection.
  */
 import BaseLayout from '../../layouts/BaseLayout.astro';
+import { detailHeroPreload } from '../../lib/hub-media';
 import HubNavbar from '../../components/hub/HubNavbar.astro';
 import SiteFooter from '../../components/hub/SiteFooter.astro';
 import TemplateDetailPage from '../../components/template-detail/TemplateDetailPage.astro';
@@ -28,7 +29,9 @@ import {
   serializeJsonLdForScript,
   buildWorkflowBreadcrumb,
   buildSoftwareApplicationJsonLd,
+  buildWorkflowGraphJsonLd,
 } from '../../lib/structured-data';
+import { getWorkflowEntityGraph } from '../../data/workflow-entity-graphs';
 import { buildToolbarLabels } from '../../lib/toolbar';
 
 import { localizeUrl } from '../../i18n/utils';
@@ -133,6 +136,7 @@ const hreflangLocales = data.shareId
 
 const thumbnails = data.thumbnails;
 const primaryThumbnail = thumbnails[0] || null;
+const heroPreload = detailHeroPreload(thumbnails, data.mediaSubtype, data.thumbnailVariant);
 const ogImage = workflowOgUrl(
   data.title || data.name,
   primaryThumbnail ? primaryThumbnail : undefined,
@@ -161,6 +165,30 @@ const softwareAppStructuredData = buildSoftwareApplicationJsonLd({
   description: data.metaDescription || data.description,
 });
 
+// Client-approved schema replacement: templates with a curated entity graph
+// (see workflow-entity-graphs.ts) get a single linked @graph — WebSite,
+// Organization, ComfyUI, WebPage, workflow, DefinedTerm/DefinedTermSet, FAQ,
+// and breadcrumb — in place of the four separate scripts above. Every other
+// template (no curated data yet) keeps the scripts above unchanged.
+const entityGraph = getWorkflowEntityGraph(data.name);
+const workflowGraphStructuredData = entityGraph
+  ? buildWorkflowGraphJsonLd({
+      canonicalUrl,
+      title: data.title,
+      pageHeadline: title,
+      description: data.description,
+      image: primaryThumbnail || undefined,
+      datePublished: data.date,
+      inLanguage: 'en',
+      breadcrumbItems: breadcrumbStructuredData.itemListElement.map(({ name, item }) => ({
+        name,
+        item,
+      })),
+      faqItems: data.faqItems,
+      entityGraph,
+    })
+  : null;
+
 const relatedTemplates: SerializedTemplate[] = await listRelatedWorkflows(data.name);
 // Embed only the top-30 by usage for instant paint; the grid lazy-loads the full
 // catalog from grid.json (see WorkflowGrid `lazyFull`) so the page HTML stays small.
@@ -174,12 +202,18 @@ const toolbarLabels = buildToolbarLabels(locale);
   canonicalUrl={canonicalUrl}
   ogImage={ogImage}
   ogType="article"
-  structuredData={structuredData}
+  structuredData={workflowGraphStructuredData ?? structuredData}
   hreflangBasePath={`/workflows/${urlSlug}/`}
   hreflangLocales={hreflangLocales}
   theme="dark"
   hideDefaultFooter
 >
+  {
+    heroPreload && (
+      <link slot="head" rel="preload" as="image" href={heroPreload} fetchpriority="high" />
+    )
+  }
+
   <HubNavbar />
   <TemplateDetailPage template={{ data }} locale={locale}>
     {
@@ -206,7 +240,7 @@ const toolbarLabels = buildToolbarLabels(locale);
   </TemplateDetailPage>
 
   {
-    faqStructuredData && (
+    !entityGraph && faqStructuredData && (
       <script
         is:inline
         type="application/ld+json"
@@ -214,16 +248,24 @@ const toolbarLabels = buildToolbarLabels(locale);
       />
     )
   }
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(softwareAppStructuredData)}
-  />
-  <script
-    is:inline
-    type="application/ld+json"
-    set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
-  />
+  {
+    !entityGraph && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(softwareAppStructuredData)}
+      />
+    )
+  }
+  {
+    !entityGraph && (
+      <script
+        is:inline
+        type="application/ld+json"
+        set:html={serializeJsonLdForScript(breadcrumbStructuredData)}
+      />
+    )
+  }
 
   <Fragment slot="footer">
     <SiteFooter />

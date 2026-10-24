@@ -1,0 +1,306 @@
+{
+  "id": "60907284-662d-4c42-b157-1344088b88e5",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 5,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        420,
+        540
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Bria: Virtual Try-On\n\nPut a garment from a product photo onto the person. Bria keeps the face, pose and background of the person photo and refits the garment to the body, so a catalog or flat-lay shot becomes a worn look without a photoshoot. The result comes back at roughly one megapixel.\n\n## Input Asset\n\n- [bria_tryon_man.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_tryon_man.png)\n- [bria_tryon_shirt.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_tryon_shirt.png)\n\n## Parameters\n\n- `garment_images` takes 1 to 3 garments or accessories worn together, and each one replaces the matching item the person already wears. The node starts with one garment socket, and the + button on the node adds more.\n- `instruction` is optional extra direction on top of Bria's built-in one, such as `keep the shirt untucked` or `roll the sleeves up`. Left empty, the garment is simply worn as shown.\n- Two garments are combined into one layered outfit, so a top and a skirt can go in together instead of running the node twice.\n- `aspect_ratio` at `auto` keeps the framing of the person photo; a fixed ratio returns 0.6 to 1 megapixel.\n- A garment photographed on a hanger or laid flat works as well as one worn by a model.\n- This node only returns an image, so it is connected to Save Image.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "# Bria: Virtual Try-On\n\nPut a garment from a product photo onto the person. Bria keeps the face, pose and background of the person photo and refits the garment to the body, so a catalog or flat-lay shot becomes a worn look without a photoshoot. The result comes back at roughly one megapixel.\n\n## Input Asset\n\n- [bria_tryon_man.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_tryon_man.png)\n- [bria_tryon_shirt.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_tryon_shirt.png)\n\n## Parameters\n\n- `garment_images` takes 1 to 3 garments or accessories worn together, and each one replaces the matching item the person already wears. The node starts with one garment socket, and the + button on the node adds more.\n- `instruction` is optional extra direction on top of Bria's built-in one, such as `keep the shirt untucked` or `roll the sleeves up`. Left empty, the garment is simply worn as shown.\n- Two garments are combined into one layered outfit, so a top and a skirt can go in together instead of running the node twice.\n- `aspect_ratio` at `auto` keeps the framing of the person photo; a fixed ratio returns 0.6 to 1 megapixel.\n- A garment photographed on a hanger or laid flat works as well as one worn by a model.\n- This node only returns an image, so it is connected to Save Image.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        500,
+        40
+      ],
+      "size": [
+        326.1653330667779,
+        181.9998904451512
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1,
+            5
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "bria_tryon_man.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "bria_tryon_man.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        502.8420711856701,
+        543.7503664230233
+      ],
+      "size": [
+        320,
+        370
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "bria_tryon_shirt.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "bria_tryon_shirt.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 4,
+      "type": "BriaVirtualTryOn",
+      "pos": [
+        874.165333066778,
+        40
+      ],
+      "size": [
+        440,
+        420
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "person_image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "garment_images.garment_image_1",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "garment_images.garment_image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BriaVirtualTryOn"
+      },
+      "widgets_values": [
+        "put the shirt on the person",
+        "auto",
+        42,
+        "fixed",
+        "false"
+      ],
+      "widgets_values_named": {
+        "instruction": "put the shirt on the person",
+        "aspect_ratio": "auto",
+        "seed": 42,
+        "control_after_generate": "fixed",
+        "moderation": "false"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "SaveImage",
+      "pos": [
+        1362.165333066778,
+        40
+      ],
+      "size": [
+        440,
+        470
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_bria_virtual_try_on"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_bria_virtual_try_on"
+      }
+    },
+    {
+      "id": 6,
+      "type": "ImageCompare",
+      "pos": [
+        1850.165333066778,
+        40
+      ],
+      "size": [
+        421.35818083267776,
+        476.0491445942677
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 5
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 4
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    }
+  ],
+  "links": [
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ],
+    [
+      1,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      1,
+      "IMAGE"
+    ],
+    [
+      4,
+      5,
+      0,
+      6,
+      1,
+      "IMAGE"
+    ],
+    [
+      5,
+      2,
+      0,
+      6,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.44076913214425156,
+      "offset": [
+        914.2634036097404,
+        634.6402318271216
+      ]
+    },
+    "frontendVersion": "1.57.1"
+  },
+  "version": 0.4
+}

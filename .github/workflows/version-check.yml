@@ -1,12 +1,12 @@
 name: Version Check and Auto-bump
 
-# This workflow automatically bumps package versions when templates change.
+# This workflow generates and commits all PR-derived template files in one commit.
 #
 # Process:
 #   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
 #   2. Validates bundles.json completeness
-#   3. Detects which packages have template changes (via git history)
-#   4. Bumps version numbers for affected packages (including core if manifest changed)
+#   3. Compares release content with the latest reachable release tag
+#   4. Bumps core/json once per release and changed active asset/blueprint packages
 #   5. Updates meta package dependencies (exact pinning)
 #   6. When the root meta version differs from the PR base branch (e.g. manual
 #      version bump on the PR, or in-job bump), runs the PyPI quota check,
@@ -25,6 +25,18 @@ on:
     types: [opened, synchronize]
     paths:
       - 'templates/**'
+      - 'input/**'
+      - 'workflow_template_input_files.json'
+      - 'scripts/sync/sync_custom_nodes.py'
+      - 'scripts/sync/sync_data.py'
+      - 'scripts/sync/sync_bundles.py'
+      - 'scripts/sync/sync_blueprints.py'
+      - 'scripts/mcp/sync_index.py'
+      - 'scripts/mcp/**'
+      - 'scripts/validate/check_input_assets.py'
+      - 'scripts/lib/index_format.py'
+      - 'scripts/lib/locale_index_files.py'
+      - 'scripts/data/i18n.json'
       - 'bundles.json'
       - 'blueprints/**'
       - 'blueprints_bundles.json'
@@ -35,6 +47,10 @@ on:
       - 'scripts/lib/version_policy.py'
       - 'scripts/ci/check_frozen_policy.py'
       - 'scripts/ci/ci_version_manager.py'
+      - '.github/workflows/version-check.yml'
+      - '.github/workflows/sync-custom-nodes.yml'
+      - '.github/workflows/sync-template-index.yml'
+      - '.github/workflows/generate-upload-json.yml'
 
 permissions:
   contents: write
@@ -51,13 +67,16 @@ jobs:
       cancel-in-progress: true
     steps:
       - name: Checkout PR
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ github.head_ref }}
           fetch-depth: 0
+          fetch-tags: true
           sparse-checkout: |
             templates/
+            input/
+            workflow_template_input_files.json
             blueprints/
             bundles.json
             blueprints_bundles.json
@@ -75,6 +94,15 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: "3.x"
+
+      - name: Install index sync dependency
+        run: python -m pip install 'jsonschema>=4,<5'
+
+      - name: Sync template-derived index fields and upload JSON
+        run: |
+          python scripts/sync/sync_custom_nodes.py --templates-dir ./templates
+          python scripts/sync/sync_data.py --templates-dir ./templates --index-only
+          python scripts/validate/check_input_assets.py --generate-upload-json
 
       - name: Sync manifests and bundles (first)
         run: |
@@ -106,6 +134,9 @@ jobs:
           echo "Pre-bump root version: $OLD_VERSION"
 
       - name: Auto-bump package versions if needed
+        env:
+          # Flush progress prints promptly in Actions logs.
+          PYTHONUNBUFFERED: "1"
         run: |
           echo "=== Analyzing template changes and bumping versions ==="
           # This runs AFTER manifest sync so it can detect core package changes
@@ -297,56 +328,20 @@ jobs:
               });
             }
 
-      - name: Commit version bumps, manifest updates, and refreshed cache/report to PR
+      - name: Commit generated files once
         env:
           PR_HEAD_REF: ${{ github.head_ref }}
         run: |
-          echo "=== Committing automated changes to PR ==="
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-
-          # Stage all potential changes from version bumps and manifest sync.
-          # The PyPI quota check writes its working cache under .github/cache/,
-          # which is git-ignored and never staged.
-          git add pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
-            packages/*/src/*/blueprints_manifest.json \
-            templates/index.mcp.json scripts/data/mcp/models_registry.json
-
-          # Commit regenerated manifests even when the root version is unchanged.
-          # Skipping that used to leave SHA256 hashes stale on template-only PRs,
-          # which then failed validate-manifests.yml / build-test.yml.
+          git add templates/index*.json workflow_template_input_files.json \
+            pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
+            packages/*/src/*/blueprints_manifest.json scripts/data/mcp/models_registry.json
           if git diff --cached --quiet; then
-            echo "✅ No package version or manifest changes needed"
+            echo "✅ Generated files are already in sync"
             exit 0
           fi
-          if git diff --cached --name-only | grep -q 'pyproject\.toml'; then
-            COMMIT_MSG="Auto-bump package versions and sync manifests for template changes"
-            echo "📝 Version bump and/or manifest changes - committing to PR branch"
-          else
-            COMMIT_MSG="Auto-sync manifests for template changes"
-            echo "📝 Manifest changes only (no version bump) - committing to PR branch"
-          fi
-
-          # Commit with retry logic in case of conflicts
-          if ! git commit -m "$COMMIT_MSG"; then
-            echo "⚠️ Commit failed, possibly due to conflicts. Retrying..."
-            if ! git pull origin "$PR_HEAD_REF" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
-            fi
-            git commit -m "$COMMIT_MSG"
-          fi
-
-          # Push with retry logic
-          if ! git push origin HEAD; then
-            echo "⚠️ Push failed, retrying after pull..."
-            if ! git pull origin "$PR_HEAD_REF" --rebase; then
-              echo "❌ Rebase failed due to conflicts. Manual intervention required."
-              git status
-              exit 1
-            fi
-            git push origin HEAD
-          fi
-
-          echo "✅ Automated changes committed to PR"
+          git commit -m "Auto-sync generated template files"
+          # Never rebase an old generator result onto a newer PR head. A newer
+          # run will regenerate from that head and commit its own result.
+          git push origin "HEAD:$PR_HEAD_REF"

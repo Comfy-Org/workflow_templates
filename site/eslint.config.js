@@ -11,6 +11,14 @@ export default tseslint.config(
     ignores: ['dist/', 'node_modules/', '.astro/', '.vercel/'],
   },
   {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+  {
     files: ['*.config.mjs', '*.config.js'],
     languageOptions: {
       globals: {

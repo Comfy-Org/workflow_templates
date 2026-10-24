@@ -1,0 +1,512 @@
+{
+  "id": "b9a4879b-6e6a-4acb-a0c0-b4f8375f608c",
+  "revision": 0,
+  "last_node_id": 19,
+  "last_link_id": 23,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "IdeogramEditApi",
+      "pos": [
+        1240,
+        630
+      ],
+      "size": [
+        400,
+        320
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.images.image_1",
+          "type": "IMAGE",
+          "link": 22
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.prompt",
+          "type": "STRING",
+          "widget": {
+            "name": "model.prompt"
+          },
+          "link": 5
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            7
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "IdeogramEditApi"
+      },
+      "widgets_values": [
+        "ideogram-4.5",
+        "",
+        "source",
+        2048,
+        2048,
+        "medium",
+        1491935687,
+        "randomize",
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "ideogram-4.5",
+        "model.prompt": "",
+        "model.size": "source",
+        "model.width": 2048,
+        "model.height": 2048,
+        "model.quality": "medium",
+        "model.seed": 1491935687,
+        "control_after_generate#1": "randomize",
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -670,
+        630
+      ],
+      "size": [
+        390,
+        720
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            21,
+            22,
+            23
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "interior_orange_sofa.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "interior_orange_sofa.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "BuildJsonPromptIdeogram",
+      "pos": [
+        310,
+        760
+      ],
+      "size": [
+        400,
+        270
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "element",
+          "type": "ARRAY",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "prompt",
+          "type": "DICT",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BuildJsonPromptIdeogram"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "none",
+        "",
+        "",
+        "",
+        []
+      ],
+      "widgets_values_named": {
+        "high_level_description": "",
+        "background": "",
+        "style": "none",
+        "aesthetics": "",
+        "lighting": "",
+        "medium": "",
+        "color_palette": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "CreateBoundingBoxes",
+      "pos": [
+        -190,
+        630
+      ],
+      "size": [
+        470,
+        720
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "background",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 21
+        },
+        {
+          "name": "bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX,ARRAY,STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "preview",
+          "type": "IMAGE",
+          "links": null
+        },
+        {
+          "name": "bboxes",
+          "type": "BOUNDING_BOX",
+          "links": null
+        },
+        {
+          "name": "elements",
+          "type": "ARRAY",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "CreateBoundingBoxes"
+      },
+      "widgets_values": [
+        896,
+        1152,
+        [
+          {
+            "x": 96,
+            "y": 768,
+            "width": 672,
+            "height": 352,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "Change the color to blue",
+              "palette": []
+            }
+          }
+        ],
+        []
+      ],
+      "widgets_values_named": {
+        "width": 896,
+        "height": 1152,
+        "editor_state": [
+          {
+            "x": 96,
+            "y": 768,
+            "width": 672,
+            "height": 352,
+            "metadata": {
+              "type": "obj",
+              "text": "",
+              "desc": "Change the color to blue",
+              "palette": []
+            }
+          }
+        ],
+        "last_incoming": []
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 5,
+      "type": "PreviewAny",
+      "pos": [
+        750,
+        760
+      ],
+      "size": [
+        430,
+        400
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            5
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 7,
+      "type": "SaveImageAdvanced",
+      "pos": [
+        1680,
+        630
+      ],
+      "size": [
+        440,
+        520
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            8
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "ideogram4.5_image_edit",
+        "png",
+        "8-bit",
+        "sRGB"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "ideogram4.5_image_edit",
+        "format": "png",
+        "format.bit_depth": "8-bit",
+        "format.input_color_space": "sRGB"
+      }
+    },
+    {
+      "id": 8,
+      "type": "ImageCompare",
+      "pos": [
+        2170,
+        630
+      ],
+      "size": [
+        540,
+        530
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 23
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 8
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 18,
+      "type": "MarkdownNote",
+      "pos": [
+        -180,
+        1590
+      ],
+      "size": [
+        470,
+        140
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "- Enable [Nodes2.0](https://docs.comfy.org/interface/nodes-2) if you can't see the editor above\n- Load an image and draw BBox captions on it, like \"remove it\", to edit the image.\n"
+      ],
+      "widgets_values_named": {
+        "text": "- Enable [Nodes2.0](https://docs.comfy.org/interface/nodes-2) if you can't see the editor above\n- Load an image and draw BBox captions on it, like \"remove it\", to edit the image.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 19,
+      "type": "MarkdownNote",
+      "pos": [
+        -1140,
+        630
+      ],
+      "size": [
+        400,
+        300
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [interior_orange_sofa.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/interior_orange_sofa.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [interior_orange_sofa.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/interior_orange_sofa.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      4,
+      3,
+      0,
+      5,
+      0,
+      "DICT"
+    ],
+    [
+      8,
+      7,
+      0,
+      8,
+      1,
+      "IMAGE"
+    ],
+    [
+      21,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      23,
+      2,
+      0,
+      8,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      2,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      5,
+      5,
+      0,
+      1,
+      2,
+      "STRING"
+    ],
+    [
+      1,
+      4,
+      2,
+      3,
+      0,
+      "ARRAY"
+    ],
+    [
+      7,
+      1,
+      0,
+      7,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.40362477370860816,
+      "offset": [
+        1592.986677203126,
+        169.3807937103608
+      ]
+    },
+    "frontendVersion": "1.56.0"
+  },
+  "version": 0.4
+}

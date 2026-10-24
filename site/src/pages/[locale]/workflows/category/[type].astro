@@ -58,7 +58,9 @@ const typedLocale = locale as Locale;
 const mediaType = type as MediaType;
 
 const categoryName = t(categoryTranslationKeys[mediaType], typedLocale);
-const title = `${categoryName} Workflows - ${t('meta.title', typedLocale)}`;
+const title = t('category.metaTitle', typedLocale)
+  .replace('{category}', categoryName)
+  .replace('{site}', t('meta.title', typedLocale));
 const description = t('meta.description', typedLocale);
 
 // Cards come from the hub index, which is English only. Resolve the same text
@@ -76,6 +78,8 @@ if (templates.length === 0) {
     statusText: 'Not Found',
   });
 }
+
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
 
 const basePath = categoryPath(mediaType);
 // Gated until this locale completes native review — see listing-indexing.

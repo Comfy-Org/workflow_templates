@@ -34,21 +34,25 @@
         }
       ],
       "properties": {
+        "Node name for S&R": "LoadImage",
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "LoadImage"
+        "secondTabWidth": 65
       },
       "widgets_values": [
         "modern_living_room.png",
         "image"
-      ]
+      ],
+      "widgets_values_named": {
+        "image": "modern_living_room.png",
+        "upload": "image"
+      }
     },
     {
       "id": 50,
@@ -58,8 +62,8 @@
         5000
       ],
       "size": [
-        490,
-        1423.609375
+        510,
+        840
       ],
       "flags": {},
       "order": 1,
@@ -70,6 +74,9 @@
       "widgets_values": [
         "## moge_image_to_mesh\n\n**Single perspective photo -> textured GLB**\n\n`Load Image` -> `Geometry Estimation (MoGe)` -> `Save GLB`\n\n### Main flow\n- Runs MoGe inference on one source image\n- Converts the inferred geometry into a mesh\n- Exposes OpenGL and DirectX normal previews\n\n### Inputs\n| Control | Meaning |\n|--------|--------|\n| `source_image` | Input RGB image |\n| `inference_resolution` | MoGe detail level `0-9`; higher is slower but keeps more detail |\n| `inference_batch_size` | Passed to `MoGeInference` batch size; use `1` for a single still image |\n| `mesh_frame_index` | Batch/frame index used when converting geometry to mesh; use `0` for one image |\n| `mesh_decimation` | Mesh decimation step; `1` keeps the densest mesh |\n| `mesh_gap_threshold` | Removes faces across large depth discontinuities; `0` disables the filter |\n| `mesh_texture` | Bakes source image colors into the exported GLB |\n| `moge_model` | Model checkpoint loaded by `LoadMoGeModel`; see `Model Link` |\n| `auto_resize_input` | Enables pre-inference resize logic for large images |\n\n### Auto-resize logic\nWhen `auto_resize_input` is enabled, the subgraph checks image width first:\n- width `> 2048`: resize by longer edge to `2048` before inference\n- width `<= 2048`: keep the original image\n\nWhen `auto_resize_input` is disabled, the original image always goes into inference.\n\n### Outputs\n- `mesh`: mesh output for `Save GLB`\n- `normal_opengl`: preview rendered through `MoGeRender`\n- `normal_directx`: preview rendered through `MoGeRender`"
       ],
+      "widgets_values_named": {
+        "text": "## moge_image_to_mesh\n\n**Single perspective photo -> textured GLB**\n\n`Load Image` -> `Geometry Estimation (MoGe)` -> `Save GLB`\n\n### Main flow\n- Runs MoGe inference on one source image\n- Converts the inferred geometry into a mesh\n- Exposes OpenGL and DirectX normal previews\n\n### Inputs\n| Control | Meaning |\n|--------|--------|\n| `source_image` | Input RGB image |\n| `inference_resolution` | MoGe detail level `0-9`; higher is slower but keeps more detail |\n| `inference_batch_size` | Passed to `MoGeInference` batch size; use `1` for a single still image |\n| `mesh_frame_index` | Batch/frame index used when converting geometry to mesh; use `0` for one image |\n| `mesh_decimation` | Mesh decimation step; `1` keeps the densest mesh |\n| `mesh_gap_threshold` | Removes faces across large depth discontinuities; `0` disables the filter |\n| `mesh_texture` | Bakes source image colors into the exported GLB |\n| `moge_model` | Model checkpoint loaded by `LoadMoGeModel`; see `Model Link` |\n| `auto_resize_input` | Enables pre-inference resize logic for large images |\n\n### Auto-resize logic\nWhen `auto_resize_input` is enabled, the subgraph checks image width first:\n- width `> 2048`: resize by longer edge to `2048` before inference\n- width `<= 2048`: keep the original image\n\nWhen `auto_resize_input` is disabled, the original image always goes into inference.\n\n### Outputs\n- `mesh`: mesh output for `Save GLB`\n- `normal_opengl`: preview rendered through `MoGeRender`\n- `normal_directx`: preview rendered through `MoGeRender`"
+      },
       "color": "#222",
       "bgcolor": "#000"
     },
@@ -94,21 +101,26 @@
           "link": 88
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "Preview Image (normal_opengl)",
       "properties": {
+        "Node name for S&R": "PreviewImage (normal_opengl)",
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "PreviewImage (normal_opengl)"
-      },
-      "widgets_values": []
+        "secondTabWidth": 65
+      }
     },
     {
       "id": 47,
@@ -131,21 +143,26 @@
           "link": 89
         }
       ],
-      "outputs": [],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
       "title": "Preview Image (normal_directx)",
       "properties": {
+        "Node name for S&R": "PreviewImage (normal_directx)",
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
         "hasSecondTab": false,
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
-        "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "PreviewImage (normal_directx)"
-      },
-      "widgets_values": []
+        "secondTabWidth": 65
+      }
     },
     {
       "id": 21,
@@ -164,12 +181,15 @@
       "inputs": [
         {
           "name": "mesh",
-          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D_PLY,FILE_3D_SPLAT,FILE_3D_SPZ,FILE_3D_KSPLAT,FILE_3D_SPLAT_ANY,FILE_3D_POINT_CLOUD_ANY,FILE_3D",
           "link": 87
         }
       ],
       "outputs": [],
       "properties": {
+        "Node name for S&R": "SaveGLB",
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
@@ -177,14 +197,31 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1",
-        "Node name for S&R": "SaveGLB",
         "Scene Config": {
           "showGrid": true,
           "backgroundColor": "#282828",
           "backgroundImage": "",
-          "backgroundRenderMode": "tiled"
+          "backgroundRenderMode": "tiled",
+          "models": [
+            {
+              "position": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "quaternion": {
+                "x": 0,
+                "y": 0,
+                "z": 0,
+                "w": 1
+              },
+              "scale": {
+                "x": 1,
+                "y": 1,
+                "z": 1
+              }
+            }
+          ]
         },
         "Camera Config": {
           "cameraType": "perspective",
@@ -205,28 +242,60 @@
           }
         },
         "Light Config": {
-          "intensity": 2.4000000000000004
+          "intensity": 2.4000000000000004,
+          "hdri": {
+            "enabled": false,
+            "hdriPath": "",
+            "showAsBackground": false,
+            "intensity": 1
+          }
         },
         "Model Config": {
           "upDirection": "original",
-          "materialMode": "original"
-        }
+          "materialMode": "original",
+          "showSkeleton": false,
+          "gizmo": {
+            "enabled": false,
+            "mode": "translate",
+            "position": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          }
+        },
+        "Last Time Model File": "3d/25b04b6945123d64f83a0806c7ace4863dd1ef395dfc0b5c62ee2af0cd44f12d.glb",
+        "Last Time Model Folder": "output"
       },
       "widgets_values": [
         "3d/ComfyUI",
         ""
-      ]
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "3d/ComfyUI",
+        "image": ""
+      }
     },
     {
       "id": 52,
       "type": "MarkdownNote",
       "pos": [
-        -5680,
+        -5670,
         5000
       ],
       "size": [
-        690,
-        1010
+        700,
+        840
       ],
       "flags": {},
       "order": 2,
@@ -236,8 +305,11 @@
       "title": "Model Link",
       "properties": {},
       "widgets_values": [
-        "## MoGe — models & downloads\n\nResearch repo: [microsoft/MoGe](https://github.com/microsoft/MoGe) (CVPR'25, monocular geometry from a single image).\n\nComfyUI weights: [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe) → `models/geometry_estimation/`\n\n### Which checkpoint to use\n\n| File | Version | Use when |\n|------|---------|----------|\n| `moge_1_vitl_fp16` | **MoGe-1** | Point map + depth + mask; relative scale. Lighter baseline. |\n| `moge_2_vitl_normal_fp16` | **MoGe-2** | **Recommended.** Metric-scale depth/points, sharper detail, **normal maps** (needed for normal previews & better mesh edges). |\n\nMoGe-2 adds metric scale and normals in one forward pass; MoGe-1 does not predict normals (normals in previews may be derived from points).\n\n### Downloads\n- [moge_1_vitl_fp16.safetensors](https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_1_vitl_fp16.safetensors)\n- [moge_2_vitl_normal_fp16.safetensors](https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_2_vitl_normal_fp16.safetensors)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   └── 📂 geometry_estimation/\n│       ├── moge_2_vitl_normal_fp16.safetensors\n│       └── moge_1_vitl_fp16.safetensors\n```\n\nGuide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n### Issues\nUpdate ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)), then install models.\n- Runtime: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n"
+        "## MoGe — models & downloads\n\nResearch repo: [microsoft/MoGe](https://github.com/microsoft/MoGe) (CVPR'25, monocular geometry from a single image).\n\nComfyUI weights: [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe) → `models/geometry_estimation/`\n\n### Which checkpoint to use\n\n| File | Version | Use when |\n|------|---------|----------|\n| `moge_1_vitl_fp16` | **MoGe-1** | Point map + depth + mask; relative scale. Lighter baseline. |\n| `moge_2_vitl_normal_fp16` | **MoGe-2** | **Recommended.** Metric-scale depth/points, sharper detail, **normal maps** (needed for normal previews & better mesh edges). |\n\nMoGe-2 adds metric scale and normals in one forward pass; MoGe-1 does not predict normals (normals in previews may be derived from points).\n\n### Downloads\n- [moge_1_vitl_fp16.safetensors](https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_1_vitl_fp16.safetensors) (599.3 MB)\n- [moge_2_vitl_normal_fp16.safetensors](https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_2_vitl_normal_fp16.safetensors) (631.2 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   └── 📂 geometry_estimation/\n│       ├── moge_2_vitl_normal_fp16.safetensors\n│       └── moge_1_vitl_fp16.safetensors\n```\n\nGuide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n### Issues\nUpdate ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)), then install models.\n- Runtime: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n"
       ],
+      "widgets_values_named": {
+        "text": "## MoGe — models & downloads\n\nResearch repo: [microsoft/MoGe](https://github.com/microsoft/MoGe) (CVPR'25, monocular geometry from a single image).\n\nComfyUI weights: [Comfy-Org/MoGe](https://huggingface.co/Comfy-Org/MoGe) → `models/geometry_estimation/`\n\n### Which checkpoint to use\n\n| File | Version | Use when |\n|------|---------|----------|\n| `moge_1_vitl_fp16` | **MoGe-1** | Point map + depth + mask; relative scale. Lighter baseline. |\n| `moge_2_vitl_normal_fp16` | **MoGe-2** | **Recommended.** Metric-scale depth/points, sharper detail, **normal maps** (needed for normal previews & better mesh edges). |\n\nMoGe-2 adds metric scale and normals in one forward pass; MoGe-1 does not predict normals (normals in previews may be derived from points).\n\n### Downloads\n- [moge_1_vitl_fp16.safetensors](https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_1_vitl_fp16.safetensors) (599.3 MB)\n- [moge_2_vitl_normal_fp16.safetensors](https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_2_vitl_normal_fp16.safetensors) (631.2 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   └── 📂 geometry_estimation/\n│       ├── moge_2_vitl_normal_fp16.safetensors\n│       └── moge_1_vitl_fp16.safetensors\n```\n\nGuide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n### Issues\nUpdate ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)), then install models.\n- Runtime: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n"
+      },
       "color": "#222",
       "bgcolor": "#000"
     },
@@ -257,11 +329,6 @@
       "mode": 0,
       "inputs": [
         {
-          "name": "source_image",
-          "type": "IMAGE",
-          "link": 84
-        },
-        {
           "label": "auto_resize_input",
           "name": "switch",
           "type": "BOOLEAN",
@@ -269,6 +336,11 @@
             "name": "switch"
           },
           "link": null
+        },
+        {
+          "name": "source_image",
+          "type": "IMAGE",
+          "link": 84
         }
       ],
       "outputs": [
@@ -295,40 +367,8 @@
         }
       ],
       "properties": {
-        "proxyWidgets": [
-          [
-            "55",
-            "resolution_level"
-          ],
-          [
-            "55",
-            "batch_size"
-          ],
-          [
-            "54",
-            "batch_index"
-          ],
-          [
-            "54",
-            "decimation"
-          ],
-          [
-            "54",
-            "discontinuity_threshold"
-          ],
-          [
-            "54",
-            "texture"
-          ],
-          [
-            "58",
-            "model_name"
-          ],
-          [
-            "66",
-            "switch"
-          ]
-        ],
+        "cnr_id": "comfy-core",
+        "ver": "0.21.1",
         "enableTabs": false,
         "tabWidth": 65,
         "tabXOffset": 10,
@@ -336,21 +376,31 @@
         "secondTabText": "Send Back",
         "secondTabOffset": 80,
         "secondTabWidth": 65,
-        "cnr_id": "comfy-core",
-        "ver": "0.21.1"
+        "previewExposures": []
       },
-      "widgets_values": []
+      "widgets_values": [
+        9,
+        4,
+        0,
+        1,
+        0.04,
+        true,
+        true,
+        "moge_2_vitl_normal_fp16.safetensors"
+      ],
+      "widgets_values_named": {
+        "inference_resolution": 9,
+        "inference_batch_size": 4,
+        "mesh_frame_index": 0,
+        "mesh_decimation": 1,
+        "mesh_gap_threshold": 0.04,
+        "mesh_texture": true,
+        "switch": true,
+        "moge_model": "moge_2_vitl_normal_fp16.safetensors"
+      }
     }
   ],
   "links": [
-    [
-      84,
-      9,
-      0,
-      67,
-      0,
-      "IMAGE"
-    ],
     [
       87,
       67,
@@ -374,6 +424,14 @@
       47,
       0,
       "IMAGE"
+    ],
+    [
+      84,
+      9,
+      0,
+      67,
+      1,
+      "IMAGE"
     ]
   ],
   "groups": [],
@@ -394,8 +452,8 @@
         "inputNode": {
           "id": -10,
           "bounding": [
-            -5130,
-            5320,
+            -5270,
+            5170,
             167.337890625,
             228
           ]
@@ -411,22 +469,6 @@
         },
         "inputs": [
           {
-            "id": "cc8ce79d-ba20-4a25-a51c-c2afcd35e520",
-            "name": "source_image",
-            "type": "IMAGE",
-            "linkIds": [
-              48,
-              55,
-              56,
-              82
-            ],
-            "localized_name": "source_image",
-            "pos": [
-              -4986.662109375,
-              5344
-            ]
-          },
-          {
             "id": "06eefa21-8e60-49f3-9a34-35b081f4ae52",
             "name": "inference_resolution",
             "type": "INT",
@@ -435,8 +477,8 @@
             ],
             "localized_name": "inference_resolution",
             "pos": [
-              -4986.662109375,
-              5364
+              -5126.662109375,
+              5214
             ]
           },
           {
@@ -448,8 +490,8 @@
             ],
             "localized_name": "inference_batch_size",
             "pos": [
-              -4986.662109375,
-              5384
+              -5126.662109375,
+              5234
             ]
           },
           {
@@ -461,8 +503,8 @@
             ],
             "localized_name": "mesh_frame_index",
             "pos": [
-              -4986.662109375,
-              5404
+              -5126.662109375,
+              5254
             ]
           },
           {
@@ -474,8 +516,8 @@
             ],
             "localized_name": "mesh_decimation",
             "pos": [
-              -4986.662109375,
-              5424
+              -5126.662109375,
+              5274
             ]
           },
           {
@@ -487,8 +529,8 @@
             ],
             "localized_name": "mesh_gap_threshold",
             "pos": [
-              -4986.662109375,
-              5444
+              -5126.662109375,
+              5294
             ]
           },
           {
@@ -500,21 +542,8 @@
             ],
             "localized_name": "mesh_texture",
             "pos": [
-              -4986.662109375,
-              5464
-            ]
-          },
-          {
-            "id": "65694805-186e-4181-a721-df8b5af49d31",
-            "name": "moge_model",
-            "type": "COMBO",
-            "linkIds": [
-              79
-            ],
-            "localized_name": "moge_model",
-            "pos": [
-              -4986.662109375,
-              5484
+              -5126.662109375,
+              5314
             ]
           },
           {
@@ -526,8 +555,37 @@
             ],
             "label": "auto_resize_input",
             "pos": [
-              -4986.662109375,
-              5504
+              -5126.662109375,
+              5354
+            ]
+          },
+          {
+            "id": "65694805-186e-4181-a721-df8b5af49d31",
+            "name": "moge_model",
+            "type": "COMBO",
+            "linkIds": [
+              79
+            ],
+            "localized_name": "moge_model",
+            "pos": [
+              -5126.662109375,
+              5334
+            ]
+          },
+          {
+            "id": "cc8ce79d-ba20-4a25-a51c-c2afcd35e520",
+            "name": "source_image",
+            "type": "IMAGE",
+            "linkIds": [
+              48,
+              55,
+              56,
+              82
+            ],
+            "localized_name": "source_image",
+            "pos": [
+              -5126.662109375,
+              5194
             ]
           }
         ],
@@ -583,7 +641,7 @@
             ],
             "size": [
               290,
-              200
+              154.00002232304328
             ],
             "flags": {},
             "order": 0,
@@ -643,23 +701,29 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "MoGePointMapToMesh",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGePointMapToMesh"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               0,
               1,
               0.04,
               true
-            ]
+            ],
+            "widgets_values_named": {
+              "batch_index": 0,
+              "decimation": 1,
+              "discontinuity_threshold": 0.04,
+              "texture": true
+            }
           },
           {
             "id": 55,
@@ -670,7 +734,7 @@
             ],
             "size": [
               270,
-              230
+              149.999946076193
             ],
             "flags": {},
             "order": 1,
@@ -720,24 +784,33 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "MoGeInference",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGeInference"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               9,
               0,
               4,
               true,
-              true
-            ]
+              true,
+              3
+            ],
+            "widgets_values_named": {
+              "resolution_level": 9,
+              "fov_x_degrees": 0,
+              "batch_size": 4,
+              "force_projection": true,
+              "apply_mask": true,
+              "refine_steps": 3
+            }
           },
           {
             "id": 58,
@@ -775,27 +848,30 @@
               }
             ],
             "properties": {
-              "enableTabs": false,
-              "tabWidth": 65,
-              "tabXOffset": 10,
-              "hasSecondTab": false,
-              "secondTabText": "Send Back",
-              "secondTabOffset": 80,
-              "secondTabWidth": 65,
+              "Node name for S&R": "LoadMoGeModel",
               "cnr_id": "comfy-core",
               "ver": "0.21.1",
-              "Node name for S&R": "LoadMoGeModel",
               "models": [
                 {
                   "name": "moge_2_vitl_normal_fp16.safetensors",
                   "url": "https://huggingface.co/Comfy-Org/MoGe/resolve/main/geometry_estimation/moge_2_vitl_normal_fp16.safetensors",
                   "directory": "geometry_estimation"
                 }
-              ]
+              ],
+              "enableTabs": false,
+              "tabWidth": 65,
+              "tabXOffset": 10,
+              "hasSecondTab": false,
+              "secondTabText": "Send Back",
+              "secondTabOffset": 80,
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "moge_2_vitl_normal_fp16.safetensors"
-            ]
+            ],
+            "widgets_values_named": {
+              "model_name": "moge_2_vitl_normal_fp16.safetensors"
+            }
           },
           {
             "id": 59,
@@ -814,14 +890,14 @@
             "inputs": [
               {
                 "label": "a",
-                "localized_name": "values.a",
+                "localized_name": "a",
                 "name": "values.a",
                 "type": "FLOAT,INT,BOOLEAN",
                 "link": 49
               },
               {
                 "label": "b",
-                "localized_name": "values.b",
+                "localized_name": "b",
                 "name": "values.b",
                 "shape": 7,
                 "type": "FLOAT,INT,BOOLEAN",
@@ -851,20 +927,23 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ComfyMathExpression",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "ComfyMathExpression"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "a > 2048"
-            ]
+            ],
+            "widgets_values_named": {
+              "expression": "a > 2048"
+            }
           },
           {
             "id": 60,
@@ -911,22 +990,21 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "GetImageSize",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "GetImageSize"
-            },
-            "widgets_values": []
+              "secondTabWidth": 65
+            }
           },
           {
             "id": 61,
-            "type": "ResizeImagesByLongerEdge",
+            "type": "ImageScaleToMaxDimension",
             "pos": [
               -4650,
               5210
@@ -940,16 +1018,16 @@
             "mode": 0,
             "inputs": [
               {
-                "localized_name": "images",
-                "name": "images",
+                "localized_name": "image",
+                "name": "image",
                 "type": "IMAGE",
                 "link": 55
               }
             ],
             "outputs": [
               {
-                "localized_name": "images",
-                "name": "images",
+                "localized_name": "IMAGE",
+                "name": "IMAGE",
                 "type": "IMAGE",
                 "links": [
                   54
@@ -957,20 +1035,24 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ImageScaleToMaxDimension",
+              "cnr_id": "comfy-core",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "ResizeImagesByLongerEdge"
+              "secondTabWidth": 65
             },
             "widgets_values": [
+              "lanczos",
               2048
-            ]
+            ],
+            "widgets_values_named": {
+              "upscale_method": "lanczos",
+              "largest_size": 2048
+            }
           },
           {
             "id": 62,
@@ -990,12 +1072,14 @@
               {
                 "localized_name": "on_false",
                 "name": "on_false",
+                "shape": 7,
                 "type": "IMAGE",
                 "link": 56
               },
               {
                 "localized_name": "on_true",
                 "name": "on_true",
+                "shape": 7,
                 "type": "IMAGE",
                 "link": 54
               },
@@ -1020,20 +1104,23 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "ComfySwitchNode"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               false
-            ]
+            ],
+            "widgets_values_named": {
+              "switch": false
+            }
           },
           {
             "id": 63,
@@ -1068,20 +1155,23 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "MoGeRender",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGeRender"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "normal_opengl"
-            ]
+            ],
+            "widgets_values_named": {
+              "output": "normal_opengl"
+            }
           },
           {
             "id": 64,
@@ -1116,20 +1206,23 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "MoGeRender",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "MoGeRender"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               "normal_directx"
-            ]
+            ],
+            "widgets_values_named": {
+              "output": "normal_directx"
+            }
           },
           {
             "id": 66,
@@ -1149,12 +1242,14 @@
               {
                 "localized_name": "on_false",
                 "name": "on_false",
+                "shape": 7,
                 "type": "IMAGE",
                 "link": 82
               },
               {
                 "localized_name": "on_true",
                 "name": "on_true",
+                "shape": 7,
                 "type": "IMAGE",
                 "link": 80
               },
@@ -1179,20 +1274,23 @@
               }
             ],
             "properties": {
+              "Node name for S&R": "ComfySwitchNode",
+              "cnr_id": "comfy-core",
+              "ver": "0.21.1",
               "enableTabs": false,
               "tabWidth": 65,
               "tabXOffset": 10,
               "hasSecondTab": false,
               "secondTabText": "Send Back",
               "secondTabOffset": 80,
-              "secondTabWidth": 65,
-              "cnr_id": "comfy-core",
-              "ver": "0.21.1",
-              "Node name for S&R": "ComfySwitchNode"
+              "secondTabWidth": 65
             },
             "widgets_values": [
               true
-            ]
+            ],
+            "widgets_values_named": {
+              "switch": true
+            }
           }
         ],
         "groups": [
@@ -1227,14 +1325,6 @@
             "type": "MOGE_MODEL"
           },
           {
-            "id": 49,
-            "origin_id": 60,
-            "origin_slot": 0,
-            "target_id": 59,
-            "target_slot": 0,
-            "type": "INT"
-          },
-          {
             "id": 54,
             "origin_id": 61,
             "origin_slot": 0,
@@ -1267,30 +1357,6 @@
             "type": "MOGE_GEOMETRY"
           },
           {
-            "id": 48,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 60,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
-          {
-            "id": 55,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 61,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
-          {
-            "id": 56,
-            "origin_id": -10,
-            "origin_slot": 0,
-            "target_id": 62,
-            "target_slot": 0,
-            "type": "IMAGE"
-          },
-          {
             "id": 34,
             "origin_id": 54,
             "origin_slot": 0,
@@ -1315,62 +1381,6 @@
             "type": "IMAGE"
           },
           {
-            "id": 73,
-            "origin_id": -10,
-            "origin_slot": 1,
-            "target_id": 55,
-            "target_slot": 2,
-            "type": "INT"
-          },
-          {
-            "id": 74,
-            "origin_id": -10,
-            "origin_slot": 2,
-            "target_id": 55,
-            "target_slot": 3,
-            "type": "INT"
-          },
-          {
-            "id": 75,
-            "origin_id": -10,
-            "origin_slot": 3,
-            "target_id": 54,
-            "target_slot": 1,
-            "type": "INT"
-          },
-          {
-            "id": 76,
-            "origin_id": -10,
-            "origin_slot": 4,
-            "target_id": 54,
-            "target_slot": 2,
-            "type": "INT"
-          },
-          {
-            "id": 77,
-            "origin_id": -10,
-            "origin_slot": 5,
-            "target_id": 54,
-            "target_slot": 3,
-            "type": "FLOAT"
-          },
-          {
-            "id": 78,
-            "origin_id": -10,
-            "origin_slot": 6,
-            "target_id": 54,
-            "target_slot": 4,
-            "type": "BOOLEAN"
-          },
-          {
-            "id": 79,
-            "origin_id": -10,
-            "origin_slot": 7,
-            "target_id": 58,
-            "target_slot": 0,
-            "type": "COMBO"
-          },
-          {
             "id": 80,
             "origin_id": 62,
             "origin_slot": 0,
@@ -1387,20 +1397,108 @@
             "type": "IMAGE"
           },
           {
-            "id": 82,
+            "id": 49,
+            "origin_id": 60,
+            "origin_slot": 0,
+            "target_id": 59,
+            "target_slot": 0,
+            "type": "INT"
+          },
+          {
+            "id": 73,
             "origin_id": -10,
             "origin_slot": 0,
-            "target_id": 66,
-            "target_slot": 0,
-            "type": "IMAGE"
+            "target_id": 55,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 74,
+            "origin_id": -10,
+            "origin_slot": 1,
+            "target_id": 55,
+            "target_slot": 3,
+            "type": "INT"
+          },
+          {
+            "id": 75,
+            "origin_id": -10,
+            "origin_slot": 2,
+            "target_id": 54,
+            "target_slot": 1,
+            "type": "INT"
+          },
+          {
+            "id": 76,
+            "origin_id": -10,
+            "origin_slot": 3,
+            "target_id": 54,
+            "target_slot": 2,
+            "type": "INT"
+          },
+          {
+            "id": 77,
+            "origin_id": -10,
+            "origin_slot": 4,
+            "target_id": 54,
+            "target_slot": 3,
+            "type": "FLOAT"
+          },
+          {
+            "id": 78,
+            "origin_id": -10,
+            "origin_slot": 5,
+            "target_id": 54,
+            "target_slot": 4,
+            "type": "BOOLEAN"
           },
           {
             "id": 83,
             "origin_id": -10,
-            "origin_slot": 8,
+            "origin_slot": 6,
             "target_id": 66,
             "target_slot": 2,
             "type": "BOOLEAN"
+          },
+          {
+            "id": 79,
+            "origin_id": -10,
+            "origin_slot": 7,
+            "target_id": 58,
+            "target_slot": 0,
+            "type": "COMBO"
+          },
+          {
+            "id": 48,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 60,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 55,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 61,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 56,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 62,
+            "target_slot": 0,
+            "type": "IMAGE"
+          },
+          {
+            "id": 82,
+            "origin_id": -10,
+            "origin_slot": 8,
+            "target_id": 66,
+            "target_slot": 0,
+            "type": "IMAGE"
           }
         ],
         "extra": {}
@@ -1410,13 +1508,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.40164264177219744,
+      "scale": 0.3319360675803287,
       "offset": [
-        6097.938922222344,
-        -4238.718995644318
+        7136.135581279705,
+        -3763.724124178821
       ]
     },
-    "frontendVersion": "1.43.18",
+    "frontendVersion": "1.56.3",
     "VHS_latentpreview": false,
     "VHS_latentpreviewrate": 0,
     "VHS_MetadataImage": true,

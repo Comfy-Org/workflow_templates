@@ -1,0 +1,242 @@
+{
+  "id": "5b4ffc84-79bf-4ead-840c-689638e237ab",
+  "revision": 0,
+  "last_node_id": 6,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 6,
+      "type": "MarkdownNote",
+      "pos": [
+        -1040,
+        -420
+      ],
+      "size": [
+        520,
+        620
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## VEED Fabric 1.0: Talking Photo — Workflow Guide\n\n## Input Assets\n- [black_fashion_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/black_fashion_portrait.png)\n- [audio_see_beyond_the_light.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/audio_see_beyond_the_light.mp3)\n\n## How to Use\n1. Load a photo with one clear, front-facing face.\n2. Load the speech: it sets lip movement and clip length.\n3. Pick 720p (default) or 480p.\n\n## Limits\n- Audio up to 300 seconds; output length equals the audio.\n- 480p is 864x480 at 16:9; 720p is 1312x736.\n- One speaker per run; the clearest front-facing face speaks.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## VEED Fabric 1.0: Talking Photo — Workflow Guide\n\n## Input Assets\n- [black_fashion_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/black_fashion_portrait.png)\n- [audio_see_beyond_the_light.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/audio_see_beyond_the_light.mp3)\n\n## How to Use\n1. Load a photo with one clear, front-facing face.\n2. Load the speech: it sets lip movement and clip length.\n3. Pick 720p (default) or 480p.\n\n## Limits\n- Audio up to 300 seconds; output length equals the audio.\n- 480p is 864x480 at 16:9; 720p is 1312x736.\n- One speaker per run; the clearest front-facing face speaks.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000",
+      "title": "Note: Workflow Guide"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        -440,
+        -420
+      ],
+      "size": [
+        420,
+        470
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "black_fashion_portrait.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "black_fashion_portrait.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 5,
+      "type": "LoadAudio",
+      "pos": [
+        -440,
+        110
+      ],
+      "size": [
+        420,
+        170
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "audio_see_beyond_the_light.mp3",
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "audio_see_beyond_the_light.mp3",
+        "upload": ""
+      }
+    },
+    {
+      "id": 1,
+      "type": "VeedFabricNode",
+      "pos": [
+        60,
+        -420
+      ],
+      "size": [
+        360,
+        260
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "model.audio",
+          "type": "AUDIO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VeedFabricNode"
+      },
+      "widgets_values": [
+        "fabric-1.0",
+        "720p"
+      ],
+      "widgets_values_named": {
+        "model": "fabric-1.0",
+        "model.resolution": "720p"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        500,
+        -420
+      ],
+      "size": [
+        560,
+        540
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/VEED_Fabric_1.0",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/VEED_Fabric_1.0",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      1,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      5,
+      0,
+      1,
+      1,
+      "AUDIO"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.72,
+      "offset": [
+        820,
+        402
+      ]
+    },
+    "frontendVersion": "1.58.0"
+  },
+  "version": 0.4
+}

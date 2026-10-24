@@ -33,7 +33,7 @@ jobs:
       pr-number: ${{ steps.pr.outputs.number }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           sparse-checkout: |
             pyproject.toml
@@ -129,10 +129,10 @@ jobs:
       new-version: ${{ steps.check.outputs.version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0  # Full history needed for tags and version comparison
+          fetch-depth: 2  # HEAD and HEAD~1 for version comparison
           sparse-checkout: |
             pyproject.toml
             packages/*/pyproject.toml
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 2
           sparse-checkout: |
@@ -208,19 +208,19 @@ jobs:
       issues: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           token: ${{ secrets.PAT_TOKEN }}
-          fetch-depth: 0  # Full history needed for tags
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install Node dependencies
-        run: npm ci
+          # HEAD~1 is enough for changed-file detection. Full history plus
+          # input/, output/, site/, archived/, and thumbnail/ is ~3.3GB and
+          # is not used by the PyPI build.
+          fetch-depth: 2
+          sparse-checkout: |
+            templates
+            packages
+            scripts
+          # Cone mode always keeps root files (pyproject.toml, bundles.json,
+          # README.md, LICENSE, MANIFEST.in, setup.py).
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -260,7 +260,7 @@ jobs:
           
           # Check for package version changes (primary trigger)
           echo -e "\n--- Checking for changed package versions ---"
-          for pkg in core json media_api media_video media_image media_other media_assets_01 blueprints; do
+          for pkg in core json media_api media_video media_image media_other media_assets_01 media_assets_02 blueprints; do
             if echo "$CHANGED_FILES" | grep -q "packages/$pkg/pyproject.toml"; then
               PACKAGES="$PACKAGES $pkg"
               echo "✓ Will publish $pkg (version file changed)"

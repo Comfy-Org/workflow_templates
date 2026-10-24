@@ -4,16 +4,20 @@ Meshy is a popular AI 3D model generator enabling text-to-3D and image-to-3D cre
 
 ## Model Variants
 
+### Meshy-7.1
+
+- Newest generation, and the only one that reaches the 4k ultra pass
+- Ultra mode and 4k ultra resolution both require Meshy-7.1 (or `latest`)
+
+### Meshy-7
+
+- Runs the ultra pass at 2k ultra resolution
+- Highest geometry detail below the 4k pass
+
 ### Meshy-6
 
-- Latest generation with highest quality geometry
-- Supports symmetry and pose control (A-pose, T-pose)
-- Configurable polygon counts up to 300,000
-
-### Meshy-5
-
-- Previous generation with art style support
-- Realistic and sculpture style options
+- Oldest generation these nodes still offer
+- Previous generation with stable geometry and texturing
 
 ## Key Features
 
@@ -42,8 +46,13 @@ Meshy is a popular AI 3D model generator enabling text-to-3D and image-to-3D cre
 ## Key Parameters
 
 - **prompt**: Text description up to 600 characters
-- **ai_model**: Model version (meshy-5, meshy-6, latest)
-- **topology**: Mesh type (quad or triangle)
+- **model**: Model version (meshy-7.1, meshy-7, meshy-6, latest)
+- **style**: Art style for text-to-3D (realistic)
+- **topology**: Mesh type (quad or triangle), available when remeshing is on
 - **target_polycount**: 100 to 300,000 polygons
-- **enable_pbr**: Generate PBR material maps
+- **should_texture**: Generate textures on the image-to-3D path, with an optional texture prompt, reference image, and PBR maps
+- **ultra_mode**: Finer surface detail from the ultra pass, on Meshy-7.1, Meshy-7 or latest
+- **ultra_resolution**: Resolution of the ultra pass (2k, or 4k on Meshy-7.1 and latest)
 - **pose_mode**: Character pose (a-pose, t-pose, or none)
+- **symmetry_mode**: Symmetry control (auto, on, or off)
+- **seed**: Seed for the run; results stay non-deterministic regardless

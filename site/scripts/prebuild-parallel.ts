@@ -22,7 +22,8 @@ async function runTask(name: string, command: string, args: string[]): Promise<T
   return new Promise((resolve) => {
     console.log(`[START] ${name}`);
 
-    const proc = spawn(command, args, {
+    // One command string: Node 24 deprecates an args array alongside `shell: true` (DEP0190).
+    const proc = spawn([command, ...args].join(' '), {
       stdio: 'inherit',
       shell: true,
     });
@@ -72,6 +73,10 @@ async function main(): Promise<void> {
   const phase2Tasks = [
     // Search index always runs — it only reads synced data, no AI needed
     runTask('build-search-index', 'pnpm', ['run', 'build:search-index']),
+    // Hub manifests always run too: the sitemap's hub-derived URLs and the
+    // model build guards come from the hub index, and astro.config.mjs must not
+    // fetch it itself.
+    runTask('build-hub-manifests', 'pnpm', ['run', 'build:hub-manifests']),
     ...(skipAI
       ? []
       : [

@@ -1,0 +1,129 @@
+name: Validate Widget Value Types
+
+# Blocks a template or blueprint whose saved widget value has the wrong JSON
+# type for its node input (e.g. "1536" stored for an INT widget — PM-2173).
+# The node baseline is the /object_info of ComfyUI master started on CPU, so V3
+# (IO.*.Input) node schemas are covered, which a static source scan cannot read.
+#
+# master moves, so a schema change upstream can surface a finding in a template
+# nobody touched. On pull requests only findings in the PR's own templates and
+# blueprints fail the job; the rest are reported as warnings. On push and manual
+# runs every finding fails.
+#
+# The job fails closed when a ComfyUI node module does not import: its node types
+# would be missing from /object_info and the check skips unknown types, so an
+# incomplete baseline would pass silently. A broken ComfyUI master therefore
+# blocks template PRs until it is fixed upstream (re-run the job then).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'templates/**'
+      - 'blueprints/**'
+      - 'scripts/validate/check_widget_types.py'
+      - 'scripts/validate/test_check_widget_types.py'
+      - 'scripts/lib/locale_index_files.py'
+      - '.github/workflows/validate-widget-types.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'templates/**'
+      - 'blueprints/**'
+      - 'scripts/validate/check_widget_types.py'
+      - 'scripts/validate/test_check_widget_types.py'
+      - 'scripts/lib/locale_index_files.py'
+      - '.github/workflows/validate-widget-types.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout workflow templates
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          sparse-checkout: |
+            templates/*.json
+            blueprints/*.json
+            scripts/validate/check_widget_types.py
+            scripts/validate/test_check_widget_types.py
+            scripts/lib/locale_index_files.py
+          sparse-checkout-cone-mode: false
+
+      - name: Checkout ComfyUI master
+        uses: actions/checkout@v7
+        with:
+          repository: Comfy-Org/ComfyUI
+          ref: master
+          path: comfyui
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: comfyui/requirements.txt
+
+      - name: Run unit tests
+        working-directory: scripts/validate
+        env:
+          PYTHONPATH: ../lib
+        run: python -m unittest test_check_widget_types -v
+
+      - name: Install ComfyUI (CPU)
+        run: |
+          python -m pip install --upgrade pip
+          pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+          grep -v '^comfyui-workflow-templates' comfyui/requirements.txt > comfyui-requirements.txt
+          pip install -r comfyui-requirements.txt
+
+      - name: Dump /object_info from ComfyUI
+        run: |
+          cd comfyui
+          python main.py --cpu --listen 127.0.0.1 --port 8188 > ../comfyui.log 2>&1 &
+          cd ..
+          for _ in $(seq 1 90); do
+            if curl -fsS -o object_info.json http://127.0.0.1:8188/object_info; then
+              break
+            fi
+            sleep 2
+          done
+          if [ ! -s object_info.json ]; then
+            echo "::error::ComfyUI did not serve /object_info"
+            tail -n 100 comfyui.log
+            exit 1
+          fi
+          python -c "import json; print(len(json.load(open('object_info.json'))), 'node types')"
+          # A node module that fails to import is silently absent from
+          # /object_info, and the check skips node types it does not know.
+          if grep -E "IMPORT FAILED|Cannot import" comfyui.log; then
+            echo "::error::Some ComfyUI node modules failed to import; the baseline is incomplete"
+            exit 1
+          fi
+
+      - name: List workflows changed by this PR
+        if: github.event_name == 'pull_request'
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          git diff --name-only --diff-filter=AMR "$BASE_SHA"...HEAD -- \
+            'templates/*.json' 'blueprints/*.json' > changed_workflows.txt
+          cat changed_workflows.txt
+
+      - name: Check widget value types
+        run: |
+          blocking=()
+          if [ -f changed_workflows.txt ]; then
+            blocking=(--blocking-files changed_workflows.txt)
+          fi
+          python scripts/validate/check_widget_types.py \
+            --object-info object_info.json "${blocking[@]}" templates blueprints

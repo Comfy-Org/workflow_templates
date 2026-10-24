@@ -13,6 +13,7 @@ BUNDLE_PACKAGE_MAP: dict[str, str] = {
     "media-image": "media_image",
     "media-other": "media_other",
     "media-assets-01": "media_assets_01",
+    "media-assets-02": "media_assets_02",
 }
 
 MEDIA_ASSET_EXTENSIONS = {
@@ -90,7 +91,7 @@ def build_frozen_bundle_inventory(
     return {
         "source": "bundles.json",
         "description": (
-            "Templates assigned to frozen legacy media bundles. "
+            "Templates assigned to frozen media bundles. "
             "Regenerate after bundles.json changes: python scripts/sync/sync_frozen_inventory.py"
         ),
         "bundles": inventory_bundles,
@@ -148,7 +149,7 @@ def get_additive_logo_bundle(policy: dict[str, Any] | None = None) -> str:
     return str(
         policy.get("additive_logo_bundle")
         or policy.get("recommended_asset_bundle")
-        or "media-assets-01"
+        or "media-assets-02"
     )
 
 

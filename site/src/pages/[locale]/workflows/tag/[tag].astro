@@ -63,12 +63,17 @@ const firstMatchingTag =
   matchingTemplates[0].tags?.find((t: string) => tagSlug(t) === tag) || tag || '';
 const tagName = tagDisplayName(firstMatchingTag);
 
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
 const basePath = `/workflows/tag/${tag}/`;
 // Gated until this locale completes native review — see listing-indexing.
 const indexing = listingIndexing(basePath, typedLocale);
 const canonicalUrl = absoluteUrl(indexing.canonicalPath);
 
-const title = `${tagName} ${SITE_NAME} - ${t('nav.templates', typedLocale)}`;
+const title = t('tag.metaTitle', typedLocale)
+  .replace('{tag}', tagName)
+  .replace('{site}', SITE_NAME)
+  .replace('{workflows}', t('nav.templates', typedLocale));
 // Localized (falls back to English until the CI locale step translates the new
 // key). These tag pages are already self-canonical, so this is a quick CTR win.
 const description = t('tag.metaDescription', typedLocale)

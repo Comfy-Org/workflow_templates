@@ -1,0 +1,296 @@
+{
+  "92": {
+    "inputs": {
+      "filename_prefix": "video/MiniMax_H3",
+      "format": "auto",
+      "format.codec": "auto",
+      "codec": "auto",
+      "video": [
+        "105:91",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "143": {
+    "inputs": {
+      "aspect_ratio": "1:1 (Square)",
+      "megapixels": 0.4,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector"
+    }
+  },
+  "105:11": {
+    "inputs": {
+      "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "105:24": {
+    "inputs": {
+      "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "105:23": {
+    "inputs": {
+      "samples": [
+        "105:14",
+        0
+      ],
+      "vae": [
+        "105:24",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "105:10": {
+    "inputs": {
+      "samples": [
+        "105:14",
+        0
+      ],
+      "vae": [
+        "105:11",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "105:17": {
+    "inputs": {
+      "sampler_name": "res_multistep"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "105:9": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 8,
+      "denoise": 1,
+      "model": [
+        "105:127",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "105:14": {
+    "inputs": {
+      "noise": [
+        "105:15",
+        0
+      ],
+      "guider": [
+        "105:16",
+        0
+      ],
+      "sampler": [
+        "105:17",
+        0
+      ],
+      "sigmas": [
+        "105:9",
+        0
+      ],
+      "latent_image": [
+        "105:104",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "105:16": {
+    "inputs": {
+      "model": [
+        "105:127",
+        0
+      ],
+      "conditioning": [
+        "105:104",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider"
+    }
+  },
+  "105:6": {
+    "inputs": {
+      "unet_name": "fastvideo_fasth3_8step_v2_pruned_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "105:13": {
+    "inputs": {
+      "clip_name": "qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "105:15": {
+    "inputs": {
+      "noise_seed": 631153434041465
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "105:91": {
+    "inputs": {
+      "fps": 24,
+      "bit_depth": "auto",
+      "color_space": "sRGB",
+      "codec": "none",
+      "images": [
+        "105:10",
+        0
+      ],
+      "audio": [
+        "105:23",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "105:104": {
+    "inputs": {
+      "prompt": "integrated_multimodal_description: [Shot 1] Cinematic, a wide-angle shot filmed from an extreme low-angle, worm's-eye perspective. In the extreme foreground of the square frame, a massive tan suede work boot features a thick, chunky brown rubber sole and tightly laced brown shoelaces, rendered slightly out of focus. Above the boot, a young adult man wears loose-fitting, olive green cargo pants, an unbuttoned dark navy blue heavy-cotton overshirt, and a tan baseball cap. He has a serious expression, looking directly down into the lens. Behind him, a modern skyscraper made of reflective glass panels stretches into an overcast, pale grey sky. Large, bold, white typography reading \"STREETWEAR\" bursts into the frame, positioned seamlessly between the man's back and the skyscraper, creating a three-dimensional interlaced title sequence effect. The man lowers his raised foot, and the massive tan boot descends rapidly, striking the pavement. He then raises both hands to adjust his cap's brim. The camera pushes in slowly, intensifying the visual scale of the figure and the floating text. [Shot 2] At 00:02.100, the camera cuts to a medium shot from a slightly elevated low-angle vantage point. The man from Shot 1 now stands fully planted on the ground against the sheer glass facade of the skyscraper. Fast-paced, neon-yellow text reading \"VOL. 1\" flashes rapidly in the extreme foreground, momentarily overlapping his navy jacket. He drops his hands and executes a sharp, forceful turn of his shoulders to the right, striking a dynamic, angular pose. His jacket flares out, revealing a neutral-toned t-shirt underneath. His gaze shifts away from the camera, looking off into the distance. The camera arcs right at a medium speed, tracking his rotation and capturing the shifting reflections of the city on the glass building behind him. [Shot 3] At 00:03.600, the camera cuts to a wide tracking shot positioned just above the pavement level. The man from Shot 1 strides purposefully forward along the grey concrete sidewalk. Clean, white typography reading \"AVAILABLE NOW\" scrolls vertically down the right side of the frame, weaving behind his swinging right arm to maintain the interlaced text aesthetic. The focus is directed toward the lower half of his body, highlighting the movement of his olive green cargo pants as they wrinkle dynamically. His heavy tan boots stomp rhythmically on the concrete. The camera pulls out at a fast speed, maintaining a constant distance just ahead of his advancing boots while the vertical grid lines of the skyscraper blur in the background.\noverall_soundscape: A faint, continuous urban hum of distant city traffic provides a subtle ambient baseline. A loud, resonant thud is heard prominently in the foreground as the heavy tan boot strikes the concrete pavement, followed by the crisp, audible rustle of thick cotton and denim as the man adjusts his cap. When the shot changes, a sharp, distinct swish of heavy fabric accompanies his sudden shoulder rotation. Finally, a rhythmic series of heavy, pronounced footsteps—thick rubber soles slapping firmly against the concrete—dominates the foreground, accompanied by the continuous, rough rustling of cargo pants.\nnon_diegetic_music: Electronic bass music, fast tempo, featuring a heavy, rhythmic drum machine beat, deep synthesizer drones, and sudden aggressive bass drops with no melodic swell.",
+      "width": [
+        "143",
+        0
+      ],
+      "height": [
+        "143",
+        1
+      ],
+      "length": [
+        "105:107",
+        1
+      ],
+      "clip": [
+        "105:13",
+        0
+      ],
+      "vae": [
+        "105:11",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ImageToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Image to Video"
+    }
+  },
+  "105:107": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "105:111",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  },
+  "105:111": {
+    "inputs": {
+      "value": 5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (duration)"
+    }
+  },
+  "105:127": {
+    "inputs": {
+      "selection": "vsa",
+      "selection.keep_percent": 10,
+      "start_percent": 0.2,
+      "end_percent": 1,
+      "dense_blocks": "",
+      "min_tokens": 12288,
+      "extra_tokens": 256,
+      "sink_conditioning": "exact_kv_and_rows",
+      "verbose": false,
+      "model": [
+        "105:128",
+        0
+      ]
+    },
+    "class_type": "BlockSparseAttention",
+    "_meta": {
+      "title": "Model Sparse Attention"
+    }
+  },
+  "105:128": {
+    "inputs": {
+      "attention": "comfy kitchen attention",
+      "model": [
+        "105:148",
+        0
+      ]
+    },
+    "class_type": "ModelAttentionBackend",
+    "_meta": {
+      "title": "Model Attention Backend"
+    }
+  },
+  "105:148": {
+    "inputs": {
+      "shift_video": 10,
+      "shift_audio": 3,
+      "model": [
+        "105:6",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3SigmaShift",
+    "_meta": {
+      "title": "ModelSamplingMiniMaxH3"
+    }
+  }
+}

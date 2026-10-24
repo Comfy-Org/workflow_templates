@@ -8,24 +8,23 @@ on:
       - 'input/**'
       - 'templates/index.json'
       - 'scripts/validate/check_input_assets.py'
+      - '.github/workflows/generate-upload-json.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
 
 jobs:
   generate-json:
     runs-on: ubuntu-latest
-    # Run on PRs from the same repo only (fork PRs cannot auto-commit to the head branch)
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           sparse-checkout: |
             templates/index.json
@@ -71,37 +70,15 @@ jobs:
           path: workflow_template_input_files.json
           retention-days: 30
       
-      - name: Commit and push to PR branch if changed
+      - name: Check generated upload JSON
         id: commit
         if: github.event_name == 'pull_request' && steps.check_json.outputs.json_exists == 'true'
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
           if [ -n "$(git status --porcelain workflow_template_input_files.json)" ]; then
-            git add workflow_template_input_files.json
-            git commit -m "chore: update workflow_template_input_files.json (PR #${{ github.event.pull_request.number }})"
-            git push origin HEAD:${{ github.head_ref }}
-
-            echo "✅ Changes committed and pushed to PR branch"
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          else
-            echo "ℹ️ No changes to commit"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "::error::Upload JSON is out of sync. Run: python scripts/validate/check_input_assets.py --generate-upload-json"
+            exit 1
           fi
-
-      - name: Comment on PR (only if changes were made)
-        if: github.event_name == 'pull_request' && steps.commit.outputs.has_changes == 'true'
-        continue-on-error: true
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `✅ **Upload JSON updated** - ${{ steps.check_json.outputs.asset_count }} assets`
-            });
+          echo "✅ Upload JSON is in sync"
 
       - name: Comment on PR if failed
         if: github.event_name == 'pull_request' && failure()

@@ -50,6 +50,8 @@ The whitelist configuration file `whitelist.json` supports the following configu
 
 ### Model analysis (CI)
 
+Subgraph instances are checked: models in the instance `widgets_values` must have a `properties.models` download URL (on the instance or the matching inner loader), and that inner loader must document the same model unless the instance itself carries the download entry.
+
 ```bash
 python scripts/validate/analyze_models.py --templates-dir ./templates
 python scripts/validate/analyze_models.py --whitelist ./my_whitelist.json

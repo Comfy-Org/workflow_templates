@@ -23,7 +23,6 @@ interface TemplateEntry {
   date?: unknown;
   openSource?: unknown;
   size?: unknown;
-  vram?: unknown;
   usage?: unknown;
   searchRank?: unknown;
   tutorialUrl?: unknown;
@@ -84,15 +83,6 @@ function validateTemplate(
       errors.push({
         path: `${prefix}(${template.name})`,
         message: `invalid "thumbnailVariant": "${template.thumbnailVariant}" (must be one of: ${VALID_THUMBNAIL_VARIANTS.join(', ')})`,
-      });
-    }
-  }
-
-  if (template.vram !== undefined) {
-    if (typeof template.vram !== 'number' || template.vram < 0) {
-      errors.push({
-        path: `${prefix}(${template.name})`,
-        message: `invalid "vram": "${template.vram}" (must be a non-negative number)`,
       });
     }
   }

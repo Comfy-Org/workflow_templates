@@ -20,11 +20,24 @@ Related skills (do not replace this one):
 - `name` must match the workflow JSON filename (without `.json`).
 - **Always** run `python3 scripts/sync/sync_bundles.py` after editing `bundles.json` or renaming template assets.
 - **Always** validate after structural changes (see Validation below).
-- For **new** templates, assign media to `media-assets-01` — see [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
+- For **new** templates, assign media to `media-assets-02` — see [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
 - Bump root `pyproject.toml` only for intentional PyPI releases (`release` label).
 - Use double-quotes `"` in all JSON files.
 - Model download URLs must produce filenames that **exactly** match `widgets_values` in the workflow JSON.
 - Package copies under `packages/*/src/**/templates/` are gitignored; regenerate via `sync_bundles.py`, do not hand-edit.
+
+### Black Forest Labs product names
+
+Official spelling is the [BFL All Models list](https://bfl.ai/models). Use these tokens in titles and descriptions:
+
+- **FLUX 3** (space): `FLUX 3 Image`, `FLUX 3 Image Klein`, `FLUX 3 Video`, `FLUX 3 Action`
+- **FLUX.2** (dot): `FLUX.2`, `FLUX.2 Max`, `FLUX.2 Klein`
+
+Do not invent `FLUX 2` (space), `FLUX.3` / `Flux.3` (dot), or mixed casing (`Flux 3`, `Flux.2`).
+
+- Brand tokens stay untranslated and byte-identical in every locale. Translate only the rest of the title or description.
+- Template Library search names in external docs must match these English titles exactly.
+- Do not rename template ids, filenames, API paths, download URLs, or model tag enums to chase branding.
 
 ## Decide the operation
 
@@ -67,7 +80,11 @@ Add the object to the right category's `templates` array.
 
 **Required:** `name`, `description`, `mediaType` (`image` \| `video` \| `audio` \| `3d`), `mediaSubtype` (usually `webp`).
 
-**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `vram`, `searchRank`, `io`, `thumbnail`.
+**Common optional:** `title`, `tags`, `models`, `logos`, `date`, `openSource`, `requiresCustomNodes`, `thumbnailVariant`, `tutorialUrl`, `usage`, `size`, `searchRank`, `io`, `thumbnail`.
+
+**`minComfyUIVersion` is required for every new template** — see [`minComfyUIVersion`](#mincomfyuiversion-required) below.
+
+**Position in the category:** a template from a brand-new or lesser-known provider does **not** get a prominent slot. Place it next to its closest peers and leave `usage` / `searchRank` at `0` — a good default position is earned by real performance, never granted at add time. See `/managing-bundles`.
 
 ```json
 {
@@ -79,9 +96,24 @@ Add the object to the right category's `templates` array.
 }
 ```
 
+### `minComfyUIVersion` (required)
+
+Set `minComfyUIVersion` on every new template: the ComfyUI release that first supports the node / model the workflow uses. It is copied into the locale indexes by `sync_data.py` and into `index.mcp.json` by the MCP sync, so it must be right in English `index.json`.
+
+Look up the newest tag first (tags can be newer than published releases, so read the tag list, not only `/releases`):
+
+```bash
+gh api "repos/Comfy-Org/ComfyUI/tags?per_page=15" --jq '.[].name'
+```
+
+- **Support merged and released** → the earliest tag containing the merge: `git merge-base --is-ancestor <merge-sha> <tag>` (non-zero exit = not included).
+- **Support not merged yet** (open PR / unreleased node) → the **next patch version after the newest tag**: newest tag `v0.39.1` → `"minComfyUIVersion": "0.39.2"`. Use the future version rather than leaving the field out, so the catalog carries the version the template will actually require.
+
+Existing catalog values follow this rule — the `0.39.1` / `0.39.2` entries were written while their support was not released yet.
+
 ### Step 4 — Bundle
 
-Add the name to the correct array in `bundles.json`. New media → `media-assets-01`.
+Add the name to the correct array in `bundles.json`. New media → `media-assets-02`.
 
 ```bash
 python3 scripts/sync/sync_bundles.py
@@ -153,6 +185,8 @@ Order matters: edit `i18n.json` first, then sync. Re-run sync after any later tr
 ### Step 9 — Version (release PRs only)
 
 See [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
+
+Full release knowledge (label flow, publish pipeline, quota gates, force publish): use `/managing-releases`.
 
 ---
 
@@ -269,9 +303,10 @@ python3 scripts/validate/validate_thumbnails.py
 | "Rename X to Y" / "把 X 重命名成 Y" | Renaming Steps 1–6 |
 | "Change the template name / slug" | Renaming (not title-only) |
 | "Add a thumbnail for template X" | Prefer `/managing-thumbnails` |
-| "What bundle?" | New media → `media-assets-01`; legacy `media-*` frozen |
+| "What bundle?" | New media → `media-assets-02`; `media-*` and `media-assets-01` frozen |
 | "Validate my template" | Validation section |
 | "Sync translations" / "加翻译" | Edit `scripts/data/i18n.json` first, then Adding Step 8 / `/managing-translations` |
+| "FLUX title" / "BFL brand name" | [Black Forest Labs product names](#black-forest-labs-product-names) |
 
 ---
 

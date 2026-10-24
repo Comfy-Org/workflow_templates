@@ -52,6 +52,12 @@ from template_cache import (  # noqa: E402
 )
 
 USE_CASES_CATEGORY = "Use Cases"
+APPLIED_CATEGORIES = frozenset({
+    "Use Cases",
+    "Product & Ads",
+    "Character & Fashion",
+    "Brand & Design",
+})
 
 # Shared instruction fragments for build_prompt
 _REGISTRY_AUTHORITY = (
@@ -80,12 +86,12 @@ def build_prompt(
     model_name = template.get("model", "")
     model_info = lookup_registry_profile(model_name, registry)
     index_description = (index_entry or {}).get("description", "")
-    is_use_case = category == USE_CASES_CATEGORY
+    is_use_case = category in APPLIED_CATEGORIES
 
     if is_use_case:
         system = (
             "You write brief ComfyUI workflow template descriptions for an MCP tool index. "
-            "This template is in the **Use Cases** category: a concrete demo of a specific "
+            f"This template is in the **{category}** category: a concrete demo of a specific "
             "effect or technique — not a general-purpose baseline. "
             f"{_REGISTRY_AUTHORITY} "
             "Explain what the user achieves, required inputs (see io), and how the model applies. "

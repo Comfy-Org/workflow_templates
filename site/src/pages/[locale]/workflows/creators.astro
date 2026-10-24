@@ -27,6 +27,9 @@ if (!locale || !LOCALES.includes(locale as Locale) || locale === DEFAULT_LOCALE)
 }
 
 const typedLocale = locale as Locale;
+
+Astro.response.headers.set('CDN-Cache-Control', 'public, max-age=60, stale-while-revalidate=600');
+
 const [profiles, rankingMap] = await Promise.all([getProfileCache(), fetchRankingMap()]);
 
 // Fetch all workflows from hub API
@@ -42,7 +45,7 @@ try {
   );
 } catch (err) {
   console.error('Hub API failed for creators page:', err);
-  // API failed — show empty page
+  Astro.response.headers.set('CDN-Cache-Control', 'no-store');
 }
 
 // Group templates by username
