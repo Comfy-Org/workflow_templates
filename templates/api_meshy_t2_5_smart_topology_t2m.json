@@ -1,0 +1,151 @@
+{
+  "id": "0065d526-3bdc-4cbf-9807-913bcf29db61",
+  "revision": 0,
+  "last_node_id": 3,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "MarkdownNote",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        420,
+        520
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Meshy T2.5: Text to Model (Smart Topology)\n\nDescribe the object you want and Meshy T2.5 returns a game-ready mesh built directly at the triangle budget you ask for, so there is no separate retopology step before it goes into an engine.\n\n## Parameters\n\n- `target_polycount` is the approximate triangle count of the result, from 100 to 30000.\n- `pose_mode` stays empty for props; pick A-pose or T-pose for characters that must land in a fixed stance.\n- `seed` only controls whether the node re-runs. Meshy output is non-deterministic regardless of the seed.\n\nSave GLB writes the mesh from the node's GLB output, not the task id or the FBX output.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "# Meshy T2.5: Text to Model (Smart Topology)\n\nDescribe the object you want and Meshy T2.5 returns a game-ready mesh built directly at the triangle budget you ask for, so there is no separate retopology step before it goes into an engine.\n\n## Parameters\n\n- `target_polycount` is the approximate triangle count of the result, from 100 to 30000.\n- `pose_mode` stays empty for props; pick A-pose or T-pose for characters that must land in a fixed stance.\n- `seed` only controls whether the node re-runs. Meshy output is non-deterministic regardless of the seed.\n\nSave GLB writes the mesh from the node's GLB output, not the task id or the FBX output.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 1,
+      "type": "MeshyTextToModelSmartTopologyNode",
+      "pos": [
+        500,
+        40
+      ],
+      "size": [
+        420,
+        300
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "meshy_task_id",
+          "type": "MESHY_TASK_ID",
+          "links": null
+        },
+        {
+          "name": "GLB",
+          "type": "FILE_3D_GLB",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "FBX",
+          "type": "FILE_3D_FBX",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MeshyTextToModelSmartTopologyNode"
+      },
+      "widgets_values": [
+        "meshy-t2.5",
+        "A weathered wooden treasure chest with iron banding, a rounded lid and a rusted lock plate, standing open with a few gold coins inside, standalone game prop, clean silhouette, neutral studio lighting",
+        15000,
+        "",
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "meshy-t2.5",
+        "prompt": "A weathered wooden treasure chest with iron banding, a rounded lid and a rusted lock plate, standing open with a few gold coins inside, standalone game prop, clean silhouette, neutral studio lighting",
+        "target_polycount": 15000,
+        "pose_mode": "",
+        "seed": 42,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "SaveGLB",
+      "pos": [
+        1000,
+        40
+      ],
+      "size": [
+        520,
+        490
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "mesh",
+          "type": "MESH,FILE_3D_GLB,FILE_3D_GLTF,FILE_3D_OBJ,FILE_3D_FBX,FILE_3D_STL,FILE_3D_USDZ,FILE_3D_PLY,FILE_3D_SPLAT,FILE_3D_SPZ,FILE_3D_KSPLAT,FILE_3D_SPLAT_ANY,FILE_3D_POINT_CLOUD_ANY,FILE_3D",
+          "link": 1
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "SaveGLB"
+      },
+      "widgets_values": [
+        "3d/meshy_t2_5_t2m",
+        ""
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "3d/meshy_t2_5_t2m",
+        "image": ""
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      1,
+      3,
+      0,
+      "FILE_3D_GLB"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "frontendVersion": "1.54.14",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

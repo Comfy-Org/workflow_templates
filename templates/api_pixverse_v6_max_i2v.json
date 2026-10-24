@@ -1,0 +1,212 @@
+{
+  "id": "cf2e48fc-0917-4381-a4e6-bcc98deedfce",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        422.8977724003582,
+        364.49039296768797
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Input Asset\n\n- [pixverse_v6max_i2v_input_image.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/pixverse_v6max_i2v_input_image.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Input Asset\n\n- [pixverse_v6max_i2v_input_image.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/pixverse_v6max_i2v_input_image.png)\n\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        500,
+        40
+      ],
+      "size": [
+        374.82740210065344,
+        602.9572753538075
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "pixverse_v6max_i2v_input_image.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "pixverse_v6max_i2v_input_image.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "PixverseV6ImageToVideoNode",
+      "pos": [
+        922.8274021006534,
+        40
+      ],
+      "size": [
+        420,
+        420
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PixverseV6ImageToVideoNode"
+      },
+      "widgets_values": [
+        "PixVerse V6 Max",
+        "The astronaut turns slowly in vacuum, tether coiling around him, sun flare cresting the hull and flaring across the lens, deep shadow swallowing the ship, overwhelming sense of isolation",
+        "720p",
+        5,
+        true,
+        572622940,
+        "randomize",
+        "",
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "PixVerse V6 Max",
+        "model.prompt": "The astronaut turns slowly in vacuum, tether coiling around him, sun flare cresting the hull and flaring across the lens, deep shadow swallowing the ship, overwhelming sense of isolation",
+        "model.quality": "720p",
+        "model.duration_seconds": 5,
+        "model.generate_audio": true,
+        "model.seed": 572622940,
+        "control_after_generate#1": "randomize",
+        "model.negative_prompt": "",
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveVideo",
+      "pos": [
+        1390.8274021006534,
+        40
+      ],
+      "size": [
+        400,
+        560
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveVideo"
+      },
+      "widgets_values": [
+        "video/PixVerse_v6max_i2v",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/PixVerse_v6max_i2v",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5132901211556948,
+      "offset": [
+        1047.5058025752166,
+        581.9005132499148
+      ]
+    },
+    "frontendVersion": "1.57.1",
+    "VHS_latentpreview": false,
+    "VHS_latentpreviewrate": 0,
+    "VHS_MetadataImage": true,
+    "VHS_KeepIntermediate": true
+  },
+  "version": 0.4
+}

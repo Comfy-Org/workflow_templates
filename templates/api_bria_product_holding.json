@@ -1,0 +1,299 @@
+{
+  "id": "a84dfbd8-7949-46bb-ab74-e302adaefdd6",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "MarkdownNote",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        420,
+        540
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Bria: Product Holding\n\nPut a product into the person's hands. Bria keeps the face, pose and background of the person photo and renders the product held naturally, so a phone snapshot plus a product shot is enough for a lifestyle image. The result comes back at roughly one megapixel.\n\n## Input Asset\n\n- [bria_holding_person.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_holding_person.png)\n- [bria_holding_product.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_holding_product.png)\n\n## Parameters\n\n- `product_images` takes 1 to 3 images of the same product: the product, its packaging, another angle or a companion item. The node starts with one product socket, and the + button on the node adds more.\n- `instruction` is optional extra direction on top of Bria's built-in one, such as `hold the bag in one hand` or `face the label to the camera`. Left empty, the product is simply placed in a hand.\n- Better results come from a person photo where the hands are already visible and empty, which gives Bria room to place the product.\n- `aspect_ratio` at `auto` keeps the framing of the person photo; a fixed ratio returns 0.6 to 1 megapixel.\n- When the person already holds something similar, the product replaces it instead of being added next to it.\n- This node only returns an image, so it is connected to Save Image.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      ],
+      "widgets_values_named": {
+        "text": "# Bria: Product Holding\n\nPut a product into the person's hands. Bria keeps the face, pose and background of the person photo and renders the product held naturally, so a phone snapshot plus a product shot is enough for a lifestyle image. The result comes back at roughly one megapixel.\n\n## Input Asset\n\n- [bria_holding_person.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_holding_person.png)\n- [bria_holding_product.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/bria_holding_product.png)\n\n## Parameters\n\n- `product_images` takes 1 to 3 images of the same product: the product, its packaging, another angle or a companion item. The node starts with one product socket, and the + button on the node adds more.\n- `instruction` is optional extra direction on top of Bria's built-in one, such as `hold the bag in one hand` or `face the label to the camera`. Left empty, the product is simply placed in a hand.\n- Better results come from a person photo where the hands are already visible and empty, which gives Bria room to place the product.\n- `aspect_ratio` at `auto` keeps the framing of the person photo; a fixed ratio returns 0.6 to 1 megapixel.\n- When the person already holds something similar, the product replaces it instead of being added next to it.\n- This node only returns an image, so it is connected to Save Image.\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 2,
+      "type": "LoadImage",
+      "pos": [
+        500,
+        40
+      ],
+      "size": [
+        320,
+        370
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "bria_holding_person.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "bria_holding_person.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        500,
+        470
+      ],
+      "size": [
+        320,
+        370
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "upload",
+          "type": "IMAGEUPLOAD",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "bria_holding_product.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "bria_holding_product.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 4,
+      "type": "BriaProductHolding",
+      "pos": [
+        900,
+        40
+      ],
+      "size": [
+        440,
+        420
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "person_image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "product_images.product_image_1",
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "product_images.product_image_2",
+          "type": "IMAGE",
+          "link": null,
+          "shape": 7
+        },
+        {
+          "name": "instruction",
+          "type": "STRING",
+          "link": null
+        },
+        {
+          "name": "aspect_ratio",
+          "type": "COMBO",
+          "link": null
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null
+        },
+        {
+          "name": "moderation",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BriaProductHolding"
+      },
+      "widgets_values": [
+        "hold the bag in one hand",
+        "auto",
+        42,
+        "fixed",
+        "false"
+      ],
+      "widgets_values_named": {
+        "instruction": "hold the bag in one hand",
+        "aspect_ratio": "auto",
+        "seed": 42,
+        "control_after_generate": "fixed",
+        "moderation": "false"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 5,
+      "type": "SaveImage",
+      "pos": [
+        1420,
+        40
+      ],
+      "size": [
+        440,
+        470
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "name": "filename_prefix",
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_bria_product_holding"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_bria_product_holding"
+      }
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      4,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      3,
+      0,
+      4,
+      1,
+      "IMAGE"
+    ],
+    [
+      3,
+      4,
+      0,
+      5,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1,
+      "offset": [
+        0,
+        0
+      ]
+    },
+    "frontendVersion": "1.57.1"
+  },
+  "version": 0.4
+}

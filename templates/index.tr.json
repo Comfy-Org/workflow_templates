@@ -331,6 +331,27 @@
         }
       },
       {
+        "name": "api_bria_fibo2_t2i",
+        "title": "Bria: FIBO 2.0 Text to Image",
+        "description": "Generate an image from a text prompt with Bria FIBO 2.0, one model for both generation and editing. It is trained on structured VGL captions, so a detailed poster-style brief is followed closely, exact wording is rendered literally, and the node also returns that structured prompt so the same image can be rebuilt or refined from JSON. Ideal for editorial covers, posters and typography-led layouts.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Metinden Görüntüye"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.2",
+        "date": "2026-10-21",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI"
+      },
+      {
         "name": "image_flux3_klein_image_edit",
         "title": "FLUX 3 Image Klein: Görsel Düzenleme",
         "description": "Bir giriş görüntüsü ve iki metin istemi sağlayarak FLUX 3 Image Klein ile mevcut bir görseli düzenleyin; bir iyileştirilmiş Çıktı ve yan yana karşılaştırma görünümü elde edin. Orijinal kompozisyonu koruyan hedefli rötuş, stil ayarları ve detay düzeltmeleri için idealdir.",
@@ -3333,14 +3354,14 @@
       },
       {
         "name": "api_bria_image_edit",
-        "title": "Bria: Görsel Düzenleme",
+        "title": "Bria: FIBO 2.0 Görsel Düzenleme",
         "description": "FIBO, aydınlatma, kompozisyon ve kamera ayarları üzerinde yapılandırılmış JSON kontrolü ile kesin, öngörülebilir görüntü düzenlemeyi sağlar",
         "mediaType": "image",
         "mediaSubtype": "webp",
         "thumbnailVariant": "compareSlider",
         "tags": ["API","Görüntü Düzenleme"],
         "models": ["BRIA"],
-        "date": "2026-01-20",
+        "date": "2026-10-21",
         "openSource": false,
         "usage": 24,
         "io": {
@@ -3371,6 +3392,140 @@
         "searchRank": 0,
         "thumbnail": ["input/sunlit_rooftop_capture.png","output/api_bria_image_edit.png"],
         "minComfyUIVersion": "0.10.0"
+      },
+      {
+        "name": "api_bria_guided_remove_background",
+        "title": "Bria: Guided Background Removal",
+        "description": "Remove the background from an image with Bria while keeping whatever a text prompt describes, so one subject can be cut out of a busy scene instead of losing everything that is not background. The original pixels come back at full resolution with a new alpha channel. Ideal for product cutouts, portrait isolation and compositing prep.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Görüntü","Arka Planı Kaldır"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "bria_guided_person.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "SaveImage",
+              "file": "api_bria_guided_remove_background.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnailVariant": "compareSlider"
+      },
+      {
+        "name": "api_bria_product_holding",
+        "title": "Bria: Product Holding",
+        "description": "Place a product into the hands of the person in a photo with Bria. One person photo plus one to three product shots is enough for a lifestyle image in which the face, pose and background stay untouched and the product is held naturally. Ideal for e-commerce and social content that would otherwise need a shoot.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["API","Görüntü","Görüntü Düzenleme"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "thumbnail": ["input/bria_holding_person.png","input/bria_holding_product.png"],
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "bria_holding_person.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "bria_holding_product.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 5,
+              "nodeType": "SaveImage",
+              "file": "api_bria_product_holding.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_bria_virtual_try_on",
+        "title": "Bria: Virtual Try-On",
+        "description": "Dress the person in a photo with a garment from a separate product shot using Bria. One person photo plus one to three garments or accessories produces a worn look in which the face, pose and background stay untouched and the garment is refitted to the body. Ideal for fashion catalogs and lookbooks without a photoshoot.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["API","Fashion","Görüntü","Görüntü Düzenleme"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "thumbnail": ["input/bria_tryon_man.png","input/bria_tryon_shirt.png"],
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "bria_tryon_man.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "bria_tryon_shirt.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 5,
+              "nodeType": "SaveImage",
+              "file": "api_bria_virtual_try_on.png",
+              "mediaType": "image"
+            }
+          ]
+        }
       },
       {
         "name": "api_meta_muse_image_image_edit",
@@ -11508,6 +11663,96 @@
         "minComfyUIVersion": "0.28.1"
       },
       {
+        "name": "api_veed_fabric_1_0",
+        "title": "VEED Fabric 1.0: Konuşan Fotoğraf",
+        "description": "VEED Fabric 1.0, tek bir fotoğrafı ve bir konuşma parçasını dudakları senkronize konuşan videoya dönüştürür: görseldeki yüz sesi konuşur, klip görselin en-boy oranını korur ve sesle aynı uzunlukta olur; 480p veya 720p seçenekleriyle en fazla 300 saniye. Avatarlar, maskotlar ve kendi kaydınız ya da bir TTS düğümüyle üretilen sesle hazırlanan yerelleştirilmiş sunucu klipleri için idealdir.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Görüntüden Videoya","Dudak Senkronizasyonu"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "black_fashion_portrait.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 5,
+              "nodeType": "LoadAudio",
+              "file": "audio_see_beyond_the_light.mp3",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_fabric_1_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_lipsync_2_0",
+        "title": "VEED Lipsync 2.0: Dudak Senkronizasyonu",
+        "description": "VEED Lipsync 2.0, çekilmiş bir videodaki konuşmacının ağzını yeni bir konuşma parçasına göre yeniden eşitler. Ekrandaki kişi yeni sesle konuşur, planın geri kalanı çekildiği gibi kalır; çıktı videonun çözünürlüğünü 25 fps'te korur ve sesle aynı uzunlukta olur, en fazla 600 saniye. Klip sesten kısaysa ses bitene kadar ileri ve geri oynatılır. Bir repliği dublajlamak, yeniden çekmeden metni değiştirmek veya mevcut çekimin yerelleştirilmiş sürümlerini üretmek için idealdir.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Dudak Senkronizasyonu","Video Düzenleme"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadVideo",
+              "file": "rainbow_face_portrait_prism_video.mp4",
+              "mediaType": "video"
+            },
+            {
+              "nodeId": 9,
+              "nodeType": "LoadAudio",
+              "file": "veed_lipsync_rainbow_night_speech.wav",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 10,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_lipsync_2_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_seedance2_0_mini_r2v",
         "title": "Seedance 2.0 Mini: referanstan video",
         "description": "Seedance 2.0 Mini kullanarak iki referans görüntüden sinematik video oluşturun; yapay zeka destekli kamera hareketi ve tutarlı karakter üretimi ile tek bir video çıktısı üretin. Çekim kompozisyonu ve görsel sürekliliğin önemli olduğu hikaye anlatımı, markalı içerik ve kısa film oluşturma için idealdir.",
@@ -13125,6 +13370,76 @@
           ]
         },
         "thumbnail": ["output/api_pixverse6_t2v.mp4"]
+      },
+      {
+        "name": "api_pixverse_v6_max_t2v",
+        "title": "PixVerse V6 Max: Text to Video",
+        "description": "Generate videos up to 15 seconds at 1080p from a text prompt with PixVerse V6 Max, the higher-fidelity tier of PixVerse V6, with native audio and multi-shot direction in a single generation. No input files required. Ideal for social ads, product concept clips and short-form storytelling.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Metinden Videoya"],
+        "models": ["PixVerse"],
+        "logos": [
+          {
+            "provider": "Pixverse"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_pixverse_v6_max_t2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_pixverse_v6_max_i2v",
+        "title": "PixVerse V6 Max: Image to Video",
+        "description": "Animate a still image with PixVerse V6 Max, keeping the aspect ratio of the input image and generating up to 15 seconds at up to 1080p with an optional native audio track. Ideal for bringing product shots, character art and keyframes to life for social and advertising use.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Görüntüden Videoya"],
+        "models": ["PixVerse"],
+        "logos": [
+          {
+            "provider": "Pixverse"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "pixverse_v6max_i2v_input_image.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "SaveVideo",
+              "file": "api_pixverse_v6_max_i2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
       },
       {
         "name": "api_pixverse_t2v",
@@ -16514,6 +16829,76 @@
         "minComfyUIVersion": "0.14.0"
       },
       {
+        "name": "api_veed_remove_video_background",
+        "title": "VEED Remove Video Background: Matte Dışa Aktarma",
+        "description": "VEED Remove Video Background ile bir videodaki özneyi kesip çıkarın: düğüm her karede ön planı bölütler ve karelerle birlikte bir alfa maskesi döndürür; Join Image with Alpha bu maskeyi saydamlık kanalına çevirerek birleştirmeye hazır PNG dizisi üretir. standard, fast veya yeşil perde modunu seçin; video en fazla 60 saniye.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Arka Planı Kaldır","Video"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadVideo",
+              "file": "swimcap_glass_pop_video.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio_video",
+        "title": "VEED Clean Audio: Videoda Konuşma Temizleme",
+        "description": "VEED Clean Audio ile bir videodaki konuşmayı temizleyin: arka plan gürültüsü, müzik ve efektler ses bandından çıkarılır, duraklamalar tamamen temizlenir ve klip, görüntü olduğu gibi kalırken isteğe bağlı olarak hedef ses yüksekliğine normalize edilmiş 48 kHz mono konuşmayla geri döner. Video en fazla 1799 saniye.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Ses","Video Düzenleme"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadVideo",
+              "file": "veed_clean_audio_input_h3_omniref_person_dialogue_plus_noise.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_clean_audio_video.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_bria_video_green_screen",
         "title": "Yeşil Perde: Bria",
         "description": "Şeffaf veya düz bir arka plana sahip yeşil ekran versiyonu oluşturmak için bir video yükleyin.",
@@ -16968,6 +17353,97 @@
     "title": "Ses",
     "templates": [
       {
+        "name": "api_mirelo_video_to_sfx",
+        "title": "Mirelo SFX 2.0: Videodan Ses Efektine",
+        "description": "Mirelo sfx-2.0 ile bir klibe görüntüye kilitli ses efektleri ekleyin: model videoyu izler, Foley'i ekrandaki harekete göre zamanlar, konuşmayı varsayılan olarak korur ve efekt kanalını, konuşma kanalını ve yeni miksli videoyu kaydeder.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["Video","Ses","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "LoadVideo",
+              "file": "mage_crash_discovery_video.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 730,
+              "nodeType": "SaveVideo",
+              "file": "api_mirelo_video_to_sfx.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_mirelo_text_to_sfx",
+        "title": "Mirelo SFX 2.0: Metinden Ses Efektine",
+        "description": "Mirelo sfx-2.0 ile metinden ses efekti üretin: sesin kendisini, malzemesini, mekânı ve şiddetini tek satırda tanımlayın, 48 kHz mono ses dosyasını 10 dakikaya kadar alın.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["Metinden Sese","Ses","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio",
+        "title": "VEED Clean Audio: Konuşma Temizleme",
+        "description": "VEED Clean Audio ile bir konuşma kaydının arka plan gürültüsünü temizleyin: müzik ve efektler gürültüyle birlikte gider, duraklamalar tamamen temizlenir ve ses, isteğe bağlı olarak hedef ses yüksekliğine normalize edilerek 48 kHz mono ses olarak döner. Ses en fazla 1799 saniye olabilir.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Ses","Ses Düzenleme"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 13,
+              "nodeType": "LoadAudio",
+              "file": "veed_clean_audio_noisy_input.wav",
+              "mediaType": "audio"
+            }
+          ]
+        }
+      },
+      {
         "name": "api_elevenlabs_v4_text_to_speech",
         "title": "Eleven v4: Metinden Sese",
         "description": "Kalite odaklı ElevenLabs modeli Eleven v4 ile metinden etkileyici konuşma oluşturun. Senaryoya [whispers] veya [excited] gibi ses etiketleri yazarak performansı yönlendirin ya da bir ses örneği yükleyerek sesi klonlayın ve senaryoyu o sesle seslendirin. Bir ses dosyası çıktı olarak verilir. Sesli kitaplar, seslendirme ve karakter dublajı için idealdir.",
@@ -17400,6 +17876,37 @@
           }
         ],
         "date": "2026-10-19",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadAudio",
+              "file": "long_demo.mp3",
+              "mediaType": "audio"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.40.0"
+      },
+      {
+        "name": "api_heygen_voice_1_turbo",
+        "title": "HeyGen Voice 1.0 Turbo: Sesi Klonla ve Konuşmaya Dönüştür",
+        "description": "HeyGen Voice 1.0 Turbo ile kısa bir kayıttan ses klonlayın, ardından herhangi bir metni o sesle seslendirin. Voice 1.0 ile aynı anlık klonlama turbo model üzerinde çalıştığı için hızlı taslaklar ve denemeler için daha çabuk sonuç verir. Bir ses klibini Instant Clone'a bağlayın; elde edilen voice_id doğrudan metinden sese aktarılır ve SaveText bu kimliği sonraki oturum için diske kaydeder. Kendi sesinizle anlatım, karakter diyalogları ve çok dilli seslendirme için idealdir.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Metinden Sese","Ses Klonlama"],
+        "models": ["HeyGen"],
+        "logos": [
+          {
+            "provider": "HeyGen"
+          }
+        ],
+        "date": "2026-10-22",
         "openSource": false,
         "size": 0,
         "usage": 0,
@@ -18245,6 +18752,60 @@
           ]
         },
         "thumbnail": ["thumbnail/api_meshy7_1_image_to_model-1.mp4","thumbnail/api_meshy7_1_image_to_model-2.mp4"]
+      },
+      {
+        "name": "api_meshy_t2_5_smart_topology_t2m",
+        "title": "Meshy T2.5: Text to Model (Smart Topology)",
+        "description": "Generate a game-ready 3D model from a text prompt with Meshy T2.5. Meshy T2.5 builds the mesh at the triangle budget you set instead of generating a dense mesh and retopologizing it afterwards, so the result drops straight into a game engine. No input files required. Ideal for props, environment dressing and low-poly game assets that need a predictable triangle count.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","metinden 3D"],
+        "models": ["Meshy"],
+        "logos": [
+          {
+            "provider": "Meshy"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "thumbnailVariant": "compareSlider"
+      },
+      {
+        "name": "api_meshy_t2_5_smart_topology_i2m",
+        "title": "Meshy T2.5: Image to Model (Smart Topology)",
+        "description": "Generate a game-ready 3D model from a single image with Meshy T2.5. Meshy T2.5 builds the mesh at the triangle budget you set instead of generating a dense mesh and retopologizing it afterwards, so the result drops straight into a game engine. Texturing with PBR maps is optional and runs at 2k, 4k or 8k. Ideal for turning concept art, product photos and sculpts into engine-ready props.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Görüntüden 3B'ye"],
+        "models": ["Meshy"],
+        "logos": [
+          {
+            "provider": "Meshy"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "abstract_3d_toy_van_game_asset.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnailVariant": "compareSlider"
       },
       {
         "name": "3d_pixal3d_multi_views",
@@ -19472,6 +20033,68 @@
           ]
         },
         "thumbnail": ["output/api_quiver_arrow2_text_to_svg.svg"]
+      },
+      {
+        "name": "api_ideogram_vector_1_text_to_svg",
+        "title": "Ideogram Vector 1: Text to SVG",
+        "description": "Generate a fully editable SVG from a text prompt with Ideogram Vector 1, optionally guided by up to five reference images, and save it as one vector file. Ideal for logos, posters, flat illustration, patterns and line art that stays crisp at any size and opens directly in a vector editor.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Vektör"],
+        "models": ["Ideogram"],
+        "logos": [
+          {
+            "provider": "Ideogram"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadImage",
+              "file": "academic-svg.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_ideogram_vector_1_image_to_svg",
+        "title": "Ideogram Vector 1: Image to SVG",
+        "description": "Trace a bitmap into a fully editable SVG with Ideogram Vector 1 and save it as one vector file. Ideal for turning logos, flat illustration, patterns and line art into clean paths that stay crisp at any size, with a detail mode that either keeps large flat color blocks or finer color regions. Photographs also work, but convert into many small paths, so clean sources with large areas of flat color and transparent backgrounds vectorize best.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Vektör"],
+        "models": ["Ideogram"],
+        "logos": [
+          {
+            "provider": "Ideogram"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "LoadImage",
+              "file": "kid_onknight_dragon.png",
+              "mediaType": "image"
+            }
+          ]
+        }
       }
     ]
   },

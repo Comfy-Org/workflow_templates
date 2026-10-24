@@ -331,6 +331,27 @@
         }
       },
       {
+        "name": "api_bria_fibo2_t2i",
+        "title": "Bria: FIBO 2.0 Text to Image",
+        "description": "Generate an image from a text prompt with Bria FIBO 2.0, one model for both generation and editing. It is trained on structured VGL captions, so a detailed poster-style brief is followed closely, exact wording is rendered literally, and the node also returns that structured prompt so the same image can be rebuilt or refined from JSON. Ideal for editorial covers, posters and typography-led layouts.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Text to Image"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.2",
+        "date": "2026-10-21",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI"
+      },
+      {
         "name": "image_flux3_klein_image_edit",
         "title": "FLUX 3 Image Klein: Image Edit",
         "description": "Edit an existing image with FLUX 3 Image Klein by supplying one input image and two text prompts, producing one refined output alongside a side-by-side comparison view. Ideal for targeted retouching, style adjustments, and detail corrections that preserve the original composition.",
@@ -3333,14 +3354,14 @@
       },
       {
         "name": "api_bria_image_edit",
-        "title": "Bria: Image Edit",
-        "description": "FIBO enables precise, predictable image editing through structured JSON control over lighting, composition, and camera settings",
+        "title": "Bria: FIBO 2.0 Image Edit",
+        "description": "Edit an image with Bria FIBO 2.0 by describing the change in plain language, with an optional mask to confine it to one region. FIBO 2.0 is one model for both editing and generation, trained on structured VGL captions, so it holds everything you did not ask to change, and it returns that structured prompt so the edit can be rebuilt or refined from JSON.",
         "mediaType": "image",
         "mediaSubtype": "webp",
         "thumbnailVariant": "compareSlider",
         "tags": ["API","Image Edit"],
         "models": ["BRIA"],
-        "date": "2026-01-20",
+        "date": "2026-10-21",
         "openSource": false,
         "usage": 24,
         "io": {
@@ -3371,6 +3392,140 @@
         "searchRank": 0,
         "thumbnail": ["input/sunlit_rooftop_capture.png","output/api_bria_image_edit.png"],
         "minComfyUIVersion": "0.10.0"
+      },
+      {
+        "name": "api_bria_guided_remove_background",
+        "title": "Bria: Guided Background Removal",
+        "description": "Remove the background from an image with Bria while keeping whatever a text prompt describes, so one subject can be cut out of a busy scene instead of losing everything that is not background. The original pixels come back at full resolution with a new alpha channel. Ideal for product cutouts, portrait isolation and compositing prep.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Image","Remove Background"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "bria_guided_person.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "SaveImage",
+              "file": "api_bria_guided_remove_background.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnailVariant": "compareSlider"
+      },
+      {
+        "name": "api_bria_product_holding",
+        "title": "Bria: Product Holding",
+        "description": "Place a product into the hands of the person in a photo with Bria. One person photo plus one to three product shots is enough for a lifestyle image in which the face, pose and background stay untouched and the product is held naturally. Ideal for e-commerce and social content that would otherwise need a shoot.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["API","Image","Image Edit"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "thumbnail": ["input/bria_holding_person.png","input/bria_holding_product.png"],
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "bria_holding_person.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "bria_holding_product.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 5,
+              "nodeType": "SaveImage",
+              "file": "api_bria_product_holding.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_bria_virtual_try_on",
+        "title": "Bria: Virtual Try-On",
+        "description": "Dress the person in a photo with a garment from a separate product shot using Bria. One person photo plus one to three garments or accessories produces a worn look in which the face, pose and background stay untouched and the garment is refitted to the body. Ideal for fashion catalogs and lookbooks without a photoshoot.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["API","Fashion","Image","Image Edit"],
+        "models": ["BRIA"],
+        "logos": [
+          {
+            "provider": "BRIA"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "thumbnail": ["input/bria_tryon_man.png","input/bria_tryon_shirt.png"],
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "bria_tryon_man.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 3,
+              "nodeType": "LoadImage",
+              "file": "bria_tryon_shirt.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 5,
+              "nodeType": "SaveImage",
+              "file": "api_bria_virtual_try_on.png",
+              "mediaType": "image"
+            }
+          ]
+        }
       },
       {
         "name": "api_meta_muse_image_image_edit",
@@ -11508,6 +11663,96 @@
         "minComfyUIVersion": "0.28.1"
       },
       {
+        "name": "api_veed_fabric_1_0",
+        "title": "VEED Fabric 1.0: Talking Photo",
+        "description": "Turn a still photo and a speech track into a talking, lip-synced video with VEED Fabric 1.0. The face in the image speaks the audio, the clip keeps the image's aspect ratio and runs as long as the audio, up to 300 seconds at 480p or 720p. Ideal for avatars, mascots and localized spokesperson clips driven by your own voice recording or a TTS node.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Image to Video","Lip Sync"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "black_fashion_portrait.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 5,
+              "nodeType": "LoadAudio",
+              "file": "audio_see_beyond_the_light.mp3",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_fabric_1_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_lipsync_2_0",
+        "title": "VEED Lipsync 2.0: Lip Sync",
+        "description": "Re-sync a speaker's mouth in footage you already shot to a new speech track with VEED Lipsync 2.0. The person on camera speaks the new audio while the rest of the shot stays as recorded; the output keeps the video's resolution at 25 fps and runs as long as the audio, up to 600 seconds. If the clip is shorter than the speech it plays forward and backward until the audio ends. Ideal for dubbing a line, swapping a script without re-shooting, or making localized versions of existing footage.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Lip Sync","Video Edit"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadVideo",
+              "file": "rainbow_face_portrait_prism_video.mp4",
+              "mediaType": "video"
+            },
+            {
+              "nodeId": 9,
+              "nodeType": "LoadAudio",
+              "file": "veed_lipsync_rainbow_night_speech.wav",
+              "mediaType": "audio"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 10,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_lipsync_2_0.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_seedance2_0_mini_r2v",
         "title": "Seedance 2.0 Mini: Reference to Video",
         "description": "Generate cinematic video from two reference images using Seedance 2.0 Mini, producing a single video output with AI-driven camera motion and consistent character generation. Ideal for storytelling, branded content, and short film creation where shot composition and visual continuity are essential.",
@@ -13125,6 +13370,76 @@
           ]
         },
         "thumbnail": ["output/api_pixverse6_t2v.mp4"]
+      },
+      {
+        "name": "api_pixverse_v6_max_t2v",
+        "title": "PixVerse V6 Max: Text to Video",
+        "description": "Generate videos up to 15 seconds at 1080p from a text prompt with PixVerse V6 Max, the higher-fidelity tier of PixVerse V6, with native audio and multi-shot direction in a single generation. No input files required. Ideal for social ads, product concept clips and short-form storytelling.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Text to Video"],
+        "models": ["PixVerse"],
+        "logos": [
+          {
+            "provider": "Pixverse"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_pixverse_v6_max_t2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_pixverse_v6_max_i2v",
+        "title": "PixVerse V6 Max: Image to Video",
+        "description": "Animate a still image with PixVerse V6 Max, keeping the aspect ratio of the input image and generating up to 15 seconds at up to 1080p with an optional native audio track. Ideal for bringing product shots, character art and keyframes to life for social and advertising use.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Image to Video"],
+        "models": ["PixVerse"],
+        "logos": [
+          {
+            "provider": "Pixverse"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "pixverse_v6max_i2v_input_image.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "SaveVideo",
+              "file": "api_pixverse_v6_max_i2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
       },
       {
         "name": "api_pixverse_t2v",
@@ -16514,6 +16829,76 @@
         "minComfyUIVersion": "0.14.0"
       },
       {
+        "name": "api_veed_remove_video_background",
+        "title": "VEED Remove Video Background: Matte Export",
+        "description": "Cut the subject out of a video with VEED Remove Video Background: the node segments the foreground in every frame and returns the frames plus an alpha mask, and Join Image with Alpha turns that mask into a transparent PNG sequence ready to composite. Choose standard, fast or green-screen keying; clips up to 60 seconds.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Remove Background","Video"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "LoadVideo",
+              "file": "swimcap_glass_pop_video.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio_video",
+        "title": "VEED Clean Audio: Video Speech Cleanup",
+        "description": "Clean the speech inside a video with VEED Clean Audio: background noise, music and effects are stripped from the soundtrack, pauses are cleaned completely, and the clip comes back with 48 kHz mono speech, optionally normalized to a target loudness while the picture stays as shot. Video up to 1799 seconds.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Audio","Video Edit"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadVideo",
+              "file": "veed_clean_audio_input_h3_omniref_person_dialogue_plus_noise.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_veed_clean_audio_video.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
         "name": "api_bria_video_green_screen",
         "title": "Green Screen: Bria",
         "description": "Upload a video to generate a green screen version with a transparent or solid background.",
@@ -16968,6 +17353,97 @@
     "type": "audio",
     "templates": [
       {
+        "name": "api_mirelo_video_to_sfx",
+        "title": "Mirelo SFX 2.0: Video to SFX",
+        "description": "Add picture-locked sound effects to a clip with Mirelo sfx-2.0: the model watches the video and times Foley to on-screen action, keeps speech by default, and saves the SFX track, the speech track and the video carrying the new mix.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["Video","Audio","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "LoadVideo",
+              "file": "mage_crash_discovery_video.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 730,
+              "nodeType": "SaveVideo",
+              "file": "api_mirelo_video_to_sfx.mp4",
+              "mediaType": "video"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_mirelo_text_to_sfx",
+        "title": "Mirelo SFX 2.0: Text to SFX",
+        "description": "Generate sound effects from a text prompt with Mirelo sfx-2.0: name the sound, its material, space and intensity in one line and get a 48 kHz mono audio file, up to 10 minutes.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["Text to Audio","Audio","API"],
+        "models": ["Mirelo"],
+        "logos": [
+          {
+            "provider": "Mirelo"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0"
+      },
+      {
+        "name": "api_veed_clean_audio",
+        "title": "VEED Clean Audio: Speech Cleanup",
+        "description": "Remove background noise from a speech recording with VEED Clean Audio: music and effects go with the noise, pauses are cleaned completely, and the voice comes back as 48 kHz mono audio, optionally normalized to a target loudness. Audio up to 1799 seconds.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Audio","Audio Editing"],
+        "models": ["VEED"],
+        "logos": [
+          {
+            "provider": "VEED"
+          }
+        ],
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "minComfyUIVersion": "0.43.0",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 13,
+              "nodeType": "LoadAudio",
+              "file": "veed_clean_audio_noisy_input.wav",
+              "mediaType": "audio"
+            }
+          ]
+        }
+      },
+      {
         "name": "api_elevenlabs_v4_text_to_speech",
         "title": "Eleven v4: Text to Speech",
         "description": "Generate expressive speech from text with Eleven v4, the quality-focused ElevenLabs model. Direct the performance with audio tags such as [whispers] or [excited] written into the script, or upload a voice sample to clone a voice and narrate the script in it. One audio file is output. Ideal for audiobooks, narration, and character voiceovers.",
@@ -17400,6 +17876,37 @@
           }
         ],
         "date": "2026-10-19",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadAudio",
+              "file": "long_demo.mp3",
+              "mediaType": "audio"
+            }
+          ]
+        },
+        "minComfyUIVersion": "0.40.0"
+      },
+      {
+        "name": "api_heygen_voice_1_turbo",
+        "title": "HeyGen Voice 1.0 Turbo: Voice Clone to Speech",
+        "description": "Clone a voice from a short recording with HeyGen Voice 1.0 Turbo, then speak any script in that voice. It is the same instant clone as Voice 1.0, run through the turbo model, which renders faster for quick drafts and iteration. Connect one audio clip to Instant Clone and the resulting voice_id feeds straight into text to speech, while SaveText keeps the ID on disk for the next session. Ideal for narration in your own voice, character dialogue, and multilingual voiceover.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Text to Speech","Voice Cloning"],
+        "models": ["HeyGen"],
+        "logos": [
+          {
+            "provider": "HeyGen"
+          }
+        ],
+        "date": "2026-10-22",
         "openSource": false,
         "size": 0,
         "usage": 0,
@@ -18245,6 +18752,60 @@
           ]
         },
         "thumbnail": ["thumbnail/api_meshy7_1_image_to_model-1.mp4","thumbnail/api_meshy7_1_image_to_model-2.mp4"]
+      },
+      {
+        "name": "api_meshy_t2_5_smart_topology_t2m",
+        "title": "Meshy T2.5: Text to Model (Smart Topology)",
+        "description": "Generate a game-ready 3D model from a text prompt with Meshy T2.5. Meshy T2.5 builds the mesh at the triangle budget you set instead of generating a dense mesh and retopologizing it afterwards, so the result drops straight into a game engine. No input files required. Ideal for props, environment dressing and low-poly game assets that need a predictable triangle count.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Text to 3D"],
+        "models": ["Meshy"],
+        "logos": [
+          {
+            "provider": "Meshy"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "thumbnailVariant": "compareSlider"
+      },
+      {
+        "name": "api_meshy_t2_5_smart_topology_i2m",
+        "title": "Meshy T2.5: Image to Model (Smart Topology)",
+        "description": "Generate a game-ready 3D model from a single image with Meshy T2.5. Meshy T2.5 builds the mesh at the triangle budget you set instead of generating a dense mesh and retopologizing it afterwards, so the result drops straight into a game engine. Texturing with PBR maps is optional and runs at 2k, 4k or 8k. Ideal for turning concept art, product photos and sculpts into engine-ready props.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Image to 3D"],
+        "models": ["Meshy"],
+        "logos": [
+          {
+            "provider": "Meshy"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-23",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "abstract_3d_toy_van_game_asset.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnailVariant": "compareSlider"
       },
       {
         "name": "3d_pixal3d_multi_views",
@@ -19472,6 +20033,68 @@
           ]
         },
         "thumbnail": ["output/api_quiver_arrow2_text_to_svg.svg"]
+      },
+      {
+        "name": "api_ideogram_vector_1_text_to_svg",
+        "title": "Ideogram Vector 1: Text to SVG",
+        "description": "Generate a fully editable SVG from a text prompt with Ideogram Vector 1, optionally guided by up to five reference images, and save it as one vector file. Ideal for logos, posters, flat illustration, patterns and line art that stays crisp at any size and opens directly in a vector editor.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Vector"],
+        "models": ["Ideogram"],
+        "logos": [
+          {
+            "provider": "Ideogram"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadImage",
+              "file": "academic-svg.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
+        "name": "api_ideogram_vector_1_image_to_svg",
+        "title": "Ideogram Vector 1: Image to SVG",
+        "description": "Trace a bitmap into a fully editable SVG with Ideogram Vector 1 and save it as one vector file. Ideal for turning logos, flat illustration, patterns and line art into clean paths that stay crisp at any size, with a detail mode that either keeps large flat color blocks or finer color regions. Photographs also work, but convert into many small paths, so clean sources with large areas of flat color and transparent backgrounds vectorize best.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","Vector"],
+        "models": ["Ideogram"],
+        "logos": [
+          {
+            "provider": "Ideogram"
+          }
+        ],
+        "minComfyUIVersion": "0.42.5",
+        "date": "2026-10-22",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "LoadImage",
+              "file": "kid_onknight_dragon.png",
+              "mediaType": "image"
+            }
+          ]
+        }
       }
     ]
   },
