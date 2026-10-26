@@ -151,6 +151,24 @@
         }
       },
       {
+        "name": "image_minimax_h3_t2i",
+        "title": "MiniMax H3: Text to Image",
+        "task": "Text to Image",
+        "model": "MiniMax H3",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a single still image from a text prompt with MiniMax H3, an omni-modal video model used here for its first-frame decode. No file inputs required: the graph samples an empty latent and decodes it through the H3 video VAE. Best suited to a single subject with a defined light source and a simple or blurred background.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated image"]
+        },
+        "minComfyUIVersion": "0.30.0",
+        "capabilities": {
+          "workflow": ["text-to-image", "int8"]
+        }
+      },
+      {
         "name": "image_moss_image_t2i",
         "title": "MOSS-Image: Text to Image",
         "task": "Text to Image",
@@ -220,6 +238,42 @@
         "minComfyUIVersion": "0.41.3",
         "capabilities": {
           "workflow": ["text-to-image", "layout"]
+        }
+      },
+      {
+        "name": "image_moss_image_edit",
+        "title": "MOSS-Image: Image Edit LoRA",
+        "task": "Image Edit",
+        "model": "MOSS-Image",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Edit a photo with a short instruction using MOSS-Image and its edit LoRA: the instruction and the source image are encoded together, so the sampler redraws the same frame and only the described change is applied. Colour, material, outfit and background swaps keep the face, hair, pose and framing intact, and a Compare Images node shows the source next to the result.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["image-edit"]
+        }
+      },
+      {
+        "name": "image_moss_image_color_depth_control",
+        "title": "MOSS-Image: Color & Depth Control",
+        "task": "Depth Estimation",
+        "model": "MOSS-Image",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Re-pose and re-style a reference photo with MOSS-Image: the graph estimates the reference's geometry with MoGe 3, then generates a new image that keeps the pose, framing and silhouette while the prompt decides the character, wardrobe, setting and light. A color/depth control adapter LoRA makes the model follow the estimated map, and the color map socket is there for region-painted layouts.",
+        "io": {
+          "inputs": ["image: Input image"],
+          "outputs": ["image: Depth map"]
+        },
+        "minComfyUIVersion": "0.43.0",
+        "capabilities": {
+          "workflow": ["depth"]
         }
       },
       {
@@ -788,7 +842,7 @@
         "title": "Seedream 5.0 Flash: Image Edit",
         "task": "Image Edit",
         "model": "Seedream 5.0",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 590,
         "recommend": "high",
         "description": "Edit and generate images with Seedream 5.0 Flash, transforming a single input image into one refined output with cinematic lighting, accurate text rendering, and resolutions up to 2K.",
@@ -1319,9 +1373,9 @@
         "title": "Seedream 5.0 Flash: Text to Image",
         "task": "Text to Image",
         "model": "Seedream 5.0",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 185,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate high-quality images from text prompts using Seedream 5.0 Flash, producing detailed 1K, 1.5K, or 2K visuals with cinematic lighting and accurate text rendering, saved as a single image output.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -1544,9 +1598,9 @@
         "title": "Recraft 4.1 flash: Text to Image",
         "task": "Text to Image",
         "model": "Recraft",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 47,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Generate images from text prompts using Recraft V4.1 Flash, a fast, low-cost model that produces one image output with no file inputs required. Ideal for high-volume generation, rapid iteration, photography and portraits, atmospheric scenes, and quick logo concept exploration.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -1655,7 +1709,7 @@
         "title": "Mage-Flow-Edit Turbo: Image Edit",
         "task": "Image Edit",
         "model": "Mage-Flow",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 95,
         "recommend": "low",
         "description": "Edit images using a reference photo and text instructions with the Mage-Flow-Edit Turbo model, a distilled 4B-parameter model that produces results in just 4 steps. It takes 1-3 reference images and a text prompt as input, then outputs an edited image matching your instructions. Ideal for quick style transfers, background replacements, and interactive photo editing sessions.",
@@ -2504,7 +2558,7 @@
         "title": "Mage-Flow-Edit: Image Edit",
         "task": "Image Edit",
         "model": "Mage-Flow",
-        "freshness": "recent",
+        "freshness": "current",
         "usage": 37,
         "recommend": "not_recommended",
         "description": "Edit images by following natural language instructions with Mage-Flow-Edit, an instruction-based model that handles background replacement, style changes, localized edits, and restoration using up to three reference images. The workflow takes one input image and produces one edited output plus a side-by-side comparison view. Ideal for creative photo retouching, product image styling, and restoring old or damaged photos.",
@@ -3797,9 +3851,9 @@
         "title": "Ming Image 0.1 Design: Text to Image",
         "task": "Text to Image",
         "model": "Ming Image",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 131,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate text-heavy design compositions from text prompts using Ming Image 0.1 Design, a 6B model tuned for UI screens, infographics, and posters. It takes no file inputs and produces one image, supporting transparent backgrounds for easy layering. Ideal for interface mockups, marketing posters, and data-rich infographic drafts.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -4133,7 +4187,7 @@
         "title": "Image Segmentation: SAM3",
         "task": "Image Segmentation",
         "model": "SAM3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 112,
         "recommend": "low",
         "description": "Use the SAM3 model to segment the main subject or content from a photo or image, isolating specific objects or regions. Input an image and receive a segmented mask output.",
@@ -5273,7 +5327,7 @@
         "title": "Seedance2.5 Draft: Reference to Video",
         "task": "Reference to Video",
         "model": "Seedance 2.5",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 572,
         "recommend": "high",
         "description": "Generate draft preview videos from reference images using Seedance 2.5's two-phase draft mode: stage one turns your references and prompt into a fast, low-cost 480p preview plus a reusable draft task ID, and stage two renders the 1080p final from that ID. Ideal for locking in a character or storyboard reference before committing to a full-quality render.",
@@ -5294,7 +5348,7 @@
         "title": "Seedance2.5 Draft: Image to Video",
         "task": "Image to Video",
         "model": "Seedance 2.5",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 247,
         "recommend": "medium",
         "description": "Generate draft preview videos from a first frame image using Seedance 2.5's two-phase draft mode: stage one turns your image into a fast, low-cost 480p preview plus a reusable draft task ID, and stage two renders the 1080p final from that ID. Ideal for testing motion, camera and scene ideas on a still before committing to a full-quality render.",
@@ -6131,7 +6185,7 @@
         "title": "LTX 2.3 IC-LoRA Union Control",
         "task": "Video Generation",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 97,
         "recommend": "low",
         "description": "Generate LTX 2.3 videos with IC-LoRA using aligned control inputs like depth, pose, or edges.",
@@ -6160,6 +6214,78 @@
         "minComfyUIVersion": "0.8.0",
         "capabilities": {
           "workflow": ["video-edit", "api"]
+        }
+      },
+      {
+        "name": "api_kling4_i2v",
+        "title": "Kling 4.0: Image to Video",
+        "task": "Image to Video",
+        "model": "Kling 4.0",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Animate a single still into a five-second clip with Kling 4.0, cutting three times inside one generation. The source image locks the subject and styling while the default prompt drives the camera moves and a beat-timed edit, and the model also produces stereo audio. Ideal for fashion, editorial, and product motion where the input frame defines the look.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.42.6",
+        "capabilities": {
+          "workflow": ["api", "image-to-video"]
+        }
+      },
+      {
+        "name": "api_kling4_t2v",
+        "title": "Kling 4.0: Text to Video",
+        "task": "Text to Video",
+        "model": "Kling 4.0",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate a ten-second cinematic clip from text alone with Kling 4.0, holding one single continuous shot through a full high-speed chase while also producing native stereo audio. Ideal for short-form spectacle, concept pitches, and motion references where a single unbroken take carries the idea.",
+        "io": {
+          "inputs": ["text: Video prompt"],
+          "outputs": ["video: Generated video"]
+        },
+        "minComfyUIVersion": "0.42.6",
+        "capabilities": {
+          "workflow": ["api", "text-to-video"]
+        }
+      },
+      {
+        "name": "api_kling4_video_edit",
+        "title": "Kling 4.0: Video Edit",
+        "task": "Video Edit",
+        "model": "Kling 4.0",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Edit an existing clip in one pass with Kling 4.0: name the change and list what must survive, and the model rewrites only that part while keeping the subject, costume, shot count, camera work and timing intact. Output inherits the input's length and aspect ratio, and stereo audio is regenerated to match the new scene. Ideal for swapping environments, wardrobe or style on footage that is already cut.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.42.6",
+        "capabilities": {
+          "workflow": ["video-edit", "api"]
+        }
+      },
+      {
+        "name": "api_kling4_r2v",
+        "title": "Kling 4.0: Reference to Video",
+        "task": "Reference to Video",
+        "model": "Kling 4.0",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Hold a character and a location from two reference images and shoot a three-shot fashion fragment between them: an extreme close-up with a snap zoom, a mid-hall turn with a whip-pan, and a 120-degree orbit under the arched window. Each cut lands on a new position inside the same room, with two hard cuts in five seconds and stereo audio generated for the space.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.42.6",
+        "capabilities": {
+          "workflow": ["api", "reference-to-video"]
         }
       },
       {
@@ -6248,9 +6374,9 @@
         "title": "Seedance2.5 Draft: Text to Video",
         "task": "Text to Video",
         "model": "Seedance 2.5",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 48,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Generate draft preview videos from text prompts using Seedance 2.5's two-phase draft mode: stage one turns your prompt into a fast, low-cost 480p preview plus a reusable draft task ID, and stage two renders the 1080p final from that ID. Ideal for storyboard testing, rapid creative iteration, and budget-conscious production workflows.",
         "io": {
           "inputs": ["text: Video prompt"],
@@ -7698,7 +7824,7 @@
         "title": "HappyHorse: Video Edit",
         "task": "Video Edit",
         "model": "HappyHorse 1.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 47,
         "recommend": "not_recommended",
         "description": "Edit a video using text instructions and optional reference images with HappyHorse 1.0’s Video Edit API. Supports style transfer and local replacement by taking a source video and up to 5 reference images. This workflow calls a third-party API; execution time depends on server-side response.",
@@ -7719,7 +7845,7 @@
         "title": "HappyHorse: Image to Video",
         "task": "Image to Video",
         "model": "HappyHorse 1.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 20,
         "recommend": "not_recommended",
         "description": "This workflow uses HappyHorse 1.0 to generate a fluid video from a static image and a text prompt describing desired motion. It outputs up to 1080p video with realistic movement and intelligent semantic comprehension, relying on a third-party API for execution.",
@@ -7740,7 +7866,7 @@
         "title": "HappyHorse: Text to Video",
         "task": "Text to Video",
         "model": "HappyHorse 1.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 17,
         "recommend": "not_recommended",
         "description": "Generate synchronized audio-video clips from text prompts using the HappyHorse 1.0 API. This workflow produces dynamic, high-quality videos with fluid motion and accurate semantic comprehension. Input a text description and receive a generated video; note that execution depends on third-party server response.",
@@ -7761,7 +7887,7 @@
         "title": "HappyHorse: Reference to Video",
         "task": "Reference to Video",
         "model": "HappyHorse 1.0",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 8,
         "recommend": "not_recommended",
         "description": "HappyHorse 1.0 Reference-to-Video generates a short video preserving character identity from two reference images and a text scene description. Input up to 2 subject images and a prompt, output a 3–15 second video with consistent appearance. This workflow calls the HappyHorse API.",
@@ -9354,7 +9480,7 @@
         "title": "Video Segmentation: SAM3",
         "task": "Image Segmentation",
         "model": "SAM3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 147,
         "recommend": "low",
         "description": "Use the SAM3 model to segment the main subject or content from a video, isolating specific objects or regions. Input a video and receive a segmented mask output.",
@@ -9474,7 +9600,7 @@
         "title": "Frame Interpolation: FILM or RIFE",
         "task": "Frame Interpolation",
         "model": "FILM",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 56,
         "recommend": "low",
         "description": "Upload a video and select either RIFE or FILM frame interpolation model to generate smoother, higher frame rate video output.",
@@ -10811,9 +10937,9 @@
         "title": "Meshy 7.1: Text to Model",
         "task": "Text to 3D",
         "model": "Meshy",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 19,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Generate detailed 3D models from text prompts using Meshy 7.1, with an optional Ultra 4K geometry mode that captures fine surface detail like stitching, wood grain, and scales as real geometry. Ideal for game asset creation, product visualization, and 3D printing preparation.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -10829,7 +10955,7 @@
         "title": "Meshy 7.1: Image to 3D",
         "task": "Image to 3D",
         "model": "Meshy",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 218,
         "recommend": "medium",
         "description": "Generate a 3D model from a single image using Meshy 7.1's Ultra 4K geometry mode, which produces 4096³ meshes so fine surface detail like stitching, wood grain, and scales becomes real geometry rather than texture. Takes one input image. Ideal for high-fidelity asset creation, detailed prop modeling, and product visualization.",
@@ -11666,9 +11792,9 @@
         "title": "Arrow2: Image to SVG",
         "task": "Image Generation",
         "model": "Quiver",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 43,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Convert a raster image into a clean, editable SVG vector using Arrow 2, taking one image and returning one vector output. The model produces cleaner geometry and stronger composition with fewer control points. Ideal for vectorizing sketches, logos, and line art, or preparing scalable brand and product assets.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -11684,9 +11810,9 @@
         "title": "Arrow2: Text to SVG",
         "task": "Image Generation",
         "model": "Quiver",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 13,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Generate editable SVG vector graphics directly from text prompts using Arrow 2, producing one image output with no file inputs required. Ideal for illustrations, technical diagrams, logo design, and turning written briefs into clean, scalable vector assets.",
         "io": {
           "inputs": ["text: Prompt"],

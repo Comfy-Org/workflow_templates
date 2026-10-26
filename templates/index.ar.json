@@ -227,6 +227,33 @@
         }
       },
       {
+        "name": "image_minimax_h3_t2i",
+        "title": "MiniMax H3: من النص إلى الصورة",
+        "description": "ينشئ صورة ثابتة واحدة من وصف نصي باستخدام MiniMax H3، وهو نموذج فيديو متعدد الوسائط يُستخدم هنا لفك ترميز الإطار الأول. لا حاجة إلى ملفات إدخال: يرسم المخطط latent فارغًا ويفك ترميزه عبر VAE الفيديو الخاص بـ H3. الأنسب لموضوع واحد ومصدر ضوء واضح وخلفية بسيطة أو ضبابية.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["نص إلى صورة","Int8"],
+        "models": ["MiniMax H3"],
+        "date": "2026-10-27",
+        "openSource": true,
+        "size": 41865330663,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "outputs": [
+            {
+              "nodeId": 48,
+              "nodeType": "SaveImage",
+              "file": "image_minimax_h3_t2i.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnail": ["output/image_minimax_h3_t2i.png"],
+        "minComfyUIVersion": "0.30.0"
+      },
+      {
         "name": "image_moss_image_t2i",
         "title": "MOSS-Image: من النص إلى الصورة",
         "description": "ينشئ صورة من وصف نصي باستخدام MOSS-Image، وهو نموذج مفتوح الأوزان يقرأ وصفًا كاملًا للمشهد ويعيد صورة نهائية. يوسّع محسّن الوصف الطلب القصير إلى ذلك الوصف أولًا، لذا تكفي جملة واحدة. مناسب لتصوير التحرير وصور المنتجات والفن المفاهيمي.",
@@ -325,6 +352,76 @@
               "nodeId": 9,
               "nodeType": "SaveImage",
               "file": "image_moss_image_t2i_bboxes_base.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
+        "name": "image_moss_image_edit",
+        "title": "MOSS-Image: Image Edit",
+        "description": "Edit a photo with a short instruction using MOSS-Image and its edit LoRA: the instruction and the source image are encoded together, so the sampler redraws the same frame and only the described change is applied. Colour, material, outfit and background swaps keep the face, hair, pose and framing intact, and a Compare Images node shows the source next to the result.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["تحرير صورة"],
+        "models": ["MOSS-Image"],
+        "minComfyUIVersion": "0.43.0",
+        "date": "2026-10-26",
+        "openSource": true,
+        "size": 13314398618,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 8,
+              "nodeType": "LoadImage",
+              "file": "two_women_berets_floral_jackets.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 9,
+              "nodeType": "SaveImage",
+              "file": "image_moss_image_edit.png",
+              "mediaType": "image"
+            }
+          ]
+        }
+      },
+      {
+        "name": "image_moss_image_color_depth_control",
+        "title": "MOSS-Image: Color & Depth Control",
+        "description": "Re-pose and re-style a reference photo with MOSS-Image: the graph estimates the reference's geometry with MoGe 3, then generates a new image that keeps the pose, framing and silhouette while the prompt decides the character, wardrobe, setting and light. A color/depth control adapter LoRA makes the model follow the estimated map, and the color map socket is there for region-painted layouts.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["صورة","Depth"],
+        "models": ["MOSS-Image"],
+        "minComfyUIVersion": "0.43.0",
+        "date": "2026-10-26",
+        "openSource": true,
+        "size": 18253611008,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 55,
+              "nodeType": "LoadImage",
+              "file": "fashion_portrait_red_canyon.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 85,
+              "nodeType": "SaveImage",
+              "file": "image_moss_image_color_depth_control.png",
               "mediaType": "image"
             }
           ]
@@ -2371,6 +2468,80 @@
         "includeOnDistributions": ["local"],
         "thumbnail": ["output/image_flux2_klein_image_edit_9b_distilled.png","output/image_flux2_klein_image_edit_9b_distilled.png"],
         "minComfyUIVersion": "0.3.72"
+      },
+      {
+        "name": "image_fibo2_edit_turbo_pe",
+        "title": "Fibo 2.0 Turbo: Image Edit",
+        "description": "Edit an image with local open-weights Fibo 2.0 Edit Turbo (int8) and an optional prompt enhancer: a local vision LLM reads the reference image and rewrites your instruction into the structured caption Fibo 2.0 was trained on before TextEncodeFibo2 samples 4 steps at CFG 1. Switch the enhancer off to feed your raw prompt, and compare the result against the source in the built-in image compare node. Ideal for fast instruction-based retouches that keep identity and composition.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["تحرير صورة","Int8"],
+        "models": ["Fibo 2.0"],
+        "minComfyUIVersion": "0.43.0",
+        "date": "2026-10-26",
+        "openSource": true,
+        "size": 26950919782,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 10,
+              "nodeType": "LoadImage",
+              "file": "auburn_afro_payphone_portrait.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "SaveImage",
+              "file": "image_fibo2_edit_turbo_pe.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnail": ["input/auburn_afro_payphone_portrait.png","output/image_fibo2_edit_turbo_pe.png"],
+        "includeOnDistributions": ["local"]
+      },
+      {
+        "name": "image_fibo2_edit_dev_pe",
+        "title": "Fibo 2.0 Dev: Image Edit",
+        "description": "Same graph as the Turbo template loaded with the full non-distilled Fibo 2.0 Dev weights: 50 steps at CFG 5 with Bria's structured negative, for the cleanest edits when sampling time is not the constraint. The optional prompt enhancer rewrites the instruction into a structured caption; switch it off to sample the raw prompt.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "thumbnailVariant": "compareSlider",
+        "tags": ["تحرير صورة","Int8"],
+        "models": ["Fibo 2.0"],
+        "minComfyUIVersion": "0.43.0",
+        "date": "2026-10-26",
+        "openSource": true,
+        "size": 26971291510,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 10,
+              "nodeType": "LoadImage",
+              "file": "red_bowler_hat_portrait.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 7,
+              "nodeType": "SaveImage",
+              "file": "image_fibo2_edit_dev_pe.png",
+              "mediaType": "image"
+            }
+          ]
+        },
+        "thumbnail": ["input/red_bowler_hat_portrait.png","output/image_fibo2_edit_dev_pe.png"],
+        "includeOnDistributions": ["local"]
       },
       {
         "name": "flux_canny_model_example",
@@ -11034,6 +11205,165 @@
         },
         "username": "ComfyUI",
         "minComfyUIVersion": "0.8.0"
+      },
+      {
+        "name": "api_kling4_i2v",
+        "title": "Kling 4.0: Image to Video",
+        "description": "Animate a single still into a five-second clip with Kling 4.0, cutting three times inside one generation. The source image locks the subject and styling while the default prompt drives the camera moves and a beat-timed edit, and the model also produces stereo audio. Ideal for fashion, editorial, and product motion where the input frame defines the look.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","صورة إلى فيديو"],
+        "models": ["Kling 4.0"],
+        "logos": [
+          {
+            "provider": "Kling"
+          }
+        ],
+        "date": "2026-10-27",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 1,
+              "nodeType": "LoadImage",
+              "file": "kling4_editorial_portrait.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_kling4_i2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "thumbnail": ["output/api_kling4_i2v.mp4"],
+        "minComfyUIVersion": "0.42.6"
+      },
+      {
+        "name": "api_kling4_t2v",
+        "title": "Kling 4.0: Text to Video",
+        "description": "Generate a ten-second cinematic clip from text alone with Kling 4.0, holding one single continuous shot through a full high-speed chase while also producing native stereo audio. Ideal for short-form spectacle, concept pitches, and motion references where a single unbroken take carries the idea.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","نص إلى فيديو"],
+        "models": ["Kling 4.0"],
+        "logos": [
+          {
+            "provider": "Kling"
+          }
+        ],
+        "date": "2026-10-27",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "outputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "SaveVideo",
+              "file": "api_kling4_t2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "thumbnail": ["output/api_kling4_t2v.mp4"],
+        "minComfyUIVersion": "0.42.6"
+      },
+      {
+        "name": "api_kling4_video_edit",
+        "title": "Kling 4.0: Video Edit",
+        "description": "Edit an existing clip in one pass with Kling 4.0: name the change and list what must survive, and the model rewrites only that part while keeping the subject, costume, shot count, camera work and timing intact. Output inherits the input's length and aspect ratio, and stereo audio is regenerated to match the new scene. Ideal for swapping environments, wardrobe or style on footage that is already cut.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["تحرير الفيديو","API"],
+        "models": ["Kling 4.0"],
+        "logos": [
+          {
+            "provider": "Kling"
+          }
+        ],
+        "date": "2026-10-27",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 1,
+              "nodeType": "LoadVideo",
+              "file": "kling4_gown_input.mp4",
+              "mediaType": "video"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 3,
+              "nodeType": "SaveVideo",
+              "file": "api_kling4_video_edit.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "thumbnail": ["output/api_kling4_video_edit.mp4"],
+        "minComfyUIVersion": "0.42.6",
+        "thumbnailVariant": "compareSlider"
+      },
+      {
+        "name": "api_kling4_r2v",
+        "title": "Kling 4.0: Reference to Video",
+        "description": "Hold a character and a location from two reference images and shoot a three-shot fashion fragment between them: an extreme close-up with a snap zoom, a mid-hall turn with a whip-pan, and a 120-degree orbit under the arched window. Each cut lands on a new position inside the same room, with two hard cuts in five seconds and stereo audio generated for the space.",
+        "mediaType": "image",
+        "mediaSubtype": "webp",
+        "tags": ["API","إنشاء فيديو باستخدام مرجع"],
+        "models": ["Kling 4.0"],
+        "logos": [
+          {
+            "provider": "Kling"
+          }
+        ],
+        "date": "2026-10-27",
+        "openSource": false,
+        "size": 0,
+        "usage": 0,
+        "searchRank": 0,
+        "username": "ComfyUI",
+        "io": {
+          "inputs": [
+            {
+              "nodeId": 2,
+              "nodeType": "LoadImage",
+              "file": "kling4_r2v_brutalist_hall.png",
+              "mediaType": "image"
+            },
+            {
+              "nodeId": 5,
+              "nodeType": "LoadImage",
+              "file": "kling4_r2v_woman_copper_bob.png",
+              "mediaType": "image"
+            }
+          ],
+          "outputs": [
+            {
+              "nodeId": 4,
+              "nodeType": "SaveVideo",
+              "file": "api_kling4_r2v.mp4",
+              "mediaType": "video"
+            }
+          ]
+        },
+        "thumbnail": ["output/api_kling4_r2v.mp4"],
+        "minComfyUIVersion": "0.42.6"
       },
       {
         "name": "api_kling_o3_i2v",

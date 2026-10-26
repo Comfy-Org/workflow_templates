@@ -1,0 +1,1041 @@
+{
+ "id": "11f4aa31-53e3-453a-b4dd-4bf52de3a617",
+ "revision": 0,
+ "last_node_id": 40,
+ "last_link_id": 9069,
+ "nodes": [
+  {
+   "id": 8,
+   "type": "LoadImage",
+   "pos": [
+    820,
+    -240
+   ],
+   "size": [
+    690,
+    930
+   ],
+   "flags": {},
+   "order": 0,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "slot_index": 0,
+     "links": [
+      43,
+      9051
+     ]
+    },
+    {
+     "name": "MASK",
+     "type": "MASK",
+     "links": null
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoadImage"
+   },
+   "widgets_values": [
+    "two_women_berets_floral_jackets.png",
+    "image"
+   ],
+   "widgets_values_named": {
+    "image": "two_women_berets_floral_jackets.png",
+    "upload": "image"
+   },
+   "color": "#322",
+   "bgcolor": "#533"
+  },
+  {
+   "id": 9,
+   "type": "SaveImage",
+   "pos": [
+    3630,
+    -180
+   ],
+   "size": [
+    760,
+    870
+   ],
+   "flags": {},
+   "order": 15,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "link": 9060
+    }
+   ],
+   "outputs": [
+    {
+     "name": "images",
+     "type": "IMAGE",
+     "links": [
+      44
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SaveImage"
+   },
+   "widgets_values": [
+    "image_moss_image_edit"
+   ],
+   "widgets_values_named": {
+    "filename_prefix": "image_moss_image_edit"
+   }
+  },
+  {
+   "id": 20,
+   "type": "ImageCompare",
+   "pos": [
+    4440,
+    -180
+   ],
+   "size": [
+    860,
+    870
+   ],
+   "flags": {},
+   "order": 16,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image_a",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 43
+    },
+    {
+     "name": "image_b",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": 44
+    }
+   ],
+   "outputs": [],
+   "properties": {
+    "Node name for S&R": "ImageCompare"
+   },
+   "widgets_values": [],
+   "widgets_values_named": {}
+  },
+  {
+   "id": 21,
+   "type": "MarkdownNote",
+   "pos": [
+    60,
+    -370
+   ],
+   "size": [
+    670,
+    1500
+   ],
+   "flags": {},
+   "order": 1,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "properties": {},
+   "widgets_values": [
+    "## MOSS-Image: Image Edit\n\nEdit one photo with a short instruction. An edit LoRA runs on top of the MOSS-Image SFT checkpoint, and the instruction is encoded together with the source image as a reference, so the sampler redraws the same frame with only the described change applied.\n\n### How to use\n\n1. **Load Image** (node 8): the photo to edit. It is scaled to 1.0 MP and aligned to 16 px (node 29), and **Get Image Size** feeds that size to **Empty Flux2 Latent Image**, so the output keeps the source aspect ratio.\n2. **Text Encode MOSS-Image Edit - positive** (node 39): describe only the change. The phrasing the LoRA was trained on works best: `Change only the X to Y. Keep the character, face, hair, pose, background and composition unchanged.`\n3. **Text Encode MOSS-Image Edit - negative** (node 36): the model's recommended negative line. It sees the same reference image, so it describes what to avoid, not what to remove from the scene.\n4. **KSampler** (node 37): 30 steps, cfg 4.0, `euler`, `normal`, denoise 1: the values the LoRA author ships.\n5. Queue. **Save Image** writes `image_moss_image_edit_*.png`, and **Compare Images** (node 20) shows the source next to the result.\n\n### edit_format must match the LoRA\n\n`edit_format` selects the layout the LoRA was trained with. Both encode nodes must use the same value.\n\n| value | trained with |\n|-------|--------------|\n| `Moss-Image-Edit` | `moss_image_edit_lora_rank_64_bf16.safetensors`, the LoRA this workflow loads |\n| `ai-toolkit` | ai-toolkit's MOSS-Image Edit Training |\n| `ai-toolkit (kv_cache off)` | the same with `kv_cache` off: the references also attend to the image being generated, so they are recomputed every step |\n\nPicking the wrong layout still returns an image, but a worse one: identity, framing and fine detail drift away from the source.\n\n### Resolution\n\nReferences enter the diffusion model at exactly the size they arrive with, so the source is scaled once by **Image Scale To Total Pixels** (node 29, 1.0 MP, 16 px step) and both the reference and the generated frame use that size. Lowering it to about 0.26 MP (a 512 px long edge) makes the run cheaper but looser: the model starts re-framing the subject instead of editing the frame it was given.\n\n### Sampling\n\n- **Skip Layer Guidance** (node 32) stays on, single layer `22`, 0 to 1.0 of the schedule: what the LoRA author ships.\n- CFG 4.0 means the negative branch matters. If you see a necklace or earrings appear out of nowhere while editing the top, the cfg is too low for this LoRA; keep it at 4.0.\n\n### More than one reference\n\nThe encode nodes autogrow `images.image_0`, `images.image_1`, ... Connect up to four photos (a garment, a face, a prop) and say in the prompt what each one is for. Extra slots appear only when you connect them; a disconnected slot costs nothing.\n"
+   ],
+   "widgets_values_named": {
+    "text": "## MOSS-Image: Image Edit\n\nEdit one photo with a short instruction. An edit LoRA runs on top of the MOSS-Image SFT checkpoint, and the instruction is encoded together with the source image as a reference, so the sampler redraws the same frame with only the described change applied.\n\n### How to use\n\n1. **Load Image** (node 8): the photo to edit. It is scaled to 1.0 MP and aligned to 16 px (node 29), and **Get Image Size** feeds that size to **Empty Flux2 Latent Image**, so the output keeps the source aspect ratio.\n2. **Text Encode MOSS-Image Edit - positive** (node 39): describe only the change. The phrasing the LoRA was trained on works best: `Change only the X to Y. Keep the character, face, hair, pose, background and composition unchanged.`\n3. **Text Encode MOSS-Image Edit - negative** (node 36): the model's recommended negative line. It sees the same reference image, so it describes what to avoid, not what to remove from the scene.\n4. **KSampler** (node 37): 30 steps, cfg 4.0, `euler`, `normal`, denoise 1: the values the LoRA author ships.\n5. Queue. **Save Image** writes `image_moss_image_edit_*.png`, and **Compare Images** (node 20) shows the source next to the result.\n\n### edit_format must match the LoRA\n\n`edit_format` selects the layout the LoRA was trained with. Both encode nodes must use the same value.\n\n| value | trained with |\n|-------|--------------|\n| `Moss-Image-Edit` | `moss_image_edit_lora_rank_64_bf16.safetensors`, the LoRA this workflow loads |\n| `ai-toolkit` | ai-toolkit's MOSS-Image Edit Training |\n| `ai-toolkit (kv_cache off)` | the same with `kv_cache` off: the references also attend to the image being generated, so they are recomputed every step |\n\nPicking the wrong layout still returns an image, but a worse one: identity, framing and fine detail drift away from the source.\n\n### Resolution\n\nReferences enter the diffusion model at exactly the size they arrive with, so the source is scaled once by **Image Scale To Total Pixels** (node 29, 1.0 MP, 16 px step) and both the reference and the generated frame use that size. Lowering it to about 0.26 MP (a 512 px long edge) makes the run cheaper but looser: the model starts re-framing the subject instead of editing the frame it was given.\n\n### Sampling\n\n- **Skip Layer Guidance** (node 32) stays on, single layer `22`, 0 to 1.0 of the schedule: what the LoRA author ships.\n- CFG 4.0 means the negative branch matters. If you see a necklace or earrings appear out of nowhere while editing the top, the cfg is too low for this LoRA; keep it at 4.0.\n\n### More than one reference\n\nThe encode nodes autogrow `images.image_0`, `images.image_1`, ... Connect up to four photos (a garment, a face, a prop) and say in the prompt what each one is for. Extra slots appear only when you connect them; a disconnected slot costs nothing.\n"
+   },
+   "color": "#222",
+   "bgcolor": "#000"
+  },
+  {
+   "id": 22,
+   "type": "MarkdownNote",
+   "pos": [
+    -670,
+    -370
+   ],
+   "size": [
+    670,
+    1150
+   ],
+   "flags": {},
+   "order": 2,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [],
+   "properties": {},
+   "widgets_values": [
+    "## Model Links\n\n- [Hugging Face: Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image) (checkpoints, text encoder, VAE, edit LoRA)\n- [Hugging Face: chinoll/Moss-Image-Edit](https://huggingface.co/chinoll/Moss-Image-Edit) (upstream edit LoRA, same bytes as the rehosted file)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors) (higher precision, slower)\n\n**loras**\n\n- [moss_image_edit_lora_rank_64_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/loras/moss_image_edit_lora_rank_64_bf16.safetensors) (rank 64, bf16, 297 MB)\n\n**text_encoders**\n\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors)\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors) (larger, slightly higher precision)\n\n**vae**\n\n- [flux2-vae_small.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors)\n\nThe edit LoRA runs on either MOSS-Image checkpoint: set `unet_model` to `moss_image_base_*` to try it on the base model. The Core support (`Text Encode MOSS-Image Edit`) ships from ComfyUI 0.43.0.\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── moss_image_sft_int8_convrot.safetensors\n│   ├── 📂 loras/\n│   │   └── moss_image_edit_lora_rank_64_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_w4a8_gptq.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae_small.safetensors\n```\n\n## Input Asset\n\n`Load Image` points at `two_women_berets_floral_jackets.png`, two women in berets and floral jackets, which is what the shipped thumbnail was made from. Any image works: the graph scales it to 1.0 MP and keeps its aspect ratio, so portrait, square and landscape sources all come out at their own shape. Swap in your own file, or paint/connect extra references on the encode nodes.\n"
+   ],
+   "widgets_values_named": {
+    "text": "## Model Links\n\n- [Hugging Face: Comfy-Org/MOSS-Image](https://huggingface.co/Comfy-Org/MOSS-Image) (checkpoints, text encoder, VAE, edit LoRA)\n- [Hugging Face: chinoll/Moss-Image-Edit](https://huggingface.co/chinoll/Moss-Image-Edit) (upstream edit LoRA, same bytes as the rehosted file)\n\n**diffusion_models**\n\n- [moss_image_sft_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors)\n- [moss_image_sft_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_bf16.safetensors) (higher precision, slower)\n\n**loras**\n\n- [moss_image_edit_lora_rank_64_bf16.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/loras/moss_image_edit_lora_rank_64_bf16.safetensors) (rank 64, bf16, 297 MB)\n\n**text_encoders**\n\n- [qwen3.5_9b_w4a8_gptq.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors)\n- [qwen3.5_9b_int8_convrot.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_int8_convrot.safetensors) (larger, slightly higher precision)\n\n**vae**\n\n- [flux2-vae_small.safetensors](https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors)\n\nThe edit LoRA runs on either MOSS-Image checkpoint: set `unet_model` to `moss_image_base_*` to try it on the base model. The Core support (`Text Encode MOSS-Image Edit`) ships from ComfyUI 0.43.0.\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── moss_image_sft_int8_convrot.safetensors\n│   ├── 📂 loras/\n│   │   └── moss_image_edit_lora_rank_64_bf16.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3.5_9b_w4a8_gptq.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae_small.safetensors\n```\n\n## Input Asset\n\n`Load Image` points at the photo you want to edit. Any image works: the graph scales it to 1.0 MP and keeps its aspect ratio, so portrait, square and landscape sources all come out at their own shape. Swap in your own file, or paint/connect extra references on the encode nodes.\n"
+   },
+   "color": "#222",
+   "bgcolor": "#000"
+  },
+  {
+   "id": 27,
+   "type": "GetImageSize",
+   "pos": [
+    1670,
+    1030
+   ],
+   "size": [
+    380,
+    100
+   ],
+   "flags": {},
+   "order": 10,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 9069
+    }
+   ],
+   "outputs": [
+    {
+     "name": "width",
+     "type": "INT",
+     "slot_index": 0,
+     "links": [
+      9049
+     ]
+    },
+    {
+     "name": "height",
+     "type": "INT",
+     "slot_index": 1,
+     "links": [
+      9050
+     ]
+    },
+    {
+     "name": "batch_size",
+     "type": "INT",
+     "slot_index": 2,
+     "links": []
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "GetImageSize"
+   }
+  },
+  {
+   "id": 28,
+   "type": "EmptyFlux2LatentImage",
+   "pos": [
+    2340,
+    1000
+   ],
+   "size": [
+    380,
+    120
+   ],
+   "flags": {},
+   "order": 12,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "width",
+     "type": "INT",
+     "widget": {
+      "name": "width"
+     },
+     "link": 9049
+    },
+    {
+     "name": "height",
+     "type": "INT",
+     "widget": {
+      "name": "height"
+     },
+     "link": 9050
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "slot_index": 0,
+     "links": [
+      9057
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "EmptyFlux2LatentImage"
+   },
+   "widgets_values": [
+    1024,
+    1024,
+    1
+   ],
+   "widgets_values_named": {
+    "width": 1024,
+    "height": 1024,
+    "batch_size": 1
+   }
+  },
+  {
+   "id": 29,
+   "type": "ImageScaleToTotalPixels",
+   "pos": [
+    1670,
+    830
+   ],
+   "size": [
+    380,
+    150
+   ],
+   "flags": {},
+   "order": 6,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "image",
+     "type": "IMAGE",
+     "link": 9051
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "slot_index": 0,
+     "links": [
+      9062,
+      9067,
+      9069
+     ]
+    }
+   ],
+   "title": "Image Scale To Total Pixels (reference)",
+   "properties": {
+    "Node name for S&R": "ImageScaleToTotalPixels"
+   },
+   "widgets_values": [
+    "lanczos",
+    1,
+    16
+   ],
+   "widgets_values_named": {
+    "upscale_method": "lanczos",
+    "megapixels": 1,
+    "resolution_steps": 16
+   }
+  },
+  {
+   "id": 30,
+   "type": "UNETLoader",
+   "pos": [
+    1620,
+    -240
+   ],
+   "size": [
+    440,
+    90
+   ],
+   "flags": {},
+   "order": 3,
+   "mode": 0,
+   "showAdvanced": true,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "slot_index": 0,
+     "links": [
+      9052
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "UNETLoader",
+    "models": [
+     {
+      "name": "moss_image_sft_int8_convrot.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/diffusion_models/moss_image_sft_int8_convrot.safetensors",
+      "directory": "diffusion_models"
+     }
+    ]
+   },
+   "widgets_values": [
+    "moss_image_sft_int8_convrot.safetensors",
+    "default"
+   ],
+   "widgets_values_named": {
+    "unet_name": "moss_image_sft_int8_convrot.safetensors",
+    "weight_dtype": "default"
+   }
+  },
+  {
+   "id": 31,
+   "type": "LoraLoaderModelOnly",
+   "pos": [
+    1620,
+    -80
+   ],
+   "size": [
+    440,
+    120
+   ],
+   "flags": {},
+   "order": 7,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 9052
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "slot_index": 0,
+     "links": [
+      9053
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "LoraLoaderModelOnly",
+    "models": [
+     {
+      "name": "moss_image_edit_lora_rank_64_bf16.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/loras/moss_image_edit_lora_rank_64_bf16.safetensors",
+      "directory": "loras"
+     }
+    ]
+   },
+   "widgets_values": [
+    "moss_image_edit_lora_rank_64_bf16.safetensors",
+    1
+   ],
+   "widgets_values_named": {
+    "lora_name": "moss_image_edit_lora_rank_64_bf16.safetensors",
+    "strength_model": 1
+   }
+  },
+  {
+   "id": 32,
+   "type": "SkipLayerGuidanceDiTSimple",
+   "pos": [
+    1620,
+    110
+   ],
+   "size": [
+    440,
+    210
+   ],
+   "flags": {},
+   "order": 11,
+   "mode": 0,
+   "showAdvanced": true,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 9053
+    }
+   ],
+   "outputs": [
+    {
+     "name": "MODEL",
+     "type": "MODEL",
+     "slot_index": 0,
+     "links": [
+      9054
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "SkipLayerGuidanceDiTSimple"
+   },
+   "widgets_values": [
+    "",
+    "22",
+    0,
+    1
+   ],
+   "widgets_values_named": {
+    "double_layers": "",
+    "single_layers": "22",
+    "start_percent": 0,
+    "end_percent": 1
+   }
+  },
+  {
+   "id": 33,
+   "type": "CLIPLoader",
+   "pos": [
+    1620,
+    400
+   ],
+   "size": [
+    440,
+    130
+   ],
+   "flags": {},
+   "order": 4,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "CLIP",
+     "type": "CLIP",
+     "slot_index": 0,
+     "links": [
+      9061,
+      9066
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "CLIPLoader",
+    "models": [
+     {
+      "name": "qwen3.5_9b_w4a8_gptq.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/text_encoders/qwen3.5_9b_w4a8_gptq.safetensors",
+      "directory": "text_encoders"
+     }
+    ]
+   },
+   "widgets_values": [
+    "qwen3.5_9b_w4a8_gptq.safetensors",
+    "moss_image",
+    "default"
+   ],
+   "widgets_values_named": {
+    "clip_name": "qwen3.5_9b_w4a8_gptq.safetensors",
+    "type": "moss_image",
+    "device": "default"
+   }
+  },
+  {
+   "id": 34,
+   "type": "VAELoader",
+   "pos": [
+    1620,
+    600
+   ],
+   "size": [
+    440,
+    60
+   ],
+   "flags": {},
+   "order": 5,
+   "mode": 0,
+   "inputs": [],
+   "outputs": [
+    {
+     "name": "VAE",
+     "type": "VAE",
+     "slot_index": 0,
+     "links": [
+      9059,
+      9063,
+      9070
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAELoader",
+    "models": [
+     {
+      "name": "flux2-vae_small.safetensors",
+      "url": "https://huggingface.co/Comfy-Org/MOSS-Image/resolve/main/vae/flux2-vae_small.safetensors",
+      "directory": "vae"
+     }
+    ]
+   },
+   "widgets_values": [
+    "flux2-vae_small.safetensors"
+   ],
+   "widgets_values_named": {
+    "vae_name": "flux2-vae_small.safetensors"
+   }
+  },
+  {
+   "id": 36,
+   "type": "TextEncodeMOSSImageEdit",
+   "pos": [
+    2260,
+    280
+   ],
+   "size": [
+    460,
+    320
+   ],
+   "flags": {},
+   "order": 8,
+   "mode": 0,
+   "showAdvanced": false,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 9061
+    },
+    {
+     "name": "images.image_0",
+     "type": "IMAGE",
+     "link": 9062
+    },
+    {
+     "name": "images.image_1",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "name": "vae",
+     "shape": 7,
+     "type": "VAE",
+     "link": 9063
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "slot_index": 0,
+     "links": [
+      9056
+     ]
+    }
+   ],
+   "title": "Text Encode MOSS-Image Edit (negative)",
+   "properties": {
+    "Node name for S&R": "TextEncodeMOSSImageEdit"
+   },
+   "widgets_values": [
+    "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
+    "Moss-Image-Edit",
+    1
+   ],
+   "widgets_values_named": {
+    "prompt": "nsfw, worst quality, bad anatomy, watermark, jpeg artifact",
+    "edit_format": "Moss-Image-Edit",
+    "image_strength": 1
+   },
+   "color": "#223",
+   "bgcolor": "#335"
+  },
+  {
+   "id": 37,
+   "type": "KSampler",
+   "pos": [
+    2890,
+    -180
+   ],
+   "size": [
+    310,
+    690
+   ],
+   "flags": {},
+   "order": 13,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "model",
+     "type": "MODEL",
+     "link": 9054
+    },
+    {
+     "name": "positive",
+     "type": "CONDITIONING",
+     "link": 9068
+    },
+    {
+     "name": "negative",
+     "type": "CONDITIONING",
+     "link": 9056
+    },
+    {
+     "name": "latent_image",
+     "type": "LATENT",
+     "link": 9057
+    }
+   ],
+   "outputs": [
+    {
+     "name": "LATENT",
+     "type": "LATENT",
+     "slot_index": 0,
+     "links": [
+      9058
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "KSampler"
+   },
+   "widgets_values": [
+    42,
+    "fixed",
+    30,
+    4,
+    "euler",
+    "normal",
+    1
+   ],
+   "widgets_values_named": {
+    "seed": 42,
+    "control_after_generate": "fixed",
+    "steps": 30,
+    "cfg": 4,
+    "sampler_name": "euler",
+    "scheduler": "normal",
+    "denoise": 1
+   }
+  },
+  {
+   "id": 38,
+   "type": "VAEDecode",
+   "pos": [
+    3230,
+    -180
+   ],
+   "size": [
+    300,
+    90
+   ],
+   "flags": {},
+   "order": 14,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "samples",
+     "type": "LATENT",
+     "link": 9058
+    },
+    {
+     "name": "vae",
+     "type": "VAE",
+     "link": 9059
+    }
+   ],
+   "outputs": [
+    {
+     "name": "IMAGE",
+     "type": "IMAGE",
+     "slot_index": 0,
+     "links": [
+      9060
+     ]
+    }
+   ],
+   "properties": {
+    "Node name for S&R": "VAEDecode"
+   }
+  },
+  {
+   "id": 39,
+   "type": "TextEncodeMOSSImageEdit",
+   "pos": [
+    2260,
+    -200
+   ],
+   "size": [
+    470,
+    380
+   ],
+   "flags": {},
+   "order": 9,
+   "mode": 0,
+   "inputs": [
+    {
+     "name": "clip",
+     "type": "CLIP",
+     "link": 9066
+    },
+    {
+     "name": "images.image_0",
+     "type": "IMAGE",
+     "link": 9067
+    },
+    {
+     "name": "images.image_1",
+     "shape": 7,
+     "type": "IMAGE",
+     "link": null
+    },
+    {
+     "name": "vae",
+     "shape": 7,
+     "type": "VAE",
+     "link": 9070
+    }
+   ],
+   "outputs": [
+    {
+     "name": "CONDITIONING",
+     "type": "CONDITIONING",
+     "links": [
+      9068
+     ]
+    }
+   ],
+   "title": "Text Encode MOSS-Image Edit (positive)",
+   "properties": {
+    "Node name for S&R": "TextEncodeMOSSImageEdit"
+   },
+   "widgets_values": [
+    "Change only the pink floral blazer to a plain black wool coat. Keep both women, their faces, glasses, berets, poses, the embroidered cardigan and the concrete wall background unchanged.",
+    "Moss-Image-Edit",
+    1
+   ],
+   "widgets_values_named": {
+    "prompt": "Change only the pink floral blazer to a plain black wool coat. Keep both women, their faces, glasses, berets, poses, the embroidered cardigan and the concrete wall background unchanged.",
+    "edit_format": "Moss-Image-Edit",
+    "image_strength": 1
+   },
+   "color": "#232",
+   "bgcolor": "#353"
+  }
+ ],
+ "links": [
+  [
+   43,
+   8,
+   0,
+   20,
+   0,
+   "IMAGE"
+  ],
+  [
+   44,
+   9,
+   0,
+   20,
+   1,
+   "IMAGE"
+  ],
+  [
+   9049,
+   27,
+   0,
+   28,
+   0,
+   "INT"
+  ],
+  [
+   9050,
+   27,
+   1,
+   28,
+   1,
+   "INT"
+  ],
+  [
+   9051,
+   8,
+   0,
+   29,
+   0,
+   "IMAGE"
+  ],
+  [
+   9052,
+   30,
+   0,
+   31,
+   0,
+   "MODEL"
+  ],
+  [
+   9053,
+   31,
+   0,
+   32,
+   0,
+   "MODEL"
+  ],
+  [
+   9054,
+   32,
+   0,
+   37,
+   0,
+   "MODEL"
+  ],
+  [
+   9056,
+   36,
+   0,
+   37,
+   2,
+   "CONDITIONING"
+  ],
+  [
+   9057,
+   28,
+   0,
+   37,
+   3,
+   "LATENT"
+  ],
+  [
+   9058,
+   37,
+   0,
+   38,
+   0,
+   "LATENT"
+  ],
+  [
+   9059,
+   34,
+   0,
+   38,
+   1,
+   "VAE"
+  ],
+  [
+   9060,
+   38,
+   0,
+   9,
+   0,
+   "IMAGE"
+  ],
+  [
+   9068,
+   39,
+   0,
+   37,
+   1,
+   "CONDITIONING"
+  ],
+  [
+   9069,
+   29,
+   0,
+   27,
+   0,
+   "IMAGE"
+  ],
+  [
+   9061,
+   33,
+   0,
+   36,
+   0,
+   "CLIP"
+  ],
+  [
+   9062,
+   29,
+   0,
+   36,
+   1,
+   "IMAGE"
+  ],
+  [
+   9063,
+   34,
+   0,
+   36,
+   3,
+   "VAE"
+  ],
+  [
+   9066,
+   33,
+   0,
+   39,
+   0,
+   "CLIP"
+  ],
+  [
+   9067,
+   29,
+   0,
+   39,
+   1,
+   "IMAGE"
+  ],
+  [
+   9070,
+   34,
+   0,
+   39,
+   3,
+   "VAE"
+  ]
+ ],
+ "groups": [
+  {
+   "id": 1,
+   "title": "Models",
+   "bounding": [
+    1580,
+    -360,
+    600,
+    1070
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 2,
+   "title": "Conditioning",
+   "bounding": [
+    2220,
+    -360,
+    570,
+    1070
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 3,
+   "title": "Sampling & Decoding",
+   "bounding": [
+    2820,
+    -360,
+    760,
+    1070
+   ],
+   "color": "#3f789e",
+   "flags": {}
+  },
+  {
+   "id": 4,
+   "title": "Size",
+   "bounding": [
+    1580,
+    740,
+    1210,
+    430
+   ],
+   "color": "#444",
+   "flags": {}
+  }
+ ],
+ "config": {},
+ "extra": {
+  "ds": {
+   "scale": 0.2905397748220841,
+   "offset": [
+    3998.777225220796,
+    1464.2479565093668
+   ]
+  },
+  "frontendVersion": "1.57.1",
+  "VHS_latentpreview": false,
+  "VHS_latentpreviewrate": 0,
+  "VHS_MetadataImage": true,
+  "VHS_KeepIntermediate": true
+ },
+ "version": 0.4
+}
