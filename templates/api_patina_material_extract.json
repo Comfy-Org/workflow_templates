@@ -1,207 +1,28 @@
 {
-  "id": "",
+  "id": "65921f96-39e0-48c0-90f0-48a3907755e3",
   "revision": 0,
-  "last_node_id": 16,
-  "last_link_id": 8,
+  "last_node_id": 31,
+  "last_link_id": 24,
   "nodes": [
     {
-      "id": 1,
-      "type": "MarkdownNote",
-      "pos": [
-        0,
-        0
-      ],
-      "size": [
-        420,
-        520
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [],
-      "properties": {},
-      "widgets_values": [
-        "# Patina Material Extract\n\n**Photo -> seamless, tiling PBR material, extracted.** Point it at a photo that already contains the material you want\nand the prompt says which surface to pull out and what structure to keep. The base texture and the basecolor / normal /\nroughness / metalness / height maps all come from the same latent, so they line up pixel for pixel. Partner (API) node:\nit runs on Comfy's servers, needs an account, nothing renders locally.\n\n## Input Asset\n\n- [patina_brick_wall.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/patina_brick_wall.jpg)\n\n## How to use it\n\n- **Load Image** holds a flat, evenly lit photo of the surface - ideally front-facing, without strong perspective.\n- `prompt` names the surface to extract and the structure to preserve: `dark grey brick wall`, \"keep the brick bond and\n  mortar lines\". Without the keep-list the model happily invents a different bond.\n- `strength` (advanced, 0.6 here) sets how far the extracted texture may drift from the photo.\n- Output is always seamless: `tiling_mode` picks both / horizontal / vertical, so the result drops straight into a\n  tiling material instead of showing a seam.\n- For text-only material generation use the Patina Material text-to-material template; to convert a photo into maps\n  **without** making it tile, the Patina PBR Maps node is the direct path.\n\n## Outputs - wire in this slot order\n\n`0 texture` . `1 basecolor` . `2 normal` . `3 roughness` . `4 metalness` . `5 height` . `6 expanded_prompt`\n\nEvery map can be switched off, but at least one has to stay on. Fewer maps = a cheaper, faster run.\n\n## Tips that actually matter\n\n- Keep the photo bigger than the output size where you can - the model has more real detail to extract from.\n- `num_inference_steps` tops out at 8; there is nothing to gain above that.\n- `tile_size` is in latent space: 128 is about 1024 px, 64 about 512 px.\n- `prompt_expansion` is **off by default on purpose**: the LLM rewrite reframes the prompt as a photo and tends to\n  wash out the metalness map.\n- `upscale_factor` 2 or 4 upscales the **maps only** (SeedVR) - the base texture is never upscaled.\n\n## This workflow\n\nBrick wall photo, basecolor and normal maps on, seed fixed at 42 so the default run is reproducible. Every save node\nwrites to `patina/<yyyymmdd>-<hhmm>_<map>`, so one run's files sit next to each other and different runs never mix."
-      ],
-      "widgets_values_named": {
-        "text": "# Patina Material Extract\n\n**Photo -> seamless, tiling PBR material, extracted.** Point it at a photo that already contains the material you want\nand the prompt says which surface to pull out and what structure to keep. The base texture and the basecolor / normal /\nroughness / metalness / height maps all come from the same latent, so they line up pixel for pixel. Partner (API) node:\nit runs on Comfy's servers, needs an account, nothing renders locally.\n\n## Input Asset\n\n- [patina_brick_wall.jpg](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/patina_brick_wall.jpg)\n\n## How to use it\n\n- **Load Image** holds a flat, evenly lit photo of the surface - ideally front-facing, without strong perspective.\n- `prompt` names the surface to extract and the structure to preserve: `dark grey brick wall`, \"keep the brick bond and\n  mortar lines\". Without the keep-list the model happily invents a different bond.\n- `strength` (advanced, 0.6 here) sets how far the extracted texture may drift from the photo.\n- Output is always seamless: `tiling_mode` picks both / horizontal / vertical, so the result drops straight into a\n  tiling material instead of showing a seam.\n- For text-only material generation use the Patina Material text-to-material template; to convert a photo into maps\n  **without** making it tile, the Patina PBR Maps node is the direct path.\n\n## Outputs - wire in this slot order\n\n`0 texture` . `1 basecolor` . `2 normal` . `3 roughness` . `4 metalness` . `5 height` . `6 expanded_prompt`\n\nEvery map can be switched off, but at least one has to stay on. Fewer maps = a cheaper, faster run.\n\n## Tips that actually matter\n\n- Keep the photo bigger than the output size where you can - the model has more real detail to extract from.\n- `num_inference_steps` tops out at 8; there is nothing to gain above that.\n- `tile_size` is in latent space: 128 is about 1024 px, 64 about 512 px.\n- `prompt_expansion` is **off by default on purpose**: the LLM rewrite reframes the prompt as a photo and tends to\n  wash out the metalness map.\n- `upscale_factor` 2 or 4 upscales the **maps only** (SeedVR) - the base texture is never upscaled.\n\n## This workflow\n\nBrick wall photo, basecolor and normal maps on, seed fixed at 42 so the default run is reproducible. Every save node\nwrites to `patina/<yyyymmdd>-<hhmm>_<map>`, so one run's files sit next to each other and different runs never mix."
-      }
-    },
-    {
-      "id": 2,
-      "type": "LoadImage",
-      "pos": [
-        480,
-        0
-      ],
-      "size": [
-        290,
-        360
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "IMAGE",
-          "type": "IMAGE",
-          "links": [
-            1
-          ]
-        },
-        {
-          "name": "MASK",
-          "type": "MASK",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "LoadImage"
-      },
-      "widgets_values": [
-        "patina_brick_wall.jpg",
-        "image"
-      ],
-      "widgets_values_named": {
-        "image": "patina_brick_wall.jpg",
-        "upload": "image"
-      }
-    },
-    {
-      "id": 3,
-      "type": "PatinaMaterialExtractNode",
-      "pos": [
-        830,
-        0
-      ],
-      "size": [
-        460,
-        740
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "image",
-          "type": "IMAGE",
-          "link": 1
-        }
-      ],
-      "outputs": [
-        {
-          "name": "texture",
-          "type": "IMAGE",
-          "links": [
-            2
-          ]
-        },
-        {
-          "name": "basecolor",
-          "type": "IMAGE",
-          "links": [
-            3
-          ]
-        },
-        {
-          "name": "normal",
-          "type": "IMAGE",
-          "links": [
-            4
-          ]
-        },
-        {
-          "name": "roughness",
-          "type": "IMAGE",
-          "links": [
-            6
-          ]
-        },
-        {
-          "name": "metalness",
-          "type": "IMAGE",
-          "links": [
-            7
-          ]
-        },
-        {
-          "name": "height",
-          "type": "IMAGE",
-          "links": [
-            8
-          ]
-        },
-        {
-          "name": "expanded_prompt",
-          "type": "STRING",
-          "links": [
-            5
-          ]
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "PatinaMaterialExtractNode"
-      },
-      "widgets_values": [
-        "dark grey brick wall, seamless tiling texture, keep the brick bond and the pale lime mortar lines of the source photo, weathered stone faces with fine grain, flat even lighting, no perspective",
-        "1:1 (1024x1024)",
-        true,
-        true,
-        false,
-        false,
-        false,
-        0,
-        42,
-        "fixed",
-        0.6,
-        "both",
-        8,
-        128,
-        64,
-        false,
-        false
-      ],
-      "widgets_values_named": {
-        "prompt": "dark grey brick wall, seamless tiling texture, keep the brick bond and the pale lime mortar lines of the source photo, weathered stone faces with fine grain, flat even lighting, no perspective",
-        "image_size": "1:1 (1024x1024)",
-        "basecolor": true,
-        "normal": true,
-        "roughness": false,
-        "metalness": false,
-        "height": false,
-        "upscale_factor": 0,
-        "seed": 42,
-        "control_after_generate": "fixed",
-        "strength": 0.6,
-        "tiling_mode": "both",
-        "num_inference_steps": 8,
-        "tile_size": 128,
-        "tile_stride": 64,
-        "prompt_expansion": false,
-        "safety_checker": false
-      }
-    },
-    {
-      "id": 10,
+      "id": 21,
       "type": "SaveImage",
       "pos": [
-        1350,
-        0
+        913.024172616747,
+        8.987101490822187
       ],
       "size": [
-        360,
-        300
+        373.6485367550731,
+        421.999244495615
       ],
       "flags": {},
-      "order": 0,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 2
+          "link": 19
         }
       ],
       "outputs": [
@@ -211,45 +32,7 @@
           "links": null
         }
       ],
-      "properties": {
-        "Node name for S&R": "SaveImage"
-      },
-      "widgets_values": [
-        "patina/%year%%month%%day%-%hour%%minute%_texture"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_texture"
-      },
-      "title": "texture"
-    },
-    {
-      "id": 11,
-      "type": "SaveImage",
-      "pos": [
-        1770,
-        0
-      ],
-      "size": [
-        360,
-        300
-      ],
-      "flags": {},
-      "order": 0,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 3
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
+      "title": "basecolor",
       "properties": {
         "Node name for S&R": "SaveImage"
       },
@@ -258,28 +41,27 @@
       ],
       "widgets_values_named": {
         "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_basecolor"
-      },
-      "title": "basecolor"
+      }
     },
     {
-      "id": 12,
+      "id": 22,
       "type": "SaveImage",
       "pos": [
-        2190,
-        0
+        69.7270991066008,
+        8.987101490822187
       ],
       "size": [
-        360,
-        300
+        373.6485367550731,
+        421.999244495615
       ],
       "flags": {},
-      "order": 0,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
           "name": "images",
           "type": "IMAGE",
-          "link": 4
+          "link": 20
         }
       ],
       "outputs": [
@@ -289,6 +71,7 @@
           "links": null
         }
       ],
+      "title": "normal",
       "properties": {
         "Node name for S&R": "SaveImage"
       },
@@ -297,28 +80,183 @@
       ],
       "widgets_values_named": {
         "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_normal"
-      },
-      "title": "normal"
+      }
     },
     {
-      "id": 13,
-      "type": "SaveText",
+      "id": 23,
+      "type": "SaveImage",
       "pos": [
-        1350,
-        360
+        491.3756358616739,
+        8.987101490822187
       ],
       "size": [
-        360,
-        220
+        373.6485367550731,
+        421.999244495615
       ],
       "flags": {},
-      "order": 0,
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 18
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": null
+        }
+      ],
+      "title": "texture",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "patina/%year%%month%%day%-%hour%%minute%_texture"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_texture"
+      }
+    },
+    {
+      "id": 24,
+      "type": "SaveImage",
+      "pos": [
+        913.024172616747,
+        508.9863459864372
+      ],
+      "size": [
+        373.6485367550731,
+        421.999244495615
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "roughness",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "patina/%year%%month%%day%-%hour%%minute%_roughness"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_roughness"
+      }
+    },
+    {
+      "id": 25,
+      "type": "SaveImage",
+      "pos": [
+        69.7270991066008,
+        508.9863459864372
+      ],
+      "size": [
+        373.6485367550731,
+        421.999244495615
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "metalness",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "patina/%year%%month%%day%-%hour%%minute%_metalness"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_metalness"
+      }
+    },
+    {
+      "id": 26,
+      "type": "SaveImage",
+      "pos": [
+        491.3756358616739,
+        508.9863459864372
+      ],
+      "size": [
+        373.6485367550731,
+        421.999244495615
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "title": "height",
+      "properties": {
+        "Node name for S&R": "SaveImage"
+      },
+      "widgets_values": [
+        "patina/%year%%month%%day%-%hour%%minute%_height"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_height"
+      }
+    },
+    {
+      "id": 27,
+      "type": "SaveText",
+      "pos": [
+        1344.4437364341845,
+        10.211257943315161
+      ],
+      "size": [
+        402.051097237096,
+        411.75603311460543
+      ],
+      "flags": {},
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
           "name": "text",
           "type": "STRING",
-          "link": 5
+          "link": 24
         }
       ],
       "outputs": [
@@ -328,6 +266,7 @@
           "links": null
         }
       ],
+      "title": "expanded prompt",
       "properties": {
         "Node name for S&R": "SaveText"
       },
@@ -338,203 +277,269 @@
       "widgets_values_named": {
         "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_expanded_prompt",
         "format": "txt"
-      },
-      "title": "expanded prompt"
+      }
     },
     {
-      "id": 14,
-      "type": "SaveImage",
+      "id": 29,
+      "type": "MarkdownNote",
       "pos": [
-        1770,
-        0
+        -1557.265453790667,
+        8.902110424501338
       ],
       "size": [
-        360,
-        300
+        587.2726037200163,
+        782.0166239750356
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# Patina Material Extract\n\n**Photo -> seamless, tiling PBR material, extracted.** Point it at a photo that already contains the material you want\nand the prompt says which surface to pull out and what structure to keep. The base texture and the basecolor / normal /\nroughness / metalness / height maps all come from the same latent, so they line up pixel for pixel. Partner (API) node:\nit runs on Comfy's servers, needs an account, nothing renders locally.\n\n## Input Asset\n\n- [patina_chair_webbing.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/patina_chair_webbing.png)\n\n## How to use it\n\n- **Load Image** holds the photo. It does not have to be a flat crop: the node re-synthesises the layout, so a product\n  shot works as long as the material itself repeats - here the green and white webbing on a folding chair.\n- `prompt` names the surface to extract, not the scene: `chair webbing fabric` picks the woven straps and ignores the\n  chair frame, the court and the paddle. Add the structure to keep (\"keep the weave and the strap edges\") when the\n  pattern starts drifting.\n- `strength` (advanced, 0.6 here) sets how far the extracted texture may drift from the photo.\n- Works best on materials whose pattern repeats inside a few hundred pixels - webbing, brick, pavers, planks, plaster.\n  Large one-off structures (a rock cliff, aerial terrain, a single object) come back as a repaint that will not tile.\n- For text-only material generation use the Patina Material text-to-material template; to convert a photo into maps\n  **without** making it tile, the Patina PBR Maps node is the direct path.\n\n## Outputs - wire in this slot order\n\n`0 texture` . `1 basecolor` . `2 normal` . `3 roughness` . `4 metalness` . `5 height` . `6 expanded_prompt`\n\nEvery map can be switched off, but at least one has to stay on. Fewer maps = a cheaper, faster run.\n\n## Tips that actually matter\n\n- Keep the photo bigger than the output size where you can - the model has more real detail to extract from.\n- `num_inference_steps` tops out at 8; there is nothing to gain above that.\n- `tile_size` is in latent space: 128 is about 1024 px, 64 about 512 px. `tiling_mode` = both / horizontal / vertical.\n- `prompt_expansion` is **off by default on purpose**: the LLM rewrite reframes the prompt as a photo and tends to\n  wash out the metalness map.\n- `upscale_factor` 2 or 4 upscales the **maps only** (SeedVR) - the base texture is never upscaled.\n- Dramatic lighting in the source carries into the basecolor: prefer flat, evenly lit photos."
+      ],
+      "widgets_values_named": {
+        "text": "# Patina Material Extract\n\n**Photo -> seamless, tiling PBR material, extracted.** Point it at a photo that already contains the material you want\nand the prompt says which surface to pull out and what structure to keep. The base texture and the basecolor / normal /\nroughness / metalness / height maps all come from the same latent, so they line up pixel for pixel. Partner (API) node:\nit runs on Comfy's servers, needs an account, nothing renders locally.\n\n## Input Asset\n\n- [patina_chair_webbing.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/patina_chair_webbing.png)\n\n## How to use it\n\n- **Load Image** holds the photo. It does not have to be a flat crop: the node re-synthesises the layout, so a product\n  shot works as long as the material itself repeats - here the green and white webbing on a folding chair.\n- `prompt` names the surface to extract, not the scene: `chair webbing fabric` picks the woven straps and ignores the\n  chair frame, the court and the paddle. Add the structure to keep (\"keep the weave and the strap edges\") when the\n  pattern starts drifting.\n- `strength` (advanced, 0.6 here) sets how far the extracted texture may drift from the photo.\n- Works best on materials whose pattern repeats inside a few hundred pixels - webbing, brick, pavers, planks, plaster.\n  Large one-off structures (a rock cliff, aerial terrain, a single object) come back as a repaint that will not tile.\n- For text-only material generation use the Patina Material text-to-material template; to convert a photo into maps\n  **without** making it tile, the Patina PBR Maps node is the direct path.\n\n## Outputs - wire in this slot order\n\n`0 texture` . `1 basecolor` . `2 normal` . `3 roughness` . `4 metalness` . `5 height` . `6 expanded_prompt`\n\nEvery map can be switched off, but at least one has to stay on. Fewer maps = a cheaper, faster run.\n\n## Tips that actually matter\n\n- Keep the photo bigger than the output size where you can - the model has more real detail to extract from.\n- `num_inference_steps` tops out at 8; there is nothing to gain above that.\n- `tile_size` is in latent space: 128 is about 1024 px, 64 about 512 px. `tiling_mode` = both / horizontal / vertical.\n- `prompt_expansion` is **off by default on purpose**: the LLM rewrite reframes the prompt as a photo and tends to\n  wash out the metalness map.\n- `upscale_factor` 2 or 4 upscales the **maps only** (SeedVR) - the base texture is never upscaled.\n- Dramatic lighting in the source carries into the basecolor: prefer flat, evenly lit photos."
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 30,
+      "type": "LoadImage",
+      "pos": [
+        -916.0890251245451,
+        13.48273436379975
+      ],
+      "size": [
+        415.0581423487129,
+        432.7386056769318
       ],
       "flags": {},
       "order": 1,
       "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 6
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "name": "images",
+          "name": "IMAGE",
           "type": "IMAGE",
-          "links": null
+          "links": [
+            17
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
         }
       ],
       "properties": {
-        "Node name for S&R": "SaveImage"
+        "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "patina/%year%%month%%day%-%hour%%minute%_roughness"
+        "patina_chair_webbing.png",
+        "image"
       ],
       "widgets_values_named": {
-        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_roughness"
-      },
-      "title": "roughness"
+        "image": "patina_chair_webbing.png",
+        "upload": "image"
+      }
     },
     {
-      "id": 15,
-      "type": "SaveImage",
+      "id": 31,
+      "type": "PatinaMaterialExtractNode",
       "pos": [
-        2190,
-        0
+        -459.0498746311147,
+        15.455660429013562
       ],
       "size": [
-        360,
-        300
+        400,
+        592
       ],
       "flags": {},
       "order": 2,
       "mode": 0,
       "inputs": [
         {
-          "name": "images",
+          "name": "image",
           "type": "IMAGE",
-          "link": 7
+          "link": 17
         }
       ],
       "outputs": [
         {
-          "name": "images",
+          "name": "texture",
           "type": "IMAGE",
-          "links": null
+          "links": [
+            18
+          ]
+        },
+        {
+          "name": "basecolor",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        },
+        {
+          "name": "normal",
+          "type": "IMAGE",
+          "links": [
+            20
+          ]
+        },
+        {
+          "name": "roughness",
+          "type": "IMAGE",
+          "links": [
+            21
+          ]
+        },
+        {
+          "name": "metalness",
+          "type": "IMAGE",
+          "links": [
+            22
+          ]
+        },
+        {
+          "name": "height",
+          "type": "IMAGE",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "expanded_prompt",
+          "type": "STRING",
+          "links": [
+            24
+          ]
         }
       ],
       "properties": {
-        "Node name for S&R": "SaveImage"
+        "Node name for S&R": "PatinaMaterialExtractNode"
       },
       "widgets_values": [
-        "patina/%year%%month%%day%-%hour%%minute%_metalness"
+        "chair webbing fabric",
+        "1:1 (1024x1024)",
+        true,
+        true,
+        false,
+        false,
+        false,
+        0,
+        1766525070,
+        "randomize",
+        0.6,
+        "both",
+        8,
+        128,
+        64,
+        false,
+        false
       ],
       "widgets_values_named": {
-        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_metalness"
+        "prompt": "chair webbing fabric",
+        "image_size": "1:1 (1024x1024)",
+        "basecolor": true,
+        "normal": true,
+        "roughness": false,
+        "metalness": false,
+        "height": false,
+        "upscale_factor": 0,
+        "seed": 1766525070,
+        "control_after_generate": "randomize",
+        "strength": 0.6,
+        "tiling_mode": "both",
+        "num_inference_steps": 8,
+        "tile_size": 128,
+        "tile_stride": 64,
+        "prompt_expansion": false,
+        "safety_checker": false
       },
-      "title": "metalness"
-    },
-    {
-      "id": 16,
-      "type": "SaveImage",
-      "pos": [
-        2610,
-        0
-      ],
-      "size": [
-        360,
-        300
-      ],
-      "flags": {},
-      "order": 3,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "link": 8
-        }
-      ],
-      "outputs": [
-        {
-          "name": "images",
-          "type": "IMAGE",
-          "links": null
-        }
-      ],
-      "properties": {
-        "Node name for S&R": "SaveImage"
-      },
-      "widgets_values": [
-        "patina/%year%%month%%day%-%hour%%minute%_height"
-      ],
-      "widgets_values_named": {
-        "filename_prefix": "patina/%year%%month%%day%-%hour%%minute%_height"
-      },
-      "title": "height"
+      "color": "#432",
+      "bgcolor": "#653"
     }
   ],
   "links": [
     [
+      17,
+      30,
+      0,
+      31,
+      0,
+      "IMAGE"
+    ],
+    [
+      18,
+      31,
+      0,
+      23,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      31,
       1,
+      21,
+      0,
+      "IMAGE"
+    ],
+    [
+      20,
+      31,
       2,
-      0,
-      3,
-      0,
-      "IMAGE"
-    ],
-    [
-      2,
-      3,
-      0,
-      10,
+      22,
       0,
       "IMAGE"
     ],
     [
+      21,
+      31,
       3,
-      3,
-      1,
-      11,
+      24,
       0,
       "IMAGE"
     ],
     [
+      22,
+      31,
       4,
-      3,
-      2,
-      12,
+      25,
       0,
       "IMAGE"
     ],
     [
+      23,
+      31,
       5,
-      3,
+      26,
+      0,
+      "IMAGE"
+    ],
+    [
+      24,
+      31,
       6,
-      13,
+      27,
       0,
       "STRING"
-    ],
-    [
-      6,
-      3,
-      3,
-      14,
-      0,
-      "IMAGE"
-    ],
-    [
-      7,
-      3,
-      4,
-      15,
-      0,
-      "IMAGE"
-    ],
-    [
-      8,
-      3,
-      5,
-      16,
-      0,
-      "IMAGE"
     ]
   ],
   "groups": [],
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.8,
+      "scale": 0.3235581649241681,
       "offset": [
-        0,
-        0
+        2149.4679942405587,
+        819.4744029556668
       ]
-    }
+    },
+    "frontendVersion": "1.57.4"
   },
   "version": 0.4
 }
