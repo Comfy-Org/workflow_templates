@@ -1,0 +1,195 @@
+{
+  "id": "47bc3771-0160-403a-adf1-d5bc4a986b4b",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 4,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        100,
+        127.51953831643175
+      ],
+      "size": [
+        349.8534373297398,
+        461.69348994880534
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "api_veed_dubbing_input_video.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "api_veed_dubbing_input_video.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        825.1307810797398,
+        127.51953831643175
+      ],
+      "size": [
+        364.5434347231959,
+        461.69348994880534
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/veed_dubbing",
+        "mp4",
+        "auto",
+        "h264",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/veed_dubbing",
+        "format": "mp4",
+        "format.codec": "auto",
+        "codec": "h264",
+        "codec.encoding": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -249.8374813000641,
+        128.939015511904
+      ],
+      "size": [
+        320.07232923408924,
+        454.6558221364456
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# VEED Dubbing\n\n**Translate the speech in a video into another language.** Every speaker's voice is cloned and their lips are re-synced\nto the translation, so the result looks spoken in the target language rather than captioned. Partner (API) node: it runs\non Comfy's servers, needs an account, and nothing is rendered locally.\n\n## Input Asset\n\n- [api_veed_dubbing_input_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_veed_dubbing_input_video.mp4)\n\n## Requirements\n\n- **The audio must contain voice that can be converted.** Narration, dialogue or an interview all work; music, sound\n  effects or silence give the model nothing to translate.\n- **There must be a face in the video.** Dubbing works on what it can see - a single speaker facing the camera is the\n  reliable case. Backs of heads, hands, product shots and crowd scenes do not dub.\n\n## How to use it\n\n- `model`: `standard` is the cheaper tier with mono audio (Spanish is Latin American, Portuguese is Brazilian);\n  `pro` adds regional accents and stereo audio.\n- `target_language`: 85 languages on standard, 101 options on pro (regional variants such as `English (UK)` or\n  `Chinese (Taiwan)`).\n- `source_language`: leave it on `auto` unless the model mishears the original; naming the spoken language improves\n  accuracy on short clips and strong accents.\n- `seed` only decides whether the node re-runs - the result is non-deterministic either way.\n\n## Limits\n\n- Up to 599 seconds of video. The output is as long as its audio track and plays at 25 fps, so a 24 fps source becomes\n  25 fps.\n- One speaker is the reliable case. Multi-speaker footage is supported but voice assignment can drift.\n- No subtitle file is produced: the node returns a dubbed video only.\n"
+      ],
+      "widgets_values_named": {
+        "text": "# VEED Dubbing\n\n**Translate the speech in a video into another language.** Every speaker's voice is cloned and their lips are re-synced\nto the translation, so the result looks spoken in the target language rather than captioned. Partner (API) node: it runs\non Comfy's servers, needs an account, and nothing is rendered locally.\n\n## Input Asset\n\n- [api_veed_dubbing_input_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_veed_dubbing_input_video.mp4)\n\n## Requirements\n\n- **The audio must contain voice that can be converted.** Narration, dialogue or an interview all work; music, sound\n  effects or silence give the model nothing to translate.\n- **There must be a face in the video.** Dubbing works on what it can see - a single speaker facing the camera is the\n  reliable case. Backs of heads, hands, product shots and crowd scenes do not dub.\n\n## How to use it\n\n- `model`: `standard` is the cheaper tier with mono audio (Spanish is Latin American, Portuguese is Brazilian);\n  `pro` adds regional accents and stereo audio.\n- `target_language`: 85 languages on standard, 101 options on pro (regional variants such as `English (UK)` or\n  `Chinese (Taiwan)`).\n- `source_language`: leave it on `auto` unless the model mishears the original; naming the spoken language improves\n  accuracy on short clips and strong accents.\n- `seed` only decides whether the node re-runs - the result is non-deterministic either way.\n\n## Limits\n\n- Up to 599 seconds of video. The output is as long as its audio track and plays at 25 fps, so a 24 fps source becomes\n  25 fps.\n- One speaker is the reliable case. Multi-speaker footage is supported but voice assignment can drift.\n- No subtitle file is produced: the node returns a dubbed video only.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 5,
+      "type": "VeedDubbingNode",
+      "pos": [
+        491.20080124499304,
+        127.9509725586428
+      ],
+      "size": [
+        270,
+        154
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.video",
+          "type": "VIDEO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VeedDubbingNode"
+      },
+      "widgets_values": [
+        "standard",
+        "Japanese",
+        "auto",
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "standard",
+        "model.target_language": "Japanese",
+        "model.source_language": "auto",
+        "model.seed": 42,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    }
+  ],
+  "links": [
+    [
+      3,
+      1,
+      0,
+      5,
+      0,
+      "VIDEO"
+    ],
+    [
+      4,
+      5,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.012559034060532,
+      "offset": [
+        442.37115466460864,
+        263.023910539666
+      ]
+    },
+    "frontendVersion": "1.57.4"
+  },
+  "version": 0.4
+}
