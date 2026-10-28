@@ -192,7 +192,7 @@ def _upsert_node_spec(
 
 
 def _parse_python_file(path: Path) -> tuple[dict[str, str], dict[str, str], dict[str, ast.ClassDef]]:
-    source = path.read_text(encoding="utf-8")
+    source = path.read_text(encoding="utf-8-sig")
     tree = ast.parse(source, filename=str(path))
 
     mappings: dict[str, str] = {}
@@ -248,7 +248,7 @@ def _register_v3_nodes(path: Path, specs: dict[str, NodeSpec], warnings: list[st
     - display_name containing "DEPRECATED" (legacy)
     """
     try:
-        source = path.read_text(encoding="utf-8")
+        source = path.read_text(encoding="utf-8-sig")
         tree = ast.parse(source, filename=str(path))
     except OSError as exc:
         warnings.append(f"{path}: {exc}")

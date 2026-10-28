@@ -1,6 +1,7 @@
 name: ComfyUI Node Compatibility Report
 
-# Informational report only — never blocks PR merges.
+# The report job is informational only — it never blocks PR merges.
+# The unit-tests job fails when the scanner's own tests fail.
 # Statically scans ComfyUI master source + templates/*.json (no torch, no running server).
 
 on:
@@ -8,6 +9,9 @@ on:
     types: [opened, synchronize]
     paths:
       - 'templates/**'
+      - 'scripts/comfyui_node_compat/**'
+      - 'scripts/lib/**'
+      - '.github/workflows/report-comfyui-node-compat.yml'
   workflow_dispatch:
 
 permissions:
@@ -19,6 +23,31 @@ env:
   COMFYUI_REF: master
 
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout compat scripts
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            scripts/comfyui_node_compat/
+            scripts/lib/
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run compat unit tests
+        run: |
+          PYTHONPATH=scripts/lib python3 -m unittest discover \
+            -s scripts/comfyui_node_compat -p 'test_*.py' -v
+
   report:
     runs-on: ubuntu-latest
     steps:
