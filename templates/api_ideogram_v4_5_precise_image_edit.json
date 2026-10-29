@@ -1,8 +1,8 @@
 {
   "id": "b9a4879b-6e6a-4acb-a0c0-b4f8375f608c",
   "revision": 0,
-  "last_node_id": 20,
-  "last_link_id": 26,
+  "last_node_id": 21,
+  "last_link_id": 27,
   "nodes": [
     {
       "id": 2,
@@ -59,7 +59,7 @@
         270
       ],
       "flags": {},
-      "order": 4,
+      "order": 5,
       "mode": 0,
       "inputs": [
         {
@@ -111,7 +111,7 @@
         720
       ],
       "flags": {},
-      "order": 3,
+      "order": 4,
       "mode": 0,
       "inputs": [
         {
@@ -202,7 +202,7 @@
         400
       ],
       "flags": {},
-      "order": 5,
+      "order": 6,
       "mode": 0,
       "inputs": [
         {
@@ -238,7 +238,7 @@
         520
       ],
       "flags": {},
-      "order": 7,
+      "order": 8,
       "mode": 0,
       "inputs": [
         {
@@ -282,7 +282,7 @@
         530
       ],
       "flags": {},
-      "order": 8,
+      "order": 9,
       "mode": 0,
       "inputs": [
         {
@@ -366,10 +366,10 @@
       ],
       "size": [
         400,
-        204
+        388
       ],
       "flags": {},
-      "order": 6,
+      "order": 7,
       "mode": 0,
       "inputs": [
         {
@@ -384,12 +384,30 @@
           "link": null
         },
         {
+          "name": "model.images.image_3",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
           "name": "model.prompt",
           "type": "STRING",
           "widget": {
             "name": "model.prompt"
           },
           "link": 26
+        },
+        {
+          "name": "model.context_window_bboxes",
+          "shape": 7,
+          "type": "BOUNDING_BOX",
+          "link": null
+        },
+        {
+          "name": "model.context_window_mask",
+          "shape": 7,
+          "type": "MASK",
+          "link": null
         }
       ],
       "outputs": [
@@ -409,17 +427,48 @@
         "",
         "medium",
         564797084,
-        "randomize"
+        "randomize",
+        "none",
+        2048
       ],
       "widgets_values_named": {
         "model": "ideogram-4.5",
         "model.prompt": "",
         "model.quality": "medium",
         "model.seed": 564797084,
-        "control_after_generate": "randomize"
+        "control_after_generate#1": "randomize",
+        "model.context_window": "none",
+        "control_after_generate": 2048
       },
       "color": "#432",
       "bgcolor": "#653"
+    },
+    {
+      "id": 21,
+      "type": "MarkdownNote",
+      "pos": [
+        1238.9264643449235,
+        1080.8908963986328
+      ],
+      "size": [
+        394.43923211212143,
+        158.1637813438415
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: context window",
+      "properties": {},
+      "widgets_values": [
+        "# Ideogram 4.5 Precise Edit — `context_window`\n\nEdits **only one region of image 1** at its native resolution. Without it the whole image is capped at ~4 MP (2048×2048), so anything bigger comes back downscaled. With a region, only the region changes, the rest is copied through, and the output keeps the source's exact size.\n\n| Option | Uses | Effect |\n|---|---|---|\n| `none` | — | Whole image, downscaled above ~4 MP. Default. |\n| `auto` | `context_window_mask` | Fits a region around the white mask area. Mask > 4 MP falls back to `none`. |\n| `custom` | `context_window_bboxes` | Region = union of your boxes. Sides under 256 px are padded to 256. |\n\nRegion must be 256–4608 px per side, ≤ 4 MP, ≤ 6:1, inside image 1. Max 4 reference images, 3 with a mask. Price is unchanged — one image at the chosen `quality`.\n"
+      ],
+      "widgets_values_named": {
+        "text": "# Ideogram 4.5 Precise Edit — `context_window`\n\nEdits **only one region of image 1** at its native resolution. Without it the whole image is capped at ~4 MP (2048×2048), so anything bigger comes back downscaled. With a region, only the region changes, the rest is copied through, and the output keeps the source's exact size.\n\n| Option | Uses | Effect |\n|---|---|---|\n| `none` | — | Whole image, downscaled above ~4 MP. Default. |\n| `auto` | `context_window_mask` | Fits a region around the white mask area. Mask > 4 MP falls back to `none`. |\n| `custom` | `context_window_bboxes` | Region = union of your boxes. Sides under 256 px are padded to 256. |\n\nRegion must be 256–4608 px per side, ≤ 4 MP, ≤ 6:1, inside image 1. Max 4 reference images, 3 with a mask. Price is unchanged — one image at the chosen `quality`.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -464,14 +513,6 @@
       "ARRAY"
     ],
     [
-      24,
-      2,
-      0,
-      20,
-      0,
-      "IMAGE"
-    ],
-    [
       25,
       20,
       0,
@@ -480,11 +521,19 @@
       "IMAGE"
     ],
     [
+      24,
+      2,
+      0,
+      20,
+      0,
+      "IMAGE"
+    ],
+    [
       26,
       5,
       0,
       20,
-      2,
+      3,
       "STRING"
     ]
   ],
@@ -492,13 +541,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.45794178268387664,
+      "scale": 0.3186308177103567,
       "offset": [
-        2324.7489455205714,
-        282.9103527923192
+        1898.9809645882465,
+        689.3844590357785
       ]
     },
-    "frontendVersion": "1.56.0"
+    "frontendVersion": "1.57.6"
   },
   "version": 0.4
 }
