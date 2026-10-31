@@ -22,6 +22,14 @@ export function buildTemplateItemListEntries(
         name: tpl.title,
         url: absoluteUrl(path),
         image: resolveAbsoluteThumbnail(firstStillThumbnail(tpl.thumbnails)),
+        itemType: 'CreativeWork',
+        keywords: [...tpl.tags, ...tpl.models].join(', ') || undefined,
+        creator: tpl.username
+          ? {
+              name: tpl.creatorDisplayName || tpl.username,
+              url: absoluteUrl(`/workflows/${encodeURIComponent(tpl.username)}/`),
+            }
+          : undefined,
       },
     ];
   });
