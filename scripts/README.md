@@ -128,7 +128,7 @@ Reports are written to repo root (gitignored):
 
 ### CI / static scan (no server, no torch)
 
-> **Static CI ≠ slot check.** `--static-scan` (used by `report-comfyui-node-compat.yml`) only reports removed/deprecated nodes and **skips** `widget_slot_mismatch` / `invalid_widget_value`. Runtime `/object_info` is required for those — `validate-widget-types.yml` starts ComfyUI and runs `check_widget_types.py`, which fails on slot/schema drift for **all** templates (full-repo) and on coercible type mismatches (PR-scoped via `--blocking-files`). Locally, `check.py --object-info-json` covers the full compat report.
+> **Static CI ≠ slot check.** `--static-scan` (used by `report-comfyui-node-compat.yml`) only reports deprecated nodes and **skips** `widget_slot_mismatch` / `invalid_widget_value`. Runtime `/object_info` is required for those — `validate-widget-types.yml` starts ComfyUI and runs `check_widget_types.py --object-info`, which fails on slot/schema drift for **all** templates (full-repo) and on coercible type mismatches (PR-scoped via `--blocking-files`). Locally, compat `check.py --object-info-json` covers the full compat report (different CLI flag from the widget-types checker).
 
 Clones `Comfy-Org/ComfyUI` and AST-scans Python sources. Faster and dependency-free, but only reports **deprecated nodes** (skips missing-node / combo noise from incomplete static parsing). Deprecation is detected from V3 `is_deprecated=True` (Schema kwarg or class attribute) as well as legacy display names containing `DEPRECATED`:
 

@@ -183,6 +183,7 @@ def _walk_positional(
     index: int,
     prefix: str,
     out: dict[str, tuple[Any, Any]],
+    controls_present: dict[str, bool] | None = None,
 ) -> int:
     for name, spec in items:
         if index >= len(values):
@@ -193,7 +194,9 @@ def _walk_positional(
         if widget_type == DYNAMIC_COMBO:
             out[full] = (values[index], spec)
             branch = _selected_branch(spec, values[index])
-            index = _walk_positional(_ordered_inputs(branch), values, index + 1, full + ".", out)
+            index = _walk_positional(
+                _ordered_inputs(branch), values, index + 1, full + ".", out, controls_present
+            )
             continue
         if not _is_widget(spec):
             continue
@@ -212,10 +215,14 @@ def _walk_positional(
             has_control = name in ("seed", "noise_seed")
         else:
             has_control = bool(meta.get("control_after_generate"))
+        if has_control and controls_present is not None:
+            controls_present[full] = False
         following = values[index] if index < len(values) else None
         if isinstance(following, str) and following in CONTROL_VALUES:
             if has_control:
                 index += 1
+                if controls_present is not None:
+                    controls_present[full] = True
                 # A COMBO's value control also gets a control_filter_list widget.
                 if widget_type == "COMBO" and index < len(values):
                     index += 1
@@ -583,9 +590,31 @@ def slot_schema_findings(
     if not items:
         return []
     mapped: dict[str, tuple[Any, Any]] = {}
-    consumed = _walk_positional(items, values, 0, "", mapped)
+    controls_present: dict[str, bool] = {}
+    consumed = _walk_positional(items, values, 0, "", mapped, controls_present)
     findings: list[Finding] = []
     linked = _linked_input_names(node)
+
+    for input_name, present in controls_present.items():
+        if present:
+            continue
+        findings.append(
+            Finding(
+                path=str(path),
+                scope=scope,
+                node_id=node.get("id"),
+                node_type=node_type,
+                input_name=f"{input_name}.control_after_generate",
+                value=None,
+                expected="control_after_generate string after seed/control widget",
+                reason=(
+                    "widget_slot_mismatch — required widget missing from widgets_values "
+                    "(e.g. omitted seed / control_after_generate tail)"
+                ),
+                fields=("widgets_values",),
+                kind="slot",
+            )
+        )
 
     for input_name, (value, spec) in mapped.items():
         if _widget_type(spec) != DYNAMIC_COMBO:

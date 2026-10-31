@@ -635,6 +635,42 @@ class SlotSchemaDriftTests(unittest.TestCase):
         self.assertIn("widget_slot_mismatch", reasons)
         self.assertTrue(all(f.is_slot for f in findings))
 
+    def test_seed_without_control_after_generate(self):
+        """CodeRabbit A: seed present but control tail omitted must still fail."""
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "duration": ["COMBO", {"options": ["5", "10"]}],
+                    "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                }
+            },
+            "input_order": {"required": ["prompt", "duration", "seed"]},
+        }
+        # Seed value 0 is present; control_after_generate string is not.
+        node = {"id": 1, "type": "KlingLike", "inputs": [], "widgets_values": ["hello", "5", 0]}
+        findings = slot_schema_findings(Path("kling.json"), "", node, "KlingLike", node_def)
+        self.assertTrue(findings, "expected missing control_after_generate finding")
+        names = {f.input_name for f in findings}
+        self.assertTrue(
+            any(n.endswith("control_after_generate") for n in names),
+            names,
+        )
+        self.assertTrue(all(f.is_slot for f in findings))
+        # Complete seed + control must stay clean.
+        node_ok = {
+            "id": 1,
+            "type": "KlingLike",
+            "inputs": [],
+            "widgets_values": ["hello", "5", 0, "randomize"],
+        }
+        self.assertEqual(
+            slot_schema_findings(Path("kling.json"), "", node_ok, "KlingLike", node_def),
+            [],
+        )
+
     def test_invalid_dynamic_combo_key(self):
         from check_widget_types import slot_schema_findings
 

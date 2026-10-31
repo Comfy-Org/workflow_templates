@@ -6,9 +6,10 @@ That runtime baseline is what catches widget_slot_mismatch / invalid_widget_valu
 (Seedream Lite vs Pro DynamicCombo drift, missing Kling seed slots, etc.).
 
 CI note: ``report-comfyui-node-compat.yml`` uses ``--static-scan``, which only
-reports removed/deprecated nodes and **skips** widget-slot checks. Slot/schema
-alignment is enforced by ``validate-widget-types.yml`` via ``--object-info-json``
-(same live ComfyUI /object_info dump as the coercible type check).
+reports deprecated nodes and **skips** widget-slot checks. Slot/schema alignment
+is enforced by ``validate-widget-types.yml`` running
+``check_widget_types.py --object-info`` (live ComfyUI ``/object_info`` dump).
+This compat script's own flag for a saved dump is ``--object-info-json``.
 
 Examples:
   npm run validate:comfyui-nodes
