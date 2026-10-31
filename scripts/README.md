@@ -64,8 +64,8 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
 | `model-analysis.yml` | `validate/analyze_models.py`, `data/whitelist.json` |
-| `validate-widget-types.yml` | `validate/check_widget_types.py`, `lib/locale_index_files.py` (baseline: ComfyUI `master` `/object_info`) |
-| `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py` (static scan; PR comment only) |
+| `validate-widget-types.yml` | `validate/check_widget_types.py` (live ComfyUI `master` `/object_info`: coercible types **and** widget slot/schema mismatches — #1387-class drift) |
+| `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py --static-scan` (deprecated baseline; PR comment only — **does not** check widget slots) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
 | `sync-template-index.yml` | `sync/sync_data.py --index-only` (locale field sync; does not rewrite `usage`) |
@@ -128,6 +128,8 @@ Reports are written to repo root (gitignored):
 
 ### CI / static scan (no server, no torch)
 
+> **Static CI ≠ slot check.** `--static-scan` (used by `report-comfyui-node-compat.yml`) only reports removed/deprecated nodes and **skips** `widget_slot_mismatch` / `invalid_widget_value`. Runtime `/object_info` is required for those — `validate-widget-types.yml` starts ComfyUI and runs `check_widget_types.py`, which now fails on slot/schema drift as well as coercible type mismatches. Locally, `check.py --object-info-json` + `--blocking-files` covers the full compat report.
+
 Clones `Comfy-Org/ComfyUI` and AST-scans Python sources. Faster and dependency-free, but only reports **deprecated nodes** (skips missing-node / combo noise from incomplete static parsing). Deprecation is detected from V3 `is_deprecated=True` (Schema kwarg or class attribute) as well as legacy display names containing `DEPRECATED`:
 
 ```bash
@@ -170,6 +172,7 @@ Log and PR reports group findings by priority:
 | `--comfyui-dir PATH` | ComfyUI checkout for static scan |
 | `--object-info-url URL` | Override live endpoint (default `http://127.0.0.1:8188/object_info`) |
 | `--object-info-json PATH` | Debug with a saved `/object_info` JSON |
+| `--blocking-files PATH` | Only fail on errors in listed workflow paths (PR-scoped CI; empty file → exit 0) |
 | `--strict-unknown` | Warn on unknown non-core custom nodes |
 | `--no-log-file` | Skip writing log files (CI default) |
 | `--no-fail` | Exit 0 even when errors are found |

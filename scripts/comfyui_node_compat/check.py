@@ -2,10 +2,17 @@
 """Check workflow templates against a ComfyUI node baseline.
 
 Local (default): requires a running ComfyUI server and reads /object_info.
-CI / automation: pass --static-scan (optionally with --clone-comfyui) — no server or torch.
+That runtime baseline is what catches widget_slot_mismatch / invalid_widget_value
+(Seedream Lite vs Pro DynamicCombo drift, missing Kling seed slots, etc.).
+
+CI note: ``report-comfyui-node-compat.yml`` uses ``--static-scan``, which only
+reports removed/deprecated nodes and **skips** widget-slot checks. Slot/schema
+alignment is enforced by ``validate-widget-types.yml`` via ``--object-info-json``
+(same live ComfyUI /object_info dump as the coercible type check).
 
 Examples:
   npm run validate:comfyui-nodes
+  python scripts/comfyui_node_compat/check.py --object-info-json object_info.json
   python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui --no-fail
 """
 
@@ -53,6 +60,24 @@ Or pass an explicit endpoint:
 For CI-style static scanning (no running server):
   python scripts/comfyui_node_compat/check.py --static-scan --clone-comfyui
 """.strip()
+
+
+
+def load_blocking_basenames(path: Path) -> set[str]:
+    """Basenames from a changed-files list (``templates/foo.json`` or ``foo.json``)."""
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return {Path(line.strip()).name for line in lines if line.strip()}
+
+
+def issues_that_block(issues: list, blocking_basenames: set[str] | None) -> list:
+    """When ``blocking_basenames`` is set, only issues in those workflows fail CI.
+
+    An empty set (PR touched no templates) blocks nothing — matches
+    ``check_widget_types.py --blocking-files`` behaviour.
+    """
+    if blocking_basenames is None:
+        return list(issues)
+    return [issue for issue in issues if issue.workflow in blocking_basenames]
 
 
 def resolve_local_object_info_url(explicit: str | None) -> str:
@@ -125,6 +150,17 @@ def main() -> int:
         "--no-log-file",
         action="store_true",
         help="Do not write comfyui-node-compat.log files (CI uses --markdown-output instead).",
+    )
+    parser.add_argument(
+        "--blocking-files",
+        type=Path,
+        default=None,
+        help=(
+            "Optional text file of template paths (one per line), same format as "
+            "check_widget_types --blocking-files. When set, only errors in those "
+            "workflows fail the exit code; other findings are still printed. "
+            "Omit to fail on every error (local / full-repo gate)."
+        ),
     )
     parser.add_argument(
         "--no-fail",
@@ -223,9 +259,32 @@ def main() -> int:
         args.json_output.parent.mkdir(parents=True, exist_ok=True)
         args.json_output.write_text(json.dumps(report, indent=2), encoding="utf-8")
 
+    blocking_basenames: set[str] | None = None
+    if args.blocking_files is not None:
+        blocking_basenames = load_blocking_basenames(args.blocking_files)
+        print(
+            f"Blocking scope: {len(blocking_basenames)} workflow file(s) "
+            f"from {args.blocking_files}",
+            flush=True,
+        )
+
+    blocking = issues_that_block(issues, blocking_basenames)
+    if blocking_basenames is not None:
+        other_errors = sum(
+            1
+            for issue in issues
+            if issue.severity == "error" and issue not in blocking
+        )
+        if other_errors:
+            print(
+                f"Note: {other_errors} error(s) outside the blocking file set "
+                "(reported above, do not fail this run).",
+                flush=True,
+            )
+
     if args.no_fail:
         return 0
-    return 1 if any(issue.severity == "error" for issue in issues) else 0
+    return 1 if any(issue.severity == "error" for issue in blocking) else 0
 
 
 if __name__ == "__main__":

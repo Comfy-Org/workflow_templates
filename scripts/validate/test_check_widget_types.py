@@ -576,5 +576,112 @@ class MainTests(unittest.TestCase):
             self.assertIn("workflow path not found", str(raised.exception.code))
 
 
+
+class SlotSchemaDriftTests(unittest.TestCase):
+    """#1387-class drift must fail this CI check (runtime /object_info)."""
+
+    def test_missing_required_seed_tail(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "duration": ["COMBO", {"options": ["5", "10"]}],
+                    "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                }
+            },
+            "input_order": {"required": ["prompt", "duration", "seed"]},
+        }
+        node = {"id": 1, "type": "KlingLike", "inputs": [], "widgets_values": ["hi", "5"]}
+        findings = slot_schema_findings(Path("kling.json"), "", node, "KlingLike", node_def)
+        reasons = " ".join(f.reason for f in findings)
+        self.assertTrue(findings, "expected missing-seed finding")
+        self.assertIn("widget_slot_mismatch", reasons)
+
+    def test_invalid_dynamic_combo_key(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "mode": [
+                        "COMFY_DYNAMICCOMBO_V3",
+                        {
+                            "options": [
+                                {
+                                    "key": "lite",
+                                    "inputs": {
+                                        "required": {
+                                            "max_images": ["INT", {"default": 1}],
+                                        }
+                                    },
+                                },
+                                {
+                                    "key": "pro",
+                                    "inputs": {
+                                        "required": {
+                                            "prompt_optimization": [
+                                                "COMBO",
+                                                {"options": ["standard", "fast"]},
+                                            ],
+                                        }
+                                    },
+                                },
+                            ]
+                        },
+                    ],
+                }
+            },
+            "input_order": {"required": ["prompt", "mode"]},
+        }
+        node = {
+            "id": 1,
+            "type": "SeedreamLike",
+            "inputs": [],
+            "widgets_values": ["p", "standard", True],
+        }
+        findings = slot_schema_findings(Path("lite.json"), "", node, "SeedreamLike", node_def)
+        reasons = " ".join(f.reason for f in findings)
+        self.assertTrue(findings)
+        self.assertIn("invalid_combo_value", reasons)
+
+    def test_valid_lite_layout_clean(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "mode": [
+                        "COMFY_DYNAMICCOMBO_V3",
+                        {
+                            "options": [
+                                {
+                                    "key": "lite",
+                                    "inputs": {
+                                        "required": {"max_images": ["INT", {"default": 1}]}
+                                    },
+                                }
+                            ]
+                        },
+                    ],
+                }
+            },
+            "input_order": {"required": ["prompt", "mode"]},
+        }
+        node = {
+            "id": 1,
+            "type": "SeedreamLike",
+            "inputs": [],
+            "widgets_values": ["p", "lite", 4],
+        }
+        self.assertEqual(
+            slot_schema_findings(Path("lite.json"), "", node, "SeedreamLike", node_def),
+            [],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

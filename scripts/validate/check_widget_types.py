@@ -14,10 +14,14 @@ Covered: regular nodes (positional and named values), subgraph instances
 (promoted widgets), and frontend ``PrimitiveNode``s (checked against the
 widget they drive).
 
-The check only reports a value that would be valid after a type coercion. Wrong
-values of other kinds are left to the node-compat report, which keeps this check
-precise enough to block merges. Node types missing from the baseline (custom
-nodes) are skipped.
+The check reports (1) values that would be valid after a type coercion, and
+(2) widget slot/schema drift against the same ``/object_info`` baseline:
+missing required widget tails (e.g. Kling seed + control_after_generate),
+invalid DynamicCombo branch keys (e.g. Seedream Pro layout on a Lite node),
+and non-ignorable extra ``widgets_values`` tails. Static
+``report-comfyui-node-compat.yml`` (``--static-scan``) skips these slot checks
+— runtime ``/object_info`` is required. Node types missing from the baseline
+(custom nodes) are skipped.
 
 Needs a node baseline from a running ComfyUI (``/object_info``):
 
@@ -536,6 +540,112 @@ def iter_workflow_files(paths: list[Path]) -> list[Path]:
     return files
 
 
+def _linked_input_names(node: dict[str, Any]) -> set[str]:
+    names: set[str] = set()
+    for item in node.get("inputs") or []:
+        if isinstance(item, dict) and item.get("link") is not None and item.get("name"):
+            names.add(str(item["name"]))
+    return names
+
+
+def _is_ignorable_tail(value: Any) -> bool:
+    return isinstance(value, str) and (
+        value in CONTROL_VALUES or value in UPLOAD_VALUES or value in LOAD_3D_BUTTON_VALUES
+    )
+
+
+def slot_schema_findings(
+    path: Path,
+    scope: str,
+    node: dict[str, Any],
+    node_type: str,
+    node_def: dict[str, Any],
+) -> list[Finding]:
+    """Fail on widget_slot_mismatch / invalid DynamicCombo keys (#1387-class drift).
+
+    Uses the same positional walker as the coercible-type check so CI that already
+    starts ComfyUI for PM-2173 also blocks Seedream Lite↔Pro and Kling missing-seed
+    patterns without a separate workflow step.
+    """
+    values = node.get("widgets_values")
+    if not isinstance(values, list):
+        return []
+    items = _ordered_inputs(node_def.get("input"), node_def.get("input_order"))
+    if not items:
+        return []
+    mapped: dict[str, tuple[Any, Any]] = {}
+    consumed = _walk_positional(items, values, 0, "", mapped)
+    findings: list[Finding] = []
+    linked = _linked_input_names(node)
+
+    for input_name, (value, spec) in mapped.items():
+        if _widget_type(spec) != DYNAMIC_COMBO:
+            continue
+        if _selected_branch(spec, value) is not None:
+            continue
+        findings.append(
+            Finding(
+                path=str(path),
+                scope=scope,
+                node_id=node.get("id"),
+                node_type=node_type,
+                input_name=input_name,
+                value=value,
+                expected="<valid DynamicCombo branch key>",
+                reason=(
+                    "invalid_combo_value / widget schema drift — DynamicCombo key is not "
+                    "in current /object_info (e.g. Pro branch value on a Lite node)"
+                ),
+                fields=("widgets_values",),
+            )
+        )
+
+    if consumed < len(values):
+        tail = values[consumed:]
+        if tail and not all(_is_ignorable_tail(item) for item in tail):
+            findings.append(
+                Finding(
+                    path=str(path),
+                    scope=scope,
+                    node_id=node.get("id"),
+                    node_type=node_type,
+                    input_name="widgets_values",
+                    value=tail,
+                    expected=f"{consumed} schema-consumed slot(s)",
+                    reason=(
+                        f"widget_slot_mismatch — widgets_values has {len(values)} slot(s) but "
+                        f"schema walk consumed {consumed} (extra tail not ignorable)"
+                    ),
+                    fields=("widgets_values",),
+                )
+            )
+
+    required = (node_def.get("input") or {}).get("required") or {}
+    if isinstance(required, dict):
+        for name, spec in required.items():
+            if name in linked or not _is_widget(spec):
+                continue
+            if name in mapped or any(key.startswith(name + ".") for key in mapped):
+                continue
+            findings.append(
+                Finding(
+                    path=str(path),
+                    scope=scope,
+                    node_id=node.get("id"),
+                    node_type=node_type,
+                    input_name=name,
+                    value=None,
+                    expected="required widget slot present in widgets_values",
+                    reason=(
+                        "widget_slot_mismatch — required widget missing from widgets_values "
+                        "(e.g. omitted seed / control_after_generate tail)"
+                    ),
+                    fields=("widgets_values",),
+                )
+            )
+    return findings
+
+
 def check_workflow(path: Path, data: Any, object_info: dict[str, Any]) -> list[Finding]:
     """Check BOTH serialized forms of every node: the frontend restores the
     positional ``widgets_values`` by default and the named map when
@@ -563,6 +673,7 @@ def check_workflow(path: Path, data: Any, object_info: dict[str, Any]) -> list[F
         elif node_type in subgraphs:
             forms = instance_widgets(node, subgraphs[node_type], subgraphs, object_info)
         elif isinstance(node_def, dict):
+            findings.extend(slot_schema_findings(path, scope, node, node_type, node_def))
             forms = [("widgets_values", positional_widgets(node, node_def))]
             named = node.get("widgets_values_named")
             if isinstance(named, dict):
@@ -644,7 +755,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"::{'error' if is_error else 'warning'} file={finding.path}::{finding.format()}")
     print(
         f"Checked {len(files)} workflow files against {len(object_info)} node types: "
-        f"{len(findings)} widget value type mismatch(es), {errors} blocking."
+        f"{len(findings)} widget type/slot finding(s), {errors} blocking."
     )
     return 1 if errors else 0
 
