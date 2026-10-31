@@ -18,7 +18,9 @@ The check reports (1) values that would be valid after a type coercion, and
 (2) widget slot/schema drift against the same ``/object_info`` baseline:
 missing required widget tails (e.g. Kling seed + control_after_generate),
 invalid DynamicCombo branch keys (e.g. Seedream Pro layout on a Lite node),
-and non-ignorable extra ``widgets_values`` tails. Static
+and non-ignorable extra ``widgets_values`` tails. Slot/schema findings always
+fail the job for **every** template (full-repo). Coercible type findings may
+still be limited to PR-changed files via ``--blocking-files``. Static
 ``report-comfyui-node-compat.yml`` (``--static-scan``) skips these slot checks
 — runtime ``/object_info`` is required. Node types missing from the baseline
 (custom nodes) are skipped.
@@ -110,6 +112,9 @@ class Finding:
     expected: Any
     reason: str
     fields: tuple[str, ...]
+    # "slot" = schema/layout drift (always fails CI for every template).
+    # "coercion" = coercible JSON type mismatch (may be PR-scoped via --blocking-files).
+    kind: str = "coercion"
 
     def format(self) -> str:
         where = f"node {self.node_id}" + (f" ({self.scope})" if self.scope else "")
@@ -117,6 +122,10 @@ class Finding:
             f"{self.path}: {where} `{self.node_type}`.{self.input_name} = {self.value!r} "
             f"in {' and '.join(self.fields)} — {self.reason}; store it as {self.expected!r}"
         )
+
+    @property
+    def is_slot(self) -> bool:
+        return self.kind == "slot"
 
 
 def load_object_info(source: str) -> dict[str, Any]:
@@ -597,6 +606,7 @@ def slot_schema_findings(
                     "in current /object_info (e.g. Pro branch value on a Lite node)"
                 ),
                 fields=("widgets_values",),
+                kind="slot",
             )
         )
 
@@ -617,6 +627,7 @@ def slot_schema_findings(
                         f"schema walk consumed {consumed} (extra tail not ignorable)"
                     ),
                     fields=("widgets_values",),
+                    kind="slot",
                 )
             )
 
@@ -641,6 +652,7 @@ def slot_schema_findings(
                         "(e.g. omitted seed / control_after_generate tail)"
                     ),
                     fields=("widgets_values",),
+                    kind="slot",
                 )
             )
     return findings
@@ -727,8 +739,10 @@ def main(argv: list[str] | None = None) -> int:
         "--blocking-files",
         type=Path,
         help=(
-            "File listing the workflow paths (one per line) whose findings fail the run; "
-            "findings elsewhere are warnings. Default: every finding fails."
+            "File listing the workflow paths (one per line) whose *coercible type* "
+            "findings fail the run; type findings elsewhere are warnings. "
+            "Slot/schema findings always fail for every template, regardless of this "
+            "list. Default: every finding fails."
         ),
     )
     args = parser.parse_args(argv)
@@ -749,13 +763,21 @@ def main(argv: list[str] | None = None) -> int:
         findings.extend(check_workflow(path, data, object_info))
 
     errors = 0
+    slot_errors = 0
     for finding in findings:
-        is_error = blocking is None or Path(finding.path).as_posix() in blocking
+        # Slot/schema drift blocks the full repo; --blocking-files only scopes coercions.
+        is_error = (
+            finding.is_slot
+            or blocking is None
+            or Path(finding.path).as_posix() in blocking
+        )
         errors += is_error
+        slot_errors += is_error and finding.is_slot
         print(f"::{'error' if is_error else 'warning'} file={finding.path}::{finding.format()}")
     print(
         f"Checked {len(files)} workflow files against {len(object_info)} node types: "
-        f"{len(findings)} widget type/slot finding(s), {errors} blocking."
+        f"{len(findings)} widget type/slot finding(s), {errors} blocking "
+        f"({slot_errors} slot, full-repo)."
     )
     return 1 if errors else 0
 
