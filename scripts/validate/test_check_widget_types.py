@@ -554,6 +554,7 @@ class PrimitiveNodeTests(unittest.TestCase):
 
 class MainTests(unittest.TestCase):
     def test_blocking_files_limit_which_findings_fail(self):
+        """Coercible type findings stay PR-scoped via --blocking-files."""
         node = {"id": 94, "type": "Trellis2UpsampleStage", "widgets_values": ["1536"]}
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -566,6 +567,40 @@ class MainTests(unittest.TestCase):
             self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 1)
             self.assertEqual(main(args), 1)
 
+    def test_slot_findings_always_block_full_repo(self):
+        """Slot/schema drift fails even when the file is outside --blocking-files."""
+        object_info = {
+            "KlingLike": {
+                "input": {
+                    "required": {
+                        "prompt": ["STRING", {}],
+                        "duration": ["COMBO", {"options": ["5", "10"]}],
+                        "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                    }
+                },
+                "input_order": {"required": ["prompt", "duration", "seed"]},
+            }
+        }
+        node = {
+            "id": 1,
+            "type": "KlingLike",
+            "inputs": [],
+            "widgets_values": ["hi", "5"],  # missing seed + control tail
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "object_info.json").write_text(json.dumps(object_info))
+            (root / "unchanged_slot_drift.json").write_text(json.dumps({"nodes": [node]}))
+            args = [
+                "--object-info",
+                str(root / "object_info.json"),
+                str(root / "unchanged_slot_drift.json"),
+            ]
+            (root / "changed.txt").write_text("other.json\n")
+            # File is NOT in the PR-changed list — must still fail for slot drift.
+            self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 1)
+            self.assertEqual(main(args), 1)
+
     def test_missing_path_fails_instead_of_checking_nothing(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -574,6 +609,151 @@ class MainTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as raised:
                 main(args)
             self.assertIn("workflow path not found", str(raised.exception.code))
+
+
+
+class SlotSchemaDriftTests(unittest.TestCase):
+    """#1387-class drift must fail this CI check (runtime /object_info)."""
+
+    def test_missing_required_seed_tail(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "duration": ["COMBO", {"options": ["5", "10"]}],
+                    "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                }
+            },
+            "input_order": {"required": ["prompt", "duration", "seed"]},
+        }
+        node = {"id": 1, "type": "KlingLike", "inputs": [], "widgets_values": ["hi", "5"]}
+        findings = slot_schema_findings(Path("kling.json"), "", node, "KlingLike", node_def)
+        reasons = " ".join(f.reason for f in findings)
+        self.assertTrue(findings, "expected missing-seed finding")
+        self.assertIn("widget_slot_mismatch", reasons)
+        self.assertTrue(all(f.is_slot for f in findings))
+
+    def test_seed_without_control_after_generate(self):
+        """CodeRabbit A: seed present but control tail omitted must still fail."""
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "duration": ["COMBO", {"options": ["5", "10"]}],
+                    "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                }
+            },
+            "input_order": {"required": ["prompt", "duration", "seed"]},
+        }
+        # Seed value 0 is present; control_after_generate string is not.
+        node = {"id": 1, "type": "KlingLike", "inputs": [], "widgets_values": ["hello", "5", 0]}
+        findings = slot_schema_findings(Path("kling.json"), "", node, "KlingLike", node_def)
+        self.assertTrue(findings, "expected missing control_after_generate finding")
+        names = {f.input_name for f in findings}
+        self.assertTrue(
+            any(n.endswith("control_after_generate") for n in names),
+            names,
+        )
+        self.assertTrue(all(f.is_slot for f in findings))
+        # Complete seed + control must stay clean.
+        node_ok = {
+            "id": 1,
+            "type": "KlingLike",
+            "inputs": [],
+            "widgets_values": ["hello", "5", 0, "randomize"],
+        }
+        self.assertEqual(
+            slot_schema_findings(Path("kling.json"), "", node_ok, "KlingLike", node_def),
+            [],
+        )
+
+    def test_invalid_dynamic_combo_key(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "mode": [
+                        "COMFY_DYNAMICCOMBO_V3",
+                        {
+                            "options": [
+                                {
+                                    "key": "lite",
+                                    "inputs": {
+                                        "required": {
+                                            "max_images": ["INT", {"default": 1}],
+                                        }
+                                    },
+                                },
+                                {
+                                    "key": "pro",
+                                    "inputs": {
+                                        "required": {
+                                            "prompt_optimization": [
+                                                "COMBO",
+                                                {"options": ["standard", "fast"]},
+                                            ],
+                                        }
+                                    },
+                                },
+                            ]
+                        },
+                    ],
+                }
+            },
+            "input_order": {"required": ["prompt", "mode"]},
+        }
+        node = {
+            "id": 1,
+            "type": "SeedreamLike",
+            "inputs": [],
+            "widgets_values": ["p", "standard", True],
+        }
+        findings = slot_schema_findings(Path("lite.json"), "", node, "SeedreamLike", node_def)
+        reasons = " ".join(f.reason for f in findings)
+        self.assertTrue(findings)
+        self.assertIn("invalid_combo_value", reasons)
+        self.assertTrue(all(f.is_slot for f in findings))
+
+    def test_valid_lite_layout_clean(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "mode": [
+                        "COMFY_DYNAMICCOMBO_V3",
+                        {
+                            "options": [
+                                {
+                                    "key": "lite",
+                                    "inputs": {
+                                        "required": {"max_images": ["INT", {"default": 1}]}
+                                    },
+                                }
+                            ]
+                        },
+                    ],
+                }
+            },
+            "input_order": {"required": ["prompt", "mode"]},
+        }
+        node = {
+            "id": 1,
+            "type": "SeedreamLike",
+            "inputs": [],
+            "widgets_values": ["p", "lite", 4],
+        }
+        self.assertEqual(
+            slot_schema_findings(Path("lite.json"), "", node, "SeedreamLike", node_def),
+            [],
+        )
 
 
 if __name__ == "__main__":
