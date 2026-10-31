@@ -96,4 +96,46 @@ test.describe('Visual Regression Tests', () => {
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('404.png', { fullPage: true });
   });
+
+  test('author link idle and hover states', async ({ page, isMobile }) => {
+    // :hover isn't a meaningful, stable state on touch/mobile viewports —
+    // only exercise it on the desktop (mouse) project.
+    test.skip(isMobile, 'Hover states only apply to pointer/mouse viewports');
+
+    await page.goto('/workflows/');
+    await page.waitForLoadState('networkidle');
+
+    // Scoped to a grid card rather than `a[data-testid="author-link"]` on the
+    // whole page — the featured hero carousel above the grid renders the same
+    // component but auto-advances, which would make an element screenshot
+    // flaky. The grid card's author attribution is an <a> whenever the
+    // creator has a profile page, which is the state that carries the hover
+    // treatment.
+    const authorLink = page
+      .locator('[data-testid="workflow-card"]')
+      .first()
+      .locator('a[data-testid="author-link"]');
+    await expect(authorLink).toBeVisible();
+    await authorLink.scrollIntoViewIfNeeded();
+
+    // The avatar image (when the creator has one) is lazy-loaded, so it only
+    // starts fetching once scrolled into view — wait for it to finish or the
+    // idle shot can race a still-loading image and flake between the real
+    // avatar and the fallback initial. No <img> at all means Avatar already
+    // settled on the fallback initial; nothing to wait for.
+    const avatarImg = authorLink.locator('img');
+    await expect
+      .poll(async () => {
+        if ((await avatarImg.count()) === 0) return true;
+        return avatarImg.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0);
+      })
+      .toBe(true);
+
+    await expect(authorLink).toHaveScreenshot('author-link-idle.png');
+
+    await authorLink.hover();
+    // Let the 150ms background/underline/ring transition finish before capturing.
+    await page.waitForTimeout(250);
+    await expect(authorLink).toHaveScreenshot('author-link-hover.png');
+  });
 });
