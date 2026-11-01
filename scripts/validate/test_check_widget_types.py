@@ -764,6 +764,52 @@ class SlotSchemaDriftTests(unittest.TestCase):
         self.assertIn("invalid_combo_value", reasons)
         self.assertTrue(all(f.is_slot for f in findings))
 
+
+    def test_invalid_dynamic_combo_key_named_only(self):
+        """Named-only nodes skip slot_schema_findings; still flag bad DynamicCombo keys."""
+        from check_widget_types import check_workflow
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "mode": [
+                        "COMFY_DYNAMICCOMBO_V3",
+                        {
+                            "options": [
+                                {
+                                    "key": "lite",
+                                    "inputs": {
+                                        "required": {
+                                            "max_images": ["INT", {"default": 1}],
+                                        }
+                                    },
+                                },
+                            ]
+                        },
+                    ],
+                }
+            },
+            "input_order": {"required": ["prompt", "mode"]},
+        }
+        data = {
+            "nodes": [
+                {
+                    "id": 1,
+                    "type": "SeedreamLike",
+                    "inputs": [],
+                    "widgets_values_named": {"prompt": "p", "mode": "pro"},
+                }
+            ]
+        }
+        findings = check_workflow(
+            Path("named-only.json"), data, {"SeedreamLike": node_def}
+        )
+        slot = [f for f in findings if f.is_slot]
+        self.assertTrue(slot)
+        self.assertIn("invalid_combo_value", " ".join(f.reason for f in slot))
+        self.assertEqual(slot[0].fields, ("widgets_values_named",))
+
     def test_valid_lite_layout_clean(self):
         from check_widget_types import slot_schema_findings
 

@@ -722,6 +722,32 @@ def check_workflow(path: Path, data: Any, object_info: dict[str, Any]) -> list[F
             forms = [("widgets_values", positional_widgets(node, node_def))]
             named = node.get("widgets_values_named")
             if isinstance(named, dict):
+                # Named-only nodes skip slot_schema_findings (needs widgets_values list).
+                # Still flag invalid DynamicCombo branch keys in the named map.
+                for key, value in named.items():
+                    spec = named_input_spec(node_def, key, named)
+                    if (
+                        _widget_type(spec) != DYNAMIC_COMBO
+                        or _selected_branch(spec, value) is not None
+                    ):
+                        continue
+                    findings.append(
+                        Finding(
+                            path=str(path),
+                            scope=scope,
+                            node_id=node.get("id"),
+                            node_type=node_type,
+                            input_name=key,
+                            value=value,
+                            expected="<valid DynamicCombo branch key>",
+                            reason=(
+                                "invalid_combo_value / widget schema drift — DynamicCombo "
+                                "key is not in current /object_info"
+                            ),
+                            fields=("widgets_values_named",),
+                            kind="slot",
+                        )
+                    )
                 forms.append(
                     (
                         "widgets_values_named",
