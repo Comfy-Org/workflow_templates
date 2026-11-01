@@ -567,8 +567,8 @@ class MainTests(unittest.TestCase):
             self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 1)
             self.assertEqual(main(args), 1)
 
-    def test_slot_findings_always_block_full_repo(self):
-        """Slot/schema drift fails even when the file is outside --blocking-files."""
+    def test_slot_findings_respect_blocking_files_by_default(self):
+        """PR-scoped CI: slot drift outside --blocking-files is a warning only."""
         object_info = {
             "KlingLike": {
                 "input": {
@@ -590,6 +590,41 @@ class MainTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "object_info.json").write_text(json.dumps(object_info))
+            drift_path = root / "unchanged_slot_drift.json"
+            drift_path.write_text(json.dumps({"nodes": [node]}))
+            args = [
+                "--object-info",
+                str(root / "object_info.json"),
+                str(drift_path),
+            ]
+            (root / "changed.txt").write_text("other.json\n")
+            self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 0)
+            (root / "changed.txt").write_text(f"{drift_path}\n")
+            self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 1)
+
+    def test_full_slot_scan_blocks_library_wide_slot_drift(self):
+        """Opt-in full-slot-scan fails slot drift even outside --blocking-files."""
+        object_info = {
+            "KlingLike": {
+                "input": {
+                    "required": {
+                        "prompt": ["STRING", {}],
+                        "duration": ["COMBO", {"options": ["5", "10"]}],
+                        "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                    }
+                },
+                "input_order": {"required": ["prompt", "duration", "seed"]},
+            }
+        }
+        node = {
+            "id": 1,
+            "type": "KlingLike",
+            "inputs": [],
+            "widgets_values": ["hi", "5"],
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "object_info.json").write_text(json.dumps(object_info))
             (root / "unchanged_slot_drift.json").write_text(json.dumps({"nodes": [node]}))
             args = [
                 "--object-info",
@@ -597,8 +632,17 @@ class MainTests(unittest.TestCase):
                 str(root / "unchanged_slot_drift.json"),
             ]
             (root / "changed.txt").write_text("other.json\n")
-            # File is NOT in the PR-changed list — must still fail for slot drift.
-            self.assertEqual(main([*args, "--blocking-files", str(root / "changed.txt")]), 1)
+            self.assertEqual(
+                main(
+                    [
+                        *args,
+                        "--blocking-files",
+                        str(root / "changed.txt"),
+                        "--full-slot-scan",
+                    ]
+                ),
+                1,
+            )
             self.assertEqual(main(args), 1)
 
     def test_missing_path_fails_instead_of_checking_nothing(self):

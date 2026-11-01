@@ -18,9 +18,13 @@ The check reports (1) values that would be valid after a type coercion, and
 (2) widget slot/schema drift against the same ``/object_info`` baseline:
 missing required widget tails (e.g. Kling seed + control_after_generate),
 invalid DynamicCombo branch keys (e.g. Seedream Pro layout on a Lite node),
-and non-ignorable extra ``widgets_values`` tails. Slot/schema findings always
-fail the job for **every** template (full-repo). Coercible type findings may
-still be limited to PR-changed files via ``--blocking-files``. Static
+and non-ignorable extra ``widgets_values`` tails. On pull requests, slot and
+coercible findings in templates the PR did not touch are reported as warnings;
+``--blocking-files`` lists the changed workflows that fail the job. Omit
+``--blocking-files`` (push to main, manual runs, local full-repo checks) to fail
+on every finding. Pass ``--full-slot-scan`` with ``--blocking-files`` to fail
+on slot/schema drift in **all** templates while keeping coercible type findings
+PR-scoped (opt-in via the ``full-slot-scan`` PR label in CI). Static
 ``report-comfyui-node-compat.yml`` (``--static-scan``) skips these slot checks
 — runtime ``/object_info`` is required. Node types missing from the baseline
 (custom nodes) are skipped.
@@ -112,8 +116,8 @@ class Finding:
     expected: Any
     reason: str
     fields: tuple[str, ...]
-    # "slot" = schema/layout drift (always fails CI for every template).
-    # "coercion" = coercible JSON type mismatch (may be PR-scoped via --blocking-files).
+    # "slot" = schema/layout drift (#1387-class; PR-scoped via --blocking-files by default).
+    # "coercion" = coercible JSON type mismatch (PR-scoped via --blocking-files).
     kind: str = "coercion"
 
     def format(self) -> str:
@@ -768,10 +772,18 @@ def main(argv: list[str] | None = None) -> int:
         "--blocking-files",
         type=Path,
         help=(
-            "File listing the workflow paths (one per line) whose *coercible type* "
-            "findings fail the run; type findings elsewhere are warnings. "
-            "Slot/schema findings always fail for every template, regardless of this "
-            "list. Default: every finding fails."
+            "File listing workflow paths (one per line) whose findings fail the run; "
+            "findings in other files are warnings. An empty file fails nothing "
+            "(scripts-only PR). Omit to fail on every finding (full-repo gate)."
+        ),
+    )
+    parser.add_argument(
+        "--full-slot-scan",
+        action="store_true",
+        help=(
+            "With --blocking-files, fail on slot/schema findings in every template "
+            "while coercible type findings stay limited to the blocking file list. "
+            "CI sets this when a PR has the full-slot-scan label."
         ),
     )
     args = parser.parse_args(argv)
@@ -794,19 +806,27 @@ def main(argv: list[str] | None = None) -> int:
     errors = 0
     slot_errors = 0
     for finding in findings:
-        # Slot/schema drift blocks the full repo; --blocking-files only scopes coercions.
-        is_error = (
-            finding.is_slot
-            or blocking is None
-            or Path(finding.path).as_posix() in blocking
-        )
+        path_key = Path(finding.path).as_posix()
+        if blocking is None:
+            is_error = True
+        elif finding.is_slot and args.full_slot_scan:
+            is_error = True
+        else:
+            is_error = path_key in blocking
         errors += is_error
         slot_errors += is_error and finding.is_slot
         print(f"::{'error' if is_error else 'warning'} file={finding.path}::{finding.format()}")
+    scope_note = "full-repo"
+    if blocking is not None:
+        scope_note = (
+            "PR-changed + all slot templates"
+            if args.full_slot_scan
+            else f"PR-changed ({len(blocking)} file(s))"
+        )
     print(
         f"Checked {len(files)} workflow files against {len(object_info)} node types: "
         f"{len(findings)} widget type/slot finding(s), {errors} blocking "
-        f"({slot_errors} slot, full-repo)."
+        f"({slot_errors} slot; scope: {scope_note})."
     )
     return 1 if errors else 0
 

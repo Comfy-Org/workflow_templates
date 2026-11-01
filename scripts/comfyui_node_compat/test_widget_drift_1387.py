@@ -3,7 +3,9 @@
 
 Mirrors Seedream Lite-vs-Pro DynamicCombo layout mistakes and Kling templates
 that omit trailing seed + control_after_generate. CI relies on runtime
-``/object_info`` (not ``--static-scan``) plus ``--blocking-files`` to fail PRs.
+``/object_info`` (not ``--static-scan``) plus ``--blocking-files`` on changed
+templates (``validate-widget-types.yml``); label ``full-slot-scan`` for
+library-wide slot failure on PRs.
 """
 
 from __future__ import annotations
