@@ -64,7 +64,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
 | `model-analysis.yml` | `validate/analyze_models.py`, `data/whitelist.json` |
-| `validate-widget-types.yml` | `validate/check_widget_types.py` (live ComfyUI `master` `/object_info`: slot/schema drift fails for **all** templates; coercible types PR-scoped — #1387-class) |
+| `validate-widget-types.yml` | `validate/check_widget_types.py` (live ComfyUI `master` `/object_info`: PRs fail on changed templates via `--blocking-files`; label **`full-slot-scan`** for library-wide slot failure; push/manual fail coercible types only, slot drift warnings — #1387-class) |
 | `report-comfyui-node-compat.yml` | `comfyui_node_compat/check.py --static-scan` (deprecated baseline; PR comment only — **does not** check widget slots) |
 | `check_input_assets.yml`, `generate-upload-json.yml` | `validate/check_input_assets.py` |
 | `sync-custom-nodes.yml` | `sync/sync_custom_nodes.py` |
@@ -128,7 +128,7 @@ Reports are written to repo root (gitignored):
 
 ### CI / static scan (no server, no torch)
 
-> **Static CI ≠ slot check.** `--static-scan` (used by `report-comfyui-node-compat.yml`) only reports deprecated nodes and **skips** `widget_slot_mismatch` / `invalid_widget_value`. Runtime `/object_info` is required for those — `validate-widget-types.yml` starts ComfyUI and runs `check_widget_types.py --object-info`. On pull requests, findings in templates the PR did not change are warnings; `--blocking-files` lists changed workflows that fail the job (slot and coercible type findings). Add the **`full-slot-scan`** PR label to fail on slot/schema drift library-wide while keeping coercible mismatches PR-scoped. Push to `main` and manual runs omit `--blocking-files` and fail on every finding (backlog visibility). Locally, compat `check.py --object-info-json` covers the full compat report (different CLI flag from the widget-types checker).
+> **Static CI ≠ slot check.** `--static-scan` (used by `report-comfyui-node-compat.yml`) only reports deprecated nodes and **skips** `widget_slot_mismatch` / `invalid_widget_value`. Runtime `/object_info` is required for those — `validate-widget-types.yml` starts ComfyUI and runs `check_widget_types.py --object-info`. On pull requests, findings in templates the PR did not change are warnings; `--blocking-files` lists changed workflows that fail the job (slot and coercible type findings). Add the **`full-slot-scan`** PR label to fail on slot/schema drift library-wide while keeping coercible mismatches PR-scoped (the workflow listens for `labeled` / `unlabeled` so the label retriggers CI without a new push). Push to `main` and manual runs omit `--blocking-files`: coercible type mismatches fail, slot/schema drift is reported as warnings until the backlog is cleared. Locally, compat `check.py --object-info-json` covers the full compat report (different CLI flag from the widget-types checker).
 
 Clones `Comfy-Org/ComfyUI` and AST-scans Python sources. Faster and dependency-free, but only reports **deprecated nodes** (skips missing-node / combo noise from incomplete static parsing). Deprecation is detected from V3 `is_deprecated=True` (Schema kwarg or class attribute) as well as legacy display names containing `DEPRECATED`:
 

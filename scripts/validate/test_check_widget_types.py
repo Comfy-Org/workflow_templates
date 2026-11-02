@@ -643,6 +643,16 @@ class MainTests(unittest.TestCase):
                 ),
                 1,
             )
+            # Full-repo run (no --blocking-files): slot backlog is warning-only.
+            self.assertEqual(main(args), 0)
+
+    def test_full_repo_coercions_still_block_without_blocking_files(self):
+        node = {"id": 94, "type": "Trellis2UpsampleStage", "widgets_values": ["1536"]}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "object_info.json").write_text(json.dumps(OBJECT_INFO))
+            (root / "bad.json").write_text(json.dumps({"nodes": [node]}))
+            args = ["--object-info", str(root / "object_info.json"), str(root / "bad.json")]
             self.assertEqual(main(args), 1)
 
     def test_missing_path_fails_instead_of_checking_nothing(self):
@@ -809,6 +819,37 @@ class SlotSchemaDriftTests(unittest.TestCase):
         self.assertTrue(slot)
         self.assertIn("invalid_combo_value", " ".join(f.reason for f in slot))
         self.assertEqual(slot[0].fields, ("widgets_values_named",))
+
+    def test_missing_required_widget_named_only(self):
+        """Named-only save format must flag omitted required widgets like positional."""
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "duration": ["COMBO", {"options": ["5", "10"]}],
+                    "seed": ["INT", {"default": 0, "control_after_generate": True}],
+                }
+            },
+            "input_order": {"required": ["prompt", "duration", "seed"]},
+        }
+        data = {
+            "nodes": [
+                {
+                    "id": 1,
+                    "type": "KlingLike",
+                    "inputs": [],
+                    "widgets_values_named": {"prompt": "hi", "duration": "5"},
+                }
+            ]
+        }
+        findings = check_workflow(
+            Path("named-kling.json"), data, {"KlingLike": node_def}
+        )
+        slot = [f for f in findings if f.is_slot]
+        self.assertTrue(slot)
+        self.assertIn("seed", {f.input_name for f in slot})
+        self.assertEqual(slot[0].fields, ("widgets_values_named",))
+        self.assertIn("widget_slot_mismatch", " ".join(f.reason for f in slot))
 
     def test_valid_lite_layout_clean(self):
         from check_widget_types import slot_schema_findings

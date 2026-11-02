@@ -21,8 +21,9 @@ invalid DynamicCombo branch keys (e.g. Seedream Pro layout on a Lite node),
 and non-ignorable extra ``widgets_values`` tails. On pull requests, slot and
 coercible findings in templates the PR did not touch are reported as warnings;
 ``--blocking-files`` lists the changed workflows that fail the job. Omit
-``--blocking-files`` (push to main, manual runs, local full-repo checks) to fail
-on every finding. Pass ``--full-slot-scan`` with ``--blocking-files`` to fail
+``--blocking-files`` (push to main, manual runs) to fail on coercible type
+findings library-wide while slot/schema drift is reported as warnings until the
+backlog is cleared. Pass ``--full-slot-scan`` with ``--blocking-files`` to fail
 on slot/schema drift in **all** templates while keeping coercible type findings
 PR-scoped (opt-in via the ``full-slot-scan`` PR label in CI). Static
 ``report-comfyui-node-compat.yml`` (``--static-scan``) skips these slot checks
@@ -574,6 +575,45 @@ def _is_ignorable_tail(value: Any) -> bool:
     )
 
 
+def _missing_required_widget_findings(
+    path: Path,
+    scope: str,
+    node: dict[str, Any],
+    node_type: str,
+    node_def: dict[str, Any],
+    linked: set[str],
+    present_keys: set[str],
+    fields: tuple[str, ...],
+) -> list[Finding]:
+    findings: list[Finding] = []
+    required = (node_def.get("input") or {}).get("required") or {}
+    if not isinstance(required, dict):
+        return findings
+    for name, spec in required.items():
+        if name in linked or not _is_widget(spec):
+            continue
+        if name in present_keys or any(key.startswith(f"{name}.") for key in present_keys):
+            continue
+        findings.append(
+            Finding(
+                path=str(path),
+                scope=scope,
+                node_id=node.get("id"),
+                node_type=node_type,
+                input_name=name,
+                value=None,
+                expected="required widget slot present in widgets_values",
+                reason=(
+                    "widget_slot_mismatch — required widget missing from widgets_values "
+                    "(e.g. omitted seed / control_after_generate tail)"
+                ),
+                fields=fields,
+                kind="slot",
+            )
+        )
+    return findings
+
+
 def slot_schema_findings(
     path: Path,
     scope: str,
@@ -664,30 +704,18 @@ def slot_schema_findings(
                 )
             )
 
-    required = (node_def.get("input") or {}).get("required") or {}
-    if isinstance(required, dict):
-        for name, spec in required.items():
-            if name in linked or not _is_widget(spec):
-                continue
-            if name in mapped or any(key.startswith(name + ".") for key in mapped):
-                continue
-            findings.append(
-                Finding(
-                    path=str(path),
-                    scope=scope,
-                    node_id=node.get("id"),
-                    node_type=node_type,
-                    input_name=name,
-                    value=None,
-                    expected="required widget slot present in widgets_values",
-                    reason=(
-                        "widget_slot_mismatch — required widget missing from widgets_values "
-                        "(e.g. omitted seed / control_after_generate tail)"
-                    ),
-                    fields=("widgets_values",),
-                    kind="slot",
-                )
-            )
+    findings.extend(
+        _missing_required_widget_findings(
+            path,
+            scope,
+            node,
+            node_type,
+            node_def,
+            linked,
+            set(mapped.keys()),
+            ("widgets_values",),
+        )
+    )
     return findings
 
 
@@ -722,8 +750,21 @@ def check_workflow(path: Path, data: Any, object_info: dict[str, Any]) -> list[F
             forms = [("widgets_values", positional_widgets(node, node_def))]
             named = node.get("widgets_values_named")
             if isinstance(named, dict):
-                # Named-only nodes skip slot_schema_findings (needs widgets_values list).
-                # Still flag invalid DynamicCombo branch keys in the named map.
+                # Named-only nodes skip positional slot_schema_findings (needs widgets_values list).
+                linked = _linked_input_names(node)
+                if not isinstance(node.get("widgets_values"), list):
+                    findings.extend(
+                        _missing_required_widget_findings(
+                            path,
+                            scope,
+                            node,
+                            node_type,
+                            node_def,
+                            linked,
+                            set(named.keys()),
+                            ("widgets_values_named",),
+                        )
+                    )
                 for key, value in named.items():
                     spec = named_input_spec(node_def, key, named)
                     if (
@@ -800,7 +841,8 @@ def main(argv: list[str] | None = None) -> int:
         help=(
             "File listing workflow paths (one per line) whose findings fail the run; "
             "findings in other files are warnings. An empty file fails nothing "
-            "(scripts-only PR). Omit to fail on every finding (full-repo gate)."
+            "(scripts-only PR). Omit to fail on coercible type findings library-wide; "
+            "slot/schema findings are warnings unless this file or --full-slot-scan is set."
         ),
     )
     parser.add_argument(
@@ -833,16 +875,21 @@ def main(argv: list[str] | None = None) -> int:
     slot_errors = 0
     for finding in findings:
         path_key = Path(finding.path).as_posix()
-        if blocking is None:
-            is_error = True
-        elif finding.is_slot and args.full_slot_scan:
+        if finding.is_slot:
+            if blocking is None:
+                is_error = False
+            elif args.full_slot_scan:
+                is_error = True
+            else:
+                is_error = path_key in blocking
+        elif blocking is None:
             is_error = True
         else:
             is_error = path_key in blocking
         errors += is_error
         slot_errors += is_error and finding.is_slot
         print(f"::{'error' if is_error else 'warning'} file={finding.path}::{finding.format()}")
-    scope_note = "full-repo"
+    scope_note = "full-repo (coercions block; slot warnings)"
     if blocking is not None:
         scope_note = (
             "PR-changed + all slot templates"

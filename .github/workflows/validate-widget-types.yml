@@ -9,7 +9,9 @@ name: Validate Widget Value Types
 # nobody touched. On pull requests only findings in the PR's changed templates and
 # blueprints fail the job (slot and coercible type); the rest are warnings. Label
 # the PR `full-slot-scan` to fail on slot/schema drift library-wide while keeping
-# coercible mismatches PR-scoped. On push and manual runs every finding fails.
+# coercible mismatches PR-scoped. On push and manual runs coercible findings fail;
+# slot/schema drift is warning-only until the library backlog is cleared.
+# Adding or removing the full-slot-scan label re-runs this job (labeled/unlabeled).
 #
 # The job fails closed when a ComfyUI node module does not import: its node types
 # would be missing from /object_info and the check skips unknown types, so an
@@ -27,7 +29,7 @@ on:
       - 'scripts/lib/locale_index_files.py'
       - '.github/workflows/validate-widget-types.yml'
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [main]
     paths:
       - 'templates/**'
