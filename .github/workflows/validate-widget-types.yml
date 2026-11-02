@@ -6,9 +6,12 @@ name: Validate Widget Value Types
 # (IO.*.Input) node schemas are covered, which a static source scan cannot read.
 #
 # master moves, so a schema change upstream can surface a finding in a template
-# nobody touched. On pull requests only findings in the PR's own templates and
-# blueprints fail the job; the rest are reported as warnings. On push and manual
-# runs every finding fails.
+# nobody touched. On pull requests only findings in the PR's changed templates and
+# blueprints fail the job (slot and coercible type); the rest are warnings. Label
+# the PR `full-slot-scan` to fail on slot/schema drift library-wide while keeping
+# coercible mismatches PR-scoped. On push and manual runs coercible findings fail;
+# slot/schema drift is warning-only until the library backlog is cleared.
+# Adding or removing the full-slot-scan label re-runs this job (labeled/unlabeled).
 #
 # The job fails closed when a ComfyUI node module does not import: its node types
 # would be missing from /object_info and the check skips unknown types, so an
@@ -26,7 +29,7 @@ on:
       - 'scripts/lib/locale_index_files.py'
       - '.github/workflows/validate-widget-types.yml'
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [main]
     paths:
       - 'templates/**'
@@ -120,10 +123,16 @@ jobs:
           cat changed_workflows.txt
 
       - name: Check widget value types
+        env:
+          FULL_SLOT_SCAN: ${{ contains(github.event.pull_request.labels.*.name, 'full-slot-scan') }}
         run: |
           blocking=()
+          full_slot=()
           if [ -f changed_workflows.txt ]; then
             blocking=(--blocking-files changed_workflows.txt)
+            if [ "$FULL_SLOT_SCAN" = "true" ]; then
+              full_slot=(--full-slot-scan)
+            fi
           fi
           python scripts/validate/check_widget_types.py \
-            --object-info object_info.json "${blocking[@]}" templates blueprints
+            --object-info object_info.json "${blocking[@]}" "${full_slot[@]}" templates blueprints
