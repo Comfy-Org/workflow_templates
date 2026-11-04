@@ -1,0 +1,215 @@
+{
+  "id": "5b3e0f21-0000-4000-8000-000000000002",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        100.0,
+        200.0
+      ],
+      "size": [
+        282.8,
+        102
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "close_up_portrait.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "close_up_portrait.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "PikaH3FlexReferenceVideoNode",
+      "pos": [
+        520.0,
+        150.0
+      ],
+      "size": [
+        420,
+        420
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "reference_images.image_1",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "reference_images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "reference_videos.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "reference_audios.audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PikaH3FlexReferenceVideoNode"
+      },
+      "widgets_values": [
+        "@Image1 steps out of a rain-soaked neon alley, coat flaring, slow dolly in as reflections ripple underfoot.",
+        true,
+        "768p",
+        "16:9",
+        5,
+        true,
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "prompt": "@Image1 steps out of a rain-soaked neon alley, coat flaring, slow dolly in as reflections ripple underfoot.",
+        "reference_video_audio": true,
+        "resolution": "768p",
+        "aspect_ratio": "16:9",
+        "duration": 5,
+        "rewrite_prompt": true,
+        "seed": 42,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        1000.0,
+        170.0
+      ],
+      "size": [
+        453.8,
+        296.7
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_pika_h3_flex_ref2v",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_pika_h3_flex_ref2v",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -286.0,
+        700.0
+      ],
+      "size": [
+        1100.0,
+        900.0
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Reference to Video: Pika H3 Flex (API)\n\n**Direct a shot from reference material instead of a bare prompt.** Pika H3 Flex accepts up to nine images, three videos and three audio clips, addresses them as `@Image1`, `@Video1` and `@Audio1` in the prompt, and renders a clip with synchronized sound through the partner API.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the subject reference. The autogrow input on the node takes up to nine, named `image_1` to `image_9` in connection order.\n2. **Pika H3 Flex Reference to Video**: the prompt plus the reference group.\n3. **Save Video**: writes `api_pika_h3_flex_ref2v.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `prompt` | The shot. Reference the inputs by position: `@Image1`, `@Video1`, `@Audio1`. |\n| `reference_video_audio` | Copies the sound of connected reference videos into the output. Turn it off to keep only the connected audio clips. |\n| `resolution` | `480p` to `4k`; `1080p` and above render at 768p and upscale once. |\n| `aspect_ratio` | `auto` follows the first connected image, otherwise the prompt. |\n| `duration` | 5 to 15 seconds on a frame grid; 5 s gives 124 frames, about 5.17 s. |\n| `rewrite_prompt` | Expands a short prompt before rendering. Turn it off for reproducible seeds. |\n\n### Prompt tips\n\n- Keep the reference order explicit: `@Image1` is the first connected image, `@Video1` the first connected video.\n- Say what the reference supplies and what changes: `@Image1 steps out of a rain-soaked alley, coat flaring`.\n- References without a prompt are often ignored, so always describe the shot.\n\n### Measured on this graph\n\nOne portrait reference plus the prompt produced a 1344 x 768 clip, 124 frames, 5.17 s at 24 fps, with camera motion and generated audio, the subject's face and wardrobe following the reference.\n\n### Gotchas\n\n- At least one image or video is required; audio alone is rejected.\n- Reference videos run 2 to 15 seconds each and 15 seconds in total, and they are billed per second, so trim before connecting.\n- Up to 12 references in total across the three groups.\n- `1080p` and above are upscaled from 768p, and the same seed at a different resolution gives a different clip.\n\n**Input asset:** [close_up_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/close_up_portrait.png)\n"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        120.0,
+        -50.0
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}
