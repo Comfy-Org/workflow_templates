@@ -1,0 +1,196 @@
+{
+  "id": "328ce623-0000-4000-8000-000000000000",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        100.0,
+        130.0
+      ],
+      "size": [
+        282.8,
+        82
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "desert_highway_encounter.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "desert_highway_encounter.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "MinimaxHailuo03MaxInsertVideoNode",
+      "pos": [
+        520.0,
+        130.0
+      ],
+      "size": [
+        420,
+        460
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MinimaxHailuo03MaxInsertVideoNode"
+      },
+      "widgets_values": [
+        "MiniMax H3 Max",
+        "A neon-lit night market fills the empty highway: stalls glowing, a crowd crossing the road, lanterns swinging in the wind.",
+        1.8,
+        3.6,
+        5,
+        "768P",
+        true,
+        true,
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "MiniMax H3 Max",
+        "model.prompt": "A neon-lit night market fills the empty highway: stalls glowing, a crowd crossing the road, lanterns swinging in the wind.",
+        "model.start_time": 1.8,
+        "model.resume_time": 3.6,
+        "model.duration": 5,
+        "model.resolution": "768P",
+        "model.color_match": true,
+        "model.prompt_expansion": true,
+        "model.seed": 42,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        1000.0,
+        170.0
+      ],
+      "size": [
+        453.8,
+        296.7
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_minimax_h3_max_insert",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_minimax_h3_max_insert",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -286.0,
+        700.0
+      ],
+      "size": [
+        1100.0,
+        900.0
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Insert Scene: MiniMax H3 Max\n\n**Drop a new scene into the middle of a finished clip.** Insert keeps everything before `start_time` and everything after `resume_time`, and generates the beat in between so the two halves connect.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip, up to 60 seconds, aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Insert**: replaces the stretch from `start_time` to `resume_time` with a generated scene.\n3. **Save Video**: writes the full clip, source plus new scene, to `api_minimax_h3_max_insert.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `start_time` | Second of the source where the new scene begins, 1.625 or later. |\n| `resume_time` | Second where the source picks up again. Must be after `start_time` and at least 1.375 s before the end of the clip. |\n| `duration` | Length of the generated scene, 5 to 13 seconds. |\n| `resolution` | `480P` or `768P`. |\n| `color_match` | Grades the new scene toward the source so the cut is less visible. |\n| `prompt_expansion` | Rewrites the prompt using the source video. Turn it off when you need the same seed to reproduce a result. |\n\n### Prompt tips\n\n- Write the new scene, not the edit: `a neon-lit night market fills the empty highway, stalls glowing, a crowd crossing the road`.\n- Reference images and videos can be connected for consistency and are addressed as `@Image1` and `@Video1`.\n- A prompt or at least one reference is required; references without a prompt are often ignored.\n\n### Measured on this graph\n\n`desert_highway_encounter.mp4` (640 x 360, 5.17 s, 124 frames) with `start_time` 1.8 and `resume_time` 3.6 produced an 8.375 s, 201-frame 1344 x 768 clip: the original 1.8 s lead-in, a 5 s night market, then the remaining source.\n\n### Gotchas\n\n- The output is longer than the source by roughly `duration - (resume_time - start_time)`.\n- `resume_time` has to leave at least 1.375 s of source at the end, so a 5 s clip cannot resume past about 3.8 s.\n- Longer reference videos are billed per second, so keep them short unless the scene needs them.\n\n**Input asset:** [desert_highway_encounter.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/desert_highway_encounter.mp4)\n"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        120.0,
+        -50.0
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}

@@ -1,0 +1,151 @@
+{
+  "id": "a6bb0d53-0000-4000-8000-000000000000",
+  "revision": 0,
+  "last_node_id": 3,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "PikaH3FlexVideoNode",
+      "pos": [
+        120.0,
+        160.0
+      ],
+      "size": [
+        420,
+        320
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PikaH3FlexVideoNode"
+      },
+      "widgets_values": [
+        "A lone kite surfer cuts across a shallow turquoise lagoon at golden hour, spray flying, camera tracking low alongside the board.",
+        "768p",
+        "16:9",
+        5,
+        true,
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "prompt": "A lone kite surfer cuts across a shallow turquoise lagoon at golden hour, spray flying, camera tracking low alongside the board.",
+        "resolution": "768p",
+        "aspect_ratio": "16:9",
+        "duration": 5,
+        "rewrite_prompt": true,
+        "seed": 42,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 2,
+      "type": "SaveVideo",
+      "pos": [
+        1000.0,
+        170.0
+      ],
+      "size": [
+        453.8,
+        296.7
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_pika_h3_flex_t2v",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_pika_h3_flex_t2v",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "MarkdownNote",
+      "pos": [
+        -286.0,
+        700.0
+      ],
+      "size": [
+        1100.0,
+        900.0
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Pika H3 Flex: Text to Video (API)\n\n**Pika H3 Flex through the partner API.** The same MiniMax H3 base that the local Flex templates use, without downloading weights: write a prompt and get a finished clip with synchronized audio.\n\n---\n\n### What this graph does\n\n1. **Pika H3 Flex Video**: one node takes the prompt and the render settings. `first_frame` and `last_frame` are optional image inputs.\n2. **Save Video**: writes `api_pika_h3_flex_t2v.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `prompt` | The scene. Describe subject, motion, camera and sound. |\n| `resolution` | `480p` to `4k`. `1080p` and above render at 768p and upscale once. |\n| `aspect_ratio` | `auto` follows the first connected frame, otherwise the prompt. |\n| `duration` | 5 to 15 seconds; the output follows a frame grid, so 5 s gives 124 frames, about 5.17 s. |\n| `rewrite_prompt` | Lets the model expand a short prompt before rendering. Turn it off for reproducible seeds. |\n| `seed` | Same seed and same settings give similar, not identical, results. |\n\n### Measured on this graph\n\nThe kite-surfer prompt rendered a 1344 x 768 clip, 124 frames, 5.17 s at 24 fps, with the audio track generated together with the picture.\n\n### Gotchas\n\n- The audio comes from the model, not from a separate node, so the clip is ready to cut as-is.\n- The same seed at a different resolution gives a different video; `1080p` and above are upscaled from 768p.\n- Connect only `first_frame` for image to video, both frames for first-last-frame, and neither for text to video.\n\n**Input asset:** none, this template starts from text.\n"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        120.0,
+        -50.0
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}

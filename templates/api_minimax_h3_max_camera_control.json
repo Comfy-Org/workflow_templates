@@ -1,0 +1,201 @@
+{
+  "id": "047e42e2-0000-4000-8000-000000000000",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        100.0,
+        200.0
+      ],
+      "size": [
+        282.8,
+        102
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "cyber-katana.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "cyber-katana.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "MinimaxHailuo03MaxCameraControlNode",
+      "pos": [
+        520.0,
+        170.0
+      ],
+      "size": [
+        400,
+        420
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.image",
+          "type": "IMAGE",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MinimaxHailuo03MaxCameraControlNode"
+      },
+      "widgets_values": [
+        "MiniMax H3 Max",
+        "The woman turns slowly toward the camera as it orbits around her, katana catching the red and teal light, dark studio background sliding past, cinematic.",
+        75,
+        10,
+        0.85,
+        5,
+        "768P",
+        "balanced",
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "MiniMax H3 Max",
+        "model.prompt": "The woman turns slowly toward the camera as it orbits around her, katana catching the red and teal light, dark studio background sliding past, cinematic.",
+        "model.azimuth": 75,
+        "model.elevation": 10,
+        "model.distance": 0.85,
+        "model.duration": 5,
+        "model.resolution": "768P",
+        "model.prompt_expansion_mode": "balanced",
+        "model.seed": 42,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        1000.0,
+        170.0
+      ],
+      "size": [
+        453.8,
+        296.7
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_minimax_h3_max_camera_control",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_minimax_h3_max_camera_control",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -286.0,
+        700.0
+      ],
+      "size": [
+        1100.0,
+        900.0
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Camera Control: MiniMax H3 Max\n\n**Move the camera around a still image.** The image is the first frame; the model generates the video that ends at a new azimuth, elevation and distance, inventing whatever the move uncovers. Leave the prompt empty and only the camera travels; add a prompt to also direct what happens in the scene.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the starting frame, at least 256 x 256 and an aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Camera Control**: the move and the render.\n3. **Save Video**: writes `api_minimax_h3_max_camera_control.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `azimuth` | Horizontal orbit in degrees, `-360` to `360`. Positive moves the camera right, so the subject turns toward the left of the frame. |\n| `elevation` | End angle above or below the subject, `-90` to `90`. Positive looks down. |\n| `distance` | End distance relative to the start: `1` keeps it, `0.85` pushes in slightly, above `1` pulls back. |\n| `duration` | Clip length, 1 to 15 seconds. This example runs 5. |\n| `resolution` | `480P`, `768P` or `1080P`; the output keeps the aspect ratio nearest the image. |\n| `prompt_expansion_mode` | `disabled`, `balanced` (default) or `quality`. Costs nothing extra, only changes how much the prompt is rewritten. |\n\n### Prompt tips\n\n- Describe what should change in the scene, not the camera move: the move is already set by the three camera widgets.\n- Name what the orbit uncovers, for example `the woman turns slowly toward the camera, katana catching the red and teal light`.\n- Empty prompt is a clean way to isolate the camera move when checking a shot.\n\n### Measured on this graph\n\n`cyber-katana.png` (1528 x 2736) turned into a 768 x 1344 clip, 124 frames, 5.17 s at 24 fps, with the camera ending on the opposite shoulder and the katana out of frame.\n\n### Gotchas\n\n- `azimuth` is a target, not a guarantee: a 90 degree request often lands between 30 and 90 degrees.\n- Connecting a camera-info node to `camera_info` overrides both `azimuth` and `elevation`.\n- The seed gives similar, not identical, results on repeat runs.\n- The image aspect ratio must stay between 0.4 and 2.5, so no panoramas or extreme strips.\n\n**Input asset:** [cyber-katana.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/cyber-katana.png)\n"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        120.0,
+        -50.0
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}
