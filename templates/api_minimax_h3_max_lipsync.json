@@ -1,0 +1,238 @@
+{
+  "id": "77bdb9e0-0000-4000-8000-000000000001",
+  "revision": 0,
+  "last_node_id": 5,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        100.0,
+        140.0
+      ],
+      "size": [
+        282.8,
+        102
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            1
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "deep_curl_portrait.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "deep_curl_portrait.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoadAudio",
+      "pos": [
+        100.0,
+        320.0
+      ],
+      "size": [
+        282.8,
+        136
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "gel_cream_ad_voice.mp3"
+      ],
+      "widgets_values_named": {
+        "audio": "gel_cream_ad_voice.mp3"
+      }
+    },
+    {
+      "id": 3,
+      "type": "MinimaxHailuo03MaxLipSyncNode",
+      "pos": [
+        520.0,
+        150.0
+      ],
+      "size": [
+        400,
+        320
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.image",
+          "type": "IMAGE",
+          "link": 1
+        },
+        {
+          "name": "model.audio",
+          "type": "AUDIO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "MinimaxHailuo03MaxLipSyncNode"
+      },
+      "widgets_values": [
+        "MiniMax H3 Max",
+        "768P",
+        false,
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "MiniMax H3 Max",
+        "model.resolution": "768P",
+        "model.transcription": false,
+        "model.seed": 42,
+        "control_after_generate": "randomize"
+      }
+    },
+    {
+      "id": 4,
+      "type": "SaveVideo",
+      "pos": [
+        1000.0,
+        170.0
+      ],
+      "size": [
+        453.8,
+        296.7
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_minimax_h3_max_lipsync",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_minimax_h3_max_lipsync",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -286.0,
+        700.0
+      ],
+      "size": [
+        1100.0,
+        900.0
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Lip Sync: MiniMax H3 Max\n\n**Make a portrait talk to your audio track.** One image plus one audio clip is enough: the model generates the performance and matches the mouth to the voice, keeping the length of the audio.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the person to animate, at least 256 x 256 and an aspect ratio between 0.4 and 2.5.\n2. **Load Audio**: the voice track. This example uses a 5.6 second ad read.\n3. **MiniMax H3 Max Lip Sync**: renders the talking head.\n4. **Save Video**: writes `api_minimax_h3_max_lipsync.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `resolution` | `480P`, `768P`, `1080P` or `2K`; the aspect ratio snaps to the closest supported one for the image. |\n| `transcription` | Transcribes the audio first and uses the text to guide the mouth shapes. Worth turning on for noisy or accented audio. |\n| `seed` | Same seed gives similar, not identical, takes. |\n\n### Measured on this graph\n\n`deep_curl_portrait.png` with the 5.6 s voice-over produced a 768 x 1344 clip, 135 frames, 5.625 s at 24 fps, and the length follows the audio rather than a chosen duration.\n\n### Gotchas\n\n- Audio must run 5 to 899 seconds; shorter clips are rejected, so pad the track if the line is short.\n- The output length equals the audio length, so plan the edit around the voice, not around a fixed clip length.\n- Keep the head and mouth inside the frame: a tight crop animates better than a full body shot.\n- Portraits below 256 px on a side fail validation before any render starts.\n\n**Input assets:** [deep_curl_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/deep_curl_portrait.png) and [gel_cream_ad_voice.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/gel_cream_ad_voice.mp3)\n"
+      ]
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      3,
+      0,
+      "IMAGE"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      1,
+      "AUDIO"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5,
+      "offset": [
+        120.0,
+        -50.0
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}
