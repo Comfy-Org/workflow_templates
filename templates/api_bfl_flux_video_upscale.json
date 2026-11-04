@@ -40,7 +40,7 @@
       "widgets_values": [
         "2K",
         "creative",
-        "Underwater iridescent glass‑like fantasy flower slowly rotating",
+        "A sea serpent rising out of the surf beside a beach campfire at dusk, embers and waves",
         true,
         2,
         42,
@@ -49,7 +49,7 @@
       "widgets_values_named": {
         "target_resolution": "2K",
         "mode": "creative",
-        "prompt": "Underwater iridescent glass‑like fantasy flower slowly rotating",
+        "prompt": "A sea serpent rising out of the surf beside a beach campfire at dusk, embers and waves",
         "auto_downscale": true,
         "safety_tolerance": 2,
         "seed": 42,
@@ -86,11 +86,11 @@
         "Node name for S&R": "LoadVideo"
       },
       "widgets_values": [
-        "color_spin_flower.mp4",
+        "api_bfl_flux_video_upscale_input.mp4",
         "image"
       ],
       "widgets_values_named": {
-        "file": "color_spin_flower.mp4",
+        "file": "api_bfl_flux_video_upscale_input.mp4",
         "upload": "image"
       }
     },
@@ -155,7 +155,7 @@
       "title": "Note",
       "properties": {},
       "widgets_values": [
-        "## Video Upscale: FLUX\n\n**Upscale a finished clip with BFL FLUX.** Video Upscale rebuilds fine detail while it enlarges, using the prompt to describe what the footage should look like when the pixels are gone.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip, here a 640 x 352, 5.04 s rotation.\n2. **Flux Video Upscale**: picks the output size and the restoration mode.\n3. **Save Video**: writes `api_bfl_flux_video_upscale.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `target_resolution` | `1080p`, `2K`, `4K`, or `by factor` with an explicit multiplier. |\n| `mode` | `creative` invents plausible detail, best for generated footage and scenery. `precise` sharpens without changing content, best for faces, products and real footage. |\n| `prompt` | Describes the content so the model restores the right texture instead of guessing. |\n| `auto_downscale` | Shrinks footage that is already larger than the target before upscaling. |\n| `safety_tolerance` | Filter strictness, 1 to 5. |\n\n### Measured on this graph\n\nThe 640 x 352 flower clip came back at 1920 x 1056, 121 frames, 5.04 s at 24 fps with the iridescent highlights rebuilt rather than blurred.\n\n### Gotchas\n\n- Ask for a target far above the source and the model starts inventing structure; `creative` hides it, `precise` does not.\n- Long clips at 4K are the slowest setting; preview at 1080p first.\n- This template pins ComfyUI 0.44.0 because the multi-target node is newer than the original single-target one.\n\n**Input asset:** [color_spin_flower.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/color_spin_flower.mp4)\n"
+        "## Video Upscale: FLUX (1080p to 4K)\n\n**Upscale a finished clip with BFL FLUX.** Video Upscale rebuilds fine detail while it enlarges, guided by a prompt that describes what the footage contains.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip, here a 576 x 736, 5.17 s beach scene.\n2. **Flux Video Upscale**: picks the output size and the restoration mode.\n3. **Save Video**: writes `api_bfl_flux_video_upscale.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `target_resolution` | `1080p`, `2K`, `4K`, or `by factor` with an explicit multiplier. |\n| `mode` | `creative` invents plausible detail, best for generated footage and scenery. `precise` sharpens without changing content, best for faces, products and real footage. |\n| `prompt` | Describes the content so the model restores the right texture instead of guessing. |\n| `auto_downscale` | Shrinks footage already larger than the target before upscaling. |\n| `safety_tolerance` | Filter strictness, 1 to 5. |\n\n### Measured on this graph\n\n576 x 736 came back at 1440 x 1840, 125 frames, 5.21 s at 24 fps, with the surf, the embers and the serpent scales rebuilt rather than blurred.\n\n### Gotchas\n\n- Ask for a target far above the source and the model starts inventing structure; `creative` hides it, `precise` does not.\n- Long clips at 4K are the slowest setting; preview at 1080p first.\n- This template pins ComfyUI 0.44.0 because the multi-target node is newer than the single-target one.\n\n**Input asset:** [api_bfl_flux_video_upscale_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_bfl_flux_video_upscale_input.mp4)\n"
       ],
       "widgets_values_named": {
         "text": "**Input Assets:** [color_spin_flower.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/color_spin_flower.mp4)\n\nFlux Video Upscale upscales a video 1.5x to 3x with FLUX super-resolution. It keeps the source audio track and outputs at 24 fps, capped at about 14.4 megapixels per frame.\n\n**Mode**: `creative` restores and invents fine detail, best for generated footage, textures and scenery. `precise` sharpens the source without changing it, for faces, products and real footage.\n\n**Prompt**: optional. A short description of the clip steers the enhanced detail (for example: \\\"detailed armor plating and reptilian skin texture\\\"). Leave it empty for a neutral upscale. It does not change the clip's content, so no action chains, camera moves or audio cues needed.\n\n**Upscale factor**: 1.5 to 3. Output keeps the source aspect ratio. Very large sources are upscaled by less than requested.\n\n **Input limits**: 1 to 20 seconds, 64px minimum, aspect ratio between 1:4 and 4:1. Sources larger than 3840x2160 in area need `auto_downscale` enabled.\\n- Run upscaling as your final step, after editing and trimming, so you only pay for footage you keep."

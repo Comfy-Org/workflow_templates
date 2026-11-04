@@ -37,11 +37,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "cyber-katana.png",
+        "api_minimax_h3_max_camera_control_input.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "cyber-katana.png",
+        "image": "api_minimax_h3_max_camera_control_input.png",
         "upload": "image"
       }
     },
@@ -80,10 +80,10 @@
       },
       "widgets_values": [
         "MiniMax H3 Max",
-        "The woman turns slowly toward the camera as it orbits around her, katana catching the red and teal light, dark studio background sliding past, cinematic.",
-        75,
-        10,
-        0.85,
+        "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Live-action, cinematic, a medium-wide shot frames the woman in the red coat from <Picture 1>, standing on a wet city street at dusk, her long dark hair moving in the wind and red neon lettering glowing behind her. The camera holds an Arc Shot with small amplitude at slow speed around her, so storefronts, steam vents and passing headlights slide across the background while her shoulders and the coat hem keep their position in frame. She turns her head toward the lens, then looks past it as neon reflections travel across the wet asphalt.\n\noverall_soundscape: Wet traffic hisses past on the street while rain ticks on metal awnings and neon tubes hum continuously. Her coat fabric shifts as she turns.\n\nnon_diegetic_music: A low analog synth drone at a slow tempo with one sparse pulsing note every two seconds.",
+        80,
+        8,
+        0.9,
         5,
         "768P",
         "balanced",
@@ -92,10 +92,10 @@
       ],
       "widgets_values_named": {
         "model": "MiniMax H3 Max",
-        "model.prompt": "The woman turns slowly toward the camera as it orbits around her, katana catching the red and teal light, dark studio background sliding past, cinematic.",
-        "model.azimuth": 75,
-        "model.elevation": 10,
-        "model.distance": 0.85,
+        "model.prompt": "For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Live-action, cinematic, a medium-wide shot frames the woman in the red coat from <Picture 1>, standing on a wet city street at dusk, her long dark hair moving in the wind and red neon lettering glowing behind her. The camera holds an Arc Shot with small amplitude at slow speed around her, so storefronts, steam vents and passing headlights slide across the background while her shoulders and the coat hem keep their position in frame. She turns her head toward the lens, then looks past it as neon reflections travel across the wet asphalt.\n\noverall_soundscape: Wet traffic hisses past on the street while rain ticks on metal awnings and neon tubes hum continuously. Her coat fabric shifts as she turns.\n\nnon_diegetic_music: A low analog synth drone at a slow tempo with one sparse pulsing note every two seconds.",
+        "model.azimuth": 80,
+        "model.elevation": 8,
+        "model.distance": 0.9,
         "model.duration": 5,
         "model.resolution": "768P",
         "model.prompt_expansion_mode": "balanced",
@@ -163,7 +163,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Camera Control: MiniMax H3 Max\n\n**Move the camera around a still image.** The image is the first frame; the model generates the video that ends at a new azimuth, elevation and distance, inventing whatever the move uncovers. Leave the prompt empty and only the camera travels; add a prompt to also direct what happens in the scene.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the starting frame, at least 256 x 256 and an aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Camera Control**: the move and the render.\n3. **Save Video**: writes `api_minimax_h3_max_camera_control.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `azimuth` | Horizontal orbit in degrees, `-360` to `360`. Positive moves the camera right, so the subject turns toward the left of the frame. |\n| `elevation` | End angle above or below the subject, `-90` to `90`. Positive looks down. |\n| `distance` | End distance relative to the start: `1` keeps it, `0.85` pushes in slightly, above `1` pulls back. |\n| `duration` | Clip length, 1 to 15 seconds. This example runs 5. |\n| `resolution` | `480P`, `768P` or `1080P`; the output keeps the aspect ratio nearest the image. |\n| `prompt_expansion_mode` | `disabled`, `balanced` (default) or `quality`. Costs nothing extra, only changes how much the prompt is rewritten. |\n\n### Prompt tips\n\n- Describe what should change in the scene, not the camera move: the move is already set by the three camera widgets.\n- Name what the orbit uncovers, for example `the woman turns slowly toward the camera, katana catching the red and teal light`.\n- Empty prompt is a clean way to isolate the camera move when checking a shot.\n\n### Measured on this graph\n\n`cyber-katana.png` (1528 x 2736) turned into a 768 x 1344 clip, 124 frames, 5.17 s at 24 fps, with the camera ending on the opposite shoulder and the katana out of frame.\n\n### Gotchas\n\n- `azimuth` is a target, not a guarantee: a 90 degree request often lands between 30 and 90 degrees.\n- Connecting a camera-info node to `camera_info` overrides both `azimuth` and `elevation`.\n- The seed gives similar, not identical, results on repeat runs.\n- The image aspect ratio must stay between 0.4 and 2.5, so no panoramas or extreme strips.\n\n**Input asset:** [cyber-katana.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/cyber-katana.png)\n"
+        "## Camera Control: MiniMax H3 Max\n\n**Move the camera around a still image.** The image is the first frame and the node renders the move to a new azimuth, elevation and distance, inventing whatever the move uncovers.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the opening frame, at least 256 x 256 and an aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Camera Control**: the move and the render.\n3. **Save Video**: writes `api_minimax_h3_max_camera_control.mp4`.\n\n### Prompt format\n\nThe node reads MiniMax H3 prompts, so the prompt follows the official I2VA structure rather than a plain sentence:\n\n```text\nFor the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.\n\nintegrated_multimodal_description: [Shot 1] Live-action, cinematic, ... The camera holds an Arc Shot with small amplitude at slow speed ...\n\noverall_soundscape: ...\n\nnon_diegetic_music: ...\n```\n\n- The first line is the frame-alignment instruction and must stay first.\n- `integrated_multimodal_description` carries the visual timeline, the camera vocabulary (`Arc Shot`, `Push In`, `Tracking Shot`, with `small/large amplitude` and `slow/fast speed`) and any dialogue in `<d>[English] ...</d>`.\n- `overall_soundscape` covers ambience and physical sounds only, `non_diegetic_music` covers audience-only score. Use `N/A` when there is none.\n- Name the camera move in words instead of stacking adjectives: the azimuth, elevation and distance widgets set the target, the prompt describes how the shot gets there.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `azimuth` | Horizontal orbit in degrees, `-360` to `360`; positive moves the camera right. |\n| `elevation` | End angle above or below the subject, `-90` to `90`; positive looks down. |\n| `distance` | End distance relative to the start: `1` keeps it, below `1` pushes in, above `1` pulls back. |\n| `duration` | 1 to 15 seconds; this example runs 5. |\n| `resolution` | `480P`, `768P` or `1080P`. |\n| `prompt_expansion_mode` | `disabled`, `balanced` or `quality`. |\n\n### Measured on this graph\n\n`api_minimax_h3_max_camera_control_input.png` (1024 x 1024, a woman in a red coat under neon) produced a 768 x 768 clip, 124 frames, 5.17 s at 24 fps, with her identity and coat preserved while the storefronts slide past.\n\n### Gotchas\n\n- `azimuth` is a target, not a guarantee: a 90 degree request often lands between 30 and 90 degrees.\n- A camera-info node connected to `camera_info` overrides `azimuth` and `elevation`.\n- The image aspect ratio must stay between 0.4 and 2.5.\n\n**Input asset:** [api_minimax_h3_max_camera_control_input.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_camera_control_input.png)\n"
       ]
     }
   ],

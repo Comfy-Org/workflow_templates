@@ -37,11 +37,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "deep_curl_portrait.png",
+        "api_minimax_h3_max_lipsync_input.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "deep_curl_portrait.png",
+        "image": "api_minimax_h3_max_lipsync_input.png",
         "upload": "image"
       }
     },
@@ -73,10 +73,10 @@
         "Node name for S&R": "LoadAudio"
       },
       "widgets_values": [
-        "gel_cream_ad_voice.mp3"
+        "api_minimax_h3_max_lipsync_input.mp3"
       ],
       "widgets_values_named": {
-        "audio": "gel_cream_ad_voice.mp3"
+        "audio": "api_minimax_h3_max_lipsync_input.mp3"
       }
     },
     {
@@ -120,14 +120,14 @@
       "widgets_values": [
         "MiniMax H3 Max",
         "768P",
-        false,
+        true,
         42,
         "randomize"
       ],
       "widgets_values_named": {
         "model": "MiniMax H3 Max",
         "model.resolution": "768P",
-        "model.transcription": false,
+        "model.transcription": true,
         "model.seed": 42,
         "control_after_generate": "randomize"
       }
@@ -192,7 +192,7 @@
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Lip Sync: MiniMax H3 Max\n\n**Make a portrait talk to your audio track.** One image plus one audio clip is enough: the model generates the performance and matches the mouth to the voice, keeping the length of the audio.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the person to animate, at least 256 x 256 and an aspect ratio between 0.4 and 2.5.\n2. **Load Audio**: the voice track. This example uses a 5.6 second ad read.\n3. **MiniMax H3 Max Lip Sync**: renders the talking head.\n4. **Save Video**: writes `api_minimax_h3_max_lipsync.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `resolution` | `480P`, `768P`, `1080P` or `2K`; the aspect ratio snaps to the closest supported one for the image. |\n| `transcription` | Transcribes the audio first and uses the text to guide the mouth shapes. Worth turning on for noisy or accented audio. |\n| `seed` | Same seed gives similar, not identical, takes. |\n\n### Measured on this graph\n\n`deep_curl_portrait.png` with the 5.6 s voice-over produced a 768 x 1344 clip, 135 frames, 5.625 s at 24 fps, and the length follows the audio rather than a chosen duration.\n\n### Gotchas\n\n- Audio must run 5 to 899 seconds; shorter clips are rejected, so pad the track if the line is short.\n- The output length equals the audio length, so plan the edit around the voice, not around a fixed clip length.\n- Keep the head and mouth inside the frame: a tight crop animates better than a full body shot.\n- Portraits below 256 px on a side fail validation before any render starts.\n\n**Input assets:** [deep_curl_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/deep_curl_portrait.png) and [gel_cream_ad_voice.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/gel_cream_ad_voice.mp3)\n"
+        "## Lip Sync: MiniMax H3 Max\n\n**Make a portrait talk to your audio track.** One image and one voice clip: the model renders the performance and matches the mouth to the recording, keeping the length of the audio.\n\n---\n\n### What this graph does\n\n1. **Load Image**: the person to animate, at least 256 x 256 and an aspect ratio between 0.4 and 2.5.\n2. **Load Audio**: the voice track, 5 to 899 seconds.\n3. **MiniMax H3 Max Lip Sync**: renders the talking head. This node takes no prompt, the performance comes from the audio.\n4. **Save Video**: writes `api_minimax_h3_max_lipsync.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `resolution` | `480P`, `768P`, `1080P` or `2K`; the aspect ratio snaps to the closest supported one for the image. |\n| `transcription` | Transcribes the audio first and steers the mouth shapes with the text. Worth turning on for accented or noisy audio. |\n| `seed` | Same seed gives similar, not identical, takes. |\n\n### Measured on this graph\n\n`api_minimax_h3_max_lipsync_input.png` with the 9.35 s voice-over produced a 768 x 1024 clip, 225 frames, 9.375 s at 24 fps. The length follows the audio, not a widget.\n\n### Gotchas\n\n- Audio must run 5 to 899 seconds; a short line is rejected, so pad the recording.\n- The output length equals the audio length, so cut the picture to the voice.\n- Keep the head and mouth inside the frame; a tight crop animates far better than a full body shot.\n- Portraits under 256 px on a side fail validation before any render starts.\n\n**Input assets:** [api_minimax_h3_max_lipsync_input.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_lipsync_input.png) and [api_minimax_h3_max_lipsync_input.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_lipsync_input.mp3)\n"
       ]
     }
   ],
