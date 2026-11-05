@@ -8,12 +8,12 @@
       "id": 1,
       "type": "LoadVideo",
       "pos": [
-        100.0,
-        130.0
+        -120,
+        160
       ],
       "size": [
-        282.8,
-        82
+        500,
+        500
       ],
       "flags": {},
       "order": 0,
@@ -32,11 +32,11 @@
         "Node name for S&R": "LoadVideo"
       },
       "widgets_values": [
-        "api_pruna_p_video_upscale_input_480p.mp4",
+        "blue_glow_visors_video.mp4",
         "image"
       ],
       "widgets_values_named": {
-        "file": "api_pruna_p_video_upscale_input_480p.mp4",
+        "file": "blue_glow_visors_video.mp4",
         "upload": "image"
       }
     },
@@ -44,15 +44,15 @@
       "id": 2,
       "type": "PrunaPVideoUpscaleNode",
       "pos": [
-        520.0,
-        130.0
+        428,
+        160
       ],
       "size": [
         340,
         160
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [
         {
@@ -82,21 +82,23 @@
         "target": "1080p",
         "fps": "source",
         "turbo": false
-      }
+      },
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 3,
       "type": "SaveVideo",
       "pos": [
-        1000.0,
-        170.0
+        816,
+        160
       ],
       "size": [
-        453.8,
-        296.7
+        580,
+        500
       ],
       "flags": {},
-      "order": 0,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -130,22 +132,27 @@
       "id": 4,
       "type": "MarkdownNote",
       "pos": [
-        -286.0,
-        700.0
+        -600,
+        160
       ],
       "size": [
-        1100.0,
-        900.0
+        420,
+        630
       ],
       "flags": {},
-      "order": 0,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Video Upscale: Pruna P-Video\n\n**Upscale and restore a clip in one pass.** P-Video upscales to a target pixel area, can lift the frame rate, and takes a turbo pass for quick previews.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip, here a 288 x 368, 5.17 s clip.\n2. **Pruna P-Video Upscale**: one node does the upscale and the detail restoration.\n3. **Save Video**: writes `api_pruna_p_video_upscale.mp4`.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `target` | Output pixel area: `720p` about 0.9 MP, `1080p` 2.1 MP, `2K` 3.7 MP, `4K` 8.3 MP. A clip already that large keeps its size and is only enhanced. |\n| `fps` | `source` keeps the frame rate up to 60; higher values interpolate. |\n| `turbo` | Faster pass with fewer refinement steps, good for checking framing before a final render. |\n\n### Measured on this graph\n\n288 x 368 became 1274 x 1626, 124 frames, 5.17 s at 24 fps. The portrait keeps its facial structure and the coated ostrich accumulates real brass detail instead of smearing.\n\n### Gotchas\n\n- The maximum clip length follows the target: about 100 s at 720p, 50 s at 1080p, 25 s at 2K and 12.5 s at 4K.\n- Output above 30 fps is interpolated and billed at a higher rate, so leave `fps` on `source` unless smoothness matters.\n- The aspect ratio is preserved and rounded to even dimensions, which is why 288 x 368 lands on 1274 x 1626.\n\n**Input asset:** [api_pruna_p_video_upscale_input_480p.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_pruna_p_video_upscale_input_480p.mp4)\n"
-      ]
+        "## Video Upscale: Pruna P-Video\n\n**Input Assets**\n- [blue_glow_visors_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/blue_glow_visors_video.mp4) — required workflow input (`input/blue_glow_visors_video.mp4`)\n\nUpscale and restore a clip in one pass: `Load Video` -> **Pruna P-Video Upscale** -> `Save Video`.\n\n**Parameters**\n\n- `target` - output pixel area: `720p` (0.9 MP), `1080p` (2.1), `2K` (3.7), `4K` (8.3). A larger source keeps its size and is only enhanced. Max length 2400 / 1200 / 600 / 300 frames, about 100 / 50 / 25 / 12.5 s at 24 fps.\n- `fps` - `source` keeps the clip rate up to 60; a higher value is interpolated, and output above 30 fps costs twice as much.\n- `turbo` - faster pass with softer detail, same price.\n\nAspect ratio is preserved and rounded to even dimensions. Sources above 10 MP need `target` 2K or 4K; input video is capped at 512 MiB.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Video Upscale: Pruna P-Video\n\n**Input Assets**\n- [blue_glow_visors_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/blue_glow_visors_video.mp4) — required workflow input (`input/blue_glow_visors_video.mp4`)\n\nUpscale and restore a clip in one pass: `Load Video` -> **Pruna P-Video Upscale** -> `Save Video`.\n\n**Parameters**\n\n- `target` - output pixel area: `720p` (0.9 MP), `1080p` (2.1), `2K` (3.7), `4K` (8.3). A larger source keeps its size and is only enhanced. Max length 2400 / 1200 / 600 / 300 frames, about 100 / 50 / 25 / 12.5 s at 24 fps.\n- `fps` - `source` keeps the clip rate up to 60; a higher value is interpolated, and output above 30 fps costs twice as much.\n- `turbo` - faster pass with softer detail, same price.\n\nAspect ratio is preserved and rounded to even dimensions. Sources above 10 MP need `target` 2K or 4K; input video is capped at 512 MiB.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -170,10 +177,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5,
+      "scale": 0.7526422941854041,
       "offset": [
-        120.0,
-        -50.0
+        844.2573760121388,
+        235.62295362601424
       ]
     },
     "frontendVersion": "1.58.5"
