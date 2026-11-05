@@ -1,0 +1,189 @@
+{
+  "id": "5fd947ba-0000-4000-8000-000000000000",
+  "revision": 0,
+  "last_node_id": 4,
+  "last_link_id": 2,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadVideo",
+      "pos": [
+        -120,
+        160
+      ],
+      "size": [
+        500,
+        500
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadVideo"
+      },
+      "widgets_values": [
+        "blue_glow_visors_video.mp4",
+        "image"
+      ],
+      "widgets_values_named": {
+        "file": "blue_glow_visors_video.mp4",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "PrunaPVideoUpscaleNode",
+      "pos": [
+        428,
+        160
+      ],
+      "size": [
+        340,
+        160
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            2
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PrunaPVideoUpscaleNode"
+      },
+      "widgets_values": [
+        "1080p",
+        "source",
+        false
+      ],
+      "widgets_values_named": {
+        "target": "1080p",
+        "fps": "source",
+        "turbo": false
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "SaveVideo",
+      "pos": [
+        816,
+        160
+      ],
+      "size": [
+        580,
+        500
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_pruna_p_video_upscale",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_pruna_p_video_upscale",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 4,
+      "type": "MarkdownNote",
+      "pos": [
+        -600,
+        160
+      ],
+      "size": [
+        420,
+        630
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Video Upscale: Pruna P-Video\n\n**Input Assets**\n- [blue_glow_visors_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/blue_glow_visors_video.mp4) — required workflow input (`input/blue_glow_visors_video.mp4`)\n\nUpscale and restore a clip in one pass: `Load Video` -> **Pruna P-Video Upscale** -> `Save Video`.\n\n**Parameters**\n\n- `target` - output pixel area: `720p` (0.9 MP), `1080p` (2.1), `2K` (3.7), `4K` (8.3). A larger source keeps its size and is only enhanced. Max length 2400 / 1200 / 600 / 300 frames, about 100 / 50 / 25 / 12.5 s at 24 fps.\n- `fps` - `source` keeps the clip rate up to 60; a higher value is interpolated, and output above 30 fps costs twice as much.\n- `turbo` - faster pass with softer detail, same price.\n\nAspect ratio is preserved and rounded to even dimensions. Sources above 10 MP need `target` 2K or 4K; input video is capped at 512 MiB.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Video Upscale: Pruna P-Video\n\n**Input Assets**\n- [blue_glow_visors_video.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/blue_glow_visors_video.mp4) — required workflow input (`input/blue_glow_visors_video.mp4`)\n\nUpscale and restore a clip in one pass: `Load Video` -> **Pruna P-Video Upscale** -> `Save Video`.\n\n**Parameters**\n\n- `target` - output pixel area: `720p` (0.9 MP), `1080p` (2.1), `2K` (3.7), `4K` (8.3). A larger source keeps its size and is only enhanced. Max length 2400 / 1200 / 600 / 300 frames, about 100 / 50 / 25 / 12.5 s at 24 fps.\n- `fps` - `source` keeps the clip rate up to 60; a higher value is interpolated, and output above 30 fps costs twice as much.\n- `turbo` - faster pass with softer detail, same price.\n\nAspect ratio is preserved and rounded to even dimensions. Sources above 10 MP need `target` 2K or 4K; input video is capped at 512 MiB.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ],
+    [
+      2,
+      2,
+      0,
+      3,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7526422941854041,
+      "offset": [
+        844.2573760121388,
+        235.62295362601424
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}

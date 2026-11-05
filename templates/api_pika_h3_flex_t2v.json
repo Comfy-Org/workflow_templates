@@ -1,0 +1,160 @@
+{
+  "id": "a6bb0d53-0000-4000-8000-000000000000",
+  "revision": 0,
+  "last_node_id": 3,
+  "last_link_id": 1,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "PikaH3FlexVideoNode",
+      "pos": [
+        120,
+        160
+      ],
+      "size": [
+        420,
+        320
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "first_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "last_frame",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PikaH3FlexVideoNode"
+      },
+      "widgets_values": [
+        "integrated_multimodal_description: [Shot 1] Live-action, cinematic, a lone kite surfer cuts across a shallow turquoise lagoon at golden hour, the board throwing a long white wake. The camera tracks low alongside the board at fast speed as spray hits the lens. The surfer leans back, sheet in hand, carves toward the camera and then the kite pulls them into a jump.\n\noverall_soundscape: Wind rushes past the microphone while the board slices and slaps across shallow water, followed by a heavy splash on landing.\n\nnon_diegetic_music: A bright electronic pulse at a fast tempo with a rising synth line that cuts out at the splash.",
+        "768p",
+        "16:9",
+        5,
+        false,
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "prompt": "integrated_multimodal_description: [Shot 1] Live-action, cinematic, a lone kite surfer cuts across a shallow turquoise lagoon at golden hour, the board throwing a long white wake. The camera tracks low alongside the board at fast speed as spray hits the lens. The surfer leans back, sheet in hand, carves toward the camera and then the kite pulls them into a jump.\n\noverall_soundscape: Wind rushes past the microphone while the board slices and slaps across shallow water, followed by a heavy splash on landing.\n\nnon_diegetic_music: A bright electronic pulse at a fast tempo with a rising synth line that cuts out at the splash.",
+        "resolution": "768p",
+        "aspect_ratio": "16:9",
+        "duration": 5,
+        "rewrite_prompt": false,
+        "seed": 42,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "SaveVideo",
+      "pos": [
+        588.6214113724102,
+        168.48440058224696
+      ],
+      "size": [
+        453.8,
+        296.7
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_pika_h3_flex_t2v",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_pika_h3_flex_t2v",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 3,
+      "type": "MarkdownNote",
+      "pos": [
+        -515.0371749112,
+        155.70708760395473
+      ],
+      "size": [
+        562.0569002470778,
+        958.8749280369451
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Pika H3 Flex: Text to Video (API)\n\n**Input Assets**\n- none — this template starts from text.\n\n**Pika H3 Flex through the partner API.** The same MiniMax H3 base the local Flex templates use, without downloading weights: write a prompt and get a finished clip with synchronized audio.\n\n---\n\n### What this graph does\n\n1. **Pika H3 Flex Video**: one node takes the prompt and the render settings. `first_frame` and `last_frame` are optional image inputs.\n2. **Save Video**: writes `api_pika_h3_flex_t2v.mp4`.\n\n### Prompt format\n\nUse the MiniMax H3 text mode structure, so picture and sound come from one description:\n\n```text\nintegrated_multimodal_description: [Shot 1] Live-action, cinematic, ... The camera tracks low alongside the board at fast speed ...\n\noverall_soundscape: ...\n\nnon_diegetic_music: ...\n```\n\n- `integrated_multimodal_description` holds the timeline, the camera vocabulary and any dialogue in `<d>[English] ...</d>`.\n- `overall_soundscape` covers wind, impacts and other diegetic sound, `non_diegetic_music` the audience-only score, `N/A` when there is none.\n- Keep every described event inside the requested duration.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `prompt` | The structured H3 prompt. |\n| `resolution` | `480p` to `4k`; `1080p` and above render at 768p and upscale once. |\n| `aspect_ratio` | `auto` follows the first connected frame, otherwise the prompt. |\n| `duration` | 5 to 15 seconds; 5 s gives 124 frames, about 5.17 s. |\n| `rewrite_prompt` | Let the model expand the prompt. Off keeps seeds reproducible and leaves the structured prompt untouched. |\n| `seed` | Same seed gives similar, not identical, clips. |\n\n### Measured on this graph\n\nThe kite-surfer prompt rendered 1344 x 768, 124 frames, 5.17 s at 24 fps, with generated audio matching the splash.\n\n### Gotchas\n\n- Audio is generated with the picture, so the clip is cut-ready.\n- The same seed at a different resolution gives a different video.\n- Connect only `first_frame` for image to video, both frames for first-last-frame, neither for text to video.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Pika H3 Flex: Text to Video (API)\n\n**Input Assets**\n- none — this template starts from text.\n\n**Pika H3 Flex through the partner API.** The same MiniMax H3 base the local Flex templates use, without downloading weights: write a prompt and get a finished clip with synchronized audio.\n\n---\n\n### What this graph does\n\n1. **Pika H3 Flex Video**: one node takes the prompt and the render settings. `first_frame` and `last_frame` are optional image inputs.\n2. **Save Video**: writes `api_pika_h3_flex_t2v.mp4`.\n\n### Prompt format\n\nUse the MiniMax H3 text mode structure, so picture and sound come from one description:\n\n```text\nintegrated_multimodal_description: [Shot 1] Live-action, cinematic, ... The camera tracks low alongside the board at fast speed ...\n\noverall_soundscape: ...\n\nnon_diegetic_music: ...\n```\n\n- `integrated_multimodal_description` holds the timeline, the camera vocabulary and any dialogue in `<d>[English] ...</d>`.\n- `overall_soundscape` covers wind, impacts and other diegetic sound, `non_diegetic_music` the audience-only score, `N/A` when there is none.\n- Keep every described event inside the requested duration.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `prompt` | The structured H3 prompt. |\n| `resolution` | `480p` to `4k`; `1080p` and above render at 768p and upscale once. |\n| `aspect_ratio` | `auto` follows the first connected frame, otherwise the prompt. |\n| `duration` | 5 to 15 seconds; 5 s gives 124 frames, about 5.17 s. |\n| `rewrite_prompt` | Let the model expand the prompt. Off keeps seeds reproducible and leaves the structured prompt untouched. |\n| `seed` | Same seed gives similar, not identical, clips. |\n\n### Measured on this graph\n\nThe kite-surfer prompt rendered 1344 x 768, 124 frames, 5.17 s at 24 fps, with generated audio matching the splash.\n\n### Gotchas\n\n- Audio is generated with the picture, so the clip is cut-ready.\n- The same seed at a different resolution gives a different video.\n- Connect only `first_frame` for image to video, both frames for first-last-frame, neither for text to video.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.3479440172798536,
+      "offset": [
+        1885.4968955664744,
+        446.0019445904172
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}
