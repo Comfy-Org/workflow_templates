@@ -8,12 +8,12 @@
       "id": 1,
       "type": "LoadVideo",
       "pos": [
-        100.0,
-        130.0
+        28,
+        130
       ],
       "size": [
-        282.8,
-        82
+        320,
+        450
       ],
       "flags": {},
       "order": 0,
@@ -44,21 +44,33 @@
       "id": 2,
       "type": "MinimaxHailuo03MaxInsertVideoNode",
       "pos": [
-        520.0,
-        130.0
+        396,
+        130
       ],
       "size": [
         420,
         460
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [
         {
           "name": "model.video",
           "type": "VIDEO",
           "link": 1
+        },
+        {
+          "name": "model.reference_images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.reference_videos.video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
         }
       ],
       "outputs": [
@@ -83,6 +95,7 @@
         true,
         true,
         42,
+        "randomize",
         "randomize"
       ],
       "widgets_values_named": {
@@ -95,22 +108,25 @@
         "model.color_match": true,
         "model.prompt_expansion": true,
         "model.seed": 42,
+        "control_after_generate#1": "randomize",
         "control_after_generate": "randomize"
-      }
+      },
+      "color": "#432",
+      "bgcolor": "#653"
     },
     {
       "id": 3,
       "type": "SaveVideo",
       "pos": [
-        1000.0,
-        170.0
+        864,
+        130
       ],
       "size": [
-        453.8,
-        296.7
+        460,
+        460
       ],
       "flags": {},
-      "order": 0,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
@@ -144,22 +160,27 @@
       "id": 4,
       "type": "MarkdownNote",
       "pos": [
-        -286.0,
-        700.0
+        -470,
+        130
       ],
       "size": [
-        1100.0,
-        900.0
+        450,
+        470
       ],
       "flags": {},
-      "order": 0,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [],
       "properties": {},
       "widgets_values": [
-        "## Insert Scene: MiniMax H3 Max\n\n**Drop a new scene into the middle of a finished clip.** Insert keeps everything before `start_time` and after `resume_time` and generates the beat in between.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip, up to 60 seconds, aspect ratio between 0.4 and 2.5.\n2. **MiniMax H3 Max Insert**: replaces the stretch from `start_time` to `resume_time` with a generated scene.\n3. **Save Video**: writes the whole clip, source plus new scene.\n\n### Prompt format\n\nThe prompt uses the MiniMax H3 multimodal fields, written for the inserted scene:\n\n```text\nintegrated_multimodal_description: [Shot 1] Live-action, cinematic, the night street from <Video 1> holds as ...\n\noverall_soundscape: ...\n\nnon_diegetic_music: ...\n```\n\n- `integrated_multimodal_description` describes the new scene beat by beat, and can refer to the source as `<Video 1>` and to optional references as `@Image1` and `@Video1`.\n- `overall_soundscape` carries the sounds of the new scene, `non_diegetic_music` the audience-only score, `N/A` when there is none.\n- Say what erupts, moves or changes in the inserted window; the model already knows what happens before and after it.\n\n### Parameters\n\n| Widget | What it does |\n|---|---|\n| `start_time` | Second of the source where the new scene begins, 1.625 or later. |\n| `resume_time` | Second where the source picks up again, after `start_time` and at least 1.375 s before the end. |\n| `duration` | Length of the generated scene, 5 to 13 seconds. |\n| `resolution` | `480P` or `768P`. |\n| `color_match` | Grades the new scene toward the source so the cut is less visible. |\n| `prompt_expansion` | Rewrites the prompt using the source video; turn it off for reproducible seeds. |\n\n### Measured on this graph\n\n`api_minimax_h3_max_insert_input.mp4` (576 x 736, 5.17 s, 124 frames) with `start_time` 1.8 and `resume_time` 3.6 produced an 8.375 s, 201-frame 768 x 992 clip: the original lead-in, a five-second engine fire, then the remaining source.\n\n### Gotchas\n\n- The output is longer than the source by roughly `duration - (resume_time - start_time)`.\n- `resume_time` must leave at least 1.375 s of source at the end.\n- Reference videos are billed per second, so keep them short unless the scene needs them.\n\n**Input asset:** [api_minimax_h3_max_insert_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_insert_input.mp4)\n"
-      ]
+        "## Insert Scene: MiniMax H3 Max\n\nDrop a generated beat into the middle of a clip. The source keeps everything before `start_time` and from `resume_time` on; only the gap is re-generated.\n\n1. **Load Video** — source clip, ≤ 60 s, aspect ratio 0.4–2.5.\n2. **MiniMax H3 Max Insert** — `start_time` and `resume_time` both ≥ 1.625 s, `resume_time` after `start_time` and ≥ 1.375 s before the end; `duration` 5–13 s; `resolution` `480P` or `768P`.\n3. **Save Video** — writes source plus new scene, so the output runs longer than the source by `duration − (resume_time − start_time)`.\n\n**Prompt** — `integrated_multimodal_description:` the new scene beat by beat (source is `<Video 1>`, optional references are `@Image1`..`@Image9` and `@Video1`..`@Video3`), then `overall_soundscape:` and `non_diegetic_music:` (`N/A` if none).\n\n`color_match` grades the new scene toward the source. `prompt_expansion` rewrites the prompt from the video — turn it off for reproducible seeds.\n\n**Input asset:** [api_minimax_h3_max_insert_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_insert_input.mp4)\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Insert Scene: MiniMax H3 Max\n\nDrop a generated beat into the middle of a clip. The source keeps everything before `start_time` and from `resume_time` on; only the gap is re-generated.\n\n1. **Load Video** — source clip, ≤ 60 s, aspect ratio 0.4–2.5.\n2. **MiniMax H3 Max Insert** — `start_time` and `resume_time` both ≥ 1.625 s, `resume_time` after `start_time` and ≥ 1.375 s before the end; `duration` 5–13 s; `resolution` `480P` or `768P`.\n3. **Save Video** — writes source plus new scene, so the output runs longer than the source by `duration − (resume_time − start_time)`.\n\n**Prompt** — `integrated_multimodal_description:` the new scene beat by beat (source is `<Video 1>`, optional references are `@Image1`..`@Image9` and `@Video1`..`@Video3`), then `overall_soundscape:` and `non_diegetic_music:` (`N/A` if none).\n\n`color_match` grades the new scene toward the source. `prompt_expansion` rewrites the prompt from the video — turn it off for reproducible seeds.\n\n**Input asset:** [api_minimax_h3_max_insert_input.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/api_minimax_h3_max_insert_input.mp4)\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -184,10 +205,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.5,
+      "scale": 0.7200570928328744,
       "offset": [
-        120.0,
-        -50.0
+        805.1069616608402,
+        265.49845660942896
       ]
     },
     "frontendVersion": "1.58.5"
