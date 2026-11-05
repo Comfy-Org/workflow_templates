@@ -8,39 +8,19 @@
       "id": 1,
       "type": "LoadVideo",
       "pos": [
-        100.0,
-        130.0
+        100,
+        130
       ],
       "size": [
-        282.798828125,
-        82
+        290,
+        90
       ],
       "flags": {},
       "order": 0,
       "mode": 0,
-      "inputs": [
-        {
-          "localized_name": "file",
-          "name": "file",
-          "type": "COMBO",
-          "widget": {
-            "name": "file"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "choose file to upload",
-          "name": "upload",
-          "type": "IMAGEUPLOAD",
-          "widget": {
-            "name": "upload"
-          },
-          "link": null
-        }
-      ],
+      "inputs": [],
       "outputs": [
         {
-          "localized_name": "VIDEO",
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
@@ -64,72 +44,25 @@
       "id": 2,
       "type": "MinimaxHailuo03MaxReframeVideoNode",
       "pos": [
-        520.0,
-        130.0
+        438,
+        130
       ],
       "size": [
-        400,
-        232
+        410,
+        300
       ],
       "flags": {},
-      "order": 1,
+      "order": 2,
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "model",
-          "name": "model",
-          "type": "COMFY_DYNAMICCOMBO_V3",
-          "widget": {
-            "name": "model"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "video",
           "name": "model.video",
           "type": "VIDEO",
           "link": 1
-        },
-        {
-          "localized_name": "aspect_ratio",
-          "name": "model.aspect_ratio",
-          "type": "COMBO",
-          "widget": {
-            "name": "model.aspect_ratio"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "resolution",
-          "name": "model.resolution",
-          "type": "COMBO",
-          "widget": {
-            "name": "model.resolution"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "prompt",
-          "name": "model.prompt",
-          "type": "STRING",
-          "widget": {
-            "name": "model.prompt"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "seed",
-          "name": "model.seed",
-          "type": "INT",
-          "widget": {
-            "name": "model.seed"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "VIDEO",
           "name": "VIDEO",
           "type": "VIDEO",
           "links": [
@@ -165,64 +98,25 @@
       "id": 3,
       "type": "SaveVideo",
       "pos": [
-        1000.0,
-        130.0
+        896,
+        130
       ],
       "size": [
-        270,
-        106
+        430,
+        390
       ],
       "flags": {},
-      "order": 2,
+      "order": 3,
       "mode": 0,
       "inputs": [
         {
-          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "link": 2
-        },
-        {
-          "localized_name": "filename_prefix",
-          "name": "filename_prefix",
-          "type": "STRING",
-          "widget": {
-            "name": "filename_prefix"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "format",
-          "name": "format",
-          "type": "COMFY_DYNAMICCOMBO_V3",
-          "widget": {
-            "name": "format"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "codec",
-          "name": "format.codec",
-          "type": "COMFY_DYNAMICCOMBO_V3",
-          "widget": {
-            "name": "format.codec"
-          },
-          "link": null
-        },
-        {
-          "localized_name": "codec",
-          "name": "codec",
-          "shape": 7,
-          "type": "COMFY_DYNAMICCOMBO_V3",
-          "widget": {
-            "name": "codec"
-          },
-          "link": null
         }
       ],
       "outputs": [
         {
-          "localized_name": "video",
           "name": "video",
           "type": "VIDEO",
           "links": null
@@ -246,15 +140,15 @@
       "id": 4,
       "type": "MarkdownNote",
       "pos": [
-        100.0,
-        460.0
+        -490,
+        120
       ],
       "size": [
-        1100.0,
-        800.0
+        560,
+        650
       ],
       "flags": {},
-      "order": 3,
+      "order": 1,
       "mode": 0,
       "inputs": [],
       "outputs": [],
@@ -263,8 +157,10 @@
         "## Aspect Ratio Reframe: MiniMax H3 Max\n\nReframes a clip to a different aspect ratio without cropping. The source sits in place on the new canvas at its original proportions and H3 Max generates the area around it, so length, motion and audio stay untouched.\n\n**Graph**\n\n1. **Load Video**: the source clip, 0.5 to 300 seconds.\n2. **MiniMax H3 Max Reframe Video**: fits the clip on the `aspect_ratio` canvas and generates the surroundings.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [futurist_pilot.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/futurist_pilot.mp4) — a 5.17 second vertical (576 x 736) two-shot demo.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `aspect_ratio` | Target canvas: `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9` or `9:21` |\n| `resolution` | `480P`, `768P` or `1080P` |\n| `prompt` | Optional: what should continue outside the original frame |\n| `seed` | The same prompt and seed give similar, not identical, results |\n\n### Prompting\n\nDescribe what continues outside the frame, not what is inside it, and cover every shot if the clip has more than one. The demo prompt was: \"Continue what is already behind the subject on both sides: the pale gradient backdrop in the opening shot and the hangar corridor with its ceiling light strips in the closing shot, no new props, keep the pilot centred.\" Leaving `prompt` empty lets the model infer the surroundings from each frame.\n"
       ],
       "widgets_values_named": {
-        "text": "## Aspect Ratio Reframe: MiniMax H3 Max\n\n**Turn a vertical clip into a horizontal one without cropping the subject.** H3 Max keeps your frame exactly where it is on screen and generates new picture on both sides, so the timing, the motion and the sound stay untouched.\n\n---\n\n### What this graph does\n\n1. **Load Video**: the source clip, 0.5 to 300 seconds. The bundled demo is a 5.17 second vertical (576 x 736) two-shot portrait of a pilot in an orange flight suit and a black helmet with glowing orange visor lights: a pale gradient backdrop in the opening shot, then a hangar corridor with ceiling light strips.\n2. **MiniMax H3 Max Reframe Video**: fits the source on an `aspect_ratio` canvas and generates the surrounding area.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [futurist_pilot.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/futurist_pilot.mp4)\n\n---\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `aspect_ratio` | Target canvas: `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9` or `9:21` |\n| `resolution` | `480P`, `768P` or `1080P` |\n| `prompt` | Optional guidance for what appears in the generated area: name what should continue outside the frame |\n| `seed` | The same prompt and seed give similar, not identical, results |\n\nThe clip keeps its own length and audio. Nothing is stretched: the source sits in the centre of the new canvas at its original proportions and only the uncovered area is generated.\n\n---\n\n### What the demo run produced\n\nThe 1344 x 768 result runs 5.17 seconds at the source frame rate. In the opening shot the gradient backdrop continues across the wider canvas with no seam or banding. In the closing shot the generated sides pick up the hangar: the corridor wall panels and the ceiling light strips carry out to both edges, while the helmet, the visor glow and the flight suit stay unchanged. A two-shot source is the interesting case, because each shot has to be extended with its own surroundings.\n\n### Prompting the surroundings\n\nWrite what should continue outside the original frame, not what is inside it, and cover every shot if the clip has more than one. The demo prompt was: \"Continue what is already behind the subject on both sides: the pale gradient backdrop in the opening shot and the hangar corridor with its ceiling light strips in the closing shot, no new props, keep the pilot centred.\" For a single-shot clip on location, name the architecture, the floor, the sky or the light that has to carry across. Leaving `prompt` empty lets the model infer the surroundings from each frame.\n"
-      }
+        "text": "## Aspect Ratio Reframe: MiniMax H3 Max\n\nReframes a clip to a different aspect ratio without cropping. The source sits in place on the new canvas at its original proportions and H3 Max generates the area around it, so length, motion and audio stay untouched.\n\n**Graph**\n\n1. **Load Video**: the source clip, 0.5 to 300 seconds.\n2. **MiniMax H3 Max Reframe Video**: fits the clip on the `aspect_ratio` canvas and generates the surroundings.\n3. **Save Video**: writes the MP4.\n\n**Input Assets:** [futurist_pilot.mp4](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/futurist_pilot.mp4) — a 5.17 second vertical (576 x 736) two-shot demo.\n\n### Controls\n\n| Control | What it does |\n|---|---|\n| `aspect_ratio` | Target canvas: `16:9`, `9:16`, `1:1`, `4:3`, `3:4`, `21:9` or `9:21` |\n| `resolution` | `480P`, `768P` or `1080P` |\n| `prompt` | Optional: what should continue outside the original frame |\n| `seed` | The same prompt and seed give similar, not identical, results |\n\n### Prompting\n\nDescribe what continues outside the frame, not what is inside it, and cover every shot if the clip has more than one. The demo prompt was: \"Continue what is already behind the subject on both sides: the pale gradient backdrop in the opening shot and the hangar corridor with its ceiling light strips in the closing shot, no new props, keep the pilot centred.\" Leaving `prompt` empty lets the model infer the surroundings from each frame.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
     }
   ],
   "links": [
@@ -273,7 +169,7 @@
       1,
       0,
       2,
-      1,
+      0,
       "VIDEO"
     ],
     [
@@ -289,12 +185,13 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.55,
+      "scale": 0.5593941635377722,
       "offset": [
-        5.0,
-        -31.5
+        1012.0446604857359,
+        435.08759167091154
       ]
-    }
+    },
+    "frontendVersion": "1.58.5"
   },
   "version": 0.4
 }
