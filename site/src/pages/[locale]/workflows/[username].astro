@@ -58,6 +58,11 @@ if (!slug) {
   return Astro.redirect(`/${locale}/workflows/`);
 }
 
+// MiniMax H3 demo is an English-only interactive demo; redirect localized requests to English.
+if (slug === 'minimax-h3-multiref') {
+  return Astro.redirect('/workflows/minimax-h3-multiref/', 301);
+}
+
 // A `name-shareId` slug is a workflow detail request. The prerendered [slug] route
 // serves these (gated, English-canonical); anything reaching this SSR route is a
 // workflow added since the last build. Rather than render an un-gated localized
