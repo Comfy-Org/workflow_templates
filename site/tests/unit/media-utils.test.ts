@@ -3,6 +3,7 @@ import {
   heroTemplateFor,
   isAudioFile,
   isMediaFile,
+  isPlaceholderVideo,
   isVideoFile,
 } from '../../src/lib/media-utils';
 
@@ -42,6 +43,29 @@ describe('isMediaFile', () => {
     ['thumb.png', false],
   ] as [string, boolean][])('isMediaFile(%s) → %s', ([filename, expected]) => {
     expect(isMediaFile(filename)).toBe(expected);
+  });
+});
+
+describe('isPlaceholderVideo', () => {
+  const PLACEHOLDER = '850ff161-2547-4fce-a9c3-7835eeeedcce';
+
+  it.for([
+    [`${PLACEHOLDER}.mp4`, true],
+    [`https://comfy-hub-assets.comfy.org/uploads/${PLACEHOLDER}.mp4`, true],
+    [`https://media.comfy.org/hub-media/video/${PLACEHOLDER}.mp4`, true],
+    [`https://comfy-hub-assets.comfy.org/uploads/${PLACEHOLDER}.mp4?v=2`, true],
+    [`${PLACEHOLDER.toUpperCase()}.MP4`, true],
+    ['https://comfy-hub-assets.comfy.org/uploads/00000000-0000-0000-0000-000000000000.mp4', false],
+    ['real-preview.mp4', false],
+    ['thumb.webp', false],
+    ['', false],
+  ] as [string, boolean][])('isPlaceholderVideo(%s) → %s', ([url, expected]) => {
+    expect(isPlaceholderVideo(url)).toBe(expected);
+  });
+
+  it('is null-safe', () => {
+    expect(isPlaceholderVideo(null)).toBe(false);
+    expect(isPlaceholderVideo(undefined)).toBe(false);
   });
 });
 
