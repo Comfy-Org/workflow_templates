@@ -3,7 +3,7 @@
 ## Build & Run Commands
 - `npm run sync` — Sync template bundles (run after editing templates/ or bundles.json)
 - `npm run sync:templates` / `npm run i18n` — Hub i18n: `index.json` → `index.{locale}.json` (NOT MCP)
-- `npm run sync:bundles` — Regenerate manifest and copy assets to packages
+- `npm run sync:bundles` — Regenerate manifest and copy assets to packages (release/version-bump; not required on template-only contributor PRs)
 - `npm run mcp` — Sync `index.json` → `index.mcp.json` (MCP tool index)
 - `npm run mcp:check` — MCP sync dry-run
 - `npm run mcp:ai` — AI English descriptions for stale MCP templates
@@ -133,6 +133,7 @@ For full site-specific instructions, see `site/AGENTS.md`.
 - **Templates**: JSON workflow files with embedded model metadata. Thumbnails named `{template}-1.webp`
 - **Naming**: snake_case for Python/templates
 - Bump root `pyproject.toml` version only when intentionally releasing to PyPI (`release` label). Template-only / archive PRs usually leave the root version unchanged.
+- Do not require contributors to regenerate `packages/core/.../manifest.json` on template-only PRs. CI syncs and validates that file on version-bump/release (and again in `publish.yml` before PyPI).
 
 ### Vue 3 & Astro Standards (site/)
 - All Vue components use `<script setup lang="ts">` with Composition API only — no Options API, no mixins

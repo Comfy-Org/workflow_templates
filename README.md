@@ -64,7 +64,7 @@ PR opened/updated
 
 | Task | Commands |
 |------|----------|
-| Add a workflow template | Edit `templates/`, `bundles.json`, then `python scripts/sync/sync_bundles.py` |
+| Add a workflow template | Edit `templates/` + `bundles.json` (assign a bundle). Manifest sync is optional on template-only PRs — required on version-bump/release |
 | Add a subgraph blueprint | Edit `blueprints/`, `blueprints_bundles.json`, then `python scripts/sync/sync_blueprints.py` |
 | Import external blueprints | Copy JSONs to `blueprints/`, then `python scripts/blueprints/import_blueprints.py` |
 | Check node compatibility | `npm run validate:comfyui-nodes` (local ComfyUI) or see [`scripts/README.md`](scripts/README.md#comfyui-node-compatibility-check) |
@@ -158,21 +158,30 @@ Then move the renamed files to your templates folder.
 
 Each template lives in one bundle (`media-image`, `media-video`, etc.). Update
 [`bundles.json`](bundles.json) with the template ID so the correct media package ships it.
-After editing `templates/` or `bundles.json`, regenerate the manifest and copy assets into
-the package directories:
+Update [`bundles.json`](bundles.json) so the template is assigned to a media bundle.
+Template-only PRs do **not** need to regenerate or commit
+`packages/core/src/comfyui_workflow_templates_core/manifest.json`.
+
+Manifest regeneration runs on **version-bump / release** PRs (when the root
+`pyproject.toml` version changes):
+
+- `version-check.yml` runs `python scripts/sync/sync_bundles.py` and commits the
+  regenerated manifest back to the release PR
+- `validate-manifests.yml` and `build-test.yml` enforce committed-manifest SHA256
+  only on those version-bump/release changes (they do **not** sync before
+  validating, so a stale release manifest still fails — same #1091 guard)
+- `publish.yml` syncs again immediately before PyPI upload as a final safety net
+
+Locally, maintainers can still regenerate anytime:
 
 ```bash
 python scripts/sync/sync_bundles.py
-# or via Nx  
+# or via Nx
 npm run sync
 ```
 
-This step must be run before committing, and the regenerated
-`packages/core/src/comfyui_workflow_templates_core/manifest.json` must be committed with your
-change. Two workflows enforce it against the **committed** manifest — the `Validate Manifests`
-job (`.github/workflows/validate-manifests.yml`) and the pre-sync check in
-`.github/workflows/build-test.yml` — both of which fail with a SHA256 mismatch if you skip it.
-Neither runs the sync first, so a stale manifest cannot pass by being silently regenerated.
+Template-only PRs still must keep `bundles.json` complete (every `templates/*.json`
+assigned); CI checks that without requiring a manifest rewrite.
 
 ### 8 — Add Entry to `index.json`
 

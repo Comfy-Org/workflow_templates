@@ -1,0 +1,390 @@
+name: Version Check and Auto-bump
+
+# This workflow generates and commits PR-derived template files.
+#
+# Process:
+#   1. Syncs hub index / upload JSON derived from templates (always)
+#   2. Only when the root pyproject.toml version differs from the PR base
+#      (version-bump / release PR):
+#        a. Syncs manifests with SHA256 hashes (core manifest.json + blueprints)
+#        b. Validates bundles.json completeness via sync_bundles.py
+#        c. Compares release content with the latest reachable release tag
+#        d. Bumps core/json and changed active asset/blueprint packages
+#        e. Updates meta package dependencies (exact pinning)
+#        f. Runs PyPI quota / release distribution PR comments
+#   3. Commits regenerated files. Manifest/package sync commits only happen on
+#      version-bump PRs — template-only PRs no longer force a manifest rewrite.
+#
+# Critical: sync_bundles.py validates that ALL templates are assigned to bundles
+# Note: On release PRs, manifest sync must run BEFORE version detection so core
+# package changes are detected. publish.yml also re-syncs before PyPI upload.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'templates/**'
+      - 'input/**'
+      - 'workflow_template_input_files.json'
+      - 'scripts/sync/sync_custom_nodes.py'
+      - 'scripts/sync/sync_data.py'
+      - 'scripts/sync/sync_bundles.py'
+      - 'scripts/sync/sync_blueprints.py'
+      - 'scripts/mcp/sync_index.py'
+      - 'scripts/mcp/**'
+      - 'scripts/validate/check_input_assets.py'
+      - 'scripts/lib/index_format.py'
+      - 'scripts/lib/locale_index_files.py'
+      - 'scripts/data/i18n.json'
+      - 'bundles.json'
+      - 'blueprints/**'
+      - 'blueprints_bundles.json'
+      - 'pyproject.toml'
+      - 'scripts/data/version_policy.json'
+      - 'scripts/data/frozen_bundle_inventory.json'
+      - 'scripts/lib/paths.py'
+      - 'scripts/lib/version_policy.py'
+      - 'scripts/ci/check_frozen_policy.py'
+      - 'scripts/ci/ci_version_manager.py'
+      - '.github/workflows/version-check.yml'
+      - '.github/workflows/sync-custom-nodes.yml'
+      - '.github/workflows/sync-template-index.yml'
+      - '.github/workflows/generate-upload-json.yml'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version-check:
+    runs-on: ubuntu-latest
+    # Only run on same-repo PRs (skip fork PRs as they can't auto-commit)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    # Prevent concurrent version-check runs on same PR (unique per fork+branch)
+    concurrency:
+      group: version-check-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.repo.full_name }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+          fetch-tags: true
+          sparse-checkout: |
+            templates/
+            input/
+            workflow_template_input_files.json
+            blueprints/
+            bundles.json
+            blueprints_bundles.json
+            scripts/
+            scripts/sync/sync_frozen_inventory.py
+            scripts/ci/check_frozen_policy.py
+            scripts/ci/check_pypi_quota.py
+            scripts/ci/comfyui_reference.py
+            .github/pypi-packages.json
+            packages/
+            pyproject.toml
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.x"
+
+      - name: Install index sync dependency
+        run: python -m pip install 'jsonschema>=4,<5'
+
+      - name: Sync template-derived index fields and upload JSON
+        run: |
+          python scripts/sync/sync_custom_nodes.py --templates-dir ./templates
+          python scripts/sync/sync_data.py --templates-dir ./templates --index-only
+          python scripts/validate/check_input_assets.py --generate-upload-json
+
+      - name: Detect root version vs PR base (manifest sync gate)
+        id: pre_bump
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          OLD_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
+          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Pre-bump root version: $OLD_VERSION"
+
+          if [ -z "${BASE_SHA:-}" ]; then
+            echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Missing PR base SHA; enabling manifest sync to stay safe."
+            exit 0
+          fi
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Fetching base branch so ${BASE_SHA} is available..."
+            git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
+          fi
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$OLD_VERSION" != "$BASE_VERSION" ]; then
+            echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Root version differs from base (${BASE_VERSION} → ${OLD_VERSION}); will sync manifests."
+          else
+            echo "root_version_changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ Root version matches base (${OLD_VERSION}); skipping manifest sync/commit."
+          fi
+
+      - name: Sync manifests and bundles (release / version-bump only)
+        if: steps.pre_bump.outputs.root_version_changed == 'true'
+        run: |
+          echo "=== Syncing MCP template index and model registry ==="
+          python3 scripts/mcp/sync_index.py --no-scan
+          echo "✅ MCP index sync complete"
+
+          echo "=== Validating bundles.json and syncing manifests ==="
+          # This step validates that all templates are assigned to bundles
+          # and generates updated manifest files with SHA256 hashes
+          # Must run BEFORE version detection so core package manifest.json changes are detected
+          #
+          # Pip exclusion filter (cloud-only + requiresCustomNodes templates) is ON by default.
+          # To temporarily disable it and ship all templates, add --no-filter:
+          #   python scripts/sync/sync_bundles.py --no-filter
+          python scripts/sync/sync_bundles.py
+          echo "✅ Template manifest sync complete"
+
+          echo "=== Syncing blueprints manifests ==="
+          # Sync blueprints from blueprints/ to packages/blueprints/
+          python scripts/sync/sync_blueprints.py
+          echo "✅ Blueprint manifest sync complete"
+
+      - name: Skip manifest sync on template-only PRs
+        if: steps.pre_bump.outputs.root_version_changed != 'true'
+        run: |
+          echo "⏭️ Skipping sync_bundles.py / sync_blueprints.py on template-only PR."
+          echo "   Manifest regeneration is deferred to a version-bump / release PR"
+          echo "   (and publish.yml still syncs before PyPI upload)."
+
+      - name: Auto-bump package versions if needed
+        if: steps.pre_bump.outputs.root_version_changed == 'true'
+        env:
+          # Flush progress prints promptly in Actions logs.
+          PYTHONUNBUFFERED: "1"
+        run: |
+          echo "=== Analyzing template changes and bumping versions ==="
+          # This runs AFTER manifest sync so it can detect core package changes
+          python scripts/ci/ci_version_manager.py
+          echo "✅ Version analysis complete"
+
+      - name: Ensure PR base commit is available for version compare
+        run: |
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Fetching base branch so ${BASE_SHA} is available for git show..."
+            git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
+          fi
+          git cat-file -e "${BASE_SHA}^{commit}"
+
+      - name: Check frozen package and archive policy
+        id: frozen_policy
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python scripts/ci/check_frozen_policy.py \
+            --base-ref "$BASE_SHA" \
+            --comment-file pr-frozen-policy-comment.md \
+            --github-summary
+          if [ -f pr-frozen-policy-comment.md ]; then
+            echo "post_comment=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "post_comment=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post frozen bundle policy comment on PR
+        if: steps.frozen_policy.outputs.post_comment == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- frozen-policy-check -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-frozen-policy-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No frozen policy comment file');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Detect release version vs base branch (PyPI comment gate)
+        id: release_detect
+        run: |
+          NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
+          OLD_VERSION="${{ steps.pre_bump.outputs.old_version }}"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+          echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
+            echo "root_bumped_in_job=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Root version changed in this job: $OLD_VERSION → $NEW_VERSION"
+          else
+            echo "root_bumped_in_job=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Root version unchanged in this job ($NEW_VERSION)"
+          fi
+          if [ "$NEW_VERSION" != "$BASE_VERSION" ]; then
+            echo "post_pypi_comment=true" >> "$GITHUB_OUTPUT"
+            echo "📣 Will post PyPI quota comment (meta $NEW_VERSION ≠ base $BASE_VERSION)"
+          else
+            echo "post_pypi_comment=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️  Skipping PyPI quota comment (meta version matches PR base branch)"
+          fi
+
+      - name: Check PyPI quota and surface delete-candidates in PR comment
+        if: steps.release_detect.outputs.post_pypi_comment == 'true'
+        id: quota
+        env:
+          # Use GITHUB_TOKEN to lift the unauthenticated GitHub API rate limit
+          # when scanning ComfyUI's requirements.txt commit history.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "=== PyPI project quota (~10 GB) and per-file size (~100 MB) ==="
+          # The script writes the PR comment body to pr-quota-comment.md, which
+          # includes the full delete-candidates listing (orphan PyPI versions
+          # safe to clean up). The pins cache file is regenerated on disk for
+          # the duration of this job but is git-ignored — nothing is committed.
+          python scripts/ci/check_pypi_quota.py \
+            --release-packages \
+            --comfyui-ref \
+            --comment-file pr-quota-comment.md \
+            --title "PyPI quota check (version bump PR)"
+
+      - name: Post PyPI quota comment on PR
+        if: steps.release_detect.outputs.post_pypi_comment == 'true' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- pypi-quota-check -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-quota-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No quota comment file');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Build release distribution summary (pip vs cloud)
+        if: steps.release_detect.outputs.post_pypi_comment == 'true'
+        run: |
+          python scripts/ci/release_distribution_report.py \
+            --new-version "${{ steps.release_detect.outputs.new_version }}" \
+            --base-version "${{ steps.release_detect.outputs.base_version }}" \
+            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --comment-file pr-distribution-comment.md \
+            --title "Release distribution summary (version bump PR)"
+
+      - name: Post release distribution comment on PR
+        if: steps.release_detect.outputs.post_pypi_comment == 'true' && always()
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const fs = require('fs');
+            const marker = '<!-- release-distribution-report -->';
+            let body;
+            try {
+              body = fs.readFileSync('pr-distribution-comment.md', 'utf8');
+            } catch (e) {
+              core.info('No distribution comment file');
+              return;
+            }
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+      - name: Commit generated files once
+        env:
+          PR_HEAD_REF: ${{ github.head_ref }}
+          ROOT_VERSION_CHANGED: ${{ steps.pre_bump.outputs.root_version_changed }}
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          # Always commit hub/index + upload JSON derived from templates.
+          git add templates/index*.json workflow_template_input_files.json \
+            scripts/data/mcp/models_registry.json || true
+          # Manifests / package versions only on version-bump / release PRs.
+          if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+            git add pyproject.toml packages/*/pyproject.toml \
+              packages/*/src/*/manifest.json \
+              packages/*/src/*/blueprints_manifest.json || true
+          else
+            echo "⏭️ Not staging manifest.json / package version files (template-only PR)."
+          fi
+          if git diff --cached --quiet; then
+            echo "✅ Generated files are already in sync"
+            exit 0
+          fi
+          if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+            git commit -m "Auto-sync generated template files (release)"
+          else
+            git commit -m "Auto-sync generated template index files"
+          fi
+          # Never rebase an old generator result onto a newer PR head. A newer
+          # run will regenerate from that head and commit its own result.
+          git push origin "HEAD:$PR_HEAD_REF"
