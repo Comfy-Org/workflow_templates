@@ -2,6 +2,9 @@
 
 This repo hosts the official ComfyUI **workflow templates** and **subgraph blueprints**.
 
+New to the process? Start with [docs/PROCESS.md](docs/PROCESS.md) — the end-to-end map, who can own
+which stage, and the definition of done. The step-by-step instructions are further down.
+
 ## Overview
 
 | Content | Description | Location |
