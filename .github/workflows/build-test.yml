@@ -58,20 +58,53 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
           CURRENT=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
           REQUIRE=false
-          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "${BASE_SHA:-}" ]; then
-            if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
-              git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}" || true
-            fi
-            BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" 2>/dev/null | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
-            if [ -n "${BASE_VERSION:-}" ] && [ "$CURRENT" != "$BASE_VERSION" ]; then
+
+          # Release gate = head version strictly GREATER than base version.
+          # A stale branch (head LOWER than base) is a template-only PR, not a bump.
+          is_bump() {
+            [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1)" = "$2" ]
+          }
+
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            if [ -z "${BASE_SHA:-}" ]; then
+              echo "::warning::Missing PR base SHA; enabling the committed-manifest gate to stay safe."
               REQUIRE=true
+            else
+              if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+                git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}" || true
+              fi
+              BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" 2>/dev/null | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
+              if [ -z "${BASE_VERSION:-}" ]; then
+                echo "::warning::Could not read base version from ${BASE_SHA}; enabling the committed-manifest gate to stay safe instead of silently skipping it."
+                REQUIRE=true
+              elif is_bump "$CURRENT" "$BASE_VERSION"; then
+                REQUIRE=true
+                echo "Release gate ON: root version bumped ${BASE_VERSION} → ${CURRENT}"
+              elif [ "$CURRENT" = "$BASE_VERSION" ]; then
+                echo "Release gate OFF: root version unchanged (${CURRENT}); template-only PR"
+              else
+                echo "Release gate OFF: root version ${CURRENT} (behind base ${BASE_VERSION}); template-only PR"
+              fi
             fi
           elif [ "$EVENT_NAME" = "push" ]; then
-            if git diff --name-only HEAD~1 HEAD | grep -Eq '^(pyproject\.toml|packages/.*/manifest\.json)$'; then
+            # Use github.event.before so multi-commit pushes are covered fully.
+            RANGE_BASE="HEAD~1"
+            if [[ "${BEFORE_SHA:-}" =~ ^[0-9a-f]{40}$ ]] && [ -n "${BEFORE_SHA//0/}" ] \
+              && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+              RANGE_BASE="$BEFORE_SHA"
+            else
+              # Forced push / lost base: the full range is unknown. Gating here would
+              # fail main on manifest staleness that template-only merges now allow,
+              # so keep HEAD~1 and say the range is partial instead of skipping quietly.
+              echo "::warning::Push base commit unavailable (forced push?); only HEAD~1 is inspected, so a version change earlier in this push may go unvalidated."
+            fi
+            echo "Push diff range: ${RANGE_BASE}..HEAD"
+            if git diff --name-only "$RANGE_BASE" HEAD | grep -Eq '^(pyproject\.toml|packages/.*/manifest\.json|packages/.*/blueprints_manifest\.json)$'; then
               REQUIRE=true
             fi
           fi

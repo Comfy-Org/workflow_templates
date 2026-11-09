@@ -7,10 +7,12 @@ name: Validate Manifests
 # syncs again before PyPI upload. That stops fork/contributor PRs from failing
 # solely because they did not commit a regenerated manifest.
 #
-# When the root pyproject.toml version differs from the PR base (or this is a
-# push that touched pyproject.toml / the committed manifests), this job still
-# validates the **committed** manifest against templates/ and fails on drift —
-# same intentional non-tautological check as #1091 (no sync before validate).
+# When the root pyproject.toml version is strictly greater than the PR base
+# version (or this is a push that touched pyproject.toml / the committed
+# manifests), this job still validates the **committed** manifest against
+# templates/ and fails on drift — same intentional non-tautological check as
+# #1091 (no sync before validate). A stale branch whose head version is LOWER
+# than base is a template-only PR, so it does not trip the gate.
 #
 # On non-release PRs we only enforce bundles.json membership so new templates
 # are assigned, without requiring a manifest rewrite.
@@ -82,11 +84,18 @@ jobs:
         env:
           EVENT_NAME: ${{ github.event_name }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
           CURRENT=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
           REQUIRE_MANIFEST=false
           REASON=""
+
+          # Release gate = head version strictly GREATER than base version.
+          # A stale branch (head LOWER than base) is a template-only PR, not a bump.
+          is_bump() {
+            [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1)" = "$2" ]
+          }
 
           if [ "$EVENT_NAME" = "pull_request" ]; then
             if [ -z "${BASE_SHA:-}" ]; then
@@ -94,17 +103,38 @@ jobs:
               REQUIRE_MANIFEST=true
               REASON="missing PR base SHA"
             else
-              BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
-              if [ "$CURRENT" != "$BASE_VERSION" ]; then
+              if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+                echo "::warning::PR base commit ${BASE_SHA} is not available locally."
                 REQUIRE_MANIFEST=true
-                REASON="root version ${BASE_VERSION} → ${CURRENT}"
+                REASON="unreadable PR base SHA ${BASE_SHA}"
               else
-                REASON="root version unchanged (${CURRENT}); template-only PR"
+                # `|| true`: a base pyproject without a version line must reach the
+                # empty-version branch below, not abort the step under pipefail.
+                BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
+                if [ -z "${BASE_VERSION:-}" ]; then
+                  echo "::warning::Could not read base version from ${BASE_SHA}; treating as release gate to stay safe."
+                  REQUIRE_MANIFEST=true
+                  REASON="unreadable base version at ${BASE_SHA}"
+                elif is_bump "$CURRENT" "$BASE_VERSION"; then
+                  REQUIRE_MANIFEST=true
+                  REASON="root version bumped ${BASE_VERSION} → ${CURRENT}"
+                elif [ "$CURRENT" = "$BASE_VERSION" ]; then
+                  REASON="root version unchanged (${CURRENT}); template-only PR"
+                else
+                  REASON="root version ${CURRENT} (behind base ${BASE_VERSION}); template-only PR"
+                fi
               fi
             fi
           else
-            # push to main: only enforce when this push changed version or manifests
-            if git diff --name-only HEAD~1 HEAD | grep -Eq '^(pyproject\.toml|packages/.*/manifest\.json|packages/.*/blueprints_manifest\.json)$'; then
+            # push to main: only enforce when this push changed version or manifests.
+            # Use github.event.before so multi-commit pushes are covered fully.
+            RANGE_BASE="HEAD~1"
+            if [[ "${BEFORE_SHA:-}" =~ ^[0-9a-f]{40}$ ]] && [ -n "${BEFORE_SHA//0/}" ] \
+              && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
+              RANGE_BASE="$BEFORE_SHA"
+            fi
+            echo "Push diff range: ${RANGE_BASE}..HEAD"
+            if git diff --name-only "$RANGE_BASE" HEAD | grep -Eq '^(pyproject\.toml|packages/.*/manifest\.json|packages/.*/blueprints_manifest\.json)$'; then
               REQUIRE_MANIFEST=true
               REASON="push touched version or committed manifest"
             else
@@ -116,40 +146,19 @@ jobs:
           echo "reason=$REASON" >> "$GITHUB_OUTPUT"
           echo "Gate decision: require_manifest=$REQUIRE_MANIFEST ($REASON)"
 
-      - name: Check templates are assigned in bundles.json
+      - name: Check bundles.json assignments
         run: |
-          set -euo pipefail
           echo "🔍 Checking templates/ membership against bundles.json (not manifest)..."
-          python3 - <<'PY'
-          import json
-          import sys
-          from pathlib import Path
-
-          root = Path(".")
-          bundles = json.loads((root / "bundles.json").read_text(encoding="utf-8"))
-          assigned = {t for entries in bundles.values() for t in entries}
-          # Match sync_bundles.py: every templates/*.json stem must be assigned.
-          on_disk = {p.stem for p in (root / "templates").glob("*.json")}
-          missing = sorted(on_disk - assigned)
-          extra = sorted(assigned - on_disk)
-          if missing:
-              print("❌ templates/ files missing from bundles.json:")
-              for name in missing:
-                  print(f"  - {name}")
-          if extra:
-              print("❌ bundles.json references missing templates/ files:")
-              for name in extra:
-                  print(f"  - {name}")
-          if missing or extra:
-              sys.exit(1)
-          print(f"✅ bundles.json covers {len(assigned)} templates")
-          PY
+          python3 scripts/sync/sync_bundles.py --check-only
 
       - name: Validate committed manifest against committed template files
         if: steps.gate.outputs.require_manifest == 'true'
+        env:
+          # PR-controlled (version strings from pyproject.toml) — never inline in run:.
+          REASON: ${{ steps.gate.outputs.reason }}
         run: |
           echo "🔍 Release gate: validating packages/core/.../manifest.json as committed."
-          echo "   Reason: ${{ steps.gate.outputs.reason }}"
+          echo "   Reason: ${REASON}"
           echo "   No sync is run first — stale sha256 entries must fail here."
           if ! python scripts/validate/validate_manifests.py; then
             echo "::error file=packages/core/src/comfyui_workflow_templates_core/manifest.json::Manifest is out of sync with templates/. On a version-bump/release PR, run 'python scripts/sync/sync_bundles.py' (or let version-check.yml auto-sync) and commit the regenerated manifest."
@@ -158,9 +167,12 @@ jobs:
 
       - name: Skip committed-manifest SHA check on template-only PRs
         if: steps.gate.outputs.require_manifest != 'true'
+        env:
+          # PR-controlled (version strings from pyproject.toml) — never inline in run:.
+          REASON: ${{ steps.gate.outputs.reason }}
         run: |
           echo "⏭️  Skipping committed-manifest SHA validation."
-          echo "   Reason: ${{ steps.gate.outputs.reason }}"
+          echo "   Reason: ${REASON}"
           echo "   Manifest regeneration is deferred to version-bump / release / publish."
           echo "   bundles.json membership was still checked above."
 
