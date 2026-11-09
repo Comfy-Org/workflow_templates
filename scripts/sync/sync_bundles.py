@@ -484,6 +484,15 @@ def main():
             "requiresCustomNodes ones. Use this to revert the filtering behaviour temporarily."
         ),
     )
+    parser.add_argument(
+        "--check-only",
+        action="store_true",
+        help=(
+            "Validate bundles.json against templates/ (unknown bundle keys, duplicate "
+            "assignments, templates missing from bundles.json, stale bundle entries) "
+            "and exit without writing anything."
+        ),
+    )
     args = parser.parse_args()
 
     if not TEMPLATES_DIR.exists():
@@ -491,6 +500,12 @@ def main():
     filter_pip = not args.no_filter
     excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
     manifest = build_manifest(filter_pip=filter_pip, excluded_names=excluded_names)
+    if args.check_only:
+        print(
+            f"✅ bundles.json is valid: {len(manifest['templates'])} templates "
+            f"across {len(BUNDLE_TARGETS)} bundles (no files written)"
+        )
+        return
     write_manifest(manifest, dry_run=args.dry_run)
     sync_bundle_directories(
         manifest, dry_run=args.dry_run, filter_pip=filter_pip, excluded_names=excluded_names
