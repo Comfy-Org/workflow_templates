@@ -108,7 +108,9 @@ jobs:
                 REQUIRE_MANIFEST=true
                 REASON="unreadable PR base SHA ${BASE_SHA}"
               else
-                BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+                # `|| true`: a base pyproject without a version line must reach the
+                # empty-version branch below, not abort the step under pipefail.
+                BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
                 if [ -z "${BASE_VERSION:-}" ]; then
                   echo "::warning::Could not read base version from ${BASE_SHA}; treating as release gate to stay safe."
                   REQUIRE_MANIFEST=true

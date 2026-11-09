@@ -143,7 +143,9 @@ jobs:
             echo "Fetching base branch so ${BASE_SHA} is available..."
             git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
           fi
-          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+          # `|| true`: a base pyproject without a version line must fall through to
+          # "no bump" instead of aborting the step under pipefail.
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
           echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
           if is_bump "$OLD_VERSION" "$BASE_VERSION"; then
             echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
@@ -263,10 +265,13 @@ jobs:
           # version strings come from PR-controlled pyproject.toml.
           PRE_BUMP_VERSION: ${{ steps.pre_bump.outputs.old_version }}
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          # Directional gate from pre_bump: a stale branch (head version behind
+          # base) must not post release/PyPI guidance.
+          ROOT_VERSION_CHANGED: ${{ steps.pre_bump.outputs.root_version_changed }}
         run: |
           NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
           OLD_VERSION="$PRE_BUMP_VERSION"
-          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
           if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
@@ -276,12 +281,12 @@ jobs:
             echo "root_bumped_in_job=false" >> "$GITHUB_OUTPUT"
             echo "ℹ️  Root version unchanged in this job ($NEW_VERSION)"
           fi
-          if [ "$NEW_VERSION" != "$BASE_VERSION" ]; then
+          if [ "$NEW_VERSION" != "$BASE_VERSION" ] && [ "$ROOT_VERSION_CHANGED" = "true" ]; then
             echo "post_pypi_comment=true" >> "$GITHUB_OUTPUT"
-            echo "📣 Will post PyPI quota comment (meta $NEW_VERSION ≠ base $BASE_VERSION)"
+            echo "📣 Will post PyPI quota comment (meta $NEW_VERSION vs base $BASE_VERSION)"
           else
             echo "post_pypi_comment=false" >> "$GITHUB_OUTPUT"
-            echo "ℹ️  Skipping PyPI quota comment (meta version matches PR base branch)"
+            echo "ℹ️  Skipping PyPI quota comment (not a version bump vs PR base branch)"
           fi
 
       - name: Check PyPI quota and surface delete-candidates in PR comment

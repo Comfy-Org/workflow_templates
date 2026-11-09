@@ -97,6 +97,11 @@ jobs:
             if [[ "${BEFORE_SHA:-}" =~ ^[0-9a-f]{40}$ ]] && [ -n "${BEFORE_SHA//0/}" ] \
               && git cat-file -e "${BEFORE_SHA}^{commit}" 2>/dev/null; then
               RANGE_BASE="$BEFORE_SHA"
+            else
+              # Forced push / lost base: the full range is unknown. Gating here would
+              # fail main on manifest staleness that template-only merges now allow,
+              # so keep HEAD~1 and say the range is partial instead of skipping quietly.
+              echo "::warning::Push base commit unavailable (forced push?); only HEAD~1 is inspected, so a version change earlier in this push may go unvalidated."
             fi
             echo "Push diff range: ${RANGE_BASE}..HEAD"
             if git diff --name-only "$RANGE_BASE" HEAD | grep -Eq '^(pyproject\.toml|packages/.*/manifest\.json|packages/.*/blueprints_manifest\.json)$'; then

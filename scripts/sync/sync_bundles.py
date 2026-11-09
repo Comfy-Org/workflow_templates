@@ -264,12 +264,8 @@ def load_logo_bundle_config() -> tuple[set[str], str]:
     return frozen_logos, bundle
 
 
-def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] = None):
-    bundle_map = load_bundles_config()
-    frozen_logos, additive_logo_bundle = load_logo_bundle_config()
-    if excluded_names is None:
-        excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
-
+def validate_bundle_assignments(bundle_map: dict) -> None:
+    """Every templates/*.json must be assigned, and no entry may point nowhere."""
     declared_templates = {tpl for templates in bundle_map.values() for tpl in templates}
     on_disk_templates = {
         entry.name[:-5] for entry in TEMPLATES_DIR.iterdir() if entry.name.endswith(".json")
@@ -288,6 +284,15 @@ def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] 
             "bundles.json references templates that do not exist: "
             + ", ".join(missing_on_disk)
         )
+
+
+def build_manifest(filter_pip: bool = True, excluded_names: Optional[frozenset] = None):
+    bundle_map = load_bundles_config()
+    frozen_logos, additive_logo_bundle = load_logo_bundle_config()
+    if excluded_names is None:
+        excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
+
+    validate_bundle_assignments(bundle_map)
 
     templates = []
     for bundle, template_ids in bundle_map.items():
@@ -488,9 +493,9 @@ def main():
         "--check-only",
         action="store_true",
         help=(
-            "Validate bundles.json against templates/ (unknown bundle keys, duplicate "
+            "Validate bundles.json assignments only (unknown bundle keys, duplicate "
             "assignments, templates missing from bundles.json, stale bundle entries) "
-            "and exit without writing anything."
+            "and exit without building the manifest or writing anything."
         ),
     )
     args = parser.parse_args()
@@ -499,13 +504,16 @@ def main():
         raise SystemExit(f"Templates directory not found: {TEMPLATES_DIR}")
     filter_pip = not args.no_filter
     excluded_names = get_pip_excluded_template_names() if filter_pip else frozenset()
-    manifest = build_manifest(filter_pip=filter_pip, excluded_names=excluded_names)
     if args.check_only:
+        bundle_map = load_bundles_config()
+        validate_bundle_assignments(bundle_map)
+        total = sum(len(templates) for templates in bundle_map.values())
         print(
-            f"✅ bundles.json is valid: {len(manifest['templates'])} templates "
-            f"across {len(BUNDLE_TARGETS)} bundles (no files written)"
+            f"✅ bundles.json is valid: {total} templates across "
+            f"{len(bundle_map)} bundles (no files written)"
         )
         return
+    manifest = build_manifest(filter_pip=filter_pip, excluded_names=excluded_names)
     write_manifest(manifest, dry_run=args.dry_run)
     sync_bundle_directories(
         manifest, dry_run=args.dry_run, filter_pip=filter_pip, excluded_names=excluded_names
