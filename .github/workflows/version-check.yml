@@ -1,24 +1,23 @@
 name: Version Check and Auto-bump
 
-# This workflow generates and commits all PR-derived template files in one commit.
+# This workflow generates and commits PR-derived template files.
 #
 # Process:
-#   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
-#   2. Validates bundles.json completeness
-#   3. Compares release content with the latest reachable release tag
-#   4. Bumps core/json once per release and changed active asset/blueprint packages
-#   5. Updates meta package dependencies (exact pinning)
-#   6. When the root meta version differs from the PR base branch (e.g. manual
-#      version bump on the PR, or in-job bump), runs the PyPI quota check,
-#      posts a release distribution summary (pip vs cloud vs custom-nodes),
-#      refreshes the ComfyUI pins cache if stale, and regenerates the
-#      delete-candidates report (PR comment).
-#   7. Commits regenerated manifests back to the PR even when the root version
-#      is unchanged. If the root version was bumped, also commits version-bump
-#      + (optionally) cache + report changes.
+#   1. Syncs hub index / upload JSON derived from templates (always)
+#   2. Only when the root pyproject.toml version differs from the PR base
+#      (version-bump / release PR):
+#        a. Syncs manifests with SHA256 hashes (core manifest.json + blueprints)
+#        b. Validates bundles.json completeness via sync_bundles.py
+#        c. Compares release content with the latest reachable release tag
+#        d. Bumps core/json and changed active asset/blueprint packages
+#        e. Updates meta package dependencies (exact pinning)
+#        f. Runs PyPI quota / release distribution PR comments
+#   3. Commits regenerated files. Manifest/package sync commits only happen on
+#      version-bump PRs — template-only PRs no longer force a manifest rewrite.
 #
 # Critical: sync_bundles.py validates that ALL templates are assigned to bundles
-# Note: Manifest sync must run BEFORE version detection so core package changes are detected
+# Note: On release PRs, manifest sync must run BEFORE version detection so core
+# package changes are detected. publish.yml also re-syncs before PyPI upload.
 
 on:
   pull_request:
@@ -104,7 +103,37 @@ jobs:
           python scripts/sync/sync_data.py --templates-dir ./templates --index-only
           python scripts/validate/check_input_assets.py --generate-upload-json
 
-      - name: Sync manifests and bundles (first)
+      - name: Detect root version vs PR base (manifest sync gate)
+        id: pre_bump
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          OLD_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
+          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Pre-bump root version: $OLD_VERSION"
+
+          if [ -z "${BASE_SHA:-}" ]; then
+            echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Missing PR base SHA; enabling manifest sync to stay safe."
+            exit 0
+          fi
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Fetching base branch so ${BASE_SHA} is available..."
+            git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
+          fi
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          if [ "$OLD_VERSION" != "$BASE_VERSION" ]; then
+            echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Root version differs from base (${BASE_VERSION} → ${OLD_VERSION}); will sync manifests."
+          else
+            echo "root_version_changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ Root version matches base (${OLD_VERSION}); skipping manifest sync/commit."
+          fi
+
+      - name: Sync manifests and bundles (release / version-bump only)
+        if: steps.pre_bump.outputs.root_version_changed == 'true'
         run: |
           echo "=== Syncing MCP template index and model registry ==="
           python3 scripts/mcp/sync_index.py --no-scan
@@ -126,14 +155,15 @@ jobs:
           python scripts/sync/sync_blueprints.py
           echo "✅ Blueprint manifest sync complete"
 
-      - name: Capture pre-bump root version
-        id: pre_bump
+      - name: Skip manifest sync on template-only PRs
+        if: steps.pre_bump.outputs.root_version_changed != 'true'
         run: |
-          OLD_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
-          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Pre-bump root version: $OLD_VERSION"
+          echo "⏭️ Skipping sync_bundles.py / sync_blueprints.py on template-only PR."
+          echo "   Manifest regeneration is deferred to a version-bump / release PR"
+          echo "   (and publish.yml still syncs before PyPI upload)."
 
       - name: Auto-bump package versions if needed
+        if: steps.pre_bump.outputs.root_version_changed == 'true'
         env:
           # Flush progress prints promptly in Actions logs.
           PYTHONUNBUFFERED: "1"
@@ -331,17 +361,30 @@ jobs:
       - name: Commit generated files once
         env:
           PR_HEAD_REF: ${{ github.head_ref }}
+          ROOT_VERSION_CHANGED: ${{ steps.pre_bump.outputs.root_version_changed }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # Always commit hub/index + upload JSON derived from templates.
           git add templates/index*.json workflow_template_input_files.json \
-            pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
-            packages/*/src/*/blueprints_manifest.json scripts/data/mcp/models_registry.json
+            scripts/data/mcp/models_registry.json || true
+          # Manifests / package versions only on version-bump / release PRs.
+          if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+            git add pyproject.toml packages/*/pyproject.toml \
+              packages/*/src/*/manifest.json \
+              packages/*/src/*/blueprints_manifest.json || true
+          else
+            echo "⏭️ Not staging manifest.json / package version files (template-only PR)."
+          fi
           if git diff --cached --quiet; then
             echo "✅ Generated files are already in sync"
             exit 0
           fi
-          git commit -m "Auto-sync generated template files"
+          if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+            git commit -m "Auto-sync generated template files (release)"
+          else
+            git commit -m "Auto-sync generated template index files"
+          fi
           # Never rebase an old generator result onto a newer PR head. A newer
           # run will regenerate from that head and commit its own result.
           git push origin "HEAD:$PR_HEAD_REF"
