@@ -353,6 +353,9 @@ jobs:
           # This should never fail if PR validation worked, but adding as failsafe
           ./scripts/ci/validate_bundles.sh
 
+      # Final safety net: even if a release PR somehow missed committing a
+      # refreshed manifest, regenerate immediately before the PyPI build so we
+      # never ship stale sha256 entries (#1091).
       - name: Sync manifest and bundle assets
         if: needs.check-pr-label.outputs.should-publish == 'true'
         run: |
