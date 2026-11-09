@@ -1,24 +1,31 @@
 name: Version Check and Auto-bump
 
-# This workflow generates and commits all PR-derived template files in one commit.
+# This workflow generates and commits PR-derived template files.
 #
 # Process:
-#   1. Syncs manifests with SHA256 hashes (updates core package manifest.json)
-#   2. Validates bundles.json completeness
-#   3. Compares release content with the latest reachable release tag
-#   4. Bumps core/json once per release and changed active asset/blueprint packages
-#   5. Updates meta package dependencies (exact pinning)
-#   6. When the root meta version differs from the PR base branch (e.g. manual
-#      version bump on the PR, or in-job bump), runs the PyPI quota check,
-#      posts a release distribution summary (pip vs cloud vs custom-nodes),
-#      refreshes the ComfyUI pins cache if stale, and regenerates the
-#      delete-candidates report (PR comment).
-#   7. Commits regenerated manifests back to the PR even when the root version
-#      is unchanged. If the root version was bumped, also commits version-bump
-#      + (optionally) cache + report changes.
+#   1. Syncs template-derived index files and upload JSON (always):
+#        a. Custom-node / hub index fields and locale index files
+#        b. MCP template index (templates/index.mcp.json) + MCP models_registry.json
+#        c. Upload JSON (workflow_template_input_files.json)
+#   2. Only when the root pyproject.toml version is strictly greater than the PR
+#      base version (version-bump / release PR):
+#        a. Syncs manifests with SHA256 hashes (core manifest.json + blueprints)
+#        b. Validates bundles.json completeness via sync_bundles.py
+#        c. Compares release content with the latest reachable release tag
+#        d. Bumps core/json and changed active asset/blueprint packages
+#        e. Updates meta package dependencies (exact pinning)
+#        f. Runs PyPI quota / release distribution PR comments
+#   3. Commits regenerated files. Manifest/package sync commits only happen on
+#      version-bump PRs — template-only PRs no longer force a manifest rewrite.
+#      Template-derived index files are always committed.
+#
+# A PR from a branch older than the last release (head version LOWER than base)
+# is a template-only PR, not a version bump — the gate compares direction, not
+# mere inequality, so it does not fail on stale branches.
 #
 # Critical: sync_bundles.py validates that ALL templates are assigned to bundles
-# Note: Manifest sync must run BEFORE version detection so core package changes are detected
+# Note: On release PRs, manifest sync must run BEFORE version detection so core
+# package changes are detected. publish.yml also re-syncs before PyPI upload.
 
 on:
   pull_request:
@@ -91,7 +98,7 @@ jobs:
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.x"
 
@@ -102,14 +109,58 @@ jobs:
         run: |
           python scripts/sync/sync_custom_nodes.py --templates-dir ./templates
           python scripts/sync/sync_data.py --templates-dir ./templates --index-only
-          python scripts/validate/check_input_assets.py --generate-upload-json
-
-      - name: Sync manifests and bundles (first)
-        run: |
+          # MCP index is template-derived (templates/index.mcp.json +
+          # scripts/data/mcp/models_registry.json), so it must refresh on
+          # template-only PRs too — not only on version-bump PRs.
           echo "=== Syncing MCP template index and model registry ==="
           python3 scripts/mcp/sync_index.py --no-scan
           echo "✅ MCP index sync complete"
+          python scripts/validate/check_input_assets.py --generate-upload-json
 
+      - name: Detect root version vs PR base (manifest sync gate)
+        id: pre_bump
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          OLD_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
+          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Pre-bump root version: $OLD_VERSION"
+
+          # Release gate = head version strictly GREATER than base version.
+          # A stale branch (head LOWER than base) is a template-only PR, not a bump.
+          is_bump() {
+            [ "$1" != "$2" ] && [ "$(printf '%s\n%s\n' "$2" "$1" | sort -V | head -1)" = "$2" ]
+          }
+
+          if [ -z "${BASE_SHA:-}" ]; then
+            echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Missing PR base SHA; enabling manifest sync to stay safe."
+            exit 0
+          fi
+          if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
+            echo "Fetching base branch so ${BASE_SHA} is available..."
+            git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+          fi
+          # `|| true`: a base pyproject without a version line must fall through to
+          # "no bump" instead of aborting the step under pipefail.
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
+          echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          if is_bump "$OLD_VERSION" "$BASE_VERSION"; then
+            echo "root_version_changed=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Root version bumped (${BASE_VERSION} → ${OLD_VERSION}); will sync manifests."
+          elif [ "$OLD_VERSION" = "$BASE_VERSION" ]; then
+            echo "root_version_changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ Root version matches base (${OLD_VERSION}); skipping manifest sync/commit."
+          else
+            echo "root_version_changed=false" >> "$GITHUB_OUTPUT"
+            echo "ℹ️ root version ${OLD_VERSION} (behind base ${BASE_VERSION}); template-only PR — skipping manifest sync/commit."
+          fi
+
+      - name: Sync manifests and bundles (release / version-bump only)
+        if: steps.pre_bump.outputs.root_version_changed == 'true'
+        run: |
           echo "=== Validating bundles.json and syncing manifests ==="
           # This step validates that all templates are assigned to bundles
           # and generates updated manifest files with SHA256 hashes
@@ -126,14 +177,16 @@ jobs:
           python scripts/sync/sync_blueprints.py
           echo "✅ Blueprint manifest sync complete"
 
-      - name: Capture pre-bump root version
-        id: pre_bump
+      - name: Skip manifest sync on template-only PRs
+        if: steps.pre_bump.outputs.root_version_changed != 'true'
         run: |
-          OLD_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
-          echo "old_version=$OLD_VERSION" >> "$GITHUB_OUTPUT"
-          echo "Pre-bump root version: $OLD_VERSION"
+          echo "⏭️ Skipping sync_bundles.py / sync_blueprints.py on template-only PR."
+          echo "   Manifest regeneration is deferred to a version-bump / release PR"
+          echo "   (and publish.yml still syncs before PyPI upload)."
+          echo "   Template-derived index files (incl. templates/index.mcp.json) were synced above."
 
       - name: Auto-bump package versions if needed
+        if: steps.pre_bump.outputs.root_version_changed == 'true'
         env:
           # Flush progress prints promptly in Actions logs.
           PYTHONUNBUFFERED: "1"
@@ -144,11 +197,13 @@ jobs:
           echo "✅ Version analysis complete"
 
       - name: Ensure PR base commit is available for version compare
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
           if ! git cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
             echo "Fetching base branch so ${BASE_SHA} is available for git show..."
-            git fetch --no-tags origin "+refs/heads/${{ github.event.pull_request.base.ref }}:refs/remotes/origin/${{ github.event.pull_request.base.ref }}"
+            git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
           fi
           git cat-file -e "${BASE_SHA}^{commit}"
 
@@ -205,11 +260,18 @@ jobs:
 
       - name: Detect release version vs base branch (PyPI comment gate)
         id: release_detect
+        env:
+          # Values pass through env, never textually into the script: the
+          # version strings come from PR-controlled pyproject.toml.
+          PRE_BUMP_VERSION: ${{ steps.pre_bump.outputs.old_version }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          # Directional gate from pre_bump: a stale branch (head version behind
+          # base) must not post release/PyPI guidance.
+          ROOT_VERSION_CHANGED: ${{ steps.pre_bump.outputs.root_version_changed }}
         run: |
           NEW_VERSION=$(grep -E '^\s*version\s*=' pyproject.toml | head -1 | cut -d'"' -f2)
-          OLD_VERSION="${{ steps.pre_bump.outputs.old_version }}"
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2)
+          OLD_VERSION="$PRE_BUMP_VERSION"
+          BASE_VERSION=$(git show "${BASE_SHA}:pyproject.toml" | grep -E '^\s*version\s*=' | head -1 | cut -d'"' -f2 || true)
           echo "new_version=$NEW_VERSION" >> "$GITHUB_OUTPUT"
           echo "base_version=$BASE_VERSION" >> "$GITHUB_OUTPUT"
           if [ "$OLD_VERSION" != "$NEW_VERSION" ]; then
@@ -219,12 +281,12 @@ jobs:
             echo "root_bumped_in_job=false" >> "$GITHUB_OUTPUT"
             echo "ℹ️  Root version unchanged in this job ($NEW_VERSION)"
           fi
-          if [ "$NEW_VERSION" != "$BASE_VERSION" ]; then
+          if [ "$NEW_VERSION" != "$BASE_VERSION" ] && [ "$ROOT_VERSION_CHANGED" = "true" ]; then
             echo "post_pypi_comment=true" >> "$GITHUB_OUTPUT"
-            echo "📣 Will post PyPI quota comment (meta $NEW_VERSION ≠ base $BASE_VERSION)"
+            echo "📣 Will post PyPI quota comment (meta $NEW_VERSION vs base $BASE_VERSION)"
           else
             echo "post_pypi_comment=false" >> "$GITHUB_OUTPUT"
-            echo "ℹ️  Skipping PyPI quota comment (meta version matches PR base branch)"
+            echo "ℹ️  Skipping PyPI quota comment (not a version bump vs PR base branch)"
           fi
 
       - name: Check PyPI quota and surface delete-candidates in PR comment
@@ -284,11 +346,15 @@ jobs:
 
       - name: Build release distribution summary (pip vs cloud)
         if: steps.release_detect.outputs.post_pypi_comment == 'true'
+        env:
+          NEW_VERSION: ${{ steps.release_detect.outputs.new_version }}
+          BASE_VERSION: ${{ steps.release_detect.outputs.base_version }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
         run: |
           python scripts/ci/release_distribution_report.py \
-            --new-version "${{ steps.release_detect.outputs.new_version }}" \
-            --base-version "${{ steps.release_detect.outputs.base_version }}" \
-            --base-ref "${{ github.event.pull_request.base.sha }}" \
+            --new-version "$NEW_VERSION" \
+            --base-version "$BASE_VERSION" \
+            --base-ref "$BASE_SHA" \
             --comment-file pr-distribution-comment.md \
             --title "Release distribution summary (version bump PR)"
 
@@ -331,17 +397,32 @@ jobs:
       - name: Commit generated files once
         env:
           PR_HEAD_REF: ${{ github.head_ref }}
+          ROOT_VERSION_CHANGED: ${{ steps.pre_bump.outputs.root_version_changed }}
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          # Always commit template-derived index + upload JSON, including the MCP
+          # index (templates/index.mcp.json) and the MCP models registry — both
+          # are written by sync_index.py on every run, not only on version bumps.
           git add templates/index*.json workflow_template_input_files.json \
-            pyproject.toml packages/*/pyproject.toml packages/*/src/*/manifest.json \
-            packages/*/src/*/blueprints_manifest.json scripts/data/mcp/models_registry.json
+            scripts/data/mcp/models_registry.json || true
+          # Manifests / package versions only on version-bump / release PRs.
+          if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+            git add pyproject.toml packages/*/pyproject.toml \
+              packages/*/src/*/manifest.json \
+              packages/*/src/*/blueprints_manifest.json || true
+          else
+            echo "⏭️ Not staging manifest.json / package version files (template-only PR)."
+          fi
           if git diff --cached --quiet; then
             echo "✅ Generated files are already in sync"
             exit 0
           fi
-          git commit -m "Auto-sync generated template files"
+          if [ "$ROOT_VERSION_CHANGED" = "true" ]; then
+            git commit -m "Auto-sync generated template files (release)"
+          else
+            git commit -m "Auto-sync generated template index files"
+          fi
           # Never rebase an old generator result onto a newer PR head. A newer
           # run will regenerate from that head and commit its own result.
           git push origin "HEAD:$PR_HEAD_REF"

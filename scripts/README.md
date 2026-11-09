@@ -60,7 +60,7 @@ Also runs workflow I/O extraction via `generate_workflow_io.py` before locale sy
 | Workflow | Scripts |
 |----------|---------|
 | `validate-templates.yml` | `validate/validate_templates.py`, `validate/validate_thumbnails.py`, `lib/locale_index_files.py` |
-| `validate-manifests.yml` | `sync/sync_bundles.py`, `sync/sync_blueprints.py`, `validate/validate_manifests.py`, `validate/list_pip_excluded.py` |
+| `validate-manifests.yml` | `validate/validate_manifests.py`, `validate/list_pip_excluded.py` (SHA/orphan checks only on version-bump/release; always checks `bundles.json` membership) |
 | `validate-blueprints.yml` | `validate/validate_blueprints.py`, `blueprints/import_blueprints.py`, `sync/sync_blueprints.py` |
 | `link-checker.yml` | `validate/check_links.py`, `data/whitelist.json` |
 | `model-analysis.yml` | `validate/analyze_models.py`, `data/whitelist.json` |
