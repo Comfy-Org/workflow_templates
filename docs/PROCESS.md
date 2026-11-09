@@ -59,6 +59,41 @@ SHA256 sync is deferred to version-bump/release PRs.
 | Category, and `minComfyUIVersion` if it uses a new node | new node classes break older frontends |
 | Sample inputs, if the workflow needs them | inputs live in `input/` and are revision-pinned at publish time |
 
+### Model links
+
+The part that breaks most often. Download links live **on the loader node**, never at workflow level,
+and never in `index.json` — `index.json`'s `models` array is display names for the model badge only.
+
+```json
+"properties": {
+  "Node name for S&R": "UNETLoader",
+  "models": [{
+    "name": "wan2.1_t2v_1.3B_bf16.safetensors",
+    "url": "https://huggingface.co/Comfy-Org/.../resolve/main/split_files/diffusion_models/wan2.1_t2v_1.3B_bf16.safetensors",
+    "directory": "diffusion_models",
+    "hash": "6f999b0d6cb9a72b3d98ac386ed96f57f8cecae13994a69232514ea4974ad5fd",
+    "hash_type": "SHA256"
+  }]
+}
+```
+
+| Field | Rule |
+|-------|------|
+| `name` | byte-identical to the loader's widget string in `widgets_values`; a mismatch offers the user a file the loader never loads |
+| `url` | direct `…/resolve/main/…` file link in a **public** repo — prefer the `Comfy-Org/*` mirror |
+| `directory` | models subfolder: `diffusion_models`, `text_encoders`, `vae`, `loras`, `clip_vision`, `checkpoints`, `upscale_models`, `model_patches`, `background_removal`, `geometry_estimation`, `detection`, `latent_upscale_models`, `frame_interpolation`, `embeddings` |
+| `hash`, `hash_type` | optional upstream convention (SHA256); nothing verifies it, so compute it from the published file rather than copying a stale value |
+
+- one entry per file the graph actually loads; with `UNETLoader → LoraLoaderModelOnly`, link what the UNET
+  loader is set to, not the newest file in the showcased LoRA repo
+- probe the link before pushing: `curl -sI -H "Range: bytes=0-0" <url>` → `302` (CDN redirect) or `200`
+  is good; `401`/`404` means anonymous users cannot download it
+- non-HuggingFace hosts (civitai, docs pages, mirrors) need an entry in
+  [`scripts/data/whitelist.json`](../scripts/data/whitelist.json) or the link check fails
+- API/partner-node templates have no weights to link at all (index entry `openSource: false`)
+- CI does gate this: `model-analysis.yml` (metadata present, `name` ↔ widget match, subgraph instances)
+  and `link-checker.yml` (dead URLs) both fail the PR, they do not just comment
+
 ## 4. Who can own which stage
 
 | Stage | New contributor alone? | Needs the owner |
@@ -111,3 +146,6 @@ SHA256 sync is deferred to version-bump/release PRs.
   without the template owner next to them
 - per-template effort estimate, so the work can be planned and delegated by time rather than by vibe
 - the Model Hub migration: template editing is expected to move there; today the repo is still the source of truth
+- where weights should live (a `Comfy-Org/*` repackaged mirror vs the vendor's own repo) is convention, not a written rule
+- `hash`/`hash_type` are never verified by CI, so a stale hash ships silently
+- ModelScope / regional mirror conventions are not documented anywhere in the repo
