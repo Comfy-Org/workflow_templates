@@ -1,0 +1,377 @@
+{
+  "id": "f6e5e4bd-0098-4d73-92c4-c5b015bfc5c2",
+  "revision": 0,
+  "last_node_id": 42,
+  "last_link_id": 24,
+  "nodes": [
+    {
+      "id": 11,
+      "type": "LoadImage",
+      "pos": [
+        100,
+        130
+      ],
+      "size": [
+        465.86462125786784,
+        603.3658198813556
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            18,
+            20,
+            22
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "api_bytedance_seedream_5_5_image_edit_input.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "api_bytedance_seedream_5_5_image_edit_input.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 32,
+      "type": "SaveImage",
+      "pos": [
+        1061.8646212578678,
+        130
+      ],
+      "size": [
+        520.7864005025971,
+        622.2658758022359
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 21
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "api_bytedance_seedream_5_5_image_edit"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "api_bytedance_seedream_5_5_image_edit"
+      }
+    },
+    {
+      "id": 38,
+      "type": "ImageCompare",
+      "pos": [
+        1628.5593409220894,
+        140.59820813792882
+      ],
+      "size": [
+        584.0471428072578,
+        604.0250980112673
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image_a",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 18
+        },
+        {
+          "name": "image_b",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [],
+      "properties": {
+        "Node name for S&R": "ImageCompare"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 39,
+      "type": "MarkdownNote",
+      "pos": [
+        -1100,
+        130
+      ],
+      "size": [
+        560,
+        520
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## Seedream 5.5 Image Edit\n\n**Input Assets**\n- `api_bytedance_seedream_5_5_image_edit_input.png` — source portrait\n\nEdit a picture with Seedream 5.5 through the partner API: state what changes, repeat what must stay. The node accepts two reference images; the first one is wired here.\n\n1. **Load image** — the source picture.\n2. **Edit** — the prompt names the changes (chocolate → macaron, hair, earrings, top, background) and restates the invariants (face, smile, pose, hand, framing).\n3. **Compare / Save** — the result sits next to the input.\n\n**Size** — the output keeps the source resolution: `Get Image Size` feeds the node's width and height, so a 1024×1024 picture comes back at 1024×1024. See the size note beside the canvas for preset sizes.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Seedream 5.5 Image Edit\n\n**Input Assets**\n- `api_bytedance_seedream_5_5_image_edit_input.png` — source portrait\n\nEdit a picture with Seedream 5.5 through the partner API: state what changes, repeat what must stay. The node accepts two reference images; the first one is wired here.\n\n1. **Load image** — the source picture.\n2. **Edit** — the prompt names the changes (chocolate → macaron, hair, earrings, top, background) and restates the invariants (face, smile, pose, hand, framing).\n3. **Compare / Save** — the result sits next to the input.\n\n**Size** — the output keeps the source resolution: `Get Image Size` feeds the node's width and height, so a 1024×1024 picture comes back at 1024×1024. See the size note beside the canvas for preset sizes.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 40,
+      "type": "ByteDanceSeedreamNodeV3",
+      "pos": [
+        610.7732142282116,
+        132.24348323738076
+      ],
+      "size": [
+        400,
+        324
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.width",
+          "type": "INT",
+          "widget": {
+            "name": "model.width"
+          },
+          "link": 23
+        },
+        {
+          "name": "model.height",
+          "type": "INT",
+          "widget": {
+            "name": "model.height"
+          },
+          "link": 24
+        },
+        {
+          "name": "model.images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 20
+        },
+        {
+          "name": "model.images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            21
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ByteDanceSeedreamNodeV3"
+      },
+      "widgets_values": [
+        "Change the chocolate to a lilac macaron, hair to a chin-length bob, earrings to pearl studs, top to lavender ruffle blouse, background to soft lilac. Keep the same face, smile, pose, hand covering the left eye, and framing.\n\nKeep same face, smile, pose, and framing. No text.",
+        "seedream 5.5",
+        "Custom",
+        2048,
+        2048,
+        "auto",
+        42,
+        "randomize",
+        false,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "prompt": "Change the chocolate to a lilac macaron, hair to a chin-length bob, earrings to pearl studs, top to lavender ruffle blouse, background to soft lilac. Keep the same face, smile, pose, hand covering the left eye, and framing.\n\nKeep same face, smile, pose, and framing. No text.",
+        "model": "seedream 5.5",
+        "model.size_preset": "Custom",
+        "model.width": 2048,
+        "model.height": 2048,
+        "model.background": "auto",
+        "model.seed": 42,
+        "control_after_generate#1": "randomize",
+        "model.watermark": false,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 41,
+      "type": "GetImageSize",
+      "pos": [
+        620.179573544103,
+        519.3658003143698
+      ],
+      "size": [
+        140,
+        66
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "image",
+          "type": "IMAGE",
+          "link": 22
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            23
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            24
+          ]
+        },
+        {
+          "name": "batch_size",
+          "type": "INT",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "GetImageSize"
+      }
+    },
+    {
+      "id": 42,
+      "type": "MarkdownNote",
+      "pos": [
+        -500,
+        130
+      ],
+      "size": [
+        520,
+        440
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Size",
+      "properties": {},
+      "widgets_values": [
+        "**Size — custom, taken from the input image**\n\n`Get Image Size` reads the loaded picture and feeds `Size preset = Custom` plus that exact width and height, so the edit keeps the source resolution and aspect ratio.\n\nTo use a recommended size instead:\n1. Delete the `Get Image Size` node (its width/height links disappear with it).\n2. Pick a preset in `Size preset`, e.g. `(1K) 1024x1024 (1:1)`, `(1.5K) 1328x1776 (3:4)`, `(2K) 2048x2048 (1:1)`.\n3. Or keep `Custom` and type `width` / `height` yourself.\n\nA preset re-composes the canvas at that size; the edit still follows the source picture.\n"
+      ],
+      "widgets_values_named": {
+        "text": "**Size — custom, taken from the input image**\n\n`Get Image Size` reads the loaded picture and feeds `Size preset = Custom` plus that exact width and height, so the edit keeps the source resolution and aspect ratio.\n\nTo use a recommended size instead:\n1. Delete the `Get Image Size` node (its width/height links disappear with it).\n2. Pick a preset in `Size preset`, e.g. `(1K) 1024x1024 (1:1)`, `(1.5K) 1328x1776 (3:4)`, `(2K) 2048x2048 (1:1)`.\n3. Or keep `Custom` and type `width` / `height` yourself.\n\nA preset re-composes the canvas at that size; the edit still follows the source picture.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      18,
+      11,
+      0,
+      38,
+      0,
+      "IMAGE"
+    ],
+    [
+      19,
+      32,
+      0,
+      38,
+      1,
+      "IMAGE"
+    ],
+    [
+      21,
+      40,
+      0,
+      32,
+      0,
+      "IMAGE"
+    ],
+    [
+      22,
+      11,
+      0,
+      41,
+      0,
+      "IMAGE"
+    ],
+    [
+      23,
+      41,
+      0,
+      40,
+      0,
+      "INT"
+    ],
+    [
+      24,
+      41,
+      1,
+      40,
+      1,
+      "INT"
+    ],
+    [
+      20,
+      11,
+      0,
+      40,
+      2,
+      "IMAGE"
+    ]
+  ],
+  "groups": [],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.5730855330116845,
+      "offset": [
+        710.770457933314,
+        504.37190843288073
+      ]
+    },
+    "frontendVersion": "1.58.5"
+  },
+  "version": 0.4
+}
