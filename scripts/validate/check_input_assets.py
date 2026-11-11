@@ -12,6 +12,12 @@ import re
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
+_lib_dir = Path(__file__).resolve().parent.parent / "lib"
+if str(_lib_dir) not in sys.path:
+    sys.path.insert(0, str(_lib_dir))
+
+from changed_files import changed_template_files  # noqa: E402
+
 # Configure supported node types that require input assets
 # Add new node types to this list as they are discovered
 ASSET_NODE_TYPES = [
@@ -21,7 +27,31 @@ ASSET_NODE_TYPES = [
     "LoadVideo",
     "Load3D",
     "LoadImageMask",
+    # Painter stores a painted-mask PNG in its first widget. Templates have
+    # shipped references to files that never left the author's machine
+    # (issue #1392), so the mask has to be validated like any other input.
+    "Painter",
 ]
+
+# Annotations the frontend appends to a widget value to say where the file
+# lives: `photo.png [input]`, `painter-1.png [temp]`, `out.png [output]`.
+# `[temp]` can never be satisfied: temp directories are not distributed.
+_ANNOTATION_RE = re.compile(r"\s*\[(input|temp|output)\]\s*$", re.IGNORECASE)
+
+
+def split_annotation(value: str) -> Tuple[str, str]:
+    """Split `name [input]` into (`name`, `input`). No annotation returns ''."""
+    match = _ANNOTATION_RE.search(value)
+    if not match:
+        return value.strip(), ""
+    return value[: match.start()].strip(), match.group(1).lower()
+
+
+def format_asset_filename(value: str) -> str:
+    """Render the value as it appears in the workflow JSON, annotation included."""
+    bare, annotation = split_annotation(value)
+    return f"{bare} [{annotation}]" if annotation else bare
+
 
 
 def find_workflow_files(templates_dir: Path) -> List[Path]:
@@ -47,9 +77,14 @@ def extract_asset_references(workflow_file: Path, node_types: List[str]) -> List
     
     # Handle both array and object formats
     if isinstance(data, list):
-        nodes = data
+        nodes = list(data)
     elif isinstance(data, dict):
-        nodes = data.get("nodes", [])
+        nodes = list(data.get("nodes", []))
+        # Loaders also live inside subgraph definitions: `image_moss_image_t2i_bboxes`
+        # keeps its UNETLoader there, and templates keep their Painter masks there.
+        for subgraph in (data.get("definitions") or {}).get("subgraphs") or []:
+            if isinstance(subgraph, dict):
+                nodes.extend(subgraph.get("nodes") or [])
     else:
         print(f"⚠️ Warning: Unexpected JSON format in {workflow_file.name}")
         return []
@@ -71,13 +106,17 @@ def extract_asset_references(workflow_file: Path, node_types: List[str]) -> List
                     # Try common keys for filename
                     asset_filename = widgets_values.get("image") or widgets_values.get("video") or widgets_values.get("audio")
                 
-                if asset_filename:  # Skip empty strings and None
-                    assets.append({
-                        "node_id": node.get("id"),
-                        "node_type": node_type,
-                        "filename": asset_filename,
-                        "workflow": workflow_file.name
-                    })
+                if asset_filename and isinstance(asset_filename, str):  # Skip empty strings and None
+                    bare, annotation = split_annotation(asset_filename)
+                    if bare:
+                        assets.append({
+                            "node_id": node.get("id"),
+                            "node_type": node_type,
+                            "filename": bare,
+                            "annotation": annotation,
+                            "raw": format_asset_filename(asset_filename),
+                            "workflow": workflow_file.name
+                        })
     
     return assets
 
@@ -93,11 +132,19 @@ def validate_assets(assets: List[Dict], inputs_dir: Path) -> Tuple[List[Dict], L
     missing = []
     
     for asset in assets:
+        if asset.get("annotation") == "temp":
+            # A `[temp]` value points into ComfyUI's temp directory, which only
+            # exists on the machine that authored the template.
+            asset["reason"] = "temp reference (never distributed)"
+            missing.append(asset)
+            continue
+
         asset_path = inputs_dir / asset["filename"]
         if asset_path.exists():
             asset["path"] = str(asset_path)
             valid.append(asset)
         else:
+            asset["reason"] = "not in input/"
             missing.append(asset)
     
     return valid, missing
@@ -126,13 +173,17 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
     if missing_assets:
         report.append("\n## Missing Assets\n")
         report.append("The following assets are referenced in workflow files but not found in `input/`:\n\n")
-        report.append("| Workflow File | Node Type | Asset Filename |\n")
-        report.append("|---------------|-----------|----------------|\n")
+        report.append("| Workflow File | Node Type | Asset Filename | Reason |\n")
+        report.append("|---------------|-----------|----------------|--------|\n")
         
         for asset in sorted(missing_assets, key=lambda x: (x["workflow"], x["filename"])):
-            report.append(f"| `{asset['workflow']}` | `{asset['node_type']}` | `{asset['filename']}` |\n")
+            report.append(
+                f"| `{asset['workflow']}` | `{asset['node_type']}` | "
+                f"`{asset.get('raw') or asset['filename']}` | {asset.get('reason', 'not in input/')} |\n"
+            )
         
-        report.append("\n**Action Required:** Please add the missing files to the `input/` directory.\n")
+        report.append("\n**Action Required:** add the file to `input/` and reference it as `name [input]`.\n")
+        report.append("A `[temp]` reference can never be fixed by adding a file: temp files are not distributed. Clear the widget instead, or ship the file under `input/`.\n")
     
     # Valid assets summary - only show count, not full list (to keep report concise)
     # The full list is still available in the artifact if needed
@@ -355,6 +406,19 @@ def main():
         default='https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/',
         help='Base URL for GitHub raw content (default: %(default)s)'
     )
+    parser.add_argument(
+        '--base-sha',
+        help='only validate templates changed since this commit (CI: pull_request base)'
+    )
+    parser.add_argument(
+        '--head-sha',
+        help='head commit for --base-sha (defaults to HEAD)'
+    )
+    parser.add_argument(
+        '--strict',
+        action='store_true',
+        help='fail on findings outside the change set too (full-tree gate)'
+    )
     args = parser.parse_args()
     
     # Get repository root
@@ -381,8 +445,20 @@ def main():
         inputs_dir.mkdir(parents=True, exist_ok=True)
     
     # Find workflow files
-    workflow_files = find_workflow_files(templates_dir)
-    print(f"Found {len(workflow_files)} workflow files to check\n")
+    all_workflow_files = find_workflow_files(templates_dir)
+    try:
+        changed = changed_template_files(repo_root, "templates", args.base_sha, args.head_sha)
+    except RuntimeError as exc:
+        print(f"❌ {exc}")
+        sys.exit(1)
+
+    workflow_files = [
+        f for f in all_workflow_files if changed is None or f.name in changed
+    ]
+    if changed is None:
+        print(f"Found {len(workflow_files)} workflow files to check (whole tree)\n")
+    else:
+        print(f"Found {len(workflow_files)} changed workflow file(s) to check\n")
     
     # Extract all asset references
     all_assets = []
@@ -448,14 +524,41 @@ def main():
         else:
             print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
         sys.exit(0)
-    else:
-        # When only running validation (no JSON generation), fail on missing assets
-        if missing_assets:
-            print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s)")
-            sys.exit(1)
-        else:
-            print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
-            sys.exit(0)
+
+    if not missing_assets:
+        print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
+        sys.exit(0)
+
+    if changed is not None:
+        # Scoped run: every finding belongs to a template this change touches,
+        # so it is actionable right here. Report the rest of the tree as context
+        # so the debt stays visible without blocking unrelated work.
+        all_assets = []
+        for workflow_file in all_workflow_files:
+            all_assets.extend(extract_asset_references(workflow_file, ASSET_NODE_TYPES))
+        _, all_missing = validate_assets(all_assets, inputs_dir)
+        elsewhere = len(all_missing) - len(missing_assets)
+        if elsewhere > 0:
+            print(
+                f"\nℹ️ {elsewhere} pre-existing finding(s) outside this change set are "
+                "not failing this run (full tree: --strict)."
+            )
+        print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s) in changed template(s)")
+        sys.exit(1)
+
+    if args.strict:
+        print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s)")
+        sys.exit(1)
+
+    # Whole-tree runs on main are advisory by default: the tree already carries
+    # findings that no gate looked for before (three Painter masks, see #1392),
+    # and failing here would block every unrelated PR until they are fixed.
+    print(
+        f"\n⚠️ {len(missing_assets)} pre-existing missing asset(s) found "
+        "(advisory; pass --strict to fail)"
+    )
+    sys.exit(0)
+
 
 
 if __name__ == "__main__":
