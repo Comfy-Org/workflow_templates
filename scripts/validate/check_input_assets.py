@@ -12,11 +12,24 @@ import re
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional
 
-_lib_dir = Path(__file__).resolve().parent.parent / "lib"
-if str(_lib_dir) not in sys.path:
-    sys.path.insert(0, str(_lib_dir))
+def load_changed_files_helper():
+    """Import the git diff helper on demand.
 
-from changed_files import changed_template_files  # noqa: E402
+    Several workflows call this script with a sparse checkout that ships only
+    this file (they regenerate the upload JSON and never scope by commit), so a
+    top-level import would fail them with ModuleNotFoundError.
+    """
+    lib_dir = Path(__file__).resolve().parent.parent / "lib"
+    if str(lib_dir) not in sys.path:
+        sys.path.insert(0, str(lib_dir))
+    try:
+        from changed_files import changed_template_files
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "scripts/lib/changed_files.py is missing from this checkout; add it "
+            "to the workflow's sparse-checkout list"
+        ) from exc
+    return changed_template_files
 
 # Configure supported node types that require input assets
 # Add new node types to this list as they are discovered
@@ -446,11 +459,15 @@ def main():
     
     # Find workflow files
     all_workflow_files = find_workflow_files(templates_dir)
-    try:
-        changed = changed_template_files(repo_root, "templates", args.base_sha, args.head_sha)
-    except RuntimeError as exc:
-        print(f"❌ {exc}")
-        sys.exit(1)
+    changed = None
+    if args.base_sha or args.head_sha:
+        try:
+            changed = load_changed_files_helper()(
+                repo_root, "templates", args.base_sha, args.head_sha
+            )
+        except RuntimeError as exc:
+            print(f"❌ {exc}")
+            sys.exit(1)
 
     workflow_files = [
         f for f in all_workflow_files if changed is None or f.name in changed
