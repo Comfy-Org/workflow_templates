@@ -10,6 +10,7 @@ export const LOCALE_INDEX_FILES: Record<string, string> = {
   tr: 'index.tr.json',
   ar: 'index.ar.json',
   'pt-BR': 'index.pt-BR.json',
+  it: 'index.it.json',
 };
 
 export const DEFAULT_LOCALE = 'en';

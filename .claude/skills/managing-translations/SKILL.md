@@ -7,7 +7,7 @@ description: "Manages internationalization and translations for ComfyUI workflow
 
 ## Overview
 
-The repo supports 11 languages. The English master file is `templates/index.json`. Locale files follow the pattern `templates/index.{locale}.json`:
+The repo supports 14 languages. The English master file is `templates/index.json`. Locale files follow the pattern `templates/index.{locale}.json`:
 
 | Code | Language | File |
 |---|---|---|
@@ -22,6 +22,9 @@ The repo supports 11 languages. The English master file is `templates/index.json
 | tr | Turkish | `templates/index.tr.json` |
 | ar | Arabic | `templates/index.ar.json` |
 | pt-BR | Portuguese (Brazil) | `templates/index.pt-BR.json` |
+| fa | Persian | `templates/index.fa.json` |
+| it | Italian | `templates/index.it.json` |
+| he | Hebrew | `templates/index.he.json` |
 
 ## How Sync Works
 
