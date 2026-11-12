@@ -62,7 +62,7 @@ Edit `scripts/data/i18n.json`:
 
 ## Supported Languages
 
-`zh`, `zh-TW`, `ja`, `ko`, `es`, `fr`, `ru`, `tr`, `ar`, `pt-BR`
+`zh`, `zh-TW`, `ja`, `ko`, `es`, `fr`, `ru`, `tr`, `ar`, `pt-BR`, `fa`, `it`, `he`
 
 ## Notes
 

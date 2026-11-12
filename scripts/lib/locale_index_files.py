@@ -13,6 +13,8 @@ LANGUAGE_FILES: dict[str, str] = {
     "ar": "index.ar.json",
     "fa": "index.fa.json",
     "pt-BR": "index.pt-BR.json",
+    "it": "index.it.json",
+    "he": "index.he.json",
 }
 
 # Files in templates/ that are not workflow JSON or template media assets.

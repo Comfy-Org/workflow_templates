@@ -19,7 +19,7 @@ The repository uses a **package-per-media** structure for Python distribution:
 
 ### Template Site (`site/`)
 
-The `site/` directory contains an independent Astro static site that provides a browsable, searchable interface for all workflow templates. It includes AI-generated descriptions, i18n support (11 languages), SEO optimization, and automated content pipelines. See [site/AGENTS.md](site/AGENTS.md) for full documentation.
+The `site/` directory contains an independent Astro static site that provides a browsable, searchable interface for all workflow templates. It includes AI-generated descriptions, i18n support (12 languages), SEO optimization, and automated content pipelines. See [site/AGENTS.md](site/AGENTS.md) for full documentation.
 
 ```bash
 cd site

@@ -130,7 +130,7 @@ python scripts/validate/validate_templates.py
 ```
 
 This validates:
-- ✅ **All index*.json files** - Main + 10 locale variants (11 total: `index.json`, `index.ar.json`, `index.es.json`, `index.fr.json`, `index.ja.json`, `index.ko.json`, `index.pt-BR.json`, `index.ru.json`, `index.tr.json`, `index.zh.json`, `index.zh-TW.json`)
+- ✅ **All index*.json files** - Main + 13 locale variants (14 total: `index.json`, `index.ar.json`, `index.es.json`, `index.fa.json`, `index.fr.json`, `index.he.json`, `index.it.json`, `index.ja.json`, `index.ko.json`, `index.pt-BR.json`, `index.ru.json`, `index.tr.json`, `index.zh.json`, `index.zh-TW.json`)
 - ✅ JSON schema compliance for all fields
 - ✅ File consistency (all referenced files exist)
 - ✅ No duplicate template names

@@ -10,7 +10,7 @@
 | Workflow JSON   | `templates/{name}.json`       | Node graph, model requirements, embedded docs |
 | Thumbnails      | `templates/{name}-{n}.webp`   | Input/output previews                         |
 | Bundle Map      | `bundles.json`                | Template → package assignment                 |
-| Localized Index | `templates/index.{lang}.json` | 12 language variants (Milestone 2+)           |
+| Localized Index | `templates/index.{lang}.json` | 13 language variants (Milestone 2+)           |
 
 ### 1.2 Template Metadata Schema
 
