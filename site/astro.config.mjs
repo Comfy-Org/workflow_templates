@@ -186,10 +186,10 @@ export default defineConfig({
   },
   integrations: [
     sitemap({
-      // Use custom filename to avoid collision with Framer's /sitemap.xml
+      // Keep the workflows sitemap family distinct from the marketing site's
+      // /sitemap-index.xml + /sitemap-0.xml (robots.txt points crawlers there;
+      // the routing layer merges both into the root index).
       filenameBase: 'sitemap-workflows',
-      // Include Framer's marketing sitemap in the index
-      customSitemaps: ['https://comfy.org/sitemap.xml'],
       // Include on-demand locale pages that aren't discovered at build time
       customPages: customPages,
       serialize(item) {
