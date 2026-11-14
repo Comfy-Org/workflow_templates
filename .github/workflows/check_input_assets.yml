@@ -20,11 +20,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           sparse-checkout: |
             templates/*.json
             input/
             scripts/validate/check_input_assets.py
+            scripts/lib/changed_files.py
           sparse-checkout-cone-mode: false
 
       - name: Set up Python
@@ -35,8 +37,12 @@ jobs:
       - name: Run input assets validation
         id: validation
         run: |
-          # Run validation and capture exit code
-          if python scripts/validate/check_input_assets.py; then
+          # Only the templates this PR touches are judged, so pre-existing
+          # findings elsewhere (see the Painter masks in #1392) cannot block
+          # unrelated work.
+          if python scripts/validate/check_input_assets.py \
+              --base-sha "${{ github.event.pull_request.base.sha }}" \
+              --head-sha "${{ github.event.pull_request.head.sha }}"; then
             echo "validation_failed=false" >> $GITHUB_OUTPUT
           else
             echo "validation_failed=true" >> $GITHUB_OUTPUT

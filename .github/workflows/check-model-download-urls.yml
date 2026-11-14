@@ -1,0 +1,48 @@
+name: Check Model Download URLs
+
+# Guards the class of bug behind issue #1373: `properties.models[].url` pointing
+# at a different model's file than the `name` the loader expects, so a missing
+# model download silently lands as the wrong weights.
+#
+# Scoped to the changed templates: this gate is new, so the rest of the tree is
+# only judged when a template is actually touched.
+
+on:
+  pull_request:
+    paths:
+      - 'templates/**/*.json'
+      - 'scripts/validate/check_model_download_urls.py'
+      - 'scripts/lib/changed_files.py'
+      - 'scripts/lib/locale_index_files.py'
+      - '.github/workflows/check-model-download-urls.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-model-download-urls:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          sparse-checkout: |
+            templates/*.json
+            scripts/validate/check_model_download_urls.py
+            scripts/lib/changed_files.py
+            scripts/lib/locale_index_files.py
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate model download URLs
+        run: |
+          python scripts/validate/check_model_download_urls.py \
+            --base-sha "${{ github.event.pull_request.base.sha }}" \
+            --head-sha "${{ github.event.pull_request.head.sha }}"
