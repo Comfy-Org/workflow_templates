@@ -2,6 +2,9 @@
 
 This repo hosts the official ComfyUI **workflow templates** and **subgraph blueprints**.
 
+New to the process? Start with [docs/PROCESS.md](docs/PROCESS.md) — the end-to-end map, who can own
+which stage, and the definition of done. The step-by-step instructions are further down.
+
 ## Overview
 
 | Content | Description | Location |
@@ -481,19 +484,16 @@ For detailed instructions, see [scripts/I18N_GUIDE.md](scripts/I18N_GUIDE.md).
 4. Clone the fork to your system (if not a collaborator)
 5. Copy your new workflow and thumbnail(s) into the `templates` folder
 6. Add your changes to the `templates/index.json` file
-7. **Bump the version in the root `pyproject.toml`** ([example](https://github.com/Comfy-Org/workflow_templates/pull/32))
-8. Commit and push changes
-9. Create a PR on https://github.com/Comfy-Org/workflow_templates
+7. Commit and push changes
+8. Create a PR on https://github.com/Comfy-Org/workflow_templates
 
-Version bumping and package building are automated via CI/CD. Bumping the root `pyproject.toml` version automatically:
-- Detects which subpackages have changed since their last release
-- Bumps versions only for affected packages
-- Updates all dependency references
-- Builds and publishes packages to PyPI
+Do **not** bump the root `pyproject.toml` version for a template-only PR. CI regenerates the derived
+index files and commits them back to your PR, and merging publishes a GitHub Release only. A version
+bump is a deliberate release: change the root `pyproject.toml` version and add the `release` label to
+the PR, which regenerates the manifests, bumps the affected subpackages and publishes the wheels to
+PyPI. See [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 Here is the PR I made for the Wan template: https://github.com/Comfy-Org/workflow_templates/pull/16
-
-Once the PR is merged, if you followed step 6 correctly, a new version will be published to the [comfyui-workflow-templates PyPi package](https://pypi.org/project/comfyui-workflow-templates).
 
 ---
 
