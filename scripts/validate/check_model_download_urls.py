@@ -99,10 +99,14 @@ def load_entries(templates: list[Path]) -> list[dict]:
     return entries
 
 
-def find_errors(entries: list[dict]) -> list[str]:
+def find_errors(entries: list[dict], all_entries: list[dict] | None = None) -> list[str]:
     # Every declared model name, mapped to the repositories that declare it.
+    # The index is built from the whole tree on a scoped run: the sibling
+    # template that declares the copied name is usually one this PR never
+    # touches, so a scoped index would miss the very mistake being looked for.
+    index_source = all_entries if all_entries is not None else entries
     name_repos: dict[str, set[str]] = {}
-    for entry in entries:
+    for entry in index_source:
         repo = hf_repo_id(entry["url"])
         if entry["name"] and repo:
             name_repos.setdefault(entry["name"], set()).add(repo)
@@ -130,11 +134,11 @@ def find_errors(entries: list[dict]) -> list[str]:
 
         repo = hf_repo_id(url)
         declares_elsewhere = name_repos.get(basename, set())
-        same_repo = repo is None or repo in declares_elsewhere
+        same_repo = repo is not None and repo in declares_elsewhere
         if declares_elsewhere and same_repo:
             errors.append(
                 f"{where}: `{name}` downloads `{basename}`, which this repository "
-                f"declares as a different model ({repo or 'external host'})"
+                f"declares as a different model ({repo})"
             )
     return errors
 
@@ -183,7 +187,11 @@ def main() -> int:
         return 0
 
     entries = load_entries(scoped)
-    errors = find_errors(entries)
+    # Compare against every declared name in the tree, not just the changed
+    # templates, so a URL copied from an untouched sibling still resolves to the
+    # model that declares that filename.
+    index_entries = load_entries(all_files) if changed is not None else entries
+    errors = find_errors(entries, index_entries)
 
     if not errors:
         print(f"✅ {len(entries)} model URL(s) checked, no mismatched download URLs.")

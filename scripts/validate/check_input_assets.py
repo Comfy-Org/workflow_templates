@@ -145,10 +145,16 @@ def validate_assets(assets: List[Dict], inputs_dir: Path) -> Tuple[List[Dict], L
     missing = []
     
     for asset in assets:
-        if asset.get("annotation") == "temp":
-            # A `[temp]` value points into ComfyUI's temp directory, which only
-            # exists on the machine that authored the template.
-            asset["reason"] = "temp reference (never distributed)"
+        annotation = asset.get("annotation")
+        if annotation in ("temp", "output"):
+            # A `[temp]` value points into ComfyUI's temp directory and an
+            # `[output]` value into its output directory. Neither is part of the
+            # template, and ComfyUI resolves them against those folders, so a
+            # same-named file under input/ does not satisfy the widget.
+            if annotation == "temp":
+                asset["reason"] = "temp reference (never distributed)"
+            else:
+                asset["reason"] = "output reference (never distributed)"
             missing.append(asset)
             continue
 
@@ -196,7 +202,7 @@ def generate_report(valid_assets: List[Dict], missing_assets: List[Dict],
             )
         
         report.append("\n**Action Required:** add the file to `input/` and reference it as `name [input]`.\n")
-        report.append("A `[temp]` reference can never be fixed by adding a file: temp files are not distributed. Clear the widget instead, or ship the file under `input/`.\n")
+        report.append("A `[temp]` or `[output]` reference can never be fixed by adding a file: those folders are not distributed. Clear the widget instead, or ship the file under `input/`.\n")
     
     # Valid assets summary - only show count, not full list (to keep report concise)
     # The full list is still available in the artifact if needed
@@ -469,11 +475,18 @@ def main():
             print(f"❌ {exc}")
             sys.exit(1)
 
-    workflow_files = [
-        f for f in all_workflow_files if changed is None or f.name in changed
-    ]
+    # --strict is a whole-tree gate: a revision range must not narrow the file
+    # set, otherwise pre-existing findings hide behind a green scoped run.
+    full_tree = changed is None or args.strict
+    if full_tree:
+        workflow_files = all_workflow_files
+    else:
+        assert changed is not None
+        workflow_files = [f for f in all_workflow_files if f.name in changed]
     if changed is None:
         print(f"Found {len(workflow_files)} workflow files to check (whole tree)\n")
+    elif args.strict:
+        print(f"Found {len(workflow_files)} workflow files to check (--strict: whole tree)\n")
     else:
         print(f"Found {len(workflow_files)} changed workflow file(s) to check\n")
     
@@ -546,6 +559,10 @@ def main():
         print(f"\n✅ Validation passed: All {len(valid_assets)} asset(s) found")
         sys.exit(0)
 
+    if args.strict:
+        print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s)")
+        sys.exit(1)
+
     if changed is not None:
         # Scoped run: every finding belongs to a template this change touches,
         # so it is actionable right here. Report the rest of the tree as context
@@ -561,10 +578,6 @@ def main():
                 "not failing this run (full tree: --strict)."
             )
         print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s) in changed template(s)")
-        sys.exit(1)
-
-    if args.strict:
-        print(f"\n❌ Validation failed: {len(missing_assets)} missing asset(s)")
         sys.exit(1)
 
     # Whole-tree runs on main are advisory by default: the tree already carries
