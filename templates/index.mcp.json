@@ -140,7 +140,7 @@
         "title": "MOSS-Image: Text to Image",
         "task": "Text to Image",
         "model": "MOSS-Image",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 5900,
         "recommend": "highly_recommended",
         "description": "Generate an image from a text prompt with MOSS-Image, an open-weights model that reads a full scene caption and returns one finished image. A prompt upsampler expands a short request into that caption first, so a one-line description is enough. Ideal for editorial photography, product shots, and concept art.",
@@ -476,7 +476,7 @@
         "title": "MOSS-Image Base: Text to Image",
         "task": "Text to Image",
         "model": "MOSS-Image",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 1662,
         "recommend": "top",
         "description": "Generate an image from a text prompt with the MOSS-Image base checkpoint, which reads a full scene caption and returns one finished image. The prompt upsampler expands a short request into that caption first. Use it for fine-tuning experiments and comparisons with the instruction-tuned checkpoint.",
@@ -1298,9 +1298,9 @@
         "title": "MOSS-Image: Layout-Guided Text to Image",
         "task": "Text to Image",
         "model": "MOSS-Image",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 136,
-        "recommend": "medium",
+        "recommend": "low",
         "description": "Generate an image from a text prompt plus a layout drawn in Create Bounding Boxes. Each box carries its own caption, and text boxes also render their text, so MOSS-Image places every element where you put it. Useful for posters, packaging shots, and any composition where placement matters.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -2396,9 +2396,9 @@
         "title": "MOSS-Image Base: Layout-Guided Text to Image",
         "task": "Text to Image",
         "model": "MOSS-Image",
-        "freshness": "new",
+        "freshness": "recent",
         "usage": 35,
-        "recommend": "medium",
+        "recommend": "not_recommended",
         "description": "Generate an image from a text prompt plus a layout drawn in Create Bounding Boxes, using the MOSS-Image base checkpoint. Each box carries its own caption and text boxes render their text. Useful for comparing the base and instruction-tuned checkpoints on the same layout.",
         "io": {
           "inputs": ["text: Prompt"],
@@ -3382,6 +3382,60 @@
         "minComfyUIVersion": "0.13.0",
         "capabilities": {
           "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
+        "name": "api_kling4_image_t2i",
+        "title": "Kling 4.0: Text to Image",
+        "task": "Text to Image",
+        "model": "Kling",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate one image or a consistent series from a text prompt with Kling 4.0 Image, up to 8K across ten aspect ratios, optionally steered by reference images addressed in the prompt as @Image1.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated image"]
+        },
+        "minComfyUIVersion": "0.13.0",
+        "capabilities": {
+          "workflow": ["api", "text-to-image"]
+        }
+      },
+      {
+        "name": "api_kling4_image_edit",
+        "title": "Kling 4.0: Image Edit",
+        "task": "Image Edit",
+        "model": "Kling",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Restyle one reference portrait with Kling 4.0 Image: keep the same face and framing, then change the hair, the makeup, the outfit or the whole look from a text prompt. Add up to ten reference images and address them as @Image1 onwards.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Edit prompt"],
+          "outputs": ["image: Edited image"]
+        },
+        "minComfyUIVersion": "0.13.0",
+        "capabilities": {
+          "workflow": ["api", "image-edit"]
+        }
+      },
+      {
+        "name": "api_kling4_long_image",
+        "title": "Kling 4.0: Long Image (Webpage)",
+        "task": "Image Generation",
+        "model": "Kling",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Generate one very tall image that reads as a finished web page: header, hero, content bands and footer laid out in a single pass. Describe the page band by band and state the language of the copy.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.13.0",
+        "capabilities": {
+          "workflow": ["api", "long-image", "web-design"]
         }
       },
       {
@@ -5138,7 +5192,7 @@
         "title": "Depth Estimation: MoGe",
         "task": "Depth Estimation",
         "model": "MoGe",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 13,
         "recommend": "not_recommended",
         "description": "Upload a single RGB image and adjust inference resolution and batch size. Generate a colored depth preview and raw depth map,",
@@ -5731,6 +5785,42 @@
           "model_options": {
             "ByteDance2ReferenceNodeV2": ["Seedance 2.5", "Seedance 2.5 Draft", "Seedance 2.0", "Seedance 2.0 Fast", "Seedance 2.0 Mini"]
           }
+        }
+      },
+      {
+        "name": "api_heygen_avatar_6_i2v",
+        "title": "HeyGen Avatar 6: Photo to Video",
+        "task": "Image to Video",
+        "model": "HeyGen Avatar 6",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Turn one photo and one voice track into a talking clip. HeyGen Avatar 6 keeps the photo's identity and scene, lip-syncs the performance to your audio and follows a motion prompt for gestures, expression, posture and camera. The clip runs the length of the audio, renders at 1080p or 2K, and can use Avatar 6 or the cheaper Avatar 6 Turbo. Ideal for giving a portrait a voice, making presenter clips without a shoot, and bringing character art to life.",
+        "io": {
+          "inputs": ["image: Reference image", "text: Motion or style prompt"],
+          "outputs": ["video: Animated video"]
+        },
+        "minComfyUIVersion": "0.46.0",
+        "capabilities": {
+          "workflow": ["api", "image-to-video"]
+        }
+      },
+      {
+        "name": "api_heygen_avatar_6_id2v",
+        "title": "HeyGen Avatar 6: Identity to Video",
+        "task": "Lip Sync",
+        "model": "HeyGen Avatar 6",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Write a line and pick a presenter. HeyGen Avatar 6 renders a stock avatar or your own digital twin speaking that script in the chosen voice, with a motion prompt directing gestures, expression, posture and camera. No photo or audio file needed: the node synthesizes the speech, and the frame comes from the look at 1080p or 2K in 16:9, 9:16, 1:1, 4:5, 5:4 or the look's own shape. Avatar 6 or the cheaper Avatar 6 Turbo. Ideal for presenter and explainer clips, product updates and any talking-head shot you would otherwise have to film.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["image: Generated output"]
+        },
+        "minComfyUIVersion": "0.46.0",
+        "capabilities": {
+          "workflow": ["api", "lip-sync", "text-to-video"]
         }
       },
       {
@@ -8297,7 +8387,7 @@
         "title": "Googly Eyes",
         "task": "Video Edit",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 18,
         "recommend": "not_recommended",
         "description": "Apply a googly eyes effect to faces in a reference video using the fast LTX-2.3 model with the Googly Eyes LoRA. Input a video containing faces, and optionally describe the desired style to guide the edit. The model outputs a video with the playful effect applied.",
@@ -9788,7 +9878,7 @@
         "title": "Remove Object from Video - LTX 2.3 Obscura Remova LoRA",
         "task": "Video Edit",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 84,
         "recommend": "low",
         "description": "Upload an input video and a text prompt specifying the object to remove (e.g., \"Remove the red car from the foreground\"). The fast, high-quality LTX-2.3 model, designed for fast video generation with native audio and start/end frame support, applies the Obscura Remova LoRA to erase the target from every frame, outputting a clean edited video.",
@@ -9806,7 +9896,7 @@
         "title": "Remove Subtitles from Video - LTX 2.3 LoRA",
         "task": "Video Edit",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 39,
         "recommend": "not_recommended",
         "description": "This workflow removes subtitles or text from an input video using an LTX 2.3 LoRA. It leverages the fast, high-quality video generation capabilities of LTX 2.3 to inpaint subtitle regions, preserving underlying content and outputting a clean video without text.",
@@ -9824,7 +9914,7 @@
         "title": "Remove Watermark from Video - LTX 2.3 LoRA",
         "task": "Video Edit",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 46,
         "recommend": "not_recommended",
         "description": "This workflow uses a fast LTX-2.3 LoRA to remove watermarks from an input video with one click. You provide a video containing watermarks, and the workflow outputs a clean, watermark-free version. It is a purpose-built video editing example, applying the model’s strengths to a specific content removal task.",
@@ -10289,7 +10379,7 @@
         "title": "LTX2.3 LoRA: Video Outpainting",
         "task": "Video Generation",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 25,
         "recommend": "not_recommended",
         "description": "Use the LTX‑2.3 Video Outpainting IC LoRA to expand any input video in any direction. Set the target aspect ratio and optionally guide with a text prompt. The fast LTX‑2.3 model generates an outpainted video with an extended canvas.",
@@ -10307,7 +10397,7 @@
         "title": "Restore Archival Footage - LTX 2.3 Dearchive LoRA",
         "task": "Video Edit",
         "model": "LTX-2.3",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 23,
         "recommend": "not_recommended",
         "description": "Restore archival footage in one click with this LTX 2.3 workflow using the Dearchive LoRA. Upload old or degraded archival video, and the fast Lightricks model outputs a restored version with video editing and LoRA techniques.",
@@ -10721,7 +10811,7 @@
         "title": "Stable Audio 3.0 Medium",
         "task": "Audio Generation",
         "model": "Stable Audio",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 110,
         "recommend": "low",
         "description": "Input a short text idea, optional duration, seed, and category. Generate stereo audio (music, SFX, or instruments) using Stable Audio 3 with optional AI-driven text expansion.",
@@ -10739,7 +10829,7 @@
         "title": "Stable Audio 3.0 Medium Base",
         "task": "Audio Generation",
         "model": "Stable Audio",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 111,
         "recommend": "low",
         "description": "Input a short text description of a sound, music, or effect. The workflow expands your prompt with Qwen and generates a stereo audio clip from Stable Audio 3.",
@@ -10945,6 +11035,24 @@
           "model_options": {
             "FishAudioTextToSpeech": ["drama-3", "s2.1-pro", "s1"]
           }
+        }
+      },
+      {
+        "name": "breeze_tts2_tts",
+        "title": "Breeze TTS 2: Text to Speech",
+        "task": "Text to Speech",
+        "model": "Breeze Blue",
+        "freshness": "new",
+        "usage": 0,
+        "recommend": "medium",
+        "description": "Turn a script into speech with Breeze TTS 2, Breeze Blue's open-weight voice model: native English and Chinese, plus a 51-language multilingual mode. Clone a voice from a three-second recording, design a new one from a written description, or start from a featured voice, then direct the performance in plain language or with inline audio tags such as (sighs). The workflow ships a sample recording, a saved voice id you can reuse, and optional Remix and Design tools. Ideal for narration, character dialogue and localized voiceover.",
+        "io": {
+          "inputs": ["text: Prompt"],
+          "outputs": ["audio: Generated speech"]
+        },
+        "minComfyUIVersion": "0.45.4",
+        "capabilities": {
+          "workflow": ["api", "tts", "voice-cloning"]
         }
       },
       {
@@ -11810,7 +11918,7 @@
         "title": "HY 3D: Image to Model",
         "task": "Image to 3D",
         "model": "Hunyuan3D",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 53,
         "recommend": "low",
         "description": "Upload an image to generate a 3D model with geometry and PBR textures.",
@@ -13250,7 +13358,7 @@
         "title": "3x3 Contact Sheet",
         "task": "Image Edit",
         "model": "Nano Banana 2",
-        "freshness": "current",
+        "freshness": "established",
         "usage": 15,
         "recommend": "low",
         "description": "Generate a 3×3 grid of image variations from a reference image and text prompt using Nano Banana 2 (Gemini 3.1 Flash Image), which offers fast generation and up to 4K resolution. Browse the grid to select your favorite concept, then recreate that frame as a standalone high‑quality image while preserving character and outfit consistency. This workflow executes via a third‑party API, enabling rapid visual exploration without generating each variation individually.",
