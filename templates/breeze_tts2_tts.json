@@ -1,0 +1,808 @@
+{
+  "id": "dea2ff39-c2ce-4f22-8a30-75ecdc6c59b2",
+  "revision": 0,
+  "last_node_id": 29,
+  "last_link_id": 14,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "BreezeTextToSpeech",
+      "pos": [
+        1990,
+        -1680
+      ],
+      "size": [
+        400,
+        260
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "link": 14
+        }
+      ],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeTextToSpeech"
+      },
+      "widgets_values": [
+        "Meet the Breeze TTS. (sighs) It weighs less than a paperback and folds flat in your bag. Titanium frame, recycled shell, and a hinge that still feels new after ten thousand openings. Available Thursday, wherever good gear is sold.",
+        "English",
+        "Breeze TTS 2",
+        "neutral",
+        false,
+        1,
+        767741007,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "text": "Meet the Breeze TTS. (sighs) It weighs less than a paperback and folds flat in your bag. Titanium frame, recycled shell, and a hinge that still feels new after ten thousand openings. Available Thursday, wherever good gear is sold.",
+        "language": "English",
+        "language.model": "Breeze TTS 2",
+        "delivery": "neutral",
+        "delivery.speaker_boost": false,
+        "speed": 1,
+        "seed": 767741007,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 2,
+      "type": "SaveAudioAdvanced",
+      "pos": [
+        2580,
+        -1680
+      ],
+      "size": [
+        450,
+        270
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "audio/Breeze_TTS2",
+        "flac"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "audio/Breeze_TTS2",
+        "format": "flac"
+      }
+    },
+    {
+      "id": 4,
+      "type": "BreezeVoiceClone",
+      "pos": [
+        340,
+        -1660
+      ],
+      "size": [
+        350,
+        140
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "audio",
+          "type": "AUDIO",
+          "link": 4
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "preview",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceClone"
+      },
+      "widgets_values": [
+        false,
+        892527809,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "remove_background_noise": false,
+        "seed": 892527809,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 8,
+      "type": "PreviewAny",
+      "pos": [
+        750,
+        -1660
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            7,
+            12
+          ]
+        }
+      ],
+      "title": "Preview as Text (voice id)",
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 9,
+      "type": "LoadAudio",
+      "pos": [
+        -130,
+        -1660
+      ],
+      "size": [
+        400,
+        170
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            4
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "breeze_tts2_tts_clone_audio.wav"
+      ],
+      "widgets_values_named": {
+        "audio": "clone_tts.wav",
+        "upload": ""
+      }
+    },
+    {
+      "id": 11,
+      "type": "BreezeVoiceSelector",
+      "pos": [
+        1020,
+        -1660
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "language.voice_id",
+          "type": "STRING",
+          "widget": {
+            "name": "language.voice_id"
+          },
+          "link": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": [
+            14
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceSelector"
+      },
+      "widgets_values": [
+        "custom",
+        ""
+      ],
+      "widgets_values_named": {
+        "language": "custom",
+        "language.voice_id": ""
+      }
+    },
+    {
+      "id": 13,
+      "type": "SaveText",
+      "pos": [
+        1120,
+        -1400
+      ],
+      "size": [
+        280,
+        230
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "link": 13
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SaveText"
+      },
+      "widgets_values": [
+        "Breeze_voice_id",
+        "txt"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "Breeze_voice_id",
+        "format": "txt"
+      }
+    },
+    {
+      "id": 15,
+      "type": "BreezeVoiceSelector",
+      "pos": [
+        1590,
+        -1540
+      ],
+      "size": [
+        270,
+        90
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceSelector"
+      },
+      "widgets_values": [
+        "English",
+        "Elizabeth"
+      ],
+      "widgets_values_named": {
+        "language": "English",
+        "language.voice": "Elizabeth"
+      }
+    },
+    {
+      "id": 17,
+      "type": "BreezeVoiceRemix",
+      "pos": [
+        -130,
+        -910
+      ],
+      "size": [
+        400,
+        204
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 4,
+      "inputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": null
+        },
+        {
+          "name": "preview",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceRemix"
+      },
+      "widgets_values": [
+        "custom",
+        "",
+        4,
+        1201060479,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "change": "custom",
+        "change.prompt": "",
+        "strength": 4,
+        "seed": 1201060479,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 18,
+      "type": "BreezeVoiceDesign",
+      "pos": [
+        666,
+        -910
+      ],
+      "size": [
+        420,
+        325.912524242866
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "voice",
+          "type": "BREEZE_VOICE",
+          "links": null
+        },
+        {
+          "name": "preview",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BreezeVoiceDesign"
+      },
+      "widgets_values": [
+        "",
+        "",
+        "English",
+        "Breeze TTS 2",
+        4,
+        920438200,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "description": "",
+        "preview_text": "",
+        "language": "English",
+        "language.model": "Breeze TTS 2",
+        "strength": 4,
+        "seed": 920438200,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 20,
+      "type": "MarkdownNote",
+      "pos": [
+        317.18685378005824,
+        -1411.8023414402815
+      ],
+      "size": [
+        400,
+        245
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: clone → saved voice id",
+      "properties": {},
+      "widgets_values": [
+        "**Voice clone — input to reusable voice id**\n\n`Load Audio → Breeze Voice Clone → Preview as Text`\n\n- One speaker, **at least 3 s**. Only the first **60 s** of the file are read;\n  Breeze keeps the best ≤30 s, trims it clean and normalises the loudness.\n- `remove_background_noise` helps on a rough phone take.\n- `voice` output = the new **voice id** (`voc_…`), shown by *Preview as Text*.\n  `preview` output = how it sounds.\n- Only clone a voice you have the right to use — consent is required.\n\n**Reuse the id later:** paste it into *Breeze Voice Selector → custom*.\n*Concatenate Text* adds a readable prefix and *Save Text* writes the id to a\n`.txt` for your records.\n\nSample to try: [breeze_tts2_tts_clone_audio.wav](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/breeze_tts2_tts_clone_audio.wav)."
+      ],
+      "widgets_values_named": {
+        "text": "**Voice clone — input to reusable voice id**\n\n`Load Audio → Breeze Voice Clone → Preview as Text`\n\n- One speaker, **at least 3 s**. Only the first **60 s** of the file are read;\n  Breeze keeps the best ≤30 s, trims it clean and normalises the loudness.\n- `remove_background_noise` helps on a rough phone take.\n- `voice` output = the new **voice id** (`voc_…`), shown by *Preview as Text*.\n  `preview` output = how it sounds.\n- Only clone a voice you have the right to use — consent is required.\n\n**Reuse the id later:** paste it into *Breeze Voice Selector → custom*.\n*Concatenate Text* adds a readable prefix and *Save Text* writes the id to a\n`.txt` for your records.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 21,
+      "type": "StringConcatenate",
+      "pos": [
+        760,
+        -1400
+      ],
+      "size": [
+        300,
+        190
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "string_b",
+          "type": "STRING",
+          "widget": {
+            "name": "string_b"
+          },
+          "link": 12
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": [
+            13
+          ]
+        }
+      ],
+      "title": "Concatenate Text(append prefix for id)",
+      "properties": {
+        "Node name for S&R": "StringConcatenate"
+      },
+      "widgets_values": [
+        "you custom id name here: ",
+        "",
+        ""
+      ],
+      "widgets_values_named": {
+        "string_a": "you custom id name here: ",
+        "string_b": "",
+        "delimiter": ""
+      }
+    },
+    {
+      "id": 24,
+      "type": "MarkdownNote",
+      "pos": [
+        303,
+        -910
+      ],
+      "size": [
+        322.9329231665266,
+        383.0390404970097
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Voice Remix",
+      "properties": {},
+      "widgets_values": [
+        "## Breeze Voice Remix\n\nMakes a **changed copy** of a voice you already have, in that voice's language.\n\n- `change = custom` — describe the shift in words: \"older, huskier, tired, a\n  little slower\".\n- `change = preset` — 27 named shifts:\n  **age** (teenage → elderly) · **gender** (male imitating female, and reverse) ·\n  **pitch** (higher / lower) · **pace** (faster / slower) ·\n  **energy** (energetic / low-energy) ·\n  **emotion** (excited, angry, sad, afraid, awkward, sarcastic, restrained\n  grief, painful) ·\n  **role-play** (stage actor, news anchor, bedtime storyteller) ·\n  **delivery** (laughing, crying, whispered, singing).\n- `strength` 1–10 — how far it moves from the original. 4 is a good start.\n\nOutputs: a new **voice id** (saved to your account) and an audio **preview**.\nSend the voice to *Breeze Text to Speech*, or save the id for later runs.\n\nNeed another language? Use *Breeze Voice Localize* — Remix stays in the same\nlanguage.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Breeze Voice Remix\n\nMakes a **changed copy** of a voice you already have, in that voice's language.\n\n- `change = custom` — describe the shift in words: \"older, huskier, tired, a\n  little slower\".\n- `change = preset` — 27 named shifts:\n  **age** (teenage → elderly) · **gender** (male imitating female, and reverse) ·\n  **pitch** (higher / lower) · **pace** (faster / slower) ·\n  **energy** (energetic / low-energy) ·\n  **emotion** (excited, angry, sad, afraid, awkward, sarcastic, restrained\n  grief, painful) ·\n  **role-play** (stage actor, news anchor, bedtime storyteller) ·\n  **delivery** (laughing, crying, whispered, singing).\n- `strength` 1–10 — how far it moves from the original. 4 is a good start.\n\nOutputs: a new **voice id** (saved to your account) and an audio **preview**.\nSend the voice to *Breeze Text to Speech*, or save the id for later runs.\n\nNeed another language? Use *Breeze Voice Localize* — Remix stays in the same\nlanguage.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 25,
+      "type": "MarkdownNote",
+      "pos": [
+        1119,
+        -910
+      ],
+      "size": [
+        308.01025331063624,
+        426.03903633031507
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Voice Design",
+      "properties": {},
+      "widgets_values": [
+        "## Breeze Voice Design\n\nInvents a **new voice from words** — no reference audio needed.\n\n- `description` (3–500 chars) — who the voice is: age, gender, accent, timbre,\n  pace, character. e.g. \"Warm male voice in his mid-forties with a soft Scottish\n  accent, close-miked, unhurried, with dry humour underneath.\"\n- `preview_text` (≤500 chars) — the line the new voice speaks. **The voice is\n  built from this line**, so write it in the target language and in the tone you\n  want; audio tags such as `(sighs)` work here too.\n- `language` + `model` — same rule as text to speech: English and Chinese can use\n  either model, every other language uses the multilingual one.\n- `strength` 1–10 — how literally it follows the description.\n- Reroll `seed` for another take on the same description.\n\nOutputs: the **voice id** (named after the description, saved to your account)\nand an audio **preview**. Send the voice to *Breeze Text to Speech*.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## Breeze Voice Design\n\nInvents a **new voice from words** — no reference audio needed.\n\n- `description` (3–500 chars) — who the voice is: age, gender, accent, timbre,\n  pace, character. e.g. \"Warm male voice in his mid-forties with a soft Scottish\n  accent, close-miked, unhurried, with dry humour underneath.\"\n- `preview_text` (≤500 chars) — the line the new voice speaks. **The voice is\n  built from this line**, so write it in the target language and in the tone you\n  want; audio tags such as `(sighs)` work here too.\n- `language` + `model` — same rule as text to speech: English and Chinese can use\n  either model, every other language uses the multilingual one.\n- `strength` 1–10 — how literally it follows the description.\n- Reroll `seed` for another take on the same description.\n\nOutputs: the **voice id** (named after the description, saved to your account)\nand an audio **preview**. Send the voice to *Breeze Text to Speech*.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 27,
+      "type": "MarkdownNote",
+      "pos": [
+        -813.1042406846639,
+        -1751.232953656752
+      ],
+      "size": [
+        600,
+        770
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "title": "Note: Breeze TTS 2 — read me first",
+      "properties": {},
+      "widgets_values": [
+        "# Breeze TTS 2 — voice toolkit\n\n**Breeze TTS 2** (by Breeze Blue) is an open-weight text-to-speech model built for\nreal-time speech. One model speaks **English and Chinese** natively and a\nmultilingual variant covers **51 languages**. Delivery is steerable with plain\nwords, and a voice can be cloned from a 3-second sample or designed from a\nwritten description.\n\nThese are **partner nodes**: they run on Comfy's servers, so sign in to Comfy and\nkeep API credits available.\n\n| Model | Languages |\n| --- | --- |\n| Breeze TTS 2 | English, Chinese |\n| Breeze TTS 2 Multilingual | all 51 (only option outside English/Chinese) |\n\n## What this workflow does\n\n**Step 1 — create a voice**\n`Load Audio → Breeze Voice Clone → Preview as Text`\nThe clone node returns a **voice id** (`voc_…`) plus a spoken preview. The id is\nshown in *Preview as Text*, gets a readable prefix, and *Save Text* writes it to\na `.txt` so you can reuse it in later runs.\n\n**Step 2 — speak the script**\n`Breeze Voice Selector (custom) → Breeze Text to Speech → Save Audio`\nThe selector passes the cloned id into *Breeze Text to Speech*. Output lands in\n`ComfyUI/output/audio/Breeze_TTS2…`.\n\n**Optional — a featured voice** (group on the right)\n*Breeze Voice Selector* set to `English → Elizabeth` is a ready-made voice: bypass\nthe clone branch and wire it where the custom selector sits.\n\n**Voice tools** (bottom group — select all, then **Ctrl+B** to enable)\n*Breeze Voice Remix* reshapes a voice you already have; *Breeze Voice Design*\ninvents a new one from words. Each returns a voice id + preview; connect either\nto *Breeze Text to Speech*.\n\n## Writing the script\n\n- 1–1000 characters per request.\n- Audio tags are **performed, not read**: `(sighs)`, `(laughs)`, `(whispers)` in\n  English — `[叹气]`, `[笑]`, `[咳嗽]` in Chinese.\n- `delivery = neutral` keeps the voice as it is; `speaker_boost` pulls it closer\n  to the original sound. `delivery = directed` follows `instructions` written in\n  the text's language, and `strength` (1–10) sets how hard it leans on them.\n- `speed` 0.5–2.0 changes tempo, never pitch.\n- A voice sounds best in its own language. For another language, make a native\n  copy with *Breeze Voice Localize* instead of feeding foreign text to the voice.\n\n## Input asset\n\n- [breeze_tts2_tts_clone_audio.wav](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/breeze_tts2_tts_clone_audio.wav) — the sample recording wired into `Load Audio`. Download it into `ComfyUI/input/`, or swap `Load Audio` for **Record Audio** and capture a take straight from the mic.\n- Any clean single-speaker clip of 3 s or more works.\n"
+      ],
+      "widgets_values_named": {
+        "text": "# Breeze TTS 2 — voice toolkit\n\n**Breeze TTS 2** (by Breeze Blue) is an open-weight text-to-speech model built for\nreal-time speech. One model speaks **English and Chinese** natively and a\nmultilingual variant covers **51 languages**. Delivery is steerable with plain\nwords, and a voice can be cloned from a 3-second sample or designed from a\nwritten description.\n\nThese are **partner nodes**: they run on Comfy's servers, so sign in to Comfy and\nkeep API credits available.\n\n| Model | Languages |\n| --- | --- |\n| Breeze TTS 2 | English, Chinese |\n| Breeze TTS 2 Multilingual | all 51 (only option outside English/Chinese) |\n\n## What this workflow does\n\n**Step 1 — create a voice**\n`Load Audio → Breeze Voice Clone → Preview as Text`\nThe clone node returns a **voice id** (`voc_…`) plus a spoken preview. The id is\nshown in *Preview as Text*, gets a readable prefix, and *Save Text* writes it to\na `.txt` so you can reuse it in later runs.\n\n**Step 2 — speak the script**\n`Breeze Voice Selector (custom) → Breeze Text to Speech → Save Audio`\nThe selector passes the cloned id into *Breeze Text to Speech*. Output lands in\n`ComfyUI/output/audio/Breeze_TTS2…`.\n\n**Optional — a featured voice** (group on the right)\n*Breeze Voice Selector* set to `English → Elizabeth` is a ready-made voice: bypass\nthe clone branch and wire it where the custom selector sits.\n\n**Voice tools** (bottom group — select all, then **Ctrl+B** to enable)\n*Breeze Voice Remix* reshapes a voice you already have; *Breeze Voice Design*\ninvents a new one from words. Each returns a voice id + preview; connect either\nto *Breeze Text to Speech*.\n\n## Writing the script\n\n- 1–1000 characters per request.\n- Audio tags are **performed, not read**: `(sighs)`, `(laughs)`, `(whispers)` in\n  English — `[叹气]`, `[笑]`, `[咳嗽]` in Chinese.\n- `delivery = neutral` keeps the voice as it is; `speaker_boost` pulls it closer\n  to the original sound. `delivery = directed` follows `instructions` written in\n  the text's language, and `strength` (1–10) sets how hard it leans on them.\n- `speed` 0.5–2.0 changes tempo, never pitch.\n- A voice sounds best in its own language. For another language, make a native\n  copy with *Breeze Voice Localize* instead of feeding foreign text to the voice.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 28,
+      "type": "MarkdownNote",
+      "pos": [
+        1589.5414988308426,
+        -1328.0823256103233
+      ],
+      "size": [
+        280,
+        101.9625231726965
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Currently ComfyUI doesn't have remote resource preview capability, so you can preview the built-in audio :("
+      ],
+      "widgets_values_named": {
+        "text": "Currently ComfyUI doesn't have remote resource preview capability, so you can preview the built-in audio :("
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 29,
+      "type": "RecordAudio",
+      "pos": [
+        -107.89514662745893,
+        -1383.0603730630514
+      ],
+      "size": [
+        353.8934329860688,
+        114.00000817471667
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "RecordAudio"
+      },
+      "widgets_values": [
+        ""
+      ],
+      "widgets_values_named": {
+        "audio": "",
+        "audio#1": ""
+      }
+    }
+  ],
+  "links": [
+    [
+      4,
+      9,
+      0,
+      4,
+      0,
+      "AUDIO"
+    ],
+    [
+      6,
+      4,
+      0,
+      8,
+      0,
+      "BREEZE_VOICE"
+    ],
+    [
+      13,
+      21,
+      0,
+      13,
+      0,
+      "STRING"
+    ],
+    [
+      12,
+      8,
+      0,
+      21,
+      0,
+      "STRING"
+    ],
+    [
+      14,
+      11,
+      0,
+      1,
+      0,
+      "BREEZE_VOICE"
+    ],
+    [
+      1,
+      1,
+      0,
+      2,
+      0,
+      "AUDIO"
+    ],
+    [
+      7,
+      8,
+      0,
+      11,
+      0,
+      "STRING"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Step 1 - Create a Voice Clone",
+      "bounding": [
+        -160,
+        -1780,
+        1610,
+        670
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Step 2 - Audio Generation",
+      "bounding": [
+        1950,
+        -1780,
+        480,
+        670
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Save voice id",
+      "bounding": [
+        754.7055500316109,
+        -1467.1546374882246,
+        660,
+        310
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 4,
+      "title": "Optional:  Use preset audio",
+      "bounding": [
+        1560,
+        -1630,
+        340,
+        240
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 5,
+      "title": "Breeze Voice Tools (Select and Ctrl-B to enable)",
+      "bounding": [
+        -160,
+        -1070,
+        1610,
+        740
+      ],
+      "color": "#444",
+      "flags": {}
+    },
+    {
+      "id": 6,
+      "title": "Use your voice",
+      "bounding": [
+        -117.89514662745893,
+        -1453.0603730630514,
+        373.8934329860688,
+        194.00000817471664
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.7201362045677494,
+      "offset": [
+        875.0681214225718,
+        1976.9852008590194
+      ]
+    },
+    "frontendVersion": "1.59.1"
+  },
+  "version": 0.4
+}

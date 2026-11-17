@@ -1,0 +1,344 @@
+{
+  "id": "a27869ac-3e26-4094-a1af-a1b45c55f0d6",
+  "revision": 0,
+  "last_node_id": 8,
+  "last_link_id": 3,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "LoadImage",
+      "pos": [
+        -386.11122530652904,
+        514.765322411633
+      ],
+      "size": [
+        456.73468094482433,
+        485.5845932952882
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            2
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "pink_hair_portrait.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "pink_hair_portrait.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 2,
+      "type": "LoadAudio",
+      "pos": [
+        -386.11122530652904,
+        310.9859171595023
+      ],
+      "size": [
+        459.2990389737215,
+        138.00004438920453
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": [
+            1
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadAudio"
+      },
+      "widgets_values": [
+        "avatar6_narration.mp3"
+      ],
+      "widgets_values_named": {
+        "audio": "avatar6_narration.mp3",
+        "upload": ""
+      }
+    },
+    {
+      "id": 3,
+      "type": "HeyGenAvatar6ReferenceToVideoNode",
+      "pos": [
+        121.18781366719247,
+        310.9859171595023
+      ],
+      "size": [
+        400,
+        296
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model.audio",
+          "type": "AUDIO",
+          "link": 1
+        },
+        {
+          "name": "model.image",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 2
+        },
+        {
+          "name": "model.video",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "VIDEO",
+          "type": "VIDEO",
+          "links": [
+            3
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenAvatar6ReferenceToVideoNode"
+      },
+      "widgets_values": [
+        "heygen-avatar-6",
+        "1080p",
+        "auto",
+        "She speaks straight to camera with calm confidence, small open-handed gestures on the key words, relaxed shoulders and a slight head tilt; the camera eases into a slow, subtle push-in.",
+        "default",
+        1558795324,
+        "randomize",
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "model": "heygen-avatar-6",
+        "model.resolution": "1080p",
+        "model.aspect_ratio": "auto",
+        "model.motion_prompt": "She speaks straight to camera with calm confidence, small open-handed gestures on the key words, relaxed shoulders and a slight head tilt; the camera eases into a slow, subtle push-in.",
+        "model.motion_expressiveness": "default",
+        "model.seed": 1558795324,
+        "control_after_generate#1": "randomize",
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 4,
+      "type": "SaveVideo",
+      "pos": [
+        569.1878136671925,
+        310.9859171595023
+      ],
+      "size": [
+        565.5803210449219,
+        500.45856445312506
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "link": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "video",
+          "type": "VIDEO",
+          "links": null
+        }
+      ],
+      "properties": {},
+      "widgets_values": [
+        "video/HeyGen_avatar6_ia2v",
+        "auto",
+        "auto",
+        "auto"
+      ],
+      "widgets_values_named": {
+        "filename_prefix": "video/HeyGen_avatar6_ia2v",
+        "format": "auto",
+        "format.codec": "auto",
+        "codec": "auto"
+      }
+    },
+    {
+      "id": 5,
+      "type": "MarkdownNote",
+      "pos": [
+        -967.7464264428925,
+        316.17718239387716
+      ],
+      "size": [
+        509.6815912353517,
+        627.620031567383
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "## HeyGen Avatar 6: Photo to Video\n\nOne photo plus one voice track becomes a talking clip. The photo carries the identity and the\nscene, the AUDIO clip sets the length, and a motion prompt directs the performance.\n\n## Input Assets\n\n- [pink_hair_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/pink_hair_portrait.png)\n- [avatar6_narration.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/avatar6_narration.mp3)\n\n### How to use\n\n1. Sign in with your ComfyUI account. This is an API node, it bills per render.\n2. Load a head-and-shoulders or half-body photo with the hands free — the model re-stages the\n   pose, so a photo with the arms crossed or the hands on the face comes back re-posed.\n3. Connect an AUDIO clip (1.5 s to 10 minutes). The clip length is the render length.\n4. `model` picks the engine (`heygen-avatar-6` or the cheaper `heygen-avatar-6-turbo`);\n   `model.resolution` picks 1080p or 2k and `model.aspect_ratio` = `auto` keeps the photo's shape.\n5. `model.motion_prompt` directs gestures, expression, posture and camera movement (up to 1200\n   characters). `model.motion_expressiveness` = `less` damps the gestures.\n6. The photo is not used as the first frame: frame one is re-staged from the photo.\n\n### What to expect\n\n- Video of **realistic people in a reference image** is fine; only reference *videos* of realistic\n  people are refused (that is the sibling reference-to-video template).\n- Output size follows the photo aspect: this 1024x1024 photo comes back 1088x1088.\n- `seed` only decides whether the node re-runs; renders are non-deterministic anyway.\n"
+      ],
+      "widgets_values_named": {
+        "text": "## HeyGen Avatar 6: Photo to Video\n\nOne photo plus one voice track becomes a talking clip. The photo carries the identity and the\nscene, the AUDIO clip sets the length, and a motion prompt directs the performance.\n\n## Input Assets\n\n- [pink_hair_portrait.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/pink_hair_portrait.png)\n- [avatar6_narration.mp3](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/avatar6_narration.mp3)\n\n### How to use\n\n1. Sign in with your ComfyUI account. This is an API node, it bills per render.\n2. Load a head-and-shoulders or half-body photo with the hands free — the model re-stages the\n   pose, so a photo with the arms crossed or the hands on the face comes back re-posed.\n3. Connect an AUDIO clip (1.5 s to 10 minutes). The clip length is the render length.\n4. `model` picks the engine (`heygen-avatar-6` or the cheaper `heygen-avatar-6-turbo`);\n   `model.resolution` picks 1080p or 2k and `model.aspect_ratio` = `auto` keeps the photo's shape.\n5. `model.motion_prompt` directs gestures, expression, posture and camera movement (up to 1200\n   characters). `model.motion_expressiveness` = `less` damps the gestures.\n6. The photo is not used as the first frame: frame one is re-staged from the photo.\n\n### What to expect\n\n- Video of **realistic people in a reference image** is fine; only reference *videos* of realistic\n  people are refused (that is the sibling reference-to-video template).\n- Output size follows the photo aspect: this 1024x1024 photo comes back 1088x1088.\n- `seed` only decides whether the node re-runs; renders are non-deterministic anyway.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 7,
+      "type": "HeyGenTextToSpeechNode",
+      "pos": [
+        -337.10968071465453,
+        1158.093911413927
+      ],
+      "size": [
+        400,
+        232
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 4,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "AUDIO",
+          "type": "AUDIO",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenTextToSpeechNode"
+      },
+      "widgets_values": [
+        "",
+        "Chill Brian (English, male)",
+        "",
+        1,
+        false,
+        42,
+        "randomize"
+      ],
+      "widgets_values_named": {
+        "text": "",
+        "voice": "Chill Brian (English, male)",
+        "custom_voice_id": "",
+        "speed": 1,
+        "ssml": false,
+        "seed": 42,
+        "control_after_generate": "randomize"
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 8,
+      "type": "MarkdownNote",
+      "pos": [
+        -332.74862602715416,
+        1458.015083288925
+      ],
+      "size": [
+        394.87890625,
+        78
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "Select and Ctrl-B to enable, then plug the `AUDIO` output to the audio input of the `HeyGen Avatar 6 Reference to Video` node"
+      ],
+      "widgets_values_named": {
+        "text": "Select and Ctrl-B to enable, then plug the `AUDIO` output to the audio input of the `HeyGen Avatar 6 Reference to Video` node"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      1,
+      2,
+      0,
+      3,
+      0,
+      "AUDIO"
+    ],
+    [
+      2,
+      1,
+      0,
+      3,
+      1,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      4,
+      0,
+      "VIDEO"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Optional (Create audio for audio input)",
+      "bounding": [
+        -392.8842900896545,
+        1060.8259426639268,
+        509.30976562499995,
+        485.3089843749999
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.35049389948139237,
+      "offset": [
+        2986.317520639524,
+        555.7913379324497
+      ]
+    },
+    "frontendVersion": "1.59.1"
+  },
+  "version": 0.4
+}
