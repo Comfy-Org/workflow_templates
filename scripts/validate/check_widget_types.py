@@ -107,6 +107,22 @@ PRIMITIVE_NODE = "PrimitiveNode"
 # Widget types the frontend creates with ``serialize = false``: a workflow it saves
 # has no slot for them, so a missing one is not drift (useImageCompareWidget.ts).
 UNSERIALIZED_WIDGET_TYPES = frozenset({"IMAGECOMPARE"})
+# Nodes the frontend gives UI-only widgets (text preview, audio player, 3D viewer)
+# that older frontends saved as null or "" after the input widgets.
+UI_ONLY_WIDGET_NODES = frozenset(
+    {
+        "PreviewAny",
+        "LoadAudio",
+        "RecordAudio",
+        "SaveAudio",
+        "SaveAudioMP3",
+        "SaveAudioOpus",
+        "SaveAudioAdvanced",
+        "PreviewAudio",
+        "SaveGLB",
+        "Preview3D",
+    }
+)
 
 
 @dataclass(frozen=True)
@@ -572,11 +588,11 @@ def _linked_input_names(node: dict[str, Any]) -> set[str]:
     return names
 
 
-def _is_ignorable_tail(value: Any) -> bool:
+def _is_ignorable_tail(value: Any, node_type: str = "") -> bool:
     # None and "" are what older frontends saved for UI-only widgets (PreviewAny's
     # text preview, the audio player, the 3D viewer). The frontend restores only
     # its serializable widgets, in order, so an empty value past them is never read.
-    if value is None or value == "":
+    if (value is None or value == "") and node_type in UI_ONLY_WIDGET_NODES:
         return True
     return isinstance(value, str) and (
         value in CONTROL_VALUES or value in UPLOAD_VALUES or value in LOAD_3D_BUTTON_VALUES
@@ -708,7 +724,7 @@ def slot_schema_findings(
         tail = values[consumed:]
         if _is_legacy_bounding_box_fields(mapped, tail):
             tail = []
-        if tail and not all(_is_ignorable_tail(item) for item in tail):
+        if tail and not all(_is_ignorable_tail(item, node_type) for item in tail):
             findings.append(
                 Finding(
                     path=str(path),

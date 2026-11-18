@@ -926,6 +926,17 @@ class FrontendUiSlotTests(unittest.TestCase):
         findings = slot_schema_findings(Path("crop.json"), "", node, "Crop", node_def)
         self.assertEqual([f.input_name for f in findings], ["widgets_values"])
 
+    def test_empty_extra_tail_fails_on_nodes_without_ui_only_widgets(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"width": ["INT", {"default": 512}]}},
+            "input_order": {"required": ["width"]},
+        }
+        node = {"id": 1, "type": "Crop", "inputs": [], "widgets_values": [512, ""]}
+        findings = slot_schema_findings(Path("crop.json"), "", node, "Crop", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
+
     def test_unserialized_image_compare_widget_is_not_required(self):
         # The frontend creates the IMAGECOMPARE widget with serialize = false, so a
         # workflow it saves has no slot for it.
