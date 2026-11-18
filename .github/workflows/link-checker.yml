@@ -57,6 +57,10 @@ jobs:
       - name: Check links with lychee
         id: lychee
         if: steps.extract_links.outputs.extract_failed == 'false'
+        env:
+          # Without a token, lychee checks the many github.com links anonymously and
+          # GitHub throttles them with 503s, which fails PRs on links that work.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking extracted links..."
           link_errors=false
