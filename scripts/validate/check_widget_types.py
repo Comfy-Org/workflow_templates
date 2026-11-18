@@ -583,6 +583,17 @@ def _is_ignorable_tail(value: Any) -> bool:
     )
 
 
+def _is_legacy_bounding_box_fields(mapped: dict[str, tuple[Any, Any]], tail: list[Any]) -> bool:
+    """Older frontends saved the x/y/width/height number widgets drawn under a
+    BOUNDING_BOX right after it; the current one marks them unserialized."""
+    if len(tail) != 4 or not mapped:
+        return False
+    _, last_spec = list(mapped.values())[-1]
+    return _widget_type(last_spec) == "BOUNDING_BOX" and all(
+        type(item) in (int, float) for item in tail
+    )
+
+
 def _missing_required_widget_findings(
     path: Path,
     scope: str,
@@ -695,6 +706,8 @@ def slot_schema_findings(
 
     if consumed < len(values):
         tail = values[consumed:]
+        if _is_legacy_bounding_box_fields(mapped, tail):
+            tail = []
         if tail and not all(_is_ignorable_tail(item) for item in tail):
             findings.append(
                 Finding(

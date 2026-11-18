@@ -943,6 +943,30 @@ class FrontendUiSlotTests(unittest.TestCase):
             slot_schema_findings(Path("compare.json"), "", node, "ImageCompare", node_def), []
         )
 
+    def test_legacy_bounding_box_fields_after_the_box(self):
+        # Older frontends also saved the x/y/width/height number widgets they draw
+        # under a BOUNDING_BOX (ImageCropV2 in 3d_pixal3d_multi_views.json).
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "image": ["IMAGE", {}],
+                    "crop_region": ["BOUNDING_BOX", {"component": "ImageCrop"}],
+                }
+            },
+            "input_order": {"required": ["image", "crop_region"]},
+        }
+        box = {"x": 0, "y": 0, "width": 1669, "height": 2688}
+        node = {"id": 338, "type": "ImageCropV2", "inputs": [], "widgets_values": [box, 0, 0, 0, 0]}
+        node["widgets_values"] = [box, 0, 0, 512, 512]
+        self.assertEqual(
+            slot_schema_findings(Path("crop.json"), "", node, "ImageCropV2", node_def), []
+        )
+        node["widgets_values"] = [box, 0, 0, 512, 512, 7]
+        findings = slot_schema_findings(Path("crop.json"), "", node, "ImageCropV2", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
+
 
 if __name__ == "__main__":
     unittest.main()
