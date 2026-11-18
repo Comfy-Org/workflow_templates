@@ -887,5 +887,62 @@ class SlotSchemaDriftTests(unittest.TestCase):
         )
 
 
+class FrontendUiSlotTests(unittest.TestCase):
+    """Slots the frontend writes or omits on its own are not schema drift (PM-2429)."""
+
+    def test_empty_extra_tail_is_ignorable(self):
+        # Older frontends saved the value of UI-only widgets (PreviewAny's text
+        # preview, LoadAudio's audio player, SaveGLB's 3D viewer) after the input
+        # widgets. They hold no value and the frontend never restores them.
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"source": ["*", {}]}},
+            "input_order": {"required": ["source"]},
+        }
+        node = {"id": 3, "type": "PreviewAny", "inputs": [], "widgets_values": [None, None, None]}
+        self.assertEqual(
+            slot_schema_findings(Path("preview.json"), "", node, "PreviewAny", node_def), []
+        )
+        audio_def = {
+            "input": {
+                "required": {"audio": ["COMBO", {"options": ["a.mp3"], "audio_upload": True}]}
+            },
+            "input_order": {"required": ["audio"]},
+        }
+        audio = {"id": 8, "type": "LoadAudio", "inputs": [], "widgets_values": ["a.mp3", None, ""]}
+        self.assertEqual(
+            slot_schema_findings(Path("audio.json"), "", audio, "LoadAudio", audio_def), []
+        )
+
+    def test_extra_tail_with_a_value_still_fails(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"width": ["INT", {"default": 512}]}},
+            "input_order": {"required": ["width"]},
+        }
+        node = {"id": 1, "type": "Crop", "inputs": [], "widgets_values": [512, "", 768]}
+        findings = slot_schema_findings(Path("crop.json"), "", node, "Crop", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
+
+    def test_unserialized_image_compare_widget_is_not_required(self):
+        # The frontend creates the IMAGECOMPARE widget with serialize = false, so a
+        # workflow it saves has no slot for it.
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {"compare_view": ["IMAGECOMPARE", {}]},
+                "optional": {"image_a": ["IMAGE", {}], "image_b": ["IMAGE", {}]},
+            },
+            "input_order": {"required": ["compare_view"], "optional": ["image_a", "image_b"]},
+        }
+        node = {"id": 16, "type": "ImageCompare", "inputs": [], "widgets_values": []}
+        self.assertEqual(
+            slot_schema_findings(Path("compare.json"), "", node, "ImageCompare", node_def), []
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

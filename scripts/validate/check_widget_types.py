@@ -104,6 +104,9 @@ UPLOAD_VALUES = frozenset({"image", "video", "audio"})
 # Buttons load3d.ts adds right before a LOAD_3D widget; their values are saved.
 LOAD_3D_BUTTON_VALUES = frozenset({"upload3dmodel", "uploadExtraResources", "clear"})
 PRIMITIVE_NODE = "PrimitiveNode"
+# Widget types the frontend creates with ``serialize = false``: a workflow it saves
+# has no slot for them, so a missing one is not drift (useImageCompareWidget.ts).
+UNSERIALIZED_WIDGET_TYPES = frozenset({"IMAGECOMPARE"})
 
 
 @dataclass(frozen=True)
@@ -570,6 +573,11 @@ def _linked_input_names(node: dict[str, Any]) -> set[str]:
 
 
 def _is_ignorable_tail(value: Any) -> bool:
+    # None and "" are what older frontends saved for UI-only widgets (PreviewAny's
+    # text preview, the audio player, the 3D viewer). The frontend restores only
+    # its serializable widgets, in order, so an empty value past them is never read.
+    if value is None or value == "":
+        return True
     return isinstance(value, str) and (
         value in CONTROL_VALUES or value in UPLOAD_VALUES or value in LOAD_3D_BUTTON_VALUES
     )
@@ -591,6 +599,8 @@ def _missing_required_widget_findings(
         return findings
     for name, spec in required.items():
         if name in linked or not _is_widget(spec):
+            continue
+        if _widget_type(spec) in UNSERIALIZED_WIDGET_TYPES:
             continue
         if name in present_keys or any(key.startswith(f"{name}.") for key in present_keys):
             continue
