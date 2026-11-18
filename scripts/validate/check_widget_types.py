@@ -236,7 +236,9 @@ def _walk_positional(
         out[full] = (values[index], spec)
         index += 1
         if widget_type == "INT" and "control_after_generate" not in meta:
-            has_control = name in ("seed", "noise_seed")
+            # useIntWidget matches the full input name, and a dynamic-combo branch
+            # input is named `<combo>.seed`, so only a top-level seed gets one.
+            has_control = not prefix and name in ("seed", "noise_seed")
         else:
             has_control = bool(meta.get("control_after_generate"))
         if has_control and controls_present is not None:
@@ -594,6 +596,9 @@ def _is_ignorable_tail(value: Any, node_type: str = "") -> bool:
     # its serializable widgets, in order, so an empty value past them is never read.
     if (value is None or value == "") and node_type in UI_ONLY_WIDGET_NODES:
         return True
+    # PreviewAny's Markdown/Plain text toggle (textPreviewWidgets.ts) is UI-only too.
+    if node_type == "PreviewAny" and isinstance(value, bool):
+        return True
     return isinstance(value, str) and (
         value in CONTROL_VALUES or value in UPLOAD_VALUES or value in LOAD_3D_BUTTON_VALUES
     )
@@ -607,6 +612,18 @@ def _is_legacy_bounding_box_fields(mapped: dict[str, tuple[Any, Any]], tail: lis
     _, last_spec = list(mapped.values())[-1]
     return _widget_type(last_spec) == "BOUNDING_BOX" and all(
         type(item) in (int, float) for item in tail
+    )
+
+
+def _is_custom_combo_tail(tail: list[Any], node_type: str) -> bool:
+    """CustomCombo (customWidgets.ts) adds a hidden ``index`` widget and one text
+    widget per option after ``choice``; the last option widget is always empty."""
+    return (
+        node_type == "CustomCombo"
+        and len(tail) >= 2
+        and type(tail[0]) is int
+        and all(isinstance(item, str) for item in tail[1:])
+        and tail[-1] == ""
     )
 
 
@@ -722,7 +739,7 @@ def slot_schema_findings(
 
     if consumed < len(values):
         tail = values[consumed:]
-        if _is_legacy_bounding_box_fields(mapped, tail):
+        if _is_legacy_bounding_box_fields(mapped, tail) or _is_custom_combo_tail(tail, node_type):
             tail = []
         if tail and not all(_is_ignorable_tail(item, node_type) for item in tail):
             findings.append(
