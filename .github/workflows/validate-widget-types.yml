@@ -113,6 +113,15 @@ jobs:
             exit 1
           fi
 
+      - name: Upload /object_info baseline
+        # Lets a template author reproduce a finding locally without starting ComfyUI:
+        # python3 scripts/validate/check_widget_types.py --object-info object_info.json templates blueprints
+        uses: actions/upload-artifact@v4
+        with:
+          name: object_info
+          path: object_info.json
+          retention-days: 14
+
       - name: List workflows changed by this PR
         if: github.event_name == 'pull_request'
         env:
