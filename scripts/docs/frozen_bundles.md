@@ -8,6 +8,8 @@ This is separate from **hub archive** (`archived/`, `archive_templates.py`) — 
 
 PyPI enforces a **~100 MB per-file** upload limit per wheel. Filled media wheels are frozen so routine template work does **not** rebuild or republish them (which would consume PyPI project quota and risks hitting the 100 MB ceiling).
 
+> `media-assets-03` was created with a raised **200 MiB per-file** limit (PyPI project settings → Project upload limit), so its freeze threshold is 200 MiB rather than 100 MB. Check the active shard's limit before freezing it.
+
 | Bundle | PyPI package | Pinned version | Wheel size (PyPI) | Notes |
 |--------|--------------|----------------|-------------------|--------|
 | `media-api` | `comfyui-workflow-templates-media-api` | 0.3.84 | **95.5 MB** | Near limit |
