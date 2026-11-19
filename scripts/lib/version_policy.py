@@ -14,6 +14,7 @@ BUNDLE_PACKAGE_MAP: dict[str, str] = {
     "media-other": "media_other",
     "media-assets-01": "media_assets_01",
     "media-assets-02": "media_assets_02",
+    "media-assets-03": "media_assets_03",
 }
 
 MEDIA_ASSET_EXTENSIONS = {
@@ -149,7 +150,7 @@ def get_additive_logo_bundle(policy: dict[str, Any] | None = None) -> str:
     return str(
         policy.get("additive_logo_bundle")
         or policy.get("recommended_asset_bundle")
-        or "media-assets-02"
+        or "media-assets-03"
     )
 
 

@@ -14,11 +14,12 @@ PyPI enforces a **~100 MB per-file** upload limit per wheel. Filled media wheels
 | `media-image` | `comfyui-workflow-templates-media-image` | 0.3.160 | **85.3 MB** | Near limit |
 | `media-video` | `comfyui-workflow-templates-media-video` | 0.3.101 | **99.5 MB** | At limit |
 | `media-other` | `comfyui-workflow-templates-media-other` | 0.3.229 | **85.0 MB** | Near limit |
-| `media-assets-01` | `comfyui-workflow-templates-media-assets-01` | 0.1.48 | **89.8 MB** | Near limit |
+| `media-assets-01` | `comfyui-workflow-templates-media-assets-01` | 0.1.48 | **89.8 MB** | Previous shard |
+| `media-assets-02` | `comfyui-workflow-templates-media-assets-02` | 0.1.35 | **91.3 MB** | Frozen 2026-11-19 — next shard opened |
 
-Re-check sizes: `curl -s https://pypi.org/pypi/comfyui-workflow-templates-media-assets-01/json` (wheel `size` field for the pinned version).
+Re-check sizes: `curl -s https://pypi.org/pypi/comfyui-workflow-templates-media-assets-02/json` (wheel `size` field for the pinned version).
 
-**New template media** goes to **`media-assets-02`**. When that wheel approaches the limit, freeze it and open `media-assets-03`.
+**New template media** goes to **`media-assets-03`**. When that wheel approaches the limit, freeze it and open `media-assets-04`.
 
 Unfreezing and shipping a new frozen wheel should be a **deliberate, rare** decision — e.g. a major split, asset cleanup, or architectural change — not part of normal template PRs.
 
@@ -26,7 +27,7 @@ Unfreezing and shipping a new frozen wheel should be a **deliberate, rare** deci
 
 | File | Role |
 |------|------|
-| [`scripts/data/version_policy.json`](../data/version_policy.json) | `frozen_packages`, `frozen_bundles` map, `recommended_asset_bundle` (`media-assets-02`) |
+| [`scripts/data/version_policy.json`](../data/version_policy.json) | `frozen_packages`, `frozen_bundles` map, `recommended_asset_bundle` (`media-assets-03`) |
 | [`scripts/data/frozen_bundle_inventory.json`](../data/frozen_bundle_inventory.json) | Snapshot: which template IDs are assigned to each frozen bundle in `bundles.json` |
 
 Regenerate inventory after editing frozen-bundle rows in `bundles.json`:
@@ -50,8 +51,8 @@ CI: [`.github/workflows/version-check.yml`](../../.github/workflows/version-chec
 
 ### New templates
 
-- Put **media assets** (thumbnails, etc.) in bundle **`media-assets-02`** in `bundles.json`.
-- Do **not** add new templates to frozen bundles: `media-api`, `media-image`, `media-video`, `media-other`, or `media-assets-01`.
+- Put **media assets** (thumbnails, etc.) in bundle **`media-assets-03`** in `bundles.json`.
+- Do **not** add new templates to frozen bundles: `media-api`, `media-image`, `media-video`, `media-other`, `media-assets-01`, or `media-assets-02`.
 
 Workflow / index JSON ships via the **`json`** package regardless of bundle assignment.
 
@@ -61,14 +62,14 @@ Workflow / index JSON ships via the **`json`** package regardless of bundle assi
 that wheel are listed once in `scripts/data/version_policy.json` → `frozen_logo_assets`.
 
 Any **new** file under `templates/logo/` that is **not** in that inventory automatically
-ships via `additive_logo_bundle` / `recommended_asset_bundle` (`media-assets-02`).
+ships via `additive_logo_bundle` / `recommended_asset_bundle` (`media-assets-03`).
 You do not need to update the policy list for each new provider logo.
 
 Prefer single-extension filenames (e.g. `sync_so.webp`, not `sync.so.webp`).
 
-The core manifest may attach a per-asset `"bundle": "media-assets-02"` override so the
+The core manifest may attach a per-asset `"bundle": "media-assets-03"` override so the
 loader resolves additive logos from the active package without republishing frozen
-`media-other` or `media-assets-01`.
+`media-other`, `media-assets-01`, or `media-assets-02`.
 
 ### Archive / remove from frozen bundles
 
@@ -95,7 +96,7 @@ Workflow JSON changes for frozen-bundle templates are **not** flagged — those 
 | PR type | Auto-bump |
 |---------|-----------|
 | Template / archive only (root version unchanged) | None |
-| Release PR (root version bumped) | `json`, `media-assets-02`, `core`, etc. — **not** `frozen_packages` |
+| Release PR (root version bumped) | `json`, `media-assets-03`, `core`, etc. — **not** `frozen_packages` |
 
 Frozen packages are **skipped** during bump analysis (no months-long `git log` / `git diff` since their last version). PR-scoped media edits under a frozen bundle are still detected via `merge_base..HEAD` and fail the release with a clear error. File-list git queries are cached across packages so post-`sync_bundles` working trees do not re-scan once per package.
 
@@ -115,7 +116,7 @@ See also: [`docs/PUBLISHING.md`](../../docs/PUBLISHING.md), [`docs/cicd/README.m
 
 To ship a new frozen wheel:
 
-1. Manually bump `packages/media_<bundle>/pyproject.toml` (or `packages/media_assets_01/pyproject.toml`)
+1. Manually bump `packages/media_<bundle>/pyproject.toml` (or `packages/media_assets_01/pyproject.toml`, `packages/media_assets_02/pyproject.toml`)
 2. Update the matching pin in root `pyproject.toml`
 3. Optionally remove the package from `frozen_packages` for one release PR
 4. Merge with `release` label (or force publish after merge)

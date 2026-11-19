@@ -111,11 +111,12 @@ gh pr edit <PR-NUMBER> --add-label release
 | PyPI package | Contents | Status |
 |--------------|----------|--------|
 | `comfyui-workflow-templates-json` | All workflow + index JSON | Active |
-| `comfyui-workflow-templates-media-assets-02` | New template thumbnails/media | Active |
-| `comfyui-workflow-templates-media-assets-01` | Previous asset shard | Frozen — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md) |
+| `comfyui-workflow-templates-media-assets-03` | New template thumbnails/media | Active |
+| `comfyui-workflow-templates-media-assets-02` | Previous asset shard | Frozen — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md) |
+| `comfyui-workflow-templates-media-assets-01` | Older asset shard | Frozen — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md) |
 | `comfyui-workflow-templates-media-{api,image,video,other}` | Legacy assets only (JSON stripped) | Frozen — see [`scripts/docs/frozen_bundles.md`](../scripts/docs/frozen_bundles.md) |
 
-JSON fixes bump only the `json` package (~28MB). New templates assign assets via `bundles.json` → `media-assets-02`.
+JSON fixes bump only the `json` package (~28MB). New templates assign assets via `bundles.json` → `media-assets-03`.
 
 ## Package Size Considerations
 
@@ -128,8 +129,9 @@ Current wheel sizes on PyPI (pinned versions in root `pyproject.toml`):
 - `media_video` (0.3.101): **99.5 MB**
 - `media_other` (0.3.229): **85.0 MB**
 - `media_assets_01` (0.1.47): **89.8 MB**
+- `media_assets_02` (0.1.35): **91.3 MB**
 
-New template assets go to `media-assets-02`. Unfreezing a frozen wheel should only happen for a deliberate, larger change (split, cleanup, or redesign) — not routine template PRs.
+New template assets go to `media-assets-03`. Unfreezing a frozen wheel should only happen for a deliberate, larger change (split, cleanup, or redesign) — not routine template PRs.
 
 Label-based publishing also avoids rebuilding wheels on every merge, which saves PyPI project quota (~10 GB per project).
 

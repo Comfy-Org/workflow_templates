@@ -20,7 +20,7 @@ Related skills (do not replace this one):
 - `name` must match the workflow JSON filename (without `.json`).
 - **Always** run `python3 scripts/sync/sync_bundles.py` after editing `bundles.json` or renaming template assets.
 - **Always** validate after structural changes (see Validation below).
-- For **new** templates, assign media to `media-assets-02` — see [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
+- For **new** templates, assign media to `media-assets-03` — see [`scripts/docs/frozen_bundles.md`](../../../scripts/docs/frozen_bundles.md).
 - Bump root `pyproject.toml` only for intentional PyPI releases (`release` label).
 - Use double-quotes `"` in all JSON files.
 - Model download URLs must produce filenames that **exactly** match `widgets_values` in the workflow JSON.
@@ -113,7 +113,7 @@ Existing catalog values follow this rule — the `0.39.1` / `0.39.2` entries wer
 
 ### Step 4 — Bundle
 
-Add the name to the correct array in `bundles.json`. New media → `media-assets-02`.
+Add the name to the correct array in `bundles.json`. New media → `media-assets-03`.
 
 ```bash
 python3 scripts/sync/sync_bundles.py
@@ -303,7 +303,7 @@ python3 scripts/validate/validate_thumbnails.py
 | "Rename X to Y" / "把 X 重命名成 Y" | Renaming Steps 1–6 |
 | "Change the template name / slug" | Renaming (not title-only) |
 | "Add a thumbnail for template X" | Prefer `/managing-thumbnails` |
-| "What bundle?" | New media → `media-assets-02`; `media-*` and `media-assets-01` frozen |
+| "What bundle?" | New media → `media-assets-03`; `media-*`, `media-assets-01` and `media-assets-02` frozen |
 | "Validate my template" | Validation section |
 | "Sync translations" / "加翻译" | Edit `scripts/data/i18n.json` first, then Adding Step 8 / `/managing-translations` |
 | "FLUX title" / "BFL brand name" | [Black Forest Labs product names](#black-forest-labs-product-names) |

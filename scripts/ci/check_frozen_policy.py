@@ -77,7 +77,7 @@ def detect_impacts(base_ref: str) -> list[PolicyImpact]:
     policy = load_version_policy(VERSION_POLICY_FILE)
     frozen_packages = get_frozen_packages(policy)
     frozen_bundles = get_frozen_bundle_map(policy)
-    recommended = str(policy.get("recommended_asset_bundle", "media-assets-02"))
+    recommended = str(policy.get("recommended_asset_bundle", "media-assets-03"))
     if not frozen_packages:
         return []
 
@@ -195,7 +195,7 @@ def build_comment(impacts: list[PolicyImpact]) -> str:
     inventory = build_frozen_bundle_inventory(
         bundles, policy, REPO_ROOT / "pyproject.toml"
     )
-    recommended_bundle = policy.get("recommended_asset_bundle", "media-assets-02")
+    recommended_bundle = policy.get("recommended_asset_bundle", "media-assets-03")
     inventory_path = policy.get(
         "frozen_bundle_inventory", "scripts/data/frozen_bundle_inventory.json"
     )
@@ -245,7 +245,7 @@ def build_comment(impacts: list[PolicyImpact]) -> str:
             "### What to do",
             f"- Assign **new** templates to `{recommended_bundle}`, not frozen bundles "
             "(`media-api`, `media-image`, `media-video`, `media-other`, "
-            "`media-assets-01`).",
+            "`media-assets-01`, `media-assets-02`).",
             "- Workflow JSON still ships via the `json` package; legacy media wheels do not update automatically.",
             "- After editing frozen bundle assignments in `bundles.json`, run "
             "`python scripts/sync/sync_frozen_inventory.py`.",
