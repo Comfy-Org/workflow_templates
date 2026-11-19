@@ -5,6 +5,7 @@ on:
     paths:
       - 'templates/**.json'
       - 'scripts/validate/check_links.py'
+      - 'scripts/validate/recheck_github_links.py'
       - 'scripts/data/whitelist.json'
       - '.github/workflows/link-checker.yml'
       - '.github/workflows/link-check-comment.yml'
@@ -23,6 +24,7 @@ jobs:
             templates/*.json
             input/
             scripts/validate/check_links.py
+            scripts/validate/recheck_github_links.py
             scripts/lib/paths.py
             scripts/data/whitelist.json
           sparse-checkout-cone-mode: false
@@ -57,6 +59,11 @@ jobs:
       - name: Check links with lychee
         id: lychee
         if: steps.extract_links.outputs.extract_failed == 'false'
+        env:
+          # GitHub throttles bulk checks of github.com pages with 5xx even for files
+          # that exist. lychee uses the token for its own GitHub requests, and the
+          # recheck below confirms each 5xx github.com error through the API.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Checking extracted links..."
           link_errors=false
@@ -101,6 +108,13 @@ jobs:
               END { exit 1 }
             ' lychee-report.md; then
               link_errors=true
+            fi
+
+            # Errors that are only 5xx on github.com links the API confirms exist are
+            # throttling, not broken links. A 404 or any other error still fails.
+            if [ "$link_errors" = true ] && python3 scripts/validate/recheck_github_links.py lychee-report.md; then
+              echo "All errors were GitHub 5xx on links the GitHub API confirms exist."
+              link_errors=false
             fi
 
             if [ "$link_errors" = true ]; then
