@@ -665,7 +665,6 @@ class MainTests(unittest.TestCase):
             self.assertIn("workflow path not found", str(raised.exception.code))
 
 
-
 class SlotSchemaDriftTests(unittest.TestCase):
     """#1387-class drift must fail this CI check (runtime /object_info)."""
 
@@ -774,7 +773,6 @@ class SlotSchemaDriftTests(unittest.TestCase):
         self.assertIn("invalid_combo_value", reasons)
         self.assertTrue(all(f.is_slot for f in findings))
 
-
     def test_invalid_dynamic_combo_key_named_only(self):
         """Named-only nodes skip slot_schema_findings; still flag bad DynamicCombo keys."""
         from check_widget_types import check_workflow
@@ -812,9 +810,7 @@ class SlotSchemaDriftTests(unittest.TestCase):
                 }
             ]
         }
-        findings = check_workflow(
-            Path("named-only.json"), data, {"SeedreamLike": node_def}
-        )
+        findings = check_workflow(Path("named-only.json"), data, {"SeedreamLike": node_def})
         slot = [f for f in findings if f.is_slot]
         self.assertTrue(slot)
         self.assertIn("invalid_combo_value", " ".join(f.reason for f in slot))
@@ -842,9 +838,7 @@ class SlotSchemaDriftTests(unittest.TestCase):
                 }
             ]
         }
-        findings = check_workflow(
-            Path("named-kling.json"), data, {"KlingLike": node_def}
-        )
+        findings = check_workflow(Path("named-kling.json"), data, {"KlingLike": node_def})
         slot = [f for f in findings if f.is_slot]
         self.assertTrue(slot)
         self.assertIn("seed", {f.input_name for f in slot})
@@ -864,9 +858,7 @@ class SlotSchemaDriftTests(unittest.TestCase):
                             "options": [
                                 {
                                     "key": "lite",
-                                    "inputs": {
-                                        "required": {"max_images": ["INT", {"default": 1}]}
-                                    },
+                                    "inputs": {"required": {"max_images": ["INT", {"default": 1}]}},
                                 }
                             ]
                         },
@@ -885,6 +877,178 @@ class SlotSchemaDriftTests(unittest.TestCase):
             slot_schema_findings(Path("lite.json"), "", node, "SeedreamLike", node_def),
             [],
         )
+
+
+class FrontendUiSlotTests(unittest.TestCase):
+    """Slots the frontend writes or omits on its own are not schema drift (PM-2429)."""
+
+    def test_empty_extra_tail_is_ignorable(self):
+        # Older frontends saved the value of UI-only widgets (PreviewAny's text
+        # preview, LoadAudio's audio player, SaveGLB's 3D viewer) after the input
+        # widgets. They hold no value and the frontend never restores them.
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"source": ["*", {}]}},
+            "input_order": {"required": ["source"]},
+        }
+        node = {"id": 3, "type": "PreviewAny", "inputs": [], "widgets_values": [None, None, None]}
+        self.assertEqual(
+            slot_schema_findings(Path("preview.json"), "", node, "PreviewAny", node_def), []
+        )
+        # Older frontends also saved its Markdown/Plain text toggle.
+        node["widgets_values"] = [None, None, False]
+        self.assertEqual(
+            slot_schema_findings(Path("preview.json"), "", node, "PreviewAny", node_def), []
+        )
+        audio_def = {
+            "input": {
+                "required": {"audio": ["COMBO", {"options": ["a.mp3"], "audio_upload": True}]}
+            },
+            "input_order": {"required": ["audio"]},
+        }
+        audio = {"id": 8, "type": "LoadAudio", "inputs": [], "widgets_values": ["a.mp3", None, ""]}
+        self.assertEqual(
+            slot_schema_findings(Path("audio.json"), "", audio, "LoadAudio", audio_def), []
+        )
+
+    def test_extra_tail_with_a_value_still_fails(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"width": ["INT", {"default": 512}]}},
+            "input_order": {"required": ["width"]},
+        }
+        node = {"id": 1, "type": "Crop", "inputs": [], "widgets_values": [512, "", 768]}
+        findings = slot_schema_findings(Path("crop.json"), "", node, "Crop", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
+
+    def test_empty_extra_tail_fails_on_nodes_without_ui_only_widgets(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"width": ["INT", {"default": 512}]}},
+            "input_order": {"required": ["width"]},
+        }
+        node = {"id": 1, "type": "Crop", "inputs": [], "widgets_values": [512, ""]}
+        findings = slot_schema_findings(Path("crop.json"), "", node, "Crop", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
+
+    def test_unserialized_image_compare_widget_is_not_required(self):
+        # The frontend creates the IMAGECOMPARE widget with serialize = false, so a
+        # workflow it saves has no slot for it.
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {"compare_view": ["IMAGECOMPARE", {}]},
+                "optional": {"image_a": ["IMAGE", {}], "image_b": ["IMAGE", {}]},
+            },
+            "input_order": {"required": ["compare_view"], "optional": ["image_a", "image_b"]},
+        }
+        node = {"id": 16, "type": "ImageCompare", "inputs": [], "widgets_values": []}
+        self.assertEqual(
+            slot_schema_findings(Path("compare.json"), "", node, "ImageCompare", node_def), []
+        )
+
+    def test_legacy_bounding_box_fields_after_the_box(self):
+        # Older frontends also saved the x/y/width/height number widgets they draw
+        # under a BOUNDING_BOX (ImageCropV2 in 3d_pixal3d_multi_views.json).
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "image": ["IMAGE", {}],
+                    "crop_region": ["BOUNDING_BOX", {"component": "ImageCrop"}],
+                }
+            },
+            "input_order": {"required": ["image", "crop_region"]},
+        }
+        box = {"x": 0, "y": 0, "width": 1669, "height": 2688}
+        node = {"id": 338, "type": "ImageCropV2", "inputs": [], "widgets_values": [box, 0, 0, 0, 0]}
+        node["widgets_values"] = [box, 0, 0, 512, 512]
+        self.assertEqual(
+            slot_schema_findings(Path("crop.json"), "", node, "ImageCropV2", node_def), []
+        )
+        node["widgets_values"] = [box, 0, 0, 512, 512, 7]
+        findings = slot_schema_findings(Path("crop.json"), "", node, "ImageCropV2", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
+
+    def test_seed_inside_a_dynamic_combo_branch_owns_no_control_slot(self):
+        # The frontend adds the seed control only for an input named exactly
+        # seed/noise_seed (useIntWidget). A branch input is named
+        # `sampling_mode.seed`, so TextGenerate saves no control value for it.
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {
+                "required": {
+                    "prompt": ["STRING", {}],
+                    "sampling_mode": _dyn(
+                        ("on", {"required": {"temperature": ["FLOAT", {}], "seed": ["INT", {}]}}),
+                        ("off", {}),
+                    ),
+                }
+            },
+            "input_order": {"required": ["prompt", "sampling_mode"]},
+        }
+        node = {
+            "id": 11,
+            "type": "TextGenerate",
+            "inputs": [],
+            "widgets_values": ["", "on", 0.7, 0],
+        }
+        self.assertEqual(
+            slot_schema_findings(Path("textgen.json"), "", node, "TextGenerate", node_def), []
+        )
+        # A branch seed that declares a control still needs its control value.
+        node_def["input"]["required"]["sampling_mode"] = _dyn(
+            ("on", {"required": {"seed": ["INT", {"control_after_generate": True}]}}),
+        )
+        node["widgets_values"] = ["", "on", 0]
+        findings = slot_schema_findings(Path("textgen.json"), "", node, "TextGenerate", node_def)
+        self.assertEqual(
+            [f.input_name for f in findings], ["sampling_mode.seed.control_after_generate"]
+        )
+
+    def test_top_level_seed_still_owns_a_control_slot_by_name(self):
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"seed": ["INT", {}]}},
+            "input_order": {"required": ["seed"]},
+        }
+        node = {"id": 1, "type": "Sampler", "inputs": [], "widgets_values": [0]}
+        findings = slot_schema_findings(Path("s.json"), "", node, "Sampler", node_def)
+        self.assertEqual([f.input_name for f in findings], ["seed.control_after_generate"])
+
+    def test_custom_combo_index_and_option_slots(self):
+        # CustomCombo (customWidgets.ts) adds a hidden `index` widget and one text
+        # widget per option, always ending in an empty one, after `choice`.
+        from check_widget_types import slot_schema_findings
+
+        node_def = {
+            "input": {"required": {"choice": ["COMBO", {"options": []}]}},
+            "input_order": {"required": ["choice"]},
+        }
+        node = {
+            "id": 9,
+            "type": "CustomCombo",
+            "inputs": [],
+            "widgets_values": ["9:16", 1, "16:9", "9:16", ""],
+        }
+        self.assertEqual(
+            slot_schema_findings(Path("cc.json"), "", node, "CustomCombo", node_def), []
+        )
+        for bad in (["9:16", "1", "16:9", ""], ["9:16", 1, "16:9", 5, ""], ["9:16", 1, "16:9"]):
+            node["widgets_values"] = bad
+            findings = slot_schema_findings(Path("cc.json"), "", node, "CustomCombo", node_def)
+            self.assertEqual([f.input_name for f in findings], ["widgets_values"], bad)
+        # The rule is CustomCombo's alone.
+        node["widgets_values"] = ["9:16", 1, "16:9", "9:16", ""]
+        findings = slot_schema_findings(Path("cc.json"), "", node, "OtherCombo", node_def)
+        self.assertEqual([f.input_name for f in findings], ["widgets_values"])
 
 
 if __name__ == "__main__":
