@@ -1,0 +1,983 @@
+{
+  "id": "fb40edf3-32e3-4b5d-a44f-51edfe06b78a",
+  "revision": 0,
+  "last_node_id": 25,
+  "last_link_id": 35,
+  "nodes": [
+    {
+      "id": 2,
+      "type": "HeyGenDecisionScore",
+      "pos": [
+        730,
+        2020
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 3
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "BOOLEAN",
+          "links": [
+            10
+          ]
+        },
+        {
+          "name": "score",
+          "type": "FLOAT",
+          "links": [
+            11,
+            13
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenDecisionScore"
+      },
+      "widgets_values": [
+        "heygen-decision-1",
+        "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        6
+      ],
+      "widgets_values_named": {
+        "model": "heygen-decision-1",
+        "question": "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        "threshold": 6
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 3,
+      "type": "LoadImage",
+      "pos": [
+        770,
+        1370
+      ],
+      "size": [
+        360,
+        400
+      ],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            3,
+            29,
+            34
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "cartoon_kid_inventor.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "cartoon_kid_inventor.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 4,
+      "type": "LoadImage",
+      "pos": [
+        280,
+        2430
+      ],
+      "size": [
+        410,
+        400
+      ],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "IMAGE",
+          "type": "IMAGE",
+          "links": [
+            24,
+            35
+          ]
+        },
+        {
+          "name": "MASK",
+          "type": "MASK",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "LoadImage"
+      },
+      "widgets_values": [
+        "tiefling_sorcerer.png",
+        "image"
+      ],
+      "widgets_values_named": {
+        "image": "tiefling_sorcerer.png",
+        "upload": "image"
+      }
+    },
+    {
+      "id": 7,
+      "type": "PreviewAny",
+      "pos": [
+        1290,
+        1990
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 10
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": null
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 8,
+      "type": "PreviewAny",
+      "pos": [
+        1290,
+        2200
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 11
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 9,
+      "type": "ComfyMathExpression",
+      "pos": [
+        1670,
+        2210
+      ],
+      "size": [
+        400,
+        150
+      ],
+      "flags": {},
+      "order": 14,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "values.a",
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 13
+        },
+        {
+          "name": "values.b",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": 20
+        },
+        {
+          "name": "values.c",
+          "shape": 7,
+          "type": "FLOAT,INT,BOOLEAN",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "FLOAT",
+          "type": "FLOAT",
+          "links": null
+        },
+        {
+          "name": "INT",
+          "type": "INT",
+          "links": null
+        },
+        {
+          "name": "BOOL",
+          "type": "BOOLEAN",
+          "links": [
+            15
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfyMathExpression"
+      },
+      "widgets_values": [
+        "a > b"
+      ],
+      "widgets_values_named": {
+        "expression": "a > b"
+      }
+    },
+    {
+      "id": 12,
+      "type": "ComfySwitchNode",
+      "pos": [
+        1740,
+        2430
+      ],
+      "size": [
+        270,
+        80
+      ],
+      "flags": {},
+      "order": 16,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "on_false",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 35
+        },
+        {
+          "name": "on_true",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 34
+        },
+        {
+          "name": "switch",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "switch"
+          },
+          "link": 15
+        }
+      ],
+      "outputs": [
+        {
+          "name": "output",
+          "type": "IMAGE",
+          "links": [
+            19
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ComfySwitchNode"
+      },
+      "widgets_values": [
+        false
+      ],
+      "widgets_values_named": {
+        "switch": false
+      },
+      "color": "#322",
+      "bgcolor": "#533"
+    },
+    {
+      "id": 14,
+      "type": "PreviewImage",
+      "pos": [
+        2280,
+        2000
+      ],
+      "size": [
+        470,
+        740
+      ],
+      "flags": {},
+      "order": 17,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "link": 19
+        }
+      ],
+      "outputs": [
+        {
+          "name": "images",
+          "type": "IMAGE",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewImage"
+      }
+    },
+    {
+      "id": 15,
+      "type": "HeyGenDecisionScore",
+      "pos": [
+        740,
+        2440
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 24
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "BOOLEAN",
+          "links": [
+            27
+          ]
+        },
+        {
+          "name": "score",
+          "type": "FLOAT",
+          "links": [
+            20,
+            28
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenDecisionScore"
+      },
+      "widgets_values": [
+        "heygen-decision-1",
+        "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        6
+      ],
+      "widgets_values_named": {
+        "model": "heygen-decision-1",
+        "question": "Rate the technical quality of the image from 1 (worst) to 10 (best).",
+        "threshold": 6
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 16,
+      "type": "PreviewAny",
+      "pos": [
+        1890,
+        1290
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 10,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 30
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 17,
+      "type": "PreviewAny",
+      "pos": [
+        1890,
+        1490
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 11,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 31
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 18,
+      "type": "PreviewAny",
+      "pos": [
+        1890,
+        1690
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 12,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 32
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 19,
+      "type": "PreviewAny",
+      "pos": [
+        1290,
+        2610
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 15,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 20,
+      "type": "PreviewAny",
+      "pos": [
+        1290,
+        2410
+      ],
+      "size": [
+        210,
+        130
+      ],
+      "flags": {},
+      "order": 13,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "source",
+          "type": "*",
+          "link": 27
+        }
+      ],
+      "outputs": [
+        {
+          "name": "STRING",
+          "type": "STRING",
+          "links": []
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "PreviewAny"
+      },
+      "widgets_values": [],
+      "widgets_values_named": {}
+    },
+    {
+      "id": 21,
+      "type": "HeyGenDecisionYesNo",
+      "pos": [
+        1230,
+        1370
+      ],
+      "size": [
+        400,
+        240
+      ],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "images.image_1",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": 29
+        },
+        {
+          "name": "images.image_2",
+          "shape": 7,
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "audio_1",
+          "shape": 7,
+          "type": "AUDIO",
+          "link": null
+        },
+        {
+          "name": "video_1",
+          "shape": 7,
+          "type": "VIDEO",
+          "link": null
+        },
+        {
+          "name": "text",
+          "shape": 7,
+          "type": "STRING",
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "name": "result",
+          "type": "BOOLEAN",
+          "links": [
+            30
+          ]
+        },
+        {
+          "name": "answer",
+          "type": "STRING",
+          "links": [
+            31
+          ]
+        },
+        {
+          "name": "probability",
+          "type": "FLOAT",
+          "links": [
+            32
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "HeyGenDecisionYesNo"
+      },
+      "widgets_values": [
+        "heygen-decision-1",
+        "Is there a person in the image?",
+        0.5
+      ],
+      "widgets_values_named": {
+        "model": "heygen-decision-1",
+        "question": "Is there a person in the image?",
+        "threshold": 0.5
+      },
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 24,
+      "type": "MarkdownNote",
+      "pos": [
+        280,
+        1400
+      ],
+      "size": [
+        410,
+        350
+      ],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### Case 1 · one image, one verdict\n\n`Load Image → Decision (Yes/No) → Preview as Text`\n\nThe question is *\"Is there a person in the image?\"*. `probability` is the confidence in \"yes\"; `result`\nturns true once it clears the threshold (0.5 here).\n\nGood for publish-ready checks, subject facing the camera, clean background, watermark / logo detection,\ncontent gates. Change the question, run it, watch `probability` move — then wire `result` into a switch.\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Case 1 · one image, one verdict\n\n`Load Image → Decision (Yes/No) → Preview as Text`\n\nThe question is *\"Is there a person in the image?\"*. `probability` is the confidence in \"yes\"; `result`\nturns true once it clears the threshold (0.5 here).\n\nGood for publish-ready checks, subject facing the camera, clean background, watermark / logo detection,\ncontent gates. Change the question, run it, watch `probability` move — then wire `result` into a switch.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 25,
+      "type": "MarkdownNote",
+      "pos": [
+        280,
+        2020
+      ],
+      "size": [
+        410,
+        310
+      ],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "### Case 2 · two images, scored and compared\n\nEach image gets its own 1–10 score against the same question; `Comfy Math Expression` compares the two floats\nand `If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `abs(a - b) > 1` (only when clearly\nbetter) · `a > 6 && a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
+      ],
+      "widgets_values_named": {
+        "text": "### Case 2 · two images, scored and compared\n\nEach image gets its own 1–10 score against the same question; `Comfy Math Expression` compares the two floats\nand `If/Else Switch` passes the winner to `Preview Image`.\n\nRules you can drop into the expression: `a > b` (current) · `a < b` · `abs(a - b) > 1` (only when clearly\nbetter) · `a > 6 && a > b` (good in absolute terms *and* better). Both calls are billed — this is \"best of two\",\nworth it when the next step is far more expensive.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    },
+    {
+      "id": 22,
+      "type": "MarkdownNote",
+      "pos": [
+        -420,
+        1240
+      ],
+      "size": [
+        530,
+        580
+      ],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [],
+      "properties": {},
+      "widgets_values": [
+        "# HeyGen Decision — two cases\n\nThe same partner node used two ways in one graph.\n\n- **Case 1 · one image, one verdict** — ask a yes/no question, read the boolean and the probability. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two images, scored and compared** — score both candidates, compare the numbers with a math rule, and let a switch pass the winner downstream.\n\nBoth cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **HeyGen Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **HeyGen Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (optional), up to **4 images** (`image_1…image_4`), one **audio** (`audio_1`) or one **video**\n(`video_1`, ≤60 s). Name them in the question, e.g. *\"Does image_2 show the same person as image_1?\"*\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the two `Load Image` nodes.\n3. Ask one thing per node, and phrase it so **\"yes\" is the case you act on**.\n4. Tune the threshold — raise it when a false positive is expensive.\n5. Route `result` into `If/Else Switch` (two branches) or into `Comfy Math Expression` + switch (a rule).\n\n**Cost** is per input token, so a short question or one image costs a fraction of a cent. Put the decision\n*before* the expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
+      ],
+      "widgets_values_named": {
+        "text": "# HeyGen Decision — two cases\n\nThe same partner node used two ways in one graph.\n\n- **Case 1 · one image, one verdict** — ask a yes/no question, read the boolean and the probability. The cheapest gate you can put in front of an expensive node.\n- **Case 2 · two images, scored and compared** — score both candidates, compare the numbers with a math rule, and let a switch pass the winner downstream.\n\nBoth cases run in one queue. These are API (partner) nodes: sign in with a Comfy account, or set an API key\n(Settings → API Keys → My API Key).\n\n## What the nodes return\n\n| Node | Outputs |\n| --- | --- |\n| **HeyGen Decision (Yes/No)** | `result` (BOOLEAN), `answer` (\"yes\"/\"no\"), `probability` (0–1) — flips at the threshold widget, 0.01–0.99 |\n| **HeyGen Decision (Score)** | `result` (BOOLEAN), `score` (1–10) — true when score ≥ threshold, 1–10 |\n\nConnect text (optional), up to **4 images** (`image_1…image_4`), one **audio** (`audio_1`) or one **video**\n(`video_1`, ≤60 s). Name them in the question, e.g. *\"Does image_2 show the same person as image_1?\"*\n\n## How to use\n\n1. Sign in, or paste an API key.\n2. Swap the demo images in the two `Load Image` nodes.\n3. Ask one thing per node, and phrase it so **\"yes\" is the case you act on**.\n4. Tune the threshold — raise it when a false positive is expensive.\n5. Route `result` into `If/Else Switch` (two branches) or into `Comfy Math Expression` + switch (a rule).\n\n**Cost** is per input token, so a short question or one image costs a fraction of a cent. Put the decision\n*before* the expensive step and put that step on the accepted branch — the rejected branch then costs nothing.\n"
+      },
+      "color": "#222",
+      "bgcolor": "#000"
+    }
+  ],
+  "links": [
+    [
+      10,
+      2,
+      0,
+      7,
+      0,
+      "BOOLEAN"
+    ],
+    [
+      11,
+      2,
+      1,
+      8,
+      0,
+      "FLOAT"
+    ],
+    [
+      15,
+      9,
+      2,
+      12,
+      2,
+      "BOOLEAN"
+    ],
+    [
+      19,
+      12,
+      0,
+      14,
+      0,
+      "IMAGE"
+    ],
+    [
+      27,
+      15,
+      0,
+      20,
+      0,
+      "BOOLEAN"
+    ],
+    [
+      28,
+      15,
+      1,
+      19,
+      0,
+      "FLOAT"
+    ],
+    [
+      30,
+      21,
+      0,
+      16,
+      0,
+      "BOOLEAN"
+    ],
+    [
+      31,
+      21,
+      1,
+      17,
+      0,
+      "STRING"
+    ],
+    [
+      32,
+      21,
+      2,
+      18,
+      0,
+      "FLOAT"
+    ],
+    [
+      34,
+      3,
+      0,
+      12,
+      1,
+      "IMAGE"
+    ],
+    [
+      35,
+      4,
+      0,
+      12,
+      0,
+      "IMAGE"
+    ],
+    [
+      3,
+      3,
+      0,
+      2,
+      0,
+      "IMAGE"
+    ],
+    [
+      13,
+      2,
+      1,
+      9,
+      0,
+      "FLOAT"
+    ],
+    [
+      20,
+      15,
+      1,
+      9,
+      1,
+      "FLOAT"
+    ],
+    [
+      24,
+      4,
+      0,
+      15,
+      0,
+      "IMAGE"
+    ],
+    [
+      29,
+      3,
+      0,
+      21,
+      0,
+      "IMAGE"
+    ]
+  ],
+  "groups": [
+    {
+      "id": 1,
+      "title": "Case 1 · One image, one verdict",
+      "bounding": [
+        210,
+        1200,
+        2610,
+        670
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 2,
+      "title": "Case 2 · Two images, scored and compared",
+      "bounding": [
+        210,
+        1890,
+        2612.690699489064,
+        1180
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    },
+    {
+      "id": 3,
+      "title": "Dispatch · math rule picks the winner",
+      "bounding": [
+        1620,
+        2110,
+        510,
+        480
+      ],
+      "color": "#3f789e",
+      "flags": {}
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 0.3833354836973329,
+      "offset": [
+        1429.0371560122658,
+        -707.7022981703481
+      ]
+    },
+    "frontendVersion": "1.59.10"
+  },
+  "version": 0.4
+}
