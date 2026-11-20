@@ -29,7 +29,9 @@ python scripts/ccc/sync_to_ccc.py --all --change-id ci-full-sync
    reported, never faked.
 2. Finds the record that owns this template (see *Identity* below), creating a draft if there is
    none: `schema_version 2`, `visibility: public`, `enabled`, `source_locale: en`,
-   `available_surfaces: ["hub"]`, `template_name = <stem>`.
+   `available_surfaces: ["hub"]`, `template_name = <stem>`. New slugs are derived from the
+   template **title** (`ideogram-4-5-text-to-image`), matching how the existing public URLs are
+   built; existing records keep whatever slug they have.
 3. Uploads the graph pair as `src: r2` (`<slug>/workflow-ui-v1.json`, `<slug>/workflow-api-v1.json`)
    and three WebP covers from `templates/<stem>-1.webp`, downscaled to ≤960 px and ≤160 KiB —
    the ceilings the publication rules enforce.
@@ -39,25 +41,50 @@ python scripts/ccc/sync_to_ccc.py --all --change-id ci-full-sync
 5. Verifies every pinned media reference serves bytes at
    `/preview-media/<draft_rev>/<id>/<file_version_uid>` and fails the run otherwise.
 
-## Identity: `template_name`, never the slug
+## Identity: the committed ledger decides, the script just writes
 
-`template_name` is the template file stem and the only key this tool trusts. Lookup order:
-
-1. a record (live or draft) whose `template_name` equals the stem — the normal case after the
-   first sync;
-2. a legacy record with `template_name: null` whose slug starts with the derived slug or whose
-   title matches exactly — **adopted**, and `template_name` is written onto it, because a second
-   record for one workflow is a defect (the catalog does not dedupe slugs);
-3. otherwise create a new draft.
-
-A record that already carries a *different* `template_name` is never touched. When slug and title
-have both drifted (renames, old imports), add an override to `scripts/ccc/template-map.json`:
+`scripts/ccc/template-map.json` is the single source of truth for *which catalog record a
+template is*:
 
 ```json
-{ "api_old_stem": "some-live-slug-0123456789ab" }
+{
+  "api_ideogram_v4_5_t2i": { "uid": "46a8ce16-…", "slug": "ideogram-4-5-text-to-image" },
+  "utility_topaz_illustration_upscale": "08b94833-…"
+}
 ```
 
-The override only has to exist once — the sync writes `template_name` onto the mapped record.
+Lookup is deterministic, in this order:
+
+1. **map entry** for the stem → write to that record, whatever its slug or title is;
+2. **`template_name == stem`** — records this tool already wrote are found by exact field match,
+   through the catalog's search filters (`search` on staging, `q` on items; a full live sweep
+   only on bulk runs);
+3. **create** a new draft, with `template_name` stamped on it, and print the new entry for the
+   ledger (`new-mappings.json`, also in the job summary).
+
+Nothing is adopted by slug or title similarity any more — that heuristic can silently pair the
+wrong record, which is how duplicates got created before. `--adopt-unmapped` still exists for
+the one-time bootstrap, and `audit_map.py` produces the evidence a human needs to write those
+ledger entries in the first place.
+
+Why a ledger and not a heuristic: of 775 template files and 703 live records, **3** records carry
+`template_name`, **0** derived slugs equal a live slug, and **667** live slugs still end in a
+legacy 12-hex share id that the repo does not store anywhere. The slugs are the public URLs
+(`/hub/workflows/<slug>`), so this file is also what a future migration must consume to keep
+those URLs alive — preserve the slug, or emit a redirect from it.
+
+`audit_map.py` builds the evidence once:
+
+```bash
+python3 scripts/ccc/audit_map.py --all          # ~775 conversions + 703 record graphs, read-only
+```
+
+It compares each template's converted API graph against each live record's stored graph (node
+class-type multiset + model weight filenames) and writes
+`scripts/ccc/template-map.proposed.json` with `confident` / `ambiguous` / `none` buckets. Review,
+copy the entries you trust into `template-map.json`, commit. That is a one-time cost: after the
+first sync every record carries `template_name`, so step 2 finds it without any evidence
+gathering.
 
 ## What it deliberately does not do
 

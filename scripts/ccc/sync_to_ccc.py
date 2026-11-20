@@ -73,8 +73,9 @@ class Catalog:
         headers = {"Idempotency-Key": idem} if idem else {}
         for attempt in range(retries):
             try:
+                t0 = time.time()
                 r = self.s.request(method, url, json=json_body, files=files, data=data,
-                                   headers=headers, timeout=120)
+                                   headers=headers, timeout=(15, 90))
             except requests.RequestException as exc:
                 if attempt == retries - 1:
                     raise SystemExit(f"{method} {path} transport error: {exc}")
@@ -87,6 +88,9 @@ class Catalog:
                 continue
             if r.status_code >= 400:
                 raise SystemExit(f"{method} {path} -> {r.status_code}: {r.text[:800]}")
+            elapsed = time.time() - t0
+            if elapsed > 10:
+                print(f"  · slow {method} {path} {r.status_code} {elapsed:.0f}s {len(r.content) // 1024}KB")
             return r.json() if r.content else {}
         raise SystemExit("unreachable")
 
@@ -99,9 +103,12 @@ class Catalog:
 
     def live_workflows(self):
         out, cursor = [], None
+        page = 0
         while True:
+            page += 1
             path = "/items?kind=WORKFLOW&limit=100" + (f"&cursor={cursor}" if cursor else "")
             d = self.call("GET", path)
+            print(f"  · live page {page}: {len(d.get('items', []))} records")
             out += d.get("items", [])
             if not d.get("has_more"):
                 break
@@ -110,11 +117,45 @@ class Catalog:
                 break
         return out
 
+    def live_search(self, term: str, limit: int = 50):
+        """Cheap live lookup; the list payload already carries template_name when set."""
+        term = (term or "").strip()
+        if not term:
+            return []
+        if not hasattr(self, "_live_search_cache"):
+            self._live_search_cache = {}
+        if term in self._live_search_cache:
+            return self._live_search_cache[term]
+        d = self.call("GET", f"/items?kind=WORKFLOW&limit={limit}&q={term}")
+        rows = d.get("items", [])
+        self._live_search_cache[term] = rows
+        return rows
+
+    def draft_search(self, term: str, limit: int = 100):
+        """Server-side filter over the staging view. `q` is rejected (400); `search` works."""
+        term = (term or "").strip()
+        if not term:
+            return []
+        if not hasattr(self, "_search_cache"):
+            self._search_cache = {}
+        if term in self._search_cache:
+            return self._search_cache[term]
+        try:
+            d = self.call("GET", f"/draft/staging?representation=page&limit={limit}&search={term}")
+        except SystemExit:
+            return []
+        rows = d.get("items", [])
+        self._search_cache[term] = rows
+        return rows
+
     def draft_rows(self):
         out, cursor = [], None
+        page = 0
         while True:
+            page += 1
             path = "/draft/staging?representation=page&limit=100" + (f"&cursor={cursor}" if cursor else "")
             d = self.call("GET", path)
+            print(f"  · draft page {page}: {len(d.get('items', []))} rows")
             out += d.get("items", [])
             cursor = (d.get("page") or {}).get("next_cursor")
             if not cursor:
@@ -157,6 +198,11 @@ def kebab(text: str) -> str:
     s = text.lower().replace("&", " and ")
     s = re.sub(r"[^a-z0-9]+", "-", s)
     return re.sub(r"-{2,}", "-", s).strip("-")
+
+
+def slug_for_title(title: str, stem: str) -> str:
+    """Public slugs in the catalog are title-based (`ideogram-4-5-text-to-image`)."""
+    return (kebab(title or "") or slug_for(stem))[:60].strip("-")
 
 
 def slug_for(stem: str) -> str:
@@ -282,7 +328,7 @@ def trim(text: str, limit: int) -> str:
 # ----------------------------------------------------------------------------- the sync
 class Syncer:
     def __init__(self, repo: Path, cat: Catalog, change_id: str, dry_run: bool,
-                 template_map: dict | None = None):
+                 template_map: dict | None = None, adopt_unmapped: bool = False):
         self.repo = repo
         self.cat = cat
         self.change_id = change_id
@@ -293,73 +339,118 @@ class Syncer:
         self.draft_rows_cache = None
         self._live = None
         self.template_map = template_map or {}
+        self.adopt_unmapped = adopt_unmapped
+        self.bulk = False  # one live sweep instead of per-stem searches
+        self.new_mappings: dict[str, str] = {}
 
-    # --- lookup
-    def find_record(self, stem: str, entry: dict):
-        """Find the record that owns this stem: ('live'|'draft', uid, doc, adopted).
-
-        Order of evidence:
-          1. `template_name == stem` (the identity this tool writes on every sync),
-          2. a legacy record with `template_name: null` whose slug starts with the derived slug
-             or whose title matches exactly — adopted, because creating a second record for
-             the same workflow is the defect we keep seeing in this catalog,
-          3. nothing.
-        A record that already carries a *different* template_name is never touched.
-        """
-        want_slug = slug_for(stem)
-        want_title = norm_title(entry.get("title") or "")
-
-        # explicit mapping wins: some legacy records carry an unrelated slug/title
-        mapped = self.template_map.get(stem)
-        if mapped:
-            for row in (self._live if self._live is not None else self.cat.live_workflows()):
-                slug = (row.get("slug") or "").split("/")[-1]
-                if mapped in (row.get("uid"), slug):
-                    uid = row.get("uid")
-                    doc = self.cat.live_record(uid)
-                    doc = doc.get("data") or doc
-                    print(f"  · mapped {stem} -> live {slug}")
-                    return "live", uid, doc, doc.get("template_name") != stem
-
-        # live side
+    # --- lookup (deterministic: the map file decides, never a name heuristic)
+    def _live_rows(self):
+        """One live sweep per run, shared by every lookup."""
         if self._live is None:
             self._live = self.cat.live_workflows()
-        for row in self._live:
+        return self._live
+
+    def resolve_mapped(self, stem: str):
+        """map[stem] -> (kind, uid, doc) using the committed ledger. None when not mapped."""
+        mapped = self.template_map.get(stem)
+        if not mapped:
+            return None
+        uid = mapped.get("uid") if isinstance(mapped, dict) else str(mapped)
+        slug = mapped.get("slug") if isinstance(mapped, dict) else None
+        if not uid and not slug:
+            return None
+        rows = self._live_rows()
+        for row in rows:
+            row_slug = (row.get("slug") or "").split("/")[-1]
+            if uid == row.get("uid") or (slug and slug == row_slug):
+                doc = self.cat.live_record(row.get("uid"))
+                doc = doc.get("data") or doc
+                return "live", row.get("uid"), doc
+        for row in self.cat.draft_search(slug or ""):
+            content = row.get("content") or {}
+            document = content.get("document") or {}
+            row_slug = (document.get("slug") or "").split("/")[-1]
+            if uid == content.get("uid") or (slug and slug == row_slug):
+                doc = self.cat.draft_record(content.get("uid"))
+                doc = doc.get("data") or doc
+                if not doc.get("is_deleted"):
+                    return "draft", content.get("uid"), doc
+        return None
+
+    def find_by_template_name(self, stem: str, entry: dict):
+        """Records this tool already wrote carry template_name == stem: exact, no guessing.
+
+        Looked up through the server-side filters (`search` on staging, `q` on items — `q` is
+        rejected with 400 on staging). A full live sweep only happens on bulk runs, where its
+        16 pages are amortised; per-stem searches keep a single-template CI run to seconds.
+        """
+        term = slug_for_title(entry.get("title") or "", stem)
+
+        live_rows = self._live_rows() if self.bulk else self.cat.live_search(term)
+        for row in live_rows:
+            data = row.get("data") or {}
+            if data.get("template_name") != stem:
+                continue
+            if "workflow_versions" in data:
+                return "live", row.get("uid"), data
+            doc = self.cat.live_record(row.get("uid"))
+            return "live", row.get("uid"), (doc.get("data") or doc)
+
+        for row in self.cat.draft_search(term):
+            content = row.get("content") or {}
+            uid = content.get("uid")
+            if not uid:
+                continue
+            doc = self.cat.draft_record(uid)
+            doc = doc.get("data") or doc
+            if doc.get("is_deleted") or doc.get("template_name") != stem:
+                continue
+            return "draft", uid, doc
+        return None, None, None
+
+    def find_record(self, stem: str, entry: dict):
+        """(kind, uid, doc, via) — 'map' | 'template_name' | None. Legacy adoption is opt-in."""
+        hit = self.resolve_mapped(stem)
+        if hit:
+            return hit[0], hit[1], hit[2], "map"
+        kind, uid, doc = self.find_by_template_name(stem, entry)
+        if uid:
+            return kind, uid, doc, "template_name"
+        if self.adopt_unmapped:
+            kind, uid, doc = self.adopt_legacy(stem, entry)
+            if uid:
+                return kind, uid, doc, "adopted-legacy"
+        return None, None, None, None
+
+    def adopt_legacy(self, stem: str, entry: dict):
+        """Opt-in only (--adopt-unmapped): match an old record by slug prefix or exact title."""
+        want_slug = slug_for(stem)
+        want_title = norm_title(entry.get("title") or "")
+        rows = self._live_rows()
+        for row in rows:
             slug = (row.get("slug") or "").split("/")[-1]
             title = norm_title((row.get("data") or {}).get("title") or "")
             if not (slug.startswith(want_slug) or (want_title and title == want_title)):
                 continue
-            uid = row.get("uid")
-            doc = self.cat.live_record(uid)
+            doc = self.cat.live_record(row.get("uid"))
             doc = doc.get("data") or doc
-            tname = doc.get("template_name")
-            if tname == stem:
-                return "live", uid, doc, False
-            if tname is None:
-                return "live", uid, doc, True
-
-        # draft side (staging documents are partial: resolve template_name per uid)
-        if self.draft_rows_cache is None:
-            self.draft_rows_cache = self.cat.draft_rows()
-        for row in self.draft_rows_cache:
+            if doc.get("template_name") in (None, "", stem):
+                print(f"  · adopting legacy live record {slug} (unverified pairing)")
+                return "live", row.get("uid"), doc
+        for row in self.cat.draft_search(want_slug):
             content = row.get("content") or {}
             document = content.get("document") or {}
             slug = (document.get("slug") or "").split("/")[-1]
-            if not slug:
+            title = norm_title(document.get("title") or "")
+            if not (slug.startswith(want_slug) or (want_title and title == want_title)):
                 continue
-            if not (slug.startswith(want_slug) or (want_title and norm_title(document.get("title")) == want_title)):
-                continue
-            uid = content.get("uid")
-            doc = self.cat.draft_record(uid)
+            doc = self.cat.draft_record(content.get("uid"))
             doc = doc.get("data") or doc
-            if doc.get("is_deleted"):
+            if doc.get("is_deleted") or doc.get("template_name") not in (None, "", stem):
                 continue
-            tname = doc.get("template_name")
-            if tname == stem:
-                return "draft", uid, doc, False
-            if tname is None:
-                return "draft", uid, doc, True
-        return None, None, None, False
+            print(f"  · adopting legacy draft record {slug} (unverified pairing)")
+            return "draft", content.get("uid"), doc
+        return None, None, None
 
     # --- document
     def build_fields(self, stem: str, entry: dict, api_path: Path | None):
@@ -396,17 +487,19 @@ class Syncer:
         if not ui.exists():
             return {"stem": stem, "status": "skipped", "reason": "template json missing"}
 
+        t0 = time.time()
         api_path = convert_to_api(self.repo, stem, self.work)
-        kind, uid, doc, adopted = self.find_record(stem, entry)
+        print(f"  · converted in {time.time() - t0:.0f}s ({'api ok' if api_path else 'no api graph'})")
+        kind, uid, doc, via = self.find_record(stem, entry)
         fields = self.build_fields(stem, entry, api_path)
 
         created = False
-        if adopted:
-            print(f"  · adopting existing {kind} record without template_name ({uid})")
+        if via == "map":
+            print(f"  · map -> {kind} {doc.get('slug')}")
         if uid is None:
             body = {
                 "type": "workflow",
-                "slug": slug_for(stem),
+                "slug": slug_for_title(fields["title"], stem),
                 "schema_version": 2,
                 "visibility": "public",
                 "enabled": True,
@@ -424,13 +517,14 @@ class Syncer:
             uid = resp.get("uid") or (resp.get("data") or {}).get("uid")
             if not uid:
                 return {"stem": stem, "status": "failed", "reason": "create returned no uid"}
+            self.new_mappings[stem] = uid
             created = True
             doc = self.cat.draft_record(uid)
             doc = doc.get("data") or doc
 
         # media: graph pair (r2) + three covers (media), one uid and one name per field
         refs = {}
-        slug = doc.get("slug") or slug_for(stem)
+        slug = doc.get("slug") or slug_for_title(fields["title"], stem)
         uploads = [("workflow_graph", "r2", f"{slug}/workflow-ui-v1.json", ui)]
         if api_path:
             uploads.append(("api_workflow", "r2", f"{slug}/workflow-api-v1.json", api_path))
@@ -490,7 +584,7 @@ class Syncer:
         return {
             "stem": stem, "status": "created" if created else "updated", "uid": uid, "slug": slug,
             "api": bool(api_path), "covers": "static_thumb" in refs, "bad_refs": bad,
-            "adopted_legacy": adopted, "source": kind,
+            "via": via, "source": kind,
             "preview": f"{os.environ.get('CCC_PUBLIC_ORIGIN', 'https://comfy.org')}/admin/catalog",
         }
 
@@ -518,7 +612,10 @@ def main() -> int:
     ap.add_argument("--change-id", default="ci-ccc-sync")
     ap.add_argument("--summary", default=os.environ.get("GITHUB_STEP_SUMMARY"))
     ap.add_argument("--map", default="scripts/ccc/template-map.json", type=Path,
-                    help="optional stem -> uid/slug overrides for legacy records")
+                    help="committed stem -> uid/slug ledger; the only source of identity")
+    ap.add_argument("--adopt-unmapped", action="store_true",
+                    help="bootstrap only: pair an unmapped template with a legacy record by slug "
+                         "prefix / exact title. Off by default because it can pair the wrong record.")
     args = ap.parse_args()
 
     stems = list(args.stems)
@@ -548,9 +645,12 @@ def main() -> int:
     map_path = args.repo / args.map if not args.map.is_absolute() else args.map
     if map_path.exists():
         raw = json.loads(map_path.read_text())
-        template_map = {k: v for k, v in raw.items() if not k.startswith("_") and isinstance(v, str)}
+        template_map = {k: v for k, v in raw.items()
+                        if not k.startswith("_") and isinstance(v, (str, dict))}
         print(f"template map: {len(template_map)} override(s) from {map_path}")
-    syncer = Syncer(args.repo, cat, args.change_id, args.dry_run, template_map)
+    syncer = Syncer(args.repo, cat, args.change_id, args.dry_run, template_map,
+                    adopt_unmapped=args.adopt_unmapped)
+    syncer.bulk = len(stems) > 10
     results = []
     for stem in stems:
         print(f"== {stem}")
@@ -560,6 +660,12 @@ def main() -> int:
             results.append({"stem": stem, "status": "failed", "reason": str(exc)[:400]})
         except Exception as exc:  # noqa: BLE001 - one record must not kill the batch
             results.append({"stem": stem, "status": "failed", "reason": f"{type(exc).__name__}: {exc}"[:400]})
+
+    if syncer.new_mappings:
+        ledger = syncer.work / "new-mappings.json"
+        ledger.write_text(json.dumps(syncer.new_mappings, indent=1, sort_keys=True))
+        print(f"new records created — add these to scripts/ccc/template-map.json:\n"
+              + json.dumps(syncer.new_mappings, indent=1, sort_keys=True))
 
     ok = [r for r in results if r["status"] in ("created", "updated")]
     bad = [r for r in results if r["status"] in ("failed", "skipped")]
@@ -574,6 +680,8 @@ def main() -> int:
             for r in results:
                 note = r.get("reason") or (", ".join(r.get("bad_refs") or []) or
                                            ("no API graph" if r.get("api") is False else ""))
+                if r["status"] == "created":
+                    note = (note + " " if note else "") + "**add to template-map.json**"
                 fh.write(f"| `{r['stem']}` | {r['status']} | {r.get('slug', '')} | {note} |\n")
             fh.write("\nPublishing is manual: https://comfy.org/admin/catalog → filter by the change ID "
                      "→ Approve (staging) → Final review → Publish.\n")
