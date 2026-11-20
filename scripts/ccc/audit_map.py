@@ -29,6 +29,7 @@ import json
 import os
 import subprocess
 import sys
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import requests
@@ -100,6 +101,40 @@ class Client:
             return None
 
 
+def object_info(client: "Client", work: Path) -> dict | None:
+    """One fetch of the Cloud object_info; it is what the UI->API converter resolves against."""
+    cached = work / "object_info.json"
+    if cached.exists():
+        return json.loads(cached.read_text())
+    r = client.s.get(client.base + "/api/object_info", timeout=300)
+    if r.status_code != 200:
+        return None
+    cached.write_text(r.text)
+    return r.json()
+
+
+def convert_in_process(repo: Path, stem: str, work: Path, oi: dict | None) -> dict | None:
+    """Same converter comfy-cli calls, without paying interpreter startup per template."""
+    if oi is None:
+        return None
+    ui = repo / "templates" / f"{stem}.json"
+    out = work / f"{stem}.api.json"
+    if out.exists():
+        return json.loads(out.read_text())
+    try:
+        from comfy_cli.workflow_to_api import convert_ui_to_api
+    except Exception:
+        return None
+    try:
+        api = convert_ui_to_api(json.loads(ui.read_text()), oi)
+    except Exception:
+        return None
+    if not api:
+        return None
+    out.write_text(json.dumps(api, indent=1))
+    return api
+
+
 def convert(repo: Path, stem: str, work: Path) -> dict | None:
     ui = repo / "templates" / f"{stem}.json"
     out = work / f"{stem}.api.json"
@@ -144,6 +179,7 @@ def main() -> int:
     ap.add_argument("--out", default="scripts/ccc/template-map.proposed.json", type=Path)
     ap.add_argument("--limit", type=int, default=0, help="stop after N templates (smoke test)")
     ap.add_argument("--max-live", type=int, default=0, help="only consider the first N live records (smoke test)")
+    ap.add_argument("--jobs", type=int, default=4, help="parallel UI->API conversions")
     args = ap.parse_args()
 
     key = os.environ.get("CCC_API_KEY")
@@ -164,13 +200,31 @@ def main() -> int:
         print("nothing to audit")
         return 0
 
-    print(f"loading {len(stems)} template graph(s) and the live catalog…")
+    oi = object_info(client, work)
+    print(f"object_info: {'loaded' if oi else 'UNAVAILABLE'} "
+          f"({len(oi) if oi else 0} classes)", flush=True)
+    print(f"converting {len(stems)} template graph(s)…", flush=True)
     templates = {}
-    for stem in stems:
-        graph = convert(args.repo, stem, work)
-        if graph:
-            templates[stem] = signature(graph)
 
+    def one(stem):
+        graph = convert_in_process(args.repo, stem, work, oi)
+        if graph is None:
+            try:
+                graph = convert(args.repo, stem, work)  # CLI fallback
+            except subprocess.TimeoutExpired:
+                return stem, None
+        return stem, (signature(graph) if graph else None)
+
+    done = 0
+    with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
+        for stem, sig in pool.map(one, stems):
+            done += 1
+            if sig:
+                templates[stem] = sig
+            if done % 25 == 0:
+                print(f"  {done}/{len(stems)} converted ({len(templates)} with a graph)", flush=True)
+
+    print("downloading live record graphs…", flush=True)
     live = []
     live_rows = client.live()
     if args.max_live:
@@ -191,6 +245,8 @@ def main() -> int:
                 cache_file.write_text(json.dumps(graph))
         if not graph:
             continue
+        if len(live) % 100 == 0 and len(live):
+            print(f"  {len(live)} live graphs loaded", flush=True)
         live.append({"uid": row.get("uid"), "slug": (row.get("slug") or "").split("/")[-1],
                      "title": data.get("title") or "", "tname": data.get("template_name"),
                      "sig": signature(graph)})

@@ -7,6 +7,11 @@ name: Sync templates to CCC (draft only)
 #   secret  CCC_API_KEY        same comfyui-… key used by the catalog API and by comfy-cli
 #   var     CCC_API_BASE_URL   default https://cloud.comfy.org
 #   var     CCC_PUBLIC_ORIGIN  default https://comfy.org
+#   var     CCC_SYNC_ENABLED   'true' to allow draft writes; unset = dry run only
+#
+# WRITES ARE OFF until CCC_SYNC_ENABLED=true. With an incomplete identity ledger a write would
+# overwrite live records' copy and graphs with a guessed pairing, so the default path is a read
+# -only dry run that reports what it *would* write.
 #
 # Notes
 #   * Every sync is serialised: `expected_draft_rev` is ONE global CAS token for the whole
@@ -25,8 +30,8 @@ on:
         description: 'Space-separated template stems, or "all"'
         required: true
         default: 'all'
-      dry_run:
-        description: 'Convert and read only — write nothing'
+      write:
+        description: 'Really write drafts (needs repo variable CCC_SYNC_ENABLED=true)'
         type: boolean
         default: false
   push:
@@ -58,6 +63,9 @@ jobs:
     if: github.repository_owner == 'Comfy-Org'
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    env:
+      # a write needs the kill switch AND explicit intent; pull requests never write
+      CCC_SYNC_WRITE: ${{ github.event_name != 'pull_request' && vars.CCC_SYNC_ENABLED == 'true' && (github.event_name == 'push' || inputs.write == true) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -88,6 +96,7 @@ jobs:
           AFTER: ${{ github.sha }}
         run: |
           set -euo pipefail
+          echo "write=$CCC_SYNC_WRITE" >> "$GITHUB_OUTPUT"
           if [ "$EVENT" = "workflow_dispatch" ]; then
             if [ "$INPUT_TEMPLATES" = "all" ]; then
               echo "mode=all" >> "$GITHUB_OUTPUT"
@@ -112,31 +121,35 @@ jobs:
           echo "mode=list" >> "$GITHUB_OUTPUT"
           echo "stems=$stems" >> "$GITHUB_OUTPUT"
 
-      - name: Sync (dry run — pull requests never write)
-        if: github.event_name == 'pull_request' && steps.targets.outputs.stems != ''
+      - name: Run sync (dry run unless writes are enabled)
+        if: steps.targets.outputs.mode == 'all' || steps.targets.outputs.stems != ''
         env:
           CCC_API_KEY: ${{ secrets.CCC_API_KEY }}
           COMFY_CLOUD_API_KEY: ${{ secrets.CCC_API_KEY }}
           CCC_API_BASE_URL: ${{ vars.CCC_API_BASE_URL || 'https://cloud.comfy.org' }}
           CCC_PUBLIC_ORIGIN: ${{ vars.CCC_PUBLIC_ORIGIN || 'https://comfy.org' }}
+          MODE: ${{ steps.targets.outputs.mode }}
+          STEMS: ${{ steps.targets.outputs.stems }}
+          WRITE: ${{ steps.targets.outputs.write }}
+          RUN_ID: ${{ github.run_id }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          python scripts/ccc/sync_to_ccc.py --stems ${{ steps.targets.outputs.stems }} --dry-run \
-            --change-id "ci-dryrun-pr-${{ github.event.pull_request.number }}"
-
-      - name: Sync to CCC (draft)
-        if: github.event_name != 'pull_request' && (steps.targets.outputs.mode == 'all' || steps.targets.outputs.stems != '')
-        env:
-          CCC_API_KEY: ${{ secrets.CCC_API_KEY }}
-          COMFY_CLOUD_API_KEY: ${{ secrets.CCC_API_KEY }}
-          CCC_API_BASE_URL: ${{ vars.CCC_API_BASE_URL || 'https://cloud.comfy.org' }}
-          CCC_PUBLIC_ORIGIN: ${{ vars.CCC_PUBLIC_ORIGIN || 'https://comfy.org' }}
-        run: |
-          if [ "${{ steps.targets.outputs.mode }}" = "all" ]; then
-            python scripts/ccc/sync_to_ccc.py --all --change-id "ci-sync-${{ github.run_id }}"
+          set -euo pipefail
+          args=()
+          if [ "$MODE" = "all" ]; then
+            args+=(--all)
           else
-            python scripts/ccc/sync_to_ccc.py --stems ${{ steps.targets.outputs.stems }} \
-              --change-id "ci-sync-${{ github.run_id }}"
+            # shellcheck disable=SC2206 - stems is a space separated list
+            args+=(--stems $STEMS)
           fi
+          if [ "$WRITE" = "true" ]; then
+            args+=(--change-id "ci-sync-$RUN_ID")
+            echo "::notice::writing drafts, change id ci-sync-$RUN_ID"
+          else
+            args+=(--dry-run --change-id "ci-dryrun-${PR_NUMBER:-$RUN_ID}")
+            echo "::notice::dry run, no catalog writes"
+          fi
+          python scripts/ccc/sync_to_ccc.py "${args[@]}"
 
       - name: Upload converted graphs and report
         if: always()
