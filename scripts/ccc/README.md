@@ -73,16 +73,39 @@ legacy 12-hex share id that the repo does not store anywhere. The slugs are the 
 (`/hub/workflows/<slug>`), so this file is also what a future migration must consume to keep
 those URLs alive — preserve the slug, or emit a redirect from it.
 
+### Current ledger state
+
+`scripts/ccc/template-map.json` was generated from the catalog on 2026-11-20 and holds **461
+entries** (461 distinct records), against 775 template files and 703 live records:
+
+| evidence | entries |
+|---|---|
+| exact slug match after stripping the legacy 12-hex share id | 413 |
+| graph fingerprint only (slug renamed, graph identical or near) | 48 |
+| moved to `template-map.pending.json` because two stems claim one record | 16 |
+
+Left for a human in `template-map.pending.json`: 94 `ambiguous` (best candidate not clearly ahead
+of the runner-up, or graph disagrees), 204 `none` (no live record — usually a template that only
+exists as a draft, or whose record predates the API graph), and the 16 duplicate claims above.
+83 live records carry no API graph at all, so they can only be matched by slug.
+
 `audit_map.py` builds the evidence once:
 
 ```bash
 python3 scripts/ccc/audit_map.py --all          # ~775 conversions + 703 record graphs, read-only
 ```
 
-It compares each template's converted API graph against each live record's stored graph (node
-class-type multiset + model weight filenames) and writes
-`scripts/ccc/template-map.proposed.json` with `confident` / `ambiguous` / `none` buckets. Review,
-copy the entries you trust into `template-map.json`, commit. That is a one-time cost: after the
+It matches two ways:
+
+1. **exact slug** — a live slug minus its trailing `-<12 hex>` share id equals the template
+   title's slug (`qwen-image-2-1-image-edit-5fbe136ba6f9` → `image_qwen_image_2_1_image_edit`);
+2. **graph fingerprint** — node class-type multiset + model weight filenames, for records whose
+   slug was renamed.
+
+and writes `scripts/ccc/template-map.proposed.json` with `confident` / `ambiguous` / `none`
+buckets. Conversion happens in-process via `comfy_cli.workflow_to_api` with one cached
+`object_info` (2 ms per template instead of ~30 s through the CLI; output verified identical).
+Copy the entries you trust into `template-map.json`, commit. That is a one-time cost: after the
 first sync every record carries `template_name`, so step 2 finds it without any evidence
 gathering.
 

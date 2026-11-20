@@ -27,6 +27,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -37,6 +38,7 @@ import requests
 MODEL_KEYS = ("ckpt_name", "unet_name", "vae_name", "clip_name", "lora_name", "model",
               "model_name", "checkpoint", "weights")
 CONFIDENT = 0.85
+SHARE_ID = re.compile(r"-[0-9a-f]{12}$")  # legacy Hub share id appended to public slugs
 MARGIN = 0.10
 
 
@@ -54,6 +56,17 @@ def signature(graph: dict) -> tuple[collections.Counter, frozenset[str]]:
                         (".safetensors", ".ckpt", ".pth", ".pt", ".bin", ".gguf", ".onnx")):
                     models.add(value)
     return classes, frozenset(models)
+
+
+def slug_core(slug: str) -> str:
+    """Public slugs end in `-<12 hex>`; the part before it is the readable, stable half."""
+    return SHARE_ID.sub("", (slug or "").strip("-"))
+
+
+def kebab(text: str) -> str:
+    s = (text or "").lower().replace("&", " and ")
+    s = re.sub(r"[^a-z0-9]+", "-", s)
+    return re.sub(r"-{2,}", "-", s).strip("-")
 
 
 def jaccard(a: collections.Counter, b: collections.Counter) -> float:
@@ -248,11 +261,13 @@ def main() -> int:
         if len(live) % 100 == 0 and len(live):
             print(f"  {len(live)} live graphs loaded", flush=True)
         live.append({"uid": row.get("uid"), "slug": (row.get("slug") or "").split("/")[-1],
+                     "core": slug_core((row.get("slug") or "").split("/")[-1]),
                      "title": data.get("title") or "", "tname": data.get("template_name"),
                      "sig": signature(graph)})
     print(f"  {len(templates)} template graph(s), {len(live)} live record graph(s)")
 
     confident, ambiguous, none = {}, {}, {}
+    unknown = {s: t for s, t in titles.items() if s not in templates}
     for stem, sig in templates.items():
         scored = []
         for rec in live:
@@ -272,6 +287,21 @@ def main() -> int:
         if not scored:
             none[stem] = {"title": titles.get(stem), "reason": "no live API graphs"}
             continue
+        title_slug = kebab(titles.get(stem) or "")
+        by_slug = [rec for rec in live if title_slug and rec["core"] == title_slug]
+        if len(by_slug) == 1:
+            rec = by_slug[0]
+            graph_score = next((sc for sc, r, _ in scored if r is rec), 0.0)
+            entry = {"uid": rec["uid"], "slug": rec["slug"], "title": rec["title"],
+                     "score": round(graph_score, 3), "reason": "slug match (share id stripped)",
+                     "graph": round(graph_score, 3)}
+            if graph_score >= 0.35:
+                confident[stem] = entry
+            else:
+                entry["reason"] += " — graph disagrees, verify"
+                ambiguous[stem] = entry
+            continue
+
         best = scored[0]
         runner = scored[1][0] if len(scored) > 1 else 0.0
         entry = {"uid": best[1]["uid"], "slug": best[1]["slug"], "title": best[1]["title"],
@@ -292,7 +322,8 @@ def main() -> int:
                               indent=1, sort_keys=True))
     print(f"\nconfident {len(confident)} · ambiguous {len(ambiguous)} · none {len(none)} -> {out}")
     for stem, entry in list(ambiguous.items())[:10]:
-        print(f"  ? {stem} ~ {entry['slug']} ({entry['score']}, runner {entry['runner_up']})")
+        print(f"  ? {stem} ~ {entry['slug']} ({entry['score']}, "
+              f"runner {entry.get('runner_up', entry.get('graph', '?'))})")
     for stem, entry in list(none.items())[:10]:
         print(f"  - {stem}: {entry}")
     print("\nReview, then copy the entries you trust into scripts/ccc/template-map.json "
