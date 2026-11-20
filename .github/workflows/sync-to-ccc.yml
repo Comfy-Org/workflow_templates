@@ -1,0 +1,163 @@
+name: Sync templates to CCC (draft only)
+
+# Creates/updates Comfy Content Catalog records for template files, as DRAFTS.
+# Publishing stays manual: the catalog key is refused on /draft/publish by design.
+#
+# Required repository configuration
+#   secret  CCC_API_KEY        same comfyui-… key used by the catalog API and by comfy-cli
+#   var     CCC_API_BASE_URL   default https://cloud.comfy.org
+#   var     CCC_PUBLIC_ORIGIN  default https://comfy.org
+#
+# Notes
+#   * Every sync is serialised: `expected_draft_rev` is ONE global CAS token for the whole
+#     shared draft, so two runs at the same time would 409 each other. Do not remove the
+#     concurrency group.
+#   * A template is keyed by `template_name` (the file stem). Records whose template_name is
+#     null (older imports) are never touched, and a second record for the same stem is never
+#     created.
+#   * Examples are not produced here — an honest example is a real output of the graph, i.e. a
+#     paid Cloud run. Existing examples on an update are preserved.
+
+on:
+  workflow_dispatch:
+    inputs:
+      templates:
+        description: 'Space-separated template stems, or "all"'
+        required: true
+        default: 'all'
+      dry_run:
+        description: 'Convert and read only — write nothing'
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'templates/*.json'
+      - '!templates/index*.json'
+      - 'scripts/ccc/**'
+      - '.github/workflows/sync-to-ccc.yml'
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+    paths:
+      - 'templates/*.json'
+      - 'scripts/ccc/**'
+      - '.github/workflows/sync-to-ccc.yml'
+
+concurrency:
+  group: ccc-catalog-draft
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  sync:
+    # forks never get the secret; they get the dry-run path below instead
+    if: github.repository_owner == 'Comfy-Org'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            templates/
+            scripts/ccc/
+          sparse-checkout-cone-mode: false
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests pillow
+          pip install comfy-cli
+
+      - name: Work out which templates to sync
+        id: targets
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_TEMPLATES: ${{ inputs.templates }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ "$INPUT_TEMPLATES" = "all" ]; then
+              echo "mode=all" >> "$GITHUB_OUTPUT"
+              echo "stems=" >> "$GITHUB_OUTPUT"
+            else
+              stems=$(printf '%s\n' $INPUT_TEMPLATES | sed 's#^templates/##; s#\.json$##' | tr '\n' ' ')
+              echo "mode=list" >> "$GITHUB_OUTPUT"
+              echo "stems=$stems" >> "$GITHUB_OUTPUT"
+            fi
+            exit 0
+          fi
+          # push / pull_request: derive stems from the changed template files only
+          if [ "$EVENT" = "pull_request" ]; then
+            git fetch --depth=1 origin "${{ github.base_ref }}" || true
+            range="origin/${{ github.base_ref }}...HEAD"
+          else
+            range="$BEFORE..$AFTER"
+          fi
+          changed=$(git diff --name-only "$range" -- 'templates/*.json' | grep -v 'templates/index' || true)
+          stems=$(printf '%s\n' "$changed" | sed -n 's#^templates/\(.*\)\.json$#\1#p' | tr '\n' ' ')
+          echo "changed=$changed"
+          echo "mode=list" >> "$GITHUB_OUTPUT"
+          echo "stems=$stems" >> "$GITHUB_OUTPUT"
+
+      - name: Sync (dry run — pull requests never write)
+        if: github.event_name == 'pull_request' && steps.targets.outputs.stems != ''
+        env:
+          CCC_API_KEY: ${{ secrets.CCC_API_KEY }}
+          COMFY_CLOUD_API_KEY: ${{ secrets.CCC_API_KEY }}
+          CCC_API_BASE_URL: ${{ vars.CCC_API_BASE_URL || 'https://cloud.comfy.org' }}
+          CCC_PUBLIC_ORIGIN: ${{ vars.CCC_PUBLIC_ORIGIN || 'https://comfy.org' }}
+        run: |
+          python scripts/ccc/sync_to_ccc.py --stems ${{ steps.targets.outputs.stems }} --dry-run \
+            --change-id "ci-dryrun-pr-${{ github.event.pull_request.number }}"
+
+      - name: Sync to CCC (draft)
+        if: github.event_name != 'pull_request' && (steps.targets.outputs.mode == 'all' || steps.targets.outputs.stems != '')
+        env:
+          CCC_API_KEY: ${{ secrets.CCC_API_KEY }}
+          COMFY_CLOUD_API_KEY: ${{ secrets.CCC_API_KEY }}
+          CCC_API_BASE_URL: ${{ vars.CCC_API_BASE_URL || 'https://cloud.comfy.org' }}
+          CCC_PUBLIC_ORIGIN: ${{ vars.CCC_PUBLIC_ORIGIN || 'https://comfy.org' }}
+        run: |
+          if [ "${{ steps.targets.outputs.mode }}" = "all" ]; then
+            python scripts/ccc/sync_to_ccc.py --all --change-id "ci-sync-${{ github.run_id }}"
+          else
+            python scripts/ccc/sync_to_ccc.py --stems ${{ steps.targets.outputs.stems }} \
+              --change-id "ci-sync-${{ github.run_id }}"
+          fi
+
+      - name: Upload converted graphs and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ccc-sync-${{ github.run_id }}
+          path: |
+            .ccc-work/
+          retention-days: 14
+
+      - name: Comment on PR (dry run summary)
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const p = process.env.GITHUB_STEP_SUMMARY;
+            let body = 'CCC draft sync (dry run) produced no summary.';
+            try { body = fs.readFileSync(p, 'utf8').split('## CCC draft sync').pop() || body; } catch (e) {}
+            await github.rest.issues.createComment({
+              owner: context.repo.owner, repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: '### CCC draft sync (dry run)\n' + body.slice(-6000)
+            });
