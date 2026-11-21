@@ -51,11 +51,10 @@ const matchingTemplates = allTemplates.filter((tmpl) =>
   tmpl.tags.some((t: string) => tagSlug(t) === tag)
 );
 
+// No workflow carries this tag (a removed tag, or a foreign-language tag slug
+// that never matched an English tag). 301 to the localized hub rather than 404.
 if (matchingTemplates.length === 0) {
-  return new Response(null, {
-    status: 404,
-    statusText: 'Not Found',
-  });
+  return Astro.redirect(`/${locale}/workflows/`, 301);
 }
 
 // Get display name from the first matching tag
