@@ -17,6 +17,7 @@ PACKAGE_ROOTS = [
     "packages/media_other/src",
     "packages/media_assets_01/src",
     "packages/media_assets_02/src",
+    "packages/media_assets_03/src",
 ]
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -58,7 +59,7 @@ def test_frozen_logo_inventory_excludes_new_logos():
     frozen = get_frozen_logo_assets(policy)
     assert "logo/openai.png" in frozen
     assert "logo/sync_so.webp" not in frozen
-    assert get_additive_logo_bundle(policy) == "media-assets-02"
+    assert get_additive_logo_bundle(policy) == "media-assets-03"
     assert is_additive_logo_path("templates/logo/sync_so.webp", policy)
     assert not is_additive_logo_path("templates/logo/openai.png", policy)
 
@@ -68,7 +69,7 @@ def test_media_bundle_split_for_logos():
     policy = load_version_policy(REPO_ROOT / "scripts" / "data" / "version_policy.json")
     assert (
         media_bundle_for_template_asset("templates/logo/sync_so.webp", bundles, policy)
-        == "media-assets-02"
+        == "media-assets-03"
     )
     assert (
         media_bundle_for_template_asset("templates/logo/openai.png", bundles, policy)
@@ -81,14 +82,14 @@ def test_index_logo_stays_on_media_other_with_additive_override():
     assert entry.bundle == "media-other"
 
     sync_asset = next(a for a in entry.assets if a.filename == "logo/sync_so.webp")
-    assert sync_asset.bundle == "media-assets-02"
+    assert sync_asset.bundle == "media-assets-03"
 
     legacy = next(a for a in entry.assets if a.filename == "logo/openai.png")
     assert legacy.bundle is None
 
     assert (
         loader._asset_package(entry, sync_asset.filename, sync_asset.bundle)
-        == "comfyui_workflow_templates_media_assets_02"
+        == "comfyui_workflow_templates_media_assets_03"
     )
     assert (
         loader._asset_package(entry, legacy.filename, legacy.bundle)
@@ -100,7 +101,7 @@ def test_resolve_additive_and_legacy_logos():
     additive = loader.get_asset_path("index_logo", "logo/sync_so.webp")
     legacy = loader.get_asset_path("index_logo", "logo/openai.png")
     assert additive.endswith("logo/sync_so.webp")
-    assert "media_assets_02" in additive.replace("\\", "/")
+    assert "media_assets_03" in additive.replace("\\", "/")
     assert legacy.endswith("logo/openai.png")
     assert "media_other" in legacy.replace("\\", "/")
     assert Path(additive).is_file()
@@ -119,6 +120,6 @@ def test_sync_build_manifest_marks_additive_logo_bundle():
     entry = next(t for t in manifest["templates"] if t["id"] == "index_logo")
     assert entry["bundle"] == "media-other"
     sync_asset = next(a for a in entry["assets"] if a["filename"] == "logo/sync_so.webp")
-    assert sync_asset["bundle"] == "media-assets-02"
+    assert sync_asset["bundle"] == "media-assets-03"
     legacy = next(a for a in entry["assets"] if a["filename"] == "logo/openai.png")
     assert "bundle" not in legacy

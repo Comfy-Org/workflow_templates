@@ -29,7 +29,7 @@ The bundle contains <N> commits on top of workflow_templates `main` at `<BASE_SH
 | `comfyui-workflow-templates` (root) | <OLD_VERSION> | <VERSION> |
 <SUB_PACKAGE_ROWS>
 
-Packages not listed (the frozen `media-api`, `media-image`, `media-video`, `media-other`, `media-assets-01`) keep their current versions. The root `pyproject.toml` already pins the new sub-package versions with `==`.
+Packages not listed (the frozen `media-api`, `media-image`, `media-video`, `media-other`, `media-assets-01`, `media-assets-02`) keep their current versions. The root `pyproject.toml` already pins the new sub-package versions with `==`.
 
 Commits that carry the bump:
 

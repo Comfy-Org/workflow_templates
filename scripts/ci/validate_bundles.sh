@@ -42,7 +42,7 @@ if [[ -n "$MISSING_TEMPLATES" ]]; then
   echo "   - media-video: for video generation templates"
   echo "   - media-image: for image generation templates"
   echo "   - media-other: for other types of templates"
-  echo "   - media-assets-02: for new template media (recommended)"
+  echo "   - media-assets-03: for new template media (recommended)"
   exit 1
 fi
 
