@@ -17,7 +17,7 @@ PyPI enforces a **~100 MB per-file** upload limit per wheel. Filled media wheels
 | `media-video` | `comfyui-workflow-templates-media-video` | 0.3.101 | **99.5 MB** | At limit |
 | `media-other` | `comfyui-workflow-templates-media-other` | 0.3.229 | **85.0 MB** | Near limit |
 | `media-assets-01` | `comfyui-workflow-templates-media-assets-01` | 0.1.48 | **89.8 MB** | Previous shard |
-| `media-assets-02` | `comfyui-workflow-templates-media-assets-02` | 0.1.35 | **91.3 MB** | Frozen 2026-11-19 — next shard opened |
+| `media-assets-02` | `comfyui-workflow-templates-media-assets-02` | 0.1.36 | **91.3 MB** | Frozen 2026-11-19 — next shard opened |
 
 Re-check sizes: `curl -s https://pypi.org/pypi/comfyui-workflow-templates-media-assets-02/json` (wheel `size` field for the pinned version).
 

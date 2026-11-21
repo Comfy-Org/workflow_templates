@@ -129,7 +129,7 @@ Current wheel sizes on PyPI (pinned versions in root `pyproject.toml`):
 - `media_video` (0.3.101): **99.5 MB**
 - `media_other` (0.3.229): **85.0 MB**
 - `media_assets_01` (0.1.47): **89.8 MB**
-- `media_assets_02` (0.1.35): **91.3 MB**
+- `media_assets_02` (0.1.36): **91.3 MB**
 
 New template assets go to `media-assets-03`. Unfreezing a frozen wheel should only happen for a deliberate, larger change (split, cleanup, or redesign) — not routine template PRs.
 
