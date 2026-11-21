@@ -57,11 +57,11 @@
         "Node name for S&R": "LoadImage"
       },
       "widgets_values": [
-        "offwhite_contoured_form.png",
+        "withered_hydrangeas_still_life_vintage_lit.png",
         "image"
       ],
       "widgets_values_named": {
-        "image": "offwhite_contoured_form_6707_00001_.png",
+        "image": "withered_hydrangeas_still_life_vintage_lit.png",
         "upload": "image"
       },
       "color": "#322",
@@ -237,10 +237,10 @@
         "",
         42,
         4,
-        2,
+        1,
         "euler",
         "simple",
-        1,
+        0,
         true,
         1,
         1,
@@ -255,10 +255,10 @@
         "prompt": "",
         "seed": 42,
         "steps": 4,
-        "cfg": 2,
+        "cfg": 1,
         "sampler_name": "euler",
         "scheduler": "simple",
-        "expand": 1,
+        "expand": 0,
         "tapered_corners": true,
         "factor": 1,
         "factor_1": 1,
@@ -273,8 +273,8 @@
       "id": 151,
       "type": "MarkdownNote",
       "pos": [
-        -130,
-        880
+        -1140,
+        80
       ],
       "size": [
         460,
@@ -285,13 +285,13 @@
       "mode": 0,
       "inputs": [],
       "outputs": [],
-      "title": "Note: Prompt",
+      "title": "Note: RMBG 3.0",
       "properties": {},
       "widgets_values": [
-        "## Writing the prompt (optional)\n\n`auto_prompt` ON → a vision model looks at your image and writes the matte instruction itself.\n`subject_note` is optional: leave it empty and the model decides what is solid and what is see-through.\n\nWrite one plain sentence about **material and what is see-through**, for example:\n\n- `Clear glass bottle with a paper label and a metal cap.`\n- `Frosted serum bottle, the glass body is semi-transparent, the dropper inside is visible.`\n- `Bride with a tulle veil: the gown is solid, the veil is see-through.`\n\nIt helps to name the parts that must stay solid (paper, metal, skin, petals, fabric) and the parts that must keep\nalpha (glass, liquid, veil, mesh, smoke).\n\nTwo things that help when the subject is see-through:\n\n- Glass, veil or smoke should come back grey instead of white — describe it, and raise `cfg` to **1.5–2.0**\n  (4 steps stay the same).\n- Strongly coloured glass is still read as a solid object by this model, so it may come back white;\n  lower `alpha_brightness` or paint the region by hand if you need real transparency there.\n\nAvoid: describing the scene, style or lighting — the model only needs the material split.\n"
+        "## What this subgraph does\n\nOne subgraph packs the whole job: loads RMBG 3.0 + its text encoder + VAE, has a vision model write the matte\ninstruction from the image (or uses the built-in Bria sentence when `auto_prompt` is off), samples 4 steps, shapes the\nalpha, and returns **three outputs**:\n\n## About the model\n\nRMBG 3.0 is a distillation of Fibo 2.0 Edit Turbo: an 8B diffusion transformer that **renders a grayscale alpha matte**\ninstead of predicting a mask. White = opaque, grey = semi-transparent, black = background.\n\n- It works at about 1 MP internally and returns the matte at your source resolution.\n- It understands the scene, so hair, fur, thin straps and cast shadows are handled well; shadows and reflections on\n  the ground are dropped.\n- The matte is a rendered image, so faint noise can appear in the background — `alpha_brightness` (or a light\n  `mask_threshold`) cleans it up.\n\n\n## Writing the prompt (optional)\n\n- `auto_prompt` OFF → a vision model looks at your image and writes the matte instruction itself. This is a prompt rewriting rule we added and is not provided by the original RMBG 3.0 project. When it's OFF, the workflow use the original RMBG 3.0 edit instruction.\n- `subject_note` only works when `auto_prompt` is on: leave it empty and the model decides what is solid and what is see-through.\n\nWrite one plain sentence about **material and what is see-through**, for example:\n\n- `Clear glass bottle with a paper label and a metal cap.`\n- `Frosted serum bottle, the glass body is semi-transparent, the dropper inside is visible.`\n- `Bride with a tulle veil: the gown is solid, the veil is see-through.`\n\nIt helps to name the parts that must stay solid (paper, metal, skin, petals, fabric) and the parts that must keep\nalpha (glass, liquid, veil, mesh, smoke).\n\nTwo things that help when the subject is see-through:\n\n- Glass, veil or smoke should come back grey instead of white — describe it, if it not work try to raise `cfg` to **1.5–2.0**\n  (4 steps stay the same, RMBG 3.0 default cfg is 1.0).\n- Strongly coloured glass is still read as a solid object by this model, so it may come back white;\n  lower `alpha_brightness` or paint the region by hand if you need real transparency there.\n\nAvoid: describing the scene, style or lighting — the model only needs the material split.\n"
       ],
       "widgets_values_named": {
-        "text": "Add note here\n"
+        "text": "## What this subgraph does\n\nOne subgraph packs the whole job: loads RMBG 3.0 + its text encoder + VAE, has a vision model write the matte\ninstruction from the image (or uses the built-in Bria sentence when `auto_prompt` is off), samples 4 steps, shapes the\nalpha, and returns **three outputs**:\n\n## About the model\n\nRMBG 3.0 is a distillation of Fibo 2.0 Edit Turbo: an 8B diffusion transformer that **renders a grayscale alpha matte**\ninstead of predicting a mask. White = opaque, grey = semi-transparent, black = background.\n\n- It works at about 1 MP internally and returns the matte at your source resolution.\n- It understands the scene, so hair, fur, thin straps and cast shadows are handled well; shadows and reflections on\n  the ground are dropped.\n- The matte is a rendered image, so faint noise can appear in the background — `alpha_brightness` (or a light\n  `mask_threshold`) cleans it up.\n\n\n## Writing the prompt (optional)\n\n- `auto_prompt` OFF → a vision model looks at your image and writes the matte instruction itself. This is a prompt rewriting rule we added and is not provided by the original RMBG 3.0 project. When it's OFF, the workflow use the original RMBG 3.0 edit instruction.\n- `subject_note` only works when `auto_prompt` is on: leave it empty and the model decides what is solid and what is see-through.\n\nWrite one plain sentence about **material and what is see-through**, for example:\n\n- `Clear glass bottle with a paper label and a metal cap.`\n- `Frosted serum bottle, the glass body is semi-transparent, the dropper inside is visible.`\n- `Bride with a tulle veil: the gown is solid, the veil is see-through.`\n\nIt helps to name the parts that must stay solid (paper, metal, skin, petals, fabric) and the parts that must keep\nalpha (glass, liquid, veil, mesh, smoke).\n\nTwo things that help when the subject is see-through:\n\n- Glass, veil or smoke should come back grey instead of white — describe it, if it not work try to raise `cfg` to **1.5–2.0**\n  (4 steps stay the same, RMBG 3.0 default cfg is 1.0).\n- Strongly coloured glass is still read as a solid object by this model, so it may come back white;\n  lower `alpha_brightness` or paint the region by hand if you need real transparency there.\n\nAvoid: describing the scene, style or lighting — the model only needs the material split.\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -300,12 +300,12 @@
       "id": 152,
       "type": "MarkdownNote",
       "pos": [
-        -1210,
+        -1750,
         80
       ],
       "size": [
-        560,
-        1180
+        580,
+        700
       ],
       "flags": {},
       "order": 2,
@@ -315,10 +315,10 @@
       "title": "Note: Model links",
       "properties": {},
       "widgets_values": [
-        "## What this subgraph does\n\nOne subgraph packs the whole job: loads RMBG 3.0 + its text encoder + VAE, has a vision model write the matte\ninstruction from the image (or uses the built-in Bria sentence when `auto_prompt` is off), samples 4 steps, shapes the\nalpha, and returns **three outputs**:\n\n- `foreground_image` — RGBA cutout at the source resolution\n- `background_image` — the same subject cut out of the source\n- `mask` — the raw matte\n\nExposed inputs: `source_image`, `subject_note`, `auto_prompt`, `seed` / `steps` / `cfg` / `sampler_name` / `scheduler`,\n`alpha_brightness` / `alpha_contrast` / `hard_mask` / `mask_threshold`, plus the three model files.\n\n## About the model\n\nRMBG 3.0 is a distillation of Fibo 2.0 Edit Turbo: an 8B diffusion transformer that **renders a grayscale alpha matte**\ninstead of predicting a mask. White = opaque, grey = semi-transparent, black = background.\n\n- 4 steps, `euler` + `simple`, no classifier-free guidance — keep `cfg` at 1.0 for ordinary subjects.\n- It works at about 1 MP internally and returns the matte at your source resolution.\n- It understands the scene, so hair, fur, thin straps and cast shadows are handled well; shadows and reflections on\n  the ground are dropped.\n- The matte is a rendered image, so faint noise can appear in the background — `alpha_brightness` (or a light\n  `mask_threshold`) cleans it up.\n\n## Input Asset\n\n- [offwhite_contoured_form.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/offwhite_contoured_form.png)\n\n## Model Links\n\n- [Hugging Face:briaai/RMBG-3.0-Comfy](https://huggingface.co/briaai/RMBG-3.0-Comfy)\n\n**diffusion_models**\n\n- [rmbg3_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/diffusion_models/rmbg3_int8_convrot.safetensors) (7.83 GB)\n\n**text_encoders**\n\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors) (4.52 GB)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/vae/flux2-vae.safetensors) (320.6 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── rmbg3_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "## Input Asset\n\n- [offwhite_contoured_form.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/offwhite_contoured_form.png)\n\n## Model Links\n\n- [Hugging Face:briaai/RMBG-3.0-Comfy](https://huggingface.co/briaai/RMBG-3.0-Comfy)\n\n**diffusion_models**\n\n- [rmbg3_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/diffusion_models/rmbg3_int8_convrot.safetensors) (7.83 GB)\n\n**text_encoders**\n\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors) (4.52 GB)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/vae/flux2-vae.safetensors) (320.6 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── rmbg3_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       ],
       "widgets_values_named": {
-        "text": "Guide: [Subgraph](https://docs.comfy.org/interface/features/subgraph)\n\n## Input Asset\n\n- [offwhite_contoured_form_6707_00001_.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/offwhite_contoured_form_6707_00001_.png)\n\n## Model Links\n\n- [Hugging Face:briaai/RMBG-3.0-Comfy](https://huggingface.co/briaai/RMBG-3.0-Comfy)\n\n**diffusion_models**\n\n- [rmbg3_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/diffusion_models/rmbg3_int8_convrot.safetensors) (7.83 GB)\n\n**text_encoders**\n\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors) (4.52 GB)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/vae/flux2-vae.safetensors) (320.6 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── rmbg3_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
+        "text": "## Input Asset\n\n- [offwhite_contoured_form.png](https://raw.githubusercontent.com/Comfy-Org/workflow_templates/refs/heads/main/input/offwhite_contoured_form.png)\n\n## Model Links\n\n- [Hugging Face:briaai/RMBG-3.0-Comfy](https://huggingface.co/briaai/RMBG-3.0-Comfy)\n\n**diffusion_models**\n\n- [rmbg3_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/diffusion_models/rmbg3_int8_convrot.safetensors) (7.83 GB)\n\n**text_encoders**\n\n- [qwen3vl_4b_int8_convrot.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/text_encoders/qwen3vl_4b_int8_convrot.safetensors) (4.52 GB)\n\n**vae**\n\n- [flux2-vae.safetensors](https://huggingface.co/briaai/RMBG-3.0-Comfy/resolve/main/vae/flux2-vae.safetensors) (320.6 MB)\n\n\n## Model Storage Location\n\n```\n📂 ComfyUI/\n├── 📂 models/\n│   ├── 📂 diffusion_models/\n│   │   └── rmbg3_int8_convrot.safetensors\n│   ├── 📂 text_encoders/\n│   │   └── qwen3vl_4b_int8_convrot.safetensors\n│   └── 📂 vae/\n│       └── flux2-vae.safetensors\n```\n\n## Report Issue\n\nNote: Please update ComfyUI first ([guide](https://docs.comfy.org/installation/update_comfyui)) and prepare required models. Desktop/Cloud updates follow stable releases, so some nightly-supported models may not be available yet.\n\n- Cannot run / runtime errors: [ComfyUI/issues](https://github.com/comfyanonymous/ComfyUI/issues)\n- UI / frontend issues: [ComfyUI_frontend/issues](https://github.com/Comfy-Org/ComfyUI_frontend/issues)\n- Workflow issues: [workflow_templates/issues](https://github.com/Comfy-Org/workflow_templates/issues)\n"
       },
       "color": "#222",
       "bgcolor": "#000"
@@ -406,7 +406,7 @@
         "rmbg3/background"
       ],
       "widgets_values_named": {
-        "filename_prefix": "RMBG3.0_BG"
+        "filename_prefix": "rmbg3/background"
       }
     },
     {
@@ -460,7 +460,7 @@
         "rmbg3/foreground"
       ],
       "widgets_values_named": {
-        "filename_prefix": "RMBG3.0_FG"
+        "filename_prefix": "rmbg3/foreground"
       },
       "color": "#322",
       "bgcolor": "#533"
@@ -2803,10 +2803,10 @@
     "VHS_MetadataImage": true,
     "VHS_KeepIntermediate": true,
     "ds": {
-      "scale": 0.23448896773672728,
+      "scale": 0.7587032213846309,
       "offset": [
-        4365.017839195581,
-        1597.676186251845
+        928.6690460654521,
+        -1.8862290802083883
       ]
     }
   },
