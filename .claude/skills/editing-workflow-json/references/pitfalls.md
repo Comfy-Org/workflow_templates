@@ -1,0 +1,30 @@
+# Pitfalls encountered (append here)
+
+Every bug that cost a real round-trip. Read before "simplifying" a working chain.
+
+## Pitfalls Encountered (keep appending)
+
+- **Live-graph ids are strings, not file integers.** `g._nodes.find(x => x.id === 27)` → `undefined`, `.pos` then throws `Cannot read properties of undefined (reading 'pos')`. Compare `String(x.id) === String(nid)`.`
+- **Note/node resize overlaps a neighbour.** 310→390 px note hit a node at x=666, 353 px away. After any `size`/`pos` change run the box test (`a.x < b.x2 && b.x < a.x2 && a.y < b.y2 && b.y < a.y2`) and fix the width.`
+- **Removing a promoted subgraph input shifts every widget after it.** Pop `subgraph.inputs[i]` + same index in `widgets_values`/`widgets_values_named`, remap `origin_id == -10` links to new `origin_slot`; skip one and `KSamplerSelect.sampler_name` takes the seed → `Value not in list ... not in (list of length 45)`. "Add to library" requests: copy verbatim, only `filename_prefix`.`
+- **Note "recommended" values must be set on the node too.** `TextGenerate` at 0.6 / 40 / `mtp auto` vs note "temperature 0.2-0.4, top_k 1-20, max_length 2500-4000, mtp off": set array + `widgets_values_named` together (`sampling_mode.temperature`, `sampling_mode.top_k`, …, `mtp`).`
+- **An "attached" workflow can arrive as a JSON file-icon PNG.** 1024 px = the `.json` never reached context; find it by mtime (`ls -lat a local export/*.json`), say which file you take, don't infer the model from chat.`
+- **A delegated "layout verified" is not evidence.** A child can measure at the wrong zoom or screenshot pre-paint. Re-run the pairwise rect check and take one fresh full-canvas screenshot; twice it said zero overlaps over crossing wires.`
+- **The user's hand-edited screenshot is the spec.** Diff group list, grouped vs loose, group order, sampler values; reproduce theirs, say what differed.`
+- **ngrok frontend needs ~5 min to boot headless.** Canvas ~160 s, `window.app` ~310 s; a 180 s `wait_for_function` reports false "frontend broken". Budget 420 s, drive `/prompt` from the host meanwhile.`
+- **No full-repo UUID greps.** `grep -r` over `the ComfyUI checkout` times out (60s+); scope to `comfy/`, `comfy_extras/`. No clone → unresolved UUID node names are normal, infer from structure.`
+- **Leave `last_node_id` / `last_link_id` alone** unless ADDING nodes; widget edits don't need them.`
+- **Lossless round-trip.** Exports can end at `}` with no trailing `\n` (Ming Image). Check `json.dumps(d, indent=2, ensure_ascii=False) == raw`, write back the same way, else the file shows as fully modified.`
+- **Placeholder notes: fill, don't add.** About-notes ship as `widgets_values: ["update here\n"]` (`title: "Note: About Ming Image"`); scaffolds end with `Add note here` / `update here`. Replace that line, keep `## Input Asset` / `## Report Issue`.`
+- **Note `widgets_values` is an ARRAY, not a string**, plus `widgets_values_named: {"text": …}` — same string in both. Dynamic-combo nodes: array only leaves sub-widgets unnamed and the frontend won't re-derive names on save — check `serialize()`.`
+- **Structural transforms break links before widgets.** After node swap/migration/subgraph wrap: `audit_links.py` → `linkfixer_audit.test.ts` → frontend `node.inputs` readback (`-` where you wrote a link = wrong socket name) → `validate_templates.py`. "Opens fine"/clean validation log prove only the three-way invariant, not semantics.`
+- **Dangling-link sweep trap.** Removing `links[]` rows without recomputing `outputs[].links` leaves phantom ids (toast-invisible); deleting a link the new node needs (prompt/seed/width) drops a real feed. Re-attach by name; when deleting, normalise all three sides in one pass.`
+- **API-prompt dynamic-combo input is FLAT DOTTED KEYS, never nested.** `{"sign_mode": "solid", "sign_mode.fill": 20.0, "sign_mode.qef": false}`; nesting makes the executor see it as absent → `RemeshMesh.execute() missing 1 required positional argument: 'sign_mode'`. Same for `mode`/`mode.num_iterations`, any `IO.DynamicCombo`.`
+- **`Save3DAdvanced` reports a different filename than it writes.** History says `ComfyUI_00001_.glb`, disk and `/view` have `ComfyUI_00001.glb`. List the output dir.`
+- **`output/3d/*.glb` is big** (59 MB for a 4.1 M-vert pixal3d): too slow over an ssh/ts tunnel, trips tool timeouts — analyse on the box or accept the queue entry as proof.`
+- **Name a template for what its graph ships.** Only `depth_map` wired → `image_moss_image_depth_control` / "MOSS-Image: Depth Control", never "Depth & Color" (only one control is wired, so the name must narrow to it); note the unused `color_map`.`
+- **A merged node is not in the newest tag.** Run `git tag --contains <merge commit>`: empty output = ships in the *next* minor (two MOSS nodes merged before `v0.42.5` were absent, floor = next release, not `0.42.x`). No validator catches a `minComfyUIVersion` floor set too low.`
+- **`validate_wf_instance.py` false alarms.** It checks every link id against the *top-level* `links[]`: 30 inner links → ~30 `link N missing from links[]` (shipped templates too). Validate top level against `links[]`, each subgraph against its own; `LoadImage: 2 values but only 1 widgets declared (extra ['image'])` is benign (upload button).`
+- **`validate_thumbnails.py` needs BOTH `-1` and `-2` thumbnails for `thumbnailVariant: compareSlider` / `hoverDissolve`**, even when only the result is captured: 400x400 `templates/<name>-N.webp` (all 917 webp assets are 400x400), center-crop, `quality=90, method=6`.`
+- **The user's name for a workflow is not what the graph does.** "The i2v workflow" folder held a `Text to Image (MiniMax H3)` subgraph with no `LoadImage`. Read subgraph `name`, loader set, save node first, then say which graph you change.`
+- **Queue UI workflows with `a small headless-run script (kept outside this repo)`**, not a browser driver named for an earlier template (wrong pipeline). It needs playwright — run it from the workstation that has it, not the GPU box.`
