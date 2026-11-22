@@ -896,8 +896,16 @@ def main() -> int:
 
     key = os.environ.get("CCC_API_KEY")
     if not key:
-        print("CCC_API_KEY is not set — nothing to do")
-        return 2
+        # A read-only run still needs the key to read the catalog. A repository without the
+        # secret (a fork, or a repo where writes are not configured yet) must not fail the
+        # build over it: say so in the job summary and carry on. A write run still fails loudly.
+        print("CCC_API_KEY is not set — the sync was skipped")
+        if args.summary:
+            with open(args.summary, "a") as fh:
+                fh.write("\n## CCC draft sync\n\n")
+                fh.write("Skipped: `CCC_API_KEY` is not configured for this repository, so the "
+                         "catalog could not be read. Nothing was written.\n")
+        return 0 if args.dry_run else 2
     base = os.environ.get("CCC_API_BASE_URL", "https://cloud.comfy.org")
     cat = Catalog(base, key, dry_run=args.dry_run)
     ctx = cat.authoring()
