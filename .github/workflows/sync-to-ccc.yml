@@ -34,6 +34,12 @@ on:
         description: 'Really write drafts (needs repo variable CCC_SYNC_ENABLED=true)'
         type: boolean
         default: false
+      jobs:
+        description: 'Parallel read/convert workers (catalog writes stay sequential)'
+        default: '4'
+      shard:
+        description: 'Split a long run: "1/4", "2/4", ... Leave empty for a single run'
+        default: ""
   push:
     branches: [main]
     paths:
@@ -133,6 +139,8 @@ jobs:
           WRITE: ${{ steps.targets.outputs.write }}
           RUN_ID: ${{ github.run_id }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          JOBS: ${{ inputs.jobs }}
+          SHARD: ${{ inputs.shard }}
         run: |
           set -euo pipefail
           args=()
@@ -141,6 +149,15 @@ jobs:
           else
             # shellcheck disable=SC2206 - stems is a space separated list
             args+=(--stems $STEMS)
+          fi
+          args+=(--jobs "${JOBS:-4}")
+          if [ -n "${SHARD:-}" ]; then
+            args+=(--shard "$SHARD")
+          fi
+          # a graph-only edit leaves every field identical, and an unchanged document is
+          # skipped; re-upload the media for the few templates a push/PR actually touched
+          if [ "$MODE" = "list" ]; then
+            args+=(--force-media)
           fi
           if [ "$WRITE" = "true" ]; then
             args+=(--change-id "ci-sync-$RUN_ID")
