@@ -188,7 +188,7 @@
     },
     {
       "id": 23,
-      "type": "GeminiNode",
+      "type": "GeminiNodeV3",
       "pos": [
         -610,
         120
@@ -202,26 +202,27 @@
       "mode": 0,
       "inputs": [
         {
-          "name": "images",
-          "shape": 7,
+          "name": "model.images.image_1",
           "type": "IMAGE",
           "link": 47
         },
         {
-          "name": "audio",
-          "shape": 7,
+          "name": "model.images.image_2",
+          "type": "IMAGE",
+          "link": null
+        },
+        {
+          "name": "model.audio.audio_1",
           "type": "AUDIO",
           "link": null
         },
         {
-          "name": "video",
-          "shape": 7,
+          "name": "model.video.video_1",
           "type": "VIDEO",
           "link": null
         },
         {
-          "name": "files",
-          "shape": 7,
+          "name": "model.files",
           "type": "GEMINI_INPUT_FILES",
           "link": null
         }
@@ -238,13 +239,17 @@
       ],
       "title": "Prompt + Google Gemini Prompt Enhancer",
       "properties": {
-        "Node name for S&R": "GeminiNode",
+        "Node name for S&R": "GeminiNodeV3",
         "cnr_id": "comfy-core",
         "ver": "0.4.0"
       },
       "widgets_values": [
+        "Gemini 3.1 Pro",
         "The canned product sits on a reflective glass table, faintly reflecting the sky, liquid water textures sit on the table, small silicon computer chips are scattered around. In the blue sky, clouds form as text that says \"Comfy Cloud\" amongst scattered clouds. Realistic product photography.",
-        "gemini-3-pro-preview",
+        "HIGH",
+        1.0,
+        0.95,
+        32768,
         12345,
         "randomize",
         "# Role: Prompt Architect & Creative Director\n\n## 1. Core Objective\n\nYou are an expert **Prompt Engineer and Commercial Art Director**. Your mission is to transform natural language user requests—ranging from simple object/product names, mandatory H1 header titles, typography fonts styles to use, taglines phrases, to specific hex color codes, detailed brand briefs—into a **structured, detailed, and execution-ready English prompt**.\n\nYou must seamlessly integrate user-provided details (brand names, specific color codes, product features) while creatively \"gap-filling\" any missing aesthetic details to ensure a high-quality, cohesive visual output.\n\n\n## 2. Input Processing & Adaptation Strategy\n\nBefore generating the output, analyze the user's input against these three levels of granularity:\n\n* **Level 1: Sparse (e.g., \"a coffee poster\").**\n\n    * *Action:* You must invent a cohesive brand identity, mood, and style. Infer a suitable context (e.g., a cozy morning or a high-energy workspace).\n\n* **Level 2: Hybrid (e.g., \"Retro sci-fi poster for a sleek energy drink\").**\n\n    * *Action:* Adopt the requested style (\"Retro sci-fi\"). Create a visual scene that highlights the \"sleekness\" of the product. Invent a brand name if none is provided.\n\n* **Level 3: Specific (e.g., \"Rolex Submariner, underwater scene, emerald green and gold palette, Title: 'Deep Dive'\").**\n\n    * *Action:* strictly adhere to the brand name, color palette, and specific product details provided. Do not deviate from these constraints.\n\n\n## 3. Output Structure Requirements\n\nYou must organize the final prompt into **five distinct dimensions**. Do not use bullet points within the sections; instead, write coherent, descriptive paragraphs for each dimension.\n\n\n### Dimension 1: Poster Content & Hero Object\n\n* **Goal:** Define the visual reality and the Product/Subject placement.\n\n* **Instruction:** clearly describe the main visual elements. If a product is mentioned, treat it as the \"Hero Object\"—describe its lighting, material qualities (e.g., condensation on a can, sheen on leather), and interaction with the environment.\n\n* **Example logic:** Instead of \"a shoe,\" write \"a floating high-top sneaker with reflective holographic panels, surrounded by shattered concrete debris suspended in mid-air.\"\n\n\n### Dimension 2: Aesthetic Style & Brand Identity\n\n* **Goal:** Define the artistic lens and color strategy.\n\n* **Instruction:** Describe the visual tone (e.g., cinematic, minimalist, brutalist, ethereal). **Crucial:** If the user provided brand colors, explicitly mandate them here. Describe the hex code colors into natural english, DO NOT output the actual hex code #. If no colors are provided, define a sophisticated palette that compliments the subject. Mention textures (e.g., matte finish, film grain, glossy plastic) and lighting style (e.g., volumetric god-rays, neon rim lighting).\n\n\n### Dimension 3: Poster Text\n\n* **Goal:** Define the exact strings to render.\n\n* **Instruction:** Provide **only** the exact text content to appear on the poster.\n\n    1.  If the user provides a Brand Name/Title, use it exactly.\n\n    2.  If the user provides *no* text, you **must** invent a short, punchy, thematic title or brand name that fits the vibe.\n\n    3.  Maintain exact spelling and capitalization.\n\n\n### Dimension 4: Text Style and Position\n\n* **Goal:** Define typography and hierarchy.\n\n* **Instruction:**\n\n    * **Font:** Describe the font family (e.g., bold sans-serif, elegant serif, handwritten marker, futuristic digital display).\n\n    * **Attributes:** Specify material effects on the text (e.g., metallic gold, glowing neon, negative space cutout).\n\n    * **Placement:** Describe the layout of the text relative to the image (e.g., bold header centered at the top, small legal text at the bottom, vertical tagline interlaced with the main subject).\n\n\n### Dimension 5: Layout\n\n* **Goal:** Define composition and flow.\n\n* **Instruction:** Describe how elements are arranged to guide the viewer's eye. Explain the relationship between the background and the foreground. Define the camera angle (e.g., low-angle hero shot, top-down flat lay, macro close-up). Ensure there is clear \"safe space\" for the text defined in Dimension 4 so it does not clash with the busy parts of the image.\n\n\n## 4. Strict Constraints\n\n1.  **Language:** The final output must be in **English only**.\n\n2.  **Purity:** Output **only** the structured prompt content. Do not include conversational fillers (e.g., \"Here is your prompt\"), explanations, or markdown code block fences (like ```).\n\n3.  **Format:** Strictly follow the header structure shown in the \"Output Structure Requirements\"."
@@ -254,7 +259,7 @@
     },
     {
       "id": 14,
-      "type": "ByteDanceSeedreamNode",
+      "type": "ByteDanceSeedreamNodeV3",
       "pos": [
         370,
         120
@@ -268,18 +273,17 @@
       "mode": 0,
       "inputs": [
         {
-          "name": "image",
-          "shape": 7,
-          "type": "IMAGE",
-          "link": null
-        },
-        {
           "name": "prompt",
           "type": "STRING",
           "widget": {
             "name": "prompt"
           },
           "link": 25
+        },
+        {
+          "name": "model.images.image_1",
+          "type": "IMAGE",
+          "link": null
         }
       ],
       "outputs": [
@@ -293,18 +297,18 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "ByteDanceSeedreamNode",
+        "Node name for S&R": "ByteDanceSeedreamNodeV3",
         "cnr_id": "comfy-core",
         "ver": "0.3.76"
       },
       "widgets_values": [
-        "seedream-4-5-251128",
         "## Dimension 1: Poster Content Description\nThe central subject is an energetic, glossy-coated Fox Terrier with perked ears and a joyful expression, captured mid-leap or sitting attentively with a wagging tail. Beside the dog, in the lower foreground, sits a realistic open tin can of dog food with the lid peeled back, revealing hearty meat chunks, next to a ceramic yellow bowl filled to the brim. The background features a subtle, stylized sunburst pattern radiating from behind the dog to emphasize vitality and energy.\n\n## Dimension 2: Aesthetic Style Optimization\nThe image utilizes a vintage 1940s American advertising illustration style, characterized by a soft lithographic texture and visible halftone patterns. The color palette is nostalgic and warm, dominated by creamy off-whites, patriotic reds, mustard yellows, and muted navy blues. The overall finish mimics the look of aged paper or cardboard with slightly distressed edges and a matte, hand-painted quality typical of mid-century commercial art.\n\n## Dimension 3: Poster Text\nFIDELITY\nPREMIUM DOG RATION\nKeeps Him Full of Pep!\nRich in Vitamins\n10¢\n\n## Dimension 4: Text Style and Position\nThe brand name \"FIDELITY\" is rendered in massive, blocky, all-caps sans-serif typography with a slight 3D drop shadow, colored in vibrant red to command attention at the very top of the poster. The slogan \"Keeps Him Full of Pep!\" is written in a fluid, enthusiastic navy blue brush script, slanted upward to imply motion. The words \"PREMIUM DOG RATION\" and \"Rich in Vitamins\" appear in smaller, sturdy serif fonts near the bottom, while the price \"10¢\" is enclosed in a jagged starburst graphic near the product can.\n\n## Dimension 5: Layout\nThe composition follows a classic hierarchical vertical alignment. The large brand title arches across the top third, framing the dog's head. The dog serves as the central focal point, drawing the eye down toward the product placement in the lower left and right corners. The slogan cuts across the middle section to bridge the gap between the animal and the food, guiding the viewer's gaze in a smooth Z-pattern from the headline, through the dog, to the product details at the bottom.",
-        "1664x2496 (2:3)",
+        "seedream-4-5-251128",
+        "(2K) 1664x2496 (2:3)",
         2048,
         2048,
-        "auto",
         1,
+        true,
         123,
         "randomize",
         false,
@@ -315,7 +319,7 @@
     },
     {
       "id": 19,
-      "type": "ByteDanceSeedreamNode",
+      "type": "ByteDanceSeedreamNodeV3",
       "pos": [
         1780,
         120
@@ -329,10 +333,14 @@
       "mode": 0,
       "inputs": [
         {
-          "name": "image",
-          "shape": 7,
+          "name": "model.images.image_1",
           "type": "IMAGE",
           "link": 34
+        },
+        {
+          "name": "model.images.image_2",
+          "type": "IMAGE",
+          "link": null
         }
       ],
       "outputs": [
@@ -345,18 +353,18 @@
         }
       ],
       "properties": {
-        "Node name for S&R": "ByteDanceSeedreamNode",
+        "Node name for S&R": "ByteDanceSeedreamNodeV3",
         "cnr_id": "comfy-core",
         "ver": "0.3.76"
       },
       "widgets_values": [
-        "seedream-4-5-251128",
         "Replace the product from image 1 with the product from image 2. Ensure the products dimensions stay consistent with input image 2.",
-        "1664x2496 (2:3)",
+        "seedream-4-5-251128",
+        "(2K) 1664x2496 (2:3)",
         2048,
         2048,
-        "disabled",
         1,
+        true,
         321,
         "randomize",
         false,
@@ -483,7 +491,7 @@
       23,
       0,
       14,
-      1,
+      0,
       "STRING"
     ],
     [
