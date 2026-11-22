@@ -31,20 +31,52 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, labeled, unlabeled]
     branches: [main]
-    paths:
-      - 'templates/**'
-      - 'blueprints/**'
-      - 'scripts/validate/check_widget_types.py'
-      - 'scripts/validate/test_check_widget_types.py'
-      - 'scripts/lib/locale_index_files.py'
-      - '.github/workflows/validate-widget-types.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
+  # pull_request has no path filter, so this check reports on every PR and can be
+  # a required check (a path-filtered required check never reports on other PRs
+  # and blocks them). A PR that changes none of the paths below skips `validate`,
+  # which a required check counts as passing.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      relevant: ${{ steps.diff.outputs.relevant }}
+    steps:
+      - name: Checkout workflow templates
+        if: github.event_name == 'pull_request'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
+          sparse-checkout: .github
+      - id: diff
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if git diff --name-only "$BASE_SHA"...HEAD -- \
+              templates/ blueprints/ \
+              scripts/validate/check_widget_types.py \
+              scripts/validate/test_check_widget_types.py \
+              scripts/lib/locale_index_files.py \
+              .github/workflows/validate-widget-types.yml | grep -q .; then
+            echo "relevant=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+            echo "No template, blueprint or widget-check changes; skipping validate."
+          fi
+
   validate:
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
