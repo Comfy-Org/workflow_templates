@@ -68,6 +68,15 @@ TITLE_LIMIT = 80
 
 MEDIA_KIND = {"image": "image", "video": "video", "audio": "audio", "text": "text"}
 
+# Everything `build_fields` can write, plus the `graph` pseudo-field that holds the workflow
+# pair. A `catalog_owned` list may only name these; anything else is a typo that would silently
+# hold nothing.
+MANAGED_FIELDS = frozenset({
+    "title", "description", "template_name", "tags", "model_labels", "template_category",
+    "io", "output_type", "generation_type", "long_description", "faq", "use_cases", "runnable",
+    "compatibility", "graph",
+})
+
 
 # ----------------------------------------------------------------------------- catalog client
 class Catalog:
@@ -381,6 +390,11 @@ class Syncer:
         self.bulk = False  # one live sweep instead of per-stem searches
         self.new_mappings: dict[str, str] = {}
         self.records = records or {}   # long-form copy, from scripts/ccc/records.json
+        # Per-record field ownership from the ledger: a field listed under `catalog_owned` is
+        # authored on comfy.org and must never be written by this tool.
+        self.owned = {stem: set(v.get("catalog_owned") or ())
+                      for stem, v in (template_map or {}).items() if isinstance(v, dict)}
+        self.held: dict[str, list] = {}   # stem -> fields kept from the catalog (for the report)
         self.draft_bulk = False        # one staging sweep instead of per-stem `search=`
         self.draft_index_cache = None
         self.force_media = force_media  # re-upload graphs even when the document matches
@@ -564,6 +578,10 @@ class Syncer:
         back verbatim; when the snapshot has none, the field is omitted so the catalog keeps the
         value it already holds. The old code wrote the 160-character index blurb into
         `long_description` here, which is what destroyed ~450 records' copy.
+
+        A map entry may additionally say `catalog_owned: [...]`: those fields are authored on
+        comfy.org and are dropped here, so the sync can never replace them with older repo text.
+        `template_name` is identity and is never dropped.
         """
         record = self.records.get(stem) or {}
         title = trim(entry["title"] or stem, TITLE_LIMIT)
@@ -600,6 +618,11 @@ class Syncer:
             fields["output_type"] = output_type or record["output_type"]
         if generation_type or record.get("generation_type") is not None:
             fields["generation_type"] = generation_type or record["generation_type"]
+        held = sorted(f for f in (self.owned.get(stem) or ()) if f != "template_name")
+        for field in held:
+            fields.pop(field, None)
+        if held:
+            self.held[stem] = held
         return fields
 
     def _pinned(self, doc: dict) -> bool:
@@ -666,15 +689,27 @@ class Syncer:
                         "candidates": clash[:5],
                         "reason": "live record(s) already carry this title/slug: " + listed}
         changed = sorted(k for k, v in fields.items() if doc.get(k) != v)
+        graph_owned = "graph" in (self.owned.get(stem) or ())
+        held = self.held.get(stem) or []
         # an unchanged document is left alone; media is only re-uploaded on a real change, on
         # create, when the record has no pins yet, or when the caller says the file changed
-        write = uid is None or bool(changed) or self.force_media or not self._pinned(doc)
+        pinned = self._pinned(doc)
+        if graph_owned:
+            # the workflow pair belongs to the catalog, so only copy/covers can justify a write
+            pinned = bool(doc.get("static_thumb") and doc.get("thumbnail"))
+        write = (uid is None or bool(changed) or not pinned
+                 or (self.force_media and not graph_owned))
+        note = f" · held {','.join(held)}" if held else ""
+        if graph_owned:
+            note += " · graph=catalog"
         self.print(f"  · {stem}: {'api ok' if api_path else 'no api graph'} "
                    f"{converted * 1000:.0f} ms · "
                    f"{'new record' if uid is None else f'{kind} {slug}'} · "
-                   f"{'unchanged' if not write else ('update ' + ','.join(changed) if changed else 'refresh media')}")
+                   f"{'unchanged' if not write else ('update ' + ','.join(changed) if changed else 'refresh media')}"
+                   f"{note}")
         return {"stem": stem, "api_path": api_path, "kind": kind, "uid": uid, "doc": doc,
                 "via": via, "fields": fields, "slug": slug, "changed": changed,
+                "held": held, "graph_owned": graph_owned,
                 "write": write, "ui": ui}
 
     def commit(self, plan: dict) -> dict:
@@ -709,7 +744,8 @@ class Syncer:
             }
             if self.dry_run:
                 return {"stem": stem, "status": "dry-run-create", "slug": body["slug"],
-                        "api": bool(api_path), "changed": plan["changed"]}
+                        "api": bool(api_path), "changed": plan["changed"],
+                        "held": plan.get("held") or []}
             idem = "ccc-create-" + hashlib.sha256(
                 (stem + sha256_file(ui) + self.change_id).encode()).hexdigest()[:32]
             resp = self.cat.create(body, idem)
@@ -723,13 +759,18 @@ class Syncer:
 
         if self.dry_run:
             return {"stem": stem, "status": "dry-run-update", "uid": uid, "slug": slug,
-                    "api": bool(api_path), "changed": plan["changed"]}
+                    "api": bool(api_path), "changed": plan["changed"],
+                    "held": plan.get("held") or []}
 
-        # media: graph pair (r2) + three covers (media), one uid and one name per field
+        # media: graph pair (r2) + three covers (media), one uid and one name per field.
+        # A record whose entry says `catalog_owned: [graph]` keeps its published pair: the repo
+        # has no authority over that file, and a media ref cannot be merged field by field.
         refs = {}
-        uploads = [("workflow_graph", "r2", f"{slug}/workflow-ui-v1.json", ui)]
-        if api_path:
-            uploads.append(("api_workflow", "r2", f"{slug}/workflow-api-v1.json", api_path))
+        uploads = []
+        if not plan.get("graph_owned"):
+            uploads.append(("workflow_graph", "r2", f"{slug}/workflow-ui-v1.json", ui))
+            if api_path:
+                uploads.append(("api_workflow", "r2", f"{slug}/workflow-api-v1.json", api_path))
         cover_src = self.repo / "templates" / f"{stem}-1.webp"
         cover = None
         no_covers = any(not doc.get(f) for f in ("static_thumb", "thumbnail", "hero"))
@@ -781,6 +822,7 @@ class Syncer:
             "stem": stem, "status": "created" if created else "updated", "uid": uid, "slug": slug,
             "api": bool(api_path), "covers": "static_thumb" in refs, "bad_refs": bad,
             "via": plan["via"], "source": plan["kind"], "changed": plan["changed"],
+            "held": plan.get("held") or [],
             "preview": f"{os.environ.get('CCC_PUBLIC_ORIGIN', 'https://comfy.org')}/admin/catalog",
         }
 
@@ -870,6 +912,13 @@ def main() -> int:
         template_map = {k: v for k, v in raw.items()
                         if not k.startswith("_") and isinstance(v, (str, dict))}
         print(f"template map: {len(template_map)} entry/entries from {map_path}")
+        typos = sorted({f"{stem}:{field}" for stem, entry in template_map.items()
+                        if isinstance(entry, dict)
+                        for field in (entry.get("catalog_owned") or ())
+                        if field not in MANAGED_FIELDS})
+        if typos:
+            print("WARNING catalog_owned names fields this tool never writes: "
+                  + ", ".join(typos[:10]))
 
     records = {}
     records_path = args.records if args.records.is_absolute() else args.repo / args.records

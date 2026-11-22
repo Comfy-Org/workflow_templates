@@ -70,6 +70,41 @@ prose, FAQ and use cases. Editing `long_description` in `records.json` and runni
 now how that copy changes in the catalog; the pull is idempotent, so a scheduled refresh leaves
 the file byte-identical (and `_source.pulled_at` untouched) when nothing moved.
 
+## Ownership: the same ledger decides which fields the repo may write
+
+Identity alone is not enough. `description`, `tags`, `title`, `model_labels` and the workflow pair
+also exist on records a person has edited in `comfy.org/admin`, and the repo's text is often the
+*older* of the two — it kept `Sbugraph Guide` where the catalog says `Subgraph`, and `Tuotrial`
+where the catalog says `Tutorial`. Writing those fields again would undo that work.
+
+A map entry may therefore carry `catalog_owned`, a list of fields this tool must never write:
+
+```json
+"image_netayume_lumina_t2i": {
+  "uid": "…",
+  "slug": "…",
+  "catalog_owned": ["description", "tags"]
+}
+```
+
+- The default is the opposite of "hold": a field not listed is repo-owned and gets written, so
+  nothing freezes unless the ledger says so.
+- `graph` holds the whole workflow pair (`workflow-ui-v1.json` + `workflow-api-v1.json`), because
+  a media file cannot be merged field by field. A held graph is never re-uploaded, whatever
+  `--force-media` says.
+- `template_name` is identity and cannot be held.
+- Each run prints `held <fields>` next to the record it touched; a typo in a field name is
+  reported at startup instead of silently holding nothing.
+
+Where the 2026-11-22 seed came from: a read-only drift audit of all 494 mapped records compared
+every copy field and every UI-graph string against the repo, then ran `git log -S<literal>` on
+each of the 662 deltas to establish which side had moved later. 403 deltas proved the **repo**
+was newer (stale catalog → the field stays repo-owned), 12 were pulled back into the repo by
+hand, and 126 stems got `catalog_owned` for the fields whose catalog text never appears in the
+repo's history (`tags` 99, `description` 25, `model_labels` 6, `title` 3) plus one held graph.
+Delete an entry once the two sides are reconciled: the ledger is the record of that decision,
+not a permanent veto.
+
 ## Identity: the committed ledger decides, the script just writes
 
 `scripts/ccc/template-map.json` is the single source of truth for *which catalog record a
