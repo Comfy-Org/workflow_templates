@@ -365,7 +365,8 @@ def trim(text: str, limit: int) -> str:
 class Syncer:
     def __init__(self, repo: Path, cat: Catalog, change_id: str, dry_run: bool,
                  template_map: dict | None = None, adopt_unmapped: bool = False,
-                 records: dict | None = None, force_media: bool = False):
+                 records: dict | None = None, force_media: bool = False,
+                 refresh_covers: bool = False):
         self.repo = repo
         self.cat = cat
         self.change_id = change_id
@@ -383,6 +384,10 @@ class Syncer:
         self.draft_bulk = False        # one staging sweep instead of per-stem `search=`
         self.draft_index_cache = None
         self.force_media = force_media  # re-upload graphs even when the document matches
+        # Covers are content a person may have replaced in the admin. They are only written
+        # when the record has none (or when the caller asks): a graph change must not cost
+        # the published hero/thumbnail.
+        self.refresh_covers = refresh_covers
         self._oi = None
         self._oi_loaded = False
         self._oi_lock = threading.Lock()
@@ -617,6 +622,26 @@ class Syncer:
             return {"stem": stem, "status": "failed",
                     "reason": f"{type(exc).__name__}: {exc}"[:400]}
 
+    def live_clash(self, slug: str, title: str):
+        """Live records that already own this slug or title — creating another would duplicate.
+
+        The catalog does not dedupe slugs or titles, so an unmatched template whose title is
+        already published is a *pairing* question, not a create. Returns the candidates.
+        """
+        core = common.slug_core(slug)
+        tkey = norm_title(title)
+        wkey = word_key(title)
+        hits = []
+        for row in self._live_rows():
+            document = row.get("data") or row.get("document") or {}
+            live_slug = (row.get("slug") or document.get("slug") or "").split("/")[-1]
+            live_title = document.get("title") or ""
+            if (common.slug_core(live_slug) == core
+                    or norm_title(live_title) == tkey
+                    or (wkey and word_key(live_title) == wkey)):
+                hits.append({"uid": row.get("uid"), "slug": live_slug, "title": live_title})
+        return hits
+
     def _plan(self, stem: str) -> dict:
         entry = self.index.get(stem)
         if not entry:
@@ -632,6 +657,14 @@ class Syncer:
         fields = self.build_fields(stem, entry)
         doc = doc or {}
         slug = doc.get("slug") or slug_for_title(fields["title"], stem)
+        if uid is None:
+            clash = self.live_clash(slug_for_title(fields["title"], stem), fields["title"])
+            if clash:
+                listed = ", ".join(f"{c['slug']} ({c['title']})" for c in clash[:3])
+                self.print(f"  ! {stem}: a live record already owns this title — {listed}")
+                return {"stem": stem, "status": "conflict", "slug": slug,
+                        "candidates": clash[:5],
+                        "reason": "live record(s) already carry this title/slug: " + listed}
         changed = sorted(k for k, v in fields.items() if doc.get(k) != v)
         # an unchanged document is left alone; media is only re-uploaded on a real change, on
         # create, when the record has no pins yet, or when the caller says the file changed
@@ -699,7 +732,8 @@ class Syncer:
             uploads.append(("api_workflow", "r2", f"{slug}/workflow-api-v1.json", api_path))
         cover_src = self.repo / "templates" / f"{stem}-1.webp"
         cover = None
-        if cover_src.exists():
+        no_covers = any(not doc.get(f) for f in ("static_thumb", "thumbnail", "hero"))
+        if cover_src.exists() and (no_covers or self.refresh_covers):
             cover = make_cover(cover_src, self.work / f"{stem}-cover.webp")
         for role, src, name, path in uploads:
             idem = "ccc-media-" + hashlib.sha256(
@@ -798,6 +832,9 @@ def main() -> int:
     ap.add_argument("--adopt-unmapped", action="store_true",
                     help="bootstrap only: pair an unmapped template with a legacy record by slug "
                          "prefix / exact title. Off by default because it can pair the wrong record.")
+    ap.add_argument("--refresh-covers", action="store_true",
+                    help="re-upload card_thumb/thumbnail/hero from templates/<stem>-1.webp. Off by "
+                         "default: an existing cover may be one a person set in the admin.")
     args = ap.parse_args()
 
     stems = list(args.stems)
@@ -846,7 +883,8 @@ def main() -> int:
 
     syncer = Syncer(args.repo, cat, args.change_id, args.dry_run, template_map,
                     adopt_unmapped=args.adopt_unmapped, records=records,
-                    force_media=args.force_media or bool(args.changed_files))
+                    force_media=args.force_media or bool(args.changed_files),
+                    refresh_covers=args.refresh_covers)
     syncer.bulk = len(stems) > 10          # one live sweep instead of a search per stem
     syncer.draft_bulk = len(stems) > 3     # one staging sweep instead of a search per stem
     print(f"object_info: {'loaded' if syncer.object_info() else 'UNAVAILABLE'}")

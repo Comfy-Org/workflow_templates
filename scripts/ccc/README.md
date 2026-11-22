@@ -39,9 +39,11 @@ python scripts/ccc/sync_to_ccc.py --all --shard 1/4 --jobs 8
    `available_surfaces: ["hub"]`, `template_name = <stem>`. New slugs are derived from the
    template **title** (`ideogram-4-5-text-to-image`), matching how the existing public URLs are
    built; existing records keep whatever slug they have.
-3. Uploads the graph pair as `src: r2` (`<slug>/workflow-ui-v1.json`, `<slug>/workflow-api-v1.json`)
-   and three WebP covers from `templates/<stem>-1.webp`, downscaled to ≤960 px and ≤160 KiB —
-   the ceilings the publication rules enforce.
+3. Uploads the graph pair as `src: r2` (`<slug>/workflow-ui-v1.json`, `<slug>/workflow-api-v1.json`).
+   Three WebP covers from `templates/<stem>-1.webp` (downscaled to ≤960 px and ≤160 KiB, the
+   ceilings the publication rules enforce) are written **only when the record has none**, or with
+   `--refresh-covers`. A cover is content a person can replace in the admin, so a graph change
+   never costs the published hero/thumbnail.
 4. Writes one full document: `title`, `description` (≤160 chars), `tags`, `model_labels` (from
    `models`), `template_category` (the index section), `io`, and `output_type`/`generation_type`
    when the `io.outputs` media type makes them unambiguous — all from `templates/index.json`.
