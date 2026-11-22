@@ -30,6 +30,7 @@ import argparse
 import collections
 import json
 import os
+import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
@@ -39,10 +40,20 @@ import ccc_common as common
 
 CONFIDENT = 0.85
 MARGIN = 0.10
-SLUG_GRAPH_FLOOR = 0.35   # a slug match whose graph disagrees this much is not confident
-TITLE_GRAPH_FLOOR = 0.20  # same for an exact title match
-RULE_PRIORITY = {"ledger": 0, "template_name": 1, "slug": 2, "title": 3, "graph": 4,
-                 "version_successor": 5}
+LEDGER_GRAPH_FLOOR = 0.60   # a carried-over pairing must still look like the same workflow
+LEDGER_WORD_FLOOR = 0.50    # …or share this much of its title vocabulary
+# Name evidence decides identity; the graph only finds candidates, because a live record's
+# stored graph is usually stale (it is converted from an older template revision) and a
+# structure-only fingerprint ties across every 2-node API template. A carried-over ledger
+# pairing is a tiebreak, never a veto: it loses to any name claim, including one from another
+# stem, because a wrong pairing overwrites a published page.
+RULE_PRIORITY = {"template_name": 0, "slug": 1, "title": 2, "word_set": 3, "graph": 4,
+                 "version_successor": 5, "ledger": 6}
+
+
+def word_key(title: str) -> frozenset:
+    """Same words in any order / casing / punctuation: 'Video Edit: X' == 'X: Video Edit'."""
+    return frozenset(re.findall(r"[a-z0-9]+", (title or "").lower()))
 
 
 def load_index(repo: Path) -> dict:
@@ -123,7 +134,7 @@ def live_records(client, work: Path, max_live: int = 0):
     return out
 
 
-def propose(stem: str, entry: dict, sig, live, by_tkey, by_family):
+def propose(stem: str, entry: dict, sig, live, by_tkey, by_family, by_wkey):
     """Every claim this stem has on a live record, best first. Nothing is assigned here."""
     claims = []
 
@@ -134,6 +145,7 @@ def propose(stem: str, entry: dict, sig, live, by_tkey, by_family):
     title = entry.get("title") or ""
     tkey = common.norm_title(title)
     want_core = common.kebab(title)
+    wkey = word_key(title)
     family = common.title_family(title)
     has_version = family != tkey  # a version token was stripped
 
@@ -141,65 +153,62 @@ def propose(stem: str, entry: dict, sig, live, by_tkey, by_family):
         if rec["tname"] == stem:
             add(rec, "template_name", 1.0)
 
+    # A live record's slug is its identity: the slug equals this template's title slug after the
+    # legacy share id is stripped. The stored graph disagreeing is expected (it was converted
+    # from an older revision), so the score is recorded but never vetoes the pairing.
     if want_core:
         slug_hits = [rec for rec in live if rec["core"] == want_core]
         if len(slug_hits) == 1:
             score, _ = graph_score(sig, slug_hits[0])
-            if score is None or score >= SLUG_GRAPH_FLOOR:
-                add(slug_hits[0], "slug", score or 1.0)
-            else:
-                claims.append({"uid": slug_hits[0]["uid"], "slug": slug_hits[0]["slug"],
-                               "rule": "slug", "score": round(score, 3), "weak": True,
-                               "note": f"slug matches but the graph disagrees ({score:.2f})"})
+            note = "slug equals the title slug" + (
+                f"; stored graph scores {score:.2f}" if score is not None else "")
+            add(slug_hits[0], "slug", score or 1.0, note)
+        elif slug_hits:
+            claims.append({"uid": slug_hits[0]["uid"], "slug": slug_hits[0]["slug"],
+                           "rule": "slug", "score": None, "weak": True,
+                           "note": f"{len(slug_hits)} live records share this slug"})
 
     if tkey:
         title_hits = by_tkey.get(tkey) or []
         if len(title_hits) == 1:
             score, _ = graph_score(sig, title_hits[0])
-            if score is None or score >= TITLE_GRAPH_FLOOR:
-                add(title_hits[0], "title", score or 1.0)
-            else:
-                claims.append({"uid": title_hits[0]["uid"], "slug": title_hits[0]["slug"],
-                               "rule": "title", "score": round(score, 3), "weak": True,
-                               "note": f"title matches but the graph disagrees ({score:.2f})"})
+            note = "title matches exactly" + (
+                f"; stored graph scores {score:.2f}" if score is not None else "")
+            add(title_hits[0], "title", score or 1.0, note)
         elif title_hits:
-            # the catalog does not dedupe titles: pick the duplicate whose graph is our graph
-            ranked = []
-            for rec in title_hits:
-                score, _ = graph_score(sig, rec)
-                if score is not None:
-                    ranked.append((score, rec))
-            ranked.sort(key=lambda item: item[0], reverse=True)
-            if ranked and ranked[0][0] >= max(CONFIDENT, 0.9) and (
-                    len(ranked) == 1 or ranked[0][0] - ranked[1][0] >= MARGIN):
-                add(ranked[0][1], "title", ranked[0][0],
-                    f"{len(title_hits)} records share this title; the graph picks this one")
-            else:
-                best = ranked[0] if ranked else (None, title_hits[0])
-                claims.append({"uid": best[1]["uid"], "slug": best[1]["slug"], "rule": "title",
-                               "score": None if best[0] is None else round(best[0], 3),
-                               "weak": True,
-                               "note": f"{len(title_hits)} records share this title, "
-                                       f"graph cannot separate them"})
+            claims.append({"uid": title_hits[0]["uid"], "slug": title_hits[0]["slug"],
+                           "rule": "title", "score": None, "weak": True,
+                           "note": f"{len(title_hits)} live records share this title"})
 
+    # Word-set: the same words in a different order, e.g. 'Video Edit: Beeble SwitchX' versus
+    # 'Beeble SwitchX: Video Edit'. Only when exactly one live record has that word set.
+    if wkey:
+        wkey_hits = by_wkey.get(wkey) or []
+        if len(wkey_hits) == 1:
+            score, _ = graph_score(sig, wkey_hits[0])
+            add(wkey_hits[0], "word_set", score or 1.0,
+                f"same words, reordered ({wkey_hits[0]['title']!r})")
+        elif wkey_hits:
+            claims.append({"uid": wkey_hits[0]["uid"], "slug": wkey_hits[0]["slug"],
+                           "rule": "word_set", "score": None, "weak": True,
+                           "note": f"{len(wkey_hits)} live records share this word set"})
+
+    # Graph fingerprint: only usable when both sides actually load model weights. A
+    # structure-only match (two 2-node API templates) is a coin flip and produced real
+    # mis-pairings, so it is not evidence at all.
     scored = []
     for rec in live:
         score, structure_only = graph_score(sig, rec)
-        if score is None:
+        if score is None or structure_only:
             continue
-        scored.append((score, structure_only, rec))
+        scored.append((score, rec))
     scored.sort(key=lambda item: item[0], reverse=True)
     if scored:
-        best, structure_only, rec = scored[0]
+        best, rec = scored[0]
         runner = scored[1][0] if len(scored) > 1 else 0.0
-        floor = max(CONFIDENT, 0.92) if structure_only else CONFIDENT
-        if best >= floor and best - runner >= MARGIN:
-            add(rec, "graph", best, f"classes+weights {best:.2f}, runner-up {runner:.2f}")
-        elif best >= 0.6:
-            claims.append({"uid": rec["uid"], "slug": rec["slug"], "rule": "graph",
-                           "score": round(best, 3), "weak": True,
-                           "runner_up": round(runner, 3),
-                           "note": f"best graph {best:.2f} vs runner-up {runner:.2f}"})
+        if best >= CONFIDENT and best - runner >= MARGIN:
+            add(rec, "graph", best,
+                f"classes+weights {best:.2f}, runner-up {runner:.2f}")
 
     # version successor: the catalog still holds the newest record of this family and that
     # record is older than this template — i.e. the previous version's template file was
@@ -295,13 +304,18 @@ def main() -> int:
     by_uid = {rec["uid"]: rec for rec in live}
     by_tkey = collections.defaultdict(list)
     by_family = collections.defaultdict(list)
+    by_wkey = collections.defaultdict(list)
     for rec in live:
         if rec["tkey"]:
             by_tkey[rec["tkey"]].append(rec)
         if rec["family"]:
             by_family[rec["family"]].append(rec)
+        if rec["title"]:
+            by_wkey[word_key(rec["title"])].append(rec)
 
-    # prior ledger: a committed identity outranks a fresh heuristic
+    # prior ledger: a committed pairing is kept as a tiebreak — it never outranks a name claim,
+    # because a slug/title equality proved by the live record itself is the better evidence
+    # (and a mis-pairing silently overwrites a published page)
     prior = {}
     ledger_path = args.out if args.out.is_absolute() else repo / args.out
     if ledger_path.exists():
@@ -316,7 +330,7 @@ def main() -> int:
     unclaimed = []
     for stem in stems:
         entry = entries.get(stem) or {}
-        claims = propose(stem, entry, sigs.get(stem), live, by_tkey, by_family)
+        claims = propose(stem, entry, sigs.get(stem), live, by_tkey, by_family, by_wkey)
         if stem in prior:
             rec = by_uid[prior[stem]["uid"]]
             claims.insert(0, {"uid": rec["uid"], "slug": rec["slug"], "rule": "ledger",
@@ -356,6 +370,29 @@ def main() -> int:
     by_rule = collections.Counter(evidence(claim) for claim in confident.values())
     successors = sorted(stem for stem, claim in confident.items() if claim.get("version_successor"))
 
+    # A carried-over pairing is only as good as its evidence. Flag the ones whose name and
+    # graph both disagree with the record they point at, so a mis-pairing (two templates that
+    # share a generic API graph) shows up for review instead of silently overwriting a page.
+    suspect = {}
+    for stem, claim in confident.items():
+        if evidence(claim) != "ledger":
+            continue
+        rec = by_uid[claim["uid"]]
+        entry = entries.get(stem) or {}
+        title = entry.get("title") or ""
+        if (common.kebab(title) == rec["core"] or common.norm_title(title) == rec["tkey"]
+                or word_key(title) == word_key(rec["title"])):
+            continue
+        a, b = word_key(title), word_key(rec["title"])
+        overlap = len(a & b) / len(a | b) if a and b else 0.0
+        score, structure_only = graph_score(sigs.get(stem), rec)
+        if overlap < 0.25 and (score is None or structure_only or score < LEDGER_GRAPH_FLOOR):
+            suspect[stem] = {"slug": rec["slug"], "record_title": rec["title"],
+                             "template_title": title, "title_overlap": round(overlap, 2),
+                             "graph": None if score is None else round(score, 2),
+                             "reason": "carried-over pairing: neither the title nor the graph "
+                                       "supports it"}
+
     ledger = {}
     for stem in sorted(confident):
         claim = confident[stem]
@@ -363,7 +400,7 @@ def main() -> int:
         if claim.get("version_successor"):
             ledger[stem]["version_successor"] = True
 
-    pending = {"ambiguous": {}, "none": {}, "blocked": {}}
+    pending = {"ambiguous": {}, "none": {}, "blocked": {}, "suspect": suspect}
     for stem in stems:
         if stem in confident:
             continue
@@ -395,6 +432,23 @@ def main() -> int:
     doc = {**header, **ledger}
 
     out_path = ledger_path
+    # `catalog_owned` is a human decision about who may write a field, not generated evidence:
+    # carry it (and its explanation) across a rebuild so re-auditing the catalog cannot silently
+    # re-arm the sync on records somebody already protected.
+    previous, carried_comment = {}, None
+    if out_path.exists():
+        try:
+            old = json.loads(out_path.read_text())
+        except json.JSONDecodeError:
+            old = {}
+        previous = {k: v for k, v in old.items() if not k.startswith("_") and isinstance(v, dict)}
+        carried_comment = old.get("_catalog_owned_comment")
+    for stem, entry in ledger.items():
+        keep = (previous.get(stem) or {}).get("catalog_owned")
+        if keep:
+            entry["catalog_owned"] = keep
+    if carried_comment:
+        doc["_catalog_owned_comment"] = carried_comment
     # insertion order, not sort_keys: `uid` before `slug` is how the committed ledger reads,
     # and keeping it makes a rebuild diff show only the entries that actually changed
     out_path.write_text(json.dumps(doc, indent=1) + "\n")
