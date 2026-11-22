@@ -1,23 +1,26 @@
 #!/usr/bin/env python3
-"""Propose `template stem -> existing CCC record` mappings by comparing GRAPHS, not names.
+"""Build `scripts/ccc/template-map.json`: template stem -> existing CCC record, by evidence.
 
-Why this exists: the ~700 records already in the catalog were imported before
-`template_name` existed, so most carry `template_name: null` and their slugs/titles have
-drifted from the template files (renames, vendor renames, `-<12 hex>` suffixes, "(API)"
-variants). Matching those on slug or title alone is a coin flip — it either misses the real
-record (and the sync then creates a duplicate) or adopts the wrong one.
+The ~700 records already in the catalog were imported before `template_name` existed, so most
+carry `template_name: null` and their slugs/titles have drifted from the template files
+(renames, vendor renames, `-<12 hex>` suffixes, "(API)" variants). Pairing them on one signal
+is a coin flip, so four independent rules are applied and every claim is scored:
 
-Here each template file is converted to an API graph and compared against every live record's
-stored API graph on two things that survive renames:
+  1. `template_name`      — the record was written by this tool for this stem. Exact.
+  2. `slug`               — kebab(title) == the public slug with its legacy share id stripped.
+  3. `title`              — exact normalized title equality, and only one live record has it.
+  4. `graph`              — node class-type multiset + model weight filenames fingerprint.
+  5. `version_successor`  — same title family once version tokens are removed (`1.1` vs `1.2`,
+                            `2.5` vs `2.6`, `3.5` vs `4`) and the same output modality. These
+                            are the records a new template version must UPDATE, never duplicate.
 
-  * the multiset of node class_types (structure), and
-  * the set of model/filename widget values (ckpt_name, unet_name, vae_name, clip_name,
-    lora_name, model, …), i.e. *which* weights the graph loads.
+An entry already in the ledger is kept (rule `ledger`) as long as its record still exists: a
+committed identity beats a fresh heuristic. Anything the rules cannot settle goes to
+`.ccc-work/pending.json` for a human; it is not committed and it gates nothing — a stem with no
+ledger entry is created by the sync as a new record.
 
-Output is a proposal JSON for `scripts/ccc/template-map.json`; nothing is written to the
-catalog. Ambiguous or weak matches are listed separately so a human decides.
-
-    python3 scripts/ccc/audit_map.py --all --out scripts/ccc/template-map.proposed.json
+    python3 scripts/ccc/audit_map.py --all
+    python3 scripts/ccc/audit_map.py --all --out /tmp/proposed.json
     python3 scripts/ccc/audit_map.py --stems api_quiver_text_to_svg
 """
 
@@ -27,161 +30,208 @@ import argparse
 import collections
 import json
 import os
-import re
 import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-import requests
+import ccc_common as common
 
-MODEL_KEYS = ("ckpt_name", "unet_name", "vae_name", "clip_name", "lora_name", "model",
-              "model_name", "checkpoint", "weights")
 CONFIDENT = 0.85
-SHARE_ID = re.compile(r"-[0-9a-f]{12}$")  # legacy Hub share id appended to public slugs
 MARGIN = 0.10
-
-
-def signature(graph: dict) -> tuple[collections.Counter, frozenset[str]]:
-    classes = collections.Counter()
-    models: set[str] = set()
-    for node in (graph or {}).values():
-        if not isinstance(node, dict):
-            continue
-        classes[node.get("class_type") or "?"] += 1
-        inputs = node.get("inputs") or {}
-        for key, value in inputs.items():
-            if key in MODEL_KEYS or key.endswith(("_name", "_file")):
-                if isinstance(value, str) and value.lower().endswith(
-                        (".safetensors", ".ckpt", ".pth", ".pt", ".bin", ".gguf", ".onnx")):
-                    models.add(value)
-    return classes, frozenset(models)
-
-
-def slug_core(slug: str) -> str:
-    """Public slugs end in `-<12 hex>`; the part before it is the readable, stable half."""
-    return SHARE_ID.sub("", (slug or "").strip("-"))
-
-
-def kebab(text: str) -> str:
-    s = (text or "").lower().replace("&", " and ")
-    s = re.sub(r"[^a-z0-9]+", "-", s)
-    return re.sub(r"-{2,}", "-", s).strip("-")
-
-
-def jaccard(a: collections.Counter, b: collections.Counter) -> float:
-    inter = sum((a & b).values())
-    union = sum((a | b).values())
-    return inter / union if union else 0.0
-
-
-def set_jaccard(a: frozenset, b: frozenset) -> float:
-    if not a and not b:
-        return 1.0
-    return len(a & b) / len(a | b) if (a | b) else 1.0
-
-
-class Client:
-    def __init__(self, base: str, key: str):
-        self.base = base.rstrip("/")
-        self.s = requests.Session()
-        self.s.headers.update({"X-API-Key": key, "Accept": "application/json"})
-
-    def get(self, path):
-        r = self.s.get(self.base + "/api/v1/catalog" + path, timeout=120)
-        r.raise_for_status()
-        return r.json()
-
-    def live(self):
-        out, cursor = [], None
-        while True:
-            d = self.get("/items?kind=WORKFLOW&limit=100" + (f"&cursor={cursor}" if cursor else ""))
-            out += d.get("items", [])
-            if not d.get("has_more"):
-                return out
-            cursor = d.get("next_cursor")
-            if not cursor:
-                return out
-
-    def media(self, ref):
-        url = f"{self.base}/api/v1/catalog/media/{ref['id']}/{ref['file_version_uid']}"
-        r = self.s.get(url, timeout=120)
-        if r.status_code != 200:
-            return None
-        try:
-            return r.json()
-        except json.JSONDecodeError:
-            return None
-
-
-def object_info(client: "Client", work: Path) -> dict | None:
-    """One fetch of the Cloud object_info; it is what the UI->API converter resolves against."""
-    cached = work / "object_info.json"
-    if cached.exists():
-        return json.loads(cached.read_text())
-    r = client.s.get(client.base + "/api/object_info", timeout=300)
-    if r.status_code != 200:
-        return None
-    cached.write_text(r.text)
-    return r.json()
-
-
-def convert_in_process(repo: Path, stem: str, work: Path, oi: dict | None) -> dict | None:
-    """Same converter comfy-cli calls, without paying interpreter startup per template."""
-    if oi is None:
-        return None
-    ui = repo / "templates" / f"{stem}.json"
-    out = work / f"{stem}.api.json"
-    if out.exists():
-        return json.loads(out.read_text())
-    try:
-        from comfy_cli.workflow_to_api import convert_ui_to_api
-    except Exception:
-        return None
-    try:
-        api = convert_ui_to_api(json.loads(ui.read_text()), oi)
-    except Exception:
-        return None
-    if not api:
-        return None
-    out.write_text(json.dumps(api, indent=1))
-    return api
-
-
-def convert(repo: Path, stem: str, work: Path) -> dict | None:
-    ui = repo / "templates" / f"{stem}.json"
-    out = work / f"{stem}.api.json"
-    if out.exists():
-        return json.loads(out.read_text())
-    proc = subprocess.run(["comfy", "--json", "run", "--workflow", str(ui), "--where", "cloud",
-                           "--print-prompt"], capture_output=True, text=True, timeout=300)
-    try:
-        env = json.loads(proc.stdout)
-    except json.JSONDecodeError:
-        return None
-    prompt = (env.get("data") or {}).get("prompt") if env.get("ok") else None
-    if not prompt:
-        return None
-    out.write_text(json.dumps(prompt, indent=1))
-    return prompt
+SLUG_GRAPH_FLOOR = 0.35   # a slug match whose graph disagrees this much is not confident
+TITLE_GRAPH_FLOOR = 0.20  # same for an exact title match
+RULE_PRIORITY = {"ledger": 0, "template_name": 1, "slug": 2, "title": 3, "graph": 4,
+                 "version_successor": 5}
 
 
 def load_index(repo: Path) -> dict:
+    """{stem: entry} for every template in templates/index.json (the sheet the site renders)."""
     index = json.loads((repo / "templates" / "index.json").read_text())
-    found: dict[str, str] = {}
+    found: dict[str, dict] = {}
 
-    def walk(node):
+    def walk(node, section=None):
         if isinstance(node, dict):
             if isinstance(node.get("name"), str) and "title" in node:
-                found[node["name"]] = node.get("title") or ""
-            for value in node.values():
-                walk(value)
+                found[node["name"]] = {
+                    "title": node.get("title") or "",
+                    "mediaType": node.get("mediaType"),
+                    "io": node.get("io"),
+                    "section": section,
+                }
+            for key, value in node.items():
+                walk(value, {k: v for k, v in node.items() if k != "templates"}
+                     if key == "templates" else section)
         elif isinstance(node, list):
             for item in node:
-                walk(item)
+                walk(item, section)
 
     walk(index)
     return found
+
+
+def graph_score(sig, rec):
+    """(score, structure_only) or (None, False) when either side has no graph."""
+    if not sig or not rec.get("sig"):
+        return None, False
+    structure = common.jaccard(sig[0], rec["sig"][0])
+    if not sig[1] and not rec["sig"][1]:
+        # neither graph loads external weights: structure is the only evidence, and an
+        # empty-vs-empty weight match must NOT hand out free points
+        return structure, True
+    weights = common.set_jaccard(sig[1], rec["sig"][1])
+    return 0.6 * structure + 0.4 * weights, False
+
+
+def live_records(client, work: Path, max_live: int = 0):
+    """Every live record that has an API graph, with its fingerprint (graphs cached on disk)."""
+    rows = client.live()
+    if max_live:
+        rows = rows[:max_live]
+    print(f"  {len(rows)} live record(s)", flush=True)
+    out = []
+    for row in rows:
+        data = row.get("data") or {}
+        versions = data.get("workflow_versions") or []
+        api_ref = (versions[0] or {}).get("api") if versions else None
+        slug = (row.get("slug") or "").split("/")[-1]
+        rec = {
+            "uid": row.get("uid"), "slug": slug, "core": common.slug_core(slug),
+            "title": data.get("title") or "", "tkey": common.norm_title(data.get("title") or ""),
+            "family": common.title_family(data.get("title") or ""),
+            "ver": common.title_version(data.get("title") or ""),
+            "tname": data.get("template_name"),
+            "mods": common.io_modalities(data), "sig": None,
+        }
+        if api_ref:
+            cache_file = work / "live" / f"{slug}.json"
+            graph = None
+            if cache_file.exists():
+                try:
+                    graph = json.loads(cache_file.read_text())
+                except json.JSONDecodeError:
+                    graph = None
+            if graph is None:
+                graph = client.media(api_ref)
+                if graph:
+                    cache_file.parent.mkdir(parents=True, exist_ok=True)
+                    cache_file.write_text(json.dumps(graph))
+            if graph:
+                rec["sig"] = common.signature(graph)
+                rec["mods"] = rec["mods"] | common.graph_modalities(rec["sig"][0])
+        out.append(rec)
+    return out
+
+
+def propose(stem: str, entry: dict, sig, live, by_tkey, by_family):
+    """Every claim this stem has on a live record, best first. Nothing is assigned here."""
+    claims = []
+
+    def add(rec, rule, score, note=""):
+        claims.append({"uid": rec["uid"], "slug": rec["slug"], "rule": rule,
+                       "score": None if score is None else round(score, 3), "note": note})
+
+    title = entry.get("title") or ""
+    tkey = common.norm_title(title)
+    want_core = common.kebab(title)
+    family = common.title_family(title)
+    has_version = family != tkey  # a version token was stripped
+
+    for rec in live:
+        if rec["tname"] == stem:
+            add(rec, "template_name", 1.0)
+
+    if want_core:
+        slug_hits = [rec for rec in live if rec["core"] == want_core]
+        if len(slug_hits) == 1:
+            score, _ = graph_score(sig, slug_hits[0])
+            if score is None or score >= SLUG_GRAPH_FLOOR:
+                add(slug_hits[0], "slug", score or 1.0)
+            else:
+                claims.append({"uid": slug_hits[0]["uid"], "slug": slug_hits[0]["slug"],
+                               "rule": "slug", "score": round(score, 3), "weak": True,
+                               "note": f"slug matches but the graph disagrees ({score:.2f})"})
+
+    if tkey:
+        title_hits = by_tkey.get(tkey) or []
+        if len(title_hits) == 1:
+            score, _ = graph_score(sig, title_hits[0])
+            if score is None or score >= TITLE_GRAPH_FLOOR:
+                add(title_hits[0], "title", score or 1.0)
+            else:
+                claims.append({"uid": title_hits[0]["uid"], "slug": title_hits[0]["slug"],
+                               "rule": "title", "score": round(score, 3), "weak": True,
+                               "note": f"title matches but the graph disagrees ({score:.2f})"})
+        elif title_hits:
+            # the catalog does not dedupe titles: pick the duplicate whose graph is our graph
+            ranked = []
+            for rec in title_hits:
+                score, _ = graph_score(sig, rec)
+                if score is not None:
+                    ranked.append((score, rec))
+            ranked.sort(key=lambda item: item[0], reverse=True)
+            if ranked and ranked[0][0] >= max(CONFIDENT, 0.9) and (
+                    len(ranked) == 1 or ranked[0][0] - ranked[1][0] >= MARGIN):
+                add(ranked[0][1], "title", ranked[0][0],
+                    f"{len(title_hits)} records share this title; the graph picks this one")
+            else:
+                best = ranked[0] if ranked else (None, title_hits[0])
+                claims.append({"uid": best[1]["uid"], "slug": best[1]["slug"], "rule": "title",
+                               "score": None if best[0] is None else round(best[0], 3),
+                               "weak": True,
+                               "note": f"{len(title_hits)} records share this title, "
+                                       f"graph cannot separate them"})
+
+    scored = []
+    for rec in live:
+        score, structure_only = graph_score(sig, rec)
+        if score is None:
+            continue
+        scored.append((score, structure_only, rec))
+    scored.sort(key=lambda item: item[0], reverse=True)
+    if scored:
+        best, structure_only, rec = scored[0]
+        runner = scored[1][0] if len(scored) > 1 else 0.0
+        floor = max(CONFIDENT, 0.92) if structure_only else CONFIDENT
+        if best >= floor and best - runner >= MARGIN:
+            add(rec, "graph", best, f"classes+weights {best:.2f}, runner-up {runner:.2f}")
+        elif best >= 0.6:
+            claims.append({"uid": rec["uid"], "slug": rec["slug"], "rule": "graph",
+                           "score": round(best, 3), "weak": True,
+                           "runner_up": round(runner, 3),
+                           "note": f"best graph {best:.2f} vs runner-up {runner:.2f}"})
+
+    # version successor: the catalog still holds the newest record of this family and that
+    # record is older than this template — i.e. the previous version's template file was
+    # renamed away and the record must be updated, not duplicated. If the family already has a
+    # record at or above our version, this template is genuinely newer than the catalog, and a
+    # new record is the honest outcome.
+    ours_version = common.title_version(title)
+    if has_version and family and ours_version:
+        modalities = common.io_modalities(entry)
+        candidates = [rec for rec in (by_family.get(family) or [])
+                      if rec["ver"] < ours_version
+                      and rec["tkey"] != tkey and rec["core"] != want_core
+                      and not (modalities and rec["mods"] and not (modalities & rec["mods"]))]
+        # newest first: the record this template replaces is the newest family record that is
+        # still free. If another template owns it (the previous version is itself a template
+        # file), the next oldest record in the lineage is the one to update.
+        for version in sorted({rec["ver"] for rec in candidates}, reverse=True):
+            bucket = [rec for rec in candidates if rec["ver"] == version]
+            readable = ".".join(map(str, version)) or "no version"
+            if len(bucket) == 1:
+                claims.append({"uid": bucket[0]["uid"], "slug": bucket[0]["slug"],
+                               "rule": "version_successor", "score": None,
+                               "version_successor": True,
+                               "note": f"replaces {bucket[0]['title']!r} ({readable})"})
+            else:
+                claims.append({"uid": bucket[0]["uid"], "slug": bucket[0]["slug"],
+                               "rule": "version_successor", "score": None, "weak": True,
+                               "note": f"{len(bucket)} records share '{family}' at version "
+                                       f"{readable}"})
+
+    claims.sort(key=lambda c: (RULE_PRIORITY[c["rule"]], -(c["score"] or 0.0)))
+    return claims
 
 
 def main() -> int:
@@ -189,146 +239,180 @@ def main() -> int:
     ap.add_argument("--repo", default=".", type=Path)
     ap.add_argument("--stems", nargs="*", default=[])
     ap.add_argument("--all", action="store_true")
-    ap.add_argument("--out", default="scripts/ccc/template-map.proposed.json", type=Path)
-    ap.add_argument("--limit", type=int, default=0, help="stop after N templates (smoke test)")
-    ap.add_argument("--max-live", type=int, default=0, help="only consider the first N live records (smoke test)")
+    ap.add_argument("--out", default="scripts/ccc/template-map.json", type=Path)
+    ap.add_argument("--pending", default=".ccc-work/pending.json", type=Path)
     ap.add_argument("--jobs", type=int, default=4, help="parallel UI->API conversions")
+    ap.add_argument("--limit", type=int, default=0, help="stop after N templates (smoke test)")
+    ap.add_argument("--max-live", type=int, default=0, help="only the first N live records")
     args = ap.parse_args()
 
-    key = os.environ.get("CCC_API_KEY")
-    if not key:
-        print("CCC_API_KEY is not set")
-        return 2
-    client = Client(os.environ.get("CCC_API_BASE_URL", "https://cloud.comfy.org"), key)
-    work = args.repo / ".ccc-work"
+    repo = args.repo
+    work = repo / ".ccc-work"
     work.mkdir(exist_ok=True)
+    client = common.Client()
 
-    titles = load_index(args.repo)
+    entries = load_index(repo)
     stems = list(args.stems)
     if args.all:
-        stems = [s for s in titles if (args.repo / "templates" / f"{s}.json").exists()]
+        stems = [s for s in entries if (repo / "templates" / f"{s}.json").exists()]
     if args.limit:
         stems = stems[: args.limit]
     if not stems:
         print("nothing to audit")
         return 0
 
-    oi = object_info(client, work)
+    oi = common.object_info(client, work)
     print(f"object_info: {'loaded' if oi else 'UNAVAILABLE'} "
           f"({len(oi) if oi else 0} classes)", flush=True)
-    print(f"converting {len(stems)} template graph(s)…", flush=True)
-    templates = {}
 
-    def one(stem):
-        graph = convert_in_process(args.repo, stem, work, oi)
-        if graph is None:
+    def convert(stem):
+        api = common.ui_to_api(repo, stem, work, oi, cache=True)
+        if api is None:
+            # the CLI is 2000x slower; only pay it for the few graphs the fast path misses
             try:
-                graph = convert(args.repo, stem, work)  # CLI fallback
-            except subprocess.TimeoutExpired:
-                return stem, None
-        return stem, (signature(graph) if graph else None)
+                proc = subprocess.run(
+                    ["comfy", "--json", "run", "--workflow", str(repo / "templates" / f"{stem}.json"),
+                     "--where", "cloud", "--print-prompt"], capture_output=True, text=True, timeout=300)
+                env = json.loads(proc.stdout)
+                api = (env.get("data") or {}).get("prompt") if env.get("ok") else None
+            except Exception:
+                api = None
+        return stem, api
 
+    print(f"converting {len(stems)} template graph(s) with {args.jobs} worker(s)…", flush=True)
+    sigs = {}
     done = 0
     with ThreadPoolExecutor(max_workers=max(1, args.jobs)) as pool:
-        for stem, sig in pool.map(one, stems):
+        for stem, api in pool.map(convert, stems):
             done += 1
-            if sig:
-                templates[stem] = sig
-            if done % 25 == 0:
-                print(f"  {done}/{len(stems)} converted ({len(templates)} with a graph)", flush=True)
+            if api:
+                sigs[stem] = common.signature(api)
+            if done % 100 == 0:
+                print(f"  {done}/{len(stems)} converted ({len(sigs)} with a graph)", flush=True)
 
-    print("downloading live record graphs…", flush=True)
-    live = []
-    live_rows = client.live()
-    if args.max_live:
-        live_rows = live_rows[: args.max_live]
-    for row in live_rows:
-        data = row.get("data") or {}
-        versions = data.get("workflow_versions") or []
-        api_ref = (versions[0] or {}).get("api") if versions else None
-        if not api_ref:
-            continue
-        cache_file = work / "live" / f"{(row.get('slug') or '').split('/')[-1]}.json"
-        cache_file.parent.mkdir(parents=True, exist_ok=True)
-        if cache_file.exists():
-            graph = json.loads(cache_file.read_text())
-        else:
-            graph = client.media(api_ref)
-            if graph:
-                cache_file.write_text(json.dumps(graph))
-        if not graph:
-            continue
-        if len(live) % 100 == 0 and len(live):
-            print(f"  {len(live)} live graphs loaded", flush=True)
-        live.append({"uid": row.get("uid"), "slug": (row.get("slug") or "").split("/")[-1],
-                     "core": slug_core((row.get("slug") or "").split("/")[-1]),
-                     "title": data.get("title") or "", "tname": data.get("template_name"),
-                     "sig": signature(graph)})
-    print(f"  {len(templates)} template graph(s), {len(live)} live record graph(s)")
+    print("loading live record graphs…", flush=True)
+    live = live_records(client, work, args.max_live)
+    by_uid = {rec["uid"]: rec for rec in live}
+    by_tkey = collections.defaultdict(list)
+    by_family = collections.defaultdict(list)
+    for rec in live:
+        if rec["tkey"]:
+            by_tkey[rec["tkey"]].append(rec)
+        if rec["family"]:
+            by_family[rec["family"]].append(rec)
 
-    confident, ambiguous, none = {}, {}, {}
-    unknown = {s: t for s, t in titles.items() if s not in templates}
-    for stem, sig in templates.items():
-        scored = []
-        for rec in live:
-            if rec["tname"] == stem:
-                scored.append((1.0, rec, "template_name"))
+    # prior ledger: a committed identity outranks a fresh heuristic
+    prior = {}
+    ledger_path = args.out if args.out.is_absolute() else repo / args.out
+    if ledger_path.exists():
+        raw = json.loads(ledger_path.read_text())
+        for stem, value in raw.items():
+            if stem.startswith("_") or not isinstance(value, dict):
                 continue
-            structure = jaccard(sig[0], rec["sig"][0])
-            if not sig[1] and not rec["sig"][1]:
-                # neither graph loads external weights: structure is the only evidence, and an
-                # empty-vs-empty weight match must NOT hand out free points
-                scored.append((structure, rec, f"classes {structure:.2f} / no model files"))
-                continue
-            weights = set_jaccard(sig[1], rec["sig"][1])
-            scored.append((0.6 * structure + 0.4 * weights, rec,
-                           f"classes {structure:.2f} / weights {weights:.2f}"))
-        scored.sort(key=lambda item: item[0], reverse=True)
-        if not scored:
-            none[stem] = {"title": titles.get(stem), "reason": "no live API graphs"}
-            continue
-        title_slug = kebab(titles.get(stem) or "")
-        by_slug = [rec for rec in live if title_slug and rec["core"] == title_slug]
-        if len(by_slug) == 1:
-            rec = by_slug[0]
-            graph_score = next((sc for sc, r, _ in scored if r is rec), 0.0)
-            entry = {"uid": rec["uid"], "slug": rec["slug"], "title": rec["title"],
-                     "score": round(graph_score, 3), "reason": "slug match (share id stripped)",
-                     "graph": round(graph_score, 3)}
-            if graph_score >= 0.35:
-                confident[stem] = entry
-            else:
-                entry["reason"] += " — graph disagrees, verify"
-                ambiguous[stem] = entry
-            continue
+            if value.get("uid") in by_uid:
+                prior[stem] = value
 
-        best = scored[0]
-        runner = scored[1][0] if len(scored) > 1 else 0.0
-        entry = {"uid": best[1]["uid"], "slug": best[1]["slug"], "title": best[1]["title"],
-                 "score": round(best[0], 3), "reason": best[2]}
-        structure_only = "no model files" in best[2]
-        floor = max(CONFIDENT, 0.92) if structure_only else CONFIDENT
-        if best[0] >= floor and best[0] - runner >= MARGIN:
-            confident[stem] = entry
-        elif best[0] >= 0.6:
-            entry["runner_up"] = round(runner, 3)
-            ambiguous[stem] = entry
+    all_claims = []
+    unclaimed = []
+    for stem in stems:
+        entry = entries.get(stem) or {}
+        claims = propose(stem, entry, sigs.get(stem), live, by_tkey, by_family)
+        if stem in prior:
+            rec = by_uid[prior[stem]["uid"]]
+            claims.insert(0, {"uid": rec["uid"], "slug": rec["slug"], "rule": "ledger",
+                              "score": None,
+                              # a carried-over entry keeps the evidence and the marker that
+                              # established it, so a rebuild reproduces the file exactly
+                              "evidence": prior[stem].get("rule") or "ledger",
+                              "version_successor": bool(prior[stem].get("version_successor")),
+                              "note": "already committed in the ledger"})
+        for order, claim in enumerate(claims):
+            all_claims.append((RULE_PRIORITY[claim["rule"]], -(claim["score"] or 0.0), order,
+                               stem, claim))
+        if not claims:
+            unclaimed.append(stem)
+
+    all_claims.sort()
+    assigned = {}        # uid -> stem
+    confident = {}       # stem -> claim
+    blocked = {}         # stem -> claim it wanted but could not have
+    for prio, neg_score, order, stem, claim in all_claims:
+        if stem in confident:
+            if claim["uid"] in assigned:
+                blocked.setdefault(stem, claim)
+            continue
+        if claim.get("weak"):
+            blocked.setdefault(stem, claim)
+            continue
+        if claim["uid"] in assigned:
+            blocked.setdefault(stem, claim)
+            continue
+        assigned[claim["uid"]] = stem
+        confident[stem] = claim
+
+    def evidence(claim):
+        return claim.get("evidence") or claim["rule"]
+
+    by_rule = collections.Counter(evidence(claim) for claim in confident.values())
+    successors = sorted(stem for stem, claim in confident.items() if claim.get("version_successor"))
+
+    ledger = {}
+    for stem in sorted(confident):
+        claim = confident[stem]
+        ledger[stem] = {"uid": claim["uid"], "slug": claim["slug"], "rule": evidence(claim)}
+        if claim.get("version_successor"):
+            ledger[stem]["version_successor"] = True
+
+    pending = {"ambiguous": {}, "none": {}, "blocked": {}}
+    for stem in stems:
+        if stem in confident:
+            continue
+        claim = blocked.get(stem)
+        if claim:
+            pending["ambiguous"][stem] = {k: v for k, v in claim.items() if k != "uid"}
         else:
-            none[stem] = {"title": titles.get(stem), "best_score": round(best[0], 3),
-                          "best_slug": best[1]["slug"]}
+            pending["none"][stem] = {"title": (entries.get(stem) or {}).get("title"),
+                                     "reason": "no live record matched any rule"}
 
-    out = args.repo / args.out
-    out.write_text(json.dumps({"confident": confident, "ambiguous": ambiguous, "none": none},
-                              indent=1, sort_keys=True))
-    print(f"\nconfident {len(confident)} · ambiguous {len(ambiguous)} · none {len(none)} -> {out}")
-    for stem, entry in list(ambiguous.items())[:10]:
-        print(f"  ? {stem} ~ {entry['slug']} ({entry['score']}, "
-              f"runner {entry.get('runner_up', entry.get('graph', '?'))})")
-    for stem, entry in list(none.items())[:10]:
-        print(f"  - {stem}: {entry}")
-    print("\nReview, then copy the entries you trust into scripts/ccc/template-map.json "
-          "(stem -> uid). The sync stamps template_name onto the mapped record, so an override "
-          "is only needed once.")
+    header = {
+        "_comment": (
+            "GENERATED by scripts/ccc/audit_map.py — stem -> existing catalog record. The sync "
+            "writes to the record named here and stamps template_name on it. Evidence, strongest "
+            "first: template_name, slug with the legacy share id stripped, unique normalized "
+            "title, graph fingerprint, version successor. Ambiguous candidates live in "
+            ".ccc-work/pending.json (not committed) and gate nothing: a stem absent here is "
+            "created as a new record."),
+        "_generated_from": {
+            "live_records": len(live),
+            "templates": len(entries),
+            "converted": len(sigs),
+            "ledger_entries": len(ledger),
+            "by_rule": dict(sorted(by_rule.items())),
+            "version_successor_stems": successors,
+            "pending": {k: len(v) for k, v in pending.items()},
+        },
+    }
+    doc = {**header, **ledger}
+
+    out_path = ledger_path
+    # insertion order, not sort_keys: `uid` before `slug` is how the committed ledger reads,
+    # and keeping it makes a rebuild diff show only the entries that actually changed
+    out_path.write_text(json.dumps(doc, indent=1) + "\n")
+    pending_path = args.pending if args.pending.is_absolute() else repo / args.pending
+    pending_path.parent.mkdir(parents=True, exist_ok=True)
+    pending_path.write_text(json.dumps(pending, indent=1, sort_keys=True) + "\n")
+
+    print(f"\nledger {len(ledger)} entries -> {out_path}")
+    print("  by rule: " + ", ".join(f"{rule} {count}" for rule, count in sorted(by_rule.items())))
+    print(f"  version successors: {len(successors)}")
+    for stem in successors:
+        print(f"    ~ {stem} -> {ledger[stem]['slug']}")
+    print("  pending: " + ", ".join(f"{k} {len(v)}" for k, v in pending.items())
+          + f" -> {pending_path}")
+    for stem, claim in list(pending["ambiguous"].items())[:10]:
+        print(f"    ? {stem} ~ {claim.get('slug')} ({claim.get('score')}) {claim.get('note', '')}")
+    for stem, claim in list(pending["blocked"].items())[:10]:
+        print(f"    x {stem} ~ {claim.get('slug')} ({claim.get('note', '')})")
     return 0
 
 
