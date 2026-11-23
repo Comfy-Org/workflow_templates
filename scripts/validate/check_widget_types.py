@@ -98,6 +98,7 @@ WIDGET_TYPES = frozenset(
     }
 )
 DYNAMIC_COMBO = "COMFY_DYNAMICCOMBO_V3"
+DYNAMIC_GROUP = "COMFY_DYNAMICGROUP_V3"
 CONTROL_VALUES = frozenset({"fixed", "increment", "increment-wrap", "decrement", "randomize"})
 UPLOAD_FLAGS = ("image_upload", "video_upload", "audio_upload")
 UPLOAD_VALUES = frozenset({"image", "video", "audio"})
@@ -221,6 +222,28 @@ def _walk_positional(
             index = _walk_positional(
                 _ordered_inputs(branch), values, index + 1, full + ".", out, controls_present
             )
+            continue
+        # DynamicGroup: count byte first, then rows × template fields, mirroring
+        # the named keys <group>, <group>.<i>.<field>. Not a WIDGET_TYPES entry
+        # and must not be treated as forceInput / skipped as a socket.
+        if widget_type == DYNAMIC_GROUP:
+            fields = _ordered_inputs(meta.get("template"))
+            max_rows = meta.get("max", 20)
+            if not isinstance(max_rows, int) or isinstance(max_rows, bool):
+                max_rows = 20
+            n = values[index]
+            # bool is not an int here (isinstance(True, int) is True in Python).
+            if (
+                type(n) is int
+                and 0 <= n <= max_rows
+                and index + 1 + n * len(fields) <= len(values)
+            ):
+                out[full] = (n, spec)
+                index += 1
+                for i in range(n):
+                    for field_name, field_spec in fields:
+                        out[f"{full}.{i}.{field_name}"] = (values[index], field_spec)
+                        index += 1
             continue
         if not _is_widget(spec):
             continue

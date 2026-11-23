@@ -133,6 +133,29 @@ OBJECT_INFO = {
         },
         "input_order": {"required": ["image", "text", "rate"]},
     },
+    # LoadLoraModel shape: COMFY_DYNAMICGROUP_V3 with a row template.
+    "LoadLoraModel": {
+        "input": {
+            "required": {
+                "model": ["MODEL", {}],
+                "loras": [
+                    "COMFY_DYNAMICGROUP_V3",
+                    {
+                        "template": {
+                            "required": {
+                                "lora_name": ["COMBO", {"options": ["a.safetensors"]}],
+                                "strength": ["FLOAT", {}],
+                                "enabled": ["BOOLEAN", {}],
+                            }
+                        },
+                        "min": 1,
+                        "max": 20,
+                    },
+                ],
+            }
+        },
+        "input_order": {"required": ["model", "loras"]},
+    },
 }
 
 
@@ -663,6 +686,63 @@ class MainTests(unittest.TestCase):
             with self.assertRaises(SystemExit) as raised:
                 main(args)
             self.assertIn("workflow path not found", str(raised.exception.code))
+
+
+class DynamicGroupTests(unittest.TestCase):
+    """COMFY_DYNAMICGROUP_V3: count byte then rows × template fields."""
+
+    def test_one_row_consumes_four_slots(self):
+        # Case A: [1, lora, strength, enabled] — no slot finding.
+        node = {
+            "id": 63,
+            "type": "LoadLoraModel",
+            "inputs": [{"name": "model", "type": "MODEL", "link": 1}],
+            "widgets_values": [1, "a.safetensors", 1.0, True],
+        }
+        self.assertEqual(_check([node]), [])
+
+    def test_two_rows_consume_seven_slots(self):
+        # Case B: [2, row0…, row1…] — no slot finding.
+        node = {
+            "id": 63,
+            "type": "LoadLoraModel",
+            "inputs": [{"name": "model", "type": "MODEL", "link": 1}],
+            "widgets_values": [
+                2,
+                "a.safetensors",
+                1.0,
+                True,
+                "b.safetensors",
+                0.5,
+                False,
+            ],
+        }
+        self.assertEqual(_check([node]), [])
+
+    def test_row_field_type_is_still_checked(self):
+        # Case C: wrong strength type still reports a coercible finding.
+        node = {
+            "id": 63,
+            "type": "LoadLoraModel",
+            "inputs": [{"name": "model", "type": "MODEL", "link": 1}],
+            "widgets_values": [1, "a.safetensors", "1.0", True],
+        }
+        findings = _check([node])
+        self.assertEqual(_pairs(findings), [("loras.0.strength", 1.0)])
+        self.assertTrue(all(not f.is_slot for f in findings))
+
+    def test_truncated_group_is_slot_mismatch(self):
+        # Case D: truncated row must not be silently accepted.
+        node = {
+            "id": 63,
+            "type": "LoadLoraModel",
+            "inputs": [{"name": "model", "type": "MODEL", "link": 1}],
+            "widgets_values": [1, "a.safetensors"],
+        }
+        findings = _check([node])
+        self.assertTrue(findings)
+        self.assertTrue(any(f.is_slot for f in findings))
+        self.assertIn("widget_slot_mismatch", " ".join(f.reason for f in findings))
 
 
 class SlotSchemaDriftTests(unittest.TestCase):
